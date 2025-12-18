@@ -1,0 +1,10 @@
+#
+# These are the python packages that needs to be installed in order to run
+# the scripts in this directory.
+#
+# Install can be done using pip:
+# python -m pip install -r requirements.txt
+#
+cryptography>=43.0.0
+Jinja2>=3.1.4
+PyYAML>=6.0.1

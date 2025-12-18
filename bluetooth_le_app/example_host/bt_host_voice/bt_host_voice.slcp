@@ -1,0 +1,67 @@
+project_name: bt_host_voice
+package: bluetooth_le_app
+label: Bluetooth - Host Voice
+description: >
+  Host Voice example. This example demonstrates a Bluetooth LE host application
+  that communicates with an NCP (Network Co-Processor)
+  device to handle voice data transmission over Bluetooth LE.
+  Sound samples are captured by a remote device running the SoC voice application.
+category: Bluetooth Examples
+quality: experimental
+
+filter:
+  - name: "Wireless Technology"
+    value: ["Bluetooth"]
+  - name: "Device Type"
+    value: ["Host"]
+  - name: "Project Difficulty"
+    value: ["Advanced"]
+
+component:
+  - id: toolchain_gcc
+  - id: gatt_configuration
+  - id: ncp_gatt
+  - id: ncp_version
+  - id: host_main
+  - id: host_ncp
+  - id: app_log
+  - id: iostream_stdio
+  - id: app_assert
+  - id: ble_peer_manager_common
+  - id: ble_peer_manager_central
+  - id: ble_peer_manager_peripheral
+  - id: native_host
+
+source:
+  - path: app.c
+  - path: ../common/app_log/app_log_cli.c
+  - path: config.c
+  - path: parse.c
+
+template_contribution:
+  - name: ble_peer_manager_event_handler
+    value:
+      include: app.h
+      handler: app_ble_peer_manager_on_event
+
+include:
+  - path: .
+    file_list:
+      - path: app.h
+      - path: config.h
+      - path: parse.h
+  - path: ../common/app_log
+    file_list:
+      - path: app_log_cli.h
+
+tag:
+  - toolchain:gcc
+  - hwfilter:device:device_family_host
+
+readme:
+  - path: readme.md
+
+ui_hints:
+  highlight:
+    - path: readme.md
+      focus: true

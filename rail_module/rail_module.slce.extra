@@ -1,0 +1,10 @@
+id: rail_module
+examples:
+sample_apps:
+description: This package is deprecated. Use rail_library instead.
+dependencies:
+  - rail_library/3.0.0-alpha.2@silabs
+components: []
+extra_files: []
+git_extra_files: []
+git_path_mapping: []

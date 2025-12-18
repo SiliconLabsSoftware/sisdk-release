@@ -1,0 +1,1 @@
+- Bug fix in the DeleteKey command for KSU keys. The command erroneously prevented the KSU from being used after DeleteKey was called. This issue is now fixed.

@@ -1,0 +1,24 @@
+components:
+- silabs_core_buffer_manager
+- radio_priority_configurator
+- security_manager
+- radio_priority_15_4
+dependencies:
+- rail_library/0.0.1@silabs
+description: null
+examples: null
+extra_files:
+- util/silicon_labs/silabs_core/buffer_manager/buffer-management-dual-phy-test.c
+- util/silicon_labs/silabs_core/buffer_manager/buffer-malloc.h
+- util/silicon_labs/silabs_core/buffer_manager/buffer-management.c
+- util/silicon_labs/silabs_core/buffer_manager/buffer-queue.h
+- util/silicon_labs/silabs_core/buffer_manager/legacy-packet-buffer.c
+- util/silicon_labs/silabs_core/buffer_manager/buffer-malloc.c
+- util/silicon_labs/silabs_core/buffer_manager/buffer-management-test.c
+- util/silicon_labs/silabs_core/buffer_manager/buffer-queue.c
+- util/silicon_labs/silabs_core/buffer_manager/buffer-management.h
+- util/silicon_labs/silabs_core/buffer_manager/legacy-packet-buffer.h
+git_extra_files: []
+git_path_mapping: []
+id: common_15_4
+sample_apps: null

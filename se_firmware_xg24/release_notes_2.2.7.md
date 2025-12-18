@@ -1,0 +1,1 @@
+- Reseed AES DPA countermeasures upon exiting EM2/3.

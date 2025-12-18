@@ -1,0 +1,28 @@
+!!omap
+- id: brd4002b
+- label: BRD4002B
+- package: boards
+- description: Board support for BRD4002B.
+- category: Platform|Board|Mainboard
+- quality: production
+- metadata:
+    sbom:
+      license: Zlib
+- requires: []
+- provides:
+  - name: brd4002b
+  - name: hardware_board_mainboard_wstk
+  - name: hardware_board_mainboard
+  - name: hardware_board_from_wmb
+- recommends: []
+- template_contribution: []
+- define:
+  - name: SL_BOARD_NAME
+    value: '"BRD4002B"'
+  - name: SL_BOARD_REV
+    value: '"A01"'
+- tag:
+  - board:pn:BRD4002
+  - board:variant:B
+  - board:revision:A01
+- root_path: boards

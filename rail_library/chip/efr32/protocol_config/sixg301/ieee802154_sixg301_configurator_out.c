@@ -33,39 +33,68 @@
  ******************************************************************************/
 #include "em_device.h"
 #include "ieee802154_sixg301_configurator_out.h"
+#include "rail_common.h"
 
+STORE_IN_RAM
 static const uint8_t irCalConfig_0[] = {
   25, 63, 1, 6, 4, 16, 1, 0, 0, 1, 1, 6, 0, 16, 39, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
+STORE_IN_RAM
 static const uint8_t irCalConfig_1[] = {
   25, 63, 1, 6, 4, 16, 1, 0, 0, 1, 1, 6, 0, 16, 39, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
+STORE_IN_RAM
 static const int32_t timingConfig_0[] = {
   6625, 6625, 500, 0
 };
 
+STORE_IN_RAM
 static const int32_t timingConfig_1[] = {
   4455, 4455, 2000, 0
 };
 
+STORE_IN_RAM
 static const int32_t timingConfig_2[] = {
   2970, 6970, 2500, 0
 };
 
-__ALIGNED(4) static const uint8_t hfxoRetimingConfigEntries[] = {
+STORE_IN_RAM
+__ALIGNED(4) static const uint8_t hfxoRetimingConfigEntries[] =
+{
   2, 0, 0, 0, 0x00, 0xf0, 0x49, 0x02, 6, 20, 0, 0, 0x00, 0xe0, 0x93, 0x04, 5, 56, 0, 0, 0xa0, 0x08, 0, 0, 0, 0, 0x58, 0x09, 1, 4, 7, 6, 0x10, 0x0a, 1, 4, 7, 7, 0xc8, 0x0a, 0, 4, 8, 7, 0x80, 0x0b, 0, 4, 8, 8, 0x38, 0x0c, 0, 4, 9, 8, 0x61, 0x08, 0, 0, 0, 0, 0x68, 0x08, 0, 0, 0, 0, 0xc7, 0x09, 1, 4, 4, 3, 0x2c, 0x0b, 1, 4, 4, 4, 0x92, 0x0c, 1, 4, 5, 4
 };
 
 #ifdef RADIO_CONFIG_ENABLE_STACK_INFO
-__ALIGNED(4) static const uint8_t stackInfo_0[2] = { 0x05, 0x12 };
-__ALIGNED(4) static const uint8_t stackInfo_1[2] = { 0x00, 0x00 };
-__ALIGNED(4) static const uint8_t stackInfo_2[2] = { 0x05, 0x0e };
-__ALIGNED(4) static const uint8_t stackInfo_3[2] = { 0x05, 0x00 };
-__ALIGNED(4) static const uint8_t stackInfo_4[2] = { 0x05, 0x08 };
+STORE_IN_RAM
+__ALIGNED(4) static const uint8_t stackInfo_0[2] =
+{
+  0x05, 0x12
+};
+STORE_IN_RAM
+__ALIGNED(4) static const uint8_t stackInfo_1[2] =
+{
+  0x00, 0x00
+};
+STORE_IN_RAM
+__ALIGNED(4) static const uint8_t stackInfo_2[2] =
+{
+  0x05, 0x0e
+};
+STORE_IN_RAM
+__ALIGNED(4) static const uint8_t stackInfo_3[2] =
+{
+  0x05, 0x00
+};
+STORE_IN_RAM
+__ALIGNED(4) static const uint8_t stackInfo_4[2] =
+{
+  0x05, 0x08
+};
 #endif // RADIO_CONFIG_ENABLE_STACK_INFO
 
+STORE_IN_RAM
 static RAIL_ChannelConfigEntryAttr_t channelConfigEntryAttr_0 = {
 #if RAIL_SUPPORTS_OFDM_PA
   {
@@ -85,6 +114,7 @@ static RAIL_ChannelConfigEntryAttr_t channelConfigEntryAttr_0 = {
 #endif // RAIL_SUPPORTS_OFDM_PA
 };
 
+STORE_IN_RAM
 static RAIL_ChannelConfigEntryAttr_t channelConfigEntryAttr_1 = {
 #if RAIL_SUPPORTS_OFDM_PA
   {
@@ -104,6 +134,7 @@ static RAIL_ChannelConfigEntryAttr_t channelConfigEntryAttr_1 = {
 #endif // RAIL_SUPPORTS_OFDM_PA
 };
 
+STORE_IN_RAM
 static const uint32_t phyInfo_0[] = {
   20UL,
   0x00800000UL, // 128.0
@@ -128,6 +159,7 @@ static const uint32_t phyInfo_0[] = {
   (uint32_t) 0UL,
 };
 
+STORE_IN_RAM
 static const uint32_t phyInfo_1[] = {
   20UL,
   0x00492492UL, // 73.14285714285714
@@ -152,6 +184,7 @@ static const uint32_t phyInfo_1[] = {
   (uint32_t) 0UL,
 };
 
+STORE_IN_RAM
 static const uint32_t phyInfo_2[] = {
   20UL,
   0x00666666UL, // 102.4
@@ -176,6 +209,7 @@ static const uint32_t phyInfo_2[] = {
   (uint32_t) 0UL,
 };
 
+STORE_IN_RAM
 const uint32_t ieee802154_2p4_2mbps_modemConfigBase[] = {
   0x03020000UL, 0x0000803FUL, /* Write: SEQ.MMDDENOMINIT_CALC */
   /*    0004 */ 0x0001007EUL, /* SEQ.MMDDENOMINIT_CALC_DOUBLED */
@@ -380,6 +414,7 @@ const uint32_t ieee802154_2p4_2mbps_modemConfigBase[] = {
   0xFFFFFFFFUL,
 };
 
+STORE_IN_RAM
 const uint32_t ieee802154_2p4_1mbps_fec_modemConfigBase[] = {
   0x03020000UL, 0x0000803FUL, /* Write: SEQ.MMDDENOMINIT_CALC */
   /*    0004 */ 0x0001007EUL, /* SEQ.MMDDENOMINIT_CALC_DOUBLED */
@@ -586,6 +621,7 @@ const uint32_t ieee802154_2p4_1mbps_fec_modemConfigBase[] = {
   0xFFFFFFFFUL,
 };
 
+STORE_IN_RAM
 const uint32_t ieee802154_2p4_fcs_2mbps_modemConfigBase[] = {
   0x03020000UL, 0x0000803FUL, /* Write: SEQ.MMDDENOMINIT_CALC */
   /*    0004 */ 0x0001007EUL, /* SEQ.MMDDENOMINIT_CALC_DOUBLED */
@@ -790,6 +826,7 @@ const uint32_t ieee802154_2p4_fcs_2mbps_modemConfigBase[] = {
   0xFFFFFFFFUL,
 };
 
+STORE_IN_RAM
 const uint32_t ieee802154_2p4_fcs_1mbps_fec_modemConfigBase[] = {
   0x03020000UL, 0x0000803FUL, /* Write: SEQ.MMDDENOMINIT_CALC */
   /*    0004 */ 0x0001007EUL, /* SEQ.MMDDENOMINIT_CALC_DOUBLED */
@@ -996,6 +1033,7 @@ const uint32_t ieee802154_2p4_fcs_1mbps_fec_modemConfigBase[] = {
   0xFFFFFFFFUL,
 };
 
+STORE_IN_RAM
 const uint32_t ieee802154_2p4_antdiv_modemConfigBase[] = {
   0x03080000UL, 0x0000803FUL, /* Write: SEQ.MMDDENOMINIT_CALC */
   /*    0004 */ 0x0001007EUL, /* SEQ.MMDDENOMINIT_CALC_DOUBLED */
@@ -1246,6 +1284,7 @@ const uint32_t ieee802154_2p4_antdiv_modemConfigBase[] = {
   0xFFFFFFFFUL,
 };
 
+STORE_IN_RAM
 const uint32_t ieee802154_2p4_fem_modemConfigBase[] = {
   0x03080000UL, 0x0000803FUL, /* Write: SEQ.MMDDENOMINIT_CALC */
   /*    0004 */ 0x0001007EUL, /* SEQ.MMDDENOMINIT_CALC_DOUBLED */
@@ -1496,6 +1535,7 @@ const uint32_t ieee802154_2p4_fem_modemConfigBase[] = {
   0xFFFFFFFFUL,
 };
 
+STORE_IN_RAM
 const uint32_t ieee802154_2p4_dual_sync_modemConfig[] = {
   0x0301001CUL, (uint32_t) &phyInfo_0, /* Write: SEQ.PHYINFO */
   0x03050008UL, 0x0001E201UL, /* Write: SEQ.MODINDEX_CALC */
@@ -1553,6 +1593,7 @@ const uint32_t ieee802154_2p4_dual_sync_modemConfig[] = {
   0xFFFFFFFFUL,
 };
 
+STORE_IN_RAM
 const uint32_t ieee802154_2p4_high_speed_2mbps_coherent_modemConfig[] = {
   0x0301001CUL, (uint32_t) &phyInfo_1, /* Write: SEQ.PHYINFO */
   0x03050008UL, 0x00075AD7UL, /* Write: SEQ.MODINDEX_CALC */
@@ -1610,6 +1651,7 @@ const uint32_t ieee802154_2p4_high_speed_2mbps_coherent_modemConfig[] = {
   0xFFFFFFFFUL,
 };
 
+STORE_IN_RAM
 const uint32_t ieee802154_2p4_dual_sync_fec_modemConfig[] = {
   0x0301001CUL, (uint32_t) &phyInfo_0, /* Write: SEQ.PHYINFO */
   0x03050008UL, 0x0001E201UL, /* Write: SEQ.MODINDEX_CALC */
@@ -1665,6 +1707,7 @@ const uint32_t ieee802154_2p4_dual_sync_fec_modemConfig[] = {
   0xFFFFFFFFUL,
 };
 
+STORE_IN_RAM
 const uint32_t ieee802154_2p4_high_speed_1mbps_fec_modemConfig[] = {
   0x0301001CUL, (uint32_t) &phyInfo_1, /* Write: SEQ.PHYINFO */
   0x03050008UL, 0x00075AD7UL, /* Write: SEQ.MODINDEX_CALC */
@@ -1720,6 +1763,7 @@ const uint32_t ieee802154_2p4_high_speed_1mbps_fec_modemConfig[] = {
   0xFFFFFFFFUL,
 };
 
+STORE_IN_RAM
 const uint32_t ieee802154_2p4_dual_sync_fcs_modemConfig[] = {
   0x0301001CUL, (uint32_t) &phyInfo_0, /* Write: SEQ.PHYINFO */
   0x03050008UL, 0x0001E201UL, /* Write: SEQ.MODINDEX_CALC */
@@ -1777,6 +1821,7 @@ const uint32_t ieee802154_2p4_dual_sync_fcs_modemConfig[] = {
   0xFFFFFFFFUL,
 };
 
+STORE_IN_RAM
 const uint32_t ieee802154_2p4_high_speed_2mbps_coherent_fcs_modemConfig[] = {
   0x0301001CUL, (uint32_t) &phyInfo_1, /* Write: SEQ.PHYINFO */
   0x03050008UL, 0x00075AD7UL, /* Write: SEQ.MODINDEX_CALC */
@@ -1834,6 +1879,7 @@ const uint32_t ieee802154_2p4_high_speed_2mbps_coherent_fcs_modemConfig[] = {
   0xFFFFFFFFUL,
 };
 
+STORE_IN_RAM
 const uint32_t ieee802154_2p4_dual_sync_fec_fcs_modemConfig[] = {
   0x0301001CUL, (uint32_t) &phyInfo_0, /* Write: SEQ.PHYINFO */
   0x03050008UL, 0x0001E201UL, /* Write: SEQ.MODINDEX_CALC */
@@ -1889,6 +1935,7 @@ const uint32_t ieee802154_2p4_dual_sync_fec_fcs_modemConfig[] = {
   0xFFFFFFFFUL,
 };
 
+STORE_IN_RAM
 const uint32_t ieee802154_2p4_high_speed_fcs_1mbps_fec_modemConfig[] = {
   0x0301001CUL, (uint32_t) &phyInfo_1, /* Write: SEQ.PHYINFO */
   0x03050008UL, 0x00075AD7UL, /* Write: SEQ.MODINDEX_CALC */
@@ -1944,6 +1991,7 @@ const uint32_t ieee802154_2p4_high_speed_fcs_1mbps_fec_modemConfig[] = {
   0xFFFFFFFFUL,
 };
 
+STORE_IN_RAM
 const RAIL_ChannelConfigEntry_t ieee802154_2p4_2mbps_channels[] = {
   {
     .phyConfigDeltaAdd = ieee802154_2p4_dual_sync_modemConfig,
@@ -1981,6 +2029,7 @@ const RAIL_ChannelConfigEntry_t ieee802154_2p4_2mbps_channels[] = {
   },
 };
 
+STORE_IN_RAM
 const RAIL_ChannelConfigEntry_t ieee802154_2p4_1mbps_fec_channels[] = {
   {
     .phyConfigDeltaAdd = ieee802154_2p4_dual_sync_fec_modemConfig,
@@ -2018,6 +2067,7 @@ const RAIL_ChannelConfigEntry_t ieee802154_2p4_1mbps_fec_channels[] = {
   },
 };
 
+STORE_IN_RAM
 const RAIL_ChannelConfigEntry_t ieee802154_2p4_fcs_2mbps_channels[] = {
   {
     .phyConfigDeltaAdd = ieee802154_2p4_dual_sync_fcs_modemConfig,
@@ -2055,6 +2105,7 @@ const RAIL_ChannelConfigEntry_t ieee802154_2p4_fcs_2mbps_channels[] = {
   },
 };
 
+STORE_IN_RAM
 const RAIL_ChannelConfigEntry_t ieee802154_2p4_fcs_1mbps_fec_channels[] = {
   {
     .phyConfigDeltaAdd = ieee802154_2p4_dual_sync_fec_fcs_modemConfig,
@@ -2092,6 +2143,7 @@ const RAIL_ChannelConfigEntry_t ieee802154_2p4_fcs_1mbps_fec_channels[] = {
   },
 };
 
+STORE_IN_RAM
 const RAIL_ChannelConfigEntry_t ieee802154_2p4_antdiv_channels[] = {
   {
     .phyConfigDeltaAdd = NULL,
@@ -2112,6 +2164,7 @@ const RAIL_ChannelConfigEntry_t ieee802154_2p4_antdiv_channels[] = {
   },
 };
 
+STORE_IN_RAM
 const RAIL_ChannelConfigEntry_t ieee802154_2p4_antdiv_fem_channels[] = {
   {
     .phyConfigDeltaAdd = NULL,
@@ -2132,6 +2185,7 @@ const RAIL_ChannelConfigEntry_t ieee802154_2p4_antdiv_fem_channels[] = {
   },
 };
 
+STORE_IN_RAM
 const RAIL_ChannelConfigEntry_t ieee802154_2p4_coherent_channels[] = {
   {
     .phyConfigDeltaAdd = NULL,
@@ -2152,6 +2206,7 @@ const RAIL_ChannelConfigEntry_t ieee802154_2p4_coherent_channels[] = {
   },
 };
 
+STORE_IN_RAM
 const RAIL_ChannelConfigEntry_t ieee802154_2p4_fem_channels[] = {
   {
     .phyConfigDeltaAdd = NULL,
@@ -2172,6 +2227,7 @@ const RAIL_ChannelConfigEntry_t ieee802154_2p4_fem_channels[] = {
   },
 };
 
+STORE_IN_RAM
 const RAIL_ChannelConfig_t ieee802154_2p4_2mbps_channelConfig = {
   .phyConfigBase = ieee802154_2p4_2mbps_modemConfigBase,
   .phyConfigDeltaSubtract = NULL,
@@ -2181,6 +2237,7 @@ const RAIL_ChannelConfig_t ieee802154_2p4_2mbps_channelConfig = {
   .xtalFrequencyHz = 38400000UL,
 };
 
+STORE_IN_RAM
 const RAIL_ChannelConfig_t ieee802154_2p4_1mbps_fec_channelConfig = {
   .phyConfigBase = ieee802154_2p4_1mbps_fec_modemConfigBase,
   .phyConfigDeltaSubtract = NULL,
@@ -2190,6 +2247,7 @@ const RAIL_ChannelConfig_t ieee802154_2p4_1mbps_fec_channelConfig = {
   .xtalFrequencyHz = 38400000UL,
 };
 
+STORE_IN_RAM
 const RAIL_ChannelConfig_t ieee802154_2p4_fcs_2mbps_channelConfig = {
   .phyConfigBase = ieee802154_2p4_fcs_2mbps_modemConfigBase,
   .phyConfigDeltaSubtract = NULL,
@@ -2199,6 +2257,7 @@ const RAIL_ChannelConfig_t ieee802154_2p4_fcs_2mbps_channelConfig = {
   .xtalFrequencyHz = 38400000UL,
 };
 
+STORE_IN_RAM
 const RAIL_ChannelConfig_t ieee802154_2p4_fcs_1mbps_fec_channelConfig = {
   .phyConfigBase = ieee802154_2p4_fcs_1mbps_fec_modemConfigBase,
   .phyConfigDeltaSubtract = NULL,
@@ -2208,6 +2267,7 @@ const RAIL_ChannelConfig_t ieee802154_2p4_fcs_1mbps_fec_channelConfig = {
   .xtalFrequencyHz = 38400000UL,
 };
 
+STORE_IN_RAM
 const RAIL_ChannelConfig_t ieee802154_2p4_antdiv_channelConfig = {
   .phyConfigBase = ieee802154_2p4_antdiv_modemConfigBase,
   .phyConfigDeltaSubtract = NULL,
@@ -2217,6 +2277,7 @@ const RAIL_ChannelConfig_t ieee802154_2p4_antdiv_channelConfig = {
   .xtalFrequencyHz = 38400000UL,
 };
 
+STORE_IN_RAM
 const RAIL_ChannelConfig_t ieee802154_2p4_antdiv_fem_channelConfig = {
   .phyConfigBase = ieee802154_2p4_antdiv_modemConfigBase,
   .phyConfigDeltaSubtract = NULL,
@@ -2226,6 +2287,7 @@ const RAIL_ChannelConfig_t ieee802154_2p4_antdiv_fem_channelConfig = {
   .xtalFrequencyHz = 38400000UL,
 };
 
+STORE_IN_RAM
 const RAIL_ChannelConfig_t ieee802154_2p4_coherent_channelConfig = {
   .phyConfigBase = ieee802154_2p4_antdiv_modemConfigBase,
   .phyConfigDeltaSubtract = NULL,
@@ -2235,6 +2297,7 @@ const RAIL_ChannelConfig_t ieee802154_2p4_coherent_channelConfig = {
   .xtalFrequencyHz = 38400000UL,
 };
 
+STORE_IN_RAM
 const RAIL_ChannelConfig_t ieee802154_2p4_fem_channelConfig = {
   .phyConfigBase = ieee802154_2p4_fem_modemConfigBase,
   .phyConfigDeltaSubtract = NULL,

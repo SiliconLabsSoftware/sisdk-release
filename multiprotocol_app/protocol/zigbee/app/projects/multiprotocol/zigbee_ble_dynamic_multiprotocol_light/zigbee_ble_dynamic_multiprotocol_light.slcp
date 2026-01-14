@@ -220,9 +220,8 @@ include:
 tag:
   - prebuilt_demo
   - hardware:has:lcd
-  - hardware:!shared:button:led
-  - hardware:device:flash:512
-  - hardware:device:ram:64
+  - hwfilter:!board:hardware:shares:button:led
+  - hwfilter:flash:512k
   - hwfilter:device:device_supports_bluetooth
   - hwfilter:device:device_supports_zigbee
   - hwfilter:ram:64k

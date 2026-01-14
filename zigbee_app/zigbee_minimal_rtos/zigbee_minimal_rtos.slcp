@@ -114,7 +114,7 @@ template_contribution:
   - name: event_handler
     value:
       event: stack_init
-      include: app.h
+      include: sl_zigbee_system_common.h
       handler: sli_zigbee_app_rtos_task_init_cb
     priority: -8997
     condition:

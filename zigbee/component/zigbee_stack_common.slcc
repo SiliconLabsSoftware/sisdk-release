@@ -69,7 +69,7 @@ include:
   - path: coexistence/common/coexistence.h
   - path: coexistence/protocol/ieee802154_uc/coexistence-802154.h
   - path: coexistence/protocol/ieee802154_uc/coexistence-common-802154.h
-  - path: rail_util_ant_div/sl_rail_util_ant_div.h
+  - path: sl_rail_util_ant_div/sl_rail_util_ant_div.h
 - path: platform/radio/rail_lib/plugin/sl_rail_util_ieee802154
   file_list:
   - path: sl_rail_util_ieee802154_stack_event.h
@@ -363,14 +363,14 @@ source:
 - path: stack/internal/src/ipc/zigbee_ipc_callback_event_stub.c
   condition:
   - zigbee_use_ipc
-- path: platform/radio/rail_lib/plugin/rail_util_ant_div/sl_rail_util_ant_div.c
+- path: platform/radio/rail_lib/plugin/sl_rail_util_ant_div/sl_rail_util_ant_div.c
   condition:
   - device_cortexm
   unless:
   - rail_util_ant_div
     # Following condition to avoid adding this for subghz simulation which does not
     # use librail simulation (uses ember PHY) and this source file need 'rail.h'.
-- path: platform/radio/rail_lib/plugin/rail_util_ant_div/sl_rail_util_ant_div.c
+- path: platform/radio/rail_lib/plugin/sl_rail_util_ant_div/sl_rail_util_ant_div.c
   condition:
   - rail_lib_simulation
   unless:

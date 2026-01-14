@@ -201,7 +201,7 @@ static const sl_wisun_lfn_params_t SL_WISUN_PARAMS_LFN_TEST = {
     .initial_key_max_s = 3,
     .initial_key_retry_min_s = 18,
     .initial_key_retry_max_limit_s = 42,
-    .lgtk_max_mismatch_m = 60,
+    .lgtk_max_mismatch_m = 2,
     .initial_key_retry_limit = 3,
     .allow_skip = true
   },

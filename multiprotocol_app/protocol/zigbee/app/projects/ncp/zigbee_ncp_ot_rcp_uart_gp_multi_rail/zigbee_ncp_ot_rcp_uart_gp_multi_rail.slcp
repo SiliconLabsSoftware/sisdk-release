@@ -198,3 +198,4 @@ tag:
   - hwfilter:!device:rm21z000f1024im32
   - hwfilter:!device:device_family_mgm22
   - hwfilter:ram:96k
+  - toolchain:gcc

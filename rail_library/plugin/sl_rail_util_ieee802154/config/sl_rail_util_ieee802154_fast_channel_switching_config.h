@@ -40,8 +40,8 @@
 // <<< Use Configuration Wizard in Context Menu >>>
 // <h> IEEE802.15.4 Fast Channel Switching Configuration
 // <q SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_DEFAULT_ENABLED> Enable fast channel switching
-// <i> Default: 0
-#define SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_DEFAULT_ENABLED   0
+// <i> Default: 1
+#define SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_DEFAULT_ENABLED   1
 // <q SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_RUNTIME_PHY_SELECT> Runtime select
 // <i> (Enable)RX Fast Channel Switching feature can be modified at runtime.
 // <i> (Disable)RX Fast Channel Switching feature can not be modified at runtime.

@@ -130,7 +130,8 @@ configuration:
     value: 16384
     condition: [toolchain_lto, freertos]
   - name: SL_BT_CONTROLLER_BUFFER_MEMORY
-    value: 4096
+    value: 1024
+    condition: [device_generic_family_efr32xg21]
 
 define:
   - name: OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -149,6 +150,7 @@ tag:
   - hwfilter:device:device_supports_bluetooth
   - hwfilter:device:device_supports_thread
   - hwfilter:!device:device_family_efr32mr21
+  - toolchain:gcc
 
 readme:
   - path: ./README-OT-NCP-BLE-RCP.md

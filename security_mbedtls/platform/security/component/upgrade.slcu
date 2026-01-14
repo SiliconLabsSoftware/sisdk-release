@@ -3,7 +3,7 @@ upgrade:
       id: simplicity_sdk
       version: "4.2.1"
     configuration:
-      - script: platform/security/component/scripts/upgrade.lua
+      - script: security_mbedtls/platform/security/component/scripts/upgrade.lua
     component:
       - trigger: psa_its
         description: >

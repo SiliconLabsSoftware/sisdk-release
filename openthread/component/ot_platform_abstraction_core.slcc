@@ -64,6 +64,11 @@ conflicts:
 ui_hints:
   visibility: never
 include:
+- path: include
+  file_list:
+  - path: sl_ot_phy_select.h
+    condition:
+    - rail_util_ieee802154_phy_select
 - path: platform-abstraction/efr32
   file_list:
   - path: alarm.h

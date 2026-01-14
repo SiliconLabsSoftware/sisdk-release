@@ -99,7 +99,7 @@ sl_status_t slxi_zigbee_stack_switch_role_router(void)
       (void)sli_zigbee_stack_find_and_rejoin_network(true, // secure rejoin
                                                      SL_ZIGBEE_ALL_802_15_4_CHANNELS_MASK,
                                                      SL_ZIGBEE_REJOIN_REASON_NONE,
-                                                     SL_ZIGBEE_ROUTER);
+                                                     SL_ZIGBEE_DEVICE_TYPE_UNCHANGED);
     }
 
     status = SL_STATUS_OK;

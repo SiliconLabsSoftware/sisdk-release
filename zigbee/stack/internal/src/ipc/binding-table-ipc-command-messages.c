@@ -3,7 +3,7 @@
  * @brief internal wrappers for 'binding-table' ipc commands
  *******************************************************************************
  * # License
- * <b>Copyright 2024 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -30,6 +30,11 @@ void sli_zigbee_stack_binding_is_active_process_ipc_command(sli_zigbee_ipc_cmd_t
 void sli_zigbee_stack_clear_binding_table_process_ipc_command(sli_zigbee_ipc_cmd_t *msg)
 {
   msg->data.clear_binding_table.response.result = sli_zigbee_stack_clear_binding_table();
+}
+
+void sli_zigbee_stack_clear_binding_table_on_leave_process_ipc_command(sli_zigbee_ipc_cmd_t *msg)
+{
+  sli_zigbee_stack_clear_binding_table_on_leave(msg->data.clear_binding_table_on_leave.request.clear);
 }
 
 void sli_zigbee_stack_delete_binding_process_ipc_command(sli_zigbee_ipc_cmd_t *msg)
@@ -101,6 +106,13 @@ sl_status_t sl_zigbee_clear_binding_table(void)
   sli_zigbee_send_ipc_cmd(sli_zigbee_stack_clear_binding_table_process_ipc_command, &msg);
 
   return msg.data.clear_binding_table.response.result;
+}
+
+void sl_zigbee_clear_binding_table_on_leave(bool clear)
+{
+  sli_zigbee_ipc_cmd_t msg = { 0, };
+  msg.data.clear_binding_table_on_leave.request.clear = clear;
+  sli_zigbee_send_ipc_cmd(sli_zigbee_stack_clear_binding_table_on_leave_process_ipc_command, &msg);
 }
 
 sl_status_t sl_zigbee_delete_binding(uint8_t index)

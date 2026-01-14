@@ -147,6 +147,9 @@ template_contribution:
   - name: memory_ram_size
     value: 0x8000
 
+post_build:
+  profile: tz_nonsecure_application
+
 tag:
   - companion:bootloader-apploader-secure
   - hardware:device:flash:512
@@ -158,6 +161,3 @@ tag:
   - hwfilter:ram:64k
   - hwfilter:flash:512k
   - hwfilter:!device:device_generic_family_efr32xg22
-
-post_build:
-  path: "../../postbuild_profile/btmesh_tz_non_secure_application.slpb"

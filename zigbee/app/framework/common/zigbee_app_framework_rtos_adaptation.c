@@ -15,7 +15,6 @@
  ******************************************************************************/
 
 #include PLATFORM_HEADER
-#include "af.h"
 #ifdef SL_COMPONENT_CATALOG_PRESENT
 #include "sl_component_catalog.h"
 #endif
@@ -59,6 +58,7 @@ static osSemaphoreAttr_t zigbee_app_framework_task_semaphore_attr;
 
 static void zigbee_app_framework_task(void *p_arg);
 static void zigbee_app_framework_task_yield(void);
+static void sl_zigbee_rtos_wakeup_app_framework_task(void);
 
 //------------------------------------------------------------------------------
 // APIs and callbacks.

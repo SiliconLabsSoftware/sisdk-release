@@ -56,6 +56,14 @@ include:
     file_list:
       - path: app.h
 
+readme:
+  - path: readme.md
+
+other_file:
+  - path: image/readme_img0.png
+  - path: image/readme_img1.png
+  - path: image/readme_img2.png
+
 configuration:
   - name: SL_STACK_SIZE
     value: "2752"
@@ -77,3 +85,8 @@ tag:
   - companion:bootloader
   - hwfilter:device:device_supports_bluetooth
   - hwfilter:device:device_series_2
+
+ui_hints:
+  highlight:
+    - path: readme.md
+      focus: true

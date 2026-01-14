@@ -186,7 +186,7 @@ uint32_t sl_hal_usart_async_calculate_baudrate(uint32_t ref_freq,
 
   // Make sure clock divider value is valid.
   clk_div <<= _USART_CLKDIV_DIV_SHIFT;
-  EFM_ASSERT(clk_div <= _USART_CLKDIV_MASK);
+  EFM_ASSERT(clk_div <= _USART_CLKDIV_DIV_MASK);
 
   // Use integer division to avoid forcing in float division
   // utils and yet keep rounding effect errors to a minimum.
@@ -281,10 +281,10 @@ uint32_t sl_hal_usart_async_calculate_clock_div(uint32_t ref_freq,
   clk_div *= 8;
 
   // Verify that the resulting clock divider is within limits.
-  EFM_ASSERT(clk_div <= _USART_CLKDIV_MASK);
+  EFM_ASSERT(clk_div <= _USART_CLKDIV_DIV_MASK);
 
   // If the EFM_ASSERT is not enabled, make sure not to write to reserved bits.
-  clk_div = (clk_div & _USART_CLKDIV_MASK) >> _USART_CLKDIV_DIV_SHIFT;
+  clk_div = (clk_div & _USART_CLKDIV_DIV_MASK) >> _USART_CLKDIV_DIV_SHIFT;
 
   return clk_div;
 }
@@ -299,7 +299,8 @@ uint32_t sl_hal_usart_sync_calculate_baudrate(uint32_t ref_freq,
   uint32_t br;
 
   // Make sure clock divider value is valid.
-  EFM_ASSERT(clk_div <= (_USART_CLKDIV_MASK >> _USART_CLKDIV_DIV_SHIFT));
+  clk_div <<= _USART_CLKDIV_DIV_SHIFT;
+  EFM_ASSERT(clk_div <= _USART_CLKDIV_DIV_MASK);
 
   // Baudrate calculation for synchronous mode.
   // This function expects clk_div to have integer-only division (fractional bits cleared)
@@ -339,8 +340,11 @@ uint32_t sl_hal_usart_sync_calculate_clock_div(uint32_t ref_freq,
   clk_div  = (ref_freq - 1) / (2 * baudrate);
   clk_div = clk_div << 8;
 
-  /* Verify that resulting clock divider is within limits. */
-  EFM_ASSERT(clk_div <= (_USART_CLKDIV_MASK >> _USART_CLKDIV_DIV_SHIFT));
+  // Verify that resulting clock divider is within limits.
+  EFM_ASSERT(clk_div <= _USART_CLKDIV_DIV_MASK);
+
+  // If the EFM_ASSERT is not enabled, make sure not to write to reserved bits.
+  clk_div = (clk_div & _USART_CLKDIV_DIV_MASK) >> _USART_CLKDIV_DIV_SHIFT;
 
   return clk_div;
 }

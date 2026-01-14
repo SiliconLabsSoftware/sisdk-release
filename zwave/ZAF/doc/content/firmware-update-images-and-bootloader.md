@@ -1,7 +1,7 @@
 # Firmware Update Images and Bootloader
 
 ## General Information
-The guide assumes that the user is running Simplicity Studio V5.9.3.1 with the SiSDK 2024.12.0, which at the time of writing this document is the latest version available.
+This guide was originally written for Simplicity Studio V5.9.3.1 with SiSDK 2024.12.0. It has been updated for SiSDK 2025.12.0, which is distributed with Simplicity Studio v6. While file paths may differ between versions, the general procedures remain consistent.
 
 **Note:** Detailed information regarding bootloaders for the 800 series is available [here](https://www.silabs.com/documents/public/user-guides/ug103-06-fundamentals-bootloading.pdf)
 and [here](https://www.silabs.com/documents/public/user-guides/ug489-gecko-bootloader-user-guide-gsdk-4.pdf)
@@ -13,11 +13,8 @@ Before going further into this guide, it is important to know a few files and lo
 - **Default Simplicity Studio Installation Location**: `C:\SiliconLabs\SimplicityStudio\v5`
 - **Default SDK Installation Location**: `C:\Users\{Username}\SimplicityStudio\SDKs`
 - **Default Workspace Location**: `C:\Users\{Username}\SimplicityStudio\v5_workspace`
-- **SiSDK demo location**: `{Simplicity Studio Installation Location}\offline\com.silabs.sdk.stack.sisdk_2024.12.0`
 - **Sample encryption keys**: - `sample_sign.key`, `sample_sign.key.pub`, `sample_sign.key-tokens.txt`, `sample_encrypt.key`
 - **Sample keys location**: `{SDK Installation Location}\gecko_sdk\protocol\z-wave\platform\SiliconLabs\PAL\BootLoader\sample-keys`
-- **Bootloader location**: `{SiSDK demo location}\platform\bootloader\`
-- **Application location**: `{SiSDK demo location}\protocol\z-wave\`
 - **Commander utility location**: `{Simplicity Studio Installation Location}\developer\adapter_packs\commander`
 - **Sample project location**: `{Default Workspace Location}\zwave_soc_switch_on_off\`
 
@@ -61,40 +58,6 @@ commander.exe gbl create appname.gbl --app appname.hex --sign vendor_sign.key --
 ```
 This should be done each time a new firmware is produced.
 
-## Firmware Update flow (manual)
-
-1. Download the bootloader image files. This is done by running the sample demo in Simplicity Studio. This will download the bootloader images to disk.
-   - OTA bootloader images: `bootloader-storage-internal-single-zwave-ota-<board_number>.s37`
-   - OTW bootloader images: `bootloader-uart-xmodem-zwave-otw-<board_number>.s37`
-2. Create an example project using the same project above as a template.
-3. Build the project in SimplicityStudio and generate the hex files.
-4. Erase device:
-   ```bat
-   commander.exe device masserase -s <board_jlink_serial>
-   ```
-5. Reset device:
-   ```bat
-   commander.exe device reset -s <board_jlink_serial>
-   ```
-6. Flash the appropriate OTA bootloader image:
-   ```bat
-   commander.exe flash {Bootloader location}\bootloader-storage-internal-single-zwave-ota-<board_number>.s37 -s <board_jlink_serial>
-   ```
-7. Flash initial device firmware built in step 3:
-   ```bat
-   commander.exe flash "{sample project location}\zwave_soc_switch_on_off.hex" --address 0x0 -s <board_jlink_serial>
-   ```
-8. Flash the encryption keys:
-   ```bat
-   commander.exe flash --tokengroup znet --tokenfile sample_encrypt.key --tokenfile sample_sign.keytokens.txt -s <board_jlink_serial>
-   ```
-9.  Reset device:
-    ```bat
-    commander.exe device reset -s <board_jlink_serial>
-    ```
-10. Connect a controller or a device running a controller firmware to the PC and start the PC controller application.
-11. Include the node into the network and make sure the device is visible.
-12. In the PC controller application initiate the OTA update using the OTA gbl file mentioned in the prerequisites.
 
 ## Firmware update flow (Simplicity Studio)
 
@@ -103,25 +66,39 @@ This should be done each time a new firmware is produced.
 2. Open the <solution_name>.slpb (SL Postbuild Profile) file.
    This will open a GUI, where the encryption and signing keys can be added.
 3. When the `Solution Examples` project is built, the GBL files are generated in the `artifacts` folder with the merged binary of the bootloader and the Z-Wave application.
-4. Follow 7-12 from the manual steps above, but use the generated GBL file from the `artifacts` folder.
+4. Flash initial device firmware:
+   ```bat
+   commander.exe flash "{solution project location}\zwave_soc_switch_on_off.hex" --address 0x0 -s <board_jlink_serial>
+   ```
+5. Flash the encryption keys:
+   ```bat
+   commander.exe flash --tokengroup znet --tokenfile sample_encrypt.key --tokenfile sample_sign.keytokens.txt -s <board_jlink_serial>
+   ```
+6.  Reset device:
+    ```bat
+    commander.exe device reset -s <board_jlink_serial>
+    ```
+7. Connect a controller or a device running a controller firmware to the PC and start the PC controller application.
+8. Include the node into the network and make sure the device is visible.
+9. Initiate the OTA update in the PC controller application using an OTA-ready .gbl file with a firmware version greater than that of the current binary (see the *v255 generation* section below).
 
 >**Note:** The automatic generation of GBL files also works with `Example Projects`, but in this case, the bootloader won't be merged with the Z-Wave application.
 
 ## v255 generation
 
-The v255 files are the same as the released firmwares of the given application. The only difference is that the firmware version is set to 255.0.0 to make sure that the image version is greater than the current firmware version on the device, to make the OTA update possible. This file is available as a `Demo` (check the {Application location} and generate the GBL manually) or it can be generated from a `Solution Example` or `Project Example` in Simplicity Studio. The following steps are required to generate the v255 file:
+A v255 binary is an application binary in .gbl format, the firmware version of which is set to `255.0.0`. This ensures that the image version is greater than the current firmware version on the device, which is a hard requirement for OTA updates. A suitable binary can be generated from a `Solution Example` or a `Project Example` in Simplicity Studio. The following steps are required to generate the v255 file:
 1. Open `zw_version_config.h` in the GUI or in the text editor.
 2. Set `USE_USER_APP_VERSION` to `1`.
 3. Set `ZAF_VERSION_MAJOR` to `255`.
 4. Set `ZAF_VERSION_MINOR` to `0`.
 5. Set `ZAF_VERSION_PATCH` to `0`.
 
-### Bootloader configuration 
+## Bootloader configuration
 
 The bootloader resides at the start address `0x08000000` of the main flash and a fixed space of `24KB` is reserved for this. Z-Wave applications will start from address `0x08006000`.
-The bootloader must be flashed first before the Z-Wave sample application is flashed. It is also possible to combine the bootloader and the Z-Wave application into a single image. 
-*One can use the pre-built bootloader images available in Simplicity Studio or build a bootloader image by themselves using the bootloader sample applications in Simplicity Studio. *
-When building the bootloader, the OTA image storage information must be configured according to subsequent images. 
+The bootloader must be flashed first before the Z-Wave sample application is flashed. It is also possible to combine the bootloader and the Z-Wave application into a single image.
+*One can use the pre-built bootloader images available in Simplicity Studio or build a bootloader image by themselves using the bootloader sample applications in Simplicity Studio.*
+When building the bootloader, the OTA image storage information must be configured according to subsequent images.
 Importantly, **this storage slot (slot0), start address and size must not be changed**.
 
 ![Bootloader 800 Storage Slot](bootloader_800_storageslot.png)
@@ -134,11 +111,11 @@ In Simplicity Studio, the `Solution Examples` provide workspaces for the bootloa
 The Z-Wave sample applications that are available in Simplicity Studio contain linker scripts that have been tuned to accommodate the OTA image-related configuration as well.
 It is recommended not to modify this linker script when developing applications.
 
-**Bootloader Compression for 800 Series**
+## Bootloader Compression for 800 Series
 
 The bootloader compression type used for OTA is *lzma* compression. The corresponding component name to be selected in the studio is *bootloader_compression_lzma*.
 
-**Application Upgrade Version**
+## Application Upgrade Version
 
 The studio component *bootloader_app_upgrade_version* has to be selected for checking the application version during upgrades.
 

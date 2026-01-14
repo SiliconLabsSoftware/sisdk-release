@@ -3,7 +3,7 @@
  * @brief defines structured format for 'binding-table' ipc messages
  *******************************************************************************
  * # License
- * <b>Copyright 2024 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -41,6 +41,14 @@ typedef struct {
 typedef struct {
   sli_zigbee_stack_clear_binding_table_ipc_rsp_t response;
 } sli_zigbee_stack_clear_binding_table_ipc_msg_t;
+
+typedef struct {
+  bool clear;
+} sli_zigbee_stack_clear_binding_table_on_leave_ipc_req_t;
+
+typedef struct {
+  sli_zigbee_stack_clear_binding_table_on_leave_ipc_req_t request;
+} sli_zigbee_stack_clear_binding_table_on_leave_ipc_msg_t;
 
 typedef struct {
   uint8_t index;

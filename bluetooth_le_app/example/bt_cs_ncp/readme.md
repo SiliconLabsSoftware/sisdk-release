@@ -6,6 +6,8 @@ The distance estimation is performed at the NCP side, and only the measurement r
 
 If the configuration is changed to create more than 1 initiator instances, SL_BT_CONFIG_BUFFER_SIZE shall be increased.
 
+> Note: This example does not include Device Firmware Update (DFU) functionality by default. For details see the [Device Firmware Update](#device-firmware-update) section.
+
 ## Getting Started with NCP
 
 The NCP Host and Target communicate via a serial interface (UART), which can be tunneled either via USB or via Ethernet if you use a development kit. The communication between the NCP Host and Target is defined in the Silicon Labs proprietary protocol called BGAPI. BGLib is the C reference implementation of the BGAPI protocol, which is to be used on the NCP Host side.
@@ -84,27 +86,20 @@ where
 The default is calculated by using the constants and settings above using the worst case scenario, which gives 1866 bytes.
 RAM consumption can be reduced by changing the affected settings and reducing "Procedure maximum length" accordingly.
 
+## Device Firmware Update
+
+This example project does not include Device Firmware Update (DFU) functionality by default.
+To add DFU to an existing project:
+- Add the `Bootloader Interface` component to your project using Simplicity Studio’s Software Component browser.
+- Add a post-build step to generate the GBL (Gecko Bootloader) file using Simplicity Studio’s Post Build Editor.
+- Rebuild the project.
+- Flash the `Bootloader - NCP BGAPI UART DFU` bootloader to the device.
+
+See the `Bluetooth - NCP DFU` example solution for reference.
+
+For more information on bootloaders, see [UG103.6: Bootloader Fundamentals](https://www.silabs.com/documents/public/user-guides/ug103-06-fundamentals-bootloading.pdf) and [UG489: Silicon Labs Gecko Bootloader User's Guide for GSDK 4.0 and Higher](https://www.silabs.com/documents/public/user-guides/ug489-gecko-bootloader-user-guide-gsdk-4.pdf).
+
 ## Troubleshooting
-
-### Bootloader Issues
-
-Note that this Example Project does not include a bootloader. However, this Example Project expects a bootloader to be present on the device in order to support device firmware upgrade (DFU). To get your application to work, you should either
-- flash the proper bootloader or
-- remove the DFU functionality from the project.
-
-**If you do not wish to add a bootloader**, then remove the DFU functionality by uninstalling the *Bootloader Application Interface* software component -- and all of its dependants. This will automatically put your application code to the start address of the flash, which means that a bootloader is no longer needed, but also that you will not be able to upgrade your firmware.
-
-**If you want to add a bootloader**, then either
-- Create a *BGAPI UART DFU* bootloader project, build it and flash it to your device.
-
-- or run a precompiled Demo on your device from the Launcher view before flashing your application. Precompiled demos flash both bootloader and application images to the device. Flashing your own application image after the demo will overwrite the demo application but leave the bootloader in place.
-  - For NCP and RCP projects, flash the *Bluetooth - NCP* demo.
-  - For SoC projects, flash the *Bluetooth - SoC Thermometer* demo.
-
-**Important Notes:**
-- when you flash your application image to the device, use the *.hex* or *.s37* output file. Flashing *.bin* files may overwrite (erase) the bootloader.
-
-This sample application does need a bootloader.
 
 ### Programming the Radio Board
 

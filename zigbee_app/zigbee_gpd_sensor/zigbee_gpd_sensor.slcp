@@ -214,7 +214,7 @@ tag:
   - hwfilter:board:simple_led:led0
   - hwfilter:board:simple_led:led1
   - hardware:component:pti
-  - hardware:!shared:button:led
+  - hwfilter:!board:hardware:shares:button:led
   - hwfilter:device:device_supports_zigbee
   - hwfilter:!device:device_is_module
   - hwfilter:!device:device_series_3

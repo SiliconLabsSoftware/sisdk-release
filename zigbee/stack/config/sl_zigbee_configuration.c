@@ -481,19 +481,6 @@ sl_zigbee_mac_filter_match_data_t sli_zigbee_custom_mac_filter_match_list_data[S
 
 #endif // SL_ZIGBEE_AF_NCP || SL_CATALOG_ZIGBEE_NCP_FRAMEWORK_PRESENT || SL_ZIGBEE_TEST
 
-#ifdef CSL_SUPPORT
-// TODO: EMZIGBEE-8554: Change the Tx Default Priority to use a macro to set the priority based on the
-// BLE Advertisement priorities
-//
-// EMZIGBEE-8549
-// Set the Tx priority to 25 which is in between the default calculated BLE advertisement priority range of 23-26
-// This is needed to allow Zigbee to transmit reliably and not get pre-empted by BLE advertisement priorities.
-#undef SL_802154_RADIO_PRIO_TX_MIN
-#define SL_802154_RADIO_PRIO_TX_MIN       25
-#undef SL_802154_RADIO_PRIO_TX_MAX
-#define SL_802154_RADIO_PRIO_TX_MAX       25
-#endif // CSL_SUPPORT
-
 #ifdef SL_CATALOG_RADIO_PRIORITY_15_4_PRESENT
 sl_802154_radio_priorities_t radioSchedulerPriorityTable = {
   .background_rx = SL_802154_RADIO_PRIO_BACKGROUND_RX_VALUE,

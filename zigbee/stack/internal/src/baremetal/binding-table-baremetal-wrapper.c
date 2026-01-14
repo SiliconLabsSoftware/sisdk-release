@@ -3,7 +3,7 @@
  * @brief internal implementations for 'binding-table' as a thin-wrapper
  *******************************************************************************
  * # License
- * <b>Copyright 2024 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -26,6 +26,11 @@ bool sl_zigbee_binding_is_active(uint8_t index)
 sl_status_t sl_zigbee_clear_binding_table(void)
 {
   return sli_zigbee_stack_clear_binding_table();
+}
+
+void sl_zigbee_clear_binding_table_on_leave(bool clear)
+{
+  sli_zigbee_stack_clear_binding_table_on_leave(clear);
 }
 
 sl_status_t sl_zigbee_delete_binding(uint8_t index)

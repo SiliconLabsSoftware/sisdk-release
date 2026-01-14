@@ -259,7 +259,7 @@ typedef struct {
   /// Auto CS setup time in baud cycles.
   uint8_t auto_cs_setup;
 
-  /// Desired baud rate.
+  /// Desired Clock Divider.
   uint32_t clock_div;
 
   /// Number of data bits in frame.

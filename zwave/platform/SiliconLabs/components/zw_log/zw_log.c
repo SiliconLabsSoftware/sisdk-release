@@ -63,7 +63,7 @@ void zpal_log(
     msg_len += snprintf(p_buffer, ZW_LOG_BUFFER_SIZE, "%09lu ", xTaskGetTickCount());
   }
   if (ZW_LOG_DISPLAY_LEVEL) {
-    msg_len += sniprintf(p_buffer + msg_len, ZW_LOG_BUFFER_SIZE - msg_len, "[%c] ", level_char);
+    msg_len += snprintf(p_buffer + msg_len, ZW_LOG_BUFFER_SIZE - msg_len, "[%c] ", level_char);
   }
   if (ZW_LOG_DISPLAY_COMPONENT) {
     msg_len += snprintf(p_buffer + msg_len, ZW_LOG_BUFFER_SIZE - msg_len, "(%d) ", component);

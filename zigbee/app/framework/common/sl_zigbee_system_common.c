@@ -51,6 +51,8 @@ static const osMutexAttr_t app_framework_mutex_attr = {
   .name = "Zigbee App Framework Mutex",
   .attr_bits = osMutexRecursive | osMutexPrioInherit,
 };
+extern void sl_zigbee_af_acquire_lock();
+extern void sl_zigbee_af_release_lock();
 #endif // defined(SL_CATALOG_KERNEL_PRESENT)
 
 //------------------------------------------------------------------------------
@@ -274,23 +276,12 @@ sl_zigbee_af_event_t* sli_zigbee_af_event_get_event_ptr(sl_zigbee_af_event_t *ev
   return event;
 }
 
+#ifndef SL_CATALOG_KERNEL_PRESENT
 SL_CODE_CLASSIFY(SL_CODE_COMPONENT_ZIGBEE_STACK, SL_CODE_CLASS_TIME_CRITICAL)
 WEAK(void sl_zigbee_wakeup_common_task(void))
 {
 }
-
-WEAK(void sl_zigbee_rtos_wakeup_app_framework_task(void))
-{
-}
-
-WEAK(void sl_zigbee_af_acquire_lock(void))
-{
-}
-
-WEAK(void sl_zigbee_af_release_lock(void))
-{
-}
-
+#endif
 void sl_zigbee_wakeup_common_task(void);
 
 SL_CODE_CLASSIFY(SL_CODE_COMPONENT_ZIGBEE_STACK, SL_CODE_CLASS_TIME_CRITICAL)
@@ -310,59 +301,17 @@ void sl_zigbee_af_isr_event_init(sl_zigbee_af_event_t *event,
 
 void sli_zigbee_af_event_set_delay_ms(sl_zigbee_af_event_t *event, uint8_t endpoint, uint32_t delay)
 {
-#ifdef SL_CATALOG_KERNEL_PRESENT
-  if (event->actions.marker != &sli_zigbee_isr_event_marker) {
-    // ISR event doesn't need mutex protection
-    sl_zigbee_af_acquire_lock();
-  }
-#endif
   sli_zigbee_event_set_delay_ms(sli_zigbee_af_event_get_event_ptr(event, endpoint), delay);
-#ifdef SL_CATALOG_KERNEL_PRESENT
-  if (event->actions.marker != &sli_zigbee_isr_event_marker) {
-    sl_zigbee_af_release_lock();
-  }
-  // After every zigbee event activate we wake up the ZigBee task so that it can be
-  // scheduled by event queue.
-  sl_zigbee_rtos_wakeup_app_framework_task();
-#endif
 }
 
 void sli_zigbee_af_event_set_active(sl_zigbee_af_event_t *event, uint8_t endpoint)
 {
-#ifdef SL_CATALOG_KERNEL_PRESENT
-  if (event->actions.marker != &sli_zigbee_isr_event_marker) {
-    // ISR event doesn't need mutex protection
-    sl_zigbee_af_acquire_lock();
-  }
-#endif
   sli_zigbee_event_set_active(sli_zigbee_af_event_get_event_ptr(event, endpoint));
-#ifdef SL_CATALOG_KERNEL_PRESENT
-  if (event->actions.marker != &sli_zigbee_isr_event_marker) {
-    sl_zigbee_af_release_lock();
-  }
-  // After every zigbee event activate we wake up the ZigBee task so that it can be
-  // scheduled by event queue.
-  sl_zigbee_rtos_wakeup_app_framework_task();
-#endif
 }
 
 void sli_zigbee_af_event_set_inactive(sl_zigbee_af_event_t *event, uint8_t endpoint)
 {
-#ifdef SL_CATALOG_KERNEL_PRESENT
-  if (event->actions.marker != &sli_zigbee_isr_event_marker) {
-    // ISR event doesn't need mutex protection
-    sl_zigbee_af_acquire_lock();
-  }
-#endif
   sli_zigbee_event_set_inactive(sli_zigbee_af_event_get_event_ptr(event, endpoint));
-#ifdef SL_CATALOG_KERNEL_PRESENT
-  if (event->actions.marker != &sli_zigbee_isr_event_marker) {
-    sl_zigbee_af_release_lock();
-  }
-  // After every zigbee event activate we wake up the ZigBee task so that it can be
-  // scheduled by event queue.
-  sl_zigbee_rtos_wakeup_app_framework_task();
-#endif
 }
 
 bool sli_zigbee_af_event_is_scheduled(sl_zigbee_af_event_t *event, uint8_t endpoint)

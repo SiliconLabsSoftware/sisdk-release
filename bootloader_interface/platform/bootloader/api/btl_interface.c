@@ -35,10 +35,6 @@
 #include "sl_clock_manager_oscillator_config.h"
 #endif
 
-#if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
-#include "sl_rail_util_ieee802154_fast_channel_switching_config.h"
-#endif // SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT
-
 #if defined(__GNUC__)
 extern uint32_t __ResetReasonStart__;
 #elif defined(__ICCARM__)
@@ -620,7 +616,7 @@ void bootloader_ppusatdnSaveReconfigureState(Bootloader_PPUSATDnCLKENnState_t *c
   CMU->CLKEN1_SET = CMU_CLKEN1_CRYPTOACC;
 #endif
 
-#if !defined(SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_ENABLED) || (SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_ENABLED == 0)
+#ifndef SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT
   // Wait for any active transition of other busmasters to finish
   if (SMU->PPUSATD0 & SMU_PPUSATD0_LDMA) {
     while (LDMA_S->STATUS & LDMA_STATUS_ANYBUSY) ;

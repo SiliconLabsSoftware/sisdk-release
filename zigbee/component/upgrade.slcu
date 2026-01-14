@@ -17,7 +17,7 @@ upgrade:
       id: simplicity_sdk
       version: 4.1.1
     configuration:
-      - script: component/scripts/upgrade_zigbee_rtos_stack_size.lua
+      - script: zigbee/component/scripts/upgrade_zigbee_rtos_stack_size.lua
 
   - sdk:
       id: simplicity_sdk
@@ -68,7 +68,7 @@ upgrade:
         replacement: REMOVED_MACRO
       - name: EMBER_GP_SINK_TABLE_TOKEN_SIZE
         replacement: REMOVED_MACRO
-      - script: component/scripts/upgrade_gp_table_token_size.lua
+      - script: zigbee/component/scripts/upgrade_gp_table_token_size.lua
     component:
       - trigger: zigbee_end_device_bind
         description: >
@@ -99,9 +99,9 @@ upgrade:
         replacement: REMOVED_MACRO
       - name: SL_ZIGBEE_GP_SINK_TABLE_SIZE
         replacement: REMOVED_MACRO
-      - script: component/scripts/upgrade_gp_table_token_size.lua
-      - script: component/scripts/upgrade_remove_packet_buffer_count.lua
-      - script: component/scripts/zigbee_gsdk_to_sisdk_compatibility.lua
+      - script: zigbee/component/scripts/upgrade_gp_table_token_size.lua
+      - script: zigbee/component/scripts/upgrade_remove_packet_buffer_count.lua
+      - script: zigbee/component/scripts/zigbee_gsdk_to_sisdk_compatibility.lua
 
   - sdk:
       id: simplicity_sdk
@@ -109,10 +109,10 @@ upgrade:
     configuration:
       - name: SL_ZIGBEE_KEY_TABLE_SIZE
         replacement: REMOVED_MACRO
-      - script: component/scripts/upgrade_key_table_size.lua
+      - script: zigbee/component/scripts/upgrade_key_table_size.lua
       - name: NVM3_DEFAULT_CACHE_SIZE
         replacement: NVM3_DEFAULT_CACHE_SIZE
-      - script: component/scripts/upgrade_nvm3_default_cache_size.lua
+      - script: zigbee/component/scripts/upgrade_nvm3_default_cache_size.lua
     component:
       - trigger: zigbee_dmp_tuning
         description: >
@@ -138,7 +138,7 @@ upgrade:
           - zigbee_pro_stack_rail_mux
         add:
           - zigbee_pro_stack
-      - script: component/scripts/upgrade_zigbee_sl_system_compatibliity.lua
+      - script: zigbee/component/scripts/upgrade_zigbee_sl_system_compatibliity.lua
         description: >
           In sisdk-2025.6.0 the sl_system component was deprecated and support for baremetal applications has been removed.
           For baremetal applications sl_system_compatibility is now used for a seamless transition.
@@ -149,7 +149,7 @@ upgrade:
       id: simplicity_sdk
       version: 2025.6.2
     component:
-      - script: component/scripts/upgrade_zigbee_token_manager.lua
+      - script: zigbee/component/scripts/upgrade_zigbee_token_manager.lua
         description: >
           The Token Manager component has been added to the project. This is a legacy component that handles the management of tokens. No action is required, but the user is encouraged to read the corresponding zigbee 2025.6 release notes that describe the new Common Token Manager component.
 

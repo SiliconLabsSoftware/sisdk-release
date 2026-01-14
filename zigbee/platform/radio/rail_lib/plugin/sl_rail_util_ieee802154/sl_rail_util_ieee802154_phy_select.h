@@ -86,17 +86,37 @@
 #define SL_RAIL_UTIL_IEEE802154_RADIO_CONFIG_2P4_1MBPS_FEC \
   SL_RAIL_IEEE802154_PHY_2P4_GHZ_1_MBPS_FEC
 
+#ifdef  SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT
+#define SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_ENABLED    \
+  (SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_DEFAULT_ENABLED \
+   | SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_RUNTIME_ENABLED)
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
- * @addtogroup IEEE802154_Phy_Select IEEE802.15.4 Phy Select
+ * @addtogroup IEEE802154_Phy_Select IEEE 802.15.4 Phy Select
+ * @brief APIs for selecting the PHY configuration for IEEE 802.15.4.
+ *
+ * The Phy Select component provides an abstraction for selecting and
+ * configuring the radio configuration used by the IEEE 802.15.4 stack.
+ * It enables applications to choose among multiple supported PHY
+ * configurations (such as default, antenna diversity, coexistence, FEM,
+ * and high-speed PHYs) at build time or runtime, depending on the UC
+ * component settings.
+ *
+ * The component exposes APIs to query and set the active PHY, and a
+ * table of supported PHYs, each associated with a set of features and a
+ * configuration callback. Each component that contributes to this Phy
+ * selection logic (such as \ref sl_rail_util_ieee802154_fast_channel_switching)
+ * must implement the necessary APIs to interact with the PHY selection logic.
  * @{
  */
 
 /**
- * PHY select contribution for IEEE802.15.4 stack event handler
+ * PHY select contribution for IEEE 802.15.4 stack event handler
  *
  * @param[in] stack_event event to handle
  * @param[in] supplement optional event information
@@ -107,24 +127,19 @@ sl_rail_util_ieee802154_stack_status_t sl_rail_util_ieee802154_phy_select_on_eve
   uint32_t supplement);
 
 /**
- * Get the active IEEE802.15.4 2.4Ghz radio configuration.
+ * Get the active IEEE 802.15.4 2.4Ghz radio configuration.
  *
- * @return Active IEEE802.15.4 2.4Ghz radio configuration
+ * @return Active IEEE 802.15.4 2.4Ghz radio configuration
  */
 sl_rail_util_radio_config_t sl_rail_util_ieee802154_get_active_radio_config(void);
 
 /**
- * Configure IEEE802.15.4 2.4Ghz radio configuration.
+ * Configure IEEE 802.15.4 2.4Ghz radio configuration.
  *
  * @param[in] railHandle A RAIL instance handle.
  * @return Status code indicating success of the function call.
  */
-#ifdef  SL_CATALOG_SL_RAIL_UTIL_IEEE802154_PHY_SELECT_PRESENT
 sl_rail_status_t sl_rail_util_ieee802154_config_radio(sl_rail_handle_t railHandle);
-#else//!SL_CATALOG_SL_RAIL_UTIL_IEEE802154_PHY_SELECT_PRESENT
-RAIL_Status_t sl_rail_util_ieee802154_config_radio(RAIL_Handle_t railHandle);
-#endif//SL_CATALOG_SL_RAIL_UTIL_IEEE802154_PHY_SELECT_PRESENT
-
 /**
  * @}
  * end of IEEE802154_PHY_SELECT_API

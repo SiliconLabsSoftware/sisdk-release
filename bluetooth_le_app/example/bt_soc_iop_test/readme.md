@@ -4,7 +4,7 @@ Interoperability (IOP) is one of the key value propositions of Bluetooth Low Ene
 
 This readme describes the Silicon Labs IOP test framework, composed of hardware kits, embedded software, and a mobile app. It also explains the requirements for building the IOP test setup, running the test, and collecting data for further analysis.
 
-> Note: this example expects a specific Gecko Bootloader to be present on your device. For details see the Troubleshooting section.
+> Note: this example expects a specific Gecko Bootloader to be present on your device. For details see the [Troubleshooting](#troubleshooting) section.
 
 **Because some optional steps need to be taken before the IOP test starts, read this document before running the IOP test.**
 
@@ -124,13 +124,11 @@ While UART logs have multiple COMPort emulators such as tera term, you can also 
 
 ### Bootloader Issues
 
-Note that Example Projects do not include a bootloader. However this application expects a bootloader to be present on the device in order to support device firmware upgrade (DFU). To get your application to work, you should either flash
-- *Bluetooth Apploader OTA DFU* for Series 2 devices,
-- or *Internal Storage* bootloader for Series 3 devices.
+This example solution includes 2 projects: the application example and a compatible bootloader.
+When flashing this solution to the device, make sure to select the combined binary from the `artifact` folder.
+This combined binary is named after the example solution, e.g. `bt_soc_iop_test_btl.s37`.
 
-For Series 2 devices, you can also run a precompiled Demo on your device from the Launcher view before flashing your application. Precompiled demos flash both bootloader and application images to the device. Flashing your own application image after the demo will overwrite the demo application but leave the bootloader in place. Since this is an SoC project, the *Bluetooth - SoC Thermometer* demo is recommended.
-
-For more information on bootloaders, see [UG103.6: Bootloader Fundamentals](https://www.silabs.com/documents/public/user-guides/ug103-06-fundamentals-bootloading.pdf) and [UG489: Silicon Labs Gecko Bootloader User's Guide for GSDK 4.0 and Higher](https://cn.silabs.com/documents/public/user-guides/ug489-gecko-bootloader-user-guide-gsdk-4.pdf).
+Flashing only the application binary (e.g., `bt_soc_iop_test.s37`) will work only if a compatible bootloader is already present on the device.
 
 
 ### Programming the Radio Board

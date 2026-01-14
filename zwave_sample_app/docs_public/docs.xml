@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <contentItems xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.silabs.com/ss/ContentItem.ecore">
-  <contentItemData name="" label="Setting Tx Power in your final Z-Wave product" itemURI="asset://com.silabs.sdk.stack.sisdk_2025.6.2/protocol/z-wave/docs_public/INS14664.pdf">
+  <contentItemData name="" label="Setting Tx Power in your final Z-Wave product" itemURI="file:INS14664.xlsm">
     <description>This MS Excel file describes how to measure the Tx power of a Z-Wave frame and use this to calibrate the Tx Power of your final Z-Wave product.</description>
     <property key="core.category" value="Application Notes"/>
     <property key="core.priority" value="58"/>
@@ -12,61 +12,43 @@
     <property key="core.priority" value="57"/>
     <property key="core.partCompatibility" value=".*efr32zg23.* .*zgm230.*"/>
   </contentItemData>
-  <contentItemData name="" label="Manufacture Z-Wave product in volume" itemURI="https://www.silabs.com/documents/public/reference-manuals/INS14285.pdf">
+  <contentItemData name="" label="Manufacture Z-Wave product in volume" itemURI="https://docs.silabs.com/z-wave/latest/manufacture-z-wave-product-in-volume/">
     <description>Describes the manufacturing test flow for Z-Wave 800 SoC-based products.</description>
     <property key="core.category" value="Application Notes"/>
     <property key="core.priority" value="61"/>
     <property key="core.partCompatibility" value=".*efr32zg23.* .*zgm230.* .*efr32zg28.*"/>
   </contentItemData>
-  <contentItemData name="" label="Z-Wave 800 Series Integration Guide" itemURI="https://www.silabs.com/documents/public/user-guides/ug517-zwave-800-integration-guide.pdf">
+  <contentItemData name="" label="Z-Wave 800 Series Integration Guide" itemURI="https://docs.silabs.com/z-wave/latest/z-wave-800-series-integration-guide/">
     <description>Z-Wave 800 Series Integration Guide</description>
     <property key="core.category" value="Application Notes"/>
     <property key="core.priority" value="54"/>
     <property key="core.partCompatibility" value=".*efr32zg23.* .*zgm230.*"/>
   </contentItemData>
-  <contentItemData name="" label="Bring-up/test HW development" itemURI="https://www.silabs.com/documents/public/user-guides/ug523-bring-up_test-hw-development.pdf">
+  <contentItemData name="" label="Bring-up/test HW development" itemURI="https://docs.silabs.com/z-wave/latest/z-wave-bring-up-test-hardware-development">
     <description>Describes how to use the RailTest software to perform RF bring-up tests and validate a design based on the Z-Wave devices.</description>
     <property key="core.category" value="Application Notes"/>
     <property key="core.priority" value="55"/>
     <property key="core.partCompatibility" value=".*efr32zg23.* .*zgm230.*"/>
   </contentItemData>
-  <contentItemData name="" label="EFR32ZG14 Zen Gecko Z-Wave 700 USB Stick Bridge Module UZB-7 Data Sheet" itemURI="asset://com.silabs.sdk.stack.sisdk_2025.6.2/protocol/z-wave/docs_public/DSH14483.pdf">
-    <description>EFR32ZG14 Zen Gecko Z-Wave 700 USB Stick Bridge Module UZB-7 Data Sheet</description>
-    <property key="core.category" value="Datasheet"/>
-    <property key="core.priority" value="68"/>
-    <property key="core.partCompatibility" value=".*efr32zg14p.*"/>
-  </contentItemData>
-  <contentItemData name="" label="Mandatory Crystal Adjustment for EFR32ZG14/EFR32ZG23 Based Products" itemURI="https://www.silabs.com/documents/public/user-guides/ug522-mandatory-xtal-adjustments-for-zwave-products.pdf">
+  <contentItemData name="" label="Mandatory Crystal Adjustment for EFR32ZG14/EFR32ZG23 Based Products" itemURI="https://docs.silabs.com/z-wave/latest/mandatory-crystal-adjustments-for-z-wave-products/">
     <description>Instruction for mandatory crystal adjustment for EFR32ZG14/EFR32ZG23 based products.</description>
     <property key="core.category" value="Production"/>
     <property key="core.priority" value="59"/>
     <property key="core.partCompatibility" value=".*efr32zg23.* .*zgm230.* .*efr32zg28.*"/>
   </contentItemData>
-  <contentItemData name="" label="Zniffer v4.66 Release Note" itemURI="asset://com.silabs.sdk.stack.sisdk_2025.6.2/protocol/z-wave/docs_public/SRN13233.pdf">
+  <contentItemData name="" label="Zniffer v4.69 Release Note" itemURI="https://www.silabs.com/documents/public/release-notes/SRN13233.pdf">
     <description>Discusses the latest changes to the PC-based Zniffer tool and lists new features.</description>
     <property key="core.category" value="Release Notes"/>
     <property key="core.priority" value="41"/>
     <property key="core.partCompatibility" value=".*efr32zg23.* .*zgm230.* .*efr32zg28.*"/>
   </contentItemData>
-  <contentItemData name="" label="PC based Controller v5.53 Release Note" itemURI="asset://com.silabs.sdk.stack.sisdk_2025.6.2/protocol/z-wave/docs_public/SRN13757.pdf">
+  <contentItemData name="" label="PC based Controller v5.55 Release Note" itemURI="https://www.silabs.com/documents/public/release-notes/SRN13757.pdf">
     <description>Discusses the latest changes to the PC-based Controller code and lists new features.</description>
     <property key="core.category" value="Release Notes"/>
     <property key="core.priority" value="40"/>
     <property key="core.partCompatibility" value=".*efr32zg23.* .*zgm230.*"/>
   </contentItemData>
-  <contentItemData name="" label="Development Material for UZB-7" itemURI="asset://com.silabs.sdk.stack.sisdk_2025.6.2/protocol/z-wave/docs_public/PHD14501.zip">
-    <description>Development Material for UZB-7.</description>
-    <property key="core.category" value="Schematic and Layout Files"/>
-    <property key="core.priority" value="90"/>
-    <property key="core.partCompatibility" value=".*efr32zg23.* .*zgm230.*"/>
-  </contentItemData>
-  <contentItemData name="" label="PCB documentation for UZB-7 PCB" itemURI="asset://com.silabs.sdk.stack.sisdk_2025.6.2/protocol/z-wave/docs_public/UZB-7P1.rar">
-    <description>PCB documentation for UZB-7 PCB.</description>
-    <property key="core.category" value="Schematic and Layout Files"/>
-    <property key="core.priority" value="91"/>
-    <property key="core.partCompatibility" value=".*efr32zg23.* .*zgm230.*"/>
-  </contentItemData>
-  <contentItemData name="" label="Z-Wave Speciications" itemURI="https://z-wavealliance.org/development-resources-overview/specification-for-developers">
+  <contentItemData name="" label="Z-Wave Specifications" itemURI="https://z-wavealliance.org/development-resources-overview/specification-for-developers">
     <description>This package contains all the neccessary Z-Wave related sources, like Device-type specification, Role-type specification, Command Class description, Host API specification.</description>
     <property key="core.category" value="Software API Documentation"/>
     <property key="core.priority" value="21"/>
@@ -78,7 +60,7 @@
     <property key="core.priority" value="1"/>
     <property key="core.partCompatibility" value=".*efr32zg23.* .*zgm230.* .*efr32zg28.*"/>
   </contentItemData>
-  <contentItemData name="" label="Prepare for Z-Wave Certification Tests" itemURI="asset://com.silabs.sdk.stack.sisdk_2025.6.2/protocol/z-wave/docs_public/INS14284.pdf">
+  <contentItemData name="" label="Prepare for Z-Wave Certification Tests" itemURI="https://www.silabs.com/documents/public/application-notes/INS14284.pdf">
     <description>Describes the Z-Wave Certification process for the Z-Wave 800 products and serves as a guide on where to find additional information.</description>
     <property key="core.category" value="User's Guides"/>
     <property key="core.priority" value="52"/>
@@ -90,7 +72,7 @@
     <property key="core.priority" value="20"/>
     <property key="core.partCompatibility" value=".*efr32zg23.* .*zgm230.* .*efr32zg28.*"/>
   </contentItemData>
-  <contentItemData name="" label="Z-Wave 800 Thunderboard Quick Start Guide" itemURI="https://www.silabs.com/documents/public/quick-start-guides/qsg184_z-wave_800_thunderboard_quick_start_guide.pdf">
+  <contentItemData name="" label="Z-Wave 800 Thunderboard Quick Start Guide" itemURI="https://docs.silabs.com/z-wave/latest/z-wave-800-thunderboard-qsg/">
     <description>Z-Wave 800 Thunderboard Quick Start Guide</description>
     <property key="core.category" value="User's Guides"/>
     <property key="core.priority" value="5"/>
@@ -114,7 +96,7 @@
     <property key="core.priority" value="32"/>
     <property key="core.partCompatibility" value=".*efr32zg23.* .*zgm230.* .*efr32zg28.*"/>
   </contentItemData>
-  <contentItemData name="" label="Serial API Host Application Programming Guide" itemURI="https://www.silabs.com/documents/public/user-guides/INS12350-Serial-API-Host-Appl.-Prg.-Guide.pdf">
+  <contentItemData name="" label="Serial API Host Application Programming Guide" itemURI="https://docs.silabs.com/z-wave/latest/z-wave-serial-api-host-app-programming-guide/">
     <description>Guideline for developing serial API based host applications.</description>
     <property key="core.category" value="User's Guides"/>
     <property key="core.priority" value="51"/>
@@ -126,19 +108,19 @@
     <property key="core.priority" value="31"/>
     <property key="core.partCompatibility" value=".*efr32zg23.* .*zgm230.* .*efr32zg28.*"/>
   </contentItemData>
-  <contentItemData name="" label="Z-Wave Plus V2 Application Framework GSDK" itemURI="https://www.silabs.com/documents/public/user-guides/INS14259.pdf">
+  <contentItemData name="" label="Z-Wave Plus V2 Application Framework GSDK" itemURI="https://docs.silabs.com/z-wave/latest/z-wave-plus-v2-app-framework/">
     <description>Describes the Z-Wave Plus V2 Application Framework (ZAF) versions distributed on Z-Wave SDKs. The purpose of the ZAF is to facilitate the implementation of robust Z-Wave Plus V2 compliant products.</description>
     <property key="core.category" value="User's Guides"/>
     <property key="core.priority" value="4"/>
     <property key="core.partCompatibility" value=".*efr32zg23.* .*zgm230.* .*efr32zg28.*"/>
   </contentItemData>
-  <contentItemData name="" label="How to Use Certified Apps in Z-Wave" itemURI="https://www.silabs.com/documents/public/user-guides/INS14278.pdf">
+  <contentItemData name="" label="How to Use Certified Apps in Z-Wave" itemURI="https://docs.silabs.com/z-wave/latest/how-to-use-certified-apps-in-z-wave/">
     <description>Describes how to use the Z-Wave certified applications, which come as part of the Z-Wave SDK.</description>
     <property key="core.category" value="User's Guides"/>
     <property key="core.priority" value="2"/>
     <property key="core.partCompatibility" value=".*efr32zg23.* .*zgm230.* .*efr32zg28.*"/>
   </contentItemData>
-  <contentItemData name="" label="Z-Wave Getting Started for End Devices" itemURI="https://www.silabs.com/documents/public/user-guides/INS14280.pdf">
+  <contentItemData name="" label="Z-Wave Getting Started for End Devices" itemURI="https://docs.silabs.com/z-wave/latest/z-wave-getting-started-for-end-devices/">
     <description>Describes how to get started with Z-Wave development for end devices using Simplicity Studio.</description>
     <property key="core.category" value="User's Guides"/>
     <property key="core.priority" value="1"/>
@@ -150,13 +132,7 @@
     <property key="core.priority" value="50"/>
     <property key="core.partCompatibility" value=".*efr32zg23.* .*zgm230.*"/>
   </contentItemData>
-  <contentItemData name="" label="How to Use Pre-Certified Apps in Z-Wave" itemURI="https://www.silabs.com/documents/public/user-guides/INS14816.pdf">
-    <description>Describes how to use the Z-Wave pre-certified applications, which come as part of the Z-Wave SDK.</description>
-    <property key="core.category" value="User's Guides"/>
-    <property key="core.priority" value="3"/>
-    <property key="core.partCompatibility" value=".*efr32zg23.* .*zgm230.* .*efr32zg28.*"/>
-  </contentItemData>
-  <contentItemData name="" label="RAILtest User's Guide" itemURI="https://www.silabs.com/documents/public/user-guides/ug409-railtest-users-guide.pdf">
+  <contentItemData name="" label="RAILtest User's Guide" itemURI="https://docs.silabs.com/z-wave/latest/railtest-users-guide/">
     <description>Describes the functionality available in the RAIL Test application.</description>
     <property key="core.category" value="User's Guides"/>
     <property key="core.priority" value="60"/>

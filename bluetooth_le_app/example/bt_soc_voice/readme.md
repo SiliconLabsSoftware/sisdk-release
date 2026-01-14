@@ -8,7 +8,7 @@ Boards which have an on-board microphone and capable of transmitting voice data:
   * xG27 Dev Kit
   * Thunderboard EFR32BG22
 
-> Note: this example expects a specific Gecko Bootloader to be present on your device. For details see the Troubleshooting section.
+> Note: This example does not include Device Firmware Update (DFU) functionality by default. For details see the [Device Firmware Update](#device-firmware-update) section.
 
 ## Getting started
 
@@ -47,32 +47,27 @@ The handling of the microphone, the encoding and filtering can be found in their
 * filter.c
 * voice.c
 
+## Device Firmware Update
+
+This example project does not include Device Firmware Update (DFU) functionality by default, but it can be added easily.
+SoC applications can use one of Silicon Labs' Over-the-Air (OTA) DFU implementations. The table below summarizes the options:
+
+|                           | In-place OTA DFU                 | Application OTA DFU                 |
+|---------------------------|----------------------------------|-------------------------------------|
+| **Component to add**      | In-place OTA DFU                 | Application OTA DFU                 |
+| **Compatible bootloader** | Bluetooth Apploader OTA DFU      | Bootloader - SoC Internal Storage (Series 2) <br> Bootloader - SoC Storage (Series 3) |
+| **Reference solution**    | Bluetooth - SoC In-Place OTA DFU | Bluetooth - SoC Application OTA DFU |
+| **Supported devices**     | Supports Series 2 devices only and requires a smaller flash size | Supports Series 2 and Series 3 devices with enough flash to store firmware images in 2 instances |
+
+To add DFU to an existing project:
+- Add the appropriate DFU component to your project using Simplicity Studio’s Software Component browser.
+- Add a post-build step to generate the GBL (Gecko Bootloader) file using Simplicity Studio’s Post Build Editor.
+- Rebuild the project.
+- Flash a compatible bootloader to the device.
+
+For more information on bootloaders, see [UG103.6: Bootloader Fundamentals](https://www.silabs.com/documents/public/user-guides/ug103-06-fundamentals-bootloading.pdf) and [UG489: Silicon Labs Gecko Bootloader User's Guide for GSDK 4.0 and Higher](https://www.silabs.com/documents/public/user-guides/ug489-gecko-bootloader-user-guide-gsdk-4.pdf).
+
 ## Troubleshooting
-
-### Bootloader Issues
-
-Note that Example Projects do not include a bootloader. However, Bluetooth-based Example Projects expect a bootloader to be present on the device in order to support device firmware upgrade (DFU). To get your application to work, you should either 
-- flash the proper bootloader or
-- remove the DFU functionality from the project.
-
-**If you do not wish to add a bootloader**, then remove the DFU functionality by uninstalling the *Bootloader Application Interface* software component -- and all of its dependants. This will automatically put your application code to the start address of the flash, which means that a bootloader is no longer needed, but also that you will not be able to upgrade your firmware.
-
-**If you want to add a bootloader**, then either 
-- Create a bootloader project, build it and flash it to your device. Note that different projects expect different bootloaders:
-  - for NCP and RCP projects create a *BGAPI UART DFU* type bootloader
-  - for SoC projects on Series 2 devices create a *Bluetooth Apploader OTA DFU* type bootloader
-
-- or run a precompiled Demo on your device from the Launcher view before flashing your application. Precompiled demos flash both bootloader and application images to the device. Flashing your own application image after the demo will overwrite the demo application but leave the bootloader in place.
-  - For NCP and RCP projects, flash the *Bluetooth - NCP* demo.
-  - For SoC projects, flash the *Bluetooth - SoC Thermometer* demo.
-
-**Important Notes:**
-- when you flash your application image to the device, use the *.hex* or *.s37* output file. Flashing *.bin* files may overwrite (erase) the bootloader.
-
-- On Series 2 devices SoC example projects require a *Bluetooth Apploader OTA DFU* type bootloader by default. This bootloader needs a lot of flash space and does not fit into the regular bootloader area, hence the application start address must be shifted. This shift is automatically done by the *Apploader Support for Applications* software component, which is installed by default. If you want to use any other bootloader type, you should remove this software component in order to shift the application start address back to the end of the regular bootloader area. Note, that in this case you cannot do OTA DFU with Apploader, but you can still implement application-level OTA DFU by installing the *Application OTA DFU* software component instead of *In-place OTA DFU*.
-
-For more information on bootloaders, see [UG103.6: Bootloader Fundamentals](https://www.silabs.com/documents/public/user-guides/ug103-06-fundamentals-bootloading.pdf) and [UG489: Silicon Labs Gecko Bootloader User's Guide for GSDK 4.0 and Higher](https://cn.silabs.com/documents/public/user-guides/ug489-gecko-bootloader-user-guide-gsdk-4.pdf).
-
 
 ### Programming the Radio Board
 

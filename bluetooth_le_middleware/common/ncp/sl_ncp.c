@@ -514,6 +514,10 @@ void sl_bt_ncp_transport_on_transmit(sl_status_t status)
     #endif // SL_CATALOG_WAKE_LOCK_PRESENT
     busy = false;
     (void)app_rta_proceed(ctx);
+    // Signal that event or command response has been sent. In case the event
+    // queue was full and the next event is waiting, it can be re-checked if it
+    // can be processed now.
+    sli_ncp_sync_signal();
     // Release guard
     (void)app_rta_release(ctx);
   } else {
@@ -671,14 +675,9 @@ static void ncp_step(void)
     }
     // Clear event buffer
     evt_dequeue(msg_len);
-    (void)app_rta_release(ctx);
-
-    // Signal that event was processed. In case the event queue was full and the
-    // next event is waiting, it can be re-checked if it can be processed now.
-    sli_ncp_sync_signal();
-  } else {
-    (void)app_rta_release(ctx);
   }
+  // Release guard
+  (void)app_rta_release(ctx);
 }
 
 // -----------------------------------------------------------------------------

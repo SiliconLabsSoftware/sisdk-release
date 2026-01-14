@@ -983,11 +983,6 @@ void sl_zigbee_af_set_device_enabled(uint8_t endpoint, bool enabled);
 void sl_zigbee_wakeup_common_task(void);
 
 /**
- * @brief Set the App Framework task to ready when running on an OS.
- */
-void sl_zigbee_rtos_wakeup_app_framework_task(void);
-
-/**
  * @brief Enable/disable endpoints.
  */
 bool sl_zigbee_af_endpoint_enable_disable(uint8_t endpoint, bool enable);

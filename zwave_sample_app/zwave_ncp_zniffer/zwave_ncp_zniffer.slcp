@@ -137,3 +137,8 @@ filter:
     value: ["NCP"]
   - name: "Project Difficulty"
     value: ["Beginner"]
+
+readme:
+   - path: README.md
+ui_hints:
+   highlight: README.md

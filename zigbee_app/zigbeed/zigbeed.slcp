@@ -110,3 +110,4 @@ filter:
     value: [Beginner]
 tag:
   - hwfilter:device:device_family_host
+  - toolchain:gcc

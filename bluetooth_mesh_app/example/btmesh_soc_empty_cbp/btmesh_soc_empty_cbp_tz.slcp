@@ -122,6 +122,9 @@ template_contribution:
   - name: memory_ram_size
     value: 0x8000
 
+post_build:
+  profile: tz_nonsecure_application
+
 tag:
   - companion:bootloader-apploader-secure
   - hardware:device:flash:512
@@ -140,6 +143,3 @@ ui_hints:
       focus: false
     - path: readme.md
       focus: true
-
-post_build:
-  path: "../../postbuild_profile/btmesh_tz_non_secure_application.slpb"

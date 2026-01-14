@@ -161,7 +161,7 @@ include:
 tag:
   - prebuilt_demo
   - hardware:device:ram:32
-  - hardware:!shared:button:led
+  - hwfilter:!board:hardware:shares:button:led
   - hwfilter:board:simple_button:btn1
   - hwfilter:device:device_supports_zigbee
   - hwfilter:board:simple_led:led0

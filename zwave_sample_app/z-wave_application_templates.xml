@@ -72,7 +72,7 @@
     <properties key="keywords" value="universal\ configurator"/>
     <properties key="solutionReferenceId" value="zwave_sample_app.workspaces.zwave_ncp_zniffer_otw.slcw"/>
     <properties key="projectFilePaths" value="workspaces/zwave_ncp_zniffer_otw.slcw"/>
-    <properties key="readmeFiles" value=""/>
+    <properties key="readmeFiles" value="zwave_ncp_zniffer/README.md"/>
     <properties key="boardCompatibility" value="brd2603a brd2705a brd4204a brd4204b brd4204c brd4204d brd4205a brd4205b brd4210a brd4400b brd4400c brd4401b brd4401c com.silabs.board.none"/>
     <properties key="partCompatibility" value=".*efr32zg23a010f512gm40.* .*efr32zg23a010f512gm48.* .*efr32zg23a020f512gm40.* .*efr32zg23a020f512gm48.* .*efr32zg23b010f512im40.* .*efr32zg23b010f512im48.* .*efr32zg23b011f512im40.* .*efr32zg23b020f512im40.* .*efr32zg23b020f512im48.* .*efr32zg23b021f512im40.* .*efr32zg28a110f1024gm48.* .*efr32zg28a110f1024gm68.* .*efr32zg28a112f1024gm48.* .*efr32zg28a112f1024gm68.* .*efr32zg28a120f1024gm48.* .*efr32zg28a120f1024gm68.* .*efr32zg28a122f1024gm48.* .*efr32zg28a122f1024gm68.* .*efr32zg28b310f1024im48.* .*efr32zg28b310f1024im68.* .*efr32zg28b312f1024im48.* .*efr32zg28b312f1024im68.* .*efr32zg28b320f1024im48.* .*efr32zg28b320f1024im68.* .*efr32zg28b322f1024im48.* .*efr32zg28b322f1024im68.* .*zgm230sa27hgn.* .*zgm230sa27hnn.* .*zgm230sb27hgn.* .*zgm230sb27hnn.*"/>
     <properties key="ideCompatibility" value="generic-template makefile-ide simplicity-ide visual-studio-code"/>
@@ -240,7 +240,7 @@ The Serial API End Device allows the user to create a product with a host applic
     <properties key="keywords" value="universal\ configurator"/>
     <properties key="solutionReferenceId" value="zwave_sample_app.zwave_ncp_zniffer.zwave_ncp_zniffer.slcp"/>
     <properties key="projectFilePaths" value="zwave_ncp_zniffer/zwave_ncp_zniffer.slcp"/>
-    <properties key="readmeFiles" value=""/>
+    <properties key="readmeFiles" value="zwave_ncp_zniffer/README.md"/>
     <properties key="boardCompatibility" value="brd2603a brd2705a brd4204a brd4204b brd4204c brd4204d brd4205a brd4205b brd4210a brd4400b brd4400c brd4401b brd4401c com.silabs.board.none"/>
     <properties key="partCompatibility" value=".*efr32zg23a010f512gm40.* .*efr32zg23a010f512gm48.* .*efr32zg23a020f512gm40.* .*efr32zg23a020f512gm48.* .*efr32zg23b010f512im40.* .*efr32zg23b010f512im48.* .*efr32zg23b011f512im40.* .*efr32zg23b020f512im40.* .*efr32zg23b020f512im48.* .*efr32zg23b021f512im40.* .*efr32zg28a110f1024gm48.* .*efr32zg28a110f1024gm68.* .*efr32zg28a112f1024gm48.* .*efr32zg28a112f1024gm68.* .*efr32zg28a120f1024gm48.* .*efr32zg28a120f1024gm68.* .*efr32zg28a122f1024gm48.* .*efr32zg28a122f1024gm68.* .*efr32zg28b310f1024im48.* .*efr32zg28b310f1024im68.* .*efr32zg28b312f1024im48.* .*efr32zg28b312f1024im68.* .*efr32zg28b320f1024im48.* .*efr32zg28b320f1024im68.* .*efr32zg28b322f1024im48.* .*efr32zg28b322f1024im68.* .*zgm230sa27hgn.* .*zgm230sa27hnn.* .*zgm230sb27hgn.* .*zgm230sb27hnn.*"/>
     <properties key="ideCompatibility" value="generic-template makefile-ide simplicity-ide visual-studio-code"/>

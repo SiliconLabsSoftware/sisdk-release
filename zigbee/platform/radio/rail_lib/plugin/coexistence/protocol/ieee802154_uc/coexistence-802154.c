@@ -564,7 +564,8 @@ static void stackEventTickInit(void)
                                       SL_RAIL_UTIL_COEX_PWM_REQ_PERIOD);
 #endif
 #if SL_RAIL_UTIL_COEX_IEEE802154_SIGNAL_IDENTIFIER_ENABLED
-    sl_rail_ieee802154_config_signal_identifier(emPhyRailHandle, SL_RAIL_IEEE802154_SIGNAL_IDENTIFIER_MODE_154);
+    sl_rail_ieee802154_config_signal_identifier(emPhyRailHandle,
+                                                (sl_rail_ieee802154_signal_identifier_mode_t) SL_RAIL_UTIL_COEX_IEEE802154_SIGNAL_IDENTIFIER_MODE);
 #endif
     stackEventTickInitialized = true;
   }

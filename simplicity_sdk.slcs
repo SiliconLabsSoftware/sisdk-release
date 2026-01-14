@@ -8,11 +8,11 @@ component_path:
 - path: bgapi_protocol/component
 - path: bluetooth_mesh/component
 - path: bluetooth_apploader/component
+- path: bluetooth_le_middleware/component
 - path: bluetooth_common/component
 - path: bluetooth_mesh_srtest/component
-- path: bluetooth_le_middleware/component
-- path: bluetooth_le_host/component
 - path: bluetooth_mesh_middleware/component
+- path: bluetooth_le_host/component
 - path: bluetooth_le_controller/component
 - path: board_drivers/hardware/driver/component
 - path: boards_everest_internal/hardware/board/component
@@ -27,10 +27,10 @@ component_path:
 - path: bootloader/platform/common/component
 - path: bootloader/platform/bootloader/component
 - path: bootloader/platform/bootloader/series3/component
+- path: bootloader_interface/platform/bootloader/component
 - path: bootloader_internal/platform/common/component
 - path: bootloader_internal/platform/bootloader/component
 - path: bootloader_internal/platform/bootloader/series3/component
-- path: bootloader_interface/platform/bootloader/component
 - path: cmsis_common_internal/platform/common/component
 - path: cmsis_dsp/component
 - path: cmsis_common/platform/common/component
@@ -41,8 +41,8 @@ component_path:
 - path: common_15_4/util/silicon_labs/silabs_core/component
 - path: common_15_4/platform/radio/mac/component
 - path: compute/component
-- path: connect_sdk/component
 - path: connect_stack/component
+- path: connect_sdk/component
 - path: coremark/component
 - path: cpc/component
 - path: cpc_gpio/component
@@ -69,10 +69,11 @@ component_path:
 - path: multiprotocol/protocol/zigbee/component
 - path: multiprotocol/platform/radio/mac/component
 - path: multiprotocol/protocol/openthread/component
-- path: openthread_stack/component
 - path: openthread_internal/component
 - path: openthread_internal/component/internal
 - path: openthread/component
+- path: openthread_stack/component
+- path: platform_common_apps/app/common/component
 - path: platform_core/util/plugin/component
 - path: platform_core/hardware/driver/component
 - path: platform_core/platform/peripheral/component
@@ -82,6 +83,10 @@ component_path:
 - path: platform_core/util/silicon_labs/silabs_core/component
 - path: platform_core/platform/service/component
 - path: platform_core/platform/emdrv/component
+- path: platform_riscv_internal/platform/rvlib/component
+- path: platform_riscv_internal/platform/service/component
+- path: platform_riscv_internal/platform/common/component
+- path: platform_common_internal/platform/common/component
 - path: platform_core_internal/platform/common/component
 - path: platform_core_internal/platform/service/component
 - path: platform_core_internal/platform/emlib/component
@@ -89,21 +94,16 @@ component_path:
 - path: platform_core_internal/util/silicon_labs/silabs_core/component
 - path: platform_core_internal/platform/emdrv/component
 - path: platform_core_internal/platform/driver/component
-- path: platform_riscv_internal/platform/rvlib/component
-- path: platform_riscv_internal/platform/service/component
-- path: platform_riscv_internal/platform/common/component
-- path: platform_common_internal/platform/common/component
 - path: platform_core_everest_internal/platform/peripheral/component
 - path: platform_common/platform/common/component
-- path: platform_common_apps/app/common/component
 - path: printf/component
 - path: proprietary_default_radio_confs/.
 - path: protocol_user_sequencer_internal/component/protocol_user_sequencer_internal
-- path: rail_library/component/rail_library
-- path: rail_library_alpha_chips/component/rail_library_alpha_chips
-- path: rail_sdk/component
 - path: rail_library_internal_chips/component/rail_library_internal_chips
+- path: rail_library_alpha_chips/component/rail_library_alpha_chips
+- path: rail_library/component/rail_library
 - path: rail_internal/component/rail_internal
+- path: rail_sdk/component
 - path: realtime_locationing/component
 - path: rv2_framework_internal/component
 - path: security_mbedtls_source/component
@@ -123,10 +123,6 @@ component_path:
 - path: wisun/component
 - path: wisun_config_generator/component
 - path: wisun_sdk/component
-- path: zigbee_wwah/app/framework/component
-- path: zigbee_smart_energy/component
-- path: zigbee_sleepy_to_sleepy/component
-- path: zigbee_sleepy_to_sleepy/app/framework/component
 - path: zigbee/platform/radio/mac/component
 - path: zigbee/platform/radio/rail_lib/plugin/component
 - path: zigbee/component
@@ -134,6 +130,10 @@ component_path:
 - path: zigbee/util/silicon_labs/silabs_core/component
 - path: zigbee/app/framework/component
 - path: zigbee/platform/service/component
+- path: zigbee_smart_energy/component
+- path: zigbee_sleepy_to_sleepy/component
+- path: zigbee_sleepy_to_sleepy/app/framework/component
+- path: zigbee_wwah/app/framework/component
 - path: zigbee_internal/platform/radio/mac/component
 - path: zigbee_internal/platform/radio/rail_lib/plugin/component
 - path: zigbee_internal/component
@@ -149,14 +149,14 @@ toolchain_mapping: toolchains.slct
 documentation:
 - docset: machine-learning
   version: 2.2.0
-- docset: bluetooth_le_siwx91x
-  version: 4.0.0
 - docset: btmesh
+  version: 10.0.0
+- docset: btmesh-service-api
   version: 10.0.0
 - docset: bluetooth
   version: 11.0.0
-- docset: btmesh-service-api
-  version: 10.0.0
+- docset: bluetooth_le_siwx91x
+  version: 4.0.0
 - docset: mcu-bootloader
   version: 3.1.0
 - docset: connect-sdk
@@ -172,12 +172,12 @@ documentation:
 - docset: rtl-lib
   version: 11.0.0
 - docset: sidewalk
-  version: 2.7.0
+  version: 2.8.0
 - docset: protocol-usb
   version: 1.6.0
-- docset: wifi
-  version: 4.0.0
 - docset: wifi_sqa_internal
+  version: 4.0.0
+- docset: wifi
   version: 4.0.0
 - docset: wisun
   version: 2.10.0
@@ -185,9 +185,12 @@ documentation:
   version: 9.0.0
 upgrade_manifest:
 - path: bluetooth_le_middleware/upgrade.slcu
+- path: connect_stack/component/upgrade.slcu
 - path: openthread/component/upgrade.slcu
-- path: platform_core/platform/service/component/upgrade.slcu
 - path: platform_common_apps/app/common/upgrade.slcu
+- path: platform_core/platform/service/component/upgrade.slcu
+- path: platform_core/platform/upgrade.slcu
+- path: platform_core/hardware/upgrade.slcu
 - path: proprietary_default_radio_confs/./upgrade.slcu
 - path: rail_sdk/upgrade.slcu
 - path: security_mbedtls/platform/security/component/upgrade.slcu

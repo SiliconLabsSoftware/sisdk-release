@@ -6,7 +6,7 @@ label=Platform Sample App Package
 
 description=Platform Sample App Package
 
-version=1.0.0-rc.1
+version=1.0.0-rc.2
 
 prop.file.templatesFile=platform_production_templates.xml
     

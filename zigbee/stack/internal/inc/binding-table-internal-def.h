@@ -3,7 +3,7 @@
  * @brief internal names for 'binding-table' declarations
  *******************************************************************************
  * # License
- * <b>Copyright 2024 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -25,6 +25,8 @@
 bool sli_zigbee_stack_binding_is_active(uint8_t index);
 
 sl_status_t sli_zigbee_stack_clear_binding_table(void);
+
+void sli_zigbee_stack_clear_binding_table_on_leave(bool clear);
 
 sl_status_t sli_zigbee_stack_delete_binding(uint8_t index);
 

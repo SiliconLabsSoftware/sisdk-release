@@ -78,14 +78,6 @@ configuration:
   - name: BOOTLOADER_DISABLE_OLD_BOOTLOADER_MITIGATION
     value: '1'
 
-toolchain_settings:
-  - option: gcc_linker_option
-    value: -Xlinker --cmse-implib
-  - option: gcc_linker_option
-    value: -Xlinker --out-implib=skl_secure_lib.o
-  - option: iar_linker_option
-    value: --import_cmse_lib_out=$PROJ_DIR$\skl_secure_lib.o
-
 tag:
   - companion:nonsecure_app
   - hardware:device:flash:512
@@ -103,7 +95,7 @@ import:
 
 export:
   library:
-    - path: skl_secure_lib.o
+    - path: artifact/trustzone_secure_library.o
 
 post_build:
-  path: "../../postbuild_profile/btmesh_tz_secure_application.slpb"
+  profile: tz_secure_application

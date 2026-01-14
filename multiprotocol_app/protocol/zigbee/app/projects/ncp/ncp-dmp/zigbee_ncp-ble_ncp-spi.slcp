@@ -38,7 +38,6 @@ component:
   - id: bluetooth_feature_system
   - id: bluetooth_feature_dynamic_gattdb
   - id: bluetooth_feature_test
-  - id: toolchain_gcc
   - id: ncp
   - id: bluetooth_ncp_transport_cpc
   - id: cpc_secondary

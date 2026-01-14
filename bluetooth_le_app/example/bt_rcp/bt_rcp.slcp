@@ -75,6 +75,7 @@ tag:
   - hwfilter:device:device_series_2
   - hwfilter:+device:efr32mr21a020f512im32
   - hwfilter:!board:hardware:vcom:no:rts:cts
+  - hwfilter:+board:brd4421a
 
 ui_hints:
   highlight:

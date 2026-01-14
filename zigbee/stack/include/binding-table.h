@@ -214,6 +214,20 @@ sl_status_t sl_zigbee_set_reply_binding(uint8_t index,
  */
 sl_status_t sl_zigbee_note_senders_binding(uint8_t index, sl_802154_short_addr_t source);
 
+/** @brief Set the policy whether to clear the binding table when definitively leaving the network.
+ *  This policy is not applied if the local device is instructed to leave and rejoin.
+ *
+ * @param clear True to clear the binding table when leaving without rejoin. False to leave the binding table intact.
+ *
+ * @return None
+ *
+ * @note The default behavior of the stack is to not clear the binding table upon leave. Zigbee 4.0 applications
+ *  are mandated to clear their binding tables upon leave, and this policy is updated to reflect that
+ *  requirement when creating Zigbee 4.0 applications. The Network Steering component updates this policy for
+ *  Zigbee 4.0 applications.
+ */
+void sl_zigbee_clear_binding_table_on_leave(bool clear);
+
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 // Set or get the binding table size
 sl_status_t sl_zigbee_set_binding_table_size(uint8_t size);

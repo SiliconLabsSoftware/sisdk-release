@@ -12,7 +12,7 @@ version = "0"
   commander = [{ installer = "archive", type = "apack", version = "1.20.5" }]
   coremark = [{ installer = "conan", ref = "coremark/1.0.0@silabs#343a2e008990521d9be761680522b4ea", type = "sdk", version = "1.0.0" }]
   cpc = [{ installer = "conan", ref = "cpc/4.8.0-beta.1@silabs#8c4ab5add3067423f232ab8d1f27fd52a5004cb8", type = "sdk", version = "4.8.0-beta.1" }]
-  cpc_app = [{ installer = "conan", ref = "cpc_app/1.0.0-beta.6@silabs", type = "sdk", version = "1.0.0-beta.6" }]
+  cpc_app = [{ installer = "conan", ref = "cpc_app/1.0.0-beta.7@silabs", type = "sdk", version = "1.0.0-beta.7" }]
   cslib = [{ installer = "conan", ref = "cslib/1.0.0@silabs#1698b7d934684a29cea629f83ec539ea", type = "sdk", version = "1.0.0" }]
   delta_dfu = [{ installer = "conan", ref = "delta_dfu/1.1.0-rc.3@silabs#1ebba4a316f35b36228125a8942d772c72943ec6", type = "sdk", version = "1.1.0-rc.3" }]
   devices = [{ installer = "conan", ref = "devices/1.0.0@silabs#d23fe1fd78258ca6d66bdb8bc5dd2344", type = "sdk", version = "1.0.0" }]

@@ -51,6 +51,7 @@
 #endif
 
 #if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
+#include "sl_rail_util_ieee802154_fast_channel_switching.h"
 #include "sl_rail_util_ieee802154_fast_channel_switching_config.h"
 
 // This file supports 2 instances of stacks (ZB, OT). Similar configuration is expected on RAIL side
@@ -651,7 +652,7 @@ sl_rail_status_t sl_rail_mux_StartRx(sl_rail_handle_t railHandle,
   SET_CHANNEL_SWITCHING_CFG_CH(context_index, channel);
 
   // Check to ensure lock is not active before acting on startRx
-  if ( check_lock_permissions(context_index) ) {
+  if ( check_lock_permissions(context_index) && !tx_in_progress()) {
     #if !defined(SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT) && !defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
     if (!fn_get_context_flag_by_index(context_index, RAIL_MUX_PROTOCOL_FLAGS_LOCK_ACTIVE)) {
       if (rx_channel != INVALID_CHANNEL && rx_channel != channel) {
@@ -677,6 +678,10 @@ sl_rail_status_t sl_rail_mux_Idle(sl_rail_handle_t railHandle,
                                   bool wait)
 {
   uint8_t i;
+ 
+  if (tx_in_progress()) {
+    return SL_RAIL_STATUS_INVALID_CALL;
+  }
 
   uint8_t context_index = fn_get_context_index(railHandle);
   EFM_ASSERT(context_index < SUPPORTED_PROTOCOL_COUNT);

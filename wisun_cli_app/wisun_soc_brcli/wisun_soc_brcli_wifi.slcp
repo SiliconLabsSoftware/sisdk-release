@@ -7,6 +7,10 @@ package: "wisun"
 category: "Wi-SUN Examples"
 quality: "production"
 
+sdk_extension:
+  - vendor: silabs
+    id: wiseconnect3_sdk
+    version: 4.0.0
 
 component:
   - id: "wisun_br_stack"

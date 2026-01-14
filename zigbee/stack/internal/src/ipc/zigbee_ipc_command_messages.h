@@ -118,6 +118,7 @@ typedef struct {
     sli_zigbee_stack_aes_mmo_hash_update_ipc_msg_t aes_mmo_hash_update;
     sli_zigbee_stack_binding_is_active_ipc_msg_t binding_is_active;
     sli_zigbee_stack_clear_binding_table_ipc_msg_t clear_binding_table;
+    sli_zigbee_stack_clear_binding_table_on_leave_ipc_msg_t clear_binding_table_on_leave;
     sli_zigbee_stack_delete_binding_ipc_msg_t delete_binding;
     sli_zigbee_stack_get_binding_ipc_msg_t get_binding;
     sli_zigbee_stack_get_binding_remote_node_id_ipc_msg_t get_binding_remote_node_id;

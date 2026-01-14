@@ -215,6 +215,13 @@ void sli_zigbee_af_network_steering_init_callback(uint8_t init_level)
 
   sl_zigbee_af_network_event_init(finishSteeringEvent,
                                   sl_zigbee_af_network_steering_finish_steering_event_handler);
+
+#if defined(SL_ZIGBEE_AF_HAS_SECURITY_PROFILE_Z4)
+  // Zigbee 4.0 mandates the binding table to be cleared when leaving a network
+  // See CN-Reset-TC-01 and DN-Reset-TC-01
+  // The Network Steering component is used by all device roles (ZC, ZR, ZED) so this covers everything
+  sl_zigbee_clear_binding_table_on_leave(true);
+#endif // SL_ZIGBEE_AF_HAS_SECURITY_PROFILE_Z4
 }
 
 //============================================================================

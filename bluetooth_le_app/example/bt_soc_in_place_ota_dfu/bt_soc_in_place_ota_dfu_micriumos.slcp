@@ -54,6 +54,17 @@ config_file:
     path: gatt_configuration.btconf
     directory: btconf
 
+readme:
+  - path: readme.md
+
+other_file:
+  - path: image/readme_img0.png
+  - path: image/readme_img1.png
+  - path: image/readme_img2.png
+  - path: image/readme_img3.png
+  - path: image/readme_img4.png
+  - path: image/readme_img5.png
+
 configuration:
   - name: SL_STACK_SIZE
     value: "2000"
@@ -98,3 +109,5 @@ tag:
 ui_hints:
   highlight:
     - path: config/btconf/gatt_configuration.btconf
+    - path: readme.md
+      focus: true

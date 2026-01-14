@@ -2,6 +2,7 @@ package: zigbee
 description: This component is an example utility that brings in additional, necessary functionality for Zigbee 4.0 trust centers. This component is only necessary for coordinator applications, not routers or end devices. This component handles performing cluster discovery of devices upon joining, and issuing ZDO Bind Request messages to end devices that support the Poll Control cluster, as required by the BDB 3.1 specification.
 quality: production
 id: zigbee_bdb_3dot1_trust_center_extension
+label: BDB 3.1 Trust Center Extension
 category: Zigbee|Zigbee 4.0
 provides:
 - name: zigbee_bdb_3dot1_trust_center_extension

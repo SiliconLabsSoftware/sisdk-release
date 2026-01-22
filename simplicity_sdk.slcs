@@ -7,13 +7,13 @@ supplier: Silicon Laboratories, Inc.
 component_path:
 - path: bgapi_protocol/component
 - path: bluetooth_mesh/component
-- path: bluetooth_apploader/component
-- path: bluetooth_le_middleware/component
 - path: bluetooth_common/component
+- path: bluetooth_apploader/component
+- path: bluetooth_le_controller/component
+- path: bluetooth_le_middleware/component
 - path: bluetooth_mesh_srtest/component
 - path: bluetooth_mesh_middleware/component
 - path: bluetooth_le_host/component
-- path: bluetooth_le_controller/component
 - path: board_drivers/hardware/driver/component
 - path: boards_everest_internal/hardware/board/component
 - path: boards_everest_internal/platform/common/component
@@ -153,10 +153,10 @@ documentation:
   version: 10.0.0
 - docset: btmesh-service-api
   version: 10.0.0
-- docset: bluetooth
-  version: 11.0.0
 - docset: bluetooth_le_siwx91x
   version: 4.0.0
+- docset: bluetooth
+  version: 11.0.0
 - docset: mcu-bootloader
   version: 3.1.0
 - docset: connect-sdk
@@ -175,16 +175,18 @@ documentation:
   version: 2.8.0
 - docset: protocol-usb
   version: 1.6.0
-- docset: wifi_sqa_internal
-  version: 4.0.0
 - docset: wifi
+  version: 4.0.0
+- docset: wifi_sqa_internal
   version: 4.0.0
 - docset: wisun
   version: 2.10.0
 - docset: zigbee
   version: 9.0.0
 upgrade_manifest:
+- path: bluetooth_mesh/component/upgrade.slcu
 - path: bluetooth_le_middleware/upgrade.slcu
+- path: bluetooth_le_host/component/upgrade.slcu
 - path: connect_stack/component/upgrade.slcu
 - path: openthread/component/upgrade.slcu
 - path: platform_common_apps/app/common/upgrade.slcu

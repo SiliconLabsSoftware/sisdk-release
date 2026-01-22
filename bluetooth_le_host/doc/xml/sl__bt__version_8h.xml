@@ -44,7 +44,7 @@
       </memberdef>
       <memberdef kind="define" id="group__sl__bt__version_1ga702d68a51ae68d689249900414058101" prot="public" static="no">
         <name>SL_BT_VERSION_HASH</name>
-        <initializer>{0x5c,0xa2,0xb0,0x70,0xbc,0xa5,0x76,0x7f,0x28,0xb0,0xec,0x32,0x94,0x1e,0xd1,0x27,0x25,0xb3,0xef,0x20}</initializer>
+        <initializer>{0x64,0x7c,0x0d,0xf8,0x26,0xd5,0x71,0x39,0x5e,0x52,0xc5,0xc0,0xd0,0xc6,0x48,0x03,0x9e,0xeb,0x7c,0xeb}</initializer>
         <briefdescription>
 <para>The hash value of the build the Bluetooth SDK was created from. </para>
         </briefdescription>
@@ -71,7 +71,7 @@
 <codeline lineno="39"><highlight class="normal"></highlight></codeline>
 <codeline lineno="45" refid="group__sl__bt__version_1gabdc3b1f3ef5b86303857c56b8c89e600" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SL_BT_VERSION_PATCH<sp/>0</highlight><highlight class="normal"></highlight></codeline>
 <codeline lineno="46"><highlight class="normal"></highlight></codeline>
-<codeline lineno="50" refid="group__sl__bt__version_1ga702d68a51ae68d689249900414058101" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SL_BT_VERSION_HASH<sp/>{0x5c,0xa2,0xb0,0x70,0xbc,0xa5,0x76,0x7f,0x28,0xb0,0xec,0x32,0x94,0x1e,0xd1,0x27,0x25,0xb3,0xef,0x20}</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="50" refid="group__sl__bt__version_1ga702d68a51ae68d689249900414058101" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SL_BT_VERSION_HASH<sp/>{0x64,0x7c,0x0d,0xf8,0x26,0xd5,0x71,0x39,0x5e,0x52,0xc5,0xc0,0xd0,0xc6,0x48,0x03,0x9e,0xeb,0x7c,0xeb}</highlight><highlight class="normal"></highlight></codeline>
 <codeline lineno="51"><highlight class="normal"><sp/></highlight><highlight class="comment">//<sp/>end<sp/>addtogroup<sp/>sl_bt_version</highlight><highlight class="normal"></highlight></codeline>
 <codeline lineno="53"><highlight class="normal"></highlight></codeline>
 <codeline lineno="54"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>

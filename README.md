@@ -18,10 +18,10 @@ The repository’s **structure, dependencies, and content are not guaranteed** t
 
 To obtain and work with Silicon Labs software releases, customers must use one of the following Silicon Labs–supported tools:
 
-- **SLT-CLI (v1.1.0+)**
+- **[SLT-CLI](https://docs.silabs.com/simplicity-installer-slt/latest/slt-getting-started-slt-cli) (v1.1.0+)**
   A standalone command-line tool
 
-- **Simplicity Installer (v1.1.0+)**
+- **[Simplicity Installer](https://www.silabs.com/software-and-tools/simplicity-studio?tab=getting-started) (v1.1.0+)**
   A graphical installer that integrates SLT-CLI functionality
 
 ### These tools ensure:

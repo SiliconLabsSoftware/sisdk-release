@@ -308,10 +308,6 @@ library:
   condition:
   - toolchain_iar
   - bgm260pb32vna
-- path: autogen/librail_release/librail_config_mgm270sc32sna_iar.a
-  condition:
-  - toolchain_iar
-  - mgm270sc32sna
 - path: autogen/librail_release/librail_config_mgm270sc22sna_iar.a
   condition:
   - toolchain_iar
@@ -613,10 +609,6 @@ library:
   condition:
   - toolchain_gcc
   - bgm260pb32vna
-- path: autogen/librail_release/librail_config_mgm270sc32sna_gcc.a
-  condition:
-  - toolchain_gcc
-  - mgm270sc32sna
 - path: autogen/librail_release/librail_config_mgm270sc22sna_gcc.a
   condition:
   - toolchain_gcc

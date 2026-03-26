@@ -17,7 +17,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" line="90" column="33" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" bodystart="90" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" line="90" column="33" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" bodystart="90" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="group__bluetooth__rtos__adaptation_1gae57501271487d2e270bbc7b6789efa0a" prot="public" static="no" mutable="no">
         <type>sli_bgapi_component_deinit_func_t</type>
@@ -32,7 +32,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" line="128" column="35" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" bodystart="128" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" line="128" column="35" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" bodystart="128" bodyend="-1"/>
       </memberdef>
       </sectiondef>
       <sectiondef kind="func">
@@ -55,7 +55,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" line="81" column="13" declfile="/var/lib/jenkins/github/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" declline="81" declcolumn="13"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" line="81" column="13" declfile="/var/lib/jenkins/github@3/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" declline="81" declcolumn="13"/>
       </memberdef>
       <memberdef kind="function" id="group__bluetooth__rtos__adaptation_1ga10d163cf628c20fcdd80f7670916fe52" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>sl_status_t</type>
@@ -76,7 +76,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" line="101" column="13" declfile="/var/lib/jenkins/github/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" declline="101" declcolumn="13"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" line="101" column="13" declfile="/var/lib/jenkins/github@3/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" declline="101" declcolumn="13"/>
       </memberdef>
       <memberdef kind="function" id="group__bluetooth__rtos__adaptation_1ga35709a76781b2fb07eb15e8629321431" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -94,7 +94,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" line="110" column="6" declfile="/var/lib/jenkins/github/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" declline="110" declcolumn="6"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" line="110" column="6" declfile="/var/lib/jenkins/github@3/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" declline="110" declcolumn="6"/>
       </memberdef>
       <memberdef kind="function" id="group__bluetooth__rtos__adaptation_1gac3a5c1f982e53d7002f43caeaf4eacea" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -112,7 +112,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" line="119" column="6" declfile="/var/lib/jenkins/github/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" declline="119" declcolumn="6"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" line="119" column="6" declfile="/var/lib/jenkins/github@3/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" declline="119" declcolumn="6"/>
       </memberdef>
       <memberdef kind="function" id="group__bluetooth__rtos__adaptation_1gaa7b9592f6f990160875fc32fe5028e6c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>sl_status_t</type>
@@ -131,7 +131,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" line="151" column="13" declfile="/var/lib/jenkins/github/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" declline="151" declcolumn="13"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" line="151" column="13" declfile="/var/lib/jenkins/github@3/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" declline="151" declcolumn="13"/>
       </memberdef>
       <memberdef kind="function" id="group__bluetooth__rtos__adaptation_1ga6c0f014f2cfe37e0301e8d0dcd124b6d" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>sl_status_t</type>
@@ -149,7 +149,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" line="161" column="13" declfile="/var/lib/jenkins/github/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" declline="161" declcolumn="13"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" line="161" column="13" declfile="/var/lib/jenkins/github@3/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h" declline="161" declcolumn="13"/>
       </memberdef>
       </sectiondef>
     <briefdescription>

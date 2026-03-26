@@ -58,6 +58,10 @@
 #include <openthread/platform/spi-slave.h>
 #include "common/code_utils.hpp"
 
+#ifdef SL_CATALOG_KERNEL_PRESENT
+#include "sl_ot_rtos_adaptation.h"
+#endif // SL_CATALOG_KERNEL_PRESENT
+
 // DEFINES
 #define MAX_DMA_DESCRIPTOR_TRANSFER_COUNT ((_LDMA_CH_CTRL_XFERCNT_MASK >> _LDMA_CH_CTRL_XFERCNT_SHIFT) + 1U)
 
@@ -171,8 +175,11 @@ static void rcp_spidrv_spi_transaction_end_interrupt(uint8_t intNo)
                           old_rx_buffer_size,
                           tx_transaction_size))
     {
-        otSysEventSignalPending();
         should_process_transaction = true;
+#ifdef SL_CATALOG_KERNEL_PRESENT
+        sl_ot_rtos_set_pending_event(SL_OT_RTOS_EVENT_SERIAL);
+#endif
+        otSysEventSignalPending();
     }
 }
 

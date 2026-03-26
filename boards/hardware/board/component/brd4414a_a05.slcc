@@ -18,6 +18,7 @@
   - name: hardware_board
   - name: hardware_board_rb
   - name: hardware_board_has_vcom
+  - name: hardware_board_has_vcom_hardware_flowcontrol
   - name: hardware_board_has_spiflash
   - name: hardware_board_has_exp_16
   - name: board_config_clock_manager
@@ -70,6 +71,7 @@
   - board:revision:A05
   - board:device:efr32bg29b220f1024cj45
   - hardware:has:vcom
+  - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:led:2
   - hardware:has:button:2

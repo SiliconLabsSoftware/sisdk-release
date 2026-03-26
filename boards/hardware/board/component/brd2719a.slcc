@@ -18,6 +18,7 @@
   - name: hardware_board_from_tb
   - name: hardware_board_from_sixg301-ek2719a
   - name: hardware_board_has_vcom
+  - name: hardware_board_has_vcom_hardware_flowcontrol
   - name: hardware_board_supports_rf_band_2400
   - name: hardware_board_supports_1_rf_band
   - name: hardware_board_default_rf_band
@@ -54,6 +55,7 @@
   - board:revision:A03
   - board:device:simg301m104lil
   - hardware:has:vcom
+  - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:led:2
   - hardware:has:button:2

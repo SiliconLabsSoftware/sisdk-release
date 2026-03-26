@@ -311,21 +311,27 @@ void esl_lib_pawr_on_bt_event(sl_bt_msg_t *evt)
           if (sc == SL_STATUS_OK
               && (data_status == PAWR_RESPONSE_COMPLETE
                   || data_status == PAWR_RESPONSE_TRUNCATED)) {
-            esl_lib_log_pawr_debug(PAWR_FMT "Sending response, PAwR handle = %u" APP_LOG_NL,
+            esl_lib_log_pawr_debug(PAWR_FMT "Received response, PAwR handle = %u" APP_LOG_NL,
                                    ESL_LIB_LOG_PTR(pawr_ptr),
                                    pawr_ptr->pawr_handle);
-            sc = send_pawr_response_event(pawr_ptr,
-                                          evt->data.evt_pawr_advertiser_response_report.subevent,
-                                          evt->data.evt_pawr_advertiser_response_report.response_slot);
-            if (sc == SL_STATUS_OK) {
-              // Clean storage
-              sc = esl_lib_storage_clean(pawr_ptr->storage_handle);
-              if (sc == SL_STATUS_OK) {
-                esl_lib_log_pawr_debug(PAWR_FMT "PAwR storage cleaned, PAwR handle = %u" APP_LOG_NL,
-                                       ESL_LIB_LOG_PTR(pawr_ptr),
-                                       pawr_ptr->pawr_handle);
-              }
-            }
+          }
+        } else {
+          esl_lib_log_pawr_debug(PAWR_FMT "No response received in subevent %u, slot %u, PAwR handle = %u (may not have been expected)." APP_LOG_NL,
+                                 ESL_LIB_LOG_PTR(pawr_ptr),
+                                 evt->data.evt_pawr_advertiser_response_report.subevent,
+                                 evt->data.evt_pawr_advertiser_response_report.response_slot,
+                                 pawr_ptr->pawr_handle);
+        }
+        sc = send_pawr_response_event(pawr_ptr,
+                                      evt->data.evt_pawr_advertiser_response_report.subevent,
+                                      evt->data.evt_pawr_advertiser_response_report.response_slot);
+        if (sc == SL_STATUS_OK) {
+          // Clean storage
+          sc = esl_lib_storage_clean(pawr_ptr->storage_handle);
+          if (sc == SL_STATUS_OK) {
+            esl_lib_log_pawr_debug(PAWR_FMT "PAwR storage cleaned, PAwR handle = %u" APP_LOG_NL,
+                                   ESL_LIB_LOG_PTR(pawr_ptr),
+                                   pawr_ptr->pawr_handle);
           }
         }
       }

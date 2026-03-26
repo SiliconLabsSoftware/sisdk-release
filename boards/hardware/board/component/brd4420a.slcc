@@ -19,6 +19,7 @@
   - name: hardware_board_from_stk
   - name: hardware_board_from_bg29-rb4420a
   - name: hardware_board_has_vcom
+  - name: hardware_board_has_vcom_hardware_flowcontrol
   - name: hardware_board_has_spiflash
   - name: hardware_board_has_exp_5
   - name: hardware_board_has_exp_3
@@ -70,7 +71,7 @@
   - name: SL_BOARD_NAME
     value: '"BRD4420A"'
   - name: SL_BOARD_REV
-    value: '"A03"'
+    value: '"A04"'
   - name: HFXO_FREQ
     value: 38400000
   - name: HARDWARE_BOARD_SUPPORTS_RF_BAND_2400
@@ -79,9 +80,10 @@
 - tag:
   - board:pn:BRD4420
   - board:variant:A
-  - board:revision:A03
+  - board:revision:A04
   - board:device:efr32bg29b220f1024cj45
   - hardware:has:vcom
+  - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:led:2
   - hardware:has:button:2

@@ -540,12 +540,6 @@ void app_cli_init(int argc, char *argv[])
     if (initiator_cs_sync_antenna_req_set && initiator_config.cs_main_mode == sl_bt_cs_mode_pbr) {
       app_log_warning(APP_PREFIX "RTT antenna configuration is omitted in PBR mode!" APP_LOG_NL);
     }
-    if (initiator_config.max_procedure_count == 1
-        && rtl_config.algo_mode == SL_RTL_CS_ALGO_MODE_REAL_TIME_FAST) {
-      app_log_error(APP_PREFIX "Real-time fast mode is not supported "
-                               "with CS_INITIATOR_DEFAULT_MAX_PROCEDURE_COUNT == 1!" APP_LOG_NL);
-      exit(EXIT_FAILURE);
-    }
     if (rtl_config.algo_mode == SL_RTL_CS_ALGO_MODE_REAL_TIME_FAST
         && initiator_config.cs_main_mode == sl_bt_cs_mode_rtt) {
       app_log_error(APP_PREFIX "Real-time fast mode is not supported with main mode RTT!" APP_LOG_NL);
@@ -1397,9 +1391,10 @@ static void cs_on_result(const uint8_t conn_handle,
   sl_status_t sc = SL_STATUS_OK;
   float value = .0f;
   cs_result_session_data_t result_data;
-  measurement_counter++;
+  
   const bd_addr *bt_address = ble_peer_manager_get_bt_address(conn_handle);
-  PRINT_HEAD_AND_DATA(measurement_counter, is_data) {
+  for (uint8_t is_data = ((measurement_counter % CS_HOST_HEADER_LOG) > 0); is_data <= 1; is_data++) {
+
     app_log_info(APP_INSTANCE_PREFIX, conn_handle);
     cs_initiator_print_bt_address(!is_data, bt_address);
 
@@ -1573,7 +1568,9 @@ static void cs_on_result(const uint8_t conn_handle,
     }
     app_log_append(APP_LOG_NL);
   }
+  measurement_counter++;
 }
+
 
 /******************************************************************************
  * Extract and display intermediate results between measurement results

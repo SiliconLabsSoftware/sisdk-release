@@ -17,7 +17,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1081" column="11" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="1081" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1081" column="11" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="1081" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structsl__bt__evt__system__resource__exhausted__s_1aa33fff270a2e746d4081ab4347c5a7f6" prot="public" static="no" mutable="no">
         <type>uint8_t</type>
@@ -32,7 +32,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1094" column="11" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="1094" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1094" column="11" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="1094" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structsl__bt__evt__system__resource__exhausted__s_1a2ca140349ad12c0705a674763d5637ed" prot="public" static="no" mutable="no">
         <type>uint8_t</type>
@@ -47,7 +47,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1100" column="11" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="1100" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1100" column="11" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="1100" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structsl__bt__evt__system__resource__exhausted__s_1a2f5512033fd9c00e2635bfa35730fc19" prot="public" static="no" mutable="no">
         <type>uint8_t</type>
@@ -62,7 +62,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1109" column="11" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="1109" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1109" column="11" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="1109" bodyend="-1"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
@@ -70,7 +70,7 @@
     </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1079" column="1" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="1080" bodyend="1113"/>
+    <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1079" column="1" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="1080" bodyend="1113"/>
     <listofallmembers>
       <member refid="structsl__bt__evt__system__resource__exhausted__s_1aa33fff270a2e746d4081ab4347c5a7f6" prot="public" virt="non-virtual"><scope>sl_bt_evt_system_resource_exhausted_s</scope><name>num_buffer_allocation_failures</name></member>
       <member refid="structsl__bt__evt__system__resource__exhausted__s_1a97dd311e4778d68e48a1a82bdb816499" prot="public" virt="non-virtual"><scope>sl_bt_evt_system_resource_exhausted_s</scope><name>num_buffers_discarded</name></member>

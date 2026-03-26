@@ -19,6 +19,7 @@
   - name: hardware_board_from_stk
   - name: hardware_board_from_bg22-rb4403b
   - name: hardware_board_has_vcom
+  - name: hardware_board_has_vcom_hardware_flowcontrol
   - name: hardware_board_has_spiflash
   - name: hardware_board_has_exp_7
   - name: hardware_board_has_exp_11
@@ -75,6 +76,7 @@
   - board:revision:A00
   - board:device:efr32bg22c224f512im32
   - hardware:has:vcom
+  - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:led:1
   - hardware:has:button:1

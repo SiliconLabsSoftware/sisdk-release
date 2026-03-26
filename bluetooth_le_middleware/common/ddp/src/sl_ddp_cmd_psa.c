@@ -3,7 +3,7 @@
  * @brief DDP commands for PSA Crypto
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -34,6 +34,7 @@
 #include "psa/crypto_types.h"
 #include "psa_crypto_its.h"
 #include "sl_ddp_types.h"
+#include "sl_ddp_cmd_psa_init.h"
 
 // -----------------------------------------------------------------------------
 // Definitions
@@ -127,6 +128,10 @@ int sl_ddp_cmd_psa_its_set(const uint8_t *input,
   (void)output_size;
   (void)output_len;
 
+  if (!sl_ddp_cmd_psa_is_initialized()) {
+    return SL_DDP_ERROR_NOT_INITIALIZED;
+  }
+
   if ((input == NULL) || (input_len < sizeof(sl_ddp_cmd_psa_its_set_t))) {
     return SL_DDP_ERROR_ARG;
   }
@@ -155,6 +160,10 @@ int sl_ddp_cmd_psa_its_get(const uint8_t *input,
       || (output == NULL)
       || (output_len == NULL)) {
     return SL_DDP_ERROR_ARG;
+  }
+
+  if (!sl_ddp_cmd_psa_is_initialized()) {
+    return SL_DDP_ERROR_NOT_INITIALIZED;
   }
 
   const sl_ddp_cmd_psa_its_get_t *req = (const sl_ddp_cmd_psa_its_get_t *)input;
@@ -187,6 +196,10 @@ int sl_ddp_cmd_psa_key_gen(const uint8_t *input,
       || (output == NULL)
       || (output_len == NULL)) {
     return SL_DDP_ERROR_ARG;
+  }
+
+  if (!sl_ddp_cmd_psa_is_initialized()) {
+    return SL_DDP_ERROR_NOT_INITIALIZED;
   }
 
   psa_status_t status;
@@ -253,6 +266,10 @@ int sl_ddp_cmd_psa_key_inj(const uint8_t *input,
     return SL_DDP_ERROR_ARG;
   }
 
+  if (!sl_ddp_cmd_psa_is_initialized()) {
+    return SL_DDP_ERROR_NOT_INITIALIZED;
+  }
+
   psa_status_t status;
   psa_key_id_t gen_key_id;
   psa_key_attributes_t key_attr;
@@ -303,6 +320,10 @@ int sl_ddp_cmd_psa_key_get_att(const uint8_t *input,
       || (output == NULL)
       || (output_len == NULL)) {
     return SL_DDP_ERROR_ARG;
+  }
+
+  if (!sl_ddp_cmd_psa_is_initialized()) {
+    return SL_DDP_ERROR_NOT_INITIALIZED;
   }
 
   psa_status_t status = PSA_SUCCESS;

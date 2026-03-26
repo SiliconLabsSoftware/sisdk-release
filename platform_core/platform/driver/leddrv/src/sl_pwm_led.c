@@ -215,10 +215,16 @@ sl_status_t sl_pwm_led_init(void *led_handler)
 #endif
 #if defined(_SILICON_LABS_32B_SERIES_2)
   led->timer->EN_SET = TIMER_EN_EN;
+#else
+  sl_hal_timer_enable(led->timer);
 #endif
 
   // The configured resolution configuration has to be at least 2. And not bigger than the timer max count + 1
+#if defined(_SILICON_LABS_32B_SERIES_2)
   uint32_t max_count = TIMER_MaxCount(led->timer);
+#else
+  uint32_t max_count = SL_HAL_TIMER_MAX_COUNT(led->timer);
+#endif
   if ((led->resolution < 2UL) || (led->resolution > (max_count))) {
     // The user configured max level value is invalid
 
@@ -332,11 +338,13 @@ sl_status_t sl_pwm_led_init(void *led_handler)
   TIMER_Init_TypeDef timer_init = TIMER_INIT_DEFAULT;
   TIMER_Init(led->timer, &timer_init);
 #else
-  sl_hal_timer_set_top(led->timer, top);
-
-  // Initialize TIMER
+  // Initialize TIMER 
   sl_hal_timer_config_t timer_init = SL_HAL_TIMER_CONFIG_DEFAULT;
   sl_hal_timer_init(led->timer, &timer_init);
+  sl_hal_timer_enable(led->timer);
+  sl_hal_timer_set_top(led->timer, top);
+  sl_hal_timer_wait_sync(led->timer);
+  sl_hal_timer_start(led->timer);
 #endif
 
 // Initialize the level settings values

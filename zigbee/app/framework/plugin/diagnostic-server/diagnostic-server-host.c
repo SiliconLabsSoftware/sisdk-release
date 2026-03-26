@@ -23,10 +23,13 @@ bool sl_zigbee_af_read_diagnostic_attribute(
   sl_zigbee_af_attribute_metadata_t *attributeMetadata,
   uint8_t *buffer)
 {
+  (void)attributeMetadata;
+  (void)buffer;
   return false;
 }
 
 bool sl_zigbee_af_pre_message_received_cb(sl_zigbee_af_incoming_message_t* incomingMessage)
 {
+  (void)incomingMessage;
   return false;
 }

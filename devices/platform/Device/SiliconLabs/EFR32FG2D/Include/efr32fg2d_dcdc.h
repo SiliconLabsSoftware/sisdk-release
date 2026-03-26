@@ -3,7 +3,7 @@
  * @brief EFR32FG2D DCDC register and bit field definitions
  ******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories, Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories, Inc. www.silabs.com</b>
  ******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -60,9 +60,8 @@ typedef struct dcdc_typedef{
   __IOM uint32_t LOCK;                          /**< Lock Register                                      */
   __IM uint32_t  LOCKSTATUS;                    /**< Lock Status Register                               */
   uint32_t       RESERVED4[2U];                 /**< Reserved for future use                            */
-  uint32_t       RESERVED5[4U];                 /**< Reserved for future use                            */
-  __IOM uint32_t CFG;                           /**< Configuration Register                             */
-  uint32_t       RESERVED6[3U];                 /**< Reserved for future use                            */
+  uint32_t       RESERVED5[1U];                 /**< Reserved for future use                            */
+  uint32_t       RESERVED6[7U];                 /**< Reserved for future use                            */
   uint32_t       RESERVED7[1U];                 /**< Reserved for future use                            */
   uint32_t       RESERVED8[9U];                 /**< Reserved for future use                            */
   uint32_t       RESERVED9[1U];                 /**< Reserved for future use                            */
@@ -84,9 +83,8 @@ typedef struct dcdc_typedef{
   __IOM uint32_t LOCK_SET;                      /**< Lock Register                                      */
   __IM uint32_t  LOCKSTATUS_SET;                /**< Lock Status Register                               */
   uint32_t       RESERVED15[2U];                /**< Reserved for future use                            */
-  uint32_t       RESERVED16[4U];                /**< Reserved for future use                            */
-  __IOM uint32_t CFG_SET;                       /**< Configuration Register                             */
-  uint32_t       RESERVED17[3U];                /**< Reserved for future use                            */
+  uint32_t       RESERVED16[1U];                /**< Reserved for future use                            */
+  uint32_t       RESERVED17[7U];                /**< Reserved for future use                            */
   uint32_t       RESERVED18[1U];                /**< Reserved for future use                            */
   uint32_t       RESERVED19[9U];                /**< Reserved for future use                            */
   uint32_t       RESERVED20[1U];                /**< Reserved for future use                            */
@@ -108,9 +106,8 @@ typedef struct dcdc_typedef{
   __IOM uint32_t LOCK_CLR;                      /**< Lock Register                                      */
   __IM uint32_t  LOCKSTATUS_CLR;                /**< Lock Status Register                               */
   uint32_t       RESERVED26[2U];                /**< Reserved for future use                            */
-  uint32_t       RESERVED27[4U];                /**< Reserved for future use                            */
-  __IOM uint32_t CFG_CLR;                       /**< Configuration Register                             */
-  uint32_t       RESERVED28[3U];                /**< Reserved for future use                            */
+  uint32_t       RESERVED27[1U];                /**< Reserved for future use                            */
+  uint32_t       RESERVED28[7U];                /**< Reserved for future use                            */
   uint32_t       RESERVED29[1U];                /**< Reserved for future use                            */
   uint32_t       RESERVED30[9U];                /**< Reserved for future use                            */
   uint32_t       RESERVED31[1U];                /**< Reserved for future use                            */
@@ -132,9 +129,8 @@ typedef struct dcdc_typedef{
   __IOM uint32_t LOCK_TGL;                      /**< Lock Register                                      */
   __IM uint32_t  LOCKSTATUS_TGL;                /**< Lock Status Register                               */
   uint32_t       RESERVED37[2U];                /**< Reserved for future use                            */
-  uint32_t       RESERVED38[4U];                /**< Reserved for future use                            */
-  __IOM uint32_t CFG_TGL;                       /**< Configuration Register                             */
-  uint32_t       RESERVED39[3U];                /**< Reserved for future use                            */
+  uint32_t       RESERVED38[1U];                /**< Reserved for future use                            */
+  uint32_t       RESERVED39[7U];                /**< Reserved for future use                            */
   uint32_t       RESERVED40[1U];                /**< Reserved for future use                            */
   uint32_t       RESERVED41[9U];                /**< Reserved for future use                            */
   uint32_t       RESERVED42[1U];                /**< Reserved for future use                            */
@@ -157,30 +153,21 @@ typedef struct dcdc_typedef{
 #define DCDC_IPVERSION_IPVERSION_DEFAULT            (_DCDC_IPVERSION_IPVERSION_DEFAULT << 0) /**< Shifted mode DEFAULT for DCDC_IPVERSION     */
 
 /* Bit fields for DCDC CTRL */
-#define _DCDC_CTRL_RESETVALUE                       0x00000100UL                              /**< Default value for DCDC_CTRL                 */
-#define _DCDC_CTRL_MASK                             0xC00001F1UL                              /**< Mask for DCDC_CTRL                          */
-#define DCDC_CTRL_MODE                              (0x1UL << 0)                              /**< DCDC/Bypass Mode Control                    */
-#define _DCDC_CTRL_MODE_SHIFT                       0                                         /**< Shift value for DCDC_MODE                   */
-#define _DCDC_CTRL_MODE_MASK                        0x1UL                                     /**< Bit mask for DCDC_MODE                      */
-#define _DCDC_CTRL_MODE_DEFAULT                     0x00000000UL                              /**< Mode DEFAULT for DCDC_CTRL                  */
-#define _DCDC_CTRL_MODE_BYPASS                      0x00000000UL                              /**< Mode BYPASS for DCDC_CTRL                   */
-#define _DCDC_CTRL_MODE_DCDCREGULATION              0x00000001UL                              /**< Mode DCDCREGULATION for DCDC_CTRL           */
-#define DCDC_CTRL_MODE_DEFAULT                      (_DCDC_CTRL_MODE_DEFAULT << 0)            /**< Shifted mode DEFAULT for DCDC_CTRL          */
-#define DCDC_CTRL_MODE_BYPASS                       (_DCDC_CTRL_MODE_BYPASS << 0)             /**< Shifted mode BYPASS for DCDC_CTRL           */
-#define DCDC_CTRL_MODE_DCDCREGULATION               (_DCDC_CTRL_MODE_DCDCREGULATION << 0)     /**< Shifted mode DCDCREGULATION for DCDC_CTRL   */
-#define _DCDC_CTRL_IPKTMAXCTRL_SHIFT                4                                         /**< Shift value for DCDC_IPKTMAXCTRL            */
-#define _DCDC_CTRL_IPKTMAXCTRL_MASK                 0x1F0UL                                   /**< Bit mask for DCDC_IPKTMAXCTRL               */
-#define _DCDC_CTRL_IPKTMAXCTRL_DEFAULT              0x00000010UL                              /**< Mode DEFAULT for DCDC_CTRL                  */
-#define DCDC_CTRL_IPKTMAXCTRL_DEFAULT               (_DCDC_CTRL_IPKTMAXCTRL_DEFAULT << 4)     /**< Shifted mode DEFAULT for DCDC_CTRL          */
-#define DCDC_CTRL_VCMPIBOOSTMODE                    (0x1UL << 30)                             /**< EM0 only or PFMX only                       */
-#define _DCDC_CTRL_VCMPIBOOSTMODE_SHIFT             30                                        /**< Shift value for DCDC_VCMPIBOOSTMODE         */
-#define _DCDC_CTRL_VCMPIBOOSTMODE_MASK              0x40000000UL                              /**< Bit mask for DCDC_VCMPIBOOSTMODE            */
-#define _DCDC_CTRL_VCMPIBOOSTMODE_DEFAULT           0x00000000UL                              /**< Mode DEFAULT for DCDC_CTRL                  */
-#define _DCDC_CTRL_VCMPIBOOSTMODE_EM0               0x00000000UL                              /**< Mode EM0 for DCDC_CTRL                      */
-#define _DCDC_CTRL_VCMPIBOOSTMODE_PFMX              0x00000001UL                              /**< Mode PFMX for DCDC_CTRL                     */
-#define DCDC_CTRL_VCMPIBOOSTMODE_DEFAULT            (_DCDC_CTRL_VCMPIBOOSTMODE_DEFAULT << 30) /**< Shifted mode DEFAULT for DCDC_CTRL          */
-#define DCDC_CTRL_VCMPIBOOSTMODE_EM0                (_DCDC_CTRL_VCMPIBOOSTMODE_EM0 << 30)     /**< Shifted mode EM0 for DCDC_CTRL              */
-#define DCDC_CTRL_VCMPIBOOSTMODE_PFMX               (_DCDC_CTRL_VCMPIBOOSTMODE_PFMX << 30)    /**< Shifted mode PFMX for DCDC_CTRL             */
+#define _DCDC_CTRL_RESETVALUE                       0x00000100UL                          /**< Default value for DCDC_CTRL                 */
+#define _DCDC_CTRL_MASK                             0xC00001F1UL                          /**< Mask for DCDC_CTRL                          */
+#define DCDC_CTRL_MODE                              (0x1UL << 0)                          /**< DCDC/Bypass Mode Control                    */
+#define _DCDC_CTRL_MODE_SHIFT                       0                                     /**< Shift value for DCDC_MODE                   */
+#define _DCDC_CTRL_MODE_MASK                        0x1UL                                 /**< Bit mask for DCDC_MODE                      */
+#define _DCDC_CTRL_MODE_DEFAULT                     0x00000000UL                          /**< Mode DEFAULT for DCDC_CTRL                  */
+#define _DCDC_CTRL_MODE_BYPASS                      0x00000000UL                          /**< Mode BYPASS for DCDC_CTRL                   */
+#define _DCDC_CTRL_MODE_DCDCREGULATION              0x00000001UL                          /**< Mode DCDCREGULATION for DCDC_CTRL           */
+#define DCDC_CTRL_MODE_DEFAULT                      (_DCDC_CTRL_MODE_DEFAULT << 0)        /**< Shifted mode DEFAULT for DCDC_CTRL          */
+#define DCDC_CTRL_MODE_BYPASS                       (_DCDC_CTRL_MODE_BYPASS << 0)         /**< Shifted mode BYPASS for DCDC_CTRL           */
+#define DCDC_CTRL_MODE_DCDCREGULATION               (_DCDC_CTRL_MODE_DCDCREGULATION << 0) /**< Shifted mode DCDCREGULATION for DCDC_CTRL   */
+#define _DCDC_CTRL_IPKTMAXCTRL_SHIFT                4                                     /**< Shift value for DCDC_IPKTMAXCTRL            */
+#define _DCDC_CTRL_IPKTMAXCTRL_MASK                 0x1F0UL                               /**< Bit mask for DCDC_IPKTMAXCTRL               */
+#define _DCDC_CTRL_IPKTMAXCTRL_DEFAULT              0x00000010UL                          /**< Mode DEFAULT for DCDC_CTRL                  */
+#define DCDC_CTRL_IPKTMAXCTRL_DEFAULT               (_DCDC_CTRL_IPKTMAXCTRL_DEFAULT << 4) /**< Shifted mode DEFAULT for DCDC_CTRL          */
 
 /* Bit fields for DCDC DOCTRL */
 #define _DCDC_DOCTRL_RESETVALUE                     0x00000050UL                                  /**< Default value for DCDC_DOCTRL               */
@@ -191,21 +178,11 @@ typedef struct dcdc_typedef{
 #define _DCDC_DOCTRL_REGULATIONTYPE_REGDVDD         0x00000000UL                                  /**< Mode REGDVDD for DCDC_DOCTRL                */
 #define _DCDC_DOCTRL_REGULATIONTYPE_REGDEC          0x00000001UL                                  /**< Mode REGDEC for DCDC_DOCTRL                 */
 #define _DCDC_DOCTRL_REGULATIONTYPE_REGDVDDDEC      0x00000002UL                                  /**< Mode REGDVDDDEC for DCDC_DOCTRL             */
-#define _DCDC_DOCTRL_REGULATIONTYPE_UNUSED          0x00000003UL                                  /**< Mode UNUSED for DCDC_DOCTRL                 */
 #define DCDC_DOCTRL_REGULATIONTYPE_DEFAULT          (_DCDC_DOCTRL_REGULATIONTYPE_DEFAULT << 0)    /**< Shifted mode DEFAULT for DCDC_DOCTRL        */
 #define DCDC_DOCTRL_REGULATIONTYPE_REGDVDD          (_DCDC_DOCTRL_REGULATIONTYPE_REGDVDD << 0)    /**< Shifted mode REGDVDD for DCDC_DOCTRL        */
 #define DCDC_DOCTRL_REGULATIONTYPE_REGDEC           (_DCDC_DOCTRL_REGULATIONTYPE_REGDEC << 0)     /**< Shifted mode REGDEC for DCDC_DOCTRL         */
 #define DCDC_DOCTRL_REGULATIONTYPE_REGDVDDDEC       (_DCDC_DOCTRL_REGULATIONTYPE_REGDVDDDEC << 0) /**< Shifted mode REGDVDDDEC for DCDC_DOCTRL     */
-#define DCDC_DOCTRL_REGULATIONTYPE_UNUSED           (_DCDC_DOCTRL_REGULATIONTYPE_UNUSED << 0)     /**< Shifted mode UNUSED for DCDC_DOCTRL         */
-#define _DCDC_DOCTRL_TOFFMINDEC_SHIFT               4                                             /**< Shift value for DCDC_TOFFMINDEC             */
-#define _DCDC_DOCTRL_TOFFMINDEC_MASK                0x30UL                                        /**< Bit mask for DCDC_TOFFMINDEC                */
-#define _DCDC_DOCTRL_TOFFMINDEC_DEFAULT             0x00000001UL                                  /**< Mode DEFAULT for DCDC_DOCTRL                */
-#define DCDC_DOCTRL_TOFFMINDEC_DEFAULT              (_DCDC_DOCTRL_TOFFMINDEC_DEFAULT << 4)        /**< Shifted mode DEFAULT for DCDC_DOCTRL        */
-#define _DCDC_DOCTRL_TOFFMINDVDD_SHIFT              6                                             /**< Shift value for DCDC_TOFFMINDVDD            */
-#define _DCDC_DOCTRL_TOFFMINDVDD_MASK               0xC0UL                                        /**< Bit mask for DCDC_TOFFMINDVDD               */
-#define _DCDC_DOCTRL_TOFFMINDVDD_DEFAULT            0x00000001UL                                  /**< Mode DEFAULT for DCDC_DOCTRL                */
-#define DCDC_DOCTRL_TOFFMINDVDD_DEFAULT             (_DCDC_DOCTRL_TOFFMINDVDD_DEFAULT << 6)       /**< Shifted mode DEFAULT for DCDC_DOCTRL        */
-#define DCDC_DOCTRL_DUALIPKEN                       (0x1UL << 31)                                 /**< Use seperate IPK Dac values                 */
+#define DCDC_DOCTRL_DUALIPKEN                       (0x1UL << 31)                                 /**< Use seperate IPK DAC values                 */
 #define _DCDC_DOCTRL_DUALIPKEN_SHIFT                31                                            /**< Shift value for DCDC_DUALIPKEN              */
 #define _DCDC_DOCTRL_DUALIPKEN_MASK                 0x80000000UL                                  /**< Bit mask for DCDC_DUALIPKEN                 */
 #define _DCDC_DOCTRL_DUALIPKEN_DEFAULT              0x00000000UL                                  /**< Mode DEFAULT for DCDC_DOCTRL                */
@@ -235,7 +212,21 @@ typedef struct dcdc_typedef{
 #define _DCDC_EM01CTRL0_IPKDECVAL_SHIFT             4                                               /**< Shift value for DCDC_IPKDECVAL              */
 #define _DCDC_EM01CTRL0_IPKDECVAL_MASK              0xF0UL                                          /**< Bit mask for DCDC_IPKDECVAL                 */
 #define _DCDC_EM01CTRL0_IPKDECVAL_DEFAULT           0x00000009UL                                    /**< Mode DEFAULT for DCDC_EM01CTRL0             */
+#define _DCDC_EM01CTRL0_IPKDECVAL_Load36mA          0x00000003UL                                    /**< Mode Load36mA for DCDC_EM01CTRL0            */
+#define _DCDC_EM01CTRL0_IPKDECVAL_Load40mA          0x00000004UL                                    /**< Mode Load40mA for DCDC_EM01CTRL0            */
+#define _DCDC_EM01CTRL0_IPKDECVAL_Load44mA          0x00000005UL                                    /**< Mode Load44mA for DCDC_EM01CTRL0            */
+#define _DCDC_EM01CTRL0_IPKDECVAL_Load48mA          0x00000006UL                                    /**< Mode Load48mA for DCDC_EM01CTRL0            */
+#define _DCDC_EM01CTRL0_IPKDECVAL_Load52mA          0x00000007UL                                    /**< Mode Load52mA for DCDC_EM01CTRL0            */
+#define _DCDC_EM01CTRL0_IPKDECVAL_Load56mA          0x00000008UL                                    /**< Mode Load56mA for DCDC_EM01CTRL0            */
+#define _DCDC_EM01CTRL0_IPKDECVAL_Load60mA          0x00000009UL                                    /**< Mode Load60mA for DCDC_EM01CTRL0            */
 #define DCDC_EM01CTRL0_IPKDECVAL_DEFAULT            (_DCDC_EM01CTRL0_IPKDECVAL_DEFAULT << 4)        /**< Shifted mode DEFAULT for DCDC_EM01CTRL0     */
+#define DCDC_EM01CTRL0_IPKDECVAL_Load36mA           (_DCDC_EM01CTRL0_IPKDECVAL_Load36mA << 4)       /**< Shifted mode Load36mA for DCDC_EM01CTRL0    */
+#define DCDC_EM01CTRL0_IPKDECVAL_Load40mA           (_DCDC_EM01CTRL0_IPKDECVAL_Load40mA << 4)       /**< Shifted mode Load40mA for DCDC_EM01CTRL0    */
+#define DCDC_EM01CTRL0_IPKDECVAL_Load44mA           (_DCDC_EM01CTRL0_IPKDECVAL_Load44mA << 4)       /**< Shifted mode Load44mA for DCDC_EM01CTRL0    */
+#define DCDC_EM01CTRL0_IPKDECVAL_Load48mA           (_DCDC_EM01CTRL0_IPKDECVAL_Load48mA << 4)       /**< Shifted mode Load48mA for DCDC_EM01CTRL0    */
+#define DCDC_EM01CTRL0_IPKDECVAL_Load52mA           (_DCDC_EM01CTRL0_IPKDECVAL_Load52mA << 4)       /**< Shifted mode Load52mA for DCDC_EM01CTRL0    */
+#define DCDC_EM01CTRL0_IPKDECVAL_Load56mA           (_DCDC_EM01CTRL0_IPKDECVAL_Load56mA << 4)       /**< Shifted mode Load56mA for DCDC_EM01CTRL0    */
+#define DCDC_EM01CTRL0_IPKDECVAL_Load60mA           (_DCDC_EM01CTRL0_IPKDECVAL_Load60mA << 4)       /**< Shifted mode Load60mA for DCDC_EM01CTRL0    */
 #define _DCDC_EM01CTRL0_DRVSPEED_SHIFT              8                                               /**< Shift value for DCDC_DRVSPEED               */
 #define _DCDC_EM01CTRL0_DRVSPEED_MASK               0x300UL                                         /**< Bit mask for DCDC_DRVSPEED                  */
 #define _DCDC_EM01CTRL0_DRVSPEED_DEFAULT            0x00000002UL                                    /**< Mode DEFAULT for DCDC_EM01CTRL0             */
@@ -257,7 +248,11 @@ typedef struct dcdc_typedef{
 #define _DCDC_EM23CTRL0_IPKDECVAL_SHIFT             4                                               /**< Shift value for DCDC_IPKDECVAL              */
 #define _DCDC_EM23CTRL0_IPKDECVAL_MASK              0xF0UL                                          /**< Bit mask for DCDC_IPKDECVAL                 */
 #define _DCDC_EM23CTRL0_IPKDECVAL_DEFAULT           0x00000003UL                                    /**< Mode DEFAULT for DCDC_EM23CTRL0             */
+#define _DCDC_EM23CTRL0_IPKDECVAL_Load5mA           0x00000003UL                                    /**< Mode Load5mA for DCDC_EM23CTRL0             */
+#define _DCDC_EM23CTRL0_IPKDECVAL_Load10mA          0x00000009UL                                    /**< Mode Load10mA for DCDC_EM23CTRL0            */
 #define DCDC_EM23CTRL0_IPKDECVAL_DEFAULT            (_DCDC_EM23CTRL0_IPKDECVAL_DEFAULT << 4)        /**< Shifted mode DEFAULT for DCDC_EM23CTRL0     */
+#define DCDC_EM23CTRL0_IPKDECVAL_Load5mA            (_DCDC_EM23CTRL0_IPKDECVAL_Load5mA << 4)        /**< Shifted mode Load5mA for DCDC_EM23CTRL0     */
+#define DCDC_EM23CTRL0_IPKDECVAL_Load10mA           (_DCDC_EM23CTRL0_IPKDECVAL_Load10mA << 4)       /**< Shifted mode Load10mA for DCDC_EM23CTRL0    */
 #define _DCDC_EM23CTRL0_DRVSPEED_SHIFT              8                                               /**< Shift value for DCDC_DRVSPEED               */
 #define _DCDC_EM23CTRL0_DRVSPEED_MASK               0x300UL                                         /**< Bit mask for DCDC_DRVSPEED                  */
 #define _DCDC_EM23CTRL0_DRVSPEED_DEFAULT            0x00000002UL                                    /**< Mode DEFAULT for DCDC_EM23CTRL0             */
@@ -266,40 +261,60 @@ typedef struct dcdc_typedef{
 #define DCDC_EM23CTRL0_DRVSPEED_DEFAULT_SETTING     (_DCDC_EM23CTRL0_DRVSPEED_DEFAULT_SETTING << 8) /**< Shifted mode DEFAULT_SETTING for DCDC_EM23CTRL0*/
 
 /* Bit fields for DCDC PFMXCTRL */
-#define _DCDC_PFMXCTRL_RESETVALUE                   0x000C0C0CUL                              /**< Default value for DCDC_PFMXCTRL             */
-#define _DCDC_PFMXCTRL_MASK                         0x000F1F0FUL                              /**< Mask for DCDC_PFMXCTRL                      */
-#define _DCDC_PFMXCTRL_IPKVAL_SHIFT                 0                                         /**< Shift value for DCDC_IPKVAL                 */
-#define _DCDC_PFMXCTRL_IPKVAL_MASK                  0xFUL                                     /**< Bit mask for DCDC_IPKVAL                    */
-#define _DCDC_PFMXCTRL_IPKVAL_DEFAULT               0x0000000CUL                              /**< Mode DEFAULT for DCDC_PFMXCTRL              */
-#define _DCDC_PFMXCTRL_IPKVAL_LOAD50MA              0x00000003UL                              /**< Mode LOAD50MA for DCDC_PFMXCTRL             */
-#define _DCDC_PFMXCTRL_IPKVAL_LOAD65MA              0x00000004UL                              /**< Mode LOAD65MA for DCDC_PFMXCTRL             */
-#define _DCDC_PFMXCTRL_IPKVAL_LOAD73MA              0x00000005UL                              /**< Mode LOAD73MA for DCDC_PFMXCTRL             */
-#define _DCDC_PFMXCTRL_IPKVAL_LOAD80MA              0x00000006UL                              /**< Mode LOAD80MA for DCDC_PFMXCTRL             */
-#define _DCDC_PFMXCTRL_IPKVAL_LOAD86MA              0x00000007UL                              /**< Mode LOAD86MA for DCDC_PFMXCTRL             */
-#define _DCDC_PFMXCTRL_IPKVAL_LOAD93MA              0x00000008UL                              /**< Mode LOAD93MA for DCDC_PFMXCTRL             */
-#define _DCDC_PFMXCTRL_IPKVAL_LOAD100MA             0x00000009UL                              /**< Mode LOAD100MA for DCDC_PFMXCTRL            */
-#define _DCDC_PFMXCTRL_IPKVAL_LOAD106MA             0x0000000AUL                              /**< Mode LOAD106MA for DCDC_PFMXCTRL            */
-#define _DCDC_PFMXCTRL_IPKVAL_LOAD113MA             0x0000000BUL                              /**< Mode LOAD113MA for DCDC_PFMXCTRL            */
-#define _DCDC_PFMXCTRL_IPKVAL_LOAD120MA             0x0000000CUL                              /**< Mode LOAD120MA for DCDC_PFMXCTRL            */
-#define DCDC_PFMXCTRL_IPKVAL_DEFAULT                (_DCDC_PFMXCTRL_IPKVAL_DEFAULT << 0)      /**< Shifted mode DEFAULT for DCDC_PFMXCTRL      */
-#define DCDC_PFMXCTRL_IPKVAL_LOAD50MA               (_DCDC_PFMXCTRL_IPKVAL_LOAD50MA << 0)     /**< Shifted mode LOAD50MA for DCDC_PFMXCTRL     */
-#define DCDC_PFMXCTRL_IPKVAL_LOAD65MA               (_DCDC_PFMXCTRL_IPKVAL_LOAD65MA << 0)     /**< Shifted mode LOAD65MA for DCDC_PFMXCTRL     */
-#define DCDC_PFMXCTRL_IPKVAL_LOAD73MA               (_DCDC_PFMXCTRL_IPKVAL_LOAD73MA << 0)     /**< Shifted mode LOAD73MA for DCDC_PFMXCTRL     */
-#define DCDC_PFMXCTRL_IPKVAL_LOAD80MA               (_DCDC_PFMXCTRL_IPKVAL_LOAD80MA << 0)     /**< Shifted mode LOAD80MA for DCDC_PFMXCTRL     */
-#define DCDC_PFMXCTRL_IPKVAL_LOAD86MA               (_DCDC_PFMXCTRL_IPKVAL_LOAD86MA << 0)     /**< Shifted mode LOAD86MA for DCDC_PFMXCTRL     */
-#define DCDC_PFMXCTRL_IPKVAL_LOAD93MA               (_DCDC_PFMXCTRL_IPKVAL_LOAD93MA << 0)     /**< Shifted mode LOAD93MA for DCDC_PFMXCTRL     */
-#define DCDC_PFMXCTRL_IPKVAL_LOAD100MA              (_DCDC_PFMXCTRL_IPKVAL_LOAD100MA << 0)    /**< Shifted mode LOAD100MA for DCDC_PFMXCTRL    */
-#define DCDC_PFMXCTRL_IPKVAL_LOAD106MA              (_DCDC_PFMXCTRL_IPKVAL_LOAD106MA << 0)    /**< Shifted mode LOAD106MA for DCDC_PFMXCTRL    */
-#define DCDC_PFMXCTRL_IPKVAL_LOAD113MA              (_DCDC_PFMXCTRL_IPKVAL_LOAD113MA << 0)    /**< Shifted mode LOAD113MA for DCDC_PFMXCTRL    */
-#define DCDC_PFMXCTRL_IPKVAL_LOAD120MA              (_DCDC_PFMXCTRL_IPKVAL_LOAD120MA << 0)    /**< Shifted mode LOAD120MA for DCDC_PFMXCTRL    */
-#define _DCDC_PFMXCTRL_IPKTMAXCTRL_SHIFT            8                                         /**< Shift value for DCDC_IPKTMAXCTRL            */
-#define _DCDC_PFMXCTRL_IPKTMAXCTRL_MASK             0x1F00UL                                  /**< Bit mask for DCDC_IPKTMAXCTRL               */
-#define _DCDC_PFMXCTRL_IPKTMAXCTRL_DEFAULT          0x0000000CUL                              /**< Mode DEFAULT for DCDC_PFMXCTRL              */
-#define DCDC_PFMXCTRL_IPKTMAXCTRL_DEFAULT           (_DCDC_PFMXCTRL_IPKTMAXCTRL_DEFAULT << 8) /**< Shifted mode DEFAULT for DCDC_PFMXCTRL      */
-#define _DCDC_PFMXCTRL_IPKDECVAL_SHIFT              16                                        /**< Shift value for DCDC_IPKDECVAL              */
-#define _DCDC_PFMXCTRL_IPKDECVAL_MASK               0xF0000UL                                 /**< Bit mask for DCDC_IPKDECVAL                 */
-#define _DCDC_PFMXCTRL_IPKDECVAL_DEFAULT            0x0000000CUL                              /**< Mode DEFAULT for DCDC_PFMXCTRL              */
-#define DCDC_PFMXCTRL_IPKDECVAL_DEFAULT             (_DCDC_PFMXCTRL_IPKDECVAL_DEFAULT << 16)  /**< Shifted mode DEFAULT for DCDC_PFMXCTRL      */
+#define _DCDC_PFMXCTRL_RESETVALUE                   0x000C0C0CUL                               /**< Default value for DCDC_PFMXCTRL             */
+#define _DCDC_PFMXCTRL_MASK                         0x000F1F0FUL                               /**< Mask for DCDC_PFMXCTRL                      */
+#define _DCDC_PFMXCTRL_IPKVAL_SHIFT                 0                                          /**< Shift value for DCDC_IPKVAL                 */
+#define _DCDC_PFMXCTRL_IPKVAL_MASK                  0xFUL                                      /**< Bit mask for DCDC_IPKVAL                    */
+#define _DCDC_PFMXCTRL_IPKVAL_DEFAULT               0x0000000CUL                               /**< Mode DEFAULT for DCDC_PFMXCTRL              */
+#define _DCDC_PFMXCTRL_IPKVAL_LOAD50MA              0x00000003UL                               /**< Mode LOAD50MA for DCDC_PFMXCTRL             */
+#define _DCDC_PFMXCTRL_IPKVAL_LOAD65MA              0x00000004UL                               /**< Mode LOAD65MA for DCDC_PFMXCTRL             */
+#define _DCDC_PFMXCTRL_IPKVAL_LOAD73MA              0x00000005UL                               /**< Mode LOAD73MA for DCDC_PFMXCTRL             */
+#define _DCDC_PFMXCTRL_IPKVAL_LOAD80MA              0x00000006UL                               /**< Mode LOAD80MA for DCDC_PFMXCTRL             */
+#define _DCDC_PFMXCTRL_IPKVAL_LOAD86MA              0x00000007UL                               /**< Mode LOAD86MA for DCDC_PFMXCTRL             */
+#define _DCDC_PFMXCTRL_IPKVAL_LOAD93MA              0x00000008UL                               /**< Mode LOAD93MA for DCDC_PFMXCTRL             */
+#define _DCDC_PFMXCTRL_IPKVAL_LOAD100MA             0x00000009UL                               /**< Mode LOAD100MA for DCDC_PFMXCTRL            */
+#define _DCDC_PFMXCTRL_IPKVAL_LOAD106MA             0x0000000AUL                               /**< Mode LOAD106MA for DCDC_PFMXCTRL            */
+#define _DCDC_PFMXCTRL_IPKVAL_LOAD113MA             0x0000000BUL                               /**< Mode LOAD113MA for DCDC_PFMXCTRL            */
+#define _DCDC_PFMXCTRL_IPKVAL_LOAD120MA             0x0000000CUL                               /**< Mode LOAD120MA for DCDC_PFMXCTRL            */
+#define DCDC_PFMXCTRL_IPKVAL_DEFAULT                (_DCDC_PFMXCTRL_IPKVAL_DEFAULT << 0)       /**< Shifted mode DEFAULT for DCDC_PFMXCTRL      */
+#define DCDC_PFMXCTRL_IPKVAL_LOAD50MA               (_DCDC_PFMXCTRL_IPKVAL_LOAD50MA << 0)      /**< Shifted mode LOAD50MA for DCDC_PFMXCTRL     */
+#define DCDC_PFMXCTRL_IPKVAL_LOAD65MA               (_DCDC_PFMXCTRL_IPKVAL_LOAD65MA << 0)      /**< Shifted mode LOAD65MA for DCDC_PFMXCTRL     */
+#define DCDC_PFMXCTRL_IPKVAL_LOAD73MA               (_DCDC_PFMXCTRL_IPKVAL_LOAD73MA << 0)      /**< Shifted mode LOAD73MA for DCDC_PFMXCTRL     */
+#define DCDC_PFMXCTRL_IPKVAL_LOAD80MA               (_DCDC_PFMXCTRL_IPKVAL_LOAD80MA << 0)      /**< Shifted mode LOAD80MA for DCDC_PFMXCTRL     */
+#define DCDC_PFMXCTRL_IPKVAL_LOAD86MA               (_DCDC_PFMXCTRL_IPKVAL_LOAD86MA << 0)      /**< Shifted mode LOAD86MA for DCDC_PFMXCTRL     */
+#define DCDC_PFMXCTRL_IPKVAL_LOAD93MA               (_DCDC_PFMXCTRL_IPKVAL_LOAD93MA << 0)      /**< Shifted mode LOAD93MA for DCDC_PFMXCTRL     */
+#define DCDC_PFMXCTRL_IPKVAL_LOAD100MA              (_DCDC_PFMXCTRL_IPKVAL_LOAD100MA << 0)     /**< Shifted mode LOAD100MA for DCDC_PFMXCTRL    */
+#define DCDC_PFMXCTRL_IPKVAL_LOAD106MA              (_DCDC_PFMXCTRL_IPKVAL_LOAD106MA << 0)     /**< Shifted mode LOAD106MA for DCDC_PFMXCTRL    */
+#define DCDC_PFMXCTRL_IPKVAL_LOAD113MA              (_DCDC_PFMXCTRL_IPKVAL_LOAD113MA << 0)     /**< Shifted mode LOAD113MA for DCDC_PFMXCTRL    */
+#define DCDC_PFMXCTRL_IPKVAL_LOAD120MA              (_DCDC_PFMXCTRL_IPKVAL_LOAD120MA << 0)     /**< Shifted mode LOAD120MA for DCDC_PFMXCTRL    */
+#define _DCDC_PFMXCTRL_IPKTMAXCTRL_SHIFT            8                                          /**< Shift value for DCDC_IPKTMAXCTRL            */
+#define _DCDC_PFMXCTRL_IPKTMAXCTRL_MASK             0x1F00UL                                   /**< Bit mask for DCDC_IPKTMAXCTRL               */
+#define _DCDC_PFMXCTRL_IPKTMAXCTRL_DEFAULT          0x0000000CUL                               /**< Mode DEFAULT for DCDC_PFMXCTRL              */
+#define DCDC_PFMXCTRL_IPKTMAXCTRL_DEFAULT           (_DCDC_PFMXCTRL_IPKTMAXCTRL_DEFAULT << 8)  /**< Shifted mode DEFAULT for DCDC_PFMXCTRL      */
+#define _DCDC_PFMXCTRL_IPKDECVAL_SHIFT              16                                         /**< Shift value for DCDC_IPKDECVAL              */
+#define _DCDC_PFMXCTRL_IPKDECVAL_MASK               0xF0000UL                                  /**< Bit mask for DCDC_IPKDECVAL                 */
+#define _DCDC_PFMXCTRL_IPKDECVAL_DEFAULT            0x0000000CUL                               /**< Mode DEFAULT for DCDC_PFMXCTRL              */
+#define _DCDC_PFMXCTRL_IPKDECVAL_LOAD50MA           0x00000003UL                               /**< Mode LOAD50MA for DCDC_PFMXCTRL             */
+#define _DCDC_PFMXCTRL_IPKDECVAL_LOAD65MA           0x00000004UL                               /**< Mode LOAD65MA for DCDC_PFMXCTRL             */
+#define _DCDC_PFMXCTRL_IPKDECVAL_LOAD73MA           0x00000005UL                               /**< Mode LOAD73MA for DCDC_PFMXCTRL             */
+#define _DCDC_PFMXCTRL_IPKDECVAL_LOAD80MA           0x00000006UL                               /**< Mode LOAD80MA for DCDC_PFMXCTRL             */
+#define _DCDC_PFMXCTRL_IPKDECVAL_LOAD86MA           0x00000007UL                               /**< Mode LOAD86MA for DCDC_PFMXCTRL             */
+#define _DCDC_PFMXCTRL_IPKDECVAL_LOAD93MA           0x00000008UL                               /**< Mode LOAD93MA for DCDC_PFMXCTRL             */
+#define _DCDC_PFMXCTRL_IPKDECVAL_LOAD100MA          0x00000009UL                               /**< Mode LOAD100MA for DCDC_PFMXCTRL            */
+#define _DCDC_PFMXCTRL_IPKDECVAL_LOAD106MA          0x0000000AUL                               /**< Mode LOAD106MA for DCDC_PFMXCTRL            */
+#define _DCDC_PFMXCTRL_IPKDECVAL_LOAD113MA          0x0000000BUL                               /**< Mode LOAD113MA for DCDC_PFMXCTRL            */
+#define _DCDC_PFMXCTRL_IPKDECVAL_LOAD120MA          0x0000000CUL                               /**< Mode LOAD120MA for DCDC_PFMXCTRL            */
+#define DCDC_PFMXCTRL_IPKDECVAL_DEFAULT             (_DCDC_PFMXCTRL_IPKDECVAL_DEFAULT << 16)   /**< Shifted mode DEFAULT for DCDC_PFMXCTRL      */
+#define DCDC_PFMXCTRL_IPKDECVAL_LOAD50MA            (_DCDC_PFMXCTRL_IPKDECVAL_LOAD50MA << 16)  /**< Shifted mode LOAD50MA for DCDC_PFMXCTRL     */
+#define DCDC_PFMXCTRL_IPKDECVAL_LOAD65MA            (_DCDC_PFMXCTRL_IPKDECVAL_LOAD65MA << 16)  /**< Shifted mode LOAD65MA for DCDC_PFMXCTRL     */
+#define DCDC_PFMXCTRL_IPKDECVAL_LOAD73MA            (_DCDC_PFMXCTRL_IPKDECVAL_LOAD73MA << 16)  /**< Shifted mode LOAD73MA for DCDC_PFMXCTRL     */
+#define DCDC_PFMXCTRL_IPKDECVAL_LOAD80MA            (_DCDC_PFMXCTRL_IPKDECVAL_LOAD80MA << 16)  /**< Shifted mode LOAD80MA for DCDC_PFMXCTRL     */
+#define DCDC_PFMXCTRL_IPKDECVAL_LOAD86MA            (_DCDC_PFMXCTRL_IPKDECVAL_LOAD86MA << 16)  /**< Shifted mode LOAD86MA for DCDC_PFMXCTRL     */
+#define DCDC_PFMXCTRL_IPKDECVAL_LOAD93MA            (_DCDC_PFMXCTRL_IPKDECVAL_LOAD93MA << 16)  /**< Shifted mode LOAD93MA for DCDC_PFMXCTRL     */
+#define DCDC_PFMXCTRL_IPKDECVAL_LOAD100MA           (_DCDC_PFMXCTRL_IPKDECVAL_LOAD100MA << 16) /**< Shifted mode LOAD100MA for DCDC_PFMXCTRL    */
+#define DCDC_PFMXCTRL_IPKDECVAL_LOAD106MA           (_DCDC_PFMXCTRL_IPKDECVAL_LOAD106MA << 16) /**< Shifted mode LOAD106MA for DCDC_PFMXCTRL    */
+#define DCDC_PFMXCTRL_IPKDECVAL_LOAD113MA           (_DCDC_PFMXCTRL_IPKDECVAL_LOAD113MA << 16) /**< Shifted mode LOAD113MA for DCDC_PFMXCTRL    */
+#define DCDC_PFMXCTRL_IPKDECVAL_LOAD120MA           (_DCDC_PFMXCTRL_IPKDECVAL_LOAD120MA << 16) /**< Shifted mode LOAD120MA for DCDC_PFMXCTRL    */
 
 /* Bit fields for DCDC IF */
 #define _DCDC_IF_RESETVALUE                         0x00000000UL                        /**< Default value for DCDC_IF                   */
@@ -499,74 +514,6 @@ typedef struct dcdc_typedef{
 #define DCDC_LOCKSTATUS_LOCK_DEFAULT                (_DCDC_LOCKSTATUS_LOCK_DEFAULT << 0)  /**< Shifted mode DEFAULT for DCDC_LOCKSTATUS    */
 #define DCDC_LOCKSTATUS_LOCK_UNLOCKED               (_DCDC_LOCKSTATUS_LOCK_UNLOCKED << 0) /**< Shifted mode UNLOCKED for DCDC_LOCKSTATUS   */
 #define DCDC_LOCKSTATUS_LOCK_LOCKED                 (_DCDC_LOCKSTATUS_LOCK_LOCKED << 0)   /**< Shifted mode LOCKED for DCDC_LOCKSTATUS     */
-
-/* Bit fields for DCDC CFG */
-#define _DCDC_CFG_RESETVALUE                        0x80001010UL                               /**< Default value for DCDC_CFG                  */
-#define _DCDC_CFG_MASK                              0x80E33131UL                               /**< Mask for DCDC_CFG                           */
-#define DCDC_CFG_EARLYRESETEN                       (0x1UL << 0)                               /**< DCDC VCMP Early Reset Enable                */
-#define _DCDC_CFG_EARLYRESETEN_SHIFT                0                                          /**< Shift value for DCDC_EARLYRESETEN           */
-#define _DCDC_CFG_EARLYRESETEN_MASK                 0x1UL                                      /**< Bit mask for DCDC_EARLYRESETEN              */
-#define _DCDC_CFG_EARLYRESETEN_DEFAULT              0x00000000UL                               /**< Mode DEFAULT for DCDC_CFG                   */
-#define _DCDC_CFG_EARLYRESETEN_DISABLE              0x00000000UL                               /**< Mode DISABLE for DCDC_CFG                   */
-#define _DCDC_CFG_EARLYRESETEN_ENABLE               0x00000001UL                               /**< Mode ENABLE for DCDC_CFG                    */
-#define DCDC_CFG_EARLYRESETEN_DEFAULT               (_DCDC_CFG_EARLYRESETEN_DEFAULT << 0)      /**< Shifted mode DEFAULT for DCDC_CFG           */
-#define DCDC_CFG_EARLYRESETEN_DISABLE               (_DCDC_CFG_EARLYRESETEN_DISABLE << 0)      /**< Shifted mode DISABLE for DCDC_CFG           */
-#define DCDC_CFG_EARLYRESETEN_ENABLE                (_DCDC_CFG_EARLYRESETEN_ENABLE << 0)       /**< Shifted mode ENABLE for DCDC_CFG            */
-#define _DCDC_CFG_VCMPVPROG_SHIFT                   4                                          /**< Shift value for DCDC_VCMPVPROG              */
-#define _DCDC_CFG_VCMPVPROG_MASK                    0x30UL                                     /**< Bit mask for DCDC_VCMPVPROG                 */
-#define _DCDC_CFG_VCMPVPROG_DEFAULT                 0x00000001UL                               /**< Mode DEFAULT for DCDC_CFG                   */
-#define _DCDC_CFG_VCMPVPROG_TARGET_1P775            0x00000000UL                               /**< Mode TARGET_1P775 for DCDC_CFG              */
-#define _DCDC_CFG_VCMPVPROG_TARGET_1P8              0x00000001UL                               /**< Mode TARGET_1P8 for DCDC_CFG                */
-#define _DCDC_CFG_VCMPVPROG_TARGET_1P825            0x00000002UL                               /**< Mode TARGET_1P825 for DCDC_CFG              */
-#define _DCDC_CFG_VCMPVPROG_TARGET_1P85             0x00000003UL                               /**< Mode TARGET_1P85 for DCDC_CFG               */
-#define DCDC_CFG_VCMPVPROG_DEFAULT                  (_DCDC_CFG_VCMPVPROG_DEFAULT << 4)         /**< Shifted mode DEFAULT for DCDC_CFG           */
-#define DCDC_CFG_VCMPVPROG_TARGET_1P775             (_DCDC_CFG_VCMPVPROG_TARGET_1P775 << 4)    /**< Shifted mode TARGET_1P775 for DCDC_CFG      */
-#define DCDC_CFG_VCMPVPROG_TARGET_1P8               (_DCDC_CFG_VCMPVPROG_TARGET_1P8 << 4)      /**< Shifted mode TARGET_1P8 for DCDC_CFG        */
-#define DCDC_CFG_VCMPVPROG_TARGET_1P825             (_DCDC_CFG_VCMPVPROG_TARGET_1P825 << 4)    /**< Shifted mode TARGET_1P825 for DCDC_CFG      */
-#define DCDC_CFG_VCMPVPROG_TARGET_1P85              (_DCDC_CFG_VCMPVPROG_TARGET_1P85 << 4)     /**< Shifted mode TARGET_1P85 for DCDC_CFG       */
-#define DCDC_CFG_SWDRVDLY                           (0x1UL << 8)                               /**< Switch Driver Delay                         */
-#define _DCDC_CFG_SWDRVDLY_SHIFT                    8                                          /**< Shift value for DCDC_SWDRVDLY               */
-#define _DCDC_CFG_SWDRVDLY_MASK                     0x100UL                                    /**< Bit mask for DCDC_SWDRVDLY                  */
-#define _DCDC_CFG_SWDRVDLY_DEFAULT                  0x00000000UL                               /**< Mode DEFAULT for DCDC_CFG                   */
-#define _DCDC_CFG_SWDRVDLY_ONECYCLE                 0x00000000UL                               /**< Mode ONECYCLE for DCDC_CFG                  */
-#define _DCDC_CFG_SWDRVDLY_TWOCYCLE                 0x00000001UL                               /**< Mode TWOCYCLE for DCDC_CFG                  */
-#define DCDC_CFG_SWDRVDLY_DEFAULT                   (_DCDC_CFG_SWDRVDLY_DEFAULT << 8)          /**< Shifted mode DEFAULT for DCDC_CFG           */
-#define DCDC_CFG_SWDRVDLY_ONECYCLE                  (_DCDC_CFG_SWDRVDLY_ONECYCLE << 8)         /**< Shifted mode ONECYCLE for DCDC_CFG          */
-#define DCDC_CFG_SWDRVDLY_TWOCYCLE                  (_DCDC_CFG_SWDRVDLY_TWOCYCLE << 8)         /**< Shifted mode TWOCYCLE for DCDC_CFG          */
-#define _DCDC_CFG_VCMPDECVPROG_SHIFT                12                                         /**< Shift value for DCDC_VCMPDECVPROG           */
-#define _DCDC_CFG_VCMPDECVPROG_MASK                 0x3000UL                                   /**< Bit mask for DCDC_VCMPDECVPROG              */
-#define _DCDC_CFG_VCMPDECVPROG_DEFAULT              0x00000001UL                               /**< Mode DEFAULT for DCDC_CFG                   */
-#define DCDC_CFG_VCMPDECVPROG_DEFAULT               (_DCDC_CFG_VCMPDECVPROG_DEFAULT << 12)     /**< Shifted mode DEFAULT for DCDC_CFG           */
-#define DCDC_CFG_DISNXMTOFF                         (0x1UL << 16)                              /**< Disable longer Min Toff                     */
-#define _DCDC_CFG_DISNXMTOFF_SHIFT                  16                                         /**< Shift value for DCDC_DISNXMTOFF             */
-#define _DCDC_CFG_DISNXMTOFF_MASK                   0x10000UL                                  /**< Bit mask for DCDC_DISNXMTOFF                */
-#define _DCDC_CFG_DISNXMTOFF_DEFAULT                0x00000000UL                               /**< Mode DEFAULT for DCDC_CFG                   */
-#define DCDC_CFG_DISNXMTOFF_DEFAULT                 (_DCDC_CFG_DISNXMTOFF_DEFAULT << 16)       /**< Shifted mode DEFAULT for DCDC_CFG           */
-#define DCDC_CFG_ENSCCILIM                          (0x1UL << 17)                              /**< Enable short-circuit current limit          */
-#define _DCDC_CFG_ENSCCILIM_SHIFT                   17                                         /**< Shift value for DCDC_ENSCCILIM              */
-#define _DCDC_CFG_ENSCCILIM_MASK                    0x20000UL                                  /**< Bit mask for DCDC_ENSCCILIM                 */
-#define _DCDC_CFG_ENSCCILIM_DEFAULT                 0x00000000UL                               /**< Mode DEFAULT for DCDC_CFG                   */
-#define DCDC_CFG_ENSCCILIM_DEFAULT                  (_DCDC_CFG_ENSCCILIM_DEFAULT << 17)        /**< Shifted mode DEFAULT for DCDC_CFG           */
-#define DCDC_CFG_DISDUTY                            (0x1UL << 21)                              /**< Disable power duty-cycling in pfmx mode     */
-#define _DCDC_CFG_DISDUTY_SHIFT                     21                                         /**< Shift value for DCDC_DISDUTY                */
-#define _DCDC_CFG_DISDUTY_MASK                      0x200000UL                                 /**< Bit mask for DCDC_DISDUTY                   */
-#define _DCDC_CFG_DISDUTY_DEFAULT                   0x00000000UL                               /**< Mode DEFAULT for DCDC_CFG                   */
-#define DCDC_CFG_DISDUTY_DEFAULT                    (_DCDC_CFG_DISDUTY_DEFAULT << 21)          /**< Shifted mode DEFAULT for DCDC_CFG           */
-#define DCDC_CFG_PFMXFORCEIZSTALL                   (0x1UL << 22)                              /**< Force izstall high in pfmx mode             */
-#define _DCDC_CFG_PFMXFORCEIZSTALL_SHIFT            22                                         /**< Shift value for DCDC_PFMXFORCEIZSTALL       */
-#define _DCDC_CFG_PFMXFORCEIZSTALL_MASK             0x400000UL                                 /**< Bit mask for DCDC_PFMXFORCEIZSTALL          */
-#define _DCDC_CFG_PFMXFORCEIZSTALL_DEFAULT          0x00000000UL                               /**< Mode DEFAULT for DCDC_CFG                   */
-#define DCDC_CFG_PFMXFORCEIZSTALL_DEFAULT           (_DCDC_CFG_PFMXFORCEIZSTALL_DEFAULT << 22) /**< Shifted mode DEFAULT for DCDC_CFG           */
-#define DCDC_CFG_ENMTOFFVCMPRST                     (0x1UL << 23)                              /**< Comparator rst during Toff window           */
-#define _DCDC_CFG_ENMTOFFVCMPRST_SHIFT              23                                         /**< Shift value for DCDC_ENMTOFFVCMPRST         */
-#define _DCDC_CFG_ENMTOFFVCMPRST_MASK               0x800000UL                                 /**< Bit mask for DCDC_ENMTOFFVCMPRST            */
-#define _DCDC_CFG_ENMTOFFVCMPRST_DEFAULT            0x00000000UL                               /**< Mode DEFAULT for DCDC_CFG                   */
-#define DCDC_CFG_ENMTOFFVCMPRST_DEFAULT             (_DCDC_CFG_ENMTOFFVCMPRST_DEFAULT << 23)   /**< Shifted mode DEFAULT for DCDC_CFG           */
-#define DCDC_CFG_PPDLYDBLREN                        (0x1UL << 31)                              /**< Pulse Pairing Delay Doubler Enable          */
-#define _DCDC_CFG_PPDLYDBLREN_SHIFT                 31                                         /**< Shift value for DCDC_PPDLYDBLREN            */
-#define _DCDC_CFG_PPDLYDBLREN_MASK                  0x80000000UL                               /**< Bit mask for DCDC_PPDLYDBLREN               */
-#define _DCDC_CFG_PPDLYDBLREN_DEFAULT               0x00000001UL                               /**< Mode DEFAULT for DCDC_CFG                   */
-#define DCDC_CFG_PPDLYDBLREN_DEFAULT                (_DCDC_CFG_PPDLYDBLREN_DEFAULT << 31)      /**< Shifted mode DEFAULT for DCDC_CFG           */
 
 /** @} End of group EFR32FG2D_DCDC_BitFields */
 /** @} End of group EFR32FG2D_DCDC */

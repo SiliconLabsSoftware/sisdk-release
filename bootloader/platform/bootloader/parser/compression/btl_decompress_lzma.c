@@ -23,6 +23,8 @@
 
 #include <string.h>
 
+#define LZMA_PATCH_LENGTH_OFFSET   17U
+
 #if defined(BTL_PARSER_SUPPORT_DELTA_DFU)
 
 #define GBL_BYTES_ARRAY_TO_U32(array, offset)          \
@@ -30,6 +32,20 @@
    | ((uint32_t)((array)[(offset) + 2]) << 16)         \
    | ((uint32_t)((array)[(offset) + 1]) << 8)          \
    | ((uint32_t)((array)[(offset) + 0]) << 0))
+
+#define GBL_BYTES_ARRAY_TO_U64(array, offset)          \
+  ((uint64_t)((uint64_t)((array)[(offset) + 7]) << 56) \
+   | ((uint64_t)((array)[(offset) + 6]) << 48)         \
+   | ((uint64_t)((array)[(offset) + 5]) << 40)         \
+   | ((uint64_t)((array)[(offset) + 4]) << 32)         \
+   | ((uint64_t)((array)[(offset) + 3]) << 24)         \
+   | ((uint64_t)((array)[(offset) + 2]) << 16)         \
+   | ((uint64_t)((array)[(offset) + 1]) << 8)          \
+   | ((uint64_t)((array)[(offset) + 0]) << 0))
+
+#include "core/btl_helper.h"
+#include "btl_delta_dfu_cfg.h"
+
 #endif
 // --------------------------------
 // Configuration
@@ -329,6 +345,20 @@ int32_t gbl_lzmaParseProgTag(ParserContext_t *ctx,
     // First call to function contains programming address in first word
 #if defined(BTL_PARSER_SUPPORT_DELTA_DFU)
     if ((callbacks->applicationCallback != NULL) && (ctx->customTagId == GBL_TAG_ID_DELTA_LZMA)) {
+
+#if BTL_DELTA_DFU_EXTRACT_TO_RAM
+      // 8 bytes file length from the LZMA header
+      uint32_t patch_length = (uint32_t)GBL_BYTES_ARRAY_TO_U64((uint8_t *)data, LZMA_PATCH_LENGTH_OFFSET);
+      patch_length = btl_checkAlignment(patch_length);
+      ctx->deltaPatchAddress = (uint32_t)btl_getRAMSlotAddress(patch_length);
+      // Check if delta patch address is not NULL
+      if (ctx->deltaPatchAddress == 0) {
+        return BOOTLOADER_ERROR_PARSER_OOB_WRITE;
+      }
+      //Update end of patch buffer address
+      ctx->endOfPatchBuffer = ctx->deltaPatchAddress + patch_length;
+#endif
+
       ctx->programmingAddress = ctx->deltaPatchAddress;
     } else {
 #endif

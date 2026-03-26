@@ -59,10 +59,10 @@ recommends:
   - zigbee_ncp
   vendor: silabs
 - id: zigbee_ipc
+  vendor: silabs
   unless:
   - zigbee_ncp
 
-  vendor: silabs
 include:
 - path: platform/radio/rail_lib/plugin
   file_list:
@@ -99,6 +99,7 @@ include:
   - path: sl_zigbee_types_internal.h
   - path: sl_zigbee.h
   - path: sl_zigbee_debug.h
+  - path: sl_zigbee_dhc.h
   - path: sl_zigbee_token.h
   - path: child.h
   - path: sl_zigbee_alternate_mac.h
@@ -337,6 +338,9 @@ include:
   - path: binding-table-ipc-callback-events.h
   condition:
   - zigbee_use_ipc
+- path: app/framework/plugin/dhc
+  file_list:
+  - path: dhc-ncp.h
 
 source:
 - path: app/util/counters/counters.c
@@ -484,6 +488,9 @@ source:
   condition:
   - zigbee_use_ipc
 - path: stack/internal/src/stubs/sl_zigbee_token_internal_weak_stubs.c
+  unless:
+  - zigbee_use_ipc
+- path: stack/internal/src/stubs/sl_zigbee_dhc_internal_weak_stubs.c
   unless:
   - zigbee_use_ipc
 

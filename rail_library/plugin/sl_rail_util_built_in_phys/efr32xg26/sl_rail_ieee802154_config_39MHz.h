@@ -2,7 +2,7 @@
  * @brief RAIL Configuration
  * @details
  *   WARNING: Auto-Generated Radio Config Header  -  DO NOT EDIT
- *   Radio Configurator Version: 2504.4.1
+ *   Radio Configurator Version: 2504.4.8
  *   RAIL Adapter Version: 2.4.33
  *   RAIL Compatibility: 2.x
  *******************************************************************************
@@ -47,6 +47,7 @@ extern const uint32_t sl_rail_ieee802154_2p4_dual_sync_39MHz_modemConfig[];
 extern const uint32_t sl_rail_ieee802154_2p4_high_speed_2mbps_coherent_39MHz_modemConfig[];
 extern const uint32_t sl_rail_ieee802154_2p4_high_speed_1mbps_fec_39MHz_modemConfig[];
 extern const uint32_t sl_rail_ieee802154_2p4_dual_sync_fec_fcs_39MHz_modemConfig[];
+extern const uint32_t sl_rail_ieee802154_2p4_high_speed_fcs_1mbps_fec_39MHz_modemConfig[];
 extern const uint32_t sl_rail_ieee802154_2p4_dual_sync_fcs_39MHz_modemConfig[];
 extern const uint32_t sl_rail_ieee802154_2p4_high_speed_fcs_2mbps_39MHz_modemConfig[];
 extern const uint32_t sl_rail_ieee802154_phy_2G4Hz_39MHz_modemConfig[];

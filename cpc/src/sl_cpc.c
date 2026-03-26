@@ -4732,9 +4732,9 @@ static bool free_closed_endpoint_if_empty(sl_cpc_endpoint_t *ep)
 
     // Stop incoming re-transmit timeout
     (void)sli_cpc_timer_stop_timer(&ep->re_transmit_timer);
-    ep->state = SL_CPC_STATE_FREED;
 
     LOCK_ENDPOINTS_LIST(inst);
+    ep->state = SL_CPC_STATE_FREED;
     sl_slist_remove(&inst->endpoints, &ep->node);
     RELEASE_ENDPOINTS_LIST(inst);
 

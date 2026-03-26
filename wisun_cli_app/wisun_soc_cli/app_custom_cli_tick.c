@@ -58,7 +58,7 @@ bool sli_cli_tick(sl_cli_handle_t handle)
   } while ((c != EOF) && (!newline));
 
   // Works around wake-up issue on RAIL timer expirations
-  EFM_ASSERT(osDelay(1) == osOK);
+  EFM_ASSERT(osDelay(10) == osOK);
 
   if (newline) {
     handle->req_prompt = true;

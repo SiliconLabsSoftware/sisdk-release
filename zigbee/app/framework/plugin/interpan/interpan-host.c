@@ -29,6 +29,8 @@ void sli_zigbee_af_interpan_mac_filter_match_message_callback(sl_zigbee_mac_filt
                                                               uint8_t messageLength,
                                                               uint8_t *messageContents)
 {
+  (void)filterValueMatch;
+  (void)packetInfo;
   sli_zigbee_af_interpan_process_message(legacyPassthroughType,
                                          messageLength,
                                          messageContents);
@@ -92,6 +94,11 @@ sl_status_t sli_zigbee_af_interpan_aps_crypt_message(bool encrypt,
                                                      uint8_t apsHeaderEndIndex,
                                                      sl_802154_long_addr_t remoteEui64)
 {
+  (void)encrypt;
+  (void)message;
+  (void)messageLength;
+  (void)apsHeaderEndIndex;
+  (void)remoteEui64;
   sl_status_t status = SL_STATUS_NOT_AVAILABLE;
 
 #if defined(ALLOW_APS_ENCRYPTED_MESSAGES)

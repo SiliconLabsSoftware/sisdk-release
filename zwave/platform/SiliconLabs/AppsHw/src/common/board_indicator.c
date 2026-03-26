@@ -38,6 +38,9 @@ typedef struct _timer_settings{
 
 static bool m_indicator_initialized    = false;
 static bool m_indicator_active_from_cc = false;
+#ifdef SL_CATALOG_ZW_SHUTDOWN_MANAGER_PRESENT
+static bool m_shutdown_lock_taken      = false;
+#endif
 
 static timer_settings indicator_settings;
 
@@ -69,7 +72,10 @@ static void sleeptimer_off_cb(__attribute__((unused)) sl_sleeptimer_timer_handle
   } else {
     m_indicator_active_from_cc = false;
 #ifdef SL_CATALOG_ZW_SHUTDOWN_MANAGER_PRESENT
-    zw_shutdown_manager_release_lock();
+    if (m_shutdown_lock_taken) {
+      m_shutdown_lock_taken = false;
+      zw_shutdown_manager_release_lock();
+    }
 #endif
   }
 }
@@ -119,7 +125,10 @@ bool Board_IndicatorControl(uint32_t on_time_ms,
     indicator_settings.on_time_ms  = 0;
     m_indicator_active_from_cc = false;
 #ifdef SL_CATALOG_ZW_SHUTDOWN_MANAGER_PRESENT
-    zw_shutdown_manager_release_lock();
+    if (m_shutdown_lock_taken) {
+      m_shutdown_lock_taken = false;
+      zw_shutdown_manager_release_lock();
+    }
 #endif
   } else {
     if (indicator_settings.cycles == 0) {
@@ -133,7 +142,10 @@ bool Board_IndicatorControl(uint32_t on_time_ms,
     sl_simple_led_turn_on(sl_led_led0.context);
     sl_sleeptimer_start_timer_ms(&my_sleeptimer_handle, indicator_settings.on_time_ms, sleeptimer_off_cb, NULL, 0, 0);
 #ifdef SL_CATALOG_ZW_SHUTDOWN_MANAGER_PRESENT
-    zw_shutdown_manager_add_lock();
+    if (!m_shutdown_lock_taken) {
+      zw_shutdown_manager_add_lock();
+      m_shutdown_lock_taken = true;
+    }
 #endif
     m_indicator_active_from_cc = called_from_indicator_cc;
   }

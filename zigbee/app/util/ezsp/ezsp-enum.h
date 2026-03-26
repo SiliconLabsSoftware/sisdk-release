@@ -1,9 +1,9 @@
 // File: ezsp-enum.h
 //
 // *** Generated file. Do not edit! ***
-//
+// 
 // Description: Enumerations for EZSP.
-//
+// 
 // Copyright 2007 by Ember Corporation. All rights reserved.                *80*
 
 #ifndef __EZSP_ENUM_H__
@@ -751,6 +751,7 @@ enum {
 // Frame IDs
 
 enum {
+
 // Configuration Frames
   SL_ZIGBEE_EZSP_VERSION                        = 0x0000,
   SL_ZIGBEE_EZSP_GET_CONFIGURATION_VALUE        = 0x0052,
@@ -803,7 +804,6 @@ enum {
   SL_ZIGBEE_EZSP_GET_TRUE_RANDOM_ENTROPY_SOURCE = 0x004F,
   SL_ZIGBEE_EZSP_SETUP_DELAYED_JOIN             = 0x003A,
   SL_ZIGBEE_EZSP_RADIO_GET_SCHEDULER_PRIORITIES = 0x012A,
-  SL_ZIGBEE_EZSP_RADIO_SET_SCHEDULER_PRIORITIES = 0x012B,
   SL_ZIGBEE_EZSP_RADIO_GET_SCHEDULER_SLIPTIME   = 0x012C,
   SL_ZIGBEE_EZSP_RADIO_SET_SCHEDULER_SLIPTIME   = 0x012D,
   SL_ZIGBEE_EZSP_COUNTER_REQUIRES_PHY_INDEX     = 0x0132,
@@ -1095,7 +1095,33 @@ enum {
   SL_ZIGBEE_EZSP_SET_TOKEN_DATA                 = 0x0103,
   SL_ZIGBEE_EZSP_RESET_NODE                     = 0x0104,
   SL_ZIGBEE_EZSP_GP_SECURITY_TEST_VECTORS       = 0x0117,
-  SL_ZIGBEE_EZSP_TOKEN_FACTORY_RESET            = 0x0077
+  SL_ZIGBEE_EZSP_TOKEN_FACTORY_RESET            = 0x0077,
+
+// Dynamic Hardware Configuration Frames
+  SL_ZIGBEE_EZSP_READ_PA_DESCRIPTOR             = 0x0152,
+  SL_ZIGBEE_EZSP_WRITE_PA_DESCRIPTOR            = 0x0153,
+  SL_ZIGBEE_EZSP_READ_PA_CURVE_SEGMENT          = 0x0154,
+  SL_ZIGBEE_EZSP_WRITE_PA_CURVE_SEGMENT         = 0x0155,
+  SL_ZIGBEE_EZSP_READ_PA_CURVE                  = 0x0156,
+  SL_ZIGBEE_EZSP_WRITE_PA_CURVE                 = 0x0157,
+  SL_ZIGBEE_EZSP_READ_PA_TABLE                  = 0x0158,
+  SL_ZIGBEE_EZSP_WRITE_PA_TABLE                 = 0x0159,
+  SL_ZIGBEE_EZSP_READ_RSSI_OFFSET               = 0x015A,
+  SL_ZIGBEE_EZSP_WRITE_RSSI_OFFSET              = 0x015F,
+  SL_ZIGBEE_EZSP_READ_PA_VOLTAGE                = 0x015B,
+  SL_ZIGBEE_EZSP_WRITE_PA_VOLTAGE               = 0x015C,
+  SL_ZIGBEE_EZSP_READ_PA_MODE                   = 0x015D,
+  SL_ZIGBEE_EZSP_WRITE_PA_MODE                  = 0x015E,
+  SL_ZIGBEE_EZSP_READ_CTUNE                     = 0x0160,
+  SL_ZIGBEE_EZSP_WRITE_CTUNE                    = 0x0161,
+  SL_ZIGBEE_EZSP_READ_DHC_VERSION               = 0x0162,
+  SL_ZIGBEE_EZSP_WRITE_DHC_VERSION              = 0x0163,
+  SL_ZIGBEE_EZSP_READ_PA_VERSION                = 0x0164,
+  SL_ZIGBEE_EZSP_READ_PA_SIGNATURE              = 0x0166,
+  SL_ZIGBEE_EZSP_WRITE_PA_SIGNATURE             = 0x0167,
+  SL_ZIGBEE_EZSP_READ_PA_METADATA               = 0x0168,
+  SL_ZIGBEE_EZSP_WRITE_PA_METADATA              = 0x0169
 };
 
 #endif // __EZSP_ENUM_H__
+

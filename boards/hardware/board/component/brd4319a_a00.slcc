@@ -18,6 +18,7 @@
   - name: hardware_board
   - name: hardware_board_rb
   - name: hardware_board_has_vcom
+  - name: hardware_board_has_vcom_hardware_flowcontrol
   - name: hardware_board_has_exp_7
   - name: hardware_board_has_exp_9
   - name: hardware_board_has_exp_14
@@ -65,6 +66,7 @@
   - board:revision:A00
   - board:device:mgm240l022vnf
   - hardware:has:vcom
+  - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:led:2
   - hardware:has:button:2

@@ -163,6 +163,22 @@ SL_WEAK void app_init_early(void)
   // User defined.
 }
 
+/******************************************************************************
+ * @brief User-defined function for application initialization after platform 
+ * and initialization.
+ *
+ * @details This function is called from sl_main_second_stage_init():
+ * - After sl_platform_init(), sl_driver_init(), and sl_service_init() complete
+ * - Before sl_stack_init() is called
+ * This function allows the user to perform initialization that depends on
+ * platform components, drivers, and services being ready, but needs to run
+ * before stacks are initialized.
+ *****************************************************************************/
+SL_WEAK void app_init_post_platform(void)
+{
+  // User defined.
+}
+
 #if !defined(SL_CATALOG_SL_SYSTEM_COMPATIBILITY_PRESENT)
 /******************************************************************************
  * @brief User-defined function for app initialization.
@@ -205,6 +221,7 @@ void sl_main_second_stage_init(void)
   sl_platform_init();
   sl_driver_init();
   sl_service_init();
+  app_init_post_platform();
   sl_stack_init();
   sl_internal_app_init();
 #if defined(SL_CATALOG_KERNEL_PRESENT) && (SL_MAIN_ENABLE_START_TASK_PRIORITY_CHANGE == 1)

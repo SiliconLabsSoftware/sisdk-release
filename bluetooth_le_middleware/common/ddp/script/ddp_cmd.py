@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2025 Silicon Laboratories Inc. www.silabs.com
+# Copyright 2026 Silicon Laboratories Inc. www.silabs.com
 #
 # SPDX-License-Identifier: Zlib
 #
@@ -24,7 +24,7 @@
 
 # Metadata
 __author__ = 'Silicon Laboratories, Inc'
-__copyright__ = 'Copyright 2025, Silicon Laboratories, Inc.'
+__copyright__ = 'Copyright 2026, Silicon Laboratories, Inc.'
 
 import struct
 

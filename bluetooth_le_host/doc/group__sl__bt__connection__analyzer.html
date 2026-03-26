@@ -107,7 +107,7 @@ Modules</h2></td></tr>
 <tr class="memitem:group__sl__bt__connection__analyzer__flags"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__connection__analyzer__flags.html">Connection Analyzer Configuration flags</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:group__sl__bt__evt__connection__analyzer__report"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__evt__connection__analyzer__report.html">sl_bt_evt_connection_analyzer_report</a></td></tr>
-<tr class="memdesc:group__sl__bt__evt__connection__analyzer__report"><td class="mdescLeft">&#160;</td><td class="mdescRight">Triggered when packets transmitted on a connection are captured. <br /></td></tr>
+<tr class="memdesc:group__sl__bt__evt__connection__analyzer__report"><td class="mdescLeft">&#160;</td><td class="mdescRight">Triggered at every connection interval. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:group__sl__bt__evt__connection__analyzer__completed"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__evt__connection__analyzer__completed.html">sl_bt_evt_connection_analyzer_completed</a></td></tr>
 <tr class="memdesc:group__sl__bt__evt__connection__analyzer__completed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Triggered when the operation of analyzing a connection is completed. <br /></td></tr>
@@ -228,7 +228,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p >Start to analyze another device's connection and report the RSSI measurements. The parameters in this command provide necessary information to identify the connection and schedule operations to follow its transmissions.</p>
-<p >When this device is in central role, the analyzer generates a report only after the peripheral responds to the central in a connection event. If the peripheral does not respond, the analyzer does not generate a report for that connection event.</p>
+<p >The analyzer generates a report at every connection interval. When a central or peripheral packet could not be observed, the RSSI for the role is reported as unavailable (127).</p>
 <p >If the other device uses Silabs' Bluetooth stack, the information of the connection could be retrieved with command <a class="el" href="group__sl__bt__connection.html#gad62e5d430b422114957d0d45005cd8bb">sl_bt_connection_get_scheduling_details</a>. The method of passing the information to this device is application layer logic.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -272,7 +272,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>SL_STATUS_OK if successful. Error code otherwise.</dd></dl>
 <p><b>Events</b> </p><ul>
-<li><a class="el" href="group__sl__bt__evt__connection__analyzer__report.html">sl_bt_evt_connection_analyzer_report</a> - Triggered when a packet transmitted from the given device is captured.</li>
+<li><a class="el" href="group__sl__bt__evt__connection__analyzer__report.html">sl_bt_evt_connection_analyzer_report</a> - Triggered at every connection interval.</li>
 <li><a class="el" href="group__sl__bt__evt__connection__analyzer__completed.html">sl_bt_evt_connection_analyzer_completed</a> - Triggered when analyzing a connection is completed in the Link Layer for some reason. </li>
 </ul>
 

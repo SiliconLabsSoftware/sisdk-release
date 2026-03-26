@@ -24,10 +24,12 @@ static const char usage[] =
   "    -h                       display usage information\n"
   "    -c <cpcd instance name>  use the specified instance name; e.g. -c cpcd_1\n"
   "                             default: cpcd_0\n"
+  "    -j <path>                apply DHC calibration JSON before stack init\n"
   "    -d <OTA dir>             sets the directory to search OTA files.\n"
   "                             NOTE: Option is useful only when zigbee OTA storage\n"
   "                             posix filesystem component is present.\n";
-;
 
 bool sl_zigbee_ezsp_internal_process_command_options(int argc, char *argv[], char *errStr);
+
+char *sl_zigbee_ezsp_get_dhc_json_path(void);
 #endif //SILABS_CPC_HOST_UI_H

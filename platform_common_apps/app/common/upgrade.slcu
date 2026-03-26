@@ -59,6 +59,12 @@ upgrade:
   - sdk:
       id: simplicity_sdk
       version: 2025.12.0
+    component:
+      - trigger: segment_lcd_driver
+        description: >
+          Add emlib_chip component to the project, for em_chip.h include issue fixing.
+        add:
+          - emlib_chip
     configuration:
       - name: SL_SEGMENT_LCD_LDMA_MODE
         replacement: SL_SEGMENT_LCD_LDMA_MODE

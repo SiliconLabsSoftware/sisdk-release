@@ -17,10 +17,10 @@
   - name: SL_KIT_NAME
     value: '"XG23-PK6067A"'
   - name: SL_KIT_REV
-    value: '"B01"'
+    value: '"B02"'
 - tag:
   - kit:opn:xG23-PK6067A
   - kit:pn:PK6067
   - kit:variant:A
-  - kit:revision:B01
+  - kit:revision:B02
 - root_path: boards

@@ -382,6 +382,36 @@
 <tr><td>sl_zigbee_token_data_t</td><td></td><td>Token Data</td></tr>
 <tr><td></td><td>uint32_t size</td><td>Token data size in bytes</td></tr>
 <tr><td></td><td>uint8_t[64] data</td><td>Token data pointer</td></tr>
+<tr><td>sl_zigbee_dhc_pa_metadata_t</td><td></td><td>Top-level PA calibration metadata.</td></tr>
+<tr><td></td><td>uint8_t version</td><td>Calibration metadata / dataset version.</td></tr>
+<tr><td></td><td>uint8_t num_descriptors</td><td>Number of PA descriptors present.</td></tr>
+<tr><td></td><td>uint16_t pa_voltage</td><td>PA supply voltage (e.g. mV).</td></tr>
+<tr><td></td><td>uint32_t signature</td><td>Integrity signature / CRC for whole set.</td></tr>
+<tr><td>sl_zigbee_dhc_pa_descriptor_t</td><td></td><td>Descriptor for either a curve (algorithm=0) or table (algorithm=1).</td></tr>
+<tr><td></td><td>uint8_t algorithm</td><td>0=Curve, 1=Table.</td></tr>
+<tr><td></td><td>uint8_t num_segments_or_entries</td><td>9 for curve, 16 for table.</td></tr>
+<tr><td></td><td>int16_t min_ddbm</td><td>Minimum ddbm (may be negative).</td></tr>
+<tr><td></td><td>int16_t max_ddbm</td><td>Maximum ddbm (may be negative).</td></tr>
+<tr><td>sl_zigbee_dhc_pa_curve_segment_t</td><td></td><td>One PA curve segment (piecewise linear).</td></tr>
+<tr><td></td><td>uint8_t maxPowerLevel</td><td>Segment upper bound power level.</td></tr>
+<tr><td></td><td>int32_t slope</td><td>Signed slope coefficient.</td></tr>
+<tr><td></td><td>int32_t intercept</td><td>Signed intercept coefficient.</td></tr>
+<tr><td>sl_zigbee_dhc_pa_curve_t</td><td></td><td>Full PA curve (fixed 9 segments).</td></tr>
+<tr><td></td><td>int16_t curve_min_ddbm</td><td>Curve min ddbm.</td></tr>
+<tr><td></td><td>int16_t curve_max_ddbm</td><td>Curve max ddbm.</td></tr>
+<tr><td></td><td>sl_zigbee_dhc_pa_curve_segment_t[9] segments</td><td>Curve segments.</td></tr>
+<tr><td>sl_zigbee_dhc_pa_table_t</td><td></td><td>Discrete PA table (16 entries).</td></tr>
+<tr><td></td><td>int16_t[16] ddbm_values</td><td>Signed ddbm table entries.</td></tr>
+<tr><td>sl_zigbee_dhc_pa_version_t</td><td></td><td>PA dataset version.</td></tr>
+<tr><td></td><td>uint8_t pa_version</td><td>The PA version.</td></tr>
+<tr><td>sl_zigbee_dhc_pa_signature_t</td><td></td><td>Standalone PA signature.</td></tr>
+<tr><td></td><td>uint32_t pa_signature</td><td>The PA signature.</td></tr>
+<tr><td>sl_zigbee_dhc_pa_mode_t</td><td></td><td>PA mode wrapper.</td></tr>
+<tr><td></td><td>uint8_t pa_mode</td><td>PA mode value.</td></tr>
+<tr><td>sl_zigbee_dhc_rssi_offset_t</td><td></td><td>RSSI offset wrapper.</td></tr>
+<tr><td></td><td>int8_t rssi_offset</td><td>RSSI offset value.</td></tr>
+<tr><td>sl_zigbee_dhc_ctune_t</td><td></td><td>CTUNE wrapper.</td></tr>
+<tr><td></td><td>uint32_t ctune</td><td>CTUNE value.</td></tr>
   </table>
   <h3>Named Values</h3>
   <table class="borders"><col width="300"><col width="100"><col width="300">
@@ -1318,6 +1348,8 @@
 
     <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
 
+    <tr><td>bool success</td><td colspan="2">true if the endpoint description was retrieved successfully, false otherwise.</td></tr>
+
     <tr><td>sl_zigbee_endpoint_description_t result</td><td colspan="2">Description of this endpoint.</td></tr>
 </table><br>
 
@@ -1758,18 +1790,6 @@
     <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
 
     <tr><td>sl_802154_radio_priorities_t priorities</td><td colspan="2">The current priorities.</td></tr>
-</table><br>
-
-    <table class="outline"><col width="300"><col width="200"><col width="200">
-    <tr class="heading">
-    <td><b>Name:</b> radioSetSchedulerPriorities</td><td><b>ID:</b> 0x012B</td><td></td></tr>
-<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Set the current scheduler priorities for radio operations</td></tr>
-
-    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b></td></tr>
-
-    <tr><td>sl_802154_radio_priorities_t priorities</td><td colspan="2">The current priorities.</td></tr>
-
-    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b> None</td></tr>
 </table><br>
 
     <table class="outline"><col width="300"><col width="200"><col width="200">
@@ -5809,6 +5829,349 @@ source route at <i>index</i>.</td></tr>
 
     <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b> None</td></tr>
 </table><br>
+    <h3>Dynamic Hardware Configuration Frames</h3>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> readPaDescriptor</td><td><b>ID:</b> 0x0152</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Read descriptor at index.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b></td></tr>
+
+    <tr><td>uint8_t index</td><td colspan="2">The PA index.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+
+    <tr><td>sl_zigbee_dhc_pa_descriptor_t descriptor</td><td colspan="2">The PA descriptor.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> writePaDescriptor</td><td><b>ID:</b> 0x0153</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Write descriptor at index.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b></td></tr>
+
+    <tr><td>uint8_t index</td><td colspan="2">The PA index.</td></tr>
+
+    <tr><td>sl_zigbee_dhc_pa_descriptor_t descriptor</td><td colspan="2">The PA descriptor.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> readPaCurveSegment</td><td><b>ID:</b> 0x0154</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Read one curve segment (algorithm=0).</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b></td></tr>
+
+    <tr><td>uint8_t index</td><td colspan="2">The PA index.</td></tr>
+
+    <tr><td>uint8_t segment_index</td><td colspan="2">The segment index.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+
+    <tr><td>sl_zigbee_dhc_pa_curve_segment_t segment</td><td colspan="2">Read PA Curve segment.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> writePaCurveSegment</td><td><b>ID:</b> 0x0155</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Write one curve segment (algorithm=0).</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b></td></tr>
+
+    <tr><td>uint8_t index</td><td colspan="2">The PA index.</td></tr>
+
+    <tr><td>uint8_t segment_index</td><td colspan="2">The segment index.</td></tr>
+
+    <tr><td>sl_zigbee_dhc_pa_curve_segment_t segment</td><td colspan="2">Write PA Curve segment.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> readPaCurve</td><td><b>ID:</b> 0x0156</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Read full curve for descriptor index (algorithm=0).</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b></td></tr>
+
+    <tr><td>uint8_t index</td><td colspan="2">The PA index.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+
+    <tr><td>sl_zigbee_dhc_pa_curve_t curve</td><td colspan="2">Read PA Curve.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> writePaCurve</td><td><b>ID:</b> 0x0157</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Write full curve (algorithm=0).</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b></td></tr>
+
+    <tr><td>uint8_t index</td><td colspan="2">The PA index.</td></tr>
+
+    <tr><td>sl_zigbee_dhc_pa_curve_t curve</td><td colspan="2">Write PA Curve.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> readPaTable</td><td><b>ID:</b> 0x0158</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Read table for descriptor index (algorithm=1).</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b></td></tr>
+
+    <tr><td>uint8_t index</td><td colspan="2">The PA index.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+
+    <tr><td>sl_zigbee_dhc_pa_table_t table</td><td colspan="2">Read PA Table.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> writePaTable</td><td><b>ID:</b> 0x0159</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Write table (algorithm=1).</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b></td></tr>
+
+    <tr><td>uint8_t index</td><td colspan="2">The PA index.</td></tr>
+
+    <tr><td>sl_zigbee_dhc_pa_table_t table</td><td colspan="2">Write PA Table.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> readRssiOffset</td><td><b>ID:</b> 0x015A</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Read RSSI offset.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b> None</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+
+    <tr><td>sl_zigbee_dhc_rssi_offset_t rssi_offset</td><td colspan="2">Read RSSI offset.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> writeRssiOffset</td><td><b>ID:</b> 0x015F</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Write RSSI offset.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b></td></tr>
+
+    <tr><td>sl_zigbee_dhc_rssi_offset_t rssi_offset</td><td colspan="2">Write RSSI offset.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> readPaVoltage</td><td><b>ID:</b> 0x015B</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Read PA voltage.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b> None</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+
+    <tr><td>uint16_t pa_voltage</td><td colspan="2">Read PA voltage.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> writePaVoltage</td><td><b>ID:</b> 0x015C</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Write PA voltage (keep consistent with metadata).</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b></td></tr>
+
+    <tr><td>uint16_t pa_voltage</td><td colspan="2">Write PA voltage.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> readPaMode</td><td><b>ID:</b> 0x015D</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Read PA mode.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b> None</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+
+    <tr><td>sl_zigbee_dhc_pa_mode_t pa_mode</td><td colspan="2">Read PA mode.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> writePaMode</td><td><b>ID:</b> 0x015E</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Write PA mode.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b></td></tr>
+
+    <tr><td>sl_zigbee_dhc_pa_mode_t pa_mode</td><td colspan="2">PA mode value to write.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> readCtune</td><td><b>ID:</b> 0x0160</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Read CTUNE value.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b> None</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+
+    <tr><td>sl_zigbee_dhc_ctune_t ctune</td><td colspan="2">Read CTUNE value.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> writeCtune</td><td><b>ID:</b> 0x0161</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Write CTUNE value.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b></td></tr>
+
+    <tr><td>sl_zigbee_dhc_ctune_t ctune</td><td colspan="2">Write CTUNE value.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> readDhcVersion</td><td><b>ID:</b> 0x0162</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Read DHC top-level version.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b> None</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+
+    <tr><td>uint8_t dhc_version</td><td colspan="2">Read DHC top-level version.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> writeDhcVersion</td><td><b>ID:</b> 0x0163</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Write DHC top-level version.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b></td></tr>
+
+    <tr><td>uint8_t dhc_version</td><td colspan="2">Write DHC top-level version.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> readPaVersion</td><td><b>ID:</b> 0x0164</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Read PA dataset version.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b> None</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+
+    <tr><td>sl_zigbee_dhc_pa_version_t pa_version</td><td colspan="2">Read PA dataset version.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> readPaSignature</td><td><b>ID:</b> 0x0166</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Read PA signature (metadata.signature mirror).</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b> None</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+
+    <tr><td>sl_zigbee_dhc_pa_signature_t pa_signature</td><td colspan="2">Read PA signature (metadata.signature mirror).</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> writePaSignature</td><td><b>ID:</b> 0x0167</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Write PA signature (updates metadata signature).</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b></td></tr>
+
+    <tr><td>sl_zigbee_dhc_pa_signature_t pa_signature</td><td colspan="2">Write PA signature (updates metadata signature).</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> readPaMetadata</td><td><b>ID:</b> 0x0168</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Read PA calibration metadata.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b> None</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+
+    <tr><td>sl_zigbee_dhc_pa_metadata_t metadata</td><td colspan="2">Read PA calibration metadata block.</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> writePaMetadata</td><td><b>ID:</b> 0x0169</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Write PA calibration metadata (must precede descriptor/data writes).</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b></td></tr>
+
+    <tr><td>sl_zigbee_dhc_pa_metadata_t metadata</td><td colspan="2">The PA metadata.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
+
+    <tr><td>sl_status_t status</td><td colspan="2">An sl_status_t value indicating success or the reason for failure.</td></tr>
+</table><br>
   <h3>Alphabetical List of Frames</h3>
   <table class="borders"><col width="350"><col width="350">
   <tr class="heading"><td><b>Name</b></td><td><b>ID</b></td></tr>
@@ -6009,12 +6372,23 @@ source route at <i>index</i>.</td></tr>
 <tr><td>proxyNextBroadcastFromLong</td><td>0x0066</td></tr>
 <tr><td>radioGetSchedulerPriorities</td><td>0x012A</td></tr>
 <tr><td>radioGetSchedulerSliptime</td><td>0x012C</td></tr>
-<tr><td>radioSetSchedulerPriorities</td><td>0x012B</td></tr>
 <tr><td>radioSetSchedulerSliptime</td><td>0x012D</td></tr>
 <tr><td>rawTransmitCompleteHandler</td><td>0x0098</td></tr>
 <tr><td>readAndClearCounters</td><td>0x0065</td></tr>
 <tr><td>readAttribute</td><td>0x0108</td></tr>
 <tr><td>readCounters</td><td>0x00F1</td></tr>
+<tr><td>readCtune</td><td>0x0160</td></tr>
+<tr><td>readDhcVersion</td><td>0x0162</td></tr>
+<tr><td>readPaCurve</td><td>0x0156</td></tr>
+<tr><td>readPaCurveSegment</td><td>0x0154</td></tr>
+<tr><td>readPaDescriptor</td><td>0x0152</td></tr>
+<tr><td>readPaMetadata</td><td>0x0168</td></tr>
+<tr><td>readPaMode</td><td>0x015D</td></tr>
+<tr><td>readPaSignature</td><td>0x0166</td></tr>
+<tr><td>readPaTable</td><td>0x0158</td></tr>
+<tr><td>readPaVersion</td><td>0x0164</td></tr>
+<tr><td>readPaVoltage</td><td>0x015B</td></tr>
+<tr><td>readRssiOffset</td><td>0x015A</td></tr>
 <tr><td>remoteDeleteBindingHandler</td><td>0x0032</td></tr>
 <tr><td>remoteSetBindingHandler</td><td>0x0031</td></tr>
 <tr><td>removeChild</td><td>0x0139</td></tr>
@@ -6112,7 +6486,18 @@ source route at <i>index</i>.</td></tr>
 <tr><td>updateTcLinkKey</td><td>0x006C</td></tr>
 <tr><td>version</td><td>0x0000</td></tr>
 <tr><td>writeAttribute</td><td>0x0109</td></tr>
+<tr><td>writeCtune</td><td>0x0161</td></tr>
+<tr><td>writeDhcVersion</td><td>0x0163</td></tr>
 <tr><td>writeNodeData</td><td>0x00FE</td></tr>
+<tr><td>writePaCurve</td><td>0x0157</td></tr>
+<tr><td>writePaCurveSegment</td><td>0x0155</td></tr>
+<tr><td>writePaDescriptor</td><td>0x0153</td></tr>
+<tr><td>writePaMetadata</td><td>0x0169</td></tr>
+<tr><td>writePaMode</td><td>0x015E</td></tr>
+<tr><td>writePaSignature</td><td>0x0167</td></tr>
+<tr><td>writePaTable</td><td>0x0159</td></tr>
+<tr><td>writePaVoltage</td><td>0x015C</td></tr>
+<tr><td>writeRssiOffset</td><td>0x015F</td></tr>
 <tr><td>zigbeeKeyEstablishmentHandler</td><td>0x009B</td></tr>
 <tr><td>zllAddressAssignmentHandler</td><td>0x00B8</td></tr>
 <tr><td>zllClearTokens</td><td>0x0025</td></tr>
@@ -6435,7 +6820,7 @@ source route at <i>index</i>.</td></tr>
 <tr><td>0x0128</td><td bgcolor="white">setIncomingTcLinkKeyFrameCounter</td></tr>
 <tr><td>0x0129</td><td bgcolor="white">apsCryptMessage</td></tr>
 <tr><td>0x012A</td><td bgcolor="white">radioGetSchedulerPriorities</td></tr>
-<tr><td>0x012B</td><td bgcolor="white">radioSetSchedulerPriorities</td></tr>
+<tr><td>0x012B</td><td bgcolor="lightgray">-- unassigned --</td></tr>
 <tr><td>0x012C</td><td bgcolor="white">radioGetSchedulerSliptime</td></tr>
 <tr><td>0x012D</td><td bgcolor="white">radioSetSchedulerSliptime</td></tr>
 <tr><td>0x012E</td><td bgcolor="white">getEndpoint</td></tr>
@@ -6474,6 +6859,30 @@ source route at <i>index</i>.</td></tr>
 <tr><td>0x014F</td><td bgcolor="white">concentratorStartDiscovery</td></tr>
 <tr><td>0x0150</td><td bgcolor="white">concentratorStopDiscovery</td></tr>
 <tr><td>0x0151</td><td bgcolor="white">concentratorNoteRouteError</td></tr>
+<tr><td>0x0152</td><td bgcolor="white">readPaDescriptor</td></tr>
+<tr><td>0x0153</td><td bgcolor="white">writePaDescriptor</td></tr>
+<tr><td>0x0154</td><td bgcolor="white">readPaCurveSegment</td></tr>
+<tr><td>0x0155</td><td bgcolor="white">writePaCurveSegment</td></tr>
+<tr><td>0x0156</td><td bgcolor="white">readPaCurve</td></tr>
+<tr><td>0x0157</td><td bgcolor="white">writePaCurve</td></tr>
+<tr><td>0x0158</td><td bgcolor="white">readPaTable</td></tr>
+<tr><td>0x0159</td><td bgcolor="white">writePaTable</td></tr>
+<tr><td>0x015A</td><td bgcolor="white">readRssiOffset</td></tr>
+<tr><td>0x015B</td><td bgcolor="white">readPaVoltage</td></tr>
+<tr><td>0x015C</td><td bgcolor="white">writePaVoltage</td></tr>
+<tr><td>0x015D</td><td bgcolor="white">readPaMode</td></tr>
+<tr><td>0x015E</td><td bgcolor="white">writePaMode</td></tr>
+<tr><td>0x015F</td><td bgcolor="white">writeRssiOffset</td></tr>
+<tr><td>0x0160</td><td bgcolor="white">readCtune</td></tr>
+<tr><td>0x0161</td><td bgcolor="white">writeCtune</td></tr>
+<tr><td>0x0162</td><td bgcolor="white">readDhcVersion</td></tr>
+<tr><td>0x0163</td><td bgcolor="white">writeDhcVersion</td></tr>
+<tr><td>0x0164</td><td bgcolor="white">readPaVersion</td></tr>
+<tr><td>0x0165</td><td bgcolor="lightgray">-- unassigned --</td></tr>
+<tr><td>0x0166</td><td bgcolor="white">readPaSignature</td></tr>
+<tr><td>0x0167</td><td bgcolor="white">writePaSignature</td></tr>
+<tr><td>0x0168</td><td bgcolor="white">readPaMetadata</td></tr>
+<tr><td>0x0169</td><td bgcolor="white">writePaMetadata</td></tr>
   </table>
   </body>
   </html>

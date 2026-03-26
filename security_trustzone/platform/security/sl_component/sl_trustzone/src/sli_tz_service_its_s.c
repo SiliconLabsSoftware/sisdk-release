@@ -33,6 +33,9 @@
 #if defined(MBEDTLS_PSA_CRYPTO_STORAGE_C)
 
 #include "sli_tz_service_its.h"
+#if defined(SL_CATALOG_PSA_CRYPTO_KEY_PROTECTION_PRESENT)
+#include "sli_tz_secure_psa_key_protection.h"
+#endif
 #include "psa/crypto_values.h"
 #include "tfm_api.h"
 #include "tfm_its_req_mngr.h"
@@ -49,6 +52,8 @@ psa_status_t tfm_its_set_req(psa_invec *in_vec, size_t in_len,
   size_t data_length;
   uint8_t *p_data;
   psa_storage_create_flags_t create_flags;
+  struct psa_storage_info_t info;
+  psa_status_t status;
   (void)out_vec;
 
   if ((in_len != 4) || (out_len != 0)) {
@@ -63,11 +68,33 @@ psa_status_t tfm_its_set_req(psa_invec *in_vec, size_t in_len,
   }
 
   uid = *((psa_storage_uid_t *)in_vec[1].base);
+  #if defined(SL_CATALOG_PSA_CRYPTO_KEY_PROTECTION_PRESENT)
+  // Check if NS is trying to access a protected key ID
+  // This assumes 1:1 mapping from key_id to uid
+  status = sl_psa_key_check_access(uid);
+  if (status != PSA_SUCCESS) {
+    return status;
+  }
+  #endif
 
   p_data = (uint8_t *)in_vec[2].base;
   data_length = in_vec[2].len;
 
   create_flags = *(psa_storage_create_flags_t *)in_vec[3].base;
+
+  // Non-secure callers cannot use secure-only flags
+  if ((create_flags == PSA_STORAGE_FLAG_WRITE_ONCE_SECURE_ACCESSIBLE)
+      || (create_flags == PSA_STORAGE_FLAG_SECURE_ACCESSIBLE)) {
+    return PSA_ERROR_NOT_SUPPORTED;
+  }
+
+  // Check if the existing object has SECURE_ACCESSIBLE flag - NS callers cannot modify such objects
+  status = psa_its_get_info(uid, &info);
+  if (status == PSA_SUCCESS) {
+    if (info.flags == PSA_STORAGE_FLAG_SECURE_ACCESSIBLE) {
+      return PSA_ERROR_NOT_PERMITTED;
+    }
+  }
 
   return psa_its_set(uid, data_length, p_data, create_flags);
 }
@@ -80,6 +107,8 @@ psa_status_t tfm_its_get_req(psa_invec *in_vec, size_t in_len,
   size_t data_size;
   uint8_t *p_data;
   size_t *p_data_length;
+  struct psa_storage_info_t info;
+  psa_status_t status;
 
   if ((in_len != 3) || (out_len != 1)) {
     /* The number of arguments is incorrect */
@@ -93,6 +122,27 @@ psa_status_t tfm_its_get_req(psa_invec *in_vec, size_t in_len,
   }
 
   uid = *((psa_storage_uid_t *)in_vec[1].base);
+  #if defined(SL_CATALOG_PSA_CRYPTO_KEY_PROTECTION_PRESENT)
+  // Check if NS is trying to access a protected key ID
+  // This assumes 1:1 mapping from key_id to uid
+  status = sl_psa_key_check_access(uid);
+  if (status != PSA_SUCCESS) {
+    return status;
+  }
+  #endif
+
+  // Check if the object has secure-only flags - NS callers cannot read such objects
+  status = psa_its_get_info(uid, &info);
+  if (status == PSA_SUCCESS) {
+    if ((info.flags == PSA_STORAGE_FLAG_WRITE_ONCE_SECURE_ACCESSIBLE)
+        || (info.flags == PSA_STORAGE_FLAG_SECURE_ACCESSIBLE)) {
+      // Non-secure callers cannot read objects with secure-only flags
+      return PSA_ERROR_NOT_PERMITTED;
+    }
+  } else if (status != PSA_ERROR_DOES_NOT_EXIST) {
+    return status;
+  }
+  // If object doesn't exist, let psa_its_get() handle it and return DOES_NOT_EXIST
 
   data_offset = *(size_t *)in_vec[2].base;
 
@@ -124,6 +174,14 @@ psa_status_t tfm_its_get_info_req(psa_invec *in_vec, size_t in_len,
   uid = *((psa_storage_uid_t *)in_vec[1].base);
 
   p_info = (struct psa_storage_info_t *)out_vec[0].base;
+  #if defined(SL_CATALOG_PSA_CRYPTO_KEY_PROTECTION_PRESENT)
+  // Check if NS is trying to access a protected key ID
+  // This assumes 1:1 mapping from key_id to uid
+  psa_status_t status = sl_psa_key_check_access(uid);
+  if (status != PSA_SUCCESS) {
+    return status;
+  }
+  #endif
 
   return psa_its_get_info(uid, p_info);
 }
@@ -132,6 +190,8 @@ psa_status_t tfm_its_remove_req(psa_invec *in_vec, size_t in_len,
                                 psa_outvec *out_vec, size_t out_len)
 {
   psa_storage_uid_t uid;
+  struct psa_storage_info_t info;
+  psa_status_t status;
 
   (void)out_vec;
 
@@ -146,6 +206,27 @@ psa_status_t tfm_its_remove_req(psa_invec *in_vec, size_t in_len,
   }
 
   uid = *((psa_storage_uid_t *)in_vec[1].base);
+  #if defined(SL_CATALOG_PSA_CRYPTO_KEY_PROTECTION_PRESENT)
+  // Check if NS is trying to access a protected key ID
+  // This assumes 1:1 mapping from key_id to uid
+  status = sl_psa_key_check_access(uid);
+  if (status != PSA_SUCCESS) {
+    return status;
+  }
+  #endif
+
+  // Check if the object has SECURE_ACCESSIBLE flag - NS callers cannot remove such objects
+  status = psa_its_get_info(uid, &info);
+  if (status == PSA_SUCCESS) {
+    if (info.flags == PSA_STORAGE_FLAG_SECURE_ACCESSIBLE) {
+      // Non-secure callers cannot remove objects with SECURE_ACCESSIBLE flag
+      return PSA_ERROR_NOT_PERMITTED;
+    }
+  } else if (status != PSA_ERROR_DOES_NOT_EXIST) {
+    // If we can't get info and it's not because the object doesn't exist, return the error
+    return status;
+  }
+  // If object doesn't exist, let psa_its_remove() handle it and return DOES_NOT_EXIST
 
   return psa_its_remove(uid);
 }

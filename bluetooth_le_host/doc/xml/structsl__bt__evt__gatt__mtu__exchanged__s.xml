@@ -17,7 +17,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="8167" column="12" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="8167" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="8167" column="12" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="8167" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structsl__bt__evt__gatt__mtu__exchanged__s_1a9ff0c5351b309356056d8b7c58878bbb" prot="public" static="no" mutable="no">
         <type>uint16_t</type>
@@ -32,7 +32,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="8168" column="12" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="8168" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="8168" column="12" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="8168" bodyend="-1"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
@@ -40,7 +40,7 @@
     </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="8165" column="1" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="8166" bodyend="8169"/>
+    <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="8165" column="1" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="8166" bodyend="8169"/>
     <listofallmembers>
       <member refid="structsl__bt__evt__gatt__mtu__exchanged__s_1aff3b70fabd76cc17a766f36b6e6f57e2" prot="public" virt="non-virtual"><scope>sl_bt_evt_gatt_mtu_exchanged_s</scope><name>connection</name></member>
       <member refid="structsl__bt__evt__gatt__mtu__exchanged__s_1a9ff0c5351b309356056d8b7c58878bbb" prot="public" virt="non-virtual"><scope>sl_bt_evt_gatt_mtu_exchanged_s</scope><name>mtu</name></member>

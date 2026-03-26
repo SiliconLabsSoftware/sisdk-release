@@ -23,26 +23,8 @@
 #ifndef SILABS_EZSP_UTILS_H
 #define SILABS_EZSP_UTILS_H
 
-//----------------------------------------------------------------
-// Zigbee Simple Descriptor:
+#include "sl_zigbee_dhc.h"
 
-/** @brief Gives the endpoint information for a particular endpoint.
- * @description Gives the endpoint information for a particular endpoint.
- */
-
-typedef struct {
-  /** An endpoint of the application on this node. */
-  uint8_t endpoint;
-  /** The endpoint's description. */
-  const sl_zigbee_endpoint_description_t *description;
-  /** Input clusters the endpoint will accept. */
-  const uint16_t* inputClusterList;
-  /** Output clusters the endpoint may send. */
-  const uint16_t* outputClusterList;
-} sl_zigbee_endpoint_t;
-
-extern uint8_t sl_zigbee_endpoint_count;
-extern sl_zigbee_endpoint_t sl_zigbee_endpoints[];
 
 /** @description Defines config parameter incompatibilities between the
  *   host and node

@@ -105,4 +105,9 @@
 #define CS_CAPABILITY                        sl_bt_sm_io_capability_noinputnooutput
 #endif // CS_CAPABILITY
 
+// <o CS_HOST_HEADER_LOG> Header log of measurements results <1..20>
+// <i> Sets how many measurements are written between header logs
+// <i> Default: 5
+#define CS_HOST_HEADER_LOG                5
+
 #endif // CS_REFLECTOR_CONFIG_H

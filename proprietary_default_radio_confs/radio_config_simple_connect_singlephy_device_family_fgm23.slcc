@@ -42,6 +42,15 @@ config_file:
   - hardware_board_tb
   - hardware_board_stk
   - hardware_board_has_hfxo_freq_39mhz
-
+- path: Connect/simple_connect_singlephy/device_generic_family_efr32xg23/rf_band_868/rf39mhz/radio_settings.radioconf
+  file_id: radio_configuration_settings
+  directory: rail
+  condition:
+  - device_family_fgm23
+  - hardware_board_has_hfxo_freq_39mhz
+  unless:
+  - hardware_board_rb
+  - hardware_board_tb
+  - hardware_board_stk
 
 root_path: proprietary_default_radio_confs

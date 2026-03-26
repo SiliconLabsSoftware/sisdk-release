@@ -6,7 +6,7 @@ description: |
   the original firmware untouched. DDP uses SEGGER RTT for communication.
 package: bluetooth_le_middleware
 category: Bluetooth|Application|Miscellaneous
-quality: experimental
+quality: production
 metadata:
   sbom:
     license: Zlib
@@ -19,6 +19,7 @@ provides:
 requires:
 - name: sl_common
 - name: iostream_rtt
+- name: toolchain_gcc   # linkerfile is only prepared for gcc atm
 include:
 - path: inc
   file_list:
@@ -28,11 +29,16 @@ include:
 source:
 - path: src/sl_ddp_common.c
 - path: src/sl_ddp_rtt.c
+other_file:
 - path: script/ddp_rtt.py
   project:
     transfer_ownership: true
     directory: script
 - path: script/ddp_cmd.py
+  project:
+    transfer_ownership: true
+    directory: script
+- path: script/requirements.txt
   project:
     transfer_ownership: true
     directory: script

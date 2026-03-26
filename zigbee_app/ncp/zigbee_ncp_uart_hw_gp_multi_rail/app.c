@@ -30,6 +30,12 @@
 #include "sl_zigbee_system_common.h"
 #include "stack/config/sl_zigbee_token_defines.h"
 
+#ifdef SL_CATALOG_ZIGBEE_REAL_IPC_PRESENT
+#define MAX_BUFFER_SIZE 127
+#else
+#define MAX_BUFFER_SIZE 128
+#endif // SL_CATALOG_ZIGBEE_REAL_IPC_PRESENT
+
 #ifdef SL_CATALOG_ZIGBEE_GREEN_POWER_SERVER_PRESENT
 #include "green-power-server.h"
 #include "green-power-common.h"
@@ -148,7 +154,15 @@ void sl_zigbee_af_green_power_cluster_commissioning_message_status_notification_
 #if defined(SL_CATALOG_ZIGBEE_MULTIRAIL_DEMO_PRESENT)
 #include "multirail-demo.h"
 
-static sl_zigbee_af_event_t gp_transmit_complete_event;
+static void gp_transmit_complete_event_handler(sli_zigbee_event_t *event);
+extern sli_zigbee_event_queue_t sli_zigbee_stack_event_queue;
+sli_zigbee_event_t gp_transmit_complete_event = { {
+                                                    &sli_zigbee_stack_event_queue,
+                                                    gp_transmit_complete_event_handler,
+                                                    sli_zigbee_isr_event_marker,
+                                                    ""
+                                                  },
+                                                  NULL, 0, 0, NULL };
 
 // The time between receiving a GP packet and sending a scheduled response
 #ifndef GP_RX_OFFSET_USEC
@@ -173,7 +187,7 @@ static void appGpScheduleOutgoingGpdf(sl_zigbee_zigbee_packet_type_t packetType,
 //---------------
 // Event handlers
 
-static void gp_transmit_complete_event_handler(sl_zigbee_af_event_t *event)
+static void gp_transmit_complete_event_handler(sli_zigbee_event_t *event)
 {
   UNUSED_VAR(event);
   sli_zigbee_stack_d_gp_sent_handler(SL_STATUS_OK, 0);
@@ -187,9 +201,6 @@ static void gp_transmit_complete_event_handler(sl_zigbee_af_event_t *event)
  */
 void sl_zigbee_af_main_init_cb(void)
 {
-#if defined(SL_CATALOG_ZIGBEE_MULTIRAIL_DEMO_PRESENT)
-  sl_zigbee_af_isr_event_init(&gp_transmit_complete_event, gp_transmit_complete_event_handler);
-#endif // SL_CATALOG_ZIGBEE_MULTIRAIL_DEMO_PRESENT
 }
 
 /** @brief Incoming Custom EZSP Message Callback
@@ -307,13 +318,13 @@ sl_status_t sl_zigbee_af_xncp_incoming_custom_frame_cb(uint8_t messageLength,
         // Initial support only for GPD Src ID
         return SL_STATUS_INVALID_STATE;
       }
-      uint8_t buffer[128];
+      uint8_t buffer[MAX_BUFFER_SIZE];
       uint16_t outPktLength = 0;
 
       if (sl_zigbee_gp_get_tx_queue_entry_from_queue(&txQueue,
                                                      buffer,
                                                      &outPktLength,
-                                                     128) != SL_ZIGBEE_NULL_MESSAGE_BUFFER) {
+                                                     sizeof(buffer)) != SL_ZIGBEE_NULL_MESSAGE_BUFFER) {
         replyPayload[0] = txQueue.addr.applicationId;
         replyPayload[1] = txQueue.addr.id.sourceId >> 0;
         replyPayload[2] = txQueue.addr.id.sourceId >> 8;
@@ -384,7 +395,7 @@ sl_zigbee_packet_action_t sli_zigbee_dispatch_packet_handoff_incoming_callback(s
                                                                                uint8_t data_len)
 {
   uint8_t size_p = sl_legacy_buffer_manager_message_buffer_length(packetBuffer) - index;
-  uint8_t packetData[128];
+  uint8_t packetData[MAX_BUFFER_SIZE];
   UNUSED_VAR(data);
   UNUSED_VAR(data_len);
   // Flat packet : [<-----MAC Frame----->|<--8 bytes Appended Info-->]
@@ -398,6 +409,7 @@ sl_zigbee_packet_action_t sli_zigbee_dispatch_packet_handoff_incoming_callback(s
   return SL_ZIGBEE_ACCEPT_PACKET;
 }
 
+extern void sl_zigbee_wakeup_common_task(void);
 /** @brief A callback called whenever a secondary instance RAIL event occurs.
  *
  * @param[in] handle A handle for a RAIL instance.
@@ -407,7 +419,10 @@ void sl_zigbee_af_multirail_demo_rail_event_cb(sl_rail_handle_t handle,
                                                sl_rail_events_t events)
 {
   if (events & SL_RAIL_EVENT_TX_PACKET_SENT) {
-    sl_zigbee_af_event_set_delay_ms(&gp_transmit_complete_event, 0);
+    sli_zigbee_event_set_active(&gp_transmit_complete_event);
+#ifdef SL_CATALOG_KERNEL_PRESENT
+    sl_zigbee_wakeup_common_task();
+#endif // SL_CATALOG_KERNEL_PRESENT
   }
   (void)handle; // unreferenced parameter
 }
@@ -433,13 +448,13 @@ static sl_zigbee_gp_tx_queue_entry_t* get_gp_stub_tx_queue(sl_zigbee_gp_address_
   // Check if RAIL 2 handle available and there is anything in GP Stub queue
   sl_zigbee_gp_tx_queue_entry_t sli_zigbee_gp_tx_queue;
   memcpy(&sli_zigbee_gp_tx_queue.addr, addr, sizeof(sl_zigbee_gp_address_t));
-  uint8_t data[128];
+  uint8_t data[MAX_BUFFER_SIZE];
   uint16_t dataLength;
   if (sl_zigbee_af_multirail_demo_get_handle()
       && sl_zigbee_gp_get_tx_queue_entry_from_queue(&sli_zigbee_gp_tx_queue,
                                                     data,
                                                     &dataLength,
-                                                    128) != SL_ZIGBEE_NULL_MESSAGE_BUFFER) {
+                                                    sizeof(data)) != SL_ZIGBEE_NULL_MESSAGE_BUFFER) {
     // Allocate a buffer and prepare a outgoing MAC header using gpd address in the sli_zigbee_gp_tx_queue
     sli_buffer_manager_buffer_t header = sli_zigbee_gpdf_make_header(true, NULL, &(sli_zigbee_gp_tx_queue.addr));
     if (header == SL_ZIGBEE_NULL_MESSAGE_BUFFER) {
@@ -465,7 +480,7 @@ static sl_zigbee_gp_tx_queue_entry_t* get_gp_stub_tx_queue(sl_zigbee_gp_address_
 
       // Prepare a RAIL frame to be transported using the additional handle
       uint8_t outPktLength = sl_legacy_buffer_manager_message_buffer_length(header);
-      uint8_t outPkt[128]; //128 = MAX size
+      uint8_t outPkt[MAX_BUFFER_SIZE];
       // RAIL Frame : [Total Length (excludes itself) | <-----MAC FRAME ---->| 2 byte CRC]
       outPkt[0] = outPktLength + 2;
       // Copy the data from the buffer
@@ -519,7 +534,7 @@ static void appGpScheduleOutgoingGpdf(sl_zigbee_zigbee_packet_type_t packetType,
       }
       // Is there a queued response for this source ID?
       uint8_t outPktLength;
-      uint8_t outPkt[128];
+      uint8_t outPkt[MAX_BUFFER_SIZE];
       sl_zigbee_gp_tx_queue_entry_t* entry = get_gp_stub_tx_queue(&gpdAddr, &outPktLength, (uint8_t*)&outPkt);
       if (entry) {
         // Schedule sending the response.

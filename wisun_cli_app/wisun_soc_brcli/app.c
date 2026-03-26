@@ -1053,6 +1053,7 @@ static void app_start(sl_wisun_phy_config_type_t phy_config_type)
         }
         phy_config.config.explicit_plan.channel_spacing = channel_spacing_id;
         phy_config.config.explicit_plan.phy_mode_id = app_settings_wisun.phy_mode_id;
+        memcpy(phy_config.config.explicit_plan.channel_mask, channel_mask.mask, SL_WISUN_CHANNEL_MASK_SIZE);
         break;
       case SL_WISUN_PHY_CONFIG_IDS:
         phy_config.config.ids.protocol_id  = app_settings_wisun.protocol_id;
@@ -2825,7 +2826,11 @@ void app_mac_allow(sl_cli_command_arg_t *arguments)
     goto cleanup;
   }
 
-  printf("[MAC address added to the access list]\r\n");
+  if (!memcmp(&address, &APP_BROADCAST_MAC, sizeof(sl_wisun_mac_address_t))) {
+    printf("[Access list cleared]\r\n");
+  } else {
+    printf("[MAC address added to the access list]\r\n");
+  }
 
 cleanup:
 
@@ -2862,7 +2867,11 @@ void app_mac_deny(sl_cli_command_arg_t *arguments)
     goto cleanup;
   }
 
-  printf("[MAC address added to the deny list]\r\n");
+  if (!memcmp(&address, &APP_BROADCAST_MAC, sizeof(sl_wisun_mac_address_t))) {
+    printf("[Access list cleared]\r\n");
+  } else {
+    printf("[MAC address added to the deny list]\r\n");
+  }
 
 cleanup:
 

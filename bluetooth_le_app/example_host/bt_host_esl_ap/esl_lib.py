@@ -246,13 +246,123 @@ class PAWRSubevent:
         """Convert to ctype object"""
         return elw.esl_lib_pawr_subevent_t(ctypes.c_void_p(self.handle), self.subevent)
 
+class EventDispatcher:
+    """Thread-safe event dispatcher for ESL library event management."""
+
+    def __init__(self):
+        """Initialize dispatcher with subscriber storage, lock, and protected observers list."""
+        self._subscribers = {}
+        # lock is used to avoid race conditions when multiple threads might modify subscribers
+        self._lock = threading.Lock()
+        # a separate list of protected observers is kept even on clearing
+        self._protected = {}
+
+    def subscribe(self, event_name, callback, prefix=None, protected=False):
+        """Register a callback for a given event name, optionally as protected."""
+        with self._lock:
+            subscribers = self._subscribers.setdefault(event_name, [])
+            if (prefix, callback) not in subscribers:
+                subscribers.append((prefix, callback))
+            if protected:
+                protected_list = self._protected.setdefault(event_name, [])
+                if (prefix, callback) not in protected_list:
+                    protected_list.append((prefix, callback))
+
+    def unsubscribe(self, event_name, callback, forced=False):
+        """Remove a callback for a given event name (skip if protected unless forced)."""
+        with self._lock:
+            if event_name in self._subscribers:
+                self._subscribers[event_name] = [
+                    (p, c) for (p, c) in self._subscribers[event_name]
+                    if c != callback or (
+                        not forced and event_name in self._protected and (p, c) in self._protected[event_name]
+                    )
+                ]
+                if forced and event_name in self._protected:
+                    self._protected[event_name] = [
+                        (p, c) for (p, c) in self._protected[event_name] if c != callback
+                    ]
+
+    def prune(self):
+        """Remove all callbacks except the protected observers."""
+        with self._lock:
+            self._subscribers = {k: list(self._protected.get(k, [])) for k in self._subscribers.keys()}
+
+    def clear(self):
+        """Remove all callbacks for all events."""
+        with self._lock:
+            # clearing dictionaries ensures no stale references remain
+            self._subscribers.clear()
+            self._protected.clear()
+
+    def notify(self, event_name, event):
+        """Notify all callbacks subscribed to a given event."""
+        # copy list under lock to avoid issues if subscribers change during iteration
+        with self._lock:
+            observers = list(self._subscribers.get(event_name, []))
+        # release lock before executing callbacks to avoid blocking other operations
+        for _, callback in observers:
+            callback(event)
+
+    def lock_current_observers(self):
+        """Mark all currently registered observers as protected."""
+        with self._lock:
+            # shallow copy is enough because tuples and callbacks are immutable references
+            self._protected = {k: list(v) for k, v in self._subscribers.items()}
+
+    def unlock_prefix(self, prefix):
+        """Remove a prefix from the protected observers."""
+        with self._lock:
+            for event_name, callbacks in self._protected.items():
+                self._protected[event_name] = [(p, c) for (p, c) in callbacks if p != prefix]
+
+    def unlock_callback(self, callback):
+        """Remove a specific callback from the protected observers."""
+        with self._lock:
+            for event_name, callbacks in self._protected.items():
+                self._protected[event_name] = [(p, c) for (p, c) in callbacks if c != callback]
+
+    def lock_prefix(self, prefix):
+        """Mark all observers with the given prefix as protected (extend existing, avoid duplicates)."""
+        with self._lock:
+            for event_name, callbacks in self._subscribers.items():
+                protected_list = self._protected.setdefault(event_name, [])
+                for (p, c) in callbacks:
+                    # None and empty ("") prefixes are the same
+                    if (p or "") == (prefix or "") and (p, c) not in protected_list:
+                        protected_list.append((p, c))
+
+    def unsubscribe_prefix(self, prefix):
+        """Remove all callbacks with the given prefix (skip if protected)."""
+        with self._lock:
+            for event_name, callbacks in list(self._subscribers.items()):
+                self._subscribers[event_name] = [
+                    (p, c) for (p, c) in callbacks
+                    if (p or "") != (prefix or "") or
+                       (event_name in self._protected and (p, c) in self._protected[event_name])
+                ]
+
+EVENT_PREFIX = "ESL_LIB_EVT_"
 
 class EventType(int):
     """Wrapper for esl_lib_evt_type_t"""
 
     def __repr__(self) -> str:
-        return get_enum("ESL_LIB_EVT_", self)
+        return get_enum(EVENT_PREFIX, self)
 
+    @property
+    def name(self) -> str:
+        """Normalized event name without prefix, lowercase"""
+        return repr(self)[len(EVENT_PREFIX):].lower()
+
+    @classmethod
+    def all(cls):
+        """Return all known event types as a list of EventType objects"""
+        codes = []
+        for name, value in vars(elw).items():
+            if name.startswith(EVENT_PREFIX):
+                codes.append(cls(value))
+        return codes
 
 class EventSystemBoot:
     """Wrapper for esl_lib_evt_system_boot_t"""
@@ -550,7 +660,7 @@ class EventPawrResponse:
         self.data = long_array_to_bytes(evt_data.evt_pawr_response.data)
 
     def __repr__(self) -> str:
-        return f"{self.evt_code}, {self.pawr_handle:#08x}, {self.subevent}, {self.response_slot}, {self.data.hex()}"
+        return f"{self.evt_code}, {self.pawr_handle:#08x}, {self.subevent}, {self.response_slot}, {self.data.hex() or 'EMPTY'}"
 
 
 class EventPawrDataRequest:

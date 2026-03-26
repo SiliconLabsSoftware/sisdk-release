@@ -155,6 +155,7 @@ void sl_ot_rtos_perm_allocation(void)
 {
     sli_ot_stack_task_mem = (uint8_t *)sl_malloc(SL_OPENTHREAD_STACK_TASK_MEM_SIZE);
     sli_ot_stack_task_cb  = (uint8_t *)sl_malloc(osThreadCbSize);
+    EFM_ASSERT(sli_ot_stack_task_mem != NULL && sli_ot_stack_task_cb != NULL);
 
     sli_ot_stack_task_attr.name       = "OT Stack";
     sli_ot_stack_task_attr.attr_bits  = 0u;
@@ -171,8 +172,10 @@ void sl_ot_rtos_perm_allocation(void)
                             &sli_ot_stack_semaphore_attr);
 
 #if SL_OPENTHREAD_ENABLE_SERIAL_TASK
-    sli_ot_serial_task_mem             = (uint8_t *)sl_malloc(SL_OPENTHREAD_SERIAL_TASK_MEM_SIZE);
-    sli_ot_serial_task_cb              = (uint8_t *)sl_malloc(osThreadCbSize);
+    sli_ot_serial_task_mem = (uint8_t *)sl_malloc(SL_OPENTHREAD_SERIAL_TASK_MEM_SIZE);
+    sli_ot_serial_task_cb  = (uint8_t *)sl_malloc(osThreadCbSize);
+    EFM_ASSERT(sli_ot_serial_task_mem != NULL && sli_ot_serial_task_cb != NULL);
+
     sli_ot_serial_task_attr.name       = "OT Serial";
     sli_ot_serial_task_attr.attr_bits  = 0u;
     sli_ot_serial_task_attr.stack_size = SL_OPENTHREAD_SERIAL_TASK_MEM_SIZE;
@@ -189,6 +192,7 @@ void sl_ot_rtos_perm_allocation(void)
 #if SL_OPENTHREAD_ENABLE_APP_TASK
     sli_ot_app_task_mem = (uint8_t *)sl_malloc(SL_OPENTHREAD_APP_TASK_MEM_SIZE);
     sli_ot_app_task_cb  = (uint8_t *)sl_malloc(osThreadCbSize);
+    EFM_ASSERT(sli_ot_app_task_mem != NULL && sli_ot_app_task_cb != NULL);
 
     sli_ot_app_task_attr.name       = "OT App";
     sli_ot_app_task_attr.attr_bits  = 0u;

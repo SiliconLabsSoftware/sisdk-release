@@ -196,6 +196,7 @@
   - name: cmsis_core
   - name: code_classification
   - name: component_catalog
+  - name: agents_md
   - name: trustzone_security_state
   - condition:
     - trustzone_unaware

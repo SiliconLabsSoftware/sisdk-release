@@ -43,6 +43,14 @@
 #include "coexistence-802154.h"
 #endif
 
+#ifdef SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT
+#include "sl_rail_util_ieee802154_fast_channel_switching.h"
+#endif
+
+#ifdef SL_CATALOG_SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT
+#include "sl_rail_util_ieee802154_rx_duty_cycling.h"
+#endif
+
 bool ieee802154EnhAckEnabled = false;
 uint8_t ieee802154PhrLen = 1U; // Default is 1-byte PHY Header (length byte)
 bool setFpByDefault = false;
@@ -54,13 +62,63 @@ sl_rail_handle_t emPhyRailHandle;
 extern sl_rail_status_t sl_rail_util_ieee802154_config_radio(sl_rail_handle_t railHandle);
 #endif
 
+#ifdef SL_CATALOG_SL_RAIL_UTIL_IEEE802154_PHY_SELECT_PRESENT
+#include "sl_rail_util_ieee802154_phy_select.h"
+#include "sl_railtest_phy_select_config.h"
+
+// Global variable that stores all PHY feature bits for testing
+static sl_rail_ieee802154_phy_features_t sl_railtest_desired_phy_features = SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ;
+
+// Component PHY feature callback implementations that mask the global railtest variable
 #ifdef SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT
-#include "sl_rail_util_ieee802154_fast_channel_switching.h"
+sl_rail_ieee802154_phy_features_t sl_rail_util_ieee802154_get_fast_channel_switching_phy_features(void)
+{
+  return sl_railtest_desired_phy_features & SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_CH_SWITCHING;
+}
 #endif
 
 #ifdef SL_CATALOG_SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT
-#include "sl_rail_util_ieee802154_rx_duty_cycling.h"
+sl_rail_ieee802154_phy_features_t sl_rail_util_ieee802154_get_rx_duty_cycling_phy_features(void)
+{
+  return sl_railtest_desired_phy_features & SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_DUTY_CYCLING;
+}
 #endif
+#endif
+
+// Railtest-specific callback to return base PHY features (ANT_DIV, COEX, FEM, 1MBPS_FEC)
+// that aren't handled by specific component callbacks
+sl_rail_ieee802154_phy_features_t sl_railtest_get_base_phy_features(void)
+{
+#ifdef SL_CATALOG_SL_RAIL_UTIL_IEEE802154_PHY_SELECT_PRESENT
+  // Return all features except those handled by component-specific callbacks
+  sl_rail_ieee802154_phy_features_t component_features = 0;
+#ifdef SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT
+  component_features |= SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_CH_SWITCHING;
+#endif
+#ifdef SL_CATALOG_SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT
+  component_features |= SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_DUTY_CYCLING;
+#endif
+#ifdef SL_CATALOG_RAIL_UTIL_IEEE802154_HIGH_SPEED_PRESENT
+  component_features |= SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_2_MBPS;
+  component_features |= SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_1_MBPS_FEC;
+#endif
+
+  // Return base features (ANT_DIV, COEX, FEM) from railtest variable
+  return sl_railtest_desired_phy_features & ~component_features;
+#else
+  return SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ;
+#endif
+}
+
+sl_rail_ieee802154_phy_features_t sl_rail_util_ieee802154_get_high_speed_phy_features(void)
+{
+#ifdef SL_CATALOG_RAIL_UTIL_IEEE802154_HIGH_SPEED_PRESENT
+  return sl_railtest_desired_phy_features & (SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_2_MBPS
+                                             | SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_1_MBPS_FEC);
+#else
+  return SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ;
+#endif
+}
 
 #ifdef SL_CATALOG_RAIL_UTIL_COEX_PRESENT
 static int8_t ccaThreshold = SL_RAIL_RSSI_INVALID_DBM;
@@ -256,6 +314,26 @@ static bool isCoexPhyConfig(uint8_t config)
   return ((config == 2U) || (config == 3U) || (config == 6U) || (config == 7U));
 }
 
+#ifdef SL_CATALOG_SL_RAIL_UTIL_IEEE802154_PHY_SELECT_PRESENT
+// Test-only function to configure PHY by features using the generated PHY select code.
+// This tests sl_rail_util_ieee802154_config_radio() by controlling the global
+// sl_railtest_desired_phy_features variable, which component callbacks mask
+// to return specific PHY features.
+static sl_rail_status_t sl_railtest_config_phy_by_features(sl_rail_ieee802154_phy_features_t desired_features)
+{
+  // Set the global feature variable
+  sl_railtest_desired_phy_features = desired_features;
+
+  // Call the generated PHY selection code which will use our controlled features
+  sl_rail_status_t status = sl_rail_util_ieee802154_config_radio(railHandle);
+
+  // Reset to default
+  sl_railtest_desired_phy_features = SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ;
+
+  return status;
+}
+#endif // SL_CATALOG_SL_RAIL_UTIL_IEEE802154_PHY_SELECT_PRESENT
+
 void list2p4Ghz802154Configs(sl_cli_command_arg_t *args)
 {
   uint8_t i;
@@ -336,6 +414,49 @@ void config2p4Ghz802154(sl_cli_command_arg_t *args)
   responsePrint(sl_cli_get_command_string(args, 0), "802.15.4:%s",
                 (status != SL_RAIL_STATUS_NO_ERROR) ? "Disabled" : "Enabled");
 }
+
+#ifdef SL_CATALOG_SL_RAIL_UTIL_IEEE802154_PHY_SELECT_PRESENT
+void config2p4Ghz802154ByFeatures(sl_cli_command_arg_t *args)
+{
+  CHECK_RAIL_HANDLE(sl_cli_get_command_string(args, 0));
+  sl_rail_status_t status;
+
+  if (!inRadioState(SL_RAIL_RF_STATE_IDLE, sl_cli_get_command_string(args, 0))) {
+    return;
+  }
+  if (disableIncompatibleProtocols(SL_RAIL_PTI_PROTOCOL_802154) != SL_RAIL_STATUS_NO_ERROR) {
+    responsePrintError(sl_cli_get_command_string(args, 0), 0x22, "Current protocol deinit failed");
+    return;
+  }
+
+  if (sl_cli_get_argument_count(args) < 1) {
+    responsePrintError(sl_cli_get_command_string(args, 0), 1,
+                       "PHY features argument required");
+    return;
+  }
+
+  sl_rail_ieee802154_phy_features_t desired_features
+    = (sl_rail_ieee802154_phy_features_t)sl_cli_get_argument_uint32(args, 0);
+
+  // Check if the desired PHY features are supported before attempting to configure
+  if (!sl_rail_util_ieee802154_is_phy_supported(desired_features)) {
+    responsePrintError(sl_cli_get_command_string(args, 0), SL_RAIL_STATUS_INVALID_STATE,
+                       "PHY features 0x%08X not supported", desired_features);
+    return;
+  }
+
+  status = sl_railtest_config_phy_by_features(desired_features);
+  if (status == SL_RAIL_STATUS_NO_ERROR) {
+    ieee802154PhrLen = 1U;
+    changeChannel(11);
+    sl_rail_ieee802154_phy_t active_phy = sl_rail_ieee802154_get_phy_id(railHandle);
+    responsePrint(sl_cli_get_command_string(args, 0), "802.15.4:Enabled,phy_id:%u", active_phy);
+  } else {
+    responsePrintError(sl_cli_get_command_string(args, 0), status,
+                       "Failed to configure PHY with features 0x%08X", desired_features);
+  }
+}
+#endif // SL_CATALOG_SL_RAIL_UTIL_IEEE802154_PHY_SELECT_PRESENT
 
 void config863Mhz802154(sl_cli_command_arg_t *args)
 {

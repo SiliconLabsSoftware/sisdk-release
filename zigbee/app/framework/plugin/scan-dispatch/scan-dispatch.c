@@ -146,8 +146,8 @@ void sli_zigbee_af_scan_dispatch_energy_scan_result_callback(uint8_t channel, in
                        false,     // failure?
                        NULL);     // network
   if (cliInitiatedScan) {
-    sl_zigbee_af_debug_println("Energy scan result: channel %d, RSSI %d dBm",
-                               channel, rssi);
+    sl_zigbee_af_core_println("Energy scan result: channel %d, RSSI %d dBm",
+                              channel, rssi);
   }
 }
 
@@ -182,7 +182,7 @@ void sli_zigbee_af_scan_dispatch_scan_complete_callback(uint8_t channel, sl_stat
 
   if (cliInitiatedScan) {
     if (status == SL_STATUS_OK) {
-      sl_zigbee_af_debug_println("Energy scan complete");
+      sl_zigbee_af_core_println("Energy scan complete");
     }
     cliInitiatedScan = false;  // Reset CLI flag
   }
@@ -204,11 +204,11 @@ void sli_zigbee_af_scan_dispatch_energy_scan_cli_command(sl_cli_command_arg_t *a
                                             scanDuration);
   if (status == SL_STATUS_OK) {
     cliInitiatedScan = true;
-    sl_zigbee_af_debug_println("Energy scan started on channel mask 0x%08X, duration %d",
-                               channelMask,
-                               scanDuration);
+    sl_zigbee_af_core_println("Energy scan started on channel mask 0x%08X, duration %d",
+                              channelMask,
+                              scanDuration);
   } else {
-    sl_zigbee_af_debug_println("Energy scan failed to start: 0x%08X", status);
+    sl_zigbee_af_core_println("Energy scan failed to start: 0x%08X", status);
   }
 }
 #endif // SL_CATALOG_CLI_PRESENT

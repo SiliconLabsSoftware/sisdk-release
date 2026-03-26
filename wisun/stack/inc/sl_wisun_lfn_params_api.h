@@ -207,7 +207,7 @@ static const sl_wisun_lfn_params_t SL_WISUN_PARAMS_LFN_TEST = {
   },
   .network = {
     .lfn_registration_lifetime_m = HOUR_TO_MIN(36),
-    .lfn_na_wait_duration_m = 1,
+    .lfn_na_wait_duration_m = 5,
     .reserved = 0
   },
   .power = {

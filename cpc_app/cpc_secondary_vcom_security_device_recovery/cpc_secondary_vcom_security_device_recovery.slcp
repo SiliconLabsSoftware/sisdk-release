@@ -42,4 +42,10 @@ readme:
 ui_hints:
   highlight: readme.md
 tag:
-  - hardware:device:ram:40
+  - hwfilter:ram:40k
+  - hwfilter:device:device_has_uart
+  - hwfilter:!device:device_generic_family_efr32xg22
+  - hwfilter:!device:device_generic_family_efr32xg25
+  - hwfilter:!device:device_generic_family_efr32xg26
+  - hwfilter:!device:device_generic_family_efr32xg29
+  - hwfilter:board:hardware:has:vcom

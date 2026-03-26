@@ -3,7 +3,7 @@
  * @brief Clock Manager - Clock Tree configuration file.
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -45,12 +45,7 @@
 #define SL_CLOCK_MANAGER_DEFAULT_LF_CLOCK_SOURCE_LFRCO        0xFC
 #define SL_CLOCK_MANAGER_DEFAULT_LF_CLOCK_SOURCE_LFXO         0xFB
 #define SL_CLOCK_MANAGER_DEFAULT_LF_CLOCK_SOURCE_ULFRCO       0xFA
-
-#if defined(SL_CATALOG_RAIL_LIB_PRESENT)
-#define SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE_AUTO         SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE_HFXO
-#else
 #define SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE_AUTO         SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE_HFRCODPLL
-#endif
 
 // <<< Use Configuration Wizard in Context Menu >>>
 

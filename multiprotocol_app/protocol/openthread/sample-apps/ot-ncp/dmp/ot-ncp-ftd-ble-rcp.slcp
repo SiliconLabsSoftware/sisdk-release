@@ -132,6 +132,10 @@ configuration:
   - name: SL_BT_CONTROLLER_BUFFER_MEMORY
     value: 1024
     condition: [device_generic_family_efr32xg21]
+  - name: SL_BTCTRL_RTOS_LINK_LAYER_TASK_STACK_SIZE
+    value: 1100
+    condition: [toolchain_lto, freertos]
+    unless: [device_series_3]
 
 define:
   - name: OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

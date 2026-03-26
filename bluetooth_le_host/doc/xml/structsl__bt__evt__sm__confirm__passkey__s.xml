@@ -17,7 +17,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="11352" column="12" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="11352" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="11352" column="12" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="11352" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structsl__bt__evt__sm__confirm__passkey__s_1a174d02a46c35159a1a2124ceb2f99dee" prot="public" static="no" mutable="no">
         <type>uint32_t</type>
@@ -38,7 +38,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="11353" column="12" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="11353" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="11353" column="12" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="11353" bodyend="-1"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
@@ -46,7 +46,7 @@
     </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="11350" column="1" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="11351" bodyend="11361"/>
+    <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="11350" column="1" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="11351" bodyend="11361"/>
     <listofallmembers>
       <member refid="structsl__bt__evt__sm__confirm__passkey__s_1aea35c21d37c47c70c566c954ac27c719" prot="public" virt="non-virtual"><scope>sl_bt_evt_sm_confirm_passkey_s</scope><name>connection</name></member>
       <member refid="structsl__bt__evt__sm__confirm__passkey__s_1a174d02a46c35159a1a2124ceb2f99dee" prot="public" virt="non-virtual"><scope>sl_bt_evt_sm_confirm_passkey_s</scope><name>passkey</name></member>

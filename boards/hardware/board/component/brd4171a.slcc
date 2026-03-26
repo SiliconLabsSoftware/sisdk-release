@@ -20,6 +20,7 @@
   - name: hardware_board_from_slwrb4171a
   - name: hardware_board_supports_wstk_lcd
   - name: hardware_board_has_vcom
+  - name: no_vcom_hardware_flowcontrol
   - name: hardware_board_has_spiflash
   - name: hardware_board_has_exp_11
   - name: hardware_board_has_exp_13
@@ -95,6 +96,7 @@
   - board:revision:A07
   - board:device:rm21z000f1024im32
   - hardware:has:vcom
+  - hardware:has:vcom:no_vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:display:ls013b7dh03
   - hardware:has:led:2

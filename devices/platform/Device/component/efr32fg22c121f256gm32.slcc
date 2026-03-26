@@ -144,6 +144,7 @@
   - name: device_supports_rail_stack
   - name: device_supports_connect
   - name: device_compute_basic
+  - name: device_has_hfrco_38m
 - recommends:
   - id: trustzone_unaware
     vendor: silabs
@@ -151,6 +152,7 @@
   - name: cmsis_core
   - name: code_classification
   - name: component_catalog
+  - name: agents_md
 - template_contribution:
   - name: device_opn
     value: EFR32FG22C121F256GM32

@@ -234,6 +234,7 @@ void btmesh_prov_on_event(sl_btmesh_msg_t *evt)
   }
   // Let subcomponents handle other events
   btmesh_cbp_on_event(evt);
+  btmesh_oob_on_event(evt);
 }
 
 sl_status_t btmesh_prov_start_scanning(void)
@@ -266,6 +267,15 @@ sl_status_t btmesh_prov_setup_provisioning(uint16_t netkey_index,
 
   // Setup CBP if enabled, otherwise do nothing
   sc = btmesh_prov_setup_cbp(uuid);
+
+  if (SL_STATUS_OK != sc) {
+    app_log_warning("Failed to setup CBP" APP_LOG_NEW_LINE);
+    return sc;
+  }
+
+  // Setup OOB if enabled
+  sc = btmesh_prov_setup_oob(uuid);
+
   return sc;
 }
 
@@ -525,7 +535,18 @@ SL_WEAK sl_status_t btmesh_prov_setup_cbp(uuid_128 uuid)
   return SL_STATUS_OK;
 }
 
+SL_WEAK sl_status_t btmesh_prov_setup_oob(uuid_128 uuid)
+{
+  (void)uuid;
+  return SL_STATUS_OK;
+}
+
 SL_WEAK void btmesh_cbp_on_event(sl_btmesh_msg_t *evt)
+{
+  (void)evt;
+}
+
+SL_WEAK void btmesh_oob_on_event(sl_btmesh_msg_t *evt)
 {
   (void)evt;
 }

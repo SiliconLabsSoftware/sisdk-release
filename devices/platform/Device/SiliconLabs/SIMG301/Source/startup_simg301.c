@@ -486,7 +486,6 @@ __STATIC_FORCEINLINE void ecc_write_zeros(uint32_t *start, uint32_t *end)
     : "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", "r12", "memory"
     );
 }
-
 /*---------------------------------------------------------------------------
  * ECC preserve initialization function using ARM Load/Store Multiple
  * (LDM/STM) instructions

@@ -3,7 +3,7 @@
  * @brief EFR32FG2D LCD register and bit field definitions
  ******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories, Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories, Inc. www.silabs.com</b>
  ******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -277,15 +277,11 @@ typedef struct lcd_typedef{
 #define _LCD_DISPCTRL_MUX_DUPLEX             0x00000001UL                               /**< Mode DUPLEX for LCD_DISPCTRL                */
 #define _LCD_DISPCTRL_MUX_TRIPLEX            0x00000002UL                               /**< Mode TRIPLEX for LCD_DISPCTRL               */
 #define _LCD_DISPCTRL_MUX_QUADRUPLEX         0x00000003UL                               /**< Mode QUADRUPLEX for LCD_DISPCTRL            */
-#define _LCD_DISPCTRL_MUX_SEXTAPLEX          0x00000005UL                               /**< Mode SEXTAPLEX for LCD_DISPCTRL             */
-#define _LCD_DISPCTRL_MUX_OCTAPLEX           0x00000007UL                               /**< Mode OCTAPLEX for LCD_DISPCTRL              */
 #define LCD_DISPCTRL_MUX_DEFAULT             (_LCD_DISPCTRL_MUX_DEFAULT << 0)           /**< Shifted mode DEFAULT for LCD_DISPCTRL       */
 #define LCD_DISPCTRL_MUX_STATIC              (_LCD_DISPCTRL_MUX_STATIC << 0)            /**< Shifted mode STATIC for LCD_DISPCTRL        */
 #define LCD_DISPCTRL_MUX_DUPLEX              (_LCD_DISPCTRL_MUX_DUPLEX << 0)            /**< Shifted mode DUPLEX for LCD_DISPCTRL        */
 #define LCD_DISPCTRL_MUX_TRIPLEX             (_LCD_DISPCTRL_MUX_TRIPLEX << 0)           /**< Shifted mode TRIPLEX for LCD_DISPCTRL       */
 #define LCD_DISPCTRL_MUX_QUADRUPLEX          (_LCD_DISPCTRL_MUX_QUADRUPLEX << 0)        /**< Shifted mode QUADRUPLEX for LCD_DISPCTRL    */
-#define LCD_DISPCTRL_MUX_SEXTAPLEX           (_LCD_DISPCTRL_MUX_SEXTAPLEX << 0)         /**< Shifted mode SEXTAPLEX for LCD_DISPCTRL     */
-#define LCD_DISPCTRL_MUX_OCTAPLEX            (_LCD_DISPCTRL_MUX_OCTAPLEX << 0)          /**< Shifted mode OCTAPLEX for LCD_DISPCTRL      */
 #define LCD_DISPCTRL_WAVE                    (0x1UL << 4)                               /**< Waveform Selection                          */
 #define _LCD_DISPCTRL_WAVE_SHIFT             4                                          /**< Shift value for LCD_WAVE                    */
 #define _LCD_DISPCTRL_WAVE_MASK              0x10UL                                     /**< Bit mask for LCD_WAVE                       */

@@ -35,6 +35,7 @@ include:
   - path: child.h
   - path: sl_zigbee_alternate_mac.h
   - path: sl_zigbee_debug.h
+  - path: sl_zigbee_dhc.h
   - path: sl_zigbee_duty_cycle.h
   - path: sl_zigbee_random_api.h
   - path: gp-types.h

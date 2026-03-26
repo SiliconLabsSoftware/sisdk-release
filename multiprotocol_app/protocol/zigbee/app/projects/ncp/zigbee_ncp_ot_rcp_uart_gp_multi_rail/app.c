@@ -408,6 +408,9 @@ void sl_zigbee_af_multirail_demo_rail_event_cb(sl_rail_handle_t handle,
 {
   if (events & SL_RAIL_EVENT_TX_PACKET_SENT) {
     sl_zigbee_af_event_set_delay_ms(&gp_transmit_complete_event, 0);
+#ifdef SL_CATALOG_KERNEL_PRESENT
+    sl_zigbee_wakeup_common_task();
+#endif // SL_CATALOG_KERNEL_PRESENT
   }
   (void)handle; // unreferenced parameter
 }

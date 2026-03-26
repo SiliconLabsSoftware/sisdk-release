@@ -17,7 +17,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="12301" column="14" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="12301" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="12301" column="14" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="12301" bodyend="-1"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
@@ -38,7 +38,7 @@
         <link refid="structuint8array"/>
       </node>
     </collaborationgraph>
-    <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="12299" column="1" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="12300" bodyend="12303"/>
+    <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="12299" column="1" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="12300" bodyend="12303"/>
     <listofallmembers>
       <member refid="structsl__bt__evt__external__bondingdb__local__irk__s_1adacc3f4f79cb80052e7606394d770b19" prot="public" virt="non-virtual"><scope>sl_bt_evt_external_bondingdb_local_irk_s</scope><name>data</name></member>
     </listofallmembers>

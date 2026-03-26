@@ -52,6 +52,7 @@ static const char usage[] =
   "    -f r,x            flow control: r=RST/CTS, x=XON/XOFF\n"
   "    -h                display usage information\n"
   "    -i 0,1            enable/disable input buffering\n"
+  "    -j <path>         apply DHC calibration JSON before stack init\n"
   "    -o 0,1            enable/disable output buffering\n"
   "    -p <port>         serial port name or number (eg, COM1, ttyS0, or 1)\n"
   "    -r d,r,c          ncp reset method: d=DTR, r=RST frame, c=custom\n"
@@ -74,6 +75,8 @@ static const char usage[] =
 static const sli_ash_host_count_t zeroAshCount = { 0 };
 
 bool sl_zigbee_ezsp_internal_process_command_options(int argc, char *argv[], char *errStr);
+
+char *sl_zigbee_ezsp_get_dhc_json_path(void);
 #endif //__ASH_HOST_UI_H___
 
 /** @} END addtogroup

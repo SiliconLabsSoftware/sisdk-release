@@ -25,6 +25,7 @@ ignore_peripherals_per_sdid = {
   230: ['EUSART0'], # Leopard only has 1 EUSART so conflicts are inevitable
   235: ['USART0'],  # Margay only has 1 USART so conflicts are inevitable
   240: [],          # Lion
+  260: ['USART0'],  # EFR32FG2D only has 1 USART so conflicts are inevitable
 }
 
 
@@ -140,10 +141,14 @@ def main():
 
     device_sdid = get_device_sdid(args.gsdk_path, board_name)
 
+    print(f"[DEBUG] Processing board '{board_name}', device_sdid={device_sdid}")
+
     if device_sdid is None:
+        print(f"[DEBUG] Skipping '{board_name}' — device_sdid is None")
       # The generic family wasn't found
-      continue
+        continue
     elif not device_sdid >= 200:
+      print(f"[DEBUG] Skipping '{board_name}' — Series 1 device (sdid={device_sdid})")
       # For now, we're only testing Series 2 devices
       continue
 
@@ -152,13 +157,24 @@ def main():
 
     peripheral, gpios = get_peripheral_signals(config_file_path)
 
-    # Ignore certain peripherals for certain SDIDs
-    if peripheral in ignore_peripherals_per_sdid[device_sdid]:
+
+    print(f"[DEBUG] Peripheral '{peripheral}' found for board '{board_name}'")
+
+
+    if device_sdid not in ignore_peripherals_per_sdid:
+      print(f"[DEBUG] SDID {device_sdid} not in ignore_peripherals_per_sdid — skipping ignore check")
+    elif peripheral in ignore_peripherals_per_sdid[device_sdid]:
+      print(f"[DEBUG] Skipping peripheral '{peripheral}' for SDID {device_sdid} — in ignore list")
       continue
+
+    # # Ignore certain peripherals for certain SDIDs
+    # if peripheral in ignore_peripherals_per_sdid[device_sdid]:
+    #   continue
 
     # If there are no signals on the peripheral, continue
     if gpios is None:
-      continue
+        print(f"[DEBUG] Skipping peripheral '{peripheral}' — no GPIOs found")
+        continue
 
     # Keep track of all the peripherals used by the boards and which config file uses them
     board_peripheral_pins[board_name][peripheral][config_file_path.stem] = gpios

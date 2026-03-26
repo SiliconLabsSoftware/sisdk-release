@@ -9,6 +9,10 @@ metadata:
     license: Zlib
 ui_hints:
   visibility: never
+requires:
+- name: cpc_config_vcom
+  condition:
+  - cpc_secondary_driver_uart_usart
 provides:
 - name: cpc_recommend_vcom
 - name: cpc_recommend_vcom_usart
@@ -21,6 +25,4 @@ recommends:
   instance:
   - vcom
   vendor: silabs
-requires:
-- name: cpc_config_vcom
 root_path: cpc

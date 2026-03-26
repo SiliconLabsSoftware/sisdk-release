@@ -19,6 +19,7 @@
   - name: hardware_board_from_xg28-ek2705a
   - name: hardware_board_from_xg28s-ek2705a
   - name: hardware_board_has_vcom
+  - name: hardware_board_has_vcom_hardware_flowcontrol
   - name: hardware_board_has_rfswitch
   - name: board_config_clock_manager
   - name: hardware_board_has_hfxo_freq_39mhz
@@ -69,6 +70,7 @@
   - board:revision:A02
   - board:device:efr32zg28b312f1024im48
   - hardware:has:vcom
+  - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:led:2
   - hardware:has:button:2

@@ -17,10 +17,10 @@
   - name: SL_KIT_NAME
     value: '"XG29-PK6034A"'
   - name: SL_KIT_REV
-    value: '"A01"'
+    value: '"A02"'
 - tag:
   - kit:opn:xG29-PK6034A
   - kit:pn:PK6034
   - kit:variant:A
-  - kit:revision:A01
+  - kit:revision:A02
 - root_path: boards

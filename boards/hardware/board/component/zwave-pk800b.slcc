@@ -17,10 +17,10 @@
   - name: SL_KIT_NAME
     value: '"ZWAVE-PK800B"'
   - name: SL_KIT_REV
-    value: '"A01"'
+    value: '"A02"'
 - tag:
   - kit:opn:ZWAVE-PK800B
   - kit:pn:PK800
   - kit:variant:B
-  - kit:revision:A01
+  - kit:revision:A02
 - root_path: boards

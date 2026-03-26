@@ -28,6 +28,7 @@ extern "C" {
 #endif
 #if defined(TFM_CONFIG_SL_SECURE_LIBRARY)
 #define PSA_STORAGE_FLAG_WRITE_ONCE_SECURE_ACCESSIBLE (1 << 3)
+#define PSA_STORAGE_FLAG_SECURE_ACCESSIBLE (1 << 4)
 #endif // TFM_CONFIG_SL_SECURE_LIBRARY
 
 psa_status_t sli_psa_its_change_key_id(mbedtls_svc_key_id_t old_id,

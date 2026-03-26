@@ -18,9 +18,11 @@
 #include PLATFORM_HEADER
 
 #include <stdarg.h>
+#include <stddef.h> // for NULL
 #include "stack/include/sl_zigbee_types.h"
 #include "ezsp-protocol.h"
 #include "ezsp-frame-utilities.h"
+#include "sl_zigbee_dhc.h"
 
 uint8_t* ezspReadPointer;
 uint8_t* ezspWritePointer;
@@ -765,6 +767,133 @@ void fetch_sl_zigbee_sec_man_aps_key_metadata_t(sl_zigbee_sec_man_aps_key_metada
   info->outgoing_frame_counter = fetchInt32u();
   info->incoming_frame_counter = fetchInt32u();
   info->ttl_in_seconds = fetchInt16u();
+}
+
+void append_sl_zigbee_dhc_pa_metadata_t(sl_zigbee_dhc_pa_metadata_t *metadata)
+{
+  appendInt8u(metadata->version);
+  appendInt8u(metadata->num_descriptors);
+  appendInt16u(metadata->pa_voltage);
+  appendInt32u(metadata->signature);
+}
+
+void fetch_sl_zigbee_dhc_pa_metadata_t(sl_zigbee_dhc_pa_metadata_t *metadata)
+{
+  metadata->version = fetchInt8u();
+  metadata->num_descriptors = fetchInt8u();
+  metadata->pa_voltage = fetchInt16u();
+  metadata->signature = fetchInt32u();
+}
+
+void append_sl_zigbee_dhc_pa_descriptor_t(sl_zigbee_dhc_pa_descriptor_t *descriptor)
+{
+  appendInt8u(descriptor->algorithm);
+  appendInt8u(descriptor->num_segments_or_entries);
+  appendInt16u((uint16_t)descriptor->min_ddbm);
+  appendInt16u((uint16_t)descriptor->max_ddbm);
+}
+
+void fetch_sl_zigbee_dhc_pa_descriptor_t(sl_zigbee_dhc_pa_descriptor_t *descriptor)
+{
+  descriptor->algorithm = fetchInt8u();
+  descriptor->num_segments_or_entries = fetchInt8u();
+  descriptor->min_ddbm = (int16_t)fetchInt16u();
+  descriptor->max_ddbm = (int16_t)fetchInt16u();
+}
+
+void append_sl_zigbee_dhc_pa_curve_segment_t(sl_zigbee_dhc_pa_curve_segment_t *segment)
+{
+  appendInt8u(segment->maxPowerLevel);
+  appendInt32u((uint32_t)segment->slope);
+  appendInt32u((uint32_t)segment->intercept);
+}
+void fetch_sl_zigbee_dhc_pa_curve_segment_t(sl_zigbee_dhc_pa_curve_segment_t *segment)
+{
+  segment->maxPowerLevel = fetchInt8u();
+  segment->slope = (int32_t)fetchInt32u();
+  segment->intercept = (int32_t)fetchInt32u();
+}
+
+void append_sl_zigbee_dhc_pa_curve_t(sl_zigbee_dhc_pa_curve_t *curve)
+{
+  appendInt16u((uint16_t)curve->curve_min_ddbm);
+  appendInt16u((uint16_t)curve->curve_max_ddbm);
+  for (uint8_t i = 0; i < SL_ZIGBEE_DHC_CURVE_SEGMENT_COUNT; i++) {
+    append_sl_zigbee_dhc_pa_curve_segment_t(&curve->segments[i]);
+  }
+}
+
+void fetch_sl_zigbee_dhc_pa_curve_t(sl_zigbee_dhc_pa_curve_t *curve)
+{
+  curve->curve_min_ddbm = (int16_t)fetchInt16u();
+  curve->curve_max_ddbm = (int16_t)fetchInt16u();
+  for (uint8_t i = 0; i < SL_ZIGBEE_DHC_CURVE_SEGMENT_COUNT; i++) {
+    fetch_sl_zigbee_dhc_pa_curve_segment_t(&curve->segments[i]);
+  }
+}
+
+void append_sl_zigbee_dhc_pa_table_t(sl_zigbee_dhc_pa_table_t *table)
+{
+  for (uint8_t i = 0; i < SL_ZIGBEE_DHC_TABLE_ENTRY_COUNT; i++) {
+    appendInt16u((uint16_t)table->ddbm_values[i]);
+  }
+}
+
+void fetch_sl_zigbee_dhc_pa_table_t(sl_zigbee_dhc_pa_table_t *table)
+{
+  for (uint8_t i = 0; i < SL_ZIGBEE_DHC_TABLE_ENTRY_COUNT; i++) {
+    table->ddbm_values[i] = (int16_t)fetchInt16u();
+  }
+}
+
+void append_sl_zigbee_dhc_pa_version_t(sl_zigbee_dhc_pa_version_t *pa_version)
+{
+  appendInt8u(pa_version->pa_version);
+}
+
+void fetch_sl_zigbee_dhc_pa_version_t(sl_zigbee_dhc_pa_version_t *pa_version)
+{
+  pa_version->pa_version = fetchInt8u();
+}
+
+void append_sl_zigbee_dhc_pa_signature_t(sl_zigbee_dhc_pa_signature_t *pa_signature)
+{
+  appendInt32u(pa_signature->pa_signature);
+}
+
+void fetch_sl_zigbee_dhc_pa_signature_t(sl_zigbee_dhc_pa_signature_t *pa_signature)
+{
+  pa_signature->pa_signature = fetchInt32u();
+}
+
+void append_sl_zigbee_dhc_pa_mode_t(sl_zigbee_dhc_pa_mode_t *pa_mode)
+{
+  appendInt8u(pa_mode->pa_mode);
+}
+
+void fetch_sl_zigbee_dhc_pa_mode_t(sl_zigbee_dhc_pa_mode_t *pa_mode)
+{
+  pa_mode->pa_mode = fetchInt8u();
+}
+
+void append_sl_zigbee_dhc_rssi_offset_t(sl_zigbee_dhc_rssi_offset_t *rssi_offset)
+{
+  appendInt8u((uint8_t)rssi_offset->rssi_offset);
+}
+
+void fetch_sl_zigbee_dhc_rssi_offset_t(sl_zigbee_dhc_rssi_offset_t *rssi_offset)
+{
+  rssi_offset->rssi_offset = (int8_t)fetchInt8u();
+}
+
+void append_sl_zigbee_dhc_ctune_t(sl_zigbee_dhc_ctune_t *ctune)
+{
+  appendInt32u(ctune->ctune);
+}
+
+void fetch_sl_zigbee_dhc_ctune_t(sl_zigbee_dhc_ctune_t *ctune)
+{
+  ctune->ctune = fetchInt32u();
 }
 
 void sli_zigbee_ezsp_set_last_status(sl_zigbee_ezsp_status_t status)

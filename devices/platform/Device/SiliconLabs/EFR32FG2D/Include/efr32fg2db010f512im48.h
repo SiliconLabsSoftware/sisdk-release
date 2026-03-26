@@ -4,7 +4,7 @@
  *        for EFR32FG2DB010F512IM48
  ******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories, Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories, Inc. www.silabs.com</b>
  ******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -1452,6 +1452,7 @@ typedef enum IRQn{
 #define RDMEM_FRC_RAM_BWE_WIDTH                 0x27UL      /**> FRCRAM BWE width */
 #define RDMEM_FRC_RAM_DATA_WIDTH                0x27UL      /**> FRC_RAM_DATA_WIDTH */
 #define RDMEM_FRC_RAM_ECC_EN                    0x1UL       /**> FRC RAM ECCEN */
+#define RDMEM_FRC_RAM_TOTAL_SIZE                0x1000UL    /**> FRC_RAM_TOTAL_SIZE */
 #define RDMEM_SEQ_BANK0_SIZE                    0x2000UL    /**> SEQ_RAM_BANK0_SIZE */
 #define RDMEM_SEQ_BANK1_SIZE                    0x2000UL    /**> SEQ_RAM_BANK1_SIZE */
 #define RDMEM_SEQ_BANK2_SIZE                    0x0UL       /**> SEQ_RAM_BANK2_SIZE */
@@ -1467,6 +1468,7 @@ typedef enum IRQn{
 #define RDMEM_SEQ_RAM_BWE_WIDTH                 0x27UL      /**> SEQRAM BWE width */
 #define RDMEM_SEQ_RAM_DATA_WIDTH                0x27UL      /**> SEQ_RAM_DATA_WIDTH */
 #define RDMEM_SEQ_RAM_ECC_EN                    0x1UL       /**> SEQ RAM ECCEN */
+#define RDMEM_SEQ_RAM_TOTAL_SIZE                0x4000UL    /**> SEQ_RAM_TOTAL_SIZE */
 
 /* Instance macros for ACMP */
 #define ACMP(n)                        (((n) == 0) ? ACMP0   \

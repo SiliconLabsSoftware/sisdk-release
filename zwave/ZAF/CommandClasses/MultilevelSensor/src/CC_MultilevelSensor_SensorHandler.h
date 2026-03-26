@@ -77,7 +77,18 @@ cc_multilevel_sensor_return_value
 cc_multilevel_sensor_registration(sensor_interface_t* i_new_sensor);
 
 /**
+ * Fills an input buffer with flags where each flag represents a supported sensor for a specific endpoint.
+ * @param[in] endpoint The endpoint to filter sensors by
+ * @param[out] o_supported_sensor_buffer Pointer to a buffer where the supported sensors' are represented as flags in a byte array.
+ * The position of each flag is calculated based on SDS13812. The buffer must be 11 byte long at least.
+ * @return CC_MULTILEVEL_SENSOR_RETURN_VALUE_OK if success, else CC_MULTILEVEL_SENSOR_RETURN_VALUE_ERROR.
+ */
+cc_multilevel_sensor_return_value
+cc_multilevel_sensor_get_supported_sensors_by_endpoint(uint8_t endpoint, uint8_t* o_supported_sensor_buffer);
+
+/**
  * Fills an input buffer with flags where each flag represents a supported sensor.
+ * This is a backward compatible wrapper that defaults to endpoint 0 (root endpoint).
  * @param[out] o_supported_sensor_buffer Pointer to a buffer where the supported sensors' are represented as flags in a byte array.
  * The position of each flag is calculated based on SDS13812. The buffer must be 11 byte long at least.
  * @return CC_MULTILEVEL_SENSOR_RETURN_VALUE_OK if success, else CC_MULTILEVEL_SENSOR_RETURN_VALUE_ERROR.
@@ -86,7 +97,18 @@ cc_multilevel_sensor_return_value
 cc_multilevel_sensor_get_supported_sensors(uint8_t* o_supported_sensor_buffer);
 
 /**
- * Fills an input buffer with flags where each flag represents a supported scale
+ * Fills an input buffer with flags where each flag represents a supported scale for a specific endpoint.
+ * @param[in] endpoint The endpoint to filter scales by
+ * @param[in] sensor_type_value Sensor type value to check, this is the value in sensor_type_t struct's value
+ * @param[out] o_supported_scale Pointer to a buffer where the supported scales will be represented for a sensor type
+ * @return CC_MULTILEVEL_SENSOR_RETURN_VALUE_OK if interface is registered for a sensor.
+ */
+cc_multilevel_sensor_return_value
+cc_multilevel_sensor_get_supported_scale_by_endpoint(uint8_t endpoint, uint8_t sensor_type_value, uint8_t* o_supported_scale);
+
+/**
+ * Fills an input buffer with flags where each flag represents a supported scale.
+ * This is a backward compatible wrapper that defaults to endpoint 0 (root endpoint).
  * @param[in] sensor_type_value Sensor type value to check, this is the value in sensor_type_t struct's value
  * @param[out] o_supported_scale Pointer to a buffer where the supported scales will be represented for a sensor type
  * @return CC_MULTILEVEL_SENSOR_RETURN_VALUE_OK if interface is registered for a sensor.

@@ -590,6 +590,10 @@ typedef struct {
   uint8_t channel_spacing;
   /// PHY mode ID
   uint8_t phy_mode_id;
+  /// Specifies the set of channels on which the device is permitted to transmit.
+  /// This mask applies to asynchronous (PAS, PA, ...), unicast and broadcast frames.
+  /// The channel mask is advertised in both US-IE and BS-IE elements.
+  uint8_t channel_mask[SL_WISUN_CHANNEL_MASK_SIZE];
 } sl_wisun_phy_config_explicit_t;
 
 /// Explicit RAIL configuration
@@ -892,7 +896,7 @@ typedef struct {
   uint32_t sample_count;
   /// Estimated chance of success
   float success_probability;
-  /// Estimated troughput in kb/s
+  /// Estimated throughput in kb/s
   float throughput;
   /// Number of successful transmissions
   uint16_t success_count;
@@ -910,7 +914,7 @@ SL_PACK_END()
 /// Adaptive rate algorithm rates
 SL_PACK_START(1)
 typedef struct {
-  /// Struct containig the rate's tx statistics
+  /// Struct containing the rate's tx statistics
   sl_wisun_rate_stats_t stats;
   /// Rate in kb/s
   uint32_t rate;
@@ -1046,7 +1050,7 @@ typedef enum {
 /// Broadcast MAC address
 extern const sl_wisun_mac_address_t sl_wisun_broadcast_mac;
 
-/// Enumeration for channel exlusion modes.
+/// Enumeration for channel exclusion modes.
 typedef enum {
   /// Channels are excluded by range if possible (3 ranges maximum),
   /// otherwise channels will be excluded by mask
@@ -1248,6 +1252,8 @@ typedef enum {
   SL_WISUN_LOGGER_EVENT_TYPE_FRAME_COUNTER_FAILURE = 4,
   /// Event published when a tx fails
   SL_WISUN_LOGGER_EVENT_TYPE_TX_FAILURE = 8,
+  /// Event published when RF test receives a packet or completes a TX
+  SL_WISUN_LOGGER_EVENT_TYPE_RF_TEST = 16,
 } sl_wisun_logger_event_type_t;
 
 /// Enumeration for event log frame types
@@ -1323,6 +1329,32 @@ typedef struct {
 } SL_ATTRIBUTE_PACKED sl_wisun_logger_event_tx_failure_t;
 SL_PACK_END()
 
+/// Value for rssi when not applicable (e.g. TX or non-RX events)
+#define SL_WISUN_RF_TEST_RSSI_NOT_AVAILABLE  (-128)
+
+/// RF test RX event information (valid when @ref SL_RAIL_EVENT_RX_PACKET_RECEIVED is set)
+SL_PACK_START(1)
+typedef struct {
+  /// RSSI in dBm; @ref SL_WISUN_RF_TEST_RSSI_NOT_AVAILABLE when not applicable
+  int8_t rssi;
+  /// Reserved for future use
+  uint8_t reserved[3];
+} SL_ATTRIBUTE_PACKED sl_wisun_logger_event_rf_test_rx_t;
+SL_PACK_END()
+
+/// RF test event information
+SL_PACK_START(1)
+typedef struct {
+  /// RAIL events associated with the RF test event
+  uint64_t events;
+  /// Event-specific data
+  union {
+    /// RX packet received information (when @ref SL_RAIL_EVENT_RX_PACKET_RECEIVED is set in events)
+    sl_wisun_logger_event_rf_test_rx_t rx;
+  } u;
+} SL_ATTRIBUTE_PACKED sl_wisun_logger_event_rf_test_t;
+SL_PACK_END()
+
 /// Wisun Event information
 SL_PACK_START(1)
 typedef struct {
@@ -1338,6 +1370,8 @@ typedef struct {
     sl_wisun_logger_event_frame_received_t frame_received;
     /// TX failure information
     sl_wisun_logger_event_tx_failure_t tx_failure;
+    /// RF test event information
+    sl_wisun_logger_event_rf_test_t rf_test;
   } u;
 } SL_ATTRIBUTE_PACKED sl_wisun_logger_event_t;
 SL_PACK_END()

@@ -314,6 +314,7 @@ static void AlarmCallback(AlarmHandle *aAlarm)
         aAlarm->mIsRunning = false;
         aAlarm->mWrapData.overflow_counter++;
         aAlarm->mTimerStart(aAlarm, aAlarm->mTimerGetMax());
+        aAlarm->mIsRunning = true;
     }
     else
     {

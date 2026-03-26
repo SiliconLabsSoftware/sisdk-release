@@ -229,9 +229,9 @@ TAG_UNASSOCIATE_TIMEOUT = 2 * TAG_SYNC_TIMEOUT
 ESL_MAX_TAGS_IN_GROUP = 255
 BROADCAST_ADDRESS = 0xFF
 
-VALID_BD_ADDRESS_REGEX = r"(([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}$)"
-VALID_ESL_ID_NUMBER_REGEX = r"\b(0|[0]?\d\d|[1]?\d\d?|2[0-4]\d|25[0-5])\b"
-VALID_GROUP_ID_NUMBER_REGEX = r"\b(0|[0]?\d\d|[1]?[0-1]?\d|12[0-7])\b"
+VALID_BD_ADDRESS_REGEX = r"(([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2})(?=\s|$)"
+VALID_ESL_ID_NUMBER_REGEX = r"(0|[0]?\d\d|[1]?\d\d?|2[0-4]\d|25[0-5])(?=\s|$)"
+VALID_GROUP_ID_NUMBER_REGEX = r"(0|[0]?\d\d|[1]?[0-1]?\d|12[0-7])(?=\s|$)"
 
 # Subevent
 SUBEVENT_START = "subevent_start"

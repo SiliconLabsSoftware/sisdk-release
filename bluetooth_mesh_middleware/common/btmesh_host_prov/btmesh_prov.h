@@ -296,6 +296,16 @@ void btmesh_prov_free_remote_serverlist(void);
 sl_status_t btmesh_prov_setup_cbp(uuid_128 uuid);
 
 /***************************************************************************//**
+* Setup out-of-band provisioning
+*
+* @param[in] uuid UUID of the device to be provisioned
+* @return Status of the setup sequence
+* @retval SL_STATUS_OK If successful
+*         Error code otherwise
+*******************************************************************************/
+sl_status_t btmesh_prov_setup_oob(uuid_128 uuid);
+
+/***************************************************************************//**
 * Wrapper for provisioning records initialization
 *
 * @return Status of the initialization sequence
@@ -308,6 +318,14 @@ sl_status_t btmesh_prov_init_provisioning_records(void);
 * @param[in] evt The received event
 *******************************************************************************/
 void btmesh_cbp_on_event(sl_btmesh_msg_t *evt);
+
+/***************************************************************************//**
+* BT Mesh event handler for OOB
+*
+* @param[in] evt The received event
+*******************************************************************************/
+void btmesh_oob_on_event(sl_btmesh_msg_t *evt);
+
 
 #ifdef __cplusplus
 }

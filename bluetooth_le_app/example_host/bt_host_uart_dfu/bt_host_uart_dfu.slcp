@@ -43,6 +43,8 @@ include:
 configuration:
   - name: ACCEPT_DFU_BOOT
     value: 1
+  - name: APP_LOG_LEVEL_FILTER_DYNAMIC 
+    value: 1
 
 tag:
   - toolchain:gcc

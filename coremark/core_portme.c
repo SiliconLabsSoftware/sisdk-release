@@ -69,17 +69,26 @@
 void efm32_timerInit(void)
 {
   TIMER_Init_TypeDef timerInit = TIMER_INIT_DEFAULT;
+  /* Ensure the counter does not start until explicitly enabled. */
+  timerInit.enable = false;
+
 #if REPORT_RESULT
   CMU_ClockEnable(cmuClock_TIMER0, true);
   CMU_ClockEnable(cmuClock_TIMER1, true);
 #endif
+
+  /* Initialize the TIMER peripheral (clock enabled) without starting the counter. */
+  TIMER_Init(TIMER0, &timerInit);
+  /* Set the TOP value; the timer must be initialized before this call. */
   TIMER_TopSet(TIMER0, 0xFFFF);
-  TIMER_Init( TIMER0, &timerInit );
+  /* Start the counter. */
+  TIMER_Enable(TIMER0, true);
+
   timerInit.sync = true;
   timerInit.clkSel = timerClkSelCascade;
+  TIMER_Init(TIMER1, &timerInit);
   TIMER_TopSet(TIMER1, 0xFFFF);
-  TIMER_Init( TIMER1, &timerInit );
-
+  TIMER_Enable(TIMER1, true);
 }
 
 uint32_t efm32_ticks(void)

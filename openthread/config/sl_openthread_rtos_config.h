@@ -72,10 +72,10 @@
 #define SL_OPENTHREAD_APP_TASK_MEM_SIZE (4608)
 
 // <o SL_OPENTHREAD_SERIAL_TASK_MEM_SIZE> OpenThread serial task stack size in bytes <1000-20000>
-// <i> Default: 3072
+// <i> Default: 3840
 // <i> Defines the stack size of the OpenThread RTOS serial task. The value is in bytes and
 // <i> and will be word aligned when it is applied at the task creation.
-#define SL_OPENTHREAD_SERIAL_TASK_MEM_SIZE (3072)
+#define SL_OPENTHREAD_SERIAL_TASK_MEM_SIZE (3840)
 
 // </h>
 // <h>  Priority Configuration for OpenThread RTOS Stack Task

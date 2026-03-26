@@ -35,6 +35,8 @@ requires:
 - name: sl_core
 - name: sl_common
 - name: status
+- name: sl_si91x_memory_manager
+  condition: [device_si91x]
 - name: memory_manager_region
   condition: [device_cortexm]
 - name: opn_device_host

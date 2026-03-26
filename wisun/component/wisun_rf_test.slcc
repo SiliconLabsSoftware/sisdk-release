@@ -17,10 +17,14 @@ provides:
 source:
   # Nanostack source files
 - path: "plugin/sl_wisun_rf_test.c"
+- path: "plugin/sl_wisun_rf_test_tools.c"
 - path: "stack/inc/sl_wisun_rf_test.h"
 
 include:
 - path: "stack/inc"
+- path: plugin
+  file_list:
+  - path: sl_wisun_rf_test_tools.h
 
 documentation:
   docset: wisun

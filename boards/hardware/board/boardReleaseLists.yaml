@@ -20,6 +20,7 @@ opn_override:
 socket_board_opn:
     BRD1020A: efr32mg29b230f1024cm40
     BRD1021A: efr32bg29b221f1024cj45
+    # BRD1026A: efr32fg2db010f512im48
 
 revision_blacklist:
     - BRD2504A_A00
@@ -33,7 +34,7 @@ board_ref_ignore:
 socket_boards:
     - BRD1020A
     - BRD1021A
-    - BRD1026A
+    # - BRD1026A
 
 board_release_whitelist:
     - BRD2503A
@@ -152,6 +153,7 @@ board_release_whitelist:
     - BRD4274A
     - BRD4276A
     - BRD4277A
+    - BRD4278A
     - BRD4308A
     - BRD4308B
     - BRD4308C
@@ -209,6 +211,7 @@ board_release_whitelist:
     - BRD4414A
     - BRD4415A
     - BRD4420A
+    - BRD4421A
     - BRD8016A
     - BRD8022A
     - BRD8023A

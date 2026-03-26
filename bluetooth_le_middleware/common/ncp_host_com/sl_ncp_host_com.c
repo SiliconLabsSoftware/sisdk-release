@@ -49,7 +49,9 @@ typedef struct {
 static volatile bool write_completed = false;
 static buf_t buf = { 0 };
 
-/**************************************************************************//**
+extern void sli_bt_ncp_transport_usart_cancel_receive(void);
+
+/******************************************************************************
  * NCP host communication initialization.
  *****************************************************************************/
 void sl_ncp_host_com_init(void)
@@ -64,7 +66,7 @@ void sl_ncp_host_com_init(void)
              (int)sc);
 }
 
-/**************************************************************************//**
+/******************************************************************************
  * Transmit function
  *
  * Transmits len bytes of data from adaptation layer through transport layer.
@@ -86,12 +88,14 @@ void sl_ncp_host_com_write(uint32_t len, uint8_t *data)
     sli_bt_ncp_transport_step();
   }
   // Start to receive the response as soon as the transmit is completed
+  sli_bt_ncp_transport_usart_cancel_receive();
+  // Start to receive the response as soon as the transmit is completed
   sl_bt_ncp_transport_receive();
   // Execute receive request
   sli_bt_ncp_transport_step();
 }
 
-/**************************************************************************//**
+/******************************************************************************
  * Receive function
  *
  * Copies received data from transport layer to adaptation layer
@@ -121,7 +125,7 @@ int32_t sl_ncp_host_com_read(uint32_t len, uint8_t *data)
   return len;
 }
 
-/**************************************************************************//**
+/******************************************************************************
  * Gives back already received message length.
  *
  * This function checks if data arrived from transport layer. This way the calls
@@ -139,7 +143,7 @@ int32_t sl_ncp_host_com_peek(void)
   return buf.len;
 }
 
-/**************************************************************************//**
+/******************************************************************************
  * Transmit completed callback
  *
  * Called after transmission is finished.
@@ -158,7 +162,7 @@ void sl_bt_ncp_transport_on_transmit(sl_status_t status)
   write_completed = true;
 }
 
-/**************************************************************************//**
+/******************************************************************************
  * Receive completed callback
  *
  * Called after reception is finished. Puts the message to the reception

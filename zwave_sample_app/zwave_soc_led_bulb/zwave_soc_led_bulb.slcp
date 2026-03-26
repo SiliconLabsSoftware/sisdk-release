@@ -40,7 +40,7 @@ component:
   - id: mpu # disable execution from RAM
   - id: simple_rgb_pwm_led
     instance: [rgb_led0]
-    condition: [zw_board_has_rgb]
+    condition: [hardware_board_has_rgb]
   - id: pwm
     instance: [led1]
     condition: [zw_board_has_no_rgb]
@@ -207,6 +207,7 @@ post_build:
 tag:
   - prebuilt_demo
   - hwfilter:device:device_supports_zwave
+  - hwfilter:!board:brd4205a
   - toolchain:gcc
 
 filter:

@@ -17,10 +17,10 @@
   - name: SL_KIT_NAME
     value: '"SIXG301-RB4408A"'
   - name: SL_KIT_REV
-    value: '"A02"'
+    value: '"A03"'
 - tag:
   - kit:opn:SixG301-RB4408A
   - kit:pn:RB4408
   - kit:variant:A
-  - kit:revision:A02
+  - kit:revision:A03
 - root_path: boards

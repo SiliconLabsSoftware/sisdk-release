@@ -5008,6 +5008,11 @@
       ],
       responseArguments: [
         {
+          type: "bool",
+          name: "success",
+          description: "true if the endpoint description was retrieved successfully, false otherwise.",
+        },
+        {
           type: "sl_zigbee_endpoint_description_t",
           name: "result",
           description: "Description of this endpoint."
@@ -5750,22 +5755,6 @@
           name: "priorities",
           description: "The current priorities."
         }
-      ],
-    },
-    ##RADIO_SET_SCHEDULER_PRIORITIES
-    {
-      value: "0x012B",
-      needGeneratedHandler: "yes",
-      commandName: "radioSetSchedulerPriorities",
-      description: "Set the current scheduler priorities for radio operations",
-      commandArguments: [
-        {
-          type: "sl_802154_radio_priorities_t",
-          name: "priorities",
-          description: "The current priorities."
-        }
-      ],
-      responseArguments: [
       ],
     },
     ##RADIO_GET_SCHEDULER_SLIPTIME
@@ -13714,3 +13703,714 @@
   ],
 }
 # END Token Interface Frames
+
+################################################################################
+- {
+  section: Dynamic Hardware Configuration Frames,
+
+  # Ensure generated code includes DHC public types and adapter prototypes when enabled
+  ncpCpps: ~,
+  
+  typedefs: [
+    {
+      name: "sl_zigbee_dhc_pa_metadata_t",
+      description: "Top-level PA calibration metadata.",
+      definition: [
+        { 
+          type: "uint8_t",
+          name: "version",
+          description: "Calibration metadata / dataset version.",
+        },
+        {
+          type: "uint8_t",
+          name: "num_descriptors",
+          description: "Number of PA descriptors present.",
+        },
+        {
+          type: "uint16_t",
+          name: "pa_voltage",
+          description: "PA supply voltage (e.g. mV).",
+        },
+        {
+          type: "uint32_t",
+          name: "signature",
+          description: "Integrity signature / CRC for whole set.",
+        },
+      ],
+    },
+    {
+      name: "sl_zigbee_dhc_pa_descriptor_t",
+      description: "Descriptor for either a curve (algorithm=0) or table (algorithm=1).",
+      definition: [
+        { 
+          type: "uint8_t",
+          name: "algorithm",               
+          description: "0=Curve, 1=Table.", 
+        },
+        { 
+          type: "uint8_t",
+          name: "num_segments_or_entries", 
+          description: "9 for curve, 16 for table.", 
+        },
+        { 
+          type: "int16_t", 
+          name: "min_ddbm",                
+          description: "Minimum ddbm (may be negative).",
+        },
+        { 
+          type: "int16_t",
+          name: "max_ddbm",                
+          description: "Maximum ddbm (may be negative).",
+        },
+      ],
+    },
+    {
+      name: "sl_zigbee_dhc_pa_curve_segment_t",
+      description: "One PA curve segment (piecewise linear).",
+      definition: [
+        { 
+          type: "uint8_t",
+          name: "maxPowerLevel", 
+          description: "Segment upper bound power level.", 
+        },
+        { 
+          type: "int32_t", 
+          name: "slope", 
+          description: "Signed slope coefficient.", 
+        },
+        { 
+          type: "int32_t", 
+          name: "intercept", 
+          description: "Signed intercept coefficient.",
+        },
+      ],
+    },
+    {
+      name: "sl_zigbee_dhc_pa_curve_t",
+      description: "Full PA curve (fixed 9 segments).",
+      definition: [
+        { 
+          type: "int16_t", 
+          name: "curve_min_ddbm", 
+          description: "Curve min ddbm.", 
+        },
+        { 
+          type: "int16_t",
+          name: "curve_max_ddbm",
+          description: "Curve max ddbm.",
+        },
+        { 
+          type: "sl_zigbee_dhc_pa_curve_segment_t[9]", 
+          name: "segments", 
+          description: "Curve segments.", 
+        },
+      ],
+    },
+    {
+      name: "sl_zigbee_dhc_pa_table_t",
+      description: "Discrete PA table (16 entries).",
+      definition: [
+        { 
+          type: "int16_t[16]", 
+          name: "ddbm_values", 
+          description: "Signed ddbm table entries.", 
+        },
+      ],
+    },
+    { 
+      name: "sl_zigbee_dhc_pa_version_t",   
+      description: "PA dataset version.",   
+      definition: [ 
+        { 
+          type: "uint8_t",  
+          name: "pa_version",
+          description: "The PA version.",
+        }, 
+      ],
+    },
+    { 
+      name: "sl_zigbee_dhc_pa_signature_t", 
+      description: "Standalone PA signature.", 
+      definition: [ 
+        { 
+          type: "uint32_t",
+          name: "pa_signature",
+          description: "The PA signature.",
+        },
+      ],
+    },
+    { 
+      name: "sl_zigbee_dhc_pa_mode_t",      
+      description: "PA mode wrapper.",
+      definition: [
+        { 
+          type: "uint8_t",
+          name: "pa_mode",
+          description: "PA mode value.",
+        },
+      ],
+    },
+    { 
+      name: "sl_zigbee_dhc_rssi_offset_t",  
+      description: "RSSI offset wrapper.",   
+      definition: [ 
+        { 
+          type: "int8_t",
+          name: "rssi_offset",
+          description: "RSSI offset value.",
+        },
+      ],
+    },
+    { 
+      name: "sl_zigbee_dhc_ctune_t",        
+      description: "CTUNE wrapper.",
+      definition: [
+        { 
+          type: "uint32_t", 
+          name: "ctune",
+          description: "CTUNE value.",
+        },
+      ],
+    },
+  ],
+
+  enums: ~,
+
+  frames: [
+   
+    ## READ_PA_DESCRIPTOR
+    {
+      value: "0x0152",
+      needGeneratedHandler: "yes",
+      commandName: "readPaDescriptor",
+      description: "Read descriptor at index.",
+      commandArguments: [
+        { 
+          type: "uint8_t", 
+          name: "index", 
+          description: "The PA index.",
+        },
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t",
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+        { 
+          type: "sl_zigbee_dhc_pa_descriptor_t", 
+          name: "descriptor",
+          description: "The PA descriptor.",
+        },
+      ],
+    },
+    ## WRITE_PA_DESCRIPTOR
+    {
+      value: "0x0153",
+      needGeneratedHandler: "yes",
+      commandName: "writePaDescriptor",
+      description: "Write descriptor at index.",
+      commandArguments: [
+        { 
+          type: "uint8_t", 
+          name: "index", 
+          description: "The PA index.",
+        },
+        { 
+          type: "sl_zigbee_dhc_pa_descriptor_t", 
+          name: "descriptor",
+          description: "The PA descriptor.",
+        },
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t", 
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+      ],
+    },
+    ## READ_PA_CURVE_SEGMENT
+    {
+      value: "0x0154",
+      needGeneratedHandler: "yes",
+      commandName: "readPaCurveSegment",
+      description: "Read one curve segment (algorithm=0).",
+      commandArguments: [
+        { 
+          type: "uint8_t",
+          name: "index", 
+          description: "The PA index.",
+        },
+        { 
+          type: "uint8_t", 
+          name: "segment_index", 
+          description: "The segment index.", 
+        },
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t", 
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+        { 
+          type: "sl_zigbee_dhc_pa_curve_segment_t", 
+          name: "segment",
+          description: "Read PA Curve segment.",
+        },
+      ],
+    },
+    ## WRITE_PA_CURVE_SEGMENT
+    {
+      value: "0x0155",
+      needGeneratedHandler: "yes",
+      commandName: "writePaCurveSegment",
+      description: "Write one curve segment (algorithm=0).",
+      commandArguments: [
+        { 
+          type: "uint8_t", 
+          name: "index",
+          description: "The PA index.",
+        },
+        { 
+          type: "uint8_t", 
+          name: "segment_index",
+          description: "The segment index.",
+        },
+        { 
+          type: "sl_zigbee_dhc_pa_curve_segment_t", 
+          name: "segment",
+          description: "Write PA Curve segment.",
+        },
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t",
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+      ],
+    },
+    ## READ_PA_CURVE
+    {
+      value: "0x0156",
+      needGeneratedHandler: "yes",
+      commandName: "readPaCurve",
+      description: "Read full curve for descriptor index (algorithm=0).",
+      commandArguments: [
+        { 
+          type: "uint8_t",
+          name: "index",
+          description: "The PA index.",
+        },
+      ],
+      responseArguments: [
+        {
+          type: "sl_status_t",
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+        {
+          type: "sl_zigbee_dhc_pa_curve_t",
+          name: "curve",
+          description: "Read PA Curve.",
+        },
+      ],
+    },
+    ## WRITE_PA_CURVE
+    {
+      value: "0x0157",
+      needGeneratedHandler: "yes",
+      commandName: "writePaCurve",
+      description: "Write full curve (algorithm=0).",
+      commandArguments: [
+        { 
+          type: "uint8_t",
+          name: "index",
+          description: "The PA index.",
+        },
+        { 
+          type: "sl_zigbee_dhc_pa_curve_t", 
+          name: "curve",
+          description: "Write PA Curve.",
+        },
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t", 
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+      ],
+    },
+    ## READ_PA_TABLE
+    {
+      value: "0x0158",
+      needGeneratedHandler: "yes",
+      commandName: "readPaTable",
+      description: "Read table for descriptor index (algorithm=1).",
+      commandArguments: [
+        { 
+          type: "uint8_t",
+          name: "index",
+          description: "The PA index.",
+        },
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t",
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+        { 
+          type: "sl_zigbee_dhc_pa_table_t",
+          name: "table",
+          description: "Read PA Table.",
+        },
+      ],
+    },
+    ## WRITE_PA_TABLE
+    {
+      value: "0x0159",
+      needGeneratedHandler: "yes",
+      commandName: "writePaTable",
+      description: "Write table (algorithm=1).",
+      commandArguments: [
+        { 
+          type: "uint8_t",
+          name: "index",
+          description: "The PA index.",
+        },
+        { 
+          type: "sl_zigbee_dhc_pa_table_t",
+          name: "table",
+          description: "Write PA Table.",
+        },
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t", 
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+      ],
+    },
+    ## READ_RSSI_OFFSET
+    {
+      value: "0x015A",
+      needGeneratedHandler: "yes",
+      commandName: "readRssiOffset",
+      description: "Read RSSI offset.",
+      commandArguments: [ 
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t",
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+        { 
+          type: "sl_zigbee_dhc_rssi_offset_t", 
+          name: "rssi_offset",
+          description: "Read RSSI offset.",
+        },
+      ],
+    },
+    ## WRITE_RSSI_OFFSET
+    {
+      value: "0x015F",
+      needGeneratedHandler: "yes",
+      commandName: "writeRssiOffset",
+      description: "Write RSSI offset.",
+      commandArguments: [
+        { 
+          type: "sl_zigbee_dhc_rssi_offset_t", 
+          name: "rssi_offset",
+          description: "Write RSSI offset.",
+        },
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t",
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+      ],
+    },
+    ## READ_PA_VOLTAGE
+    {
+      value: "0x015B",
+      needGeneratedHandler: "yes",
+      commandName: "readPaVoltage",
+      description: "Read PA voltage.",
+      commandArguments: [
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t", 
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+        { 
+          type: "uint16_t", 
+          name: "pa_voltage",
+          description: "Read PA voltage.",
+        },
+      ],
+    },
+    ## WRITE_PA_VOLTAGE
+    {
+      value: "0x015C",
+      needGeneratedHandler: "yes",
+      commandName: "writePaVoltage",
+      description: "Write PA voltage (keep consistent with metadata).",
+      commandArguments: [
+        { 
+          type: "uint16_t", 
+          name: "pa_voltage",
+          description: "Write PA voltage.",
+        },
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t", 
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+      ],
+    },
+    ## READ_PA_MODE
+    {
+      value: "0x015D",
+      needGeneratedHandler: "yes",
+      commandName: "readPaMode",
+      description: "Read PA mode.",
+      commandArguments: [ 
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t",
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+        { 
+          type: "sl_zigbee_dhc_pa_mode_t", 
+          name: "pa_mode",
+          description: "Read PA mode.",
+        },
+      ],
+    },
+    ## WRITE_PA_MODE
+    {
+      value: "0x015E",
+      needGeneratedHandler: "yes",
+      commandName: "writePaMode",
+      description: "Write PA mode.",
+      commandArguments: [
+        { 
+          type: "sl_zigbee_dhc_pa_mode_t",
+          name: "pa_mode",
+          description: "PA mode value to write.",
+        },
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t",
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+      ],
+    },
+    ## READ_CTUNE
+    {
+      value: "0x0160",
+      needGeneratedHandler: "yes",
+      commandName: "readCtune",
+      description: "Read CTUNE value.",
+      commandArguments: [ 
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t",
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+        { 
+          type: "sl_zigbee_dhc_ctune_t", 
+          name: "ctune",
+          description: "Read CTUNE value.",
+        },
+      ],
+    },
+    ## WRITE_CTUNE
+    {
+      value: "0x0161",
+      needGeneratedHandler: "yes",
+      commandName: "writeCtune",
+      description: "Write CTUNE value.",
+      commandArguments: [
+        { 
+          type: "sl_zigbee_dhc_ctune_t",
+          name: "ctune",
+          description: "Write CTUNE value.",
+        },
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t", 
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+      ],
+    },
+    ## READ_DHC_VERSION
+    {
+      value: "0x0162",
+      needGeneratedHandler: "yes",
+      commandName: "readDhcVersion",
+      description: "Read DHC top-level version.",
+      commandArguments: [ 
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t",
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+        { 
+          type: "uint8_t", 
+          name: "dhc_version",
+          description: "Read DHC top-level version.",
+        },
+      ],
+    },
+    ## WRITE_DHC_VERSION
+    {
+      value: "0x0163",
+      needGeneratedHandler: "yes",
+      commandName: "writeDhcVersion",
+      description: "Write DHC top-level version.",
+      commandArguments: [
+        { 
+          type: "uint8_t", 
+          name: "dhc_version",
+          description: "Write DHC top-level version.",
+        },
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t", 
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+      ],
+    },
+    ## READ_PA_VERSION
+    {
+      value: "0x0164",
+      needGeneratedHandler: "yes",
+      commandName: "readPaVersion",
+      description: "Read PA dataset version.",
+      commandArguments: [
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t", 
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.", 
+        },
+        { 
+          type: "sl_zigbee_dhc_pa_version_t", 
+          name: "pa_version",
+          description: "Read PA dataset version.",
+        },
+      ],
+    },
+    ## READ_PA_SIGNATURE
+    {
+      value: "0x0166",
+      needGeneratedHandler: "yes",
+      commandName: "readPaSignature",
+      description: "Read PA signature (metadata.signature mirror).",
+      commandArguments: [ 
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t", 
+          name: "status" ,
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+        { 
+          type: "sl_zigbee_dhc_pa_signature_t", 
+          name: "pa_signature",
+          description: "Read PA signature (metadata.signature mirror).",
+        },
+      ],
+    },
+    ## WRITE_PA_SIGNATURE
+    {
+      value: "0x0167",
+      needGeneratedHandler: "yes",
+      commandName: "writePaSignature",
+      description: "Write PA signature (updates metadata signature).",
+      commandArguments: [
+        { 
+          type: "sl_zigbee_dhc_pa_signature_t", 
+          name: "pa_signature",
+          description: "Write PA signature (updates metadata signature).",
+        },
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t", 
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure."
+        },
+      ],
+    },
+     ## READ_PA_METADATA
+    {
+      value: "0x0168",
+      needGeneratedHandler: "yes",
+      commandName: "readPaMetadata",
+      description: "Read PA calibration metadata.",
+      commandArguments: [ ],
+      responseArguments: [
+        { 
+          type: "sl_status_t", 
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+        { 
+          type: "sl_zigbee_dhc_pa_metadata_t", 
+          name: "metadata",
+          description: "Read PA calibration metadata block.",
+        }
+      ]
+    },
+    ## WRITE_PA_METADATA
+    {
+      value: "0x0169",
+      needGeneratedHandler: "yes",
+      commandName: "writePaMetadata",
+      description: "Write PA calibration metadata (must precede descriptor/data writes).",
+      commandArguments: [
+        { 
+          type: "sl_zigbee_dhc_pa_metadata_t",
+          name: "metadata",
+          description: "The PA metadata.",
+        },
+      ],
+      responseArguments: [
+        { 
+          type: "sl_status_t", 
+          name: "status",
+          description: "An sl_status_t value indicating success or the reason for failure.",
+        },
+      ],
+    },
+  ]
+}
+
+# END Dynamic Hardware Configuration Frames

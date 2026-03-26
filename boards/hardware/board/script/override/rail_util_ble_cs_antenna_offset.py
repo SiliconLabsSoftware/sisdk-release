@@ -5,7 +5,7 @@ import yaml
 from pathlib import Path
 from typing import Set
 
-antenna_offset_info_file = Path(__file__).parent / '../../../../platform/radio/rail_lib/plugin/cs/antenna_offset/rail_util_cs_antenna_offset.yaml'
+antenna_offset_info_file = Path(__file__).parent / '../../../../platform/scripts/board_generation/generation_files/rail_util_cs_antenna_offset.yaml'
 if not antenna_offset_info_file.exists():
     print(antenna_offset_info_file.resolve())
     raise Exception('rail_util_cs_antenna_offset.yaml not found. Make sure that the file exists!')

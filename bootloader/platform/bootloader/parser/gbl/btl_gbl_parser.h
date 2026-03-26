@@ -271,6 +271,8 @@ typedef struct {
   bool                enableGBLLengthCount;
   /// End address of the current storage slot that is being processed
   uint32_t            endOfStorageSlot;
+  /// End address of the RAM buffer allocated for patch extraction
+  uint32_t            endOfPatchBuffer;
 #endif
 #if defined(_SILICON_LABS_32B_SERIES_2)
   /// GBL Certificate
@@ -287,6 +289,8 @@ typedef struct {
   size_t              offsetInGbl;
   /// Offset of SE upgrade tag in the GBL file
   size_t              offsetOfSeUpgradeTag;
+  /// Is application version information available
+  bool     appVersionAvailable;
 #endif
   /// Current tag order
   uint8_t             currentTagOrder;

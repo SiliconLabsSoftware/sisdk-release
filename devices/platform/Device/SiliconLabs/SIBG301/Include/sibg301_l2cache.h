@@ -3,7 +3,7 @@
  * @brief SIBG301 L2CACHE register and bit field definitions
  ******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories, Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories, Inc. www.silabs.com</b>
  ******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -261,18 +261,13 @@ typedef struct l2cache_typedef{
 #define L2CACHE_STATUS_FLUSHRUNNING_DEFAULT          (_L2CACHE_STATUS_FLUSHRUNNING_DEFAULT << 4) /**< Shifted mode DEFAULT for L2CACHE_STATUS     */
 
 /* Bit fields for L2CACHE FLUSHCMD */
-#define _L2CACHE_FLUSHCMD_RESETVALUE                 0x00000000UL                                /**< Default value for L2CACHE_FLUSHCMD          */
-#define _L2CACHE_FLUSHCMD_MASK                       0x00000003UL                                /**< Mask for L2CACHE_FLUSHCMD                   */
-#define L2CACHE_FLUSHCMD_FLUSHALL                    (0x1UL << 0)                                /**< Flush All Cache Lines                       */
-#define _L2CACHE_FLUSHCMD_FLUSHALL_SHIFT             0                                           /**< Shift value for L2CACHE_FLUSHALL            */
-#define _L2CACHE_FLUSHCMD_FLUSHALL_MASK              0x1UL                                       /**< Bit mask for L2CACHE_FLUSHALL               */
-#define _L2CACHE_FLUSHCMD_FLUSHALL_DEFAULT           0x00000000UL                                /**< Mode DEFAULT for L2CACHE_FLUSHCMD           */
-#define L2CACHE_FLUSHCMD_FLUSHALL_DEFAULT            (_L2CACHE_FLUSHCMD_FLUSHALL_DEFAULT << 0)   /**< Shifted mode DEFAULT for L2CACHE_FLUSHCMD   */
-#define L2CACHE_FLUSHCMD_FLUSHRANGE                  (0x1UL << 1)                                /**< Flush Cache Within Address Range            */
-#define _L2CACHE_FLUSHCMD_FLUSHRANGE_SHIFT           1                                           /**< Shift value for L2CACHE_FLUSHRANGE          */
-#define _L2CACHE_FLUSHCMD_FLUSHRANGE_MASK            0x2UL                                       /**< Bit mask for L2CACHE_FLUSHRANGE             */
-#define _L2CACHE_FLUSHCMD_FLUSHRANGE_DEFAULT         0x00000000UL                                /**< Mode DEFAULT for L2CACHE_FLUSHCMD           */
-#define L2CACHE_FLUSHCMD_FLUSHRANGE_DEFAULT          (_L2CACHE_FLUSHCMD_FLUSHRANGE_DEFAULT << 1) /**< Shifted mode DEFAULT for L2CACHE_FLUSHCMD   */
+#define _L2CACHE_FLUSHCMD_RESETVALUE                 0x00000000UL                              /**< Default value for L2CACHE_FLUSHCMD          */
+#define _L2CACHE_FLUSHCMD_MASK                       0x00000003UL                              /**< Mask for L2CACHE_FLUSHCMD                   */
+#define L2CACHE_FLUSHCMD_FLUSHALL                    (0x1UL << 0)                              /**< Flush All Cache Lines                       */
+#define _L2CACHE_FLUSHCMD_FLUSHALL_SHIFT             0                                         /**< Shift value for L2CACHE_FLUSHALL            */
+#define _L2CACHE_FLUSHCMD_FLUSHALL_MASK              0x1UL                                     /**< Bit mask for L2CACHE_FLUSHALL               */
+#define _L2CACHE_FLUSHCMD_FLUSHALL_DEFAULT           0x00000000UL                              /**< Mode DEFAULT for L2CACHE_FLUSHCMD           */
+#define L2CACHE_FLUSHCMD_FLUSHALL_DEFAULT            (_L2CACHE_FLUSHCMD_FLUSHALL_DEFAULT << 0) /**< Shifted mode DEFAULT for L2CACHE_FLUSHCMD   */
 
 /* Bit fields for L2CACHE TAMPERIF */
 #define _L2CACHE_TAMPERIF_RESETVALUE                 0x00000000UL                                    /**< Default value for L2CACHE_TAMPERIF          */

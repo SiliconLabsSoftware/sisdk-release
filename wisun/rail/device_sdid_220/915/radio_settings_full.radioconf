@@ -101,7 +101,7 @@
         </channel_config_entry>
         <channel_config_entry name="WiSunConf Channel Group 150">
           <channel_number_start>12288</channel_number_start>
-          <channel_number_end>12319</channel_number_end>
+          <channel_number_end>12318</channel_number_end>
           <physical_channel_offset>SAME_AS_FIRST_CHANNEL</physical_channel_offset>
           <max_power>RAIL_TX_POWER_MAX</max_power>
           <metadata>{"selectedPhy":"PHY_WISUN_FAN_1v1_915MHz_Plan4_OFDM_OPT2_NA"}</metadata>
@@ -109,7 +109,7 @@
         </channel_config_entry>
         <channel_config_entry name="WiSunConf Channel Group 151">
           <channel_number_start>8192</channel_number_start>
-          <channel_number_end>8212</channel_number_end>
+          <channel_number_end>8211</channel_number_end>
           <physical_channel_offset>SAME_AS_FIRST_CHANNEL</physical_channel_offset>
           <max_power>RAIL_TX_POWER_MAX</max_power>
           <metadata>{"selectedPhy":"PHY_WISUN_FAN_1v1_915MHz_Plan5_OFDM_OPT1_NA"}</metadata>
@@ -219,7 +219,7 @@
         </channel_config_entry>
         <channel_config_entry name="WiSunConf Channel Group 164">
           <channel_number_start>12288</channel_number_start>
-          <channel_number_end>12319</channel_number_end>
+          <channel_number_end>12318</channel_number_end>
           <physical_channel_offset>SAME_AS_FIRST_CHANNEL</physical_channel_offset>
           <max_power>RAIL_TX_POWER_MAX</max_power>
           <metadata>{"selectedPhy":"PHY_WISUN_FAN_1v1_915MHz_Plan4_OFDM_OPT2_BZ"}</metadata>
@@ -227,7 +227,7 @@
         </channel_config_entry>
         <channel_config_entry name="WiSunConf Channel Group 165">
           <channel_number_start>8192</channel_number_start>
-          <channel_number_end>8212</channel_number_end>
+          <channel_number_end>8211</channel_number_end>
           <physical_channel_offset>SAME_AS_FIRST_CHANNEL</physical_channel_offset>
           <max_power>RAIL_TX_POWER_MAX</max_power>
           <metadata>{"selectedPhy":"PHY_WISUN_FAN_1v1_915MHz_Plan5_OFDM_OPT1_BZ"}</metadata>

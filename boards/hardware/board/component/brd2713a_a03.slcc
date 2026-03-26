@@ -17,6 +17,7 @@
   - name: hardware_board
   - name: hardware_board_tb
   - name: hardware_board_has_vcom
+  - name: hardware_board_has_vcom_hardware_flowcontrol
   - name: board_config_clock_manager
   - name: hardware_board_has_lfxo
   - name: hardware_board_supports_rf_band_2400
@@ -55,6 +56,7 @@
   - board:revision:A03
   - board:device:mgm260pb32vna
   - hardware:has:vcom
+  - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:led:2
   - hardware:has:button:2

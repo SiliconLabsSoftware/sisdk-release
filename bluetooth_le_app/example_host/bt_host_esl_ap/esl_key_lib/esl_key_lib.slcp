@@ -1,4 +1,4 @@
-project_name: esl_key_lib.pdx
+project_name: esl_key_lib
 package: bluetooth_le_app
 label: Bluetooth - ESL Key Library
 description: >

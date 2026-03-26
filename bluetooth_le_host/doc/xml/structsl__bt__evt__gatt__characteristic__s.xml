@@ -17,7 +17,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="8222" column="14" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="8222" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="8222" column="14" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="8222" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structsl__bt__evt__gatt__characteristic__s_1a620e0908144407678924961523f269d2" prot="public" static="no" mutable="no">
         <type>uint16_t</type>
@@ -32,7 +32,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="8223" column="14" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="8223" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="8223" column="14" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="8223" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structsl__bt__evt__gatt__characteristic__s_1ae875473e4862d23ca0bdeaa195d7e41a" prot="public" static="no" mutable="no">
         <type>uint8_t</type>
@@ -47,7 +47,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="8224" column="14" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="8224" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="8224" column="14" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="8224" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structsl__bt__evt__gatt__characteristic__s_1a6ef8b6af06e43130a96a3ef284849557" prot="public" static="no" mutable="no">
         <type><ref refid="structuint8array" kindref="compound">uint8array</ref></type>
@@ -62,7 +62,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="8225" column="14" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="8225" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="8225" column="14" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="8225" bodyend="-1"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
@@ -83,7 +83,7 @@
         <link refid="structuint8array"/>
       </node>
     </collaborationgraph>
-    <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="8220" column="1" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="8221" bodyend="8226"/>
+    <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="8220" column="1" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="8221" bodyend="8226"/>
     <listofallmembers>
       <member refid="structsl__bt__evt__gatt__characteristic__s_1a620e0908144407678924961523f269d2" prot="public" virt="non-virtual"><scope>sl_bt_evt_gatt_characteristic_s</scope><name>characteristic</name></member>
       <member refid="structsl__bt__evt__gatt__characteristic__s_1ade653d67c88b7300c7c97185f8e2eaa2" prot="public" virt="non-virtual"><scope>sl_bt_evt_gatt_characteristic_s</scope><name>connection</name></member>

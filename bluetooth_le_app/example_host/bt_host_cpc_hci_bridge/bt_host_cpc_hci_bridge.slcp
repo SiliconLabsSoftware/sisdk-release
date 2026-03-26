@@ -37,6 +37,10 @@ include:
     file_list:
       - path: app_log_cli.h
 
+configuration:
+  - name: APP_LOG_LEVEL_FILTER_DYNAMIC 
+    value: 1
+
 config_file:
   - path: config/app_config.h
 

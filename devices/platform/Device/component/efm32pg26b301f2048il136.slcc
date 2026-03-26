@@ -180,6 +180,7 @@
   - name: cmsis_core
   - name: code_classification
   - name: component_catalog
+  - name: agents_md
 - template_contribution:
   - name: device_opn
     value: EFM32PG26B301F2048IL136

@@ -3,7 +3,7 @@
  * @brief BT Mesh Host Provisioner command line build only.
  *******************************************************************************
  * # License
- * <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -43,17 +43,25 @@ extern "C" {
 #define CBP_OPTIONS
 #endif
 
+// If OOB is not used, define its macros
+#ifndef SL_CATALOG_BTMESH_HOST_APP_PROV_OOB_PRESENT
+#define OOB_OPTLENGTH 0
+#define OOB_OPTSTRING
+#define OOB_USAGE
+#define OOB_OPTIONS
+#endif // SL_CATALOG_APP_PROV_OOB_PRESENT
+
 // Remote provisioning is not used if this header is included
 #define REMOTE_PROV_OPTLENGTH 0
 
 // Size of long options struct array size
-#define LONG_OPT_SIZE       PROV_OPTLENGTH + CBP_OPTLENGTH + LAST_OPTION_ELEMENT
+#define LONG_OPT_SIZE       PROV_OPTLENGTH + CBP_OPTLENGTH + OOB_OPTLENGTH + LAST_OPTION_ELEMENT
 
 // Optstring argument for getopt.
-#define OPTSTRING           NCP_HOST_OPTSTRING PROV_OPTSTRING CBP_OPTSTRING "h"
+#define OPTSTRING           NCP_HOST_OPTSTRING PROV_OPTSTRING CBP_OPTSTRING OOB_OPTSTRING "h"
 
 // Usage info.
-#define USAGE               "\n%s " NCP_HOST_USAGE PROV_USAGE CBP_USAGE " [-h]\n"
+#define USAGE               "\n%s " NCP_HOST_USAGE PROV_USAGE CBP_USAGE OOB_USAGE" [-h]\n"
 
 // Options info.
 #define OPTIONS            \
@@ -61,6 +69,7 @@ extern "C" {
   NCP_HOST_OPTIONS         \
   PROV_OPTIONS             \
   CBP_OPTIONS              \
+  OOB_OPTIONS              \
   "    -h  Print this help message.\n"
 
 #ifdef __cplusplus

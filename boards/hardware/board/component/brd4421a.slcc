@@ -18,6 +18,7 @@
   - name: hardware_board_rb
   - name: hardware_board_from_stk
   - name: hardware_board_has_vcom
+  - name: hardware_board_has_vcom_hardware_flowcontrol
   - name: hardware_board_has_spiflash
   - name: hardware_board_has_exp_12
   - name: hardware_board_has_exp_14
@@ -60,7 +61,7 @@
   - name: SL_BOARD_NAME
     value: '"BRD4421A"'
   - name: SL_BOARD_REV
-    value: '"A00"'
+    value: '"A01"'
   - name: HFXO_FREQ
     value: 38400000
   - name: HARDWARE_BOARD_SUPPORTS_RF_BAND_2400
@@ -69,9 +70,10 @@
 - tag:
   - board:pn:BRD4421
   - board:variant:A
-  - board:revision:A00
+  - board:revision:A01
   - board:device:efr32bg22l122f352gm32
   - hardware:has:vcom
+  - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:led:1
   - hardware:has:button:1

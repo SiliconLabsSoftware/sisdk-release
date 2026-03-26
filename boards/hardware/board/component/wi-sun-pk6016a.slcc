@@ -17,10 +17,10 @@
   - name: SL_KIT_NAME
     value: '"WI-SUN-PK6016A"'
   - name: SL_KIT_REV
-    value: '"A01"'
+    value: '"A02"'
 - tag:
   - kit:opn:Wi-SUN-PK6016A
   - kit:pn:PK6016
   - kit:variant:A
-  - kit:revision:A01
+  - kit:revision:A02
 - root_path: boards

@@ -17,6 +17,7 @@
   - name: hardware_board_stk
   - name: hardware_board_from_stk
   - name: hardware_board_has_vcom
+  - name: no_vcom_hardware_flowcontrol
   - name: hardware_board_supports_rf_band_2400
   - name: hardware_board_supports_1_rf_band
   - name: hardware_board_default_rf_band
@@ -47,6 +48,7 @@
   - board:revision:A00
   - board:device:mgm240pb32vna
   - hardware:has:vcom
+  - hardware:has:vcom:no_vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:led:1
   - hardware:has:button:0

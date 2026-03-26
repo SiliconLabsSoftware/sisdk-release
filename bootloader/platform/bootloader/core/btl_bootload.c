@@ -52,6 +52,8 @@ MISRAC_ENABLE
 #include "storage/btl_storage.h"
 #include "btl_interface_parser.h"
 #include "btl_parse.h"
+// Delta DFU support
+#include "btl_delta_dfu_cfg.h"
 #endif
 
 #if defined(BOOTLOADER_SUPPORT_INTERNAL_STORAGE) \
@@ -337,9 +339,14 @@ SL_WEAK void bootload_applicationCallback(uint32_t address,
     uint32_t startOfAppSpace = BTL_APPLICATION_BASE;
     uint32_t pc = *(uint32_t *)(startOfAppSpace + 4);
     if (pc != 0xFFFFFFFF) {
-      //Carry out the patch extraction only if a valid app is present in the
-      //app area.
+      // Carry out the patch extraction only if a valid app is present in the app area.
+#if BTL_DELTA_DFU_EXTRACT_TO_RAM
+      // Write directly to RAM if RAM-based extraction is enabled
+      memset((void *)address, 0, length);
+      memcpy((void *)address, data, length);
+#else
       storage_writeRaw(address, data, length);
+#endif
     }
   } else
 #endif

@@ -50,7 +50,7 @@
 
 // <o SL_DEVICE_INIT_HFXO_CTUNE> CTUNE <0-255>
 // <i> Default: 140
-#define SL_DEVICE_INIT_HFXO_CTUNE          115
+#define SL_DEVICE_INIT_HFXO_CTUNE          120
 
 // <<< end of configuration section >>>
 

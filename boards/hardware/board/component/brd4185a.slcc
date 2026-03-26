@@ -21,6 +21,7 @@
   - name: hardware_board_supports_wstk_lcd
   - name: hardware_board_has_rfswitch_aox
   - name: hardware_board_has_vcom
+  - name: hardware_board_has_vcom_hardware_flowcontrol
   - name: hardware_board_has_spiflash
   - name: hardware_board_has_rfswitch
   - name: hardware_board_has_exp_12
@@ -93,6 +94,7 @@
   - board:revision:A01
   - board:device:efr32bg22c224f512im40
   - hardware:has:vcom
+  - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:display:ls013b7dh03
   - hardware:has:led:2

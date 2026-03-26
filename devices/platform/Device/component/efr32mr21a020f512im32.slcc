@@ -149,6 +149,7 @@
   - name: cmsis_core
   - name: code_classification
   - name: component_catalog
+  - name: agents_md
 - template_contribution:
   - name: device_opn
     value: EFR32MR21A020F512IM32

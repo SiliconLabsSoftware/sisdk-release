@@ -20,16 +20,30 @@ provides:
 - name: ot_rtos_wrappers
 
 library:
+- path: build/gcc/cortex-m33/cmake/sl-openthread-wrapper-library/Debug/libsl_openthread_wrapper.a
+  condition:
+  - toolchain_gcc
+  - cortexm33
+  - toolchain_lto
+  unless: []
 - path: build/gcc/cortex-m33/cmake/sl-openthread-wrapper-library/Release/libsl_openthread_wrapper.a
   condition:
   - toolchain_gcc
   - cortexm33
   unless:
+  - toolchain_lto
+- path: build/llvm/cortex-m33/cmake/sl-openthread-wrapper-library/Debug/libsl_openthread_wrapper.a
+  condition:
   - toolchain_llvm
+  - cortexm33
+  - toolchain_lto
+  unless: []
 - path: build/llvm/cortex-m33/cmake/sl-openthread-wrapper-library/Release/libsl_openthread_wrapper.a
   condition:
   - toolchain_llvm
   - cortexm33
+  unless:
+  - toolchain_lto
 other_file:
 - path: linker/ot-rtos-wrapper-options
   project:

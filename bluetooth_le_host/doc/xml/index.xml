@@ -3719,27 +3719,27 @@
   </compound>
   <compound refid="md_doc_bgapi" kind="page"><name>md_doc_bgapi</name>
   </compound>
-  <compound refid="dir_2391b89f2879365d74a63a728bba7d01" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi</name>
+  <compound refid="dir_2391b89f2879365d74a63a728bba7d01" kind="dir"><name>/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi</name>
   </compound>
-  <compound refid="dir_e2f731d1cb9f97679faa790ae39b91e5" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host</name>
+  <compound refid="dir_e2f731d1cb9f97679faa790ae39b91e5" kind="dir"><name>/var/lib/jenkins/github@3/bluetooth_le_host</name>
   </compound>
-  <compound refid="dir_b1a1817b9387e5b054018a5428eb2a3f" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/build</name>
+  <compound refid="dir_b1a1817b9387e5b054018a5428eb2a3f" kind="dir"><name>/var/lib/jenkins/github@3/bluetooth_le_host/build</name>
   </compound>
   <compound refid="dir_5a46a304ca1f10f7c478657ff1bdae3a" kind="dir"><name>doc</name>
   </compound>
-  <compound refid="dir_d9a0b0c47291d7e9365bb8ce2e415e2a" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/event_system</name>
+  <compound refid="dir_d9a0b0c47291d7e9365bb8ce2e415e2a" kind="dir"><name>/var/lib/jenkins/github@3/bluetooth_le_host/event_system</name>
   </compound>
-  <compound refid="dir_ae20ecc429096018a2fe615dace667aa" kind="dir"><name>/var/lib/jenkins/github/bgapi_protocol/protocol/inc</name>
+  <compound refid="dir_ae20ecc429096018a2fe615dace667aa" kind="dir"><name>/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc</name>
   </compound>
-  <compound refid="dir_d0da292a01e2631d4fa972006f72b194" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc</name>
+  <compound refid="dir_d0da292a01e2631d4fa972006f72b194" kind="dir"><name>/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc</name>
   </compound>
-  <compound refid="dir_2e99f0e5add2c6d752cf2b568e810fad" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/event_system/inc</name>
+  <compound refid="dir_2e99f0e5add2c6d752cf2b568e810fad" kind="dir"><name>/var/lib/jenkins/github@3/bluetooth_le_host/event_system/inc</name>
   </compound>
-  <compound refid="dir_848835a5aecb994e59a4c4b7340e87b9" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/inc</name>
+  <compound refid="dir_848835a5aecb994e59a4c4b7340e87b9" kind="dir"><name>/var/lib/jenkins/github@3/bluetooth_le_host/inc</name>
   </compound>
-  <compound refid="dir_9ef8797857fbe1d47af7accb030e7afd" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/build/native</name>
+  <compound refid="dir_9ef8797857fbe1d47af7accb030e7afd" kind="dir"><name>/var/lib/jenkins/github@3/bluetooth_le_host/build/native</name>
   </compound>
-  <compound refid="dir_6d235e19420f7bb65a9187ffe80ccb69" kind="dir"><name>/var/lib/jenkins/github/bgapi_protocol/protocol</name>
+  <compound refid="dir_6d235e19420f7bb65a9187ffe80ccb69" kind="dir"><name>/var/lib/jenkins/github@3/bgapi_protocol/protocol</name>
   </compound>
   <compound refid="indexpage" kind="page"><name>index</name>
   </compound>

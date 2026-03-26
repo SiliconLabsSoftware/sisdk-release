@@ -41,38 +41,6 @@
 
 #include <stdint.h>
 
-// Include config file that defines RADIO_CONFIG_MAX_SRC_MATCH_ENTRIES
-// This ensures the macro is defined before it's used below
-// First check if it was already included via openthread-core-config.h
-#ifndef _SL_OPENTHREAD_FEATURES_CONFIG_H
-// If not included yet, try to include via the macro mechanism (same as openthread-core-config.h)
-// This is the preferred method as it matches how openthread-core-config.h includes it
-#ifdef SL_OPENTHREAD_STACK_FEATURES_CONFIG_FILE
-#include SL_OPENTHREAD_STACK_FEATURES_CONFIG_FILE
-#else
-// Fallback: try direct include if macro isn't defined
-// Use __has_include if available to check for file existence before including
-#if defined(__has_include)
-#if __has_include("sl_openthread_features_config.h")
-#include "sl_openthread_features_config.h"
-#elif __has_include(<sl_openthread_features_config.h>)
-#include <sl_openthread_features_config.h>
-#endif
-#else
-// If __has_include is not available (older compilers), try direct include
-// This will cause a compilation error if the file doesn't exist, which is expected
-// for configurations that require the config file
-#include "sl_openthread_features_config.h"
-#endif
-#endif
-#endif
-
-// If RADIO_CONFIG_MAX_SRC_MATCH_ENTRIES is still not defined, provide a default
-// This can happen if the config file wasn't included or doesn't define it
-#ifndef RADIO_CONFIG_MAX_SRC_MATCH_ENTRIES
-#define RADIO_CONFIG_MAX_SRC_MATCH_ENTRIES OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

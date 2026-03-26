@@ -50,9 +50,7 @@
 {%- endif %}
 {%- endfor %}
 
-#if SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_ENABLED && defined(_SILICON_LABS_32B_SERIES_2)
-#define ANT_DIV_PHY_DEFAULT_ENABLED (1U)
-#elif SL_RAIL_UTIL_ANT_DIV_RX_MODE
+#if SL_RAIL_UTIL_ANT_DIV_RX_MODE
 #define ANT_DIV_PHY_DEFAULT_ENABLED \
   (SL_RAIL_UTIL_ANT_DIV_RX_MODE != SL_RAIL_UTIL_ANTENNA_MODE_DISABLED)
 #else
@@ -69,21 +67,28 @@
    ? SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_ANT_DIV     \
    : SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ)
 
-#define SL_RAIL_UTIL_IEEE802154_2P4_2MBPS_RUNTIME_PHY_SELECT (1                                                               \
-                                                              && SL_RAIL_UTIL_IEEE802154_RADIO_CONFIG_2P4_1MBPS_FEC_SUPPORTED \
-                                                              && SL_RAIL_UTIL_IEEE802154_RADIO_CONFIG_2P4_2MBPS_SUPPORTED)
+#define SL_RAIL_UTIL_IEEE802154_2P4_2MBPS_RUNTIME_PHY_SELECT    \
+  (SL_RAIL_UTIL_IEEE802154_RADIO_CONFIG_2P4_1MBPS_FEC_SUPPORTED \
+   && SL_RAIL_UTIL_IEEE802154_RADIO_CONFIG_2P4_2MBPS_SUPPORTED)
 
-#define SL_RAIL_UTIL_IEEE802154_RUNTIME_PHY_FEATURES_2P4_2MBPS (SL_RAIL_UTIL_IEEE802154_2P4_2MBPS_RUNTIME_PHY_SELECT              \
-                                                                ? (SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ                         \
-                                                                   | SL_RAIL_UTIL_IEEE802154_RADIO_CONFIG_2P4_1MBPS_FEC_SUPPORTED \
-                                                                   | SL_RAIL_UTIL_IEEE802154_RADIO_CONFIG_2P4_2MBPS_SUPPORTED)    \
-                                                                : SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ)
+#define SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_1_OR_2_MBPS \
+  (SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_1_MBPS_FEC       \
+   | SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_2_MBPS)
 
-#define SL_RAIL_UTIL_IEEE802154_DEFAULT_PHY_FEATURES_2P4_2MBPS (SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ                          \
-                                                                | (SL_RAIL_UTIL_IEEE802154_RADIO_CONFIG_2P4_2MBPS_SUPPORTED     \
-                                                                   << SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_2_MBPS_SHIFT)      \
-                                                                | (SL_RAIL_UTIL_IEEE802154_RADIO_CONFIG_2P4_1MBPS_FEC_SUPPORTED \
-                                                                   << SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_1_MBPS_FEC_SHIFT))
+#define SL_RAIL_UTIL_IEEE802154_RUNTIME_PHY_FEATURES_2P4_2MBPS \
+  (SL_RAIL_UTIL_IEEE802154_2P4_2MBPS_RUNTIME_PHY_SELECT        \
+   ? SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_1_OR_2_MBPS        \
+   : SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ)
+
+#define SL_RAIL_UTIL_IEEE802154_DEFAULT_PHY_FEATURES_2P4_1_MBPS_FEC \
+  (SL_RAIL_UTIL_IEEE802154_RADIO_CONFIG_2P4_1MBPS_FEC_SUPPORTED \
+   ? SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_1_MBPS_FEC          \
+   : SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ)
+
+#define SL_RAIL_UTIL_IEEE802154_DEFAULT_PHY_FEATURES_2P4_2MBPS \
+  (SL_RAIL_UTIL_IEEE802154_RADIO_CONFIG_2P4_2MBPS_SUPPORTED    \
+   ? SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_2_MBPS             \
+   : SL_RAIL_UTIL_IEEE802154_DEFAULT_PHY_FEATURES_2P4_1_MBPS_FEC)
 
 
 #define SL_RAIL_UTIL_IEEE802154_DEFAULT_PHY_FEATURES_RX_DUTY_CYCLING (SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_DEFAULT_ENABLED  \
@@ -198,6 +203,39 @@ typedef struct sl_rail_util_ieee802154_config {
 #define IS_PHY_FEATURE_SUPPORTED(phy_feature) \
   ((((phy_feature) & CONST_PHY_FEATURES) == (DEFAULT_PHY_FEATURES & CONST_PHY_FEATURES)))
 
+#define PHY_SUPPORTS_DEFAULT_FEATURES(phy_feature) \
+  (((DEFAULT_PHY_FEATURES) & (phy_feature)) == (DEFAULT_PHY_FEATURES))
+
+#define ARE_DEFAULT_PHY_FEATURES_SUPPORTED(phy_feature) \
+  (IS_PHY_FEATURE_SUPPORTED(phy_feature) && PHY_SUPPORTS_DEFAULT_FEATURES(phy_feature))
+
+// Prevent invalid combination of default PHY features
+#if ( \
+  !ARE_DEFAULT_PHY_FEATURES_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ) \
+  && !ARE_DEFAULT_PHY_FEATURES_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_ANT_DIV) \
+  && !ARE_DEFAULT_PHY_FEATURES_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_COEX) \
+  && !ARE_DEFAULT_PHY_FEATURES_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_ANT_DIV_COEX) \
+  && !ARE_DEFAULT_PHY_FEATURES_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_FEM) \
+  && !ARE_DEFAULT_PHY_FEATURES_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_FEM_ANT_DIV) \
+  && !ARE_DEFAULT_PHY_FEATURES_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_FEM_COEX) \
+  && !ARE_DEFAULT_PHY_FEATURES_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_FEM_ANT_DIV_COEX) \
+  && !ARE_DEFAULT_PHY_FEATURES_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_2_MBPS) \
+  && !ARE_DEFAULT_PHY_FEATURES_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_1_MBPS_FEC) \
+  && !ARE_DEFAULT_PHY_FEATURES_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_DUTY_CYCLING) \
+  && !ARE_DEFAULT_PHY_FEATURES_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_CH_SWITCHING) \
+  && !ARE_DEFAULT_PHY_FEATURES_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_FCS_2_MBPS) \
+  && !ARE_DEFAULT_PHY_FEATURES_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_FCS_1_MBPS_FEC) \
+  && !ARE_DEFAULT_PHY_FEATURES_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_DC_2_MBPS) \
+  && !ARE_DEFAULT_PHY_FEATURES_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_DC_1_MBPS_FEC) \
+)
+#error "DEFAULT_PHY_FEATURES is not supported by any compiled IEEE802.15.4 PHY configuration"
+#endif
+
+
+#if !IS_PHY_FEATURE_SUPPORTED(DEFAULT_PHY_FEATURES)
+#error "Default PHY FEATURE combination is unsupported on this platform!"
+#endif
+
 // The PHY table is ordered by RX sensitivity (best first).
 // We select the first PHY supporting all desired features to maximize performance.
 static sl_rail_util_ieee802154_config_t sl_rail_util_ieee802154_supported_phys[] = {
@@ -280,6 +318,22 @@ static sl_rail_util_ieee802154_config_t sl_rail_util_ieee802154_supported_phys[]
     .phy_cb = &sl_rail_ieee802154_config_2p4_ghz_radio_rx_duty_cycling
   },
 #endif
+#if IS_PHY_FEATURE_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_DC_2_MBPS)
+  {
+    .phy_id = SL_RAIL_IEEE802154_PHY_2P4_GHZ_2_MBPS,
+    .phy_features = SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_DC_2_MBPS,
+    .channel_config = &RAIL_IEEE802154_Phy2p4GHz2Mbps,
+    .phy_cb = &sl_rail_ieee802154_enable_2p4_ghz_high_data_rate
+  },
+#endif
+#if IS_PHY_FEATURE_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_DC_1_MBPS_FEC)
+  {
+    .phy_id = SL_RAIL_IEEE802154_PHY_2P4_GHZ_1_MBPS_FEC,
+    .phy_features = SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_DC_1_MBPS_FEC,
+    .channel_config = &RAIL_IEEE802154_Phy2p4GHz1MbpsFec,
+    .phy_cb = &sl_rail_ieee802154_enable_2p4_ghz_high_data_rate
+  },
+#endif
 #if IS_PHY_FEATURE_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_CH_SWITCHING)
   {
     .phy_id = SL_RAIL_IEEE802154_PHY_2P4_GHZ_RX_CH_SWITCHING,
@@ -308,36 +362,69 @@ static sl_rail_util_ieee802154_config_t sl_rail_util_ieee802154_supported_phys[]
 #define NUM_IEEE802154_PHY_FEATURES (sizeof(sl_rail_util_ieee802154_supported_phys) \
   / sizeof(sl_rail_util_ieee802154_config_t))
 
-sl_rail_status_t sl_rail_util_ieee802154_config_radio(sl_rail_handle_t railHandle)
+// Helper function to find a PHY config that supports the desired features.
+// Returns pointer to the matching config, or NULL if not found.
+// Note: This returns the first PHY that supports all desired features.
+// The PHY table (sl_rail_util_ieee802154_supported_phys) is ordered by
+// RX sensitivity (best first), so we intentionally select the first match
+// to maximize performance. For example, if a user requests coex features,
+// they will get the basic coex PHY (with better RX sensitivity) rather than
+// a more feature-rich PHY like antenna diversity + coex + FEM.
+static const sl_rail_util_ieee802154_config_t *sl_rail_util_ieee802154_find_phy_config(
+  sl_rail_ieee802154_phy_features_t desired_features)
 {
-  // Establish the proper radio config
-  sl_rail_status_t status = SL_RAIL_STATUS_INVALID_STATE;
-  sl_rail_ieee802154_phy_features_t desired_features = sl_rail_util_get_desired_phy_features();
-  sl_rail_ieee802154_phy_features_t supported_features;
-  for(unsigned int i = 0; i < NUM_IEEE802154_PHY_FEATURES; ++i) {
-    supported_features = sl_rail_util_ieee802154_supported_phys[i].phy_features;
+  for (unsigned int i = 0; i < NUM_IEEE802154_PHY_FEATURES; ++i) {
+    const sl_rail_util_ieee802154_config_t *phy_config = &sl_rail_util_ieee802154_supported_phys[i];
+    // Skip PHY configs that have no configuration method
+    if ((phy_config->channel_config == NULL) && (phy_config->phy_cb == NULL)) {
+      continue;
+    }
+    sl_rail_ieee802154_phy_features_t supported_features = phy_config->phy_features;
     if ((desired_features & supported_features) == desired_features) {
-      if (sl_rail_util_ieee802154_supported_phys[i].channel_config != NULL) {
-        status = sl_rail_ieee802154_config_channels(
-          railHandle,
-          (const sl_rail_channel_config_t *)*(sl_rail_util_ieee802154_supported_phys[i].channel_config),
-          sl_rail_util_ieee802154_supported_phys[i].phy_id);
-        if (status != SL_RAIL_STATUS_NO_ERROR) {
-          break;
-        }
-      }
-      if (sl_rail_util_ieee802154_supported_phys[i].phy_cb != NULL) {
-        status = sl_rail_util_ieee802154_supported_phys[i].phy_cb(railHandle);
-        if (status != SL_RAIL_STATUS_NO_ERROR) {
-          break;
-        }
-      }
-      active_radio_config = sl_rail_util_ieee802154_supported_phys[i].phy_id;
-      break;
+      return phy_config;
     }
   }
-  EFM_ASSERT(status == SL_RAIL_STATUS_NO_ERROR);
+  return NULL; // No matching PHY found
+}
 
+bool sl_rail_util_ieee802154_is_phy_supported(sl_rail_ieee802154_phy_features_t desired_features)
+{
+  return sl_rail_util_ieee802154_find_phy_config(desired_features) != NULL;
+}
+
+sl_rail_status_t sl_rail_util_ieee802154_config_radio(sl_rail_handle_t railHandle)
+{
+  sl_rail_ieee802154_phy_features_t desired_features = sl_rail_util_get_desired_phy_features();
+  const sl_rail_util_ieee802154_config_t *phy_config = sl_rail_util_ieee802154_find_phy_config(desired_features);
+
+  // Assert if no matching PHY found - callers should check support first
+  // using sl_rail_util_ieee802154_is_phy_supported()
+  EFM_ASSERT(phy_config != NULL);
+  if (phy_config == NULL) {
+    return SL_RAIL_STATUS_INVALID_STATE;
+  }
+
+  // Configure the matched PHY
+  sl_rail_status_t status = SL_RAIL_STATUS_NO_ERROR;
+
+  if (phy_config->channel_config != NULL) {
+    status = sl_rail_ieee802154_config_channels(
+      railHandle,
+      (const sl_rail_channel_config_t *)*(phy_config->channel_config),
+      phy_config->phy_id);
+    if (status != SL_RAIL_STATUS_NO_ERROR) {
+      return status;
+    }
+  }
+
+  if (phy_config->phy_cb != NULL) {
+    status = phy_config->phy_cb(railHandle);
+    if (status != SL_RAIL_STATUS_NO_ERROR) {
+      return status;
+    }
+  }
+
+  active_radio_config = phy_config->phy_id;
   return status;
 }
 

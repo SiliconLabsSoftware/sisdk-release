@@ -28,85 +28,121 @@ from ap_logger import getLogger
 from datetime import datetime as dt
 
 
+from dataclasses import dataclass, field
+from typing import Optional
+from datetime import datetime as dt
+from logging import getLogger
+from ap_config import ESL_CMD_MAX_RETRY_COUNT
+
+@dataclass
 class ESLCommand:
     """Class that encapsulates synchronization packet commands"""
 
-    def __init__(self, params, group_id, slot_num):
-        self.opcode = params[0]
-        self.esl_id = params[1]
-        self.group_id = group_id
-        self.slot_number = slot_num
-        self.timestamp = dt.now().timestamp()
-        self.params = params
-        self.response_opcode = []
-        self.calculate_expected_response()
+    group_id: int
+    data: bytes
+    slot_number: Optional[int] = None
+    timestamp: float = field(default_factory=lambda: dt.now().timestamp())
+    response_opcode: list = field(default_factory=list)
+    lifetime: int = field(default_factory=lambda: ESL_CMD_MAX_RETRY_COUNT)
 
-    # Logger
+    # Mapping opcode -> list of acceptable responses (by the ESL spec.)
+    _RESPONSE_MAP = {
+        TLV_OPCODE_PING: [TLV_RESPONSE_BASIC_STATE],
+        TLV_OPCODE_UNASSOCIATE: [TLV_RESPONSE_BASIC_STATE, TLV_RESPONSE_ERROR],
+        TLV_OPCODE_SERVICE_RST: [TLV_RESPONSE_BASIC_STATE, TLV_RESPONSE_ERROR],
+        TLV_OPCODE_FACTORY_RST: [TLV_RESPONSE_ERROR],
+        TLV_OPCODE_UPDATE_COMPLETE: [TLV_RESPONSE_ERROR],
+        TLV_OPCODE_READ_SENSOR: [TLV_RESPONSE_READ_SENSOR, TLV_RESPONSE_ERROR],
+        TLV_OPCODE_REFRESH_DISPLAY: [TLV_RESPONSE_DISPLAY_STATE, TLV_RESPONSE_ERROR],
+        TLV_OPCODE_DISPLAY_IMAGE: [TLV_RESPONSE_DISPLAY_STATE, TLV_RESPONSE_ERROR],
+        TLV_OPCODE_DISPLAY_TIMED_IMAGE: [TLV_RESPONSE_DISPLAY_STATE, TLV_RESPONSE_ERROR],
+        TLV_OPCODE_LED_CONTROL: [TLV_RESPONSE_LED_STATE, TLV_RESPONSE_ERROR],
+        TLV_OPCODE_LED_TIMED_CONTROL: [TLV_RESPONSE_LED_STATE, TLV_RESPONSE_ERROR],
+    }
+
+    def __post_init__(self):
+        # Keep API compatibility: calculate expected responses on init
+        self.resolve_acceptable_responses()
+
+    # ------------------------------------------------------------------
+    # Properties replacing the old C-style direct assignments
+    # ------------------------------------------------------------------
+
     @property
     def log(self):
         return getLogger("CMD")
 
-    def calculate_expected_response(self):
-        """Calculate possible response opcodes"""
-        if self.opcode == TLV_OPCODE_PING:
-            self.response_opcode = [TLV_RESPONSE_BASIC_STATE]
-        elif self.opcode == TLV_OPCODE_UNASSOCIATE:
-            self.response_opcode = [TLV_RESPONSE_BASIC_STATE, TLV_RESPONSE_ERROR]
-        elif self.opcode == TLV_OPCODE_SERVICE_RST:
-            self.response_opcode = [TLV_RESPONSE_BASIC_STATE, TLV_RESPONSE_ERROR]
-        elif self.opcode == TLV_OPCODE_FACTORY_RST:
-            self.response_opcode = [
-                TLV_RESPONSE_ERROR
-            ]  # No expected response but can be INVALID_STATE error in Synchronized state
-        elif self.opcode == TLV_OPCODE_UPDATE_COMPLETE:
-            self.response_opcode = [
-                TLV_RESPONSE_ERROR
-            ]  # No expected response - but old ESLs may response 'Invalid Opcode error', or can be INVALID_STATE error in Synchronized state
-        elif self.opcode == TLV_OPCODE_READ_SENSOR:
-            # For sensor response opcode, only the lower 4 bit is used (0x_E)
-            self.response_opcode = [TLV_RESPONSE_READ_SENSOR, TLV_RESPONSE_ERROR]
-        elif self.opcode == TLV_OPCODE_REFRESH_DISPLAY:
-            self.response_opcode = [TLV_RESPONSE_DISPLAY_STATE, TLV_RESPONSE_ERROR]
-        elif self.opcode == TLV_OPCODE_DISPLAY_IMAGE:
-            self.response_opcode = [TLV_RESPONSE_DISPLAY_STATE, TLV_RESPONSE_ERROR]
-        elif self.opcode == TLV_OPCODE_DISPLAY_TIMED_IMAGE:
-            self.response_opcode = [TLV_RESPONSE_DISPLAY_STATE, TLV_RESPONSE_ERROR]
-        elif self.opcode == TLV_OPCODE_LED_CONTROL:
-            self.response_opcode = [TLV_RESPONSE_LED_STATE, TLV_RESPONSE_ERROR]
-        elif self.opcode == TLV_OPCODE_LED_TIMED_CONTROL:
-            self.response_opcode = [TLV_RESPONSE_LED_STATE, TLV_RESPONSE_ERROR]
-        elif self.opcode == TLV_OPCODE_SILABS_SKIP_SET:
-            # For Silabs specific response example
-            self.response_opcode = [TLV_RESPONSE_SILABS_SKIP, TLV_RESPONSE_ERROR]
-        elif self.opcode & TLV_OPCODE_VENDOR_SPECIFIC == TLV_OPCODE_VENDOR_SPECIFIC:
-            # For other (probably unknown) vendor specific response, only the lower 4 bit is used (0x_F)
-            self.response_opcode = [TLV_RESPONSE_VENDOR_SPECIFIC, TLV_RESPONSE_ERROR]
+    @property
+    def opcode(self):
+        """Opcode is always the first byte of raw command data"""
+        return self.data[0]
 
-    def opcode_valid(self, opcode):
-        """Check if response opcode is valid"""
-        valid = False
-        if (opcode & 0x0F) == TLV_RESPONSE_READ_SENSOR:
-            valid = True
-        elif (opcode & 0x0F) == TLV_OPCODE_VENDOR_SPECIFIC:
-            valid = True
+    @property
+    def esl_id(self):
+        """ESL ID is always the second byte of raw command data"""
+        return self.data[1]
+
+    @property
+    def expired(self):
+        """Return True if lifetime has reached zero."""
+        return self.lifetime <= 0
+
+    def decay(self):
+        """Decrease lifetime counter by one, until it reaches zero."""
+        if self.lifetime > 0:
+            self.lifetime -= 1
+
+    def resolve_acceptable_responses(self):
+        """Resolve and store the list of acceptable response opcodes for this command."""
+        op = self.opcode
+
+        # Default: no acceptable responses
+        responses = []
+
+        # Broadcast commands never expect any response by ESL spec
+        if self.esl_id == BROADCAST_ADDRESS:
+            pass # so keep the default empty list
+        # Standard opcode mapping
+        elif op in self._RESPONSE_MAP:
+            responses = self._RESPONSE_MAP[op]
+        # Silabs-specific opcode example
+        elif (op & TLV_OPCODE_SILABS_SKIP_SET) == TLV_OPCODE_VENDOR_SPECIFIC:
+            # as the upper nibble encodes parameter count, it matches the vendor-specific responses' mask by value but is semantically distinct.
+            responses = [TLV_RESPONSE_SILABS_SKIP, TLV_RESPONSE_ERROR]
+        # Vendor specific case (0x_F range)
+        elif (op & TLV_OPCODE_VENDOR_SPECIFIC) == TLV_OPCODE_VENDOR_SPECIFIC:
+            responses = [TLV_RESPONSE_VENDOR_SPECIFIC, TLV_RESPONSE_ERROR]
+
+        self.response_opcode = responses
+
+    def accepts_response(self, opcode):
+        """Check if response opcode is valid for this command"""
+        low = opcode & 0x0F
+
+        # Sensor (0x_E) and vendor specific (0x_F) responses are defined
+        # solely by their low nibble according to the ESL specification.
+        if low in (TLV_RESPONSE_READ_SENSOR, TLV_OPCODE_VENDOR_SPECIFIC):
+            return True
         elif opcode in self.response_opcode:
-            self.log.debug("Expected response received: 0x%02x", opcode)
-            valid = True
-        if not valid:
-            self.log.warning(
-                "Unexpected response received: 0x%02x - expected: %s!",
-                opcode,
-                list(map(hex, self.response_opcode)),
-            )
-        return valid
+            self.log.debug("Valid response received: 0x%02x", opcode)
+            return True
+
+        self.log.warning(
+            "Unexpected response received: 0x%02x - expected: %s!",
+            opcode,
+            list(map(hex, self.response_opcode)),
+        )
+        return False
 
     def __str__(self):
         """Command information"""
-        ret = "ESL command:\n"
-        ret += f"opcode:      {self.opcode:#x}\n"
-        ret += f"esl_id:      {self.esl_id}\n"
-        ret += f"group_id:    {self.group_id}\n"
-        ret += f"slot_number: {self.slot_number}\n"
-        ret += f"timestamp:   {dt.fromtimestamp(self.timestamp).strftime('%d/%b %H:%M:%S.%f')[:-3]}\n"
-        ret += f"params:      {self.params.hex()}"
-        return ret
+        ts = dt.fromtimestamp(self.timestamp).strftime("%d/%b %H:%M:%S.%f")[:-3]
+        return (
+            "ESL command:\n"
+            f"opcode:      {self.opcode:#x}\n"
+            f"esl_id:      {self.esl_id}\n"
+            f"group_id:    {self.group_id}\n"
+            f"slot_number: {self.slot_number}\n"
+            f"timestamp:   {ts}\n"
+            f"raw data:    {self.data.hex()}"
+        )

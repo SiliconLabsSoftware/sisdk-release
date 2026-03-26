@@ -110,14 +110,8 @@ template_contribution:
     condition: [bootloader_interface]
     unless: [device_sdid_200]
 
-  - name: memory_flash_size
-    value: 0x70000
-
   - name: memory_ram_start
     value: 0x20003000
-
-  - name: memory_ram_size
-    value: 0xC000
 
 import:
   # Import the config files from the TZ Secure application

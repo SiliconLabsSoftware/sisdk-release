@@ -781,6 +781,26 @@ static sl_zigbee_ezsp_status_t ashReadFrame(void)
       } else {
         if (rxLen == RX_BUFFER_LEN + 1) {  // need the first linked buffer?
           if (rxFirstDataBufferFree) {
+            if (rxFirstDataBuffer == sli_legacy_buffer_manager_buffer_queue_head(&reTxQueue)) {
+              // If there is still a buffer that may need to be retransmitted
+              // and that buffer has same ID with rxFirstDataBuffer
+              // we should allocate a different one and copy the data over
+              sli_buffer_manager_buffer_t reTxBuffer = sli_legacy_buffer_manager_really_allocate_buffer(sl_legacy_buffer_manager_message_buffer_length(rxFirstDataBuffer), false);
+              // Copy the retransmit data from the original buffer to the new buffer
+              sl_legacy_buffer_manager_copy_to_linked_buffers(
+                sl_legacy_buffer_manager_get_linked_buffers_pointer(rxFirstDataBuffer, 0),
+                reTxBuffer,
+                0,
+                sl_legacy_buffer_manager_message_buffer_length(rxFirstDataBuffer)
+              );
+              sli_legacy_packet_buffer_queue_remove_head(&reTxQueue);
+              if (reTxBuffer != NULL_BUFFER) {
+                sli_legacy_packet_buffer_queue_add(&reTxQueue, reTxBuffer);  // in retx queue
+              } else {
+                // Handle allocation failure: log, assert, or take other action
+                DEBUG_ASSERT(0); // or use your preferred error handling
+              }
+            }
             rxFirstDataBufferFree = false;
             rxDataBuffer = rxFirstDataBuffer;
             sl_legacy_buffer_manager_set_message_buffer_length(rxDataBuffer, RX_BUFFER_LEN - 1);

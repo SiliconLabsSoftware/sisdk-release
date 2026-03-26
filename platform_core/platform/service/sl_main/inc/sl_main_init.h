@@ -249,6 +249,19 @@ void app_init_pre_clock(void);
 void app_init_early(void);
 
 /******************************************************************************
+ * @brief User-defined function for application initialization after platform 
+ * and initialization.
+ *
+ * @details This function is called from sl_main_second_stage_init():
+ * - After sl_platform_init(), sl_driver_init(), and sl_service_init() complete
+ * - Before sl_stack_init() is called
+ * This function allows the user to perform initialization that depends on
+ * platform components, drivers, and services being ready, but needs to run
+ * before stacks are initialized.
+ *****************************************************************************/
+void app_init_post_platform(void);
+
+/******************************************************************************
  * @brief User-defined function for app initialization.
  *
  * @details This function is called from main():

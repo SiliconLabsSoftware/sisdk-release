@@ -343,7 +343,7 @@ template_contribution:
       group: "wisun"
       name: "mac_allow"
       handler: "app_mac_allow"
-      help: "Add a MAC address to the list of allowed addresses, (FF:FF:FF:FF:FF:FF:FF:FF) clears the whitelist: w ma"
+      help: "Add a MAC address to the list of allowed addresses, FF:FF:FF:FF:FF:FF:FF:FF to allow all MAC addresses: w ma"
       shortcuts:
         - name: "ma"
       argument:
@@ -354,7 +354,7 @@ template_contribution:
       group: "wisun"
       name: "mac_deny"
       handler: "app_mac_deny"
-      help: "Add a MAC address to the list of denied addresses: w md"
+      help: "Add a MAC address to the list of denied addresses, FF:FF:FF:FF:FF:FF:FF:FF to deny all MAC addresses: w md"
       shortcuts:
         - name: "md"
       argument:

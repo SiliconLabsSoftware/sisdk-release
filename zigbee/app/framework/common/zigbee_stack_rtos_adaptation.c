@@ -33,6 +33,11 @@
 
 #include "sl_zigbee_system_common.h"
 #include "sl_zigbee_rtos_task_config.h"
+
+#ifdef SL_CATALOG_ZIGBEE_SECURE_KEY_STORAGE_UPGRADE_PRESENT
+#include "zigbee-secure-key-storage-upgrade.h"
+#endif // SL_CATALOG_ZIGBEE_SECURE_KEY_STORAGE_UPGRADE_PRESENT
+
 #include "sl_event_system.h"
 #include "sl_memory_manager.h"
 #include "zigbee_rtos_adaptation.h"
@@ -163,12 +168,6 @@ void sli_zigbee_stack_rtos_task_init_cb(void)
 
 //------------------------------------------------------------------------------
 // Static functions.
-#if defined(SL_ZIGBEE_AF_NCP) && defined(SL_CATALOG_IOSTREAM_UART_COMMON_PRESENT)
-void sli_iostream_on_uart_rx(sl_iostream_t *handle)
-{
-  sl_zigbee_wakeup_common_task();
-}
-#endif
 
 static void zigbee_stack_task(void *p_arg)
 {
@@ -178,6 +177,11 @@ static void zigbee_stack_task(void *p_arg)
 #ifdef SL_ZIGBEE_AF_NCP
   sli_zigbee_ncp_init_callback();
 #endif
+
+#ifdef SL_CATALOG_ZIGBEE_SECURE_KEY_STORAGE_UPGRADE_PRESENT
+  sli_zb_sec_man_upgrade_key_storage();
+#endif // SL_CATALOG_ZIGBEE_SECURE_KEY_STORAGE_UPGRADE_PRESENT
+
 #ifdef SL_CATALOG_ZIGBEE_MULTIRAIL_DEMO_PRESENT
   // Multi RAIL GP init function must be called after sli_zigbee_stack_init_callback()
   // otherwise it will cause an assertion when trying to initialize Multi RAIL GP plugin

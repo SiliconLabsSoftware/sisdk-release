@@ -1,4 +1,4 @@
-workspace_name: btmesh_soc_dfu_distributor_s2_ext_btl
+workspace_name: btmesh_soc_dfu_distributor_display_s2_ext_btl
 package: bluetooth_mesh_app
 label: Bluetooth Mesh - SoC DFU Distributor with External Storage Bootloader
 description: >

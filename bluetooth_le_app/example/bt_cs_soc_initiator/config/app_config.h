@@ -129,6 +129,11 @@
 #define CS_APP_CAPABILITY              sl_bt_sm_io_capability_noinputnooutput
 #endif // CS_APP_CAPABILITY
 
+// <o CS_INITIATOR_HEADER_LOG> Header log of measurements results <1..20>
+// <i> Sets how many measurements are written between header logs
+// <i> Default: 5
+#define CS_INITIATOR_HEADER_LOG                5
+
 // <<< end of configuration section >>>
 
 #endif // APP_CONFIG_H

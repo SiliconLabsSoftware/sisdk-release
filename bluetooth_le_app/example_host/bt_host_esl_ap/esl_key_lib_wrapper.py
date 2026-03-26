@@ -1,7 +1,6 @@
 r"""Wrapper for esl_key_lib.h
 
-Generated with:
-C:\SiliconLabs\Python313\Scripts\ctypesgen --no-gnu-types --no-macro-warnings -IC:/SiliconLabs/bluetooth-le-sdk/bluetooth_le_middleware/common/ead_core -IC:/SiliconLabs/bluetooth-le-sdk/bluetooth_le_middleware/common/esl_tag_core/inc -IC:/SiliconLabs/bluetooth-le-sdk/bluetooth_le_middleware/common/esl_tag_core/config -I./esl_key_lib -Iplatform/common/inc -Iprotocol/bluetooth/inc -Iutil/third_party/mbedtls/include ./esl_key_lib/esl_key_lib.h platform/common/inc/sl_status.h -o esl_key_lib_wrapper.py
+Generated with ctypesgen.
 
 Do not modify this file.
 """
@@ -857,7 +856,7 @@ del loaderclass
 
 # End loader
 
-add_library_search_dirs(["./lib"])
+add_library_search_dirs(['./lib'])
 
 # Begin libraries
 
@@ -877,15 +876,21 @@ else:
 
 # No modules
 
-uint8_t = c_ubyte# msys64/mingw64/include/stdint.h: 36
+__uint8_t = c_ubyte# types.h: 38
 
-uint16_t = c_ushort# msys64/mingw64/include/stdint.h: 38
+__uint16_t = c_ushort# types.h: 40
 
-uint32_t = c_uint# msys64/mingw64/include/stdint.h: 40
+__uint32_t = c_uint# types.h: 42
 
-sl_status_t = uint32_t# platform/common/inc/sl_status.h: 478
+uint8_t = __uint8_t# stdint-uintn.h: 24
 
-# platform/common/inc/sl_status.h: 514
+uint16_t = __uint16_t# stdint-uintn.h: 25
+
+uint32_t = __uint32_t# stdint-uintn.h: 26
+
+sl_status_t = uint32_t# sl_status.h: 504
+
+# sl_status.h: 540
 for _lib in _libs.values():
     if not _lib.has("sl_status_get_string_n", "cdecl"):
         continue
@@ -894,7 +899,7 @@ for _lib in _libs.values():
     sl_status_get_string_n.restype = c_int32
     break
 
-# platform/common/inc/sl_status.h: 527
+# sl_status.h: 553
 for _lib in _libs.values():
     if not _lib.has("sl_status_print", "cdecl"):
         continue
@@ -903,7 +908,7 @@ for _lib in _libs.values():
     sl_status_print.restype = None
     break
 
-# protocol/bluetooth/inc/sl_bgapi.h: 92
+# sl_bgapi.h: 93
 class struct_anon_4(Structure):
     pass
 
@@ -914,9 +919,9 @@ struct_anon_4._fields_ = [
     ('addr', uint8_t * int(6)),
 ]
 
-bd_addr = struct_anon_4# protocol/bluetooth/inc/sl_bgapi.h: 92
+bd_addr = struct_anon_4# sl_bgapi.h: 93
 
-# protocol/bluetooth/inc/sl_bgapi.h: 108
+# sl_bgapi.h: 109
 class struct_anon_6(Structure):
     pass
 
@@ -927,29 +932,29 @@ struct_anon_6._fields_ = [
     ('data', uint8_t * int(16)),
 ]
 
-aes_key_128 = struct_anon_6# protocol/bluetooth/inc/sl_bgapi.h: 108
+aes_key_128 = struct_anon_6# sl_bgapi.h: 109
 
-psa_key_id_t = uint32_t# util/third_party/mbedtls/include/psa/crypto_types.h: 235
+psa_key_id_t = uint32_t# crypto_types.h: 287
 
-sl_bt_ead_session_key_t = uint8_t * int(16)# bluetooth_le_middleware/common/ead_core/sl_bt_ead_core.h: 48
+sl_bt_ead_session_key_t = uint8_t * int(16)# sl_bt_ead_core.h: 48
 
-sl_bt_ead_iv_t = uint8_t * int(8)# bluetooth_le_middleware/common/ead_core/sl_bt_ead_core.h: 51
+sl_bt_ead_iv_t = uint8_t * int(8)# sl_bt_ead_core.h: 51
 
-# bluetooth_le_middleware/common/ead_core/sl_bt_ead_core.h: 70
+# sl_bt_ead_core.h: 70
 class struct_sl_bt_ead_key_material_s(Structure):
     pass
 
-sl_bt_ead_key_material_p = POINTER(struct_sl_bt_ead_key_material_s)# bluetooth_le_middleware/common/ead_core/sl_bt_ead_core.h: 60
+sl_bt_ead_key_material_p = POINTER(struct_sl_bt_ead_key_material_s)# sl_bt_ead_core.h: 60
 
-# bluetooth_le_middleware/common/ead_core/sl_bt_ead_core.h: 70
-class union_anon_73(Union):
+# sl_bt_ead_core.h: 70
+class union_anon_74(Union):
     pass
 
-union_anon_73.__slots__ = [
+union_anon_74.__slots__ = [
     'key',
     'key_id',
 ]
-union_anon_73._fields_ = [
+union_anon_74._fields_ = [
     ('key', sl_bt_ead_session_key_t),
     ('key_id', psa_key_id_t),
 ]
@@ -962,35 +967,35 @@ struct_sl_bt_ead_key_material_s._anonymous_ = [
     'unnamed_1',
 ]
 struct_sl_bt_ead_key_material_s._fields_ = [
-    ('unnamed_1', union_anon_73),
+    ('unnamed_1', union_anon_74),
     ('iv', sl_bt_ead_iv_t),
 ]
 
-esl_address_t = uint16_t# bluetooth_le_middleware/common/esl_tag_core/inc/esl_tag_core.h: 45
+esl_address_t = uint16_t# esl_tag_core.h: 45
 
-# esl_key_lib/esl_key_lib.h: 53
+# esl_key_lib.h: 53
 class struct_db_handle_s(Structure):
     pass
 
-db_handle_p = POINTER(struct_db_handle_s)# esl_key_lib/esl_key_lib.h: 53
+db_handle_p = POINTER(struct_db_handle_s)# esl_key_lib.h: 53
 
-# esl_key_lib/esl_key_lib.h: 56
+# esl_key_lib.h: 56
 class struct_db_record_s(Structure):
     pass
 
-db_record_p = POINTER(struct_db_record_s)# esl_key_lib/esl_key_lib.h: 56
+db_record_p = POINTER(struct_db_record_s)# esl_key_lib.h: 56
 
-enum_anon_75 = c_int# esl_key_lib/esl_key_lib.h: 63
+enum_anon_76 = c_int# esl_key_lib.h: 63
 
-ESL_KEY_LIB_INVALID_RECORD = 0# esl_key_lib/esl_key_lib.h: 63
+ESL_KEY_LIB_INVALID_RECORD = 0# esl_key_lib.h: 63
 
-ESL_KEY_LIB_AP_RECORD = (ESL_KEY_LIB_INVALID_RECORD + 1)# esl_key_lib/esl_key_lib.h: 63
+ESL_KEY_LIB_AP_RECORD = (ESL_KEY_LIB_INVALID_RECORD + 1)# esl_key_lib.h: 63
 
-ESL_KEY_LIB_TAG_RECORD = (ESL_KEY_LIB_AP_RECORD + 1)# esl_key_lib/esl_key_lib.h: 63
+ESL_KEY_LIB_TAG_RECORD = (ESL_KEY_LIB_AP_RECORD + 1)# esl_key_lib.h: 63
 
-esl_key_lib_record_type_t = enum_anon_75# esl_key_lib/esl_key_lib.h: 63
+esl_key_lib_record_type_t = enum_anon_76# esl_key_lib.h: 63
 
-# esl_key_lib/esl_key_lib.h: 81
+# esl_key_lib.h: 81
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_init_database", "cdecl"):
         continue
@@ -999,7 +1004,7 @@ for _lib in _libs.values():
     esl_key_lib_init_database.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 94
+# esl_key_lib.h: 94
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_deinit_database", "cdecl"):
         continue
@@ -1008,7 +1013,7 @@ for _lib in _libs.values():
     esl_key_lib_deinit_database.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 111
+# esl_key_lib.h: 111
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_split_threadsafe_handle", "cdecl"):
         continue
@@ -1017,7 +1022,7 @@ for _lib in _libs.values():
     esl_key_lib_split_threadsafe_handle.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 125
+# esl_key_lib.h: 125
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_free_threadsafe_handle", "cdecl"):
         continue
@@ -1026,7 +1031,7 @@ for _lib in _libs.values():
     esl_key_lib_free_threadsafe_handle.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 142
+# esl_key_lib.h: 142
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_alloc_record", "cdecl"):
         continue
@@ -1035,7 +1040,7 @@ for _lib in _libs.values():
     esl_key_lib_alloc_record.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 150
+# esl_key_lib.h: 150
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_free_record", "cdecl"):
         continue
@@ -1044,7 +1049,7 @@ for _lib in _libs.values():
     esl_key_lib_free_record.restype = None
     break
 
-# esl_key_lib/esl_key_lib.h: 165
+# esl_key_lib.h: 165
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_store_record", "cdecl"):
         continue
@@ -1053,7 +1058,7 @@ for _lib in _libs.values():
     esl_key_lib_store_record.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 183
+# esl_key_lib.h: 183
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_store_record_and_bind", "cdecl"):
         continue
@@ -1062,7 +1067,7 @@ for _lib in _libs.values():
     esl_key_lib_store_record_and_bind.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 198
+# esl_key_lib.h: 198
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_delete_record", "cdecl"):
         continue
@@ -1071,7 +1076,7 @@ for _lib in _libs.values():
     esl_key_lib_delete_record.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 209
+# esl_key_lib.h: 209
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_clear_database", "cdecl"):
         continue
@@ -1080,7 +1085,7 @@ for _lib in _libs.values():
     esl_key_lib_clear_database.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 231
+# esl_key_lib.h: 231
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_get_record_by_ble_address", "cdecl"):
         continue
@@ -1089,7 +1094,7 @@ for _lib in _libs.values():
     esl_key_lib_get_record_by_ble_address.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 254
+# esl_key_lib.h: 254
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_get_record_by_esl_address", "cdecl"):
         continue
@@ -1098,7 +1103,7 @@ for _lib in _libs.values():
     esl_key_lib_get_record_by_esl_address.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 270
+# esl_key_lib.h: 270
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_set_ble_address", "cdecl"):
         continue
@@ -1107,7 +1112,7 @@ for _lib in _libs.values():
     esl_key_lib_set_ble_address.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 285
+# esl_key_lib.h: 285
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_set_esl_address", "cdecl"):
         continue
@@ -1116,7 +1121,7 @@ for _lib in _libs.values():
     esl_key_lib_set_esl_address.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 298
+# esl_key_lib.h: 298
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_set_long_term_key", "cdecl"):
         continue
@@ -1125,7 +1130,7 @@ for _lib in _libs.values():
     esl_key_lib_set_long_term_key.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 311
+# esl_key_lib.h: 311
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_set_identity_key", "cdecl"):
         continue
@@ -1134,7 +1139,7 @@ for _lib in _libs.values():
     esl_key_lib_set_identity_key.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 324
+# esl_key_lib.h: 324
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_set_ap_key_material", "cdecl"):
         continue
@@ -1143,7 +1148,7 @@ for _lib in _libs.values():
     esl_key_lib_set_ap_key_material.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 337
+# esl_key_lib.h: 337
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_set_response_key_material", "cdecl"):
         continue
@@ -1152,7 +1157,7 @@ for _lib in _libs.values():
     esl_key_lib_set_response_key_material.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 351
+# esl_key_lib.h: 351
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_get_record_type", "cdecl"):
         continue
@@ -1161,7 +1166,7 @@ for _lib in _libs.values():
     esl_key_lib_get_record_type.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 363
+# esl_key_lib.h: 363
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_get_ble_address", "cdecl"):
         continue
@@ -1170,7 +1175,7 @@ for _lib in _libs.values():
     esl_key_lib_get_ble_address.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 376
+# esl_key_lib.h: 376
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_get_esl_address", "cdecl"):
         continue
@@ -1179,7 +1184,7 @@ for _lib in _libs.values():
     esl_key_lib_get_esl_address.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 391
+# esl_key_lib.h: 391
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_get_bind_address", "cdecl"):
         continue
@@ -1188,7 +1193,7 @@ for _lib in _libs.values():
     esl_key_lib_get_bind_address.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 406
+# esl_key_lib.h: 406
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_get_long_term_key", "cdecl"):
         continue
@@ -1197,7 +1202,7 @@ for _lib in _libs.values():
     esl_key_lib_get_long_term_key.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 420
+# esl_key_lib.h: 420
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_get_identity_key", "cdecl"):
         continue
@@ -1206,7 +1211,7 @@ for _lib in _libs.values():
     esl_key_lib_get_identity_key.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 433
+# esl_key_lib.h: 433
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_get_ap_key_material", "cdecl"):
         continue
@@ -1215,7 +1220,7 @@ for _lib in _libs.values():
     esl_key_lib_get_ap_key_material.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 447
+# esl_key_lib.h: 447
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_get_response_key_material", "cdecl"):
         continue
@@ -1224,7 +1229,7 @@ for _lib in _libs.values():
     esl_key_lib_get_response_key_material.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 466
+# esl_key_lib.h: 466
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_delete_record_by_ble_address", "cdecl"):
         continue
@@ -1233,7 +1238,7 @@ for _lib in _libs.values():
     esl_key_lib_delete_record_by_ble_address.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 482
+# esl_key_lib.h: 482
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_delete_record_by_esl_address", "cdecl"):
         continue
@@ -1242,7 +1247,7 @@ for _lib in _libs.values():
     esl_key_lib_delete_record_by_esl_address.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 495
+# esl_key_lib.h: 495
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_get_bind_address_by_ble_address", "cdecl"):
         continue
@@ -1251,7 +1256,7 @@ for _lib in _libs.values():
     esl_key_lib_get_bind_address_by_ble_address.restype = sl_status_t
     break
 
-# esl_key_lib/esl_key_lib.h: 509
+# esl_key_lib.h: 509
 for _lib in _libs.values():
     if not _lib.has("esl_key_lib_get_bind_address_by_esl_address", "cdecl"):
         continue
@@ -1260,2157 +1265,2283 @@ for _lib in _libs.values():
     esl_key_lib_get_bind_address_by_esl_address.restype = sl_status_t
     break
 
-# platform/common/inc/sl_status.h: 48
+# sl_status.h: 48
 try:
     SL_STATUS_SPACE_MASK = (sl_status_t (ord_if_char(0xFF00))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 50
+# sl_status.h: 50
 try:
     SL_STATUS_GENERIC_SPACE = (sl_status_t (ord_if_char(0x0000))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 52
+# sl_status.h: 52
 try:
     SL_STATUS_PLATFORM_1_SPACE = (sl_status_t (ord_if_char(0x0100))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 53
+# sl_status.h: 53
 try:
     SL_STATUS_PLATFORM_2_SPACE = (sl_status_t (ord_if_char(0x0200))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 54
+# sl_status.h: 54
 try:
     SL_STATUS_HARDWARE_SPACE = (sl_status_t (ord_if_char(0x0300))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 56
+# sl_status.h: 56
 try:
     SL_STATUS_BLUETOOTH_SPACE = (sl_status_t (ord_if_char(0x0400))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 57
+# sl_status.h: 57
 try:
     SL_STATUS_BLUETOOTH_MESH_SPACE = (sl_status_t (ord_if_char(0x0500))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 58
+# sl_status.h: 58
 try:
     SL_STATUS_CAN_CANOPEN_SPACE = (sl_status_t (ord_if_char(0x0600))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 59
+# sl_status.h: 59
 try:
     SL_STATUS_CONNECT_SPACE = (sl_status_t (ord_if_char(0x0700))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 60
+# sl_status.h: 60
 try:
     SL_STATUS_NET_SUITE_SPACE = (sl_status_t (ord_if_char(0x0800))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 61
+# sl_status.h: 61
 try:
     SL_STATUS_THREAD_SPACE = (sl_status_t (ord_if_char(0x0900))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 62
+# sl_status.h: 62
 try:
     SL_STATUS_USB_SPACE = (sl_status_t (ord_if_char(0x0A00))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 63
+# sl_status.h: 63
 try:
     SL_STATUS_WIFI_SPACE = (sl_status_t (ord_if_char(0x0B00))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 64
+# sl_status.h: 64
 try:
     SL_STATUS_ZIGBEE_SPACE = (sl_status_t (ord_if_char(0x0C00))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 65
+# sl_status.h: 65
 try:
     SL_STATUS_Z_WAVE_SPACE = (sl_status_t (ord_if_char(0x0D00))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 67
+# sl_status.h: 67
 try:
     SL_STATUS_GECKO_OS_1_SPACE = (sl_status_t (ord_if_char(0x0E00))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 68
+# sl_status.h: 68
 try:
     SL_STATUS_GECKO_OS_2_SPACE = (sl_status_t (ord_if_char(0x0F00))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 70
+# sl_status.h: 70
 try:
     SL_STATUS_BLUETOOTH_CTRL_SPACE = (sl_status_t (ord_if_char(0x1000))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 71
+# sl_status.h: 71
 try:
     SL_STATUS_BLUETOOTH_ATT_SPACE = (sl_status_t (ord_if_char(0x1100))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 72
+# sl_status.h: 72
 try:
     SL_STATUS_BLUETOOTH_SMP_SPACE = (sl_status_t (ord_if_char(0x1200))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 73
+# sl_status.h: 73
 try:
     SL_STATUS_BLUETOOTH_MESH_FOUNDATION_SPACE = (sl_status_t (ord_if_char(0x1300))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 75
+# sl_status.h: 75
 try:
     SL_STATUS_WISUN_SPACE = (sl_status_t (ord_if_char(0x1400))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 77
+# sl_status.h: 77
 try:
     SL_STATUS_COMPUTE_SPACE = (sl_status_t (ord_if_char(0x1500))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 85
+# sl_status.h: 85
 try:
     SL_STATUS_OK = (sl_status_t (ord_if_char(0x0000))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 86
+# sl_status.h: 86
 try:
     SL_STATUS_FAIL = (sl_status_t (ord_if_char(0x0001))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 89
+# sl_status.h: 89
 try:
     SL_STATUS_INVALID_STATE = (sl_status_t (ord_if_char(0x0002))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 90
+# sl_status.h: 90
 try:
     SL_STATUS_NOT_READY = (sl_status_t (ord_if_char(0x0003))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 91
+# sl_status.h: 91
 try:
     SL_STATUS_BUSY = (sl_status_t (ord_if_char(0x0004))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 92
+# sl_status.h: 92
 try:
     SL_STATUS_IN_PROGRESS = (sl_status_t (ord_if_char(0x0005))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 93
+# sl_status.h: 93
 try:
     SL_STATUS_ABORT = (sl_status_t (ord_if_char(0x0006))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 94
+# sl_status.h: 94
 try:
     SL_STATUS_TIMEOUT = (sl_status_t (ord_if_char(0x0007))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 95
+# sl_status.h: 95
 try:
     SL_STATUS_PERMISSION = (sl_status_t (ord_if_char(0x0008))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 96
+# sl_status.h: 96
 try:
     SL_STATUS_WOULD_BLOCK = (sl_status_t (ord_if_char(0x0009))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 97
+# sl_status.h: 97
 try:
     SL_STATUS_IDLE = (sl_status_t (ord_if_char(0x000A))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 98
+# sl_status.h: 98
 try:
     SL_STATUS_IS_WAITING = (sl_status_t (ord_if_char(0x000B))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 99
+# sl_status.h: 99
 try:
     SL_STATUS_NONE_WAITING = (sl_status_t (ord_if_char(0x000C))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 100
+# sl_status.h: 100
 try:
     SL_STATUS_SUSPENDED = (sl_status_t (ord_if_char(0x000D))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 101
+# sl_status.h: 101
 try:
     SL_STATUS_NOT_AVAILABLE = (sl_status_t (ord_if_char(0x000E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 102
+# sl_status.h: 102
 try:
     SL_STATUS_NOT_SUPPORTED = (sl_status_t (ord_if_char(0x000F))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 103
+# sl_status.h: 103
 try:
     SL_STATUS_INITIALIZATION = (sl_status_t (ord_if_char(0x0010))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 104
+# sl_status.h: 104
 try:
     SL_STATUS_NOT_INITIALIZED = (sl_status_t (ord_if_char(0x0011))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 105
+# sl_status.h: 105
 try:
     SL_STATUS_ALREADY_INITIALIZED = (sl_status_t (ord_if_char(0x0012))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 106
+# sl_status.h: 106
 try:
     SL_STATUS_DELETED = (sl_status_t (ord_if_char(0x0013))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 107
+# sl_status.h: 107
 try:
     SL_STATUS_ISR = (sl_status_t (ord_if_char(0x0014))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 108
+# sl_status.h: 108
 try:
     SL_STATUS_NETWORK_UP = (sl_status_t (ord_if_char(0x0015))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 109
+# sl_status.h: 109
 try:
     SL_STATUS_NETWORK_DOWN = (sl_status_t (ord_if_char(0x0016))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 110
+# sl_status.h: 110
 try:
     SL_STATUS_NOT_JOINED = (sl_status_t (ord_if_char(0x0017))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 111
+# sl_status.h: 111
 try:
     SL_STATUS_NO_BEACONS = (sl_status_t (ord_if_char(0x0018))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 114
+# sl_status.h: 114
 try:
     SL_STATUS_ALLOCATION_FAILED = (sl_status_t (ord_if_char(0x0019))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 115
+# sl_status.h: 115
 try:
     SL_STATUS_NO_MORE_RESOURCE = (sl_status_t (ord_if_char(0x001A))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 116
+# sl_status.h: 116
 try:
     SL_STATUS_EMPTY = (sl_status_t (ord_if_char(0x001B))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 117
+# sl_status.h: 117
 try:
     SL_STATUS_FULL = (sl_status_t (ord_if_char(0x001C))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 118
+# sl_status.h: 118
 try:
     SL_STATUS_WOULD_OVERFLOW = (sl_status_t (ord_if_char(0x001D))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 119
+# sl_status.h: 119
 try:
     SL_STATUS_HAS_OVERFLOWED = (sl_status_t (ord_if_char(0x001E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 120
+# sl_status.h: 120
 try:
     SL_STATUS_OWNERSHIP = (sl_status_t (ord_if_char(0x001F))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 121
+# sl_status.h: 121
 try:
     SL_STATUS_IS_OWNER = (sl_status_t (ord_if_char(0x0020))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 124
+# sl_status.h: 124
 try:
     SL_STATUS_INVALID_PARAMETER = (sl_status_t (ord_if_char(0x0021))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 125
+# sl_status.h: 125
 try:
     SL_STATUS_NULL_POINTER = (sl_status_t (ord_if_char(0x0022))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 126
+# sl_status.h: 126
 try:
     SL_STATUS_INVALID_CONFIGURATION = (sl_status_t (ord_if_char(0x0023))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 127
+# sl_status.h: 127
 try:
     SL_STATUS_INVALID_MODE = (sl_status_t (ord_if_char(0x0024))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 128
+# sl_status.h: 128
 try:
     SL_STATUS_INVALID_HANDLE = (sl_status_t (ord_if_char(0x0025))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 129
+# sl_status.h: 129
 try:
     SL_STATUS_INVALID_TYPE = (sl_status_t (ord_if_char(0x0026))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 130
+# sl_status.h: 130
 try:
     SL_STATUS_INVALID_INDEX = (sl_status_t (ord_if_char(0x0027))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 131
+# sl_status.h: 131
 try:
     SL_STATUS_INVALID_RANGE = (sl_status_t (ord_if_char(0x0028))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 132
+# sl_status.h: 132
 try:
     SL_STATUS_INVALID_KEY = (sl_status_t (ord_if_char(0x0029))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 133
+# sl_status.h: 133
 try:
     SL_STATUS_INVALID_CREDENTIALS = (sl_status_t (ord_if_char(0x002A))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 134
+# sl_status.h: 134
 try:
     SL_STATUS_INVALID_COUNT = (sl_status_t (ord_if_char(0x002B))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 135
+# sl_status.h: 135
 try:
     SL_STATUS_INVALID_SIGNATURE = (sl_status_t (ord_if_char(0x002C))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 136
+# sl_status.h: 136
 try:
     SL_STATUS_NOT_FOUND = (sl_status_t (ord_if_char(0x002D))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 137
+# sl_status.h: 137
 try:
     SL_STATUS_ALREADY_EXISTS = (sl_status_t (ord_if_char(0x002E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 140
+# sl_status.h: 140
 try:
     SL_STATUS_IO = (sl_status_t (ord_if_char(0x002F))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 141
+# sl_status.h: 141
 try:
     SL_STATUS_IO_TIMEOUT = (sl_status_t (ord_if_char(0x0030))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 142
+# sl_status.h: 142
 try:
     SL_STATUS_TRANSMIT = (sl_status_t (ord_if_char(0x0031))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 143
+# sl_status.h: 143
 try:
     SL_STATUS_TRANSMIT_UNDERFLOW = (sl_status_t (ord_if_char(0x0032))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 144
+# sl_status.h: 144
 try:
     SL_STATUS_TRANSMIT_INCOMPLETE = (sl_status_t (ord_if_char(0x0033))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 145
+# sl_status.h: 145
 try:
     SL_STATUS_TRANSMIT_BUSY = (sl_status_t (ord_if_char(0x0034))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 146
+# sl_status.h: 146
 try:
     SL_STATUS_RECEIVE = (sl_status_t (ord_if_char(0x0035))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 147
+# sl_status.h: 147
 try:
     SL_STATUS_OBJECT_READ = (sl_status_t (ord_if_char(0x0036))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 148
+# sl_status.h: 148
 try:
     SL_STATUS_OBJECT_WRITE = (sl_status_t (ord_if_char(0x0037))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 149
+# sl_status.h: 149
 try:
     SL_STATUS_MESSAGE_TOO_LONG = (sl_status_t (ord_if_char(0x0038))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 152
+# sl_status.h: 152
 try:
     SL_STATUS_EEPROM_MFG_VERSION_MISMATCH = (sl_status_t (ord_if_char(0x0039))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 153
+# sl_status.h: 153
 try:
     SL_STATUS_EEPROM_STACK_VERSION_MISMATCH = (sl_status_t (ord_if_char(0x003A))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 154
+# sl_status.h: 154
 try:
     SL_STATUS_FLASH_WRITE_INHIBITED = (sl_status_t (ord_if_char(0x003B))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 155
+# sl_status.h: 155
 try:
     SL_STATUS_FLASH_VERIFY_FAILED = (sl_status_t (ord_if_char(0x003C))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 156
+# sl_status.h: 156
 try:
     SL_STATUS_FLASH_PROGRAM_FAILED = (sl_status_t (ord_if_char(0x003D))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 157
+# sl_status.h: 157
 try:
     SL_STATUS_FLASH_ERASE_FAILED = (sl_status_t (ord_if_char(0x003E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 160
+# sl_status.h: 160
 try:
     SL_STATUS_MAC_NO_DATA = (sl_status_t (ord_if_char(0x003F))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 161
+# sl_status.h: 161
 try:
     SL_STATUS_MAC_NO_ACK_RECEIVED = (sl_status_t (ord_if_char(0x0040))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 162
+# sl_status.h: 162
 try:
     SL_STATUS_MAC_INDIRECT_TIMEOUT = (sl_status_t (ord_if_char(0x0041))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 163
+# sl_status.h: 163
 try:
     SL_STATUS_MAC_UNKNOWN_HEADER_TYPE = (sl_status_t (ord_if_char(0x0042))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 164
+# sl_status.h: 164
 try:
     SL_STATUS_MAC_ACK_HEADER_TYPE = (sl_status_t (ord_if_char(0x0043))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 165
+# sl_status.h: 165
 try:
     SL_STATUS_MAC_COMMAND_TRANSMIT_FAILURE = (sl_status_t (ord_if_char(0x0044))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 168
+# sl_status.h: 168
 try:
     SL_STATUS_CLI_STORAGE_NVM_OPEN_ERROR = (sl_status_t (ord_if_char(0x0045))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 171
+# sl_status.h: 171
 try:
     SL_STATUS_SECURITY_IMAGE_CHECKSUM_ERROR = (sl_status_t (ord_if_char(0x0046))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 172
+# sl_status.h: 172
 try:
     SL_STATUS_SECURITY_DECRYPT_ERROR = (sl_status_t (ord_if_char(0x0047))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 175
+# sl_status.h: 175
 try:
     SL_STATUS_COMMAND_IS_INVALID = (sl_status_t (ord_if_char(0x0048))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 176
+# sl_status.h: 176
 try:
     SL_STATUS_COMMAND_TOO_LONG = (sl_status_t (ord_if_char(0x0049))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 177
+# sl_status.h: 177
 try:
     SL_STATUS_COMMAND_INCOMPLETE = (sl_status_t (ord_if_char(0x004A))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 180
+# sl_status.h: 180
 try:
     SL_STATUS_BUS_ERROR = (sl_status_t (ord_if_char(0x004B))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 183
+# sl_status.h: 183
 try:
     SL_STATUS_CCA_FAILURE = (sl_status_t (ord_if_char(0x004C))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 186
+# sl_status.h: 186
 try:
     SL_STATUS_MAC_SCANNING = (sl_status_t (ord_if_char(0x004D))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 187
+# sl_status.h: 187
 try:
     SL_STATUS_MAC_INCORRECT_SCAN_TYPE = (sl_status_t (ord_if_char(0x004E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 188
+# sl_status.h: 188
 try:
     SL_STATUS_INVALID_CHANNEL_MASK = (sl_status_t (ord_if_char(0x004F))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 189
+# sl_status.h: 189
 try:
     SL_STATUS_BAD_SCAN_DURATION = (sl_status_t (ord_if_char(0x0050))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 192
+# sl_status.h: 192
 try:
     SL_STATUS_MAC_TRANSMIT_QUEUE_FULL = (sl_status_t (ord_if_char(0x0053))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 193
+# sl_status.h: 193
 try:
     SL_STATUS_TRANSMIT_SCHEDULER_FAIL = (sl_status_t (ord_if_char(0x0054))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 194
+# sl_status.h: 194
 try:
     SL_STATUS_TRANSMIT_INVALID_CHANNEL = (sl_status_t (ord_if_char(0x0055))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 195
+# sl_status.h: 195
 try:
     SL_STATUS_TRANSMIT_INVALID_POWER = (sl_status_t (ord_if_char(0x0056))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 196
+# sl_status.h: 196
 try:
     SL_STATUS_TRANSMIT_ACK_RECEIVED = (sl_status_t (ord_if_char(0x0057))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 197
+# sl_status.h: 197
 try:
     SL_STATUS_TRANSMIT_BLOCKED = (sl_status_t (ord_if_char(0x0058))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 200
+# sl_status.h: 200
 try:
     SL_STATUS_NVM3_ALIGNMENT_INVALID = (sl_status_t (ord_if_char(0x0059))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 201
+# sl_status.h: 201
 try:
     SL_STATUS_NVM3_SIZE_TOO_SMALL = (sl_status_t (ord_if_char(0x005A))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 202
+# sl_status.h: 202
 try:
     SL_STATUS_NVM3_PAGE_SIZE_NOT_SUPPORTED = (sl_status_t (ord_if_char(0x005B))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 203
+# sl_status.h: 203
 try:
     SL_STATUS_NVM3_TOKEN_INIT_FAILED = (sl_status_t (ord_if_char(0x005C))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 204
+# sl_status.h: 204
 try:
     SL_STATUS_NVM3_OPENED_WITH_OTHER_PARAMETERS = (sl_status_t (ord_if_char(0x005D))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 205
+# sl_status.h: 205
 try:
     SL_STATUS_NVM3_NO_VALID_PAGES = (sl_status_t (ord_if_char(0x005E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 206
+# sl_status.h: 206
 try:
     SL_STATUS_NVM3_OBJECT_SIZE_NOT_SUPPORTED = (sl_status_t (ord_if_char(0x005F))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 207
+# sl_status.h: 207
 try:
     SL_STATUS_NVM3_OBJECT_IS_NOT_DATA = (sl_status_t (ord_if_char(0x0060))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 208
+# sl_status.h: 208
 try:
     SL_STATUS_NVM3_OBJECT_IS_NOT_A_COUNTER = (sl_status_t (ord_if_char(0x0061))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 209
+# sl_status.h: 209
 try:
     SL_STATUS_NVM3_WRITE_DATA_SIZE = (sl_status_t (ord_if_char(0x0062))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 210
+# sl_status.h: 210
 try:
     SL_STATUS_NVM3_READ_DATA_SIZE = (sl_status_t (ord_if_char(0x0063))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 211
+# sl_status.h: 211
 try:
     SL_STATUS_NVM3_INIT_WITH_FULL_NVM = (sl_status_t (ord_if_char(0x0064))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 212
+# sl_status.h: 212
 try:
     SL_STATUS_NVM3_RESIZE_PARAMETER = (sl_status_t (ord_if_char(0x0065))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 213
+# sl_status.h: 213
 try:
     SL_STATUS_NVM3_RESIZE_NOT_ENOUGH_SPACE = (sl_status_t (ord_if_char(0x0066))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 214
+# sl_status.h: 214
 try:
     SL_STATUS_NVM3_ERASE_COUNT_ERROR = (sl_status_t (ord_if_char(0x0067))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 215
+# sl_status.h: 215
 try:
     SL_STATUS_NVM3_NVM_ACCESS = (sl_status_t (ord_if_char(0x0068))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 216
+# sl_status.h: 216
 try:
     SL_STATUS_NVM3_WRITE_TO_NOT_ERASED = (sl_status_t (ord_if_char(0x006D))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 217
+# sl_status.h: 217
 try:
     SL_STATUS_NVM3_INVALID_ADDR = (sl_status_t (ord_if_char(0x006E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 218
+# sl_status.h: 218
 try:
     SL_STATUS_NVM3_KEY_MISMATCH = (sl_status_t (ord_if_char(0x006F))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 219
+# sl_status.h: 219
 try:
     SL_STATUS_NVM3_SIZE_ERROR = (sl_status_t (ord_if_char(0x0070))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 220
+# sl_status.h: 220
 try:
     SL_STATUS_NVM3_EMULATOR = (sl_status_t (ord_if_char(0x0071))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 223
+# sl_status.h: 223
 try:
     SL_STATUS_SECURITY_ENCRYPT_ERROR = (sl_status_t (ord_if_char(0x0072))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 224
+# sl_status.h: 224
 try:
     SL_STATUS_SECURITY_KEY_ERROR = (sl_status_t (ord_if_char(0x0073))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 225
+# sl_status.h: 225
 try:
     SL_STATUS_SECURITY_RANDOM_NUM_GEN_ERROR = (sl_status_t (ord_if_char(0x0074))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 228
+# sl_status.h: 228
 try:
     SL_STATUS_BT_OUT_OF_BONDS = (sl_status_t (ord_if_char(0x0402))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 229
+# sl_status.h: 229
 try:
     SL_STATUS_BT_UNSPECIFIED = (sl_status_t (ord_if_char(0x0403))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 230
+# sl_status.h: 230
 try:
     SL_STATUS_BT_HARDWARE = (sl_status_t (ord_if_char(0x0404))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 231
+# sl_status.h: 231
 try:
     SL_STATUS_BT_NO_BONDING = (sl_status_t (ord_if_char(0x0406))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 232
+# sl_status.h: 232
 try:
     SL_STATUS_BT_CRYPTO = (sl_status_t (ord_if_char(0x0407))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 233
+# sl_status.h: 233
 try:
     SL_STATUS_BT_DATA_CORRUPTED = (sl_status_t (ord_if_char(0x0408))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 234
+# sl_status.h: 234
 try:
     SL_STATUS_BT_INVALID_SYNC_HANDLE = (sl_status_t (ord_if_char(0x040A))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 235
+# sl_status.h: 235
 try:
     SL_STATUS_BT_INVALID_MODULE_ACTION = (sl_status_t (ord_if_char(0x040B))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 236
+# sl_status.h: 236
 try:
     SL_STATUS_BT_RADIO = (sl_status_t (ord_if_char(0x040C))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 237
+# sl_status.h: 237
 try:
     SL_STATUS_BT_L2CAP_REMOTE_DISCONNECTED = (sl_status_t (ord_if_char(0x040D))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 238
+# sl_status.h: 238
 try:
     SL_STATUS_BT_L2CAP_LOCAL_DISCONNECTED = (sl_status_t (ord_if_char(0x040E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 239
+# sl_status.h: 239
 try:
     SL_STATUS_BT_L2CAP_CID_NOT_EXIST = (sl_status_t (ord_if_char(0x040F))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 240
+# sl_status.h: 240
 try:
     SL_STATUS_BT_L2CAP_LE_DISCONNECTED = (sl_status_t (ord_if_char(0x0410))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 241
+# sl_status.h: 241
 try:
     SL_STATUS_BT_L2CAP_FLOW_CONTROL_VIOLATED = (sl_status_t (ord_if_char(0x0412))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 242
+# sl_status.h: 242
 try:
     SL_STATUS_BT_L2CAP_FLOW_CONTROL_CREDIT_OVERFLOWED = (sl_status_t (ord_if_char(0x0413))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 243
+# sl_status.h: 243
 try:
     SL_STATUS_BT_L2CAP_NO_FLOW_CONTROL_CREDIT = (sl_status_t (ord_if_char(0x0414))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 244
+# sl_status.h: 244
 try:
     SL_STATUS_BT_L2CAP_CONNECTION_REQUEST_TIMEOUT = (sl_status_t (ord_if_char(0x0415))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 245
+# sl_status.h: 245
 try:
     SL_STATUS_BT_L2CAP_INVALID_CID = (sl_status_t (ord_if_char(0x0416))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 246
+# sl_status.h: 246
 try:
     SL_STATUS_BT_L2CAP_WRONG_STATE = (sl_status_t (ord_if_char(0x0417))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 247
+# sl_status.h: 247
 try:
     SL_STATUS_BT_PS_STORE_FULL = (sl_status_t (ord_if_char(0x041B))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 248
+# sl_status.h: 248
 try:
     SL_STATUS_BT_PS_KEY_NOT_FOUND = (sl_status_t (ord_if_char(0x041C))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 249
+# sl_status.h: 249
 try:
     SL_STATUS_BT_APPLICATION_MISMATCHED_OR_INSUFFICIENT_SECURITY = (sl_status_t (ord_if_char(0x041D))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 250
+# sl_status.h: 250
 try:
     SL_STATUS_BT_APPLICATION_ENCRYPTION_DECRYPTION_ERROR = (sl_status_t (ord_if_char(0x041E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 253
+# sl_status.h: 253
+try:
+    SL_STATUS_BT_CTRL_UNKNOWN_HCI_COMMAND = (sl_status_t (ord_if_char(0x1001))).value
+except:
+    pass
+
+# sl_status.h: 254
 try:
     SL_STATUS_BT_CTRL_UNKNOWN_CONNECTION_IDENTIFIER = (sl_status_t (ord_if_char(0x1002))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 254
+# sl_status.h: 255
+try:
+    SL_STATUS_BT_CTRL_HARDWARE_FAILURE = (sl_status_t (ord_if_char(0x1003))).value
+except:
+    pass
+
+# sl_status.h: 256
+try:
+    SL_STATUS_BT_CTRL_PAGE_TIMEOUT = (sl_status_t (ord_if_char(0x1004))).value
+except:
+    pass
+
+# sl_status.h: 257
 try:
     SL_STATUS_BT_CTRL_AUTHENTICATION_FAILURE = (sl_status_t (ord_if_char(0x1005))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 255
+# sl_status.h: 258
 try:
     SL_STATUS_BT_CTRL_PIN_OR_KEY_MISSING = (sl_status_t (ord_if_char(0x1006))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 256
+# sl_status.h: 259
 try:
     SL_STATUS_BT_CTRL_MEMORY_CAPACITY_EXCEEDED = (sl_status_t (ord_if_char(0x1007))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 257
+# sl_status.h: 260
 try:
     SL_STATUS_BT_CTRL_CONNECTION_TIMEOUT = (sl_status_t (ord_if_char(0x1008))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 258
+# sl_status.h: 261
 try:
     SL_STATUS_BT_CTRL_CONNECTION_LIMIT_EXCEEDED = (sl_status_t (ord_if_char(0x1009))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 259
+# sl_status.h: 262
 try:
     SL_STATUS_BT_CTRL_SYNCHRONOUS_CONNECTION_LIMIT_EXCEEDED = (sl_status_t (ord_if_char(0x100A))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 260
+# sl_status.h: 263
 try:
     SL_STATUS_BT_CTRL_ACL_CONNECTION_ALREADY_EXISTS = (sl_status_t (ord_if_char(0x100B))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 261
+# sl_status.h: 264
 try:
     SL_STATUS_BT_CTRL_COMMAND_DISALLOWED = (sl_status_t (ord_if_char(0x100C))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 262
+# sl_status.h: 265
 try:
     SL_STATUS_BT_CTRL_CONNECTION_REJECTED_DUE_TO_LIMITED_RESOURCES = (sl_status_t (ord_if_char(0x100D))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 263
+# sl_status.h: 266
 try:
     SL_STATUS_BT_CTRL_CONNECTION_REJECTED_DUE_TO_SECURITY_REASONS = (sl_status_t (ord_if_char(0x100E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 264
+# sl_status.h: 267
 try:
     SL_STATUS_BT_CTRL_CONNECTION_REJECTED_DUE_TO_UNACCEPTABLE_BD_ADDR = (sl_status_t (ord_if_char(0x100F))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 265
+# sl_status.h: 268
 try:
     SL_STATUS_BT_CTRL_CONNECTION_ACCEPT_TIMEOUT_EXCEEDED = (sl_status_t (ord_if_char(0x1010))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 266
+# sl_status.h: 269
 try:
     SL_STATUS_BT_CTRL_UNSUPPORTED_FEATURE_OR_PARAMETER_VALUE = (sl_status_t (ord_if_char(0x1011))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 267
+# sl_status.h: 270
 try:
     SL_STATUS_BT_CTRL_INVALID_COMMAND_PARAMETERS = (sl_status_t (ord_if_char(0x1012))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 268
+# sl_status.h: 271
 try:
     SL_STATUS_BT_CTRL_REMOTE_USER_TERMINATED = (sl_status_t (ord_if_char(0x1013))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 269
+# sl_status.h: 272
 try:
     SL_STATUS_BT_CTRL_REMOTE_DEVICE_TERMINATED_CONNECTION_DUE_TO_LOW_RESOURCES = (sl_status_t (ord_if_char(0x1014))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 270
+# sl_status.h: 273
 try:
     SL_STATUS_BT_CTRL_REMOTE_POWERING_OFF = (sl_status_t (ord_if_char(0x1015))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 271
+# sl_status.h: 274
 try:
     SL_STATUS_BT_CTRL_CONNECTION_TERMINATED_BY_LOCAL_HOST = (sl_status_t (ord_if_char(0x1016))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 272
+# sl_status.h: 275
 try:
     SL_STATUS_BT_CTRL_REPEATED_ATTEMPTS = (sl_status_t (ord_if_char(0x1017))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 273
+# sl_status.h: 276
 try:
     SL_STATUS_BT_CTRL_PAIRING_NOT_ALLOWED = (sl_status_t (ord_if_char(0x1018))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 274
+# sl_status.h: 277
+try:
+    SL_STATUS_BT_CTRL_UNKNOWN_LMP_PDU = (sl_status_t (ord_if_char(0x1019))).value
+except:
+    pass
+
+# sl_status.h: 278
 try:
     SL_STATUS_BT_CTRL_UNSUPPORTED_REMOTE_FEATURE = (sl_status_t (ord_if_char(0x101A))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 275
+# sl_status.h: 279
+try:
+    SL_STATUS_BT_CTRL_SCO_OFFSET_REJECTED = (sl_status_t (ord_if_char(0x101B))).value
+except:
+    pass
+
+# sl_status.h: 280
+try:
+    SL_STATUS_BT_CTRL_SCO_INTERVAL_REJECTED = (sl_status_t (ord_if_char(0x101C))).value
+except:
+    pass
+
+# sl_status.h: 281
+try:
+    SL_STATUS_BT_CTRL_SCO_AIR_MODE_REJECTED = (sl_status_t (ord_if_char(0x101D))).value
+except:
+    pass
+
+# sl_status.h: 282
 try:
     SL_STATUS_BT_CTRL_INVALID_LL_PARAMETERS = (sl_status_t (ord_if_char(0x101E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 276
+# sl_status.h: 283
 try:
     SL_STATUS_BT_CTRL_UNSPECIFIED_ERROR = (sl_status_t (ord_if_char(0x101F))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 277
+# sl_status.h: 284
+try:
+    SL_STATUS_BT_CTRL_UNSUPPORTED_LL_PARAMETER_VALUE = (sl_status_t (ord_if_char(0x1020))).value
+except:
+    pass
+
+# sl_status.h: 285
+try:
+    SL_STATUS_BT_CTRL_ROLE_CHANGE_NOT_ALLOWED = (sl_status_t (ord_if_char(0x1021))).value
+except:
+    pass
+
+# sl_status.h: 286
 try:
     SL_STATUS_BT_CTRL_LL_RESPONSE_TIMEOUT = (sl_status_t (ord_if_char(0x1022))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 278
+# sl_status.h: 287
 try:
     SL_STATUS_BT_CTRL_LL_PROCEDURE_COLLISION = (sl_status_t (ord_if_char(0x1023))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 279
+# sl_status.h: 288
+try:
+    SL_STATUS_BT_CTRL_LMP_PDU_NOT_ALLOWED = (sl_status_t (ord_if_char(0x1024))).value
+except:
+    pass
+
+# sl_status.h: 290
 try:
     SL_STATUS_BT_CTRL_ENCRYPTION_MODE_NOT_ACCEPTABLE = (sl_status_t (ord_if_char(0x1025))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 280
+# sl_status.h: 291
 try:
     SL_STATUS_BT_CTRL_LINK_KEY_CANNOT_BE_CHANGED = (sl_status_t (ord_if_char(0x1026))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 281
+# sl_status.h: 292
+try:
+    SL_STATUS_BT_CTRL_REQUESTED_QOS_NOT_SUPPORTED = (sl_status_t (ord_if_char(0x1027))).value
+except:
+    pass
+
+# sl_status.h: 293
 try:
     SL_STATUS_BT_CTRL_INSTANT_PASSED = (sl_status_t (ord_if_char(0x1028))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 282
+# sl_status.h: 294
 try:
     SL_STATUS_BT_CTRL_PAIRING_WITH_UNIT_KEY_NOT_SUPPORTED = (sl_status_t (ord_if_char(0x1029))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 283
+# sl_status.h: 295
 try:
     SL_STATUS_BT_CTRL_DIFFERENT_TRANSACTION_COLLISION = (sl_status_t (ord_if_char(0x102A))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 284
+# sl_status.h: 297
+try:
+    SL_STATUS_BT_CTRL_QOS_UNACCEPTABLE_PARAMETER = (sl_status_t (ord_if_char(0x102C))).value
+except:
+    pass
+
+# sl_status.h: 298
+try:
+    SL_STATUS_BT_CTRL_QOS_REJECTED = (sl_status_t (ord_if_char(0x102D))).value
+except:
+    pass
+
+# sl_status.h: 299
 try:
     SL_STATUS_BT_CTRL_CHANNEL_ASSESSMENT_NOT_SUPPORTED = (sl_status_t (ord_if_char(0x102E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 285
+# sl_status.h: 300
 try:
     SL_STATUS_BT_CTRL_INSUFFICIENT_SECURITY = (sl_status_t (ord_if_char(0x102F))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 286
+# sl_status.h: 301
 try:
     SL_STATUS_BT_CTRL_PARAMETER_OUT_OF_MANDATORY_RANGE = (sl_status_t (ord_if_char(0x1030))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 287
+# sl_status.h: 303
+try:
+    SL_STATUS_BT_CTRL_ROLE_SWITCH_PENDING = (sl_status_t (ord_if_char(0x1032))).value
+except:
+    pass
+
+# sl_status.h: 305
+try:
+    SL_STATUS_BT_CTRL_RESERVED_SLOT_VIOLATION = (sl_status_t (ord_if_char(0x1034))).value
+except:
+    pass
+
+# sl_status.h: 306
+try:
+    SL_STATUS_BT_CTRL_ROLE_SWITCH_FAILED = (sl_status_t (ord_if_char(0x1035))).value
+except:
+    pass
+
+# sl_status.h: 307
+try:
+    SL_STATUS_BT_CTRL_EXTENDED_INQUIRY_RESPONSE_TOO_LARGE = (sl_status_t (ord_if_char(0x1036))).value
+except:
+    pass
+
+# sl_status.h: 309
 try:
     SL_STATUS_BT_CTRL_SIMPLE_PAIRING_NOT_SUPPORTED_BY_HOST = (sl_status_t (ord_if_char(0x1037))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 288
+# sl_status.h: 310
 try:
     SL_STATUS_BT_CTRL_HOST_BUSY_PAIRING = (sl_status_t (ord_if_char(0x1038))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 289
+# sl_status.h: 311
 try:
     SL_STATUS_BT_CTRL_CONNECTION_REJECTED_DUE_TO_NO_SUITABLE_CHANNEL_FOUND = (sl_status_t (ord_if_char(0x1039))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 290
+# sl_status.h: 312
 try:
     SL_STATUS_BT_CTRL_CONTROLLER_BUSY = (sl_status_t (ord_if_char(0x103A))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 291
+# sl_status.h: 313
 try:
     SL_STATUS_BT_CTRL_UNACCEPTABLE_CONNECTION_INTERVAL = (sl_status_t (ord_if_char(0x103B))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 292
+# sl_status.h: 314
 try:
     SL_STATUS_BT_CTRL_ADVERTISING_TIMEOUT = (sl_status_t (ord_if_char(0x103C))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 293
+# sl_status.h: 315
 try:
     SL_STATUS_BT_CTRL_CONNECTION_TERMINATED_DUE_TO_MIC_FAILURE = (sl_status_t (ord_if_char(0x103D))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 294
+# sl_status.h: 316
 try:
     SL_STATUS_BT_CTRL_CONNECTION_FAILED_TO_BE_ESTABLISHED = (sl_status_t (ord_if_char(0x103E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 295
+# sl_status.h: 317
 try:
     SL_STATUS_BT_CTRL_MAC_CONNECTION_FAILED = (sl_status_t (ord_if_char(0x103F))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 296
+# sl_status.h: 318
 try:
     SL_STATUS_BT_CTRL_COARSE_CLOCK_ADJUSTMENT_REJECTED_BUT_WILL_TRY_TO_ADJUST_USING_CLOCK_DRAGGING = (sl_status_t (ord_if_char(0x1040))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 297
+# sl_status.h: 319
+try:
+    SL_STATUS_BT_CTRL_TYPE0_SUBMAP_NOT_DEFINED = (sl_status_t (ord_if_char(0x1041))).value
+except:
+    pass
+
+# sl_status.h: 320
 try:
     SL_STATUS_BT_CTRL_UNKNOWN_ADVERTISING_IDENTIFIER = (sl_status_t (ord_if_char(0x1042))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 298
+# sl_status.h: 321
 try:
     SL_STATUS_BT_CTRL_LIMIT_REACHED = (sl_status_t (ord_if_char(0x1043))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 299
+# sl_status.h: 322
 try:
     SL_STATUS_BT_CTRL_OPERATION_CANCELLED_BY_HOST = (sl_status_t (ord_if_char(0x1044))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 300
+# sl_status.h: 323
 try:
     SL_STATUS_BT_CTRL_PACKET_TOO_LONG = (sl_status_t (ord_if_char(0x1045))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 301
+# sl_status.h: 324
 try:
     SL_STATUS_BT_CTRL_TOO_LATE = (sl_status_t (ord_if_char(0x1046))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 302
+# sl_status.h: 325
 try:
     SL_STATUS_BT_CTRL_TOO_EARLY = (sl_status_t (ord_if_char(0x1047))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 303
+# sl_status.h: 326
 try:
     SL_STATUS_BT_CTRL_INSUFFICIENT_CHANNELS = (sl_status_t (ord_if_char(0x1048))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 306
+# sl_status.h: 329
 try:
     SL_STATUS_BT_ATT_INVALID_HANDLE = (sl_status_t (ord_if_char(0x1101))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 307
+# sl_status.h: 330
 try:
     SL_STATUS_BT_ATT_READ_NOT_PERMITTED = (sl_status_t (ord_if_char(0x1102))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 308
+# sl_status.h: 331
 try:
     SL_STATUS_BT_ATT_WRITE_NOT_PERMITTED = (sl_status_t (ord_if_char(0x1103))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 309
+# sl_status.h: 332
 try:
     SL_STATUS_BT_ATT_INVALID_PDU = (sl_status_t (ord_if_char(0x1104))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 310
+# sl_status.h: 333
 try:
     SL_STATUS_BT_ATT_INSUFFICIENT_AUTHENTICATION = (sl_status_t (ord_if_char(0x1105))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 311
+# sl_status.h: 334
 try:
     SL_STATUS_BT_ATT_REQUEST_NOT_SUPPORTED = (sl_status_t (ord_if_char(0x1106))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 312
+# sl_status.h: 335
 try:
     SL_STATUS_BT_ATT_INVALID_OFFSET = (sl_status_t (ord_if_char(0x1107))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 313
+# sl_status.h: 336
 try:
     SL_STATUS_BT_ATT_INSUFFICIENT_AUTHORIZATION = (sl_status_t (ord_if_char(0x1108))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 314
+# sl_status.h: 337
 try:
     SL_STATUS_BT_ATT_PREPARE_QUEUE_FULL = (sl_status_t (ord_if_char(0x1109))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 315
+# sl_status.h: 338
 try:
     SL_STATUS_BT_ATT_ATT_NOT_FOUND = (sl_status_t (ord_if_char(0x110A))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 316
+# sl_status.h: 339
 try:
     SL_STATUS_BT_ATT_ATT_NOT_LONG = (sl_status_t (ord_if_char(0x110B))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 317
+# sl_status.h: 340
 try:
-    SL_STATUS_BT_ATT_INSUFFICIENT_ENC_KEY_SIZE = (sl_status_t (ord_if_char(0x110C))).value
+    SL_STATUS_BT_ATT_ENCRYPTION_KEY_SIZE_TOO_SHORT = (sl_status_t (ord_if_char(0x110C))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 318
+# sl_status.h: 341
+try:
+    SL_STATUS_BT_ATT_INSUFFICIENT_ENC_KEY_SIZE = SL_STATUS_BT_ATT_ENCRYPTION_KEY_SIZE_TOO_SHORT
+except:
+    pass
+
+# sl_status.h: 342
 try:
     SL_STATUS_BT_ATT_INVALID_ATT_LENGTH = (sl_status_t (ord_if_char(0x110D))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 319
+# sl_status.h: 343
 try:
     SL_STATUS_BT_ATT_UNLIKELY_ERROR = (sl_status_t (ord_if_char(0x110E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 320
+# sl_status.h: 344
 try:
     SL_STATUS_BT_ATT_INSUFFICIENT_ENCRYPTION = (sl_status_t (ord_if_char(0x110F))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 321
+# sl_status.h: 345
 try:
     SL_STATUS_BT_ATT_UNSUPPORTED_GROUP_TYPE = (sl_status_t (ord_if_char(0x1110))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 322
+# sl_status.h: 346
 try:
     SL_STATUS_BT_ATT_INSUFFICIENT_RESOURCES = (sl_status_t (ord_if_char(0x1111))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 323
+# sl_status.h: 347
 try:
     SL_STATUS_BT_ATT_OUT_OF_SYNC = (sl_status_t (ord_if_char(0x1112))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 324
+# sl_status.h: 348
 try:
     SL_STATUS_BT_ATT_VALUE_NOT_ALLOWED = (sl_status_t (ord_if_char(0x1113))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 325
+# sl_status.h: 349
 try:
     SL_STATUS_BT_ATT_APPLICATION = (sl_status_t (ord_if_char(0x1180))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 326
+# sl_status.h: 350
 try:
     SL_STATUS_BT_ATT_WRITE_REQUEST_REJECTED = (sl_status_t (ord_if_char(0x11FC))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 327
+# sl_status.h: 351
 try:
     SL_STATUS_BT_ATT_CLIENT_CHARACTERISTIC_CONFIGURATION_DESCRIPTOR_IMPROPERLY_CONFIGURED = (sl_status_t (ord_if_char(0x11FD))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 328
+# sl_status.h: 352
 try:
     SL_STATUS_BT_ATT_PROCEDURE_ALREADY_IN_PROGRESS = (sl_status_t (ord_if_char(0x11FE))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 329
+# sl_status.h: 353
 try:
     SL_STATUS_BT_ATT_OUT_OF_RANGE = (sl_status_t (ord_if_char(0x11FF))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 332
+# sl_status.h: 356
 try:
     SL_STATUS_BT_SMP_PASSKEY_ENTRY_FAILED = (sl_status_t (ord_if_char(0x1201))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 333
+# sl_status.h: 357
 try:
     SL_STATUS_BT_SMP_OOB_NOT_AVAILABLE = (sl_status_t (ord_if_char(0x1202))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 334
+# sl_status.h: 358
 try:
     SL_STATUS_BT_SMP_AUTHENTICATION_REQUIREMENTS = (sl_status_t (ord_if_char(0x1203))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 335
+# sl_status.h: 359
 try:
     SL_STATUS_BT_SMP_CONFIRM_VALUE_FAILED = (sl_status_t (ord_if_char(0x1204))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 336
+# sl_status.h: 360
 try:
     SL_STATUS_BT_SMP_PAIRING_NOT_SUPPORTED = (sl_status_t (ord_if_char(0x1205))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 337
+# sl_status.h: 361
 try:
     SL_STATUS_BT_SMP_ENCRYPTION_KEY_SIZE = (sl_status_t (ord_if_char(0x1206))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 338
+# sl_status.h: 362
 try:
     SL_STATUS_BT_SMP_COMMAND_NOT_SUPPORTED = (sl_status_t (ord_if_char(0x1207))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 339
+# sl_status.h: 363
 try:
     SL_STATUS_BT_SMP_UNSPECIFIED_REASON = (sl_status_t (ord_if_char(0x1208))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 340
+# sl_status.h: 364
 try:
     SL_STATUS_BT_SMP_REPEATED_ATTEMPTS = (sl_status_t (ord_if_char(0x1209))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 341
+# sl_status.h: 365
 try:
     SL_STATUS_BT_SMP_INVALID_PARAMETERS = (sl_status_t (ord_if_char(0x120A))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 342
+# sl_status.h: 366
 try:
     SL_STATUS_BT_SMP_DHKEY_CHECK_FAILED = (sl_status_t (ord_if_char(0x120B))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 343
+# sl_status.h: 367
 try:
     SL_STATUS_BT_SMP_NUMERIC_COMPARISON_FAILED = (sl_status_t (ord_if_char(0x120C))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 344
+# sl_status.h: 368
 try:
     SL_STATUS_BT_SMP_BREDR_PAIRING_IN_PROGRESS = (sl_status_t (ord_if_char(0x120D))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 345
+# sl_status.h: 369
 try:
     SL_STATUS_BT_SMP_CROSS_TRANSPORT_KEY_DERIVATION_GENERATION_NOT_ALLOWED = (sl_status_t (ord_if_char(0x120E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 346
+# sl_status.h: 370
 try:
     SL_STATUS_BT_SMP_KEY_REJECTED = (sl_status_t (ord_if_char(0x120F))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 349
+# sl_status.h: 371
+try:
+    SL_STATUS_BT_SMP_BUSY = (sl_status_t (ord_if_char(0x1210))).value
+except:
+    pass
+
+# sl_status.h: 374
 try:
     SL_STATUS_BT_MESH_ALREADY_EXISTS = (sl_status_t (ord_if_char(0x0501))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 350
+# sl_status.h: 375
 try:
     SL_STATUS_BT_MESH_DOES_NOT_EXIST = (sl_status_t (ord_if_char(0x0502))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 351
+# sl_status.h: 376
 try:
     SL_STATUS_BT_MESH_LIMIT_REACHED = (sl_status_t (ord_if_char(0x0503))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 352
+# sl_status.h: 377
 try:
     SL_STATUS_BT_MESH_INVALID_ADDRESS = (sl_status_t (ord_if_char(0x0504))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 353
+# sl_status.h: 378
 try:
     SL_STATUS_BT_MESH_MALFORMED_DATA = (sl_status_t (ord_if_char(0x0505))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 354
+# sl_status.h: 379
 try:
     SL_STATUS_BT_MESH_ALREADY_INITIALIZED = (sl_status_t (ord_if_char(0x0506))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 355
+# sl_status.h: 380
 try:
     SL_STATUS_BT_MESH_NOT_INITIALIZED = (sl_status_t (ord_if_char(0x0507))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 356
+# sl_status.h: 381
 try:
     SL_STATUS_BT_MESH_NO_FRIEND_OFFER = (sl_status_t (ord_if_char(0x0508))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 357
+# sl_status.h: 382
 try:
     SL_STATUS_BT_MESH_PROV_LINK_CLOSED = (sl_status_t (ord_if_char(0x0509))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 358
+# sl_status.h: 383
 try:
     SL_STATUS_BT_MESH_PROV_INVALID_PDU = (sl_status_t (ord_if_char(0x050A))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 359
+# sl_status.h: 384
 try:
     SL_STATUS_BT_MESH_PROV_INVALID_PDU_FORMAT = (sl_status_t (ord_if_char(0x050B))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 360
+# sl_status.h: 385
 try:
     SL_STATUS_BT_MESH_PROV_UNEXPECTED_PDU = (sl_status_t (ord_if_char(0x050C))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 361
+# sl_status.h: 386
 try:
     SL_STATUS_BT_MESH_PROV_CONFIRMATION_FAILED = (sl_status_t (ord_if_char(0x050D))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 362
+# sl_status.h: 387
 try:
     SL_STATUS_BT_MESH_PROV_OUT_OF_RESOURCES = (sl_status_t (ord_if_char(0x050E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 363
+# sl_status.h: 388
 try:
     SL_STATUS_BT_MESH_PROV_DECRYPTION_FAILED = (sl_status_t (ord_if_char(0x050F))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 364
+# sl_status.h: 389
 try:
     SL_STATUS_BT_MESH_PROV_UNEXPECTED_ERROR = (sl_status_t (ord_if_char(0x0510))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 365
+# sl_status.h: 390
 try:
     SL_STATUS_BT_MESH_PROV_CANNOT_ASSIGN_ADDR = (sl_status_t (ord_if_char(0x0511))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 366
+# sl_status.h: 391
 try:
     SL_STATUS_BT_MESH_ADDRESS_TEMPORARILY_UNAVAILABLE = (sl_status_t (ord_if_char(0x0512))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 367
+# sl_status.h: 392
 try:
     SL_STATUS_BT_MESH_ADDRESS_ALREADY_USED = (sl_status_t (ord_if_char(0x0513))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 368
+# sl_status.h: 393
 try:
     SL_STATUS_BT_MESH_PUBLISH_NOT_CONFIGURED = (sl_status_t (ord_if_char(0x0514))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 369
+# sl_status.h: 394
 try:
     SL_STATUS_BT_MESH_APP_KEY_NOT_BOUND = (sl_status_t (ord_if_char(0x0515))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 372
+# sl_status.h: 397
 try:
     SL_STATUS_BT_MESH_FOUNDATION_INVALID_ADDRESS = (sl_status_t (ord_if_char(0x1301))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 373
+# sl_status.h: 398
 try:
     SL_STATUS_BT_MESH_FOUNDATION_INVALID_MODEL = (sl_status_t (ord_if_char(0x1302))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 374
+# sl_status.h: 399
 try:
     SL_STATUS_BT_MESH_FOUNDATION_INVALID_APP_KEY = (sl_status_t (ord_if_char(0x1303))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 375
+# sl_status.h: 400
 try:
     SL_STATUS_BT_MESH_FOUNDATION_INVALID_NET_KEY = (sl_status_t (ord_if_char(0x1304))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 376
+# sl_status.h: 401
 try:
     SL_STATUS_BT_MESH_FOUNDATION_INSUFFICIENT_RESOURCES = (sl_status_t (ord_if_char(0x1305))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 377
+# sl_status.h: 402
 try:
     SL_STATUS_BT_MESH_FOUNDATION_KEY_INDEX_EXISTS = (sl_status_t (ord_if_char(0x1306))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 378
+# sl_status.h: 403
 try:
     SL_STATUS_BT_MESH_FOUNDATION_INVALID_PUBLISH_PARAMS = (sl_status_t (ord_if_char(0x1307))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 379
+# sl_status.h: 404
 try:
     SL_STATUS_BT_MESH_FOUNDATION_NOT_SUBSCRIBE_MODEL = (sl_status_t (ord_if_char(0x1308))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 380
+# sl_status.h: 405
 try:
     SL_STATUS_BT_MESH_FOUNDATION_STORAGE_FAILURE = (sl_status_t (ord_if_char(0x1309))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 381
+# sl_status.h: 406
 try:
     SL_STATUS_BT_MESH_FOUNDATION_NOT_SUPPORTED = (sl_status_t (ord_if_char(0x130A))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 382
+# sl_status.h: 407
 try:
     SL_STATUS_BT_MESH_FOUNDATION_CANNOT_UPDATE = (sl_status_t (ord_if_char(0x130B))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 383
+# sl_status.h: 408
 try:
     SL_STATUS_BT_MESH_FOUNDATION_CANNOT_REMOVE = (sl_status_t (ord_if_char(0x130C))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 384
+# sl_status.h: 409
 try:
     SL_STATUS_BT_MESH_FOUNDATION_CANNOT_BIND = (sl_status_t (ord_if_char(0x130D))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 385
+# sl_status.h: 410
 try:
     SL_STATUS_BT_MESH_FOUNDATION_TEMPORARILY_UNABLE = (sl_status_t (ord_if_char(0x130E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 386
+# sl_status.h: 411
 try:
     SL_STATUS_BT_MESH_FOUNDATION_CANNOT_SET = (sl_status_t (ord_if_char(0x130F))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 387
+# sl_status.h: 412
 try:
     SL_STATUS_BT_MESH_FOUNDATION_UNSPECIFIED = (sl_status_t (ord_if_char(0x1310))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 388
+# sl_status.h: 413
 try:
     SL_STATUS_BT_MESH_FOUNDATION_INVALID_BINDING = (sl_status_t (ord_if_char(0x1311))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 393
+# sl_status.h: 418
 try:
     SL_STATUS_WIFI_INVALID_KEY = (sl_status_t (ord_if_char(0x0B01))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 394
+# sl_status.h: 419
 try:
     SL_STATUS_WIFI_FIRMWARE_DOWNLOAD_TIMEOUT = (sl_status_t (ord_if_char(0x0B02))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 395
+# sl_status.h: 420
 try:
     SL_STATUS_WIFI_UNSUPPORTED_MESSAGE_ID = (sl_status_t (ord_if_char(0x0B03))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 396
+# sl_status.h: 421
 try:
     SL_STATUS_WIFI_WARNING = (sl_status_t (ord_if_char(0x0B04))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 397
+# sl_status.h: 422
 try:
     SL_STATUS_WIFI_NO_PACKET_TO_RECEIVE = (sl_status_t (ord_if_char(0x0B05))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 398
+# sl_status.h: 423
 try:
     SL_STATUS_WIFI_SLEEP_GRANTED = (sl_status_t (ord_if_char(0x0B08))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 399
+# sl_status.h: 424
 try:
     SL_STATUS_WIFI_SLEEP_NOT_GRANTED = (sl_status_t (ord_if_char(0x0B09))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 400
+# sl_status.h: 425
 try:
     SL_STATUS_WIFI_SECURE_LINK_MAC_KEY_ERROR = (sl_status_t (ord_if_char(0x0B10))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 401
+# sl_status.h: 426
 try:
     SL_STATUS_WIFI_SECURE_LINK_MAC_KEY_ALREADY_BURNED = (sl_status_t (ord_if_char(0x0B11))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 402
+# sl_status.h: 427
 try:
     SL_STATUS_WIFI_SECURE_LINK_RAM_MODE_NOT_ALLOWED = (sl_status_t (ord_if_char(0x0B12))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 403
+# sl_status.h: 428
 try:
     SL_STATUS_WIFI_SECURE_LINK_FAILED_UNKNOWN_MODE = (sl_status_t (ord_if_char(0x0B13))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 404
+# sl_status.h: 429
 try:
     SL_STATUS_WIFI_SECURE_LINK_EXCHANGE_FAILED = (sl_status_t (ord_if_char(0x0B14))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 405
+# sl_status.h: 430
 try:
     SL_STATUS_WIFI_WRONG_STATE = (sl_status_t (ord_if_char(0x0B18))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 406
+# sl_status.h: 431
 try:
     SL_STATUS_WIFI_CHANNEL_NOT_ALLOWED = (sl_status_t (ord_if_char(0x0B19))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 407
+# sl_status.h: 432
 try:
     SL_STATUS_WIFI_NO_MATCHING_AP = (sl_status_t (ord_if_char(0x0B1A))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 408
+# sl_status.h: 433
 try:
     SL_STATUS_WIFI_CONNECTION_ABORTED = (sl_status_t (ord_if_char(0x0B1B))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 409
+# sl_status.h: 434
 try:
     SL_STATUS_WIFI_CONNECTION_TIMEOUT = (sl_status_t (ord_if_char(0x0B1C))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 410
+# sl_status.h: 435
 try:
     SL_STATUS_WIFI_CONNECTION_REJECTED_BY_AP = (sl_status_t (ord_if_char(0x0B1D))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 411
+# sl_status.h: 436
 try:
     SL_STATUS_WIFI_CONNECTION_AUTH_FAILURE = (sl_status_t (ord_if_char(0x0B1E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 412
+# sl_status.h: 437
 try:
     SL_STATUS_WIFI_RETRY_EXCEEDED = (sl_status_t (ord_if_char(0x0B1F))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 413
+# sl_status.h: 438
 try:
     SL_STATUS_WIFI_TX_LIFETIME_EXCEEDED = (sl_status_t (ord_if_char(0x0B20))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 418
+# sl_status.h: 443
 try:
     SL_STATUS_COMPUTE_DRIVER_FAULT = (sl_status_t (ord_if_char(0x1501))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 419
+# sl_status.h: 444
 try:
     SL_STATUS_COMPUTE_DRIVER_ALU_NAN = (sl_status_t (ord_if_char(0x1502))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 420
+# sl_status.h: 445
 try:
     SL_STATUS_COMPUTE_DRIVER_ALU_OVERFLOW = (sl_status_t (ord_if_char(0x1503))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 421
+# sl_status.h: 446
 try:
     SL_STATUS_COMPUTE_DRIVER_ALU_UNDERFLOW = (sl_status_t (ord_if_char(0x1504))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 422
+# sl_status.h: 447
 try:
     SL_STATUS_COMPUTE_DRIVER_STORE_CONVERSION_OVERFLOW = (sl_status_t (ord_if_char(0x1505))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 423
+# sl_status.h: 448
 try:
     SL_STATUS_COMPUTE_DRIVER_STORE_CONVERSION_UNDERFLOW = (sl_status_t (ord_if_char(0x1506))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 424
+# sl_status.h: 449
 try:
     SL_STATUS_COMPUTE_DRIVER_STORE_CONVERSION_INFINITY = (sl_status_t (ord_if_char(0x1507))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 425
+# sl_status.h: 450
 try:
     SL_STATUS_COMPUTE_DRIVER_STORE_CONVERSION_NAN = (sl_status_t (ord_if_char(0x1508))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 427
+# sl_status.h: 452
 try:
     SL_STATUS_COMPUTE_MATH_NAN = (sl_status_t (ord_if_char(0x1512))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 428
+# sl_status.h: 453
 try:
     SL_STATUS_COMPUTE_MATH_INFINITY = (sl_status_t (ord_if_char(0x1513))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 429
+# sl_status.h: 454
 try:
     SL_STATUS_COMPUTE_MATH_OVERFLOW = (sl_status_t (ord_if_char(0x1514))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 430
+# sl_status.h: 455
 try:
     SL_STATUS_COMPUTE_MATH_UNDERFLOW = (sl_status_t (ord_if_char(0x1515))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 434
+# sl_status.h: 459
 try:
     SL_STATUS_ZIGBEE_PACKET_HANDOFF_DROPPED = (sl_status_t (ord_if_char(0x0C01))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 435
+# sl_status.h: 460
 try:
     SL_STATUS_ZIGBEE_DELIVERY_FAILED = (sl_status_t (ord_if_char(0x0C02))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 436
+# sl_status.h: 461
 try:
     SL_STATUS_ZIGBEE_MAX_MESSAGE_LIMIT_REACHED = (sl_status_t (ord_if_char(0x0C03))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 437
+# sl_status.h: 462
 try:
     SL_STATUS_ZIGBEE_BINDING_IS_ACTIVE = (sl_status_t (ord_if_char(0x0C04))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 438
+# sl_status.h: 463
 try:
     SL_STATUS_ZIGBEE_ADDRESS_TABLE_ENTRY_IS_ACTIVE = (sl_status_t (ord_if_char(0x0C05))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 439
+# sl_status.h: 464
 try:
     SL_STATUS_ZIGBEE_MOVE_FAILED = (sl_status_t (ord_if_char(0x0C06))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 440
+# sl_status.h: 465
 try:
     SL_STATUS_ZIGBEE_NODE_ID_CHANGED = (sl_status_t (ord_if_char(0x0C07))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 441
+# sl_status.h: 466
 try:
     SL_STATUS_ZIGBEE_INVALID_SECURITY_LEVEL = (sl_status_t (ord_if_char(0x0C08))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 442
+# sl_status.h: 467
 try:
     SL_STATUS_ZIGBEE_IEEE_ADDRESS_DISCOVERY_IN_PROGRESS = (sl_status_t (ord_if_char(0x0C09))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 443
+# sl_status.h: 468
 try:
     SL_STATUS_ZIGBEE_APS_ENCRYPTION_ERROR = (sl_status_t (ord_if_char(0x0C0A))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 444
+# sl_status.h: 469
 try:
     SL_STATUS_ZIGBEE_SECURITY_STATE_NOT_SET = (sl_status_t (ord_if_char(0x0C0B))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 445
+# sl_status.h: 470
 try:
     SL_STATUS_ZIGBEE_TOO_SOON_FOR_SWITCH_KEY = (sl_status_t (ord_if_char(0x0C0C))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 446
+# sl_status.h: 471
 try:
     SL_STATUS_ZIGBEE_SIGNATURE_VERIFY_FAILURE = (sl_status_t (ord_if_char(0x0C0D))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 447
+# sl_status.h: 472
 try:
     SL_STATUS_ZIGBEE_KEY_NOT_AUTHORIZED = (sl_status_t (ord_if_char(0x0C0E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 448
+# sl_status.h: 473
 try:
     SL_STATUS_ZIGBEE_BINDING_HAS_CHANGED = (sl_status_t (ord_if_char(0x0C0F))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 449
+# sl_status.h: 474
 try:
     SL_STATUS_ZIGBEE_TRUST_CENTER_SWAP_EUI_HAS_CHANGED = (sl_status_t (ord_if_char(0x0C10))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 450
+# sl_status.h: 475
 try:
     SL_STATUS_ZIGBEE_TRUST_CENTER_SWAP_EUI_HAS_NOT_CHANGED = (sl_status_t (ord_if_char(0x0C11))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 451
+# sl_status.h: 476
 try:
     SL_STATUS_ZIGBEE_INSUFFICIENT_RANDOM_DATA = (sl_status_t (ord_if_char(0x0C12))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 452
+# sl_status.h: 477
 try:
     SL_STATUS_ZIGBEE_SOURCE_ROUTE_FAILURE = (sl_status_t (ord_if_char(0x0C13))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 453
+# sl_status.h: 478
 try:
     SL_STATUS_ZIGBEE_MANY_TO_ONE_ROUTE_FAILURE = (sl_status_t (ord_if_char(0x0C14))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 454
+# sl_status.h: 479
 try:
     SL_STATUS_ZIGBEE_STACK_AND_HARDWARE_MISMATCH = (sl_status_t (ord_if_char(0x0C15))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 455
+# sl_status.h: 480
 try:
     SL_STATUS_ZIGBEE_PAN_ID_CHANGED = (sl_status_t (ord_if_char(0x0C16))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 456
+# sl_status.h: 481
 try:
     SL_STATUS_ZIGBEE_CHANNEL_CHANGED = (sl_status_t (ord_if_char(0x0C17))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 457
+# sl_status.h: 482
 try:
     SL_STATUS_ZIGBEE_NETWORK_OPENED = (sl_status_t (ord_if_char(0x0C18))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 458
+# sl_status.h: 483
 try:
     SL_STATUS_ZIGBEE_NETWORK_CLOSED = (sl_status_t (ord_if_char(0x0C19))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 459
+# sl_status.h: 484
 try:
     SL_STATUS_ZIGBEE_RECEIVED_KEY_IN_THE_CLEAR = (sl_status_t (ord_if_char(0x0C1A))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 460
+# sl_status.h: 485
 try:
     SL_STATUS_ZIGBEE_NO_NETWORK_KEY_RECEIVED = (sl_status_t (ord_if_char(0x0C1B))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 461
+# sl_status.h: 486
 try:
     SL_STATUS_ZIGBEE_NO_LINK_KEY_RECEIVED = (sl_status_t (ord_if_char(0x0C1C))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 462
+# sl_status.h: 487
 try:
     SL_STATUS_ZIGBEE_PRECONFIGURED_KEY_REQUIRED = (sl_status_t (ord_if_char(0x0C1D))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 463
+# sl_status.h: 488
 try:
     SL_STATUS_ZIGBEE_EZSP_ERROR = (sl_status_t (ord_if_char(0x0C1E))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 464
+# sl_status.h: 489
 try:
     SL_STATUS_ZIGBEE_ID_DISCOVERY_FAILED = (sl_status_t (ord_if_char(0x0C1F))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 465
+# sl_status.h: 490
 try:
     SL_STATUS_ZIGBEE_NO_APS_ACK = (sl_status_t (ord_if_char(0x0C20))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 466
+# sl_status.h: 491
 try:
     SL_STATUS_ZIGBEE_APS_MESSAGE_CANCELED = (sl_status_t (ord_if_char(0x0C21))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 467
+# sl_status.h: 492
 try:
     SL_STATUS_ZIGBEE_ID_DISCOVERY_NOT_ENABLED = (sl_status_t (ord_if_char(0x0C22))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 468
+# sl_status.h: 493
 try:
     SL_STATUS_ZIGBEE_ID_DISCOVERY_UNDERWAY = (sl_status_t (ord_if_char(0x0C23))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 469
+# sl_status.h: 494
 try:
     SL_STATUS_ZIGBEE_SEND_UNICAST_ROUTE_DISCOVERY_UNDERWAY = (sl_status_t (ord_if_char(0x0C24))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 470
+# sl_status.h: 495
 try:
     SL_STATUS_ZIGBEE_SEND_UNICAST_FAILURE = (sl_status_t (ord_if_char(0x0C25))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 471
+# sl_status.h: 496
 try:
     SL_STATUS_ZIGBEE_SEND_UNICAST_NO_ROUTE = (sl_status_t (ord_if_char(0x0C26))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 472
+# sl_status.h: 497
 try:
     SL_STATUS_ZIGBEE_BROADCAST_TO_SLEEPY_CHILDREN_TIMEOUT = (sl_status_t (ord_if_char(0x0C27))).value
 except:
     pass
 
-# platform/common/inc/sl_status.h: 473
+# sl_status.h: 498
 try:
     SL_STATUS_ZIGBEE_BROADCAST_RELAY_FAILED = (sl_status_t (ord_if_char(0x0C28))).value
 except:
     pass
 
-db_handle_s = struct_db_handle_s# esl_key_lib/esl_key_lib.h: 53
+# sl_status.h: 499
+try:
+    SL_STATUS_ZIGBEE_REJOIN_FAILED_BUT_NETWORK_RESTORED = (sl_status_t (ord_if_char(0x0C29))).value
+except:
+    pass
 
-db_record_s = struct_db_record_s# esl_key_lib/esl_key_lib.h: 56
+db_handle_s = struct_db_handle_s# esl_key_lib.h: 53
+
+db_record_s = struct_db_record_s# esl_key_lib.h: 56
 
 # No inserted files
 

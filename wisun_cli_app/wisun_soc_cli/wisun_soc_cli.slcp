@@ -365,7 +365,7 @@ template_contribution:
       group: "wisun"
       name: "mac_allow"
       handler: "app_mac_allow"
-      help: "Add a MAC address to the list of allowed addresses, (FF:FF:FF:FF:FF:FF:FF:FF) clears the whitelist: w ma"
+      help: "Add a MAC address to the list of allowed addresses, FF:FF:FF:FF:FF:FF:FF:FF to allow all MAC addresses: w ma"
       shortcuts:
         - name: "ma"
       argument:
@@ -376,7 +376,7 @@ template_contribution:
       group: "wisun"
       name: "mac_deny"
       handler: "app_mac_deny"
-      help: "Add a MAC address to the list of denied addresses: w md"
+      help: "Add a MAC address to the list of denied addresses, FF:FF:FF:FF:FF:FF:FF:FF to deny all MAC addresses: w md"
       shortcuts:
         - name: "md"
       argument:
@@ -582,6 +582,8 @@ template_contribution:
       argument:
         - type: uint16
           help: "Channel Id"
+        - type: uint8opt
+          help: "phy config type (optional, 1=FAN1.1 by default): 0=FAN1.0, 1=FAN1.1, 2=Explicit PHY, 3=Explicit RAIL (IDS), 4=Custom FSK, 5=Custom OFDM, 6=Custom OQPSK"
       shortcuts:
         - name: "[strs] "
   - name: "cli_command"
@@ -601,6 +603,8 @@ template_contribution:
       argument:
         - type: uint16
           help: "Channel Id"
+        - type: uint8opt
+          help: "phy config type (optional, 1=FAN1.1 by default): 0=FAN1.0, 1=FAN1.1, 2=Explicit PHY, 3=Explicit RAIL (IDS), 4=Custom FSK, 5=Custom OFDM, 6=Custom OQPSK"
       shortcuts:
         - name: "strt"
   - name: "cli_command"
@@ -611,6 +615,50 @@ template_contribution:
       help: "Stop an RF test tone: rft stpt"
       shortcuts:
         - name: "stpt"
+  - name: "cli_command"
+    value:
+      group: "rftest"
+      name: "start_tx"
+      handler: "app_rftest_start_tx"
+      help: "Start RF test TX: rft stx <channel> <count> <data_length> <interval> <cca>"
+      argument:
+        - type: uint16
+          help: "Channel Id"
+        - type: uint16
+          help: "Number of packets to transmit"
+        - type: uint16
+          help: "Data length per packet"
+        - type: uint32
+          help: "Interval between transmissions (ms)"
+        - type: uint8
+          help: "CCA enable (0=off, else=on)"
+        - type: uint8opt
+          help: "phy config type (optional, 1=FAN1.1 by default): 0=FAN1.0, 1=FAN1.1, 2=Explicit PHY, 3=Explicit RAIL (IDS), 4=Custom FSK, 5=Custom OFDM, 6=Custom OQPSK"
+      shortcuts:
+        - name: "stx"
+  - name: "cli_command"
+    value:
+      group: "rftest"
+      name: "start_rx"
+      handler: "app_rftest_start_rx"
+      help: "Start RF test RX: rft srx <channel> <duration>"
+      argument:
+        - type: uint16
+          help: "Channel Id"
+        - type: uint32
+          help: "Duration (ms)"
+        - type: uint8opt
+          help: "phy config type (optional, 1=FAN1.1 by default): 0=FAN1.0, 1=FAN1.1, 2=Explicit PHY, 3=Explicit RAIL (IDS), 4=Custom FSK, 5=Custom OFDM, 6=Custom OQPSK"
+      shortcuts:
+        - name: "srx"
+  - name: "cli_command"
+    value:
+      group: "rftest"
+      name: "stop_rx"
+      handler: "app_rftest_stop_rx"
+      help: "Stop RF test RX: rft stprx"
+      shortcuts:
+        - name: "stprx"
   - name: "cli_command"
     value:
       group: "rftest"

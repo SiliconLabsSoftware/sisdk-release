@@ -3,7 +3,7 @@
  * @brief BT Mesh Provisioner Application component - CLI handler
  ******************************************************************************
  * # License
- * <b>Copyright 2022 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  ******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -262,6 +262,20 @@ void btmesh_app_prov_set_cbp_capability(bool capability);
 * @retval true if CBP is requested, false otherwise
 *******************************************************************************/
 bool btmesh_app_prov_get_cbp_status(void);
+
+/***************************************************************************//**
+* Inform the OOB handler if the provisioned node is capable of OOB or not
+*
+* @param[in] capability true if the node is OOB-capable, false otherwise
+*******************************************************************************/
+void btmesh_app_prov_set_oob_capability(bool capability);
+
+/***************************************************************************//**
+* Get current OOB status from the OOB handler
+*
+* @retval true if OOB is requested, false otherwise
+*******************************************************************************/
+bool btmesh_app_prov_get_oob_status(void);
 
 #ifdef __cplusplus
 };

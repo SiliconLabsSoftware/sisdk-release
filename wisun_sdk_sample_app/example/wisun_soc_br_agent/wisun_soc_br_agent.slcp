@@ -173,8 +173,3 @@ filter:
     value: ["SoC"]
   - name: "Project Difficulty"
     value: ["Advanced"]
-
-sdk_extension:
-  - vendor: silabs 
-    id: wiseconnect3_sdk
-    version: 4.0.0

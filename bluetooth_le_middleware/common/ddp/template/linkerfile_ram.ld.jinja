@@ -2,7 +2,7 @@
  * GCC Linker script for RAM based DDP applications
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -65,7 +65,7 @@
 {%- if memory_ram_size is defined %}
   {%-   set app_ram_size = memory_ram_size | first %}
 {%- else %}
-  {%-   set app_ram_size = sram_size %}
+  {%- set app_ram_size = sram_size - (app_ram_start - sram_addr) %}
 {%- endif %}
 
 {%- if memory_flash_start is defined %}
@@ -77,7 +77,7 @@
 {%- if memory_flash_size is defined %}
   {%- set app_flash_size = memory_flash_size | first %}
 {%- else %}
-  {%- set app_flash_size = flash_size %}
+  {%- set app_flash_size = flash_size - (app_flash_start - flash_addr) %}
 {#-
   We reserve the last flash page for tokens and key storage
 #}
@@ -327,7 +327,4 @@ SECTIONS
 {%- endif %}
   linker_nvm_begin = linker_nvm_end - SIZEOF(.nvm);
 
-{%- if (memory_ram_start and not memory_ram_size) or (memory_ram_size and not memory_ram_start)  %}
-  ASSERT( 0, "memory_ram_start and memory_ram_size, Should define/undefine both!")
-{%- endif %}
 }

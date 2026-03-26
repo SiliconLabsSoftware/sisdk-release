@@ -13979,6 +13979,8 @@ sl_status_t sl_btmesh_lc_client_set_property(uint16_t server_address,
 #define sl_btmesh_cmd_lc_server_set_regulator_interval_id                0x074d0028
 #define sl_btmesh_cmd_lc_server_set_event_mask_id                        0x084d0028
 #define sl_btmesh_cmd_lc_server_get_lc_state_id                          0x094d0028
+#define sl_btmesh_cmd_lc_server_set_regulator_mode_id                    0x0a4d0028
+#define sl_btmesh_cmd_lc_server_set_sensor_timeout_id                    0x0b4d0028
 #define sl_btmesh_rsp_lc_server_init_id                                  0x004d0028
 #define sl_btmesh_rsp_lc_server_deinit_id                                0x014d0028
 #define sl_btmesh_rsp_lc_server_update_mode_id                           0x024d0028
@@ -13989,6 +13991,8 @@ sl_status_t sl_btmesh_lc_client_set_property(uint16_t server_address,
 #define sl_btmesh_rsp_lc_server_set_regulator_interval_id                0x074d0028
 #define sl_btmesh_rsp_lc_server_set_event_mask_id                        0x084d0028
 #define sl_btmesh_rsp_lc_server_get_lc_state_id                          0x094d0028
+#define sl_btmesh_rsp_lc_server_set_regulator_mode_id                    0x0a4d0028
+#define sl_btmesh_rsp_lc_server_set_sensor_timeout_id                    0x0b4d0028
 
 /**
  * @brief These values define the possible states of Light Controller.
@@ -14073,6 +14077,32 @@ typedef enum
                                                                 and regulator
                                                                 output. */
 } sl_btmesh_lc_server_lc_debug_events_t;
+
+/**
+ * @brief These values define the regulator PI calculation mode. If the
+ * regulator is disabled, the output only depends on the configured lightness
+ * levels. Ignoring PI is non-standard behavior and should only be used for
+ * debugging purposes. If conitionally enabled, the regulator output is adjusted
+ * based on the sensor input, if available. This is default state. The
+ * conditionality permits a fallback to the disabled mode, which is the modus
+ * operandi in 1.1 and before. If permanently enabled, the regulator always
+ * adjusts the output based on the sensor input, even if it is zero, which will
+ * push the output to its maximum. This behavior has been introduced in Mesh
+ * 1.1.1 and should be used with caution, as the Test Specification is not yet
+ * updated to reflect this.
+ */
+typedef enum
+{
+  sl_btmesh_lc_server_lc_regulator_disabled    = 0x0, /**< (0x0) Regulator
+                                                           permanently disabled. */
+  sl_btmesh_lc_server_lc_regulator_conditional = 0x1, /**< (0x1) Regulator
+                                                           conditionally enabled
+                                                           \- only when sensor
+                                                           input is available
+                                                           (default). */
+  sl_btmesh_lc_server_lc_regulator_enabled     = 0x2  /**< (0x2) Regulator
+                                                           permanently enabled. */
+} sl_btmesh_lc_server_lc_regulator_mode_t;
 
 /**
  * @addtogroup sl_btmesh_evt_lc_server_mode_updated sl_btmesh_evt_lc_server_mode_updated
@@ -14430,7 +14460,9 @@ sl_status_t sl_btmesh_lc_server_init_all_properties(uint16_t elem_index);
  *
  * Update the bitmask that controls which messages are sent when the LC Server
  * publishes. By default, the bitmask will be enabled to publish all three
- * status messages.
+ * status messages. NOTE: This API will be deprecated in future releases because
+ * the publish behaviour defines only Light LC State Machine OnOff State changes
+ * to be reported.
  *
  * @param[in] elem_index Index of the element.
  * @param[in] status_type @parblock
@@ -14499,6 +14531,44 @@ sl_status_t sl_btmesh_lc_server_set_event_mask(uint16_t elem_index,
 sl_status_t sl_btmesh_lc_server_get_lc_state(uint16_t elem_index,
                                              uint8_t *state,
                                              uint32_t *transition_time);
+
+/***************************************************************************//**
+ *
+ * Set the regulator mode (disabled, conditional, or enabled). This controls
+ * whether the LC regulator PI calculation is permanently disabled,
+ * conditionally enabled (only when sensor input is available), or permanently
+ * enabled.
+ *
+ * @param[in] elem_index Index of the element.
+ * @param[in] mode @parblock
+ *   Enum @ref sl_btmesh_lc_server_lc_regulator_mode_t. Regulator mode:
+ *
+ *   lc_regulator_disabled (0) - Permanently disabled lc_regulator_conditional
+ *   (1) - Enabled when sensor input available (default) lc_regulator_enabled
+ *   (2) - Permanently enabled
+ *   @endparblock
+ *
+ * @return SL_STATUS_OK if successful. Error code otherwise.
+ *
+ ******************************************************************************/
+sl_status_t sl_btmesh_lc_server_set_regulator_mode(uint16_t elem_index,
+                                                   uint8_t mode);
+
+/***************************************************************************//**
+ *
+ * Set the sensor timeout period. If no sensor status message is received within
+ * this period, the sensor is considered disconnected and the ambient lux level
+ * is cleared to zero.
+ *
+ * @param[in] elem_index Index of the element.
+ * @param[in] timeout_ms Timeout period in milliseconds (must be non-zero,
+ *   default: 5000ms).
+ *
+ * @return SL_STATUS_OK if successful. Error code otherwise.
+ *
+ ******************************************************************************/
+sl_status_t sl_btmesh_lc_server_set_sensor_timeout(uint16_t elem_index,
+                                                   uint32_t timeout_ms);
 
 /** @} */ // end addtogroup sl_btmesh_lc_server
 

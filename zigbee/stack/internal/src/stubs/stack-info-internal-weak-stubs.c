@@ -41,13 +41,6 @@ SL_WEAK sl_status_t sli_802154_stack_radio_get_scheduler_sliptime(uint32_t *slip
   return SL_STATUS_NOT_AVAILABLE;
 }
 
-SL_WEAK sl_status_t sli_802154_stack_radio_set_scheduler_priorities(const sl_802154_radio_priorities_t *priorities)
-{
-  // NOTE stub definition
-  (void) priorities;
-  return SL_STATUS_NOT_AVAILABLE;
-}
-
 SL_WEAK sl_status_t sli_802154_stack_radio_set_scheduler_sliptime(uint32_t slipTime)
 {
   // NOTE stub definition

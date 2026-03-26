@@ -65,7 +65,9 @@ sl_status_t sli_zigbee_af_fragmentation_send(sli_zigbee_tx_fragmented_packet_t* 
 void sli_zigbee_af_fragmentation_handle_source_route(sli_zigbee_tx_fragmented_packet_t* txPacket,
                                                      uint16_t indexOrDestination)
 {
-//now this is unnneccessary and similar to SoC
+  (void)txPacket;
+  (void)indexOrDestination;
+  // Host: no source-route handling needed here; same as SoC.
 }
 
 void sli_zigbee_af_fragmentation_send_reply(sl_802154_short_addr_t sender,

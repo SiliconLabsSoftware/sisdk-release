@@ -20,6 +20,7 @@
   - name: hardware_board_from_slwrb4183a
   - name: hardware_board_from_slwstk6021a
   - name: hardware_board_has_vcom
+  - name: hardware_board_has_vcom_hardware_flowcontrol
   - name: hardware_board_has_spiflash
   - name: hardware_board_has_exp_12
   - name: hardware_board_has_exp_14
@@ -76,6 +77,7 @@
   - board:revision:A01
   - board:device:efr32mg22c224f512im32
   - hardware:has:vcom
+  - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:led:1
   - hardware:has:button:1

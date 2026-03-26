@@ -4,14 +4,14 @@ Shows the ability to advertise numerical sensor readings, such as temperature, a
 
 The Multilevel Sensor application is based on:
 
-| <!-- -->                | <!-- -->                                  |
-| :---------------------- | :---------------------------------------- |
-| Role Type               | Reporting Sleeping End Device (RSS)       |
-| Supporting Device Type  | Data reporting                            |
-| Device Type             | Notification sensor                       |
-| Generic Type            | Sensor Notification                       |
-| Specific Type           | Notification Sensor                       |
-| Requested security keys | S2\_UNAUTHENTICATED and S2\_AUTHENTICATED |
+| <!-- -->                | <!-- -->                                       |
+| :---------------------- | :--------------------------------------------- |
+| Role Type               | Reporting Sleeping End Device (RSS)            |
+| Supporting Device Type  | Data reporting                                 |
+| Device Type             | Notification sensor                            |
+| Generic Type            | Sensor Notification                            |
+| Specific Type           | Notification Sensor                            |
+| Requested security keys | S0, S2\_UNAUTHENTICATED, and S2\_AUTHENTICATED |
 
 Multilevel Sensor transmits the following events:
 
@@ -110,7 +110,7 @@ Please note external wakeup is not supported on button 1 in case of brd2603a and
 </tr><tr>
     <td>BTN0</td>
     <td>Short Press</td>
-    <td>Sends Battery Report, temperature, and humidity data</td>
+    <td>Sends Battery Report, temperature, humidity, illuminance, and acceleration* data</td>
 </tr><tr>
     <td rowspan="2">BTN1</td>
     <td>Short Press</td>
@@ -123,6 +123,8 @@ Please note external wakeup is not supported on button 1 in case of brd2603a and
     </td>
 </tr>
 </table>
+
+\*: Acceleration data about the X, Y, and Z axes is only available for brd2603a.
 
 <table>
 <tr>
@@ -139,11 +141,13 @@ Please note external wakeup is not supported on button 1 in case of brd2603a and
 
 ## Firmware Update
 
-This section will describe backward compatibility when upgrading the MultilevelSensor application from one SDK to a newer version. 
+This section will describe backward compatibility when upgrading the Multilevel Sensor application from one SDK to a newer version. 
 
 ## CLI Support
 
 In case CLI support is needed, please install zw_cli_common component to the project. Please note that the zw_cli_common component will significantly increase the power consumption of this application, as it must always be in an active state in order to receive CLI commands. The CLI cannot function during EM4 sleep mode. After a reset, the application stays awake for 10 seconds. During this timeframe, the sleeping disable CLI command can be issued to keep the application awake.
+
+The default baud rate is 9600, which allows the underlying EUSART module to work in EM2. On some development kits (e.g. BRD2603A and BRD2705A), the following command should be applied in Simplicity Studio via the Admin console to adjust the baudrate: `serial vcom config speed 9600`.
 
 ### Available CLI commands
 

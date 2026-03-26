@@ -16185,7 +16185,7 @@ sl_status_t sl_bt_cte_receiver_disable_silabs_cte(void);
 /**
  * @addtogroup sl_bt_evt_connection_analyzer_report sl_bt_evt_connection_analyzer_report
  * @{
- * @brief Triggered when packets transmitted on a connection are captured.
+ * @brief Triggered at every connection interval
  */
 
 /** @brief Identifier of the report event */
@@ -16198,11 +16198,17 @@ PACKSTRUCT( struct sl_bt_evt_connection_analyzer_report_s
 {
   uint8_t analyzer;        /**< The handle of the connection analyzer */
   int8_t  central_rssi;    /**< RSSI measurement of the packet transmitted by
-                                the Central device. Units: dBm.
-                                  - <b>Range:</b> -127 to +20 */
+                                central in units dBm, or 127 if the packet was
+                                not observed.
+                                  - <b>Range:</b> -127 to +20
+
+                                  - Value 127: RSSI information unavailable */
   int8_t  peripheral_rssi; /**< RSSI measurement of the packet transmitted by
-                                the Peripheral device. Units: dBm.
-                                  - <b>Range:</b> -127 to +20 */
+                                peripheral in units dBm, or 127 if the packet
+                                was not observed.
+                                  - <b>Range:</b> -127 to +20
+
+                                  - Value 127: RSSI information unavailable */
 });
 
 typedef struct sl_bt_evt_connection_analyzer_report_s sl_bt_evt_connection_analyzer_report_t;
@@ -16238,10 +16244,9 @@ typedef struct sl_bt_evt_connection_analyzer_completed_s sl_bt_evt_connection_an
  * measurements. The parameters in this command provide necessary information to
  * identify the connection and schedule operations to follow its transmissions.
  *
- * When this device is in central role, the analyzer generates a report only
- * after the peripheral responds to the central in a connection event. If the
- * peripheral does not respond, the analyzer does not generate a report for that
- * connection event.
+ * The analyzer generates a report at every connection interval. When a central
+ * or peripheral packet could not be observed, the RSSI for the role is reported
+ * as unavailable (127).
  *
  * If the other device uses Silabs' Bluetooth stack, the information of the
  * connection could be retrieved with command @ref
@@ -16301,8 +16306,8 @@ typedef struct sl_bt_evt_connection_analyzer_completed_s sl_bt_evt_connection_an
  * @return SL_STATUS_OK if successful. Error code otherwise.
  *
  * @b Events
- *   - @ref sl_bt_evt_connection_analyzer_report - Triggered when a packet
- *     transmitted from the given device is captured.
+ *   - @ref sl_bt_evt_connection_analyzer_report - Triggered at every connection
+ *     interval.
  *   - @ref sl_bt_evt_connection_analyzer_completed - Triggered when analyzing a
  *     connection is completed in the Link Layer for some reason.
  *

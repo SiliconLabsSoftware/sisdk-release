@@ -12,8 +12,6 @@ metadata:
     reference: zw_sbom_license
 provides:
 - name: zw_board_attributes
-- name: zw_board_has_rgb
-  condition: [brd2603a]
 - name: zw_board_has_no_rgb
   condition: [brd2705a]
 - name: zw_board_has_no_rgb
@@ -24,10 +22,6 @@ provides:
   condition: [brd4204c]
 - name: zw_board_has_no_rgb
   condition: [brd4204d]
-- name: zw_board_has_rgb
-  condition: [brd4205a]
-- name: zw_board_has_rgb
-  condition: [brd4205b]
 - name: zw_board_has_no_rgb
   condition: [brd4210a]
 - name: zw_board_has_no_rgb

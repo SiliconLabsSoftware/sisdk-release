@@ -288,35 +288,6 @@
 #endif
 // </e>
 // </e>
-// Define maximum total source match table entries for both OT and Zigbee.
-// In multi-instance builds (SoC or RCP/host), table must support all OT instances + Zigbee.
-// For single instance (default), table sized to just OT children.
-// This value is used to size all source match tables in both OT and Zigbee code.
-// Note: this is purposedly not being setup with CMSIS annotations.
-#ifndef RADIO_CONFIG_MAX_SRC_MATCH_ENTRIES
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-#if SL_ZIGBEE_MAX_END_DEVICE_CHILDREN
-// Multipan / DMP case: OT + Zigbee
-#define RADIO_CONFIG_MAX_SRC_MATCH_ENTRIES                                                \
-    ((OPENTHREAD_CONFIG_MLE_MAX_CHILDREN * (OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_NUM - 1)) \
-     + SL_ZIGBEE_MAX_END_DEVICE_CHILDREN)
-#else
-// Multi-instance OT-only case
-#define RADIO_CONFIG_MAX_SRC_MATCH_ENTRIES \
-    (OPENTHREAD_CONFIG_MLE_MAX_CHILDREN * OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_NUM)
-#endif
-#else
-// Single-instance OT (SoC / NCP / non-multipan RCP)
-#define RADIO_CONFIG_MAX_SRC_MATCH_ENTRIES OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
-#endif
-#endif
-// <h>  Spinel Match Table
-// <o OPENTHREAD_SPINEL_CONFIG_MAX_SRC_MATCH_ENTRIES>  Maximum number of spinel source match table entries
-// <i> Ensure that this value is the total of the number of openthread children times the number of openthread instances plus the number of Zigbee children.
-#ifndef OPENTHREAD_SPINEL_CONFIG_MAX_SRC_MATCH_ENTRIES
-#define OPENTHREAD_SPINEL_CONFIG_MAX_SRC_MATCH_ENTRIES RADIO_CONFIG_MAX_SRC_MATCH_ENTRIES
-#endif
-// </h>
 // <e>  OTNS (OpenThread Network Simulator)
 #ifndef OPENTHREAD_CONFIG_OTNS_ENABLE
 #define OPENTHREAD_CONFIG_OTNS_ENABLE               0

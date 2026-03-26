@@ -19,6 +19,7 @@
   - name: hardware_board_from_stk
   - name: hardware_board_has_rfswitch_aox
   - name: hardware_board_has_vcom
+  - name: hardware_board_has_vcom_hardware_flowcontrol
   - name: hardware_board_has_spiflash
   - name: hardware_board_has_rfswitch
   - name: board_config_clock_manager
@@ -62,6 +63,7 @@
   - board:revision:A01
   - board:device:efr32mg24b210f1536im48
   - hardware:has:vcom
+  - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:led:0
   - hardware:has:button:0

@@ -398,6 +398,7 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
         base_frequency = (base_frequency / 1000000);
         answer_read_request((uint8_t*)&base_frequency, 2, evt);
       } else if (gattdb_txPower == evt->data.evt_gatt_server_user_read_request.characteristic) {
+        update_phy_power_range();
         answer_read_request((uint8_t*)&range_test_settings.tx_power, 2, evt);
       } else if (gattdb_destID == evt->data.evt_gatt_server_user_read_request.characteristic) {
         answer_read_request((uint8_t*)&range_test_settings.destination_id, 1, evt);

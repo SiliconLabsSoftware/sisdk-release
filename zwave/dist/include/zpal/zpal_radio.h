@@ -536,13 +536,13 @@ void zpal_radio_clear_tx_timers(void);
 void zpal_radio_clear_network_stats(void);
 
 /**
- * @brief Returns the background RSSI.
+ * @brief Returns the background RSSI (in dBm).
  *
  * @param[in]   channel   uint8_t channel Id for measurement.
- * @param[out]  rssi      pointer to background RSSI.
+ * @param[out]  rssi      pointer where to store the background RSSI value.
  * @return @ref ZPAL_STATUS_OK if a valid RSSI value is available and read.
- *         @ref ZPAL_STATUS_FAIL if an RSSI value cannot be read. The value of *rssi is invalid.
- *         @ref ZPAL_STATUS_INVALID_ARGUMENT if rssi is NULL.
+ *         @ref ZPAL_STATUS_BUSY if radio is busy. In this case rssi is set to SL_RAIL_RSSI_INVALID_DBM.
+ *         @ref ZPAL_STATUS_INVALID_ARGUMENT if rssi pointer is null.
  */
 zpal_status_t zpal_radio_get_background_rssi(uint8_t channel, int8_t *rssi);
 

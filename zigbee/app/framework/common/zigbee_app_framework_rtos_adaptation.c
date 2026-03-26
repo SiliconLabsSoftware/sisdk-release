@@ -124,12 +124,6 @@ void sli_zigbee_app_framework_rtos_task_init_cb(void)
 
 //------------------------------------------------------------------------------
 // Static functions.
-#if defined(SL_ZIGBEE_AF_NCP) && defined(SL_CATALOG_IOSTREAM_UART_COMMON_PRESENT)
-void sli_iostream_on_uart_rx(sl_iostream_t *handle)
-{
-  sl_zigbee_wakeup_common_task();
-}
-#endif
 
 SL_CODE_CLASSIFY(SL_CODE_COMPONENT_ZIGBEE_STACK, SL_CODE_CLASS_TIME_CRITICAL)
 void sl_zigbee_rtos_wakeup_app_framework_task(void)

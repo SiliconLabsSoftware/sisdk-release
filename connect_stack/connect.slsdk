@@ -3,7 +3,7 @@ id=com.silabs.stack.connect
 label=Connect Stack
 description=Connect Stack
 
-version=4.2.0
+version=4.2.1
 prop.subLabel=Connect
 
 # General properties are prepended with "prop."

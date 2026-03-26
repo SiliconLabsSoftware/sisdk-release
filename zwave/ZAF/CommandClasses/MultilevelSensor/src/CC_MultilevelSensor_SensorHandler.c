@@ -23,6 +23,7 @@
 #include <stdbool.h>
 #include "SizeOf.h"
 #include "CC_MultilevelSensor_SensorHandler.h"
+#include <zpal_log.h>
 // -----------------------------------------------------------------------------
 //                Macros and Typedefs
 // -----------------------------------------------------------------------------
@@ -118,7 +119,7 @@ cc_multilevel_sensor_get_interface(uint8_t endpoint, uint8_t sensor_type_value, 
 }
 
 cc_multilevel_sensor_return_value
-cc_multilevel_sensor_get_supported_scale(uint8_t sensor_type_value, uint8_t* o_supported_scale)
+cc_multilevel_sensor_get_supported_scale_by_endpoint(uint8_t endpoint, uint8_t sensor_type_value, uint8_t* o_supported_scale)
 {
   cc_multilevel_sensor_return_value retval = CC_MULTILEVEL_SENSOR_RETURN_VALUE_NOT_FOUND;
 
@@ -126,11 +127,63 @@ cc_multilevel_sensor_get_supported_scale(uint8_t sensor_type_value, uint8_t* o_s
     sensor_interface_iterator_t* sensor_interface_iterator;
     cc_multilevel_sensor_init_iterator(&sensor_interface_iterator);
 
+    ZPAL_LOG_DEBUG(ZPAL_LOG_CC_MULTILEVEL_SENSOR, "get_supported_scale_by_endpoint: filtering for endpoint=%d, sensor_type=0x%02X\r\n", endpoint, sensor_type_value);
+
     while (sensor_interface_iterator) {
-      if (sensor_type_value == sensor_interface_iterator->sensor_type->value) {
+      ZPAL_LOG_DEBUG(ZPAL_LOG_CC_MULTILEVEL_SENSOR, "- endpoint=%d, sensor_type=0x%02X, match=%s\r\n",
+                     sensor_interface_iterator->endpoint,
+                     sensor_interface_iterator->sensor_type ? sensor_interface_iterator->sensor_type->value : 0,
+                     (endpoint == sensor_interface_iterator->endpoint) ? "YES" : "NO");
+
+      if (endpoint == sensor_interface_iterator->endpoint
+          && sensor_type_value == sensor_interface_iterator->sensor_type->value) {
         *o_supported_scale = sensor_interface_iterator->supported_scale;
         retval = CC_MULTILEVEL_SENSOR_RETURN_VALUE_OK;
+        ZPAL_LOG_DEBUG(ZPAL_LOG_CC_MULTILEVEL_SENSOR, "supported scale: 0x%02X\r\n", *o_supported_scale);
         break;
+      }
+      cc_multilevel_sensor_next_iterator(&sensor_interface_iterator);
+    }
+  } else {
+    retval = CC_MULTILEVEL_SENSOR_RETURN_VALUE_ERROR;
+  }
+
+  return retval;
+}
+
+cc_multilevel_sensor_return_value
+cc_multilevel_sensor_get_supported_scale(uint8_t sensor_type_value, uint8_t* o_supported_scale)
+{
+  // Backward compatible wrapper: defaults to endpoint 0 (root endpoint)
+  return cc_multilevel_sensor_get_supported_scale_by_endpoint(0, sensor_type_value, o_supported_scale);
+}
+
+cc_multilevel_sensor_return_value
+cc_multilevel_sensor_get_supported_sensors_by_endpoint(uint8_t endpoint, uint8_t* o_supported_sensor_buffer)
+{
+  cc_multilevel_sensor_return_value retval = CC_MULTILEVEL_SENSOR_RETURN_VALUE_OK;
+
+  if (o_supported_sensor_buffer != NULL) {
+    memset(o_supported_sensor_buffer, 0, 11);
+
+    sensor_interface_iterator_t* sensor_interface_iterator;
+    cc_multilevel_sensor_init_iterator(&sensor_interface_iterator);
+
+    ZPAL_LOG_DEBUG(ZPAL_LOG_CC_MULTILEVEL_SENSOR, "get_supported_sensors_by_endpoint: filtering for endpoint=%d\r\n", endpoint);
+
+    while (sensor_interface_iterator) {
+      ZPAL_LOG_DEBUG(ZPAL_LOG_CC_MULTILEVEL_SENSOR, "- endpoint=%d, sensor_type=0x%02X, match=%s\r\n",
+                     sensor_interface_iterator->endpoint,
+                     sensor_interface_iterator->sensor_type ? sensor_interface_iterator->sensor_type->value : 0,
+                     (endpoint == sensor_interface_iterator->endpoint) ? "YES" : "NO");
+
+      if (endpoint == sensor_interface_iterator->endpoint) {
+        uint8_t byte_offset =  sensor_interface_iterator->sensor_type->byte_offset;
+        uint8_t bit_mask    = (uint8_t)(1 << sensor_interface_iterator->sensor_type->bit_mask);
+
+        ZPAL_LOG_DEBUG(ZPAL_LOG_CC_MULTILEVEL_SENSOR, "  adding sensor: byte_offset=%d, bit_mask=0x%02X (bit %d)\r\n",
+                       byte_offset, bit_mask, sensor_interface_iterator->sensor_type->bit_mask);
+        o_supported_sensor_buffer[byte_offset - 1] |= bit_mask;
       }
       cc_multilevel_sensor_next_iterator(&sensor_interface_iterator);
     }
@@ -144,26 +197,8 @@ cc_multilevel_sensor_get_supported_scale(uint8_t sensor_type_value, uint8_t* o_s
 cc_multilevel_sensor_return_value
 cc_multilevel_sensor_get_supported_sensors(uint8_t* o_supported_sensor_buffer)
 {
-  cc_multilevel_sensor_return_value retval = CC_MULTILEVEL_SENSOR_RETURN_VALUE_OK;
-
-  if (o_supported_sensor_buffer != NULL) {
-    memset(o_supported_sensor_buffer, 0, 11);
-
-    sensor_interface_iterator_t* sensor_interface_iterator;
-    cc_multilevel_sensor_init_iterator(&sensor_interface_iterator);
-
-    while (sensor_interface_iterator) {
-      uint8_t byte_offset =  sensor_interface_iterator->sensor_type->byte_offset;
-      uint8_t bit_mask    = (uint8_t)(1 << sensor_interface_iterator->sensor_type->bit_mask);
-
-      o_supported_sensor_buffer[byte_offset - 1] |= bit_mask;
-      cc_multilevel_sensor_next_iterator(&sensor_interface_iterator);
-    }
-  } else {
-    retval = CC_MULTILEVEL_SENSOR_RETURN_VALUE_ERROR;
-  }
-
-  return retval;
+  // Backward compatible wrapper: defaults to endpoint 0 (root endpoint)
+  return cc_multilevel_sensor_get_supported_sensors_by_endpoint(0, o_supported_sensor_buffer);
 }
 
 cc_multilevel_sensor_return_value
@@ -177,14 +212,30 @@ cc_multilevel_sensor_registration(sensor_interface_t* i_new_sensor)
           == CC_MULTILEVEL_SENSOR_RETURN_VALUE_NOT_FOUND) {
         sensor_administrator.registrated_sensors[sensor_administrator.number_of_registrated_sensors] = i_new_sensor;
         sensor_administrator.number_of_registrated_sensors++;
+        ZPAL_LOG_DEBUG(ZPAL_LOG_CC_MULTILEVEL_SENSOR,
+                       "Registered sensor: endpoint=%d, type=0x%02X (total: %d)\r\n",
+                       i_new_sensor->endpoint,
+                       i_new_sensor->sensor_type->value,
+                       sensor_administrator.number_of_registrated_sensors);
       } else {
         retval = CC_MULTILEVEL_SENSOR_RETURN_VALUE_ALREADY_REGISTRATED;
+        ZPAL_LOG_WARNING(ZPAL_LOG_CC_MULTILEVEL_SENSOR,
+                         "WARNING: Sensor already registered: endpoint=%d, type=0x%02X\r\n",
+                         i_new_sensor->endpoint,
+                         i_new_sensor->sensor_type->value);
       }
     } else {
       retval = CC_MULTILEVEL_SENSOR_RETURN_VALUE_REGISTRATION_LIMIT_REACHED;
+      ZPAL_LOG_ERROR(ZPAL_LOG_CC_MULTILEVEL_SENSOR,
+                     "ERROR: Registration limit reached (%d). Cannot register endpoint=%d, type=0x%02X\r\n",
+                     MULTILEVEL_SENSOR_REGISTERED_SENSOR_NUMBER_LIMIT,
+                     i_new_sensor->endpoint,
+                     i_new_sensor->sensor_type->value);
     }
   } else {
     retval = CC_MULTILEVEL_SENSOR_RETURN_VALUE_ERROR;
+    ZPAL_LOG_ERROR(ZPAL_LOG_CC_MULTILEVEL_SENSOR,
+                   "ERROR: Registration failed - NULL sensor interface\r\n");
   }
 
   return retval;

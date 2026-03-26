@@ -162,6 +162,8 @@ SDK 7.14.0 is the first SDK, including LED Bulb. When there are new versions of 
 
 In case CLI support is needed, please install zw_cli_common component to the project. Please note that the zw_cli_common component will modify the power consumption for every application.
 
+The default baud rate is 9600, which allows the underlying EUSART module to work in EM2. On some development kits (e.g. BRD2603A and BRD2705A), the following command should be applied in Simplicity Studio via the Admin console to adjust the baudrate: `serial vcom config speed 9600`.
+
 ### Available CLI commands
 
 <table>

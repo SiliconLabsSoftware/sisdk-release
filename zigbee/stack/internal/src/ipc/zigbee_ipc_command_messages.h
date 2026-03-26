@@ -494,7 +494,6 @@ typedef struct {
     sli_802154_stack_get_tx_power_mode_ipc_msg_t get_tx_power_mode;
     sli_802154_stack_radio_get_scheduler_priorities_ipc_msg_t radio_get_scheduler_priorities;
     sli_802154_stack_radio_get_scheduler_sliptime_ipc_msg_t radio_get_scheduler_sliptime;
-    sli_802154_stack_radio_set_scheduler_priorities_ipc_msg_t radio_set_scheduler_priorities;
     sli_802154_stack_radio_set_scheduler_sliptime_ipc_msg_t radio_set_scheduler_sliptime;
     sli_802154_stack_set_tx_power_mode_ipc_msg_t set_tx_power_mode;
     sli_mac_stack_get_csma_params_ipc_msg_t get_csma_params;

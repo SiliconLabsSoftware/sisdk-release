@@ -43,6 +43,10 @@ include:
     file_list:
       - path: test.h
 
+configuration:
+  - name: APP_LOG_LEVEL_FILTER_DYNAMIC 
+    value: 1  
+
 tag:
   - toolchain:gcc
   - hwfilter:device:device_family_host

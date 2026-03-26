@@ -26,8 +26,6 @@ include:
   file_list:
   - path: sl_bt_l2cap_transfer.h
   - path: sli_bt_l2cap_transfer_adaptation.h
-    unless:
-    - device_host
 config_file:
 - path: config/sl_bt_l2cap_transfer_config.h
 - path: config/sl_bt_l2cap_transfer_freertos_config.h

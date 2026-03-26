@@ -45,17 +45,16 @@ static sl_wisun_br_wifi_join_handler_t wifi_join_handler;
 
 sl_status_t sl_si91x_host_process_data_frame(sl_wifi_interface_t interface, sl_wifi_buffer_t *buffer)
 {
-  void *packet;
-  uint16_t packet_length = 0;
+  sl_wifi_system_packet_t *packet;
 
   (void)interface;
-  packet = sl_si91x_host_get_buffer_data(buffer, 0, &packet_length);
+  packet = (sl_wifi_system_packet_t *)sl_si91x_host_get_buffer_data(buffer, 0, NULL);
   if (!packet) {
     // Discard received data frame
     return SL_STATUS_OK;
   }
 
-  return sl_wisun_br_lwip_wan_input((const uint8_t *)packet, packet_length);
+  return sl_wisun_br_lwip_wan_input(packet->data, packet->length);
 }
 
 static void wifi_on_wan_link_state_changed(bool link_up)

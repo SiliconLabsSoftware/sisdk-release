@@ -139,6 +139,7 @@ provides:
 tag:
   - prebuilt_demo
   - hwfilter:device:device_supports_zwave
+  - hwfilter:!board:brd4205a
   - toolchain:gcc
 
 filter:

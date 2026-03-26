@@ -83,7 +83,7 @@ config_file:
 - path: config/s2/sdid260/20dbm/sl_device_init_dcdc_config.h
   file_id: device_init_dcdc_config
   condition: [device_sdid_260, device_pa_20dbm]
-- path: config/s2/sl_device_init_dcdc_config.h
+- path: config/s2/sdid260/sl_device_init_dcdc_config.h
   file_id: device_init_dcdc_config
   condition: [device_sdid_260]
   unless: [device_pa_14dbm, device_pa_20dbm]

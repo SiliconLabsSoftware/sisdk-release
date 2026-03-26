@@ -89,7 +89,6 @@ extra_files:
   - app/wisun/component/wisun_config/scripts/wisun_generator.py
   - app/wisun/component/wisun_config/templates/sl_wisun_config.c.jinja
   - app/wisun/component/wisun_config/templates/sl_wisun_config.h.jinja
-  - app/wisun/documentation/release-highlights.txt
   - app/wisun/esf.properties
   - app/wisun/upgrade.slcu
   - app/wisun/wisun_sdk_sample_app_templates.xml
@@ -103,8 +102,6 @@ git_extra_files:
   - app/wisun/component/wisun_config/config/restrictions/app_radio_tab.restriction
   - app/wisun/component/wisun_config/scripts/ddp/.gitignore
   - app/wisun/cspell.json
-  - app/wisun/documentation/Wi-SUN_Release_Notes.docx
-  - app/wisun/documentation/Wi-SUN_Release_Notes.pdf
   - app/wisun/example/wisun_bt_dmp_soc_empty/pkg.slt
   - app/wisun/example/wisun_bt_dmp_soc_spp/pkg.slt
   - app/wisun/example/wisun_soc_coap_collector/pkg.slt

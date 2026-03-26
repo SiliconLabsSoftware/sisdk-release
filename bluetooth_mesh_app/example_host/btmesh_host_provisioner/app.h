@@ -3,7 +3,7 @@
  * @brief BT Mesh Host Provisioner Example Project.
  *******************************************************************************
  * # License
- * <b>Copyright 2022 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -157,6 +157,13 @@ void btmesh_app_on_build_cmd_options(struct option *long_options);
 void btmesh_cbp_on_build_cmd_options(struct option *long_options);
 
 /**************************************************************************//**
+ * Callback to copy options array for OOB
+ *
+ * @param[out] long_options Destination addres for options array
+ *******************************************************************************/
+void btmesh_oob_on_build_cmd_options(struct option *long_options);
+
+/**************************************************************************//**
  * Callback to check unknown command options
  *
  * @param[in] cmd_opt Command option
@@ -175,6 +182,17 @@ sl_status_t btmesh_app_on_check_cmd_options(int cmd_opt, char *cmd_optarg);
  *         SL_STATUS_NOT_FOUND if command is unknown
  *******************************************************************************/
 sl_status_t btmesh_cbp_on_check_cmd_options(int cmd_opt, char *cmd_optarg);
+
+/**************************************************************************//**
+ * Callback to check OOB-related command options
+ *
+ * @param[in] cmd_opt Command option
+ * @param[in] cmd_optarg Command argument
+ * @retval SL_STATUS_OK if command option was recognized
+ *         SL_STATUS_NOT_FOUND if command is unknown
+ *******************************************************************************/
+sl_status_t btmesh_oob_on_check_cmd_options(int cmd_opt, char *cmd_optarg);
+
 
 #ifdef __cplusplus
 };

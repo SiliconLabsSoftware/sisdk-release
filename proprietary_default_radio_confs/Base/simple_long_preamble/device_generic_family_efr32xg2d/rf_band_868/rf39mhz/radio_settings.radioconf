@@ -8,7 +8,7 @@
           <channel_number_end>20</channel_number_end>
           <physical_channel_offset>SAME_AS_FIRST_CHANNEL</physical_channel_offset>
           <max_power>RAIL_TX_POWER_MAX</max_power>
-          <metadata>{"selectedPhy":"PHY_Datasheet_868M_2GFSK_2p4Kbps_1p2K_ETSI"}</metadata>
+          <metadata>{"selectedPhy":"PHY_Studio_868M_GMSK_500Kbps"}</metadata>
           <profile_input_overrides>
             <override>
               <key>xtal_frequency_hz</key>
@@ -17,8 +17,8 @@
           </profile_input_overrides>
         </channel_config_entry>
       </channel_config_entries>
-      <metadata>{"selectedPhy":"PHY_Datasheet_868M_2GFSK_2p4Kbps_1p2K_ETSI"}</metadata>
-      <phy name="PHY_Datasheet_868M_2GFSK_2p4Kbps_1p2K_ETSI"/>
+      <metadata>{"selectedPhy":"PHY_Studio_868M_GMSK_500Kbps"}</metadata>
+      <phy name="PHY_Studio_868M_GMSK_500Kbps"/>
     </base_channel_configuration>
   </base_channel_configurations>
 </multi_phy_configuration>

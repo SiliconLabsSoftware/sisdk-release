@@ -38,6 +38,10 @@
 
 #include "sli_tz_iovec_check.h"
 #include "sli_tz_s_interface.h"
+#if defined(SL_CATALOG_PSA_CRYPTO_KEY_PROTECTION_PRESENT)
+#include "sli_tz_secure_psa_key_protection.h"
+#include "psa/crypto_client_struct.h"
+#endif
 
 #include "sl_assert.h"
 
@@ -123,6 +127,25 @@ int32_t sli_tz_s_interface_dispatch_crypto(psa_invec in_vec[],
   if (function_id >= TFM_CRYPTO_SID_MAX) {
     return PSA_ERROR_INVALID_ARGUMENT;
   }
+
+  #if defined(SL_CATALOG_PSA_CRYPTO_KEY_PROTECTION_PRESENT)
+  // Check if NS is trying to access a protected key ID.
+  // Most operations carry the key ID in iov->key_id, but import/generate
+  // operations carry it in the key attributes (second iovec entry).
+  psa_key_id_t check_key_id = iov->key_id;
+  if (check_key_id == 0
+      && in_len >= 2
+      && iovec_copy.in_vec[1].len >= sizeof(struct psa_client_key_attributes_s)) {
+    const struct psa_client_key_attributes_s *client_attr =
+      (const struct psa_client_key_attributes_s *)iovec_copy.in_vec[1].base;
+    check_key_id = client_attr->id;
+  }
+  psa_status_t access_status = sl_psa_key_check_access(check_key_id);
+  if (access_status != PSA_SUCCESS) {
+    return access_status;
+  }
+  #endif
+
   iovec_fn fn = crypto_function_table[function_id];
 
   status = fn(iovec_copy.in_vec, in_len, iovec_copy.out_vec, out_len);

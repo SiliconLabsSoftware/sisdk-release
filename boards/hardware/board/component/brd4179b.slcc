@@ -20,6 +20,7 @@
   - name: hardware_board_from_slwrb4179b
   - name: hardware_board_has_efp
   - name: hardware_board_has_vcom
+  - name: hardware_board_has_vcom_hardware_flowcontrol
   - name: hardware_board_has_exp_12
   - name: hardware_board_has_exp_14
   - name: hardware_board_has_exp_7
@@ -75,6 +76,7 @@
   - board:revision:A05
   - board:device:efr32mg21a010f1024im32
   - hardware:has:vcom
+  - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:led:2
   - hardware:has:button:2

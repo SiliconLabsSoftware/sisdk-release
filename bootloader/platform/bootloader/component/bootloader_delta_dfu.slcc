@@ -8,6 +8,8 @@ quality: production
 define:
 - name: BTL_PARSER_SUPPORT_DELTA_DFU
   value: 1
+config_file:
+- path: "platform/bootloader/config/btl_delta_dfu_cfg.h"
 requires:
 - name: bootloader_gbl_version_dependency_tag
 - name: delta_dfu

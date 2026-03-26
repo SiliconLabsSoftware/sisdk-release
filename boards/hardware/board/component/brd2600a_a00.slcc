@@ -19,6 +19,7 @@
   - name: hardware_board_has_si70xx
   - name: hardware_board_has_tempsensor
   - name: hardware_board_has_vcom
+  - name: no_vcom_hardware_flowcontrol
   - name: board_config_clock_manager
   - name: hardware_board_has_hfxo_freq_39mhz
   - name: hardware_board_has_hfxo
@@ -67,6 +68,7 @@
   - board:revision:A00
   - board:device:efr32fg23a010f512gm48
   - hardware:has:vcom
+  - hardware:has:vcom:no_vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:sensor:si7021
   - hardware:has:led:1

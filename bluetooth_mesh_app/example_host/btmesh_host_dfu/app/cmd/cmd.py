@@ -935,7 +935,18 @@ class BtmeshCmd(abc.ABC):
         elem_addrs_filter: Callable[[int], bool] = None,
     ) -> Tuple[int, List[Node], Optional[List[int]]]:
         elem_addrs = None
+
+        # The final group address calculated from all arguments.
         group_addr = btmesh.util.UNASSIGNED_ADDR
+
+        # Stores integer group address when the --group-addr/-g argument is used
+        # but it remains None when the argument isn't used.
+        # This is important in order to distinguish the case where the -g
+        # argument is not used from the case where the -g argument is zero which
+        # means unicast addressing. It can override the group address associated
+        # with the app group selected by --group/-G to zero.
+        group_addr_arg = None
+
         # If the add_group_nodes_args was called with false add_elem_arg and
         # false add_elem_addrs_arg parameters then the elem and elem_addrs
         # arguments are not added to the parser which means the Namespace object
@@ -943,6 +954,12 @@ class BtmeshCmd(abc.ABC):
         elem_support = hasattr(pargs, "elem")
         elem_addr_support = hasattr(pargs, "addrs")
         group_addr_support = hasattr(pargs, "group_addr")
+
+        if group_addr_support and pargs.group_addr:
+            group_addr_arg = btmesh.util.addr_to_int(pargs.group_addr)
+            if group_addr_arg != 0:
+                btmesh.util.validate_group_address(pargs.group_addr)
+
         # The --elem and --addrs are mutually exclusive. The --addrs provides
         # the element addresses directly while --elem determines the element
         # index and the element addresses are calculated from --elem and
@@ -1034,22 +1051,27 @@ class BtmeshCmd(abc.ABC):
                 addr for node in nodes for addr in node.get_elem_addrs(pargs.elem)
             ]
 
-        if group_addr_support and group_addr and pargs.group_addr:
+        # The --group-addr/-g and --group/-G arguments are mutually exclusive
+        # unless -g 0 is used which specifies unicast addressing.
+        if group_addr_support and group_addr and group_addr_arg:
             # Parser error raises an exception
             self.current_parser.error(
                 f"argument {self.GROUP_ADDR_OPTS}: not allowed with argument "
                 f"{self.GROUP_OPTS} when the app group specified by "
                 f"{self.GROUP_OPTS} has non-zero group address"
             )
-        if group_addr_support and pargs.group_addr:
-            btmesh.util.validate_group_address(pargs.group_addr)
-            group_addr = btmesh.util.addr_to_int(pargs.group_addr)
-        elif group_addr_support and pargs.group_addr == 0:
-            # It is allowed to pass an app group by --group option with
-            # --group-addr 0 as unassigned address. This selects the nodes from
-            # the app group but the BT Mesh messages are sent to the unicast
-            # address of each node.
-            group_addr = 0
+
+        if group_addr_support:
+            if group_addr_arg:
+                # If the --group-addr/-g argument is used then it determines
+                # the group address.
+                group_addr = group_addr_arg
+            elif group_addr_arg == 0:
+                # It is allowed to pass an app group by --group/-G option with
+                # --group-addr/-g 0 as unassigned address. This selects the
+                # nodes from the app group but the BT Mesh messages are sent to
+                # the unicast address of each node.
+                group_addr = 0
         return group_addr, nodes, elem_addrs
 
     def add_mdls_arg(self, parser: ArgumentParserExt, help: str = ""):

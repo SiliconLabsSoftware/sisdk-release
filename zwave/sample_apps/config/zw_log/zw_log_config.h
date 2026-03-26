@@ -120,6 +120,11 @@
 // <i> Default: 0
 #define ZW_LOG_ENABLE_CC_MULTI_CHANNEL  0
 
+// <q ZW_LOG_ENABLE_CC_MULTILEVEL_SENSOR> CC Multilevel Sensor
+// <i> If enabled, log messages from the Multilevel Sensor command class will be displayed
+// <i> Default: 0
+#define ZW_LOG_ENABLE_CC_MULTILEVEL_SENSOR  0
+
 // <q ZW_LOG_ENABLE_CC_MULTILEVEL_SWITCH> CC Multilevel Switch
 // <i> If enabled, log messages from the Multilevel Switch command class will be displayed
 // <i> Default: 0

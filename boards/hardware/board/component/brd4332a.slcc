@@ -20,6 +20,7 @@
   - name: hardware_board_from_kg100s-pk6130a
   - name: hardware_board_from_kg100s-rb4332a
   - name: hardware_board_has_vcom
+  - name: no_vcom_hardware_flowcontrol
   - name: hardware_board_has_exp_16
   - name: hardware_board_has_exp_15
   - name: hardware_board_has_i2c
@@ -77,6 +78,7 @@
   - board:revision:A03
   - board:device:efr32bg21b010f1024im32
   - hardware:has:vcom
+  - hardware:has:vcom:no_vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:led:2
   - hardware:has:button:2

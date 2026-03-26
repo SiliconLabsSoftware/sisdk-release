@@ -33,6 +33,8 @@
 #include "CC_MultilevelSensor_SensorHandler.h"
 #include "CC_MultilevelSensor_SensorHandlerTypes.h"
 #include <cc_multilevel_sensor_config_api.h>
+#include <zaf_config_api.h>
+#include <zpal_log.h>
 // -----------------------------------------------------------------------------
 //                Macros and Typedefs
 // -----------------------------------------------------------------------------
@@ -237,12 +239,25 @@ cc_multilevel_sensor_cmd_sensor_multilevel_get_supported_sensor(RECEIVE_OPTIONS_
     return RECEIVED_FRAME_STATUS_FAIL;
   }
 
+  uint8_t endpoint                = pRxOpt->destNode.endpoint;
+  ZPAL_LOG_DEBUG(ZPAL_LOG_CC_MULTILEVEL_SENSOR, "Get Supported Sensor: destNode.endpoint=%d, sourceNode.endpoint=%d\r\n",
+                 pRxOpt->destNode.endpoint, pRxOpt->sourceNode.endpoint);
+  /*
+   * CC:0060.03.00.21.004: For backwards compatibility, the Root Device MUST mirror the
+   * application functionality of End Point 1.
+   */
+  if ((zaf_config_get_number_of_endpoints() > 0) && (0 == endpoint)) {
+    endpoint = zaf_config_get_default_endpoint();
+  }
   uint8_t send_buffer_length_bytes = 2 /*header*/;
   size_t payload_length           = 11; /*payload*/
   uint8_t* raw_buffer_payload     = (uint8_t*)&pFrameOut->ZW_SensorMultilevelSupportedSensorReport4byteV11Frame.bitMask1;
   pFrameOut->ZW_SensorMultilevelSupportedSensorReport4byteV11Frame.cmdClass = COMMAND_CLASS_SENSOR_MULTILEVEL_V11;
   pFrameOut->ZW_SensorMultilevelSupportedSensorReport4byteV11Frame.cmd      = SENSOR_MULTILEVEL_SUPPORTED_SENSOR_REPORT_V11;
-  cc_multilevel_sensor_get_supported_sensors(&pFrameOut->ZW_SensorMultilevelSupportedSensorReport4byteV11Frame.bitMask1);
+  ZPAL_LOG_DEBUG(ZPAL_LOG_CC_MULTILEVEL_SENSOR, "Calling get_supported_sensors_by_endpoint with endpoint=%d\r\n", endpoint);
+  cc_multilevel_sensor_get_supported_sensors_by_endpoint(endpoint, &pFrameOut->ZW_SensorMultilevelSupportedSensorReport4byteV11Frame.bitMask1);
+  ZPAL_LOG_DEBUG(ZPAL_LOG_CC_MULTILEVEL_SENSOR, "Result buffer (first 3 bytes): 0x%02X 0x%02X 0x%02X\r\n",
+                 raw_buffer_payload[0], raw_buffer_payload[1], raw_buffer_payload[2]);
   while (payload_length) {
     if (raw_buffer_payload[payload_length - 1] != 0) {
       break;
@@ -265,17 +280,29 @@ cc_multilevel_sensor_cmd_sensor_multilevel_get_supported_scale(RECEIVE_OPTIONS_T
   if (true == Check_not_legal_response_job(pRxOpt)) {
     return RECEIVED_FRAME_STATUS_FAIL;
   }
-  uint8_t supported_scale   = 0;
+  uint8_t endpoint        = pRxOpt->destNode.endpoint;
+  uint8_t supported_scale = 0;
+
+  ZPAL_LOG_DEBUG(ZPAL_LOG_CC_MULTILEVEL_SENSOR, "Get Supported Scale: destNode.endpoint=%d, sourceNode.endpoint=%d\r\n",
+                 pRxOpt->destNode.endpoint, pRxOpt->sourceNode.endpoint);
+  /*
+   * CC:0060.03.00.21.004: For backwards compatibility, the Root Device MUST mirror the
+   * application functionality of End Point 1.
+   */
+  if ((zaf_config_get_number_of_endpoints() > 0) && (0 == endpoint)) {
+    endpoint = zaf_config_get_default_endpoint();
+  }
+  ZPAL_LOG_DEBUG(ZPAL_LOG_CC_MULTILEVEL_SENSOR, "Calling get_supported_scale_by_endpoint with endpoint=%d, sensorType=0x%02X\r\n",
+                 endpoint, pCmd->ZW_SensorMultilevelGetV11Frame.sensorType);
 
   pFrameOut->ZW_SensorMultilevelSupportedScaleReportV5Frame.cmdClass    = COMMAND_CLASS_SENSOR_MULTILEVEL_V11;
   pFrameOut->ZW_SensorMultilevelSupportedScaleReportV5Frame.cmd         = SENSOR_MULTILEVEL_SUPPORTED_SCALE_REPORT_V11;
   pFrameOut->ZW_SensorMultilevelSupportedScaleReportV5Frame.sensorType  = pCmd->ZW_SensorMultilevelGetV11Frame.sensorType;
 
-  supported_scale = 0;
-
   if (CC_MULTILEVEL_SENSOR_RETURN_VALUE_OK
-      == cc_multilevel_sensor_get_supported_scale(pCmd->ZW_SensorMultilevelGetV11Frame.sensorType, &supported_scale)) {
+      == cc_multilevel_sensor_get_supported_scale_by_endpoint(endpoint, pCmd->ZW_SensorMultilevelGetV11Frame.sensorType, &supported_scale)) {
     pFrameOut->ZW_SensorMultilevelSupportedScaleReportV5Frame.properties1 = supported_scale;
+    ZPAL_LOG_DEBUG(ZPAL_LOG_CC_MULTILEVEL_SENSOR, "Supported scale result: 0x%02X\r\n", supported_scale);
   }
 
   *pLengthOut = sizeof(pFrameOut->ZW_SensorMultilevelSupportedScaleReportV5Frame);

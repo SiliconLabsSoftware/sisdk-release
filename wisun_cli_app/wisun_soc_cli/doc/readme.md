@@ -67,8 +67,8 @@ The list of available commands is output on the console with the associated help
 | wisun accept_direct_connect_link \<remote address> | Accept a Direct Connect link request | wisun accept_direct_connect_link fe80::b6e3:f9ff:fec5:83df |
 | wisun concurrent_detection \<state> | Configure concurrent detection <br> - [uint8] state: 0=disabled, 1=enabled <br> | > wisun concurrent_detection 1 |
 | wisun reset_duty_cycle | Reset the duty cycle counters | > wisun reset_duty_cycle |
-| wisun set_event_filter \<mac_address> \<events> | Configure event logger filters <br> - [string] neighbor MAC address - [uint8] state: 0=disabled, 1=enabled <br> | > wisun concurrent_detection 1 |
-| wisun clear_event_filter | Clear event logger filters | > wisun wisun clear_event_filter |
+| wisun set_event_filter \<mac_address> \<events> | Configure event logger filters <br> - [string] neighbor MAC address - [hex] events: events from sl_wisun_types.h/sl_wisun_logger_event_frame_type_t | > wisun set_event_filter ff:ff:ff:ff:ff:ff:ff:ff {02} |
+| wisun clear_event_filter | Clear event logger filters | > wisun clear_event_filter |
 
 ## Wi-SUN Settings
 
@@ -210,13 +210,29 @@ To see the available commands, enter the following command in the console.
 
 The list of available commands is output on the console with the associated help. The following is an extended description and examples of how to use each command.
 
+**phy config type** (optional argument, default: 1 = FAN1.1): Values correspond to `sl_wisun_phy_config_type_t` in `sl_wisun_types.h`:
+
+| Value | Description |
+|---|---|
+| 0 | FAN1.0 PHY configuration |
+| 1 | FAN1.1 PHY configuration |
+| 2 | Explicit PHY configuration |
+| 3 | Explicit RAIL configuration (IDS) |
+| 4 | Custom FSK PHY configuration |
+| 5 | Custom OFDM PHY configuration |
+| 6 | Custom OQPSK PHY configuration |
+
 | Command | Description | Example |
 |---|---|---|
-| rftest start_stream \<channel ID> | Start an RF test stream on a specific channel | > rftest start_stream 5<br>RF Test stream started 21 |
+| rftest start_stream \<channel ID> [phy config type] | Start an RF test stream on a specific channel | > rftest start_stream 5<br>RF Test stream started 21 |
 | rftest stop_stream | Stop the RF test | > rftest stop_stream<br>RF Test stream stopped 2 |
-| rftest start_tone \<channel ID>| Start an RF test tone on a specific channel | > rftest start_tone 5<br>RF Test tone started 21|
+| rftest start_tone \<channel ID> [phy config type] | Start an RF test tone on a specific channel | > rftest start_tone 5<br>RF Test tone started 21|
 | rftest stop_tone | Stop RF test tone | > rftest stop_tone<br>RF Test tone stopped 2|
+| rftest start_tx \<channel ID> \<count> \<data_length> \<interval> \<cca> [phy config type] | Start RF test TX: channel, packet count, data length per packet, interval (ms), CCA (0=off, else=on) | > rftest start_tx 5 10 64 100 0 |
+| rftest start_rx \<channel ID> \<duration> [phy config type] | Start RF test RX on a channel for given duration (ms) | > rftest start_rx 5 5000 |
+| rftest stop_rx | Stop RF test RX | > rftest stop_rx |
 | rftest set_tx_power \<value> | Set Tx power for the RF test in dBm |> rftest set_tx_power 17<br>RF Test tx Power set to  17|
+
 
 ## RTT traces
 

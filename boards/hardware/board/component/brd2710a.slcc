@@ -19,6 +19,7 @@
   - name: hardware_board_from_xg22-ek2710a
   - name: hardware_board_from_xg22-ek8200a
   - name: hardware_board_has_vcom
+  - name: hardware_board_has_vcom_hardware_flowcontrol
   - name: board_config_clock_manager
   - name: hardware_board_has_hfxo_freq_38.4mhz
   - name: hardware_board_has_hfxo
@@ -59,6 +60,7 @@
   - board:revision:A01
   - board:device:efr32mg22e224f512im40
   - hardware:has:vcom
+  - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:led:1
   - hardware:has:button:1

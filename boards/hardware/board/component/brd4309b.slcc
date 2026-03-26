@@ -19,6 +19,7 @@
   - name: hardware_board_from_stk
   - name: hardware_board_from_slwrb4309b
   - name: hardware_board_has_vcom
+  - name: hardware_board_has_vcom_hardware_flowcontrol
   - name: hardware_board_has_exp_7
   - name: hardware_board_has_exp_12
   - name: hardware_board_has_exp_14
@@ -66,6 +67,7 @@
   - board:revision:A00
   - board:device:mgm210la22jif
   - hardware:has:vcom
+  - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:led:2
   - hardware:has:button:2

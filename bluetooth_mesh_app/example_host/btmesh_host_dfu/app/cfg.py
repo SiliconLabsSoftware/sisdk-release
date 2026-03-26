@@ -1,4 +1,4 @@
-# Copyright 2022 Silicon Laboratories Inc. www.silabs.com
+# Copyright 2026 Silicon Laboratories Inc. www.silabs.com
 #
 # SPDX-License-Identifier: Zlib
 #
@@ -126,8 +126,8 @@ profile_lightness_help = Configuration of Light Lightness Client,
 # BT Mesh procedures and provides a simple interface.
 # If relative path is provided then the base path is the location of this
 # configuration file.
-api_xmls_default = ../../../../protocol/bluetooth/api/sl_bt.xapi,
-                   ../../../../protocol/bluetooth/api/sl_btmesh.xapi
+api_xmls_default = ../../../bluetooth_le_host/api/sl_bt.xapi,
+                   ../../../bluetooth_mesh/api/sl_btmesh.xapi
 
 # Maximum command retry count when the expected event is not received or the
 # received event means a recoverable error.

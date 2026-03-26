@@ -22,6 +22,10 @@
 #if defined(_SILICON_LABS_32B_SERIES_2)
 #include "fih.h"
 #endif
+#include <stdlib.h>
+#include "sl_status.h"
+#include "sl_memory_manager.h"
+#define BTL_ALIGN4(x)   (((x) + 3U) & ~((uint32_t)0x3))
 // Linker Symbols
 #if defined (__GNUC__)
 extern uint32_t __StackTop;
@@ -47,6 +51,33 @@ static inline fih_int cleanUpRAM(uint32_t startAddr, const uint32_t endAddr)
   FIH_RET(fih_rc);
 }
 #endif
+
+/***************************************************************************//**
+ * Get pointer to heap buffer using malloc
+ *
+ * @return Pointer to the allocated heap buffer, or NULL if not available
+ ******************************************************************************/
+static inline void* btl_getRAMSlotAddress(uint32_t length)
+{
+  if (length == 0) {
+    return NULL;
+  }
+
+  sl_status_t st = sl_memory_init();
+  if (st != SL_STATUS_OK) {
+    return NULL;
+  }
+
+  // Return the pointer to the newly allocated buffer
+  return malloc(length);
+}
+
+static inline uint32_t btl_checkAlignment(uint32_t length)
+{
+  // Ensure length is word aligned 
+  return BTL_ALIGN4(length);
+}
+
 static inline void jumpToApplicationRoutine(uint32_t startOfAppSpace)
 {
 #if defined(BOOTLOADER_SECURE)

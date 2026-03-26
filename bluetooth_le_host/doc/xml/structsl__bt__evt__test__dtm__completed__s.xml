@@ -17,7 +17,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="10918" column="12" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="10918" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="10918" column="12" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="10918" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structsl__bt__evt__test__dtm__completed__s_1a2bf9c16847d09a3d0bfff53c2df5db73" prot="public" static="no" mutable="no">
         <type>uint16_t</type>
@@ -33,7 +33,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="10919" column="12" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="10919" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="10919" column="12" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="10919" bodyend="-1"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
@@ -41,7 +41,7 @@
     </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="10916" column="1" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="10917" bodyend="10923"/>
+    <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="10916" column="1" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="10917" bodyend="10923"/>
     <listofallmembers>
       <member refid="structsl__bt__evt__test__dtm__completed__s_1a2bf9c16847d09a3d0bfff53c2df5db73" prot="public" virt="non-virtual"><scope>sl_bt_evt_test_dtm_completed_s</scope><name>number_of_packets</name></member>
       <member refid="structsl__bt__evt__test__dtm__completed__s_1a4fea45573de1277eb6de5e3708f421df" prot="public" virt="non-virtual"><scope>sl_bt_evt_test_dtm_completed_s</scope><name>result</name></member>

@@ -17,7 +17,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6677" column="11" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6677" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6677" column="11" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6677" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structsl__bt__evt__connection__remote__tx__power__s_1acf1ed9f4febf4a484b14f73c2dcb514a" prot="public" static="no" mutable="no">
         <type>uint8_t</type>
@@ -38,7 +38,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6678" column="11" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6678" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6678" column="11" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6678" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structsl__bt__evt__connection__remote__tx__power__s_1aed9ffabfdbfdf52f16333c71a2879ebd" prot="public" static="no" mutable="no">
         <type>int8_t</type>
@@ -58,7 +58,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6688" column="11" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6688" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6688" column="11" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6688" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structsl__bt__evt__connection__remote__tx__power__s_1a7b46200755112b7501f2de64c1e5534e" prot="public" static="no" mutable="no">
         <type>uint8_t</type>
@@ -78,7 +78,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6697" column="11" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6697" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6697" column="11" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6697" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structsl__bt__evt__connection__remote__tx__power__s_1aefdc9c4e082ddcaca14367042e22ab2a" prot="public" static="no" mutable="no">
         <type>int8_t</type>
@@ -97,7 +97,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6709" column="11" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6709" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6709" column="11" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6709" bodyend="-1"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
@@ -105,7 +105,7 @@
     </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6675" column="1" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6676" bodyend="6717"/>
+    <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6675" column="1" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6676" bodyend="6717"/>
     <listofallmembers>
       <member refid="structsl__bt__evt__connection__remote__tx__power__s_1a6e0ffc85e1fe32d5e3544ad2b6a1f33e" prot="public" virt="non-virtual"><scope>sl_bt_evt_connection_remote_tx_power_s</scope><name>connection</name></member>
       <member refid="structsl__bt__evt__connection__remote__tx__power__s_1aefdc9c4e082ddcaca14367042e22ab2a" prot="public" virt="non-virtual"><scope>sl_bt_evt_connection_remote_tx_power_s</scope><name>delta</name></member>

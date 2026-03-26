@@ -77,6 +77,10 @@
 #define HSPI_TARGET_MODE_MAX_BITRATE (100000000U)  // 100 MHz SDR for target mode
 #endif
 
+#if (SL_CPC_DRV_SPI_RX_BUFFER_MAX_COUNT < 3)
+#error  Invalid configuration SL_CPC_DRV_SPI_RX_BUFFER_MAX_COUNT must be at least 3
+#endif
+
 // Series 2 compatibility layer
 #if defined(_SILICON_LABS_32B_SERIES_2)
 #include "em_ldma.h"

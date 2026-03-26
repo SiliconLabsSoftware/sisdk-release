@@ -22,6 +22,7 @@
   - name: hardware_board_from_wi-sun-pk6016a
   - name: hardware_board_supports_wstk_lcd
   - name: hardware_board_has_vcom
+  - name: hardware_board_has_vcom_hardware_flowcontrol
   - name: hardware_board_has_spiflash
   - name: hardware_board_has_exp_5
   - name: hardware_board_has_exp_7
@@ -98,6 +99,7 @@
   - board:revision:A06
   - board:device:efr32fg25b222f1920im56
   - hardware:has:vcom
+  - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:display:ls013b7dh03
   - hardware:has:led:2

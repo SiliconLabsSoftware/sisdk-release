@@ -115,6 +115,13 @@
 #define ZW_LOG_CC_MULTI_CHANNEL_ENABLED 0
 #endif
 
+// Helper macro to determine if logging of component cc_multilevel_sensor is enabled
+#if defined(ZW_LOG_ENABLE_CC_MULTILEVEL_SENSOR) && (ZW_LOG_ENABLE_CC_MULTILEVEL_SENSOR != 0)
+#define ZW_LOG_CC_MULTILEVEL_SENSOR_ENABLED 1
+#else
+#define ZW_LOG_CC_MULTILEVEL_SENSOR_ENABLED 0
+#endif
+
 // Helper macro to determine if logging of component cc_multilevel_switch is enabled
 #if defined(ZW_LOG_ENABLE_CC_MULTILEVEL_SWITCH) && (ZW_LOG_ENABLE_CC_MULTILEVEL_SWITCH != 0)
 #define ZW_LOG_CC_MULTILEVEL_SWITCH_ENABLED 1
@@ -242,6 +249,7 @@
           || ((COMPONENT == ZPAL_LOG_CC_FIRMWARE_UPDATE) && (ZW_LOG_CC_FIRMWARE_UPDATE_ENABLED))       \
           || ((COMPONENT == ZPAL_LOG_CC_INDICATOR) && (ZW_LOG_CC_INDICATOR_ENABLED))                   \
           || ((COMPONENT == ZPAL_LOG_CC_MULTI_CHANNEL) && (ZW_LOG_CC_MULTI_CHANNEL_ENABLED))           \
+          || ((COMPONENT == ZPAL_LOG_CC_MULTILEVEL_SENSOR) && (ZW_LOG_CC_MULTILEVEL_SENSOR_ENABLED))   \
           || ((COMPONENT == ZPAL_LOG_CC_MULTILEVEL_SWITCH) && (ZW_LOG_CC_MULTILEVEL_SWITCH_ENABLED))   \
           || ((COMPONENT == ZPAL_LOG_CC_NOTIFICATION) && (ZW_LOG_CC_NOTIFICATION_ENABLED))             \
           || ((COMPONENT == ZPAL_LOG_CC_USER_CODE) && (ZW_LOG_CC_USER_CODE_ENABLED))                   \

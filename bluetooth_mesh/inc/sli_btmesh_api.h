@@ -425,6 +425,8 @@ enum sli_btmesh_command_id
     sli_btmesh_lc_server_set_regulator_interval_command_id = 0x07,
     sli_btmesh_lc_server_set_event_mask_command_id = 0x08,
     sli_btmesh_lc_server_get_lc_state_command_id = 0x09,
+    sli_btmesh_lc_server_set_regulator_mode_command_id = 0x0a,
+    sli_btmesh_lc_server_set_sensor_timeout_command_id = 0x0b,
     sli_btmesh_lc_setup_server_update_property_command_id = 0x00,
     sli_btmesh_scene_client_init_command_id = 0x00,
     sli_btmesh_scene_client_get_command_id = 0x01,
@@ -954,6 +956,8 @@ enum sli_btmesh_response_id
     sli_btmesh_lc_server_set_regulator_interval_response_id = 0x07,
     sli_btmesh_lc_server_set_event_mask_response_id = 0x08,
     sli_btmesh_lc_server_get_lc_state_response_id = 0x09,
+    sli_btmesh_lc_server_set_regulator_mode_response_id = 0x0a,
+    sli_btmesh_lc_server_set_sensor_timeout_response_id = 0x0b,
     sli_btmesh_lc_setup_server_update_property_response_id = 0x00,
     sli_btmesh_scene_client_init_response_id = 0x00,
     sli_btmesh_scene_client_get_response_id = 0x01,
@@ -3857,6 +3861,22 @@ PACKSTRUCT( struct sl_btmesh_cmd_lc_server_get_lc_state_s
 });
 
 typedef struct sl_btmesh_cmd_lc_server_get_lc_state_s sl_btmesh_cmd_lc_server_get_lc_state_t;
+
+PACKSTRUCT( struct sl_btmesh_cmd_lc_server_set_regulator_mode_s
+{
+    uint16_t elem_index;
+    uint8_t mode;
+});
+
+typedef struct sl_btmesh_cmd_lc_server_set_regulator_mode_s sl_btmesh_cmd_lc_server_set_regulator_mode_t;
+
+PACKSTRUCT( struct sl_btmesh_cmd_lc_server_set_sensor_timeout_s
+{
+    uint16_t elem_index;
+    uint32_t timeout_ms;
+});
+
+typedef struct sl_btmesh_cmd_lc_server_set_sensor_timeout_s sl_btmesh_cmd_lc_server_set_sensor_timeout_t;
 
 PACKSTRUCT( struct sl_btmesh_cmd_lc_setup_server_update_property_s
 {
@@ -7690,6 +7710,20 @@ PACKSTRUCT( struct sl_btmesh_rsp_lc_server_get_lc_state_s
 
 typedef struct sl_btmesh_rsp_lc_server_get_lc_state_s sl_btmesh_rsp_lc_server_get_lc_state_t;
 
+PACKSTRUCT( struct sl_btmesh_rsp_lc_server_set_regulator_mode_s
+{
+    uint16_t result;
+});
+
+typedef struct sl_btmesh_rsp_lc_server_set_regulator_mode_s sl_btmesh_rsp_lc_server_set_regulator_mode_t;
+
+PACKSTRUCT( struct sl_btmesh_rsp_lc_server_set_sensor_timeout_s
+{
+    uint16_t result;
+});
+
+typedef struct sl_btmesh_rsp_lc_server_set_sensor_timeout_s sl_btmesh_rsp_lc_server_set_sensor_timeout_t;
+
 PACKSTRUCT( struct sl_btmesh_rsp_lc_setup_server_update_property_s
 {
     uint16_t result;
@@ -9364,6 +9398,8 @@ PACKSTRUCT( struct sl_btmesh_packet {
     sl_btmesh_cmd_lc_server_set_regulator_interval_t             cmd_lc_server_set_regulator_interval;
     sl_btmesh_cmd_lc_server_set_event_mask_t                     cmd_lc_server_set_event_mask;
     sl_btmesh_cmd_lc_server_get_lc_state_t                       cmd_lc_server_get_lc_state;
+    sl_btmesh_cmd_lc_server_set_regulator_mode_t                 cmd_lc_server_set_regulator_mode;
+    sl_btmesh_cmd_lc_server_set_sensor_timeout_t                 cmd_lc_server_set_sensor_timeout;
     sl_btmesh_cmd_lc_setup_server_update_property_t              cmd_lc_setup_server_update_property;
     sl_btmesh_cmd_scene_client_init_t                            cmd_scene_client_init;
     sl_btmesh_cmd_scene_client_get_t                             cmd_scene_client_get;
@@ -9850,6 +9886,8 @@ PACKSTRUCT( struct sl_btmesh_packet {
     sl_btmesh_rsp_lc_server_set_regulator_interval_t             rsp_lc_server_set_regulator_interval;
     sl_btmesh_rsp_lc_server_set_event_mask_t                     rsp_lc_server_set_event_mask;
     sl_btmesh_rsp_lc_server_get_lc_state_t                       rsp_lc_server_get_lc_state;
+    sl_btmesh_rsp_lc_server_set_regulator_mode_t                 rsp_lc_server_set_regulator_mode;
+    sl_btmesh_rsp_lc_server_set_sensor_timeout_t                 rsp_lc_server_set_sensor_timeout;
     sl_btmesh_rsp_lc_setup_server_update_property_t              rsp_lc_setup_server_update_property;
     sl_btmesh_rsp_scene_client_init_t                            rsp_scene_client_init;
     sl_btmesh_rsp_scene_client_get_t                             rsp_scene_client_get;

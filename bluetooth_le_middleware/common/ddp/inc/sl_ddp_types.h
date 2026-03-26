@@ -3,7 +3,7 @@
  * @brief Common type declarations for DDP
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -45,9 +45,10 @@ extern "C" {
 
 // -----------------------------------------------------------------------------
 // Definitions
-#define SL_DDP_ERROR_COMMAND   ((int)1)
-#define SL_DDP_ERROR_ARG       ((int)2)
-#define SL_DDP_ERROR_LENGTH    ((int)3)
+#define SL_DDP_ERROR_COMMAND          ((int)1)
+#define SL_DDP_ERROR_ARG              ((int)2)
+#define SL_DDP_ERROR_LENGTH           ((int)3)
+#define SL_DDP_ERROR_NOT_INITIALIZED  ((int)4)
 
 /******************************************************************************
  * DDP command handler prototype.

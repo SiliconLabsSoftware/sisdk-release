@@ -1,4 +1,4 @@
-project_name: esl_lib.pdx
+project_name: esl_lib
 package: bluetooth_le_app
 label: Bluetooth - ESL Library
 description: >
@@ -74,6 +74,20 @@ define:
   - name: _DEFAULT_SOURCE
     condition:
       - linux
+
+configuration:
+  - name: RECV_FUNC_US_SLEEP
+    value: "1"
+  - name: PEEK_US_SLEEP
+    value: "1"
+  - name: MSG_RECV_TIMEOUT_MS
+    value: "2"
+  - name: DEFAULT_HOST_BUFLEN
+    value: "16384"
+  - name: NCP_REBOOT_TIMEOUT_INIT_MS
+    value: "200"
+  - name: NCP_REBOOT_TIMEOUT_RETRY_MS
+    value: "1000"
 
 toolchain_settings:
   - option: gcc_compiler_option

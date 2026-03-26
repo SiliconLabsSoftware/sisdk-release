@@ -184,6 +184,7 @@
   - name: cmsis_core
   - name: code_classification
   - name: component_catalog
+  - name: agents_md
   - name: MGM240SD22VNA_config
 - template_contribution:
   - name: device_opn

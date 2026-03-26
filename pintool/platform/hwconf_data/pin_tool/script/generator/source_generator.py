@@ -75,7 +75,7 @@ def generate(context):
       for portbank in device.getModes()[0].getPortIO().getPortBanks():
         for pin in portbank.pins:
           pin_name = pin.getProperty('pin.name')
-          if pin_name is not None and pin_name is not "":
+          if pin_name is not None and pin_name != "":
             sourcegen.generate_gpio(region, pin, pin_name)
             region.write('')
 

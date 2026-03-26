@@ -7516,6 +7516,42 @@ sl_status_t sl_btmesh_lc_server_get_lc_state(uint16_t elem_index,
     return rsp->data.rsp_lc_server_get_lc_state.result;
 }
 
+sl_status_t sl_btmesh_lc_server_set_regulator_mode(uint16_t elem_index,
+                                                   uint8_t mode)
+{
+    struct sl_btmesh_packet *cmd = (struct sl_btmesh_packet *)sl_btmesh_cmd_msg;
+    struct sl_btmesh_packet *rsp = (struct sl_btmesh_packet *)sl_btmesh_rsp_msg;
+    size_t cmd_payload_len = sizeof(sl_btmesh_cmd_lc_server_set_regulator_mode_t);
+
+    cmd->header = SLI_BGAPI_MSG_HEADER(sli_btmesh_lc_server_class_id,
+                                       sli_btmesh_lc_server_set_regulator_mode_command_id,
+                                       (uint8_t) sl_bgapi_msg_type_cmd | (uint8_t) sl_bgapi_dev_type_btmesh,
+                                       cmd_payload_len);
+    cmd->data.cmd_lc_server_set_regulator_mode.elem_index = elem_index;
+    cmd->data.cmd_lc_server_set_regulator_mode.mode = mode;
+    sl_btmesh_host_handle_command();
+
+    return rsp->data.rsp_lc_server_set_regulator_mode.result;
+}
+
+sl_status_t sl_btmesh_lc_server_set_sensor_timeout(uint16_t elem_index,
+                                                   uint32_t timeout_ms)
+{
+    struct sl_btmesh_packet *cmd = (struct sl_btmesh_packet *)sl_btmesh_cmd_msg;
+    struct sl_btmesh_packet *rsp = (struct sl_btmesh_packet *)sl_btmesh_rsp_msg;
+    size_t cmd_payload_len = sizeof(sl_btmesh_cmd_lc_server_set_sensor_timeout_t);
+
+    cmd->header = SLI_BGAPI_MSG_HEADER(sli_btmesh_lc_server_class_id,
+                                       sli_btmesh_lc_server_set_sensor_timeout_command_id,
+                                       (uint8_t) sl_bgapi_msg_type_cmd | (uint8_t) sl_bgapi_dev_type_btmesh,
+                                       cmd_payload_len);
+    cmd->data.cmd_lc_server_set_sensor_timeout.elem_index = elem_index;
+    cmd->data.cmd_lc_server_set_sensor_timeout.timeout_ms = timeout_ms;
+    sl_btmesh_host_handle_command();
+
+    return rsp->data.rsp_lc_server_set_sensor_timeout.result;
+}
+
 sl_status_t sl_btmesh_lc_setup_server_update_property(uint16_t elem_index,
                                                       uint16_t property_id,
                                                       size_t params_len,

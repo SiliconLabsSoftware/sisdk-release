@@ -269,6 +269,10 @@ void NcpCPC::HandleCPCReceive(sl_cpc_user_endpoint_id_t endpoint_id, void *arg)
 {
     OT_UNUSED_VARIABLE(endpoint_id);
     OT_UNUSED_VARIABLE(arg);
+
+#ifdef SL_CATALOG_KERNEL_PRESENT
+    sl_ot_rtos_set_pending_event(SL_OT_RTOS_EVENT_SERIAL);
+#endif
     otSysEventSignalPending(); // wakeup ot task
 }
 

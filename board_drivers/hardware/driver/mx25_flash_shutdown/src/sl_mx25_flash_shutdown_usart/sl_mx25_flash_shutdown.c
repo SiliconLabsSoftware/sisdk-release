@@ -74,7 +74,6 @@ void sl_mx25_flash_shutdown(void)
 #ifdef SL_MX25_FLASH_SHUTDOWN_PERIPHERAL
   // Init flash
   sl_hal_usart_sync_init_t init = SL_HAL_USART_INIT_SYNC_DEFAULT;
-  uint32_t ref_freq;
   sl_gpio_t mx25_flash_shutdown_tx_gpio = {
     .port = SL_MX25_FLASH_SHUTDOWN_TX_PORT,
     .pin = SL_MX25_FLASH_SHUTDOWN_TX_PIN,
@@ -92,14 +91,22 @@ void sl_mx25_flash_shutdown(void)
     .pin = SL_MX25_FLASH_SHUTDOWN_CS_PIN,
   };
 
+  uint32_t ref_freq;
+  uint32_t baudrate = SL_MX25_FLASH_SHUTDOWN_BAUDRATE;
+  
   sl_clock_manager_enable_bus_clock(SL_BUS_CLOCK_GPIO);
   sl_clock_manager_enable_bus_clock(SL_MX25_FLASH_SHUTDOWN_CLK);
   sl_clock_manager_get_clock_branch_frequency(SL_CLOCK_BRANCH_PCLK, &ref_freq);
   init.msb_first = true;
-  init.clock_div = sl_hal_usart_sync_calculate_clock_div(ref_freq, SL_MX25_FLASH_SHUTDOWN_BAUDRATE);
+
+  // Set desired baudrate
+  if (baudrate > ref_freq) {
+    baudrate = ref_freq;
+  }
+  init.clock_div = sl_hal_usart_sync_calculate_clock_div(ref_freq, baudrate);
   
-  sl_hal_usart_enable(SL_MX25_FLASH_SHUTDOWN_PERIPHERAL);
   sl_hal_usart_init_sync(SL_MX25_FLASH_SHUTDOWN_PERIPHERAL, &init);
+  sl_hal_usart_enable(SL_MX25_FLASH_SHUTDOWN_PERIPHERAL);
   sl_hal_usart_enable_rx(SL_MX25_FLASH_SHUTDOWN_PERIPHERAL);
   sl_hal_usart_enable_tx(SL_MX25_FLASH_SHUTDOWN_PERIPHERAL);
   

@@ -71,10 +71,3 @@ upgrade:
           - silabs_core_sl_malloc
     configuration:
       - script: platform_core/platform/scripts/upgrade_iostream_eusart_fc.lua
-  - sdk:
-      id: simplicity_sdk
-      version: "2025.12.1"
-    component:
-      - trigger: empty_upgrade
-        description: >
-          Empty upgrade rule to mark this as a compatible version with 2025.12.0

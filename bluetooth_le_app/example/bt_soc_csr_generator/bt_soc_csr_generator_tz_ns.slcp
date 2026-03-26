@@ -102,25 +102,11 @@ template_contribution:
     value: 0x802C000
     unless: [device_sdid_200, device_sdid_205]
 
-  - name: memory_flash_size
-    value: 0x54000  # 336k
-    condition: [device_sdid_205]  # xG22
-  - name: memory_flash_size
-    value: 0x64000  # 400k
-    unless: [device_sdid_205]  # not xG22
-
   - name: memory_ram_start
     value: 0x20002000
     condition: [device_sdid_205]  # xG22
   - name: memory_ram_start
     value: 0x20003000
-    unless: [device_sdid_205]  # not xG22
-
-  - name: memory_ram_size
-    value: 0x6000  # 24k
-    condition: [device_sdid_205]  # xG22
-  - name: memory_ram_size
-    value: 0x8000  # 32k
     unless: [device_sdid_205]  # not xG22
 
 post_build:

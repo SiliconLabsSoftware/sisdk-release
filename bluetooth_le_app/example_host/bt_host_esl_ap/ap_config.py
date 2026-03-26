@@ -61,9 +61,6 @@ RSSI_THRESHOLD = -80
 SCAN_INTERVAL_DEFAULT_MS = 15.0
 SCAN_WINDOW_DEFAULT_MS = 15.0
 
-# The maximum number of threads can be limited by the system - it is better to avoid creating too many
-MAX_ADVERTISER_TIMEOUT_THREADS = 750 # If there are more ESLs advertising at the same time, this will be the upper limit of the reported count!
-
 # Advertising timeout [s]
 ADVERTISING_TIMEOUT = 60
 

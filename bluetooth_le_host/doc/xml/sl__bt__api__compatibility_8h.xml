@@ -2,22 +2,22 @@
 <doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.4" xml:lang="en-US">
   <compounddef id="sl__bt__api__compatibility_8h" kind="file" language="C++">
     <compoundname>sl_bt_api_compatibility.h</compoundname>
-    <includedby refid="sl__bt__api_8h" local="yes">/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h</includedby>
+    <includedby refid="sl__bt__api_8h" local="yes">/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h</includedby>
     <invincdepgraph>
       <node id="2">
-        <label>/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h</label>
+        <label>/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h</label>
         <link refid="sl__bt__api_8h_source"/>
         <childnode refid="3" relation="include">
         </childnode>
       </node>
       <node id="1">
-        <label>/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api_compatibility.h</label>
+        <label>/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api_compatibility.h</label>
         <link refid="sl__bt__api__compatibility_8h"/>
         <childnode refid="2" relation="include">
         </childnode>
       </node>
       <node id="3">
-        <label>/var/lib/jenkins/github/bluetooth_le_host/event_system/inc/sli_bt_event_system.h</label>
+        <label>/var/lib/jenkins/github@3/bluetooth_le_host/event_system/inc/sli_bt_event_system.h</label>
         <link refid="sli__bt__event__system_8h_source"/>
       </node>
     </invincdepgraph>
@@ -73,7 +73,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api_compatibility.h" line="27" column="1" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api_compatibility.h" bodystart="28" bodyend="33"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api_compatibility.h" line="27" column="1" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api_compatibility.h" bodystart="28" bodyend="33"/>
       </memberdef>
       <memberdef kind="enum" id="sl__bt__api__compatibility_8h_1a8cb32e507df1b06ec3d43b306dc801a8" prot="public" static="no" strong="no">
         <type></type>
@@ -121,7 +121,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api_compatibility.h" line="38" column="1" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api_compatibility.h" bodystart="39" bodyend="44"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api_compatibility.h" line="38" column="1" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api_compatibility.h" bodystart="39" bodyend="44"/>
       </memberdef>
       <memberdef kind="enum" id="sl__bt__api__compatibility_8h_1aec231a73aa758ffc4bbc97f4a79f7830" prot="public" static="no" strong="no">
         <type></type>
@@ -169,7 +169,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api_compatibility.h" line="50" column="1" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api_compatibility.h" bodystart="51" bodyend="70"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api_compatibility.h" line="50" column="1" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api_compatibility.h" bodystart="51" bodyend="70"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
@@ -216,6 +216,6 @@
 <codeline lineno="76"><highlight class="normal"></highlight></codeline>
 <codeline lineno="77"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
     </programlisting>
-    <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api_compatibility.h"/>
+    <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api_compatibility.h"/>
   </compounddef>
 </doxygen>

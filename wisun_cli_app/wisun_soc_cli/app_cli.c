@@ -945,6 +945,70 @@ static sl_status_t channel_spacing_khz_to_id(uint32_t channel_spacing_khz, uint8
   return result;
 }
 
+static sl_status_t app_build_phy_config(sl_wisun_phy_config_type_t phy_config_type, const uint8_t *channel_mask, sl_wisun_phy_config_t* phy_config)
+{
+  uint8_t channel_spacing_id;
+
+  phy_config->type = phy_config_type;
+
+  switch (phy_config_type) {
+    case SL_WISUN_PHY_CONFIG_FAN10:
+      phy_config->config.fan10.reg_domain = app_settings_wisun.regulatory_domain;
+      phy_config->config.fan10.op_class = app_settings_wisun.operating_class;
+      phy_config->config.fan10.op_mode = app_settings_wisun.operating_mode;
+      phy_config->config.fan10.fec = app_settings_wisun.fec;
+      break;
+    case SL_WISUN_PHY_CONFIG_FAN11:
+      phy_config->config.fan11.reg_domain = app_settings_wisun.regulatory_domain;
+      phy_config->config.fan11.chan_plan_id = app_settings_wisun.chan_plan_id;
+      phy_config->config.fan11.phy_mode_id = app_settings_wisun.phy_mode_id;
+      break;
+    case SL_WISUN_PHY_CONFIG_EXPLICIT:
+      phy_config->config.explicit_plan.ch0_frequency_khz = app_settings_wisun.ch0_frequency;
+      phy_config->config.explicit_plan.number_of_channels = app_settings_wisun.number_of_channels;
+      if (channel_spacing_khz_to_id(app_settings_wisun.channel_spacing, &channel_spacing_id) != SL_STATUS_OK) {
+        return SL_STATUS_INVALID_PARAMETER;
+      }
+      phy_config->config.explicit_plan.channel_spacing = channel_spacing_id;
+      phy_config->config.explicit_plan.phy_mode_id = app_settings_wisun.phy_mode_id;
+      memcpy(phy_config->config.explicit_plan.channel_mask, channel_mask, SL_WISUN_CHANNEL_MASK_SIZE);
+      break;
+    case SL_WISUN_PHY_CONFIG_IDS:
+      phy_config->config.ids.protocol_id = app_settings_wisun.protocol_id;
+      phy_config->config.ids.channel_id = app_settings_wisun.channel_id;
+      phy_config->config.ids.phy_mode_id = app_settings_wisun.phy_mode_id;
+      break;
+    case SL_WISUN_PHY_CONFIG_CUSTOM_FSK:
+      phy_config->config.custom_fsk.ch0_frequency_khz = app_settings_wisun.ch0_frequency;
+      phy_config->config.custom_fsk.number_of_channels = app_settings_wisun.number_of_channels;
+      phy_config->config.custom_fsk.channel_spacing_khz = app_settings_wisun.channel_spacing;
+      phy_config->config.custom_fsk.phy_mode_id = app_settings_wisun.phy_mode_id;
+      phy_config->config.custom_fsk.crc_type = app_settings_wisun.crc_type;
+      phy_config->config.custom_fsk.preamble_length = app_settings_wisun.preamble_length;
+      break;
+    case SL_WISUN_PHY_CONFIG_CUSTOM_OFDM:
+      phy_config->config.custom_ofdm.ch0_frequency_khz = app_settings_wisun.ch0_frequency;
+      phy_config->config.custom_ofdm.number_of_channels = app_settings_wisun.number_of_channels;
+      phy_config->config.custom_ofdm.channel_spacing_khz = app_settings_wisun.channel_spacing;
+      phy_config->config.custom_ofdm.phy_mode_id = app_settings_wisun.phy_mode_id;
+      phy_config->config.custom_ofdm.crc_type = app_settings_wisun.crc_type;
+      phy_config->config.custom_ofdm.stf_length = app_settings_wisun.stf_length;
+      break;
+    case SL_WISUN_PHY_CONFIG_CUSTOM_OQPSK:
+      phy_config->config.custom_oqpsk.ch0_frequency_khz = app_settings_wisun.ch0_frequency;
+      phy_config->config.custom_oqpsk.number_of_channels = app_settings_wisun.number_of_channels;
+      phy_config->config.custom_oqpsk.channel_spacing_khz = app_settings_wisun.channel_spacing;
+      phy_config->config.custom_oqpsk.phy_mode_id = app_settings_wisun.phy_mode_id;
+      phy_config->config.custom_oqpsk.crc_type = app_settings_wisun.crc_type;
+      phy_config->config.custom_oqpsk.preamble_length = app_settings_wisun.preamble_length;
+      break;
+    default:
+      return SL_STATUS_INVALID_PARAMETER;
+  }
+
+  return SL_STATUS_OK;
+}
+
 static void app_join(sl_wisun_phy_config_type_t phy_config_type)
 {
   sl_status_t ret;
@@ -955,7 +1019,6 @@ static void app_join(sl_wisun_phy_config_type_t phy_config_type)
   uint8_t phy_mode_id_count, is_mdr_command_capable;
   uint8_t phy_mode_id[SL_WISUN_MAX_PHY_MODE_ID_COUNT];
   uint8_t *phy_mode_id_p, *phy_mode_id_count_p;
-  uint8_t channel_spacing_id;
 #if SL_RAIL_IEEE802154_SUPPORTS_G_MODE_SWITCH
   bool set_pom_ie = false;
 #endif
@@ -973,65 +1036,19 @@ static void app_join(sl_wisun_phy_config_type_t phy_config_type)
     goto cleanup;
   }
 
-  switch (phy_config_type) {
-      case SL_WISUN_PHY_CONFIG_FAN10:
-        phy_config.config.fan10.reg_domain = app_settings_wisun.regulatory_domain;
-        phy_config.config.fan10.op_class = app_settings_wisun.operating_class;
-        phy_config.config.fan10.op_mode = app_settings_wisun.operating_mode;
-        phy_config.config.fan10.fec = app_settings_wisun.fec;
-        break;
-      case SL_WISUN_PHY_CONFIG_FAN11:
-        phy_config.config.fan11.reg_domain = app_settings_wisun.regulatory_domain;
-        phy_config.config.fan11.chan_plan_id = app_settings_wisun.chan_plan_id;
-        phy_config.config.fan11.phy_mode_id = app_settings_wisun.phy_mode_id;
-        break;
-      case SL_WISUN_PHY_CONFIG_EXPLICIT:
-        phy_config.config.explicit_plan.ch0_frequency_khz = app_settings_wisun.ch0_frequency;
-        phy_config.config.explicit_plan.number_of_channels = app_settings_wisun.number_of_channels;
-
-        if (channel_spacing_khz_to_id(app_settings_wisun.channel_spacing, &channel_spacing_id) != SL_STATUS_OK) {
-          printf("[Invalid channel spacing]\r\n");
-          goto cleanup;
-        }
-
-        phy_config.config.explicit_plan.channel_spacing = channel_spacing_id;
-        phy_config.config.explicit_plan.phy_mode_id = app_settings_wisun.phy_mode_id;
-        break;
-      case SL_WISUN_PHY_CONFIG_IDS:
-        phy_config.config.ids.protocol_id  = app_settings_wisun.protocol_id;
-        phy_config.config.ids.channel_id   = app_settings_wisun.channel_id;
-        phy_config.config.ids.phy_mode_id  = app_settings_wisun.phy_mode_id;
-        break;
-      case SL_WISUN_PHY_CONFIG_CUSTOM_FSK:
-        phy_config.config.custom_fsk.ch0_frequency_khz = app_settings_wisun.ch0_frequency;
-        phy_config.config.custom_fsk.number_of_channels = app_settings_wisun.number_of_channels;
-        phy_config.config.custom_fsk.channel_spacing_khz = app_settings_wisun.channel_spacing;
-        phy_config.config.custom_fsk.phy_mode_id = app_settings_wisun.phy_mode_id;
-        phy_config.config.custom_fsk.crc_type = app_settings_wisun.crc_type;
-        phy_config.config.custom_fsk.preamble_length = app_settings_wisun.preamble_length;
-        break;
-      case SL_WISUN_PHY_CONFIG_CUSTOM_OFDM:
-        phy_config.config.custom_ofdm.ch0_frequency_khz = app_settings_wisun.ch0_frequency;
-        phy_config.config.custom_ofdm.number_of_channels = app_settings_wisun.number_of_channels;
-        phy_config.config.custom_ofdm.channel_spacing_khz = app_settings_wisun.channel_spacing;
-        phy_config.config.custom_ofdm.phy_mode_id = app_settings_wisun.phy_mode_id;
-        phy_config.config.custom_ofdm.crc_type = app_settings_wisun.crc_type;
-        phy_config.config.custom_ofdm.stf_length = app_settings_wisun.stf_length;
-        break;
-      case SL_WISUN_PHY_CONFIG_CUSTOM_OQPSK:
-        phy_config.config.custom_oqpsk.ch0_frequency_khz = app_settings_wisun.ch0_frequency;
-        phy_config.config.custom_oqpsk.number_of_channels = app_settings_wisun.number_of_channels;
-        phy_config.config.custom_oqpsk.channel_spacing_khz = app_settings_wisun.channel_spacing;
-        phy_config.config.custom_oqpsk.phy_mode_id = app_settings_wisun.phy_mode_id;
-        phy_config.config.custom_oqpsk.crc_type = app_settings_wisun.crc_type;
-        phy_config.config.custom_oqpsk.preamble_length = app_settings_wisun.preamble_length;
-        break;
-      default:
-        printf("[Failed: unsupported PHY configuration type: %u]\r\n", phy_config_type);
-        goto cleanup;
+  ret = app_settings_get_channel_mask(app_settings_wisun.allowed_channels, &channel_mask);
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unable to get channel mask: %lu]\r\n", ret);
+    goto cleanup;
   }
 
-  app_settings_wisun.phy_config_type = phy_config.type = phy_config_type;
+  ret = app_build_phy_config(phy_config_type, channel_mask.mask, &phy_config);
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unsupported PHY configuration: %lu]\r\n", ret);
+    goto cleanup;
+  }
+
+  app_settings_wisun.phy_config_type = phy_config_type;
 
   ret = sl_wisun_set_device_type((sl_wisun_device_type_t)app_settings_wisun.device_type);
   if (ret != SL_STATUS_OK) {
@@ -1192,7 +1209,6 @@ static void app_join(sl_wisun_phy_config_type_t phy_config_type)
     goto cleanup;
   }
 
-  ret = app_settings_get_channel_mask(app_settings_wisun.allowed_channels, &channel_mask);
   ret = sl_wisun_set_channel_mask(&channel_mask);
   if (ret != SL_STATUS_OK) {
     printf("[Failed: unable to set channel mask: %lu]\r\n", ret);
@@ -2416,7 +2432,11 @@ void app_mac_allow(sl_cli_command_arg_t *arguments)
     goto cleanup;
   }
 
-  printf("[MAC address added to the access list]\r\n");
+  if (!memcmp(&address, &APP_BROADCAST_MAC, sizeof(sl_wisun_mac_address_t))) {
+    printf("[Access list cleared]\r\n");
+  } else {
+    printf("[MAC address added to the access list]\r\n");
+  }
 
 cleanup:
 
@@ -2453,7 +2473,11 @@ void app_mac_deny(sl_cli_command_arg_t *arguments)
     goto cleanup;
   }
 
-  printf("[MAC address added to the deny list]\r\n");
+  if (!memcmp(&address, &APP_BROADCAST_MAC, sizeof(sl_wisun_mac_address_t))) {
+    printf("[Access list cleared]\r\n");
+  } else {
+    printf("[MAC address added to the deny list]\r\n");
+  }
 
 cleanup:
 
@@ -2636,64 +2660,278 @@ void app_set_leaf(sl_cli_command_arg_t *arguments)
   app_wisun_cli_mutex_unlock();
 }
 
+void app_rftest_start_tx(sl_cli_command_arg_t *arguments)
+{
+  sl_status_t ret;
+  sl_wisun_phy_config_type_t phy_config_type = SL_WISUN_PHY_CONFIG_FAN11;
+  uint16_t channel;
+  uint16_t count;
+  uint16_t data_length;
+  uint8_t *data = NULL;
+  uint32_t interval_ms;
+  bool cca_enabled;
+  sl_wisun_phy_config_t phy_config;
+  uint8_t channel_mask[SL_WISUN_CHANNEL_MASK_SIZE];
+
+  app_wisun_cli_mutex_lock();
+
+  if (sl_cli_get_argument_count(arguments) > 6) {
+    printf("[Failed: invalid number of arguments]\r\n");
+    goto cleanup;
+  }
+
+  channel = sl_cli_get_argument_uint32(arguments, 0);
+  count = sl_cli_get_argument_uint32(arguments, 1);
+  data_length = sl_cli_get_argument_uint32(arguments, 2);
+  interval_ms = sl_cli_get_argument_uint32(arguments, 3);
+  cca_enabled = sl_cli_get_argument_uint32(arguments, 4) != 0;
+  if (sl_cli_get_argument_count(arguments) > 5) {
+    phy_config_type = sl_cli_get_argument_uint8(arguments, 5);
+  }
+
+  // Set all channels to be allowed
+  memset(channel_mask, 0xFF, SL_WISUN_CHANNEL_MASK_SIZE);
+
+  ret = app_build_phy_config(phy_config_type, channel_mask, &phy_config);
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unsupported PHY configuration: %lu]\r\n", ret);
+    goto cleanup;
+  }
+  ret = sl_wisun_rf_test_set_phy_config(&phy_config);
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unable to set PHY config: %lu]\r\n", ret);
+    goto cleanup;
+  }
+
+  ret = sl_wisun_rf_test_start_tx(channel, count, data_length, data, interval_ms, cca_enabled);
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unable to start TX: %lu]\r\n", ret);
+    goto cleanup;
+  }
+
+  printf("[RF Test TX started]\r\n");
+
+cleanup:
+  app_wisun_cli_mutex_unlock();
+}
+
+void app_rftest_start_rx(sl_cli_command_arg_t *arguments)
+{
+  sl_status_t ret;
+  uint16_t channel;
+  uint32_t duration_ms;
+  sl_wisun_phy_config_type_t phy_config_type = SL_WISUN_PHY_CONFIG_FAN11;
+  sl_wisun_phy_config_t phy_config;
+  uint8_t channel_mask[SL_WISUN_CHANNEL_MASK_SIZE];
+
+  app_wisun_cli_mutex_lock();
+
+  if (sl_cli_get_argument_count(arguments) > 3) {
+    printf("[Failed: invalid number of arguments]\r\n");
+    goto cleanup;
+  }
+
+  channel = sl_cli_get_argument_uint32(arguments, 0);
+  duration_ms = sl_cli_get_argument_uint32(arguments, 1);
+  if (sl_cli_get_argument_count(arguments) > 2) {
+    phy_config_type = sl_cli_get_argument_uint8(arguments, 2);
+  }
+
+  // Set all channels to be allowed
+  memset(channel_mask, 0xFF, SL_WISUN_CHANNEL_MASK_SIZE);
+
+  ret = app_build_phy_config(phy_config_type, channel_mask, &phy_config);
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unsupported PHY configuration: %lu]\r\n", ret);
+    goto cleanup;
+  }
+  ret = sl_wisun_rf_test_set_phy_config(&phy_config);
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unable to set PHY config: %lu]\r\n", ret);
+    goto cleanup;
+  }
+  ret = sl_wisun_rf_test_start_rx(channel, duration_ms);
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unable to start RX: %lu]\r\n", ret);
+    goto cleanup;
+  }
+  printf("[RF Test RX started]\r\n");
+
+cleanup:
+  app_wisun_cli_mutex_unlock();
+}
+
+void app_rftest_stop_rx(sl_cli_command_arg_t *arguments)
+{
+  sl_status_t ret;
+
+  (void)arguments;
+
+  app_wisun_cli_mutex_lock();
+
+  ret = sl_wisun_rf_test_rx_stop();
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unable to stop RX: %lu]\r\n", ret);
+  }
+  else {
+    printf("[RF Test RX stopped]\r\n");
+  }
+
+  app_wisun_cli_mutex_unlock();
+}
+
 void app_rftest_start_stream(sl_cli_command_arg_t *arguments)
 {
   sl_status_t ret;
-  (void)arguments;
-  (void)ret;
+  sl_wisun_phy_config_type_t phy_config_type = SL_WISUN_PHY_CONFIG_FAN11;
+  sl_wisun_phy_config_t phy_config;
   uint16_t channel;
+  uint8_t channel_mask[SL_WISUN_CHANNEL_MASK_SIZE];
+
+  app_wisun_cli_mutex_lock();
+
+  if (sl_cli_get_argument_count(arguments) > 2) {
+    printf("[Failed: invalid number of arguments]\r\n");
+    goto cleanup;
+  }
 
   channel = sl_cli_get_argument_uint32(arguments, 0);
+  if (sl_cli_get_argument_count(arguments) > 1) {
+    phy_config_type = sl_cli_get_argument_uint8(arguments, 1);
+  }
 
+  // Set all channels to be allowed
+  memset(channel_mask, 0xFF, SL_WISUN_CHANNEL_MASK_SIZE);
+
+  ret = app_build_phy_config(phy_config_type, channel_mask, &phy_config);
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unsupported PHY configuration: %lu]\r\n", ret);
+    goto cleanup;
+  }
+
+  ret = sl_wisun_rf_test_set_phy_config(&phy_config);
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unable to set PHY config: %lu]\r\n", ret);
+    goto cleanup;
+  }
   ret = sl_wisun_start_stream(channel);
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unable to start stream: %lu]\r\n", ret);
+    goto cleanup;
+  }
 
-  printf("RF Test stream started %lu\r\n", ret);
+  printf("[RF Test stream started]\r\n");
+
+cleanup:
+  app_wisun_cli_mutex_unlock();
 }
 
 void app_rftest_stop_stream(sl_cli_command_arg_t *arguments)
 {
   sl_status_t ret;
+
   (void)arguments;
-  (void)ret;
+
+  app_wisun_cli_mutex_lock();
 
   ret = sl_wisun_stop_stream();
-  printf("RF Test stream stopped %lu\r\n", ret);
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unable to stop stream: %lu]\r\n", ret);
+    goto cleanup;
+  }
+
+  printf("[RF Test stream stopped]\r\n");
+
+cleanup:
+  app_wisun_cli_mutex_unlock();
 }
 
 void app_rftest_start_tone(sl_cli_command_arg_t *arguments)
 {
   sl_status_t ret;
-  (void)arguments;
-  (void)ret;
+  sl_wisun_phy_config_type_t phy_config_type = SL_WISUN_PHY_CONFIG_FAN11;
+  sl_wisun_phy_config_t phy_config;
   uint16_t channel;
+  uint8_t channel_mask[SL_WISUN_CHANNEL_MASK_SIZE];
+
+  app_wisun_cli_mutex_lock();
+
+  if (sl_cli_get_argument_count(arguments) > 2) {
+    printf("[Failed: invalid number of arguments]\r\n");
+    goto cleanup;
+  }
 
   channel = sl_cli_get_argument_uint32(arguments, 0);
+  if (sl_cli_get_argument_count(arguments) > 1) {
+    phy_config_type = sl_cli_get_argument_uint8(arguments, 1);
+  }
+
+  // Set all channels to be allowed
+  memset(channel_mask, 0xFF, SL_WISUN_CHANNEL_MASK_SIZE);
+
+  ret = app_build_phy_config(phy_config_type, channel_mask, &phy_config);
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unsupported PHY configuration: %lu]\r\n", ret);
+    goto cleanup;
+  }
+
+  ret = sl_wisun_rf_test_set_phy_config(&phy_config);
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unable to set PHY config: %lu]\r\n", ret);
+    goto cleanup;
+  }
 
   ret = sl_wisun_start_tone(channel);
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unable to start tone: %lu]\r\n", ret);
+    goto cleanup;
+  }
 
-  printf("RF Test tone started %lu\r\n", ret);
+  printf("[RF Test tone started]\r\n");
+
+cleanup:
+  app_wisun_cli_mutex_unlock();
 }
 
 void app_rftest_stop_tone(sl_cli_command_arg_t *arguments)
 {
   sl_status_t ret;
+
   (void)arguments;
-  (void)ret;
+
+  app_wisun_cli_mutex_lock();
 
   ret = sl_wisun_stop_tone();
-  printf("RF Test tone stopped %lu\r\n", ret);
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unable to stop tone: %lu]\r\n", ret);
+    goto cleanup;
+  }
+
+  printf("[RF Test tone stopped]\r\n");
+
+cleanup:
+  app_wisun_cli_mutex_unlock();
 }
 
 void app_rftest_set_tx_power(sl_cli_command_arg_t *arguments)
 {
   sl_status_t ret;
-  (void)ret;
   int16_t tx_power;
+
+  app_wisun_cli_mutex_lock();
 
   tx_power = sl_cli_get_argument_int8(arguments, 0);
 
   ret = sl_wisun_set_test_tx_power(tx_power);
-  printf("RF Test tx Power set to  %d\r\n", tx_power);
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unable to set TX power: %lu]\r\n", ret);
+    goto cleanup;
+  }
+
+  printf("[RF Test TX power set to %d dBm]\r\n", tx_power);
+
+cleanup:
+  app_wisun_cli_mutex_unlock();
 }
 
 static const app_enum_t app_trace_level_type_enum[] =

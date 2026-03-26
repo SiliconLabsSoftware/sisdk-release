@@ -22,6 +22,8 @@
 
 #include "ezsp-enum.h" //for sl_zigbee_ezsp_status_t
 
+#include "sl_zigbee_dhc.h"
+
 // The contents of the current EZSP frame.  This pointer can be used inside
 // sl_zigbee_ezsp_error_handler() to obtain information about the command that preceded
 // the error (such as the command ID, index EZSP_FRAME_ID_INDEX).
@@ -442,6 +444,27 @@ void append_sl_zigbee_token_data_t(sl_zigbee_token_data_t * tokenData);
 void fetch_sl_zigbee_token_data_t(sl_zigbee_token_data_t * tokenData);
 void append_sl_zigbee_token_info_t(sl_zigbee_token_info_t *tokenInfo);
 void fetch_sl_zigbee_token_info_t(sl_zigbee_token_info_t *tokenInfo);
+
+void append_sl_zigbee_dhc_pa_metadata_t(sl_zigbee_dhc_pa_metadata_t *metadata);
+void fetch_sl_zigbee_dhc_pa_metadata_t(sl_zigbee_dhc_pa_metadata_t *metadata);
+void append_sl_zigbee_dhc_pa_descriptor_t(sl_zigbee_dhc_pa_descriptor_t *descriptor);
+void fetch_sl_zigbee_dhc_pa_descriptor_t(sl_zigbee_dhc_pa_descriptor_t *descriptor);
+void append_sl_zigbee_dhc_pa_curve_segment_t(sl_zigbee_dhc_pa_curve_segment_t *segment);
+void fetch_sl_zigbee_dhc_pa_curve_segment_t(sl_zigbee_dhc_pa_curve_segment_t *segment);
+void append_sl_zigbee_dhc_pa_curve_t(sl_zigbee_dhc_pa_curve_t *curve);
+void fetch_sl_zigbee_dhc_pa_curve_t(sl_zigbee_dhc_pa_curve_t *curve);
+void append_sl_zigbee_dhc_pa_table_t (sl_zigbee_dhc_pa_table_t *table);
+void fetch_sl_zigbee_dhc_pa_table_t (sl_zigbee_dhc_pa_table_t *table);
+void append_sl_zigbee_dhc_pa_version_t(sl_zigbee_dhc_pa_version_t *pa_version);
+void fetch_sl_zigbee_dhc_pa_version_t(sl_zigbee_dhc_pa_version_t *pa_version);
+void append_sl_zigbee_dhc_pa_signature_t(sl_zigbee_dhc_pa_signature_t *pa_signature);
+void fetch_sl_zigbee_dhc_pa_signature_t(sl_zigbee_dhc_pa_signature_t *pa_signature);
+void append_sl_zigbee_dhc_pa_mode_t(sl_zigbee_dhc_pa_mode_t *pa_mode);
+void fetch_sl_zigbee_dhc_pa_mode_t(sl_zigbee_dhc_pa_mode_t *pa_mode);
+void append_sl_zigbee_dhc_rssi_offset_t(sl_zigbee_dhc_rssi_offset_t *rssi_offset);
+void fetch_sl_zigbee_dhc_rssi_offset_t(sl_zigbee_dhc_rssi_offset_t *rssi_offset);
+void append_sl_zigbee_dhc_ctune_t(sl_zigbee_dhc_ctune_t *ctune);
+void fetch_sl_zigbee_dhc_ctune_t(sl_zigbee_dhc_ctune_t *ctune);
 
 //Writes an sl_zigbee_ezsp_status_t value into the location that sl_zigbee_ezsp_get_last_status
 //reads from.  Used by EZSP (application code should only need to read it).

@@ -61,6 +61,7 @@ define:
 - name: RAILAPP_RMR
 
 config_file:
+- path: plugin/sl_rail_util_ieee802154/config/rail_test/sl_railtest_phy_select_config.h
 - path: apps/sl_rail_test/config/efr32xg21/sl_rail_test_config.h
   condition:
   - device_sdid_200
@@ -94,6 +95,21 @@ config_file:
 - path: apps/sl_rail_test/config/sixg301/sl_rail_test_config.h
   condition:
   - device_generic_family_sixx301
+- override:
+    component: sl_rail_util_ieee802154_fast_channel_switching
+    file_id: sl_rail_util_ieee802154_fast_channel_switching_config
+    vendor: silabs
+  path: plugin/sl_rail_util_ieee802154/config/rail_test/sl_rail_util_ieee802154_fast_channel_switching_config.h
+- override:
+    component: sl_rail_util_ieee802154_rx_duty_cycling
+    file_id: sl_rail_util_ieee802154_rx_duty_cycling_config
+    vendor: silabs
+  path: plugin/sl_rail_util_ieee802154/config/rail_test/sl_rail_util_ieee802154_rx_duty_cycling_config.h
+- override:
+    component: rail_util_ieee802154_high_speed
+    file_id: sl_rail_util_ieee802154_high_speed_phy_config
+    vendor: silabs
+  path: plugin/sl_rail_util_ieee802154/config/rail_test/sl_rail_util_ieee802154_high_speed_phy_config.h
 
 include:
 - path: hal
@@ -1219,6 +1235,17 @@ template_contribution:
     argument:
     - type: uint8opt
       help: 'config: see list2p4Ghz802154Configs\n                               (ignores any remaining parameters if > 1)\n                    [uint8opt] coex: [0=Disable] 1=Enable\n                    [uint8opt] fem: [0=Disable] 1=Enable\n                    [uint8opt] custom: [0=None] 1=N/A\n                    [uint8opt] 2mbps: [0=Disable]  1=Enable'
+
+- name: cli_command
+  value:
+    name: config2p4GHz802154ByFeatures
+    handler: config2p4Ghz802154ByFeatures
+    help: Configure 2.4 GHz 802.15.4 PHY using PHY features bit flags (hex value)
+    argument:
+    - type: uint32
+      help: PHY features (hex, e.g., 0x0=default, 0x2=ANT_DIV, 0x4=COEX, 0x8=FEM)
+  condition:
+  - sl_rail_util_ieee802154_phy_select
 
 - name: cli_command
   value:
@@ -2637,6 +2664,10 @@ template_contribution:
   value:
     runtime_phy_select_stack_support: 1
     update_active_radio_config: sl_railtest_update_154_radio_config
+    config_include: sl_railtest_phy_select_config.h
+    runtime_phy_features: SL_RAILTEST_RUNTIME_PHY_FEATURES_BASE
+    default_phy_features: SL_RAILTEST_DEFAULT_PHY_FEATURES_BASE
+    get_phy_features: sl_railtest_get_base_phy_features
   priority: -9020
 
 - name: cli_command

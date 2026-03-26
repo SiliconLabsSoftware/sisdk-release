@@ -25,6 +25,7 @@
   - name: hardware_board_supports_wstk_lcd
   - name: hardware_board_has_rgb
   - name: hardware_board_has_vcom
+  - name: hardware_board_has_vcom_hardware_flowcontrol
   - name: hardware_board_has_spiflash
   - name: hardware_board_has_exp_5
   - name: hardware_board_has_exp_7
@@ -104,6 +105,7 @@
   - board:revision:A01
   - board:device:zgm230sb27hgn
   - hardware:has:vcom
+  - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:sensor:si7021
   - hardware:has:display:ls013b7dh03

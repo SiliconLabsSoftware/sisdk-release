@@ -49,6 +49,9 @@ component:
   - id: app_assert
   - id: simple_button
     instance: [btn0, btn1]
+  - id: i2cspm
+    instance: [sensor]
+    condition: [hardware_board_has_si70xx]
   - id: simple_led
     instance: [led0, led1]
   - id: si70xx_driver
@@ -66,11 +69,11 @@ source:
     condition: [simple_button]
   - path: app_sleep_callbacks.c
   - path: "MultilevelSensor_interface_sensor.c"
-    unless: [brd2705a]
+    condition: [hardware_board_has_si70xx]
   - path: "MultilevelSensor_interface_icm20689.c"
     condition: [brd2603a]
   - path: "MultilevelSensor_interface_nosensor.c"
-    condition: [brd2705a]
+    unless: [hardware_board_has_si70xx,brd2603a]
 
 include:
   - path: .
@@ -99,6 +102,9 @@ configuration:
   - name: ZAF_TSE_MAXIMUM_SIMULTANEOUS_TRIGGERS
     value: 6
     condition: [brd2603a]
+  - name: MULTILEVEL_SENSOR_REGISTERED_SENSOR_NUMBER_LIMIT
+    value: 3 # Acceleration measurements are defined but disabled for non-IMU boards due to CC Configurator limitations
+    unless: [brd2603a]
   - name: MULTILEVEL_SENSOR_REGISTERED_SENSOR_NUMBER_LIMIT
     value: 6
     condition: [brd2603a]
@@ -215,6 +221,7 @@ post_build:
 tag:
   - prebuilt_demo
   - hwfilter:device:device_supports_zwave
+  - hwfilter:!board:brd4205a
   - toolchain:gcc
 
 filter:

@@ -309,10 +309,12 @@ class Lib:
             status = eklw.esl_key_lib_get_record_by_ble_address(
                 key_db_handle, byref(ble_address), byref(esl_db_record)
             )
-            if status != eklw.SL_STATUS_OK:
+            if status not in [eklw.SL_STATUS_OK, eklw.SL_STATUS_NOT_FOUND]:
                 cleanup()
-                raise ValueError(
-                    f"The {esl_record.address} address can't be found in the database!"
+                msg = esl_lib.get_sl_status_str(status)
+                raise RuntimeError(
+                    f"ESL key library error while querying {esl_record.address}: "
+                    f" sc={status} ({msg})"
                 )
             record_type = eklw.esl_key_lib_record_type_t()
             status = eklw.esl_key_lib_get_record_type(esl_db_record, byref(record_type))

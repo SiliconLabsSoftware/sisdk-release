@@ -913,7 +913,14 @@ void touchLinkEventHandler(sl_zigbee_af_event_t * event)
           // If we are factory new and a router, then we need to form a network
           // to become non-factory new. See the BDB spec's touchlink procedure
           // for an initiator, steps 13, 21 and 22.
-          status = sli_zigbee_af_zll_form_network_for_router_initiator(0,
+          // Form on the target's channel when valid so the target does not need
+          // to switch channels (avoids channel mismatch and join failures).
+          uint8_t formChannel = sli_zigbee_af_zll_network.zigbeeNetwork.channel;
+          if (formChannel < SL_ZIGBEE_MIN_802_15_4_CHANNEL_NUMBER
+              || formChannel > SL_ZIGBEE_MAX_802_15_4_CHANNEL_NUMBER) {
+            formChannel = 0;  // use primary channel mask
+          }
+          status = sli_zigbee_af_zll_form_network_for_router_initiator(formChannel,
                                                                        SL_ZIGBEE_AF_PLUGIN_ZLL_COMMISSIONING_COMMON_RADIO_TX_POWER,
                                                                        0xffff);
           if (status != SL_STATUS_OK) {

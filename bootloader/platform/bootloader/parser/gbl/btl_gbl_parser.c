@@ -36,6 +36,8 @@
 
 #if defined (BTL_PARSER_SUPPORT_DELTA_DFU)
 #include <stddef.h>
+#include "btl_delta_dfu_cfg.h"
+#include "core/btl_helper.h"
 #endif
 
 MISRAC_DISABLE
@@ -539,13 +541,24 @@ int32_t gbl_writeProgData(ParserContext_t *context,
   }
 
 #if defined(BTL_PARSER_SUPPORT_DELTA_DFU)
-  //Check if the delta patch extraction won't overstep the storage slot
+  //Check if the delta patch extraction won't overstep the storage slot or RAM boundary
   //Check this only in case of a delta upgrade. Skip this in scenarios
   //where the bootloader supports delta DFU but it's parsing a regular
   //app upgrade.
-  if (context->newFwCRC != 0 && ((context->programmingAddress + length) > context->endOfStorageSlot)) {
-    //OOB write
-    return BOOTLOADER_ERROR_PARSER_OOB_WRITE;
+  if (context->newFwCRC != 0) {
+#if (BTL_DELTA_DFU_EXTRACT_TO_RAM == 1)
+    // Check RAM boundary - ensure we don't exceed configured RAM buffer
+    if ((context->programmingAddress + length) > context->endOfPatchBuffer) {
+      //OOB write to RAM buffer
+      return BOOTLOADER_ERROR_PARSER_OOB_WRITE;
+    }
+#else
+    // Check storage slot boundary (original behavior)
+    if ((context->programmingAddress + length) > context->endOfStorageSlot) {
+      //OOB write to storage
+      return BOOTLOADER_ERROR_PARSER_OOB_WRITE;
+    }
+#endif
   }
 #endif //BTL_PARSER_SUPPORT_DELTA_DFU
 
@@ -592,6 +605,7 @@ int32_t parser_init(void *context, void *decryptContext, void *authContext, uint
   parserContext->versionDependencyResultApp        = 1U;
   parserContext->versionDependencyResultBootloader = 1U;
   parserContext->versionDependencyResultSe         = 1U;
+  parserContext->appVersionAvailable = true;
 #endif
   parserContext->currentTagOrder = GBL_TAG_ORDER_INIT;
 
@@ -601,6 +615,7 @@ int32_t parser_init(void *context, void *decryptContext, void *authContext, uint
   parserContext->newFwCRC = 0x0U;
   parserContext->enableGBLLengthCount = false;
   parserContext->endOfStorageSlot = 0U;
+  parserContext->endOfPatchBuffer = 0U;
 #endif
 
   if (PARSER_REQUIRE_CONFIDENTIALITY && (decryptContext == NULL)) {
@@ -763,15 +778,29 @@ int32_t parser_parse(void                              *context,
 #if defined (BTL_PARSER_SUPPORT_DELTA_DFU)
       case GblParserStateDelta:
         retval = parser_parseDelta(parserContext, &input, imageProperties);
+        if (retval != BOOTLOADER_ERROR_PARSER_PARSED) {
+          return retval;
+        }
         if (callbacks->applicationCallback != NULL) {
+#if defined(BTL_PARSER_SUPPORT_DELTA_DFU) && (BTL_DELTA_DFU_EXTRACT_TO_RAM == 1)
+          // Extract delta patch to RAM instead of storage slot
+          // length of delta patch = length of tag - newCrc(4) -newSize(4) - flashAddr(4)
+          parserContext->deltaPatchAddress = (uint32_t)btl_getRAMSlotAddress(btl_checkAlignment(parserContext->lengthOfTag - 12));
+          // Check if delta patch address is not NULL
+          if (parserContext->deltaPatchAddress == 0) {
+            return BOOTLOADER_ERROR_PARSER_OOB_WRITE;
+          }
+          parserContext->programmingAddress = parserContext->deltaPatchAddress;
+          // Update end of patch buffer address
+          parserContext->endOfPatchBuffer = parserContext->deltaPatchAddress + btl_checkAlignment(parserContext->lengthOfTag - 12);
+#else
+          // Extract delta patch to storage slot (original behavior)
           parserContext->deltaPatchAddress = parserContext->deltaPatchAddress + parserContext->gblLength;
           if (parserContext->deltaPatchAddress & (FLASH_PAGE_SIZE - 1)) {
             parserContext->deltaPatchAddress = parserContext->deltaPatchAddress - (parserContext->deltaPatchAddress & (FLASH_PAGE_SIZE - 1)) + FLASH_PAGE_SIZE;
             parserContext->programmingAddress = parserContext->deltaPatchAddress;
           }
-        }
-        if (retval != BOOTLOADER_ERROR_PARSER_PARSED) {
-          return retval;
+#endif
         }
         break;
 #endif
@@ -803,11 +832,33 @@ int32_t parser_parse(void                              *context,
         if ((parserContext->customTagId == GBL_TAG_ID_DELTA_LZ4) || (parserContext->customTagId == GBL_TAG_ID_DELTA_LZMA) ) {
           imageProperties->contents |= BTL_IMAGE_CONTENT_DELTA;
           if ((callbacks->applicationCallback != NULL) && (parserContext->programmingAddress == 0U)) {
+#if defined(BTL_PARSER_SUPPORT_DELTA_DFU) && (BTL_DELTA_DFU_EXTRACT_TO_RAM == 1)
+            if(parserContext->customTagId == GBL_TAG_ID_DELTA_LZ4) {
+            BTL_DEBUG_PRINTLN(" Delta LZ4 tag detected.");
+            // Extract delta patch to RAM instead of storage slot
+            // Get length of compressed delta patch from tag length - newCrc(4) -newSize(4) - flashAddr(4)
+            // Assume that the LZ4 compression ratio won't exceed 20% for safety. Use this to allocate RAM buffer.
+            uint32_t patch_length = (uint32_t)(1.25*(parserContext->lengthOfTag - 12));
+            patch_length = btl_checkAlignment(patch_length);
+            parserContext->deltaPatchAddress = (uint32_t)btl_getRAMSlotAddress(patch_length);
+            //Check if delta patch address is not NULL
+            if (parserContext->deltaPatchAddress == 0U) {
+              return BOOTLOADER_ERROR_PARSER_OOB_WRITE;
+            }
+            parserContext->programmingAddress = parserContext->deltaPatchAddress;
+            parserContext->endOfPatchBuffer = parserContext->deltaPatchAddress + patch_length;
+            } else {
+              BTL_DEBUG_PRINTLN(" Delta LZMA tag detected.");
+              // btl_lzma_decompressor extracts length from the compressed data & allocates RAM buffer internally
+            }
+#else
+            // Extract delta patch to storage slot (original behavior)
             parserContext->deltaPatchAddress = parserContext->deltaPatchAddress + parserContext->gblLength;
             if (parserContext->deltaPatchAddress & (FLASH_PAGE_SIZE - 1)) {
               parserContext->deltaPatchAddress = parserContext->deltaPatchAddress - (parserContext->deltaPatchAddress & (FLASH_PAGE_SIZE - 1)) + FLASH_PAGE_SIZE;
               parserContext->programmingAddress = parserContext->deltaPatchAddress;
             }
+#endif
           }
         }
 #endif
@@ -1149,12 +1200,14 @@ static int32_t parser_parseVersionDependency(ParserContext_t  *parserContext,
     switch (versionDependency->imageType) {
       case GBL_VERSION_DEPENDENCY_TYPE_APPLICATION:
         if (!bootload_getApplicationVersion(&currentVersion)) {
-          // Set result to false when the application version cannot be read.
-          // This can happen if there is no app present or version information
-          // got corrupted after applying a (bootloader|SE) upgrade also
-          // present in the GBL. These are expected legitimate scenarios and
-          // should just falsify resultApp instead of setting an error state.
-          resultApp = 0U;
+          // No valid application version is available (no app, or corrupted).
+          // Record this fact and DO NOT force resultApp to 0 here.
+          // Treat this as a recovery scenario where application-side
+          // version dependency should not block a valid, signed upgrade.
+          parserContext->appVersionAvailable = false;
+          // currentVersion value is irrelevant when appVersionAvailable is false;
+          // it will not be used in the final dependency decision.
+          currentVersion = 0UL;
         }
         resultPtr = &resultApp;
         break;
@@ -2178,12 +2231,15 @@ static int32_t parser_finalize(ParserContext_t                   *parserContext,
       && bootload_getBootloaderVersion() == imageProperties->bootloaderVersion) {
     skipVersionDependencyCheck = true;
   }
-
-  if ((skipVersionDependencyCheck == false)
-      && ((!resultApp) || (!resultBootloader) || (!resultSe))) {
+  // Only treat application dependency as failed if we actually have a
+  // readable application version. When appVersionAvailable == false,
+  // appDependencyFailed will be false and BL/SE results dominate.
+  bool appDependencyFailed = (parserContext->appVersionAvailable && (resultApp == 0U));
+  if ((skipVersionDependencyCheck == false) && (appDependencyFailed || (!resultBootloader) || (!resultSe))) {
     parserContext->internalState = GblParserStateError;
     return BOOTLOADER_ERROR_PARSER_VERSION;
   }
+  
 #endif // defined(BTL_PARSER_SUPPORT_VERSION_DEPENDENCY_TAG) && defined(BOOTLOADER_SUPPORT_STORAGE)
 
   // Flash withheld information now if authenticity was not required

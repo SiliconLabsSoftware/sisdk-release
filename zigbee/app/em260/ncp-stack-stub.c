@@ -63,6 +63,15 @@ WEAK(bool sli_zigbee_af_process_ezsp_command_certificate_based_key_exchange_cbke
 }
 #endif  // SL_CATALOG_ZIGBEE_CBKE_CORE_PRESENT
 
+#ifndef SL_CATALOG_ZIGBEE_DHC_PRESENT
+WEAK(bool sli_zigbee_af_process_ezsp_command_dynamic_hardware_configuration(uint16_t commandId))
+{
+  (void)commandId;
+  appendInt32u(SL_STATUS_NOT_AVAILABLE);
+  return true;
+}
+#endif  // SL_CATALOG_ZIGBEE_DHC_PRESENT
+
 // ToDo: Change this catalog option to stack_common after EMZIGBEE-7033
 // gets merged to migration branch.
 #ifndef SL_CATALOG_ZIGBEE_STACK_COMMON_PRESENT

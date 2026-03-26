@@ -35,6 +35,7 @@ The BT Mesh network is created and handled by the NCP node, so network managemen
        - `btmesh_host_app_remote_prov` - adds remote provisioning support
        - `btmesh_host_app_remote_prov_ui` - adds remote provisioning support with UI
        - `btmesh_host_app_prov_cbp` - adds certificate-based provisioning support
+       - `btmesh_host_app_prov_oob` - adds out-of-band provisioning support
      - It is possible to combine components, i.e., `--with btmesh_host_app_prov_ui,btmesh_host_app_prov_cbp` generates CBP support with UI mode.
      - Full example command:
        ```bash

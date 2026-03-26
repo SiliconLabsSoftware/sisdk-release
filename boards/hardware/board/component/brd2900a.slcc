@@ -17,6 +17,7 @@
   - name: hardware_board_stk
   - name: hardware_board_from_stk
   - name: hardware_board_has_vcom
+  - name: hardware_board_has_vcom_hardware_flowcontrol
   - name: hardware_board_supports_rf_band_2400
   - name: hardware_board_supports_rf_band_868
   - name: hardware_board_supports_rf_band_915
@@ -57,6 +58,7 @@
   - board:revision:A00
   - board:device:efr32bg22c224f512im40
   - hardware:has:vcom
+  - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:led:1
   - hardware:has:button:1
 - root_path: boards

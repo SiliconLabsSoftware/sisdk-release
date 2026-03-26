@@ -46,6 +46,7 @@ extern uint16_t trustCenterPolicies[];
 #if defined(SL_CATALOG_IOSTREAM_UART_COMMON_PRESENT) && defined(SL_CATALOG_KERNEL_PRESENT) && !defined(SL_CATALOG_CPC_PRESENT)
 static void uart_on_new_rx_data(void *data)
 {
+  UNUSED_VAR(data);
   sli_zigbee_stack_rtos_stack_wakeup_isr_handler();
 }
 #endif // SL_CATALOG_IOSTREAM_UART_COMMON_PRESENT && SL_CATALOG_KERNEL_PRESENT && !SL_CATALOG_CPC_PRESENT

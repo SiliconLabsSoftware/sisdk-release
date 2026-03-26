@@ -91,17 +91,31 @@ void sl_zigbee_af_green_power_server_cli_sink_table_print(SL_CLI_COMMAND_ARG)
     if (status == SL_STATUS_OK
         && entry.status == SL_ZIGBEE_GP_SINK_TABLE_ENTRY_STATUS_ACTIVE) {
       tableEmpty = false;
-      sl_zigbee_af_core_println("%02X %04X %02X %08X %02X %02X %04X %02X %02X %08X",
-                                entry.status,
-                                entry.options,
-                                entry.gpd.applicationId,
-                                entry.gpd.id.sourceId,
-                                entry.gpd.endpoint,
-                                entry.deviceId,
-                                entry.assignedAlias,
-                                entry.groupcastRadius,
-                                entry.securityOptions,
-                                entry.gpdSecurityFrameCounter);
+      if (entry.gpd.applicationId == 0) {
+        sl_zigbee_af_core_println("%02X %04X %02X %08X %s %02X %04X %02X %02X %08X",
+                                  entry.status,
+                                  entry.options,
+                                  entry.gpd.applicationId,
+                                  entry.gpd.id.sourceId,
+                                  "--",
+                                  entry.deviceId,
+                                  entry.assignedAlias,
+                                  entry.groupcastRadius,
+                                  entry.securityOptions,
+                                  entry.gpdSecurityFrameCounter);
+      } else {
+        sl_zigbee_af_core_println("%02X %04X %02X %08X %02X %02X %04X %02X %02X %08X",
+                                  entry.status,
+                                  entry.options,
+                                  entry.gpd.applicationId,
+                                  entry.gpd.id.sourceId,
+                                  entry.gpd.endpoint,
+                                  entry.deviceId,
+                                  entry.assignedAlias,
+                                  entry.groupcastRadius,
+                                  entry.securityOptions,
+                                  entry.gpdSecurityFrameCounter);
+      }
     }
   }
   if (tableEmpty) {

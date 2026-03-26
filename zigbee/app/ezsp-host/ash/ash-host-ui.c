@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <limits.h>
 #include "stack/include/sl_zigbee_types.h"
 #include "ash-protocol.h"
 #include "ash-common.h"
@@ -51,7 +52,7 @@
 #define txControl (txBuffer[0])     // more descriptive aliases
 #define rxControl (rxBuffer[0])
 
-static const char options[] = "b:f:hv::i:n:o:p:r:s:t:x:d:";
+static const char options[] = "b:f:hv::i:j:n:o:p:r:s:t:x:d:";
 extern bool checkSerialPort(const char* portString, bool silent);
 
 extern int optind, opterr, optopt;
@@ -60,6 +61,8 @@ extern char *optarg;
 // To set the OTA file storage directory in runtime.
 extern char defaultStorageDirectory[OTA_FILE_STORAGE_DIR_LENGTH];
 #endif  // SL_CATALOG_ZIGBEE_OTA_STORAGE_POSIX_FILESYSTEM_PRESENT
+
+static char *dhcJsonPath = NULL;
 
 bool sl_zigbee_ezsp_internal_process_command_options(int argc, char *argv[], char *errStr)
 {
@@ -129,6 +132,28 @@ bool sl_zigbee_ezsp_internal_process_command_options(int argc, char *argv[], cha
         } else {
           blksize = enable ? 256 : 1;
           sli_ash_host_set_config(inBlockLen, blksize);
+        }
+        break;
+      case 'j':
+        if (!optarg) {
+          snprintf(errStr, ERR_LEN, "Invalid DHC configuration path NULL.\n");
+          return false;
+        } else if (access(optarg, R_OK) != 0) {
+          snprintf(errStr, ERR_LEN, "Cannot access DHC configuration file %s.\n", optarg);
+          return false;
+        } else {
+          if (dhcJsonPath != NULL) {
+            free(dhcJsonPath);
+            dhcJsonPath = NULL;
+          }
+          size_t len = strlen(optarg) + 1U;
+          dhcJsonPath = malloc(len);
+          if (dhcJsonPath == NULL) {
+            snprintf(errStr, ERR_LEN, "Failed to allocate memory for DHC configuration path.\n");
+            return false;
+          } else {
+            memcpy(dhcJsonPath, optarg, len);
+          }
         }
         break;
       case 'n':
@@ -254,6 +279,11 @@ bool sl_zigbee_ezsp_internal_process_command_options(int argc, char *argv[], cha
     }   // end of switch (c)
   } //end while
   return true;
+}
+
+char *sl_zigbee_ezsp_get_dhc_json_path(void)
+{
+  return dhcJsonPath;
 }
 
 //------------------------------------------------------------------------------

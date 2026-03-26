@@ -119,9 +119,6 @@ sl_status_t esl_image_chunk_received(uint8_t const *data,
   sl_status_t result  = SL_STATUS_INVALID_INDEX;
   esl_image_object_t *active_image = image_registry.active_image;
 
-  // ESL NVM image: data must fit to NVM object. Please check NVM config!
-  sl_bt_esl_assert(length <= NVM_IMAGE_CHUNK_SIZE);
-
   // if there's a valid image object selected
   if (active_image != NULL) {
     // check if it is the start from the beginning
@@ -151,15 +148,16 @@ sl_status_t esl_image_chunk_received(uint8_t const *data,
       uint32_t outrun_bytes = (NVM_IMAGE_CHUNK_SIZE < (data_index + length))
                               ? (data_index + length) % NVM_IMAGE_CHUNK_SIZE
                               : 0;
-      length -= outrun_bytes;
+      uint32_t first_copy_len = length - outrun_bytes;
 
-      memcpy(&(image_chunk_buffer.nvm_data[data_index]), data, length);
-      active_image->size           += length;
-      image_registry.pending_write += length;
+      memcpy(&(image_chunk_buffer.nvm_data[data_index]), data, first_copy_len);
+      active_image->size           += first_copy_len;
+      image_registry.pending_write += first_copy_len;
 
       result = SL_STATUS_OK;
-      // check for NVM write conditions:
-      if (outrun_bytes != 0 || image_registry.pending_write == NVM_IMAGE_CHUNK_SIZE) {
+
+      // process all full chunks that'll fit into an NVM object
+      while (image_registry.pending_write >= NVM_IMAGE_CHUNK_SIZE) {
         Ecode_t nvm_status;
         // select target object key, increase object ID in buffer for later use
         nvm3_ObjectKey_t target_key = image_chunk_buffer.next_nvm_obj_key++;
@@ -177,19 +175,33 @@ sl_status_t esl_image_chunk_received(uint8_t const *data,
                                     &image_chunk_buffer,
                                     sizeof(image_chunk_buffer));
 
-        // if there were more bytes received than the size of one image chunk
+        // if there were more bytes received than the size of one NVM object
         // then adjust buffer and registry data accordingly, save data to buffer
         if (nvm_status == ECODE_NVM3_OK) {
-          image_registry.pending_write = outrun_bytes;
-          memcpy(image_chunk_buffer.nvm_data, &data[length], outrun_bytes);
-          active_image->size += outrun_bytes;
+          // shift remaining bytes to the beginning of the buffer
+          image_registry.pending_write -= NVM_IMAGE_CHUNK_SIZE;
+          memmove(image_chunk_buffer.nvm_data,
+                  image_chunk_buffer.nvm_data + NVM_IMAGE_CHUNK_SIZE,
+                  image_registry.pending_write);
         } else {
           result = SL_STATUS_FAIL;
           sl_bt_esl_log(ESL_LOG_COMPONENT_NVM_IMAGE,
                         ESL_LOG_LEVEL_ERROR,
                         "ESL NVM Image: NVM operation failed with status 0x%lx!",
                         nvm_status);
+          // force-skip the last operation on this broken stream before return
+          outrun_bytes = 0;
+          break;
         }
+      }
+
+      // keep any remaining data that didn't fit onto an NVM object, yet
+      if (outrun_bytes > 0) {
+        memcpy(image_chunk_buffer.nvm_data + image_registry.pending_write,
+               &data[first_copy_len],
+               outrun_bytes);
+        image_registry.pending_write += outrun_bytes;
+        active_image->size           += outrun_bytes;
       }
     }
   }

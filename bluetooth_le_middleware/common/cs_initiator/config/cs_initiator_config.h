@@ -51,7 +51,7 @@
 #endif
 
 // <q CS_INITIATOR_CONFIG_LOG_DATA> Data logging
-// <i> Default: 1
+// <i> Default: 0
 // <i> Enable Initiator component data logging
 #ifndef CS_INITIATOR_CONFIG_LOG_DATA
 #define CS_INITIATOR_CONFIG_LOG_DATA                  (0)
@@ -296,8 +296,8 @@
 // <o CS_INITIATOR_DEFAULT_PREFERRED_PEER_ANTENNA> Preferred peer antenna
 // <i> The preferred peer-ordered antenna elements to be used by the remote device
 // <i> for the antenna configuration denoted by the tone antenna config selection.
-// <i> Default: 1
-#define CS_INITIATOR_DEFAULT_PREFERRED_PEER_ANTENNA  1
+// <i> Default: 3
+#define CS_INITIATOR_DEFAULT_PREFERRED_PEER_ANTENNA  3
 
 // <o CS_INITIATOR_ANTENNA_OFFSET> Specify antenna offset
 // <0=> Wireless antenna offset

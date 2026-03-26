@@ -891,19 +891,6 @@ void sl_mac_calibrate_current_channel(void);
 sl_status_t sl_802154_radio_get_scheduler_priorities(sl_802154_radio_priorities_t *priorities);
 
 /**
- * @brief Set the current scheduler priorities used for Zigbee
- * multiprotocol operations.
- * @param priorities A pointer to a structure of the new priorities to use. This
- * must not be NULL.
- * @return ::SL_STATUS_OK if called in a multiprotocol app and
- * ::SL_STATUS_INVALID_STATE otherwise.
- *
- * For more details on what these priorities are and how to use them see UG305,
- * the Dynamic Multiprotocol User Guide.
- */
-sl_status_t sl_802154_radio_set_scheduler_priorities(const sl_802154_radio_priorities_t *priorities);
-
-/**
  * @brief Set the multiprotocol slip time.
  * @param slipTime The value to set the slip time to for each transmit.
  * @return ::SL_STATUS_OK if called in a multiprotocol app and

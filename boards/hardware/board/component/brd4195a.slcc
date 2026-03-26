@@ -20,6 +20,7 @@
   - name: hardware_board_from_xg21-rb4195a
   - name: hardware_board_supports_wstk_lcd
   - name: hardware_board_has_vcom
+  - name: hardware_board_has_vcom_hardware_flowcontrol
   - name: hardware_board_has_exp_12
   - name: hardware_board_has_exp_14
   - name: hardware_board_has_exp_7
@@ -86,6 +87,7 @@
   - board:revision:A08
   - board:device:efr32mg21b010f1024im32
   - hardware:has:vcom
+  - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:pti
   - hardware:has:display:ls013b7dh03
   - hardware:has:led:2

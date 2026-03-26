@@ -49,7 +49,7 @@ component:
     condition: [zw_board_has_no_rgb]
   - id: simple_rgb_pwm_led
     instance: [rgb_led0]
-    condition: [zw_board_has_rgb]
+    condition: [hardware_board_has_rgb]
   - id: ZW_MIGRATION_TO_7_19
   - id: zw_cli_common
     condition: [zw_stack_release_libraries]
@@ -61,7 +61,7 @@ component:
     instance: [led0]
   - id: simple_led
     instance: [led1]
-    condition: [zw_board_has_rgb]
+    condition: [hardware_board_has_rgb]
   - id: clock_manager
 
 source:
@@ -246,6 +246,7 @@ post_build:
 tag:
   - prebuilt_demo
   - hwfilter:device:device_supports_zwave
+  - hwfilter:!board:brd4205a
   - toolchain:gcc
 
 filter:

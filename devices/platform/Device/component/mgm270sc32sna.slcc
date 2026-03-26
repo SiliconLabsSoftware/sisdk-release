@@ -3,7 +3,7 @@
 - package: devices
 - description: Silicon Labs CMSIS-Device part headers for MGM270SC32SNA.
 - category: Platform|Device|MGM27
-- quality: evaluation
+- quality: production
 - define:
   - name: MGM270SC32SNA
     unless:
@@ -167,6 +167,7 @@
   - name: cmsis_core
   - name: code_classification
   - name: component_catalog
+  - name: agents_md
   - name: MGM270SC32SNA_config
 - template_contribution:
   - name: device_opn

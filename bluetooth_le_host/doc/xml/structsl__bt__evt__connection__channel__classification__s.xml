@@ -17,7 +17,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6933" column="38" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6933" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6933" column="38" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6933" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structsl__bt__evt__connection__channel__classification__s_1a5174e2ada39cdccf7bda7cc3a5e00dfd" prot="public" static="no" mutable="no">
         <type><ref refid="structsl__bt__channel__classification__map__t" kindref="compound">sl_bt_channel_classification_map_t</ref></type>
@@ -39,7 +39,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6934" column="38" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6934" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6934" column="38" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6934" bodyend="-1"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
@@ -60,7 +60,7 @@
         </childnode>
       </node>
     </collaborationgraph>
-    <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6931" column="1" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6932" bodyend="6958"/>
+    <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6931" column="1" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6932" bodyend="6958"/>
     <listofallmembers>
       <member refid="structsl__bt__evt__connection__channel__classification__s_1a5174e2ada39cdccf7bda7cc3a5e00dfd" prot="public" virt="non-virtual"><scope>sl_bt_evt_connection_channel_classification_s</scope><name>classification_map</name></member>
       <member refid="structsl__bt__evt__connection__channel__classification__s_1a1fa36b9150adf3f5f3fcada2b2a10ae4" prot="public" virt="non-virtual"><scope>sl_bt_evt_connection_channel_classification_s</scope><name>connection</name></member>

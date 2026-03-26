@@ -18,6 +18,7 @@ requires:
 - name: device_series_3
 - name: status
 - name: sl_assert
+- name: sl_core
 - name: hal_syscfg
 - name: hal_system
 - name: se_manager

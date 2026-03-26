@@ -906,6 +906,435 @@
             "code": "0x0009",
             "manufacturerCode": null
           }
+        },
+        {
+          "id": 11,
+          "matter": {
+            "code": "0x0010",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0010",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 12,
+          "matter": {
+            "code": "0x0011",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0011",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 13,
+          "matter": {
+            "code": "0x0012",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0012",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 14,
+          "matter": {
+            "code": "0x0013",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0013",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 15,
+          "matter": {
+            "code": "0x0014",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0014",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 16,
+          "matter": {
+            "code": "0x0015",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0015",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 17,
+          "matter": {
+            "code": "0x0016",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0016",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 18,
+          "matter": {
+            "code": "0x0017",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0017",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 19,
+          "matter": {
+            "code": "0x0018",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0018",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 20,
+          "matter": {
+            "code": "0x0019",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0019",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 21,
+          "matter": {
+            "code": "0x001A",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x001A",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 22,
+          "matter": {
+            "code": "0x001B",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x001B",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 23,
+          "matter": {
+            "code": "0x001C",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x001C",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 24,
+          "matter": {
+            "code": "0x001E",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x001E",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 25,
+          "matter": {
+            "code": "0x0020",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0020",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 26,
+          "matter": {
+            "code": "0x0021",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0021",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 27,
+          "matter": {
+            "code": "0x0022",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0022",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 28,
+          "matter": {
+            "code": "0x0023",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0023",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 29,
+          "matter": {
+            "code": "0x0024",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0024",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 30,
+          "matter": {
+            "code": "0x0025",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0025",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 31,
+          "matter": {
+            "code": "0x0029",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0029",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 32,
+          "matter": {
+            "code": "0x0030",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0030",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 33,
+          "matter": {
+            "code": "0x0031",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0031",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 34,
+          "matter": {
+            "code": "0x0032",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0032",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 35,
+          "matter": {
+            "code": "0x0034",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0034",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 36,
+          "matter": {
+            "code": "0x0035",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0035",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 37,
+          "matter": {
+            "code": "0x0036",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0036",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 38,
+          "matter": {
+            "code": "0x0037",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0037",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 39,
+          "matter": {
+            "code": "0x0038",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0038",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 40,
+          "matter": {
+            "code": "0x0039",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0039",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 41,
+          "matter": {
+            "code": "0x003A",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x003A",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 42,
+          "matter": {
+            "code": "0x0040",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0040",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 43,
+          "matter": {
+            "code": "0x0041",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0041",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 44,
+          "matter": {
+            "code": "0x0042",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0042",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 45,
+          "matter": {
+            "code": "0x0043",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0043",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 46,
+          "matter": {
+            "code": "0x0044",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0044",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 47,
+          "matter": {
+            "code": "0x0045",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0045",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 48,
+          "matter": {
+            "code": "0x0046",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0046",
+            "manufacturerCode": null
+          }
+        },
+        {
+          "id": 49,
+          "matter": {
+            "code": "0x0047",
+            "manufacturerCode": null
+          },
+          "zigbee": {
+            "code": "0x0047",
+            "manufacturerCode": null
+          }
         }
       ]
     },

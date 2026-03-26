@@ -6,7 +6,7 @@ label=Platform Security Sample App Package
 
 description=Platform Security Sample App Package
 
-version=1.0.0-rc.2
+version=1.0.1-beta.1
 
 prop.file.templatesFile=platform_security_production_templates.xml
     

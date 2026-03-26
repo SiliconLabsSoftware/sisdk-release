@@ -56,19 +56,6 @@ typedef struct {
 } sli_802154_stack_radio_get_scheduler_sliptime_ipc_msg_t;
 
 typedef struct {
-  sl_802154_radio_priorities_t priorities;
-} sli_802154_stack_radio_set_scheduler_priorities_ipc_req_t;
-
-typedef struct {
-  sl_status_t result;
-} sli_802154_stack_radio_set_scheduler_priorities_ipc_rsp_t;
-
-typedef struct {
-  sli_802154_stack_radio_set_scheduler_priorities_ipc_req_t request;
-  sli_802154_stack_radio_set_scheduler_priorities_ipc_rsp_t response;
-} sli_802154_stack_radio_set_scheduler_priorities_ipc_msg_t;
-
-typedef struct {
   uint32_t slipTime;
 } sli_802154_stack_radio_set_scheduler_sliptime_ipc_req_t;
 

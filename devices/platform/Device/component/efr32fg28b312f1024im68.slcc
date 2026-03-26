@@ -186,6 +186,7 @@
   - name: cmsis_core
   - name: code_classification
   - name: component_catalog
+  - name: agents_md
 - template_contribution:
   - name: device_opn
     value: EFR32FG28B312F1024IM68

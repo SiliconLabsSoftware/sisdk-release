@@ -86,6 +86,10 @@ sl_status_t sli_crypto_countermeasure_reseed(sli_crypto_engine_t engine, sli_cry
     sli_sxsymcrypt_unlock_cryptomaster_selection();
   }
 
+  if(rc == SL_STATUS_FAIL) {
+    sli_sxsymcrypt_unlock_cryptomaster_selection();
+  }
+
   return rc;
 }
 

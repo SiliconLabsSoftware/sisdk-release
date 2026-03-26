@@ -6,7 +6,6 @@ template:
     - brd4204b
     - brd4204c
     - brd4204d
-    - brd4205a
     - brd4205b
     - brd4210a
     - brd4400b
@@ -36,7 +35,6 @@ template:
     - brd4204b
     - brd4204c
     - brd4204d
-    - brd4205a
     - brd4205b
     - brd4210a
     - brd4400b

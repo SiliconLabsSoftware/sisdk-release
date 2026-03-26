@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <limits.h>
 #include "stack/include/sl_zigbee_types.h"
 #include "app/ezsp-host/cpc/cpc-host.h"
 #include "app/ezsp-host/ezsp-host-ui.h"
@@ -37,7 +38,7 @@
 
 #define ERR_LEN               128   // max length error message
 
-static const char options[] = "c:hv::d:";
+static const char options[] = "c:hv::d:j:";
 
 extern int optind;
 extern char *optarg;
@@ -48,6 +49,7 @@ extern char defaultStorageDirectory[OTA_FILE_STORAGE_DIR_LENGTH];
 
 static char cpcdInstanceName[CPCD_INSTANCE_LEN];
 extern char *zigbee_cpc_instance_name;
+static char *dhcJsonPath = NULL;
 
 bool sl_zigbee_ezsp_internal_process_command_options(int argc, char *argv[], char *errStr)
 {
@@ -99,10 +101,37 @@ bool sl_zigbee_ezsp_internal_process_command_options(int argc, char *argv[], cha
   #endif  // SL_CATALOG_ZIGBEE_OTA_STORAGE_POSIX_FILESYSTEM_PRESENT
       }
       break;
+      case 'j':
+        if (!optarg) {
+          snprintf(errStr, ERR_LEN, "Invalid DHC configuration path NULL.\n");
+          return false;
+        } else if (access(optarg, R_OK) != 0) {
+          snprintf(errStr, ERR_LEN, "Cannot access DHC configuration file %s.\n", optarg);
+          return false;
+        } else {
+          if (dhcJsonPath != NULL) {
+            free(dhcJsonPath);
+            dhcJsonPath = NULL;
+          }
+          size_t len = strlen(optarg) + 1U;
+          dhcJsonPath = malloc(len);
+          if (dhcJsonPath == NULL) {
+            snprintf(errStr, ERR_LEN, "Failed to allocate memory for DHC configuration path.\n");
+            return false;
+          } else {
+            memcpy(dhcJsonPath, optarg, len);
+          }
+        }
+        break;
       default:
         assert(1);
         break;
     }   // end of switch (c)
   } //end while
   return true;
+}
+
+char *sl_zigbee_ezsp_get_dhc_json_path(void)
+{
+  return dhcJsonPath;
 }

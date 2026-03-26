@@ -146,6 +146,7 @@ static sl_status_t create_new_initiator_instance(uint8_t conn_handle);
 static void delete_initiator_instance(uint8_t conn_handle);
 static void app_timer_callback(app_timer_t *timer, void *data);
 static void check_supported_capabilities(const sl_bt_msg_t *evt);
+static void print_head_and_data(cs_initiator_instances_t *initiator);
 
 // -----------------------------------------------------------------------------
 // Static variables
@@ -257,58 +258,8 @@ void app_process_action(void)
   }
   for (uint8_t i = 0u; i < CS_INITIATOR_MAX_CONNECTIONS; i++) {
     if (cs_initiator_instances[i].measurement_arrived) {
-      // write results to the display & to the iostream
-      measurement_counter++;
       cs_initiator_instances[i].measurement_arrived = false;
-      const bd_addr *bt_address = ble_peer_manager_get_bt_address(cs_initiator_instances[i].conn_handle);
-      PRINT_HEAD_AND_DATA(measurement_counter, is_data) {
-        log_info(APP_INSTANCE_PREFIX, cs_initiator_instances[i].conn_handle);
-        cs_initiator_print_bt_address(!is_data, bt_address);
-
-        cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_MAINMODE,
-                                  !is_data,
-                                  &(cs_initiator_instances[i].measurement_mainmode.distance_filtered));
-        // Distance submode
-        if (initiator_config.cs_sub_mode != sl_bt_cs_submode_disabled) {
-          cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_SUBMODE,
-                                    !is_data,
-                                    &(cs_initiator_instances[i].measurement_submode.distance_filtered));
-        }
-        // Distance RAW
-        cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_RAW_MAINMODE,
-                                  !is_data,
-                                  &(cs_initiator_instances[i].measurement_mainmode.distance_raw));
-        // Distance submode RAW
-        if (initiator_config.cs_sub_mode != sl_bt_cs_submode_disabled) {
-          cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_RAW_SUBMODE,
-                                    !is_data,
-                                    &(cs_initiator_instances[i].measurement_submode.distance_raw));
-        }
-        // Likeliness
-        cs_initiator_print_result(CS_RESULT_FIELD_LIKELINESS_MAINMODE,
-                                  !is_data,
-                                  &(cs_initiator_instances[i].measurement_mainmode.likeliness));
-        // Likeliness submode
-        if (initiator_config.cs_sub_mode != sl_bt_cs_submode_disabled) {
-          cs_initiator_print_result(CS_RESULT_FIELD_LIKELINESS_SUBMODE,
-                                    !is_data,
-                                    &(cs_initiator_instances[i].measurement_submode.likeliness));
-        }
-        // RSSI distance
-        cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_RSSI,
-                                  !is_data,
-                                  &(cs_initiator_instances[i].measurement_mainmode.distance_estimate_rssi));
-        // Velocity
-        cs_initiator_print_result(CS_RESULT_FIELD_VELOCITY_MAINMODE,
-                                  !is_data,
-                                  &(cs_initiator_instances[i].measurement_mainmode.velocity));
-
-        // BER
-        cs_initiator_print_result(CS_RESULT_FIELD_BIT_ERROR_RATE,
-                                  !is_data,
-                                  &(cs_initiator_instances[i].measurement_mainmode.bit_error_rate));
-        log_info(NL);
-      }
+      print_head_and_data(&cs_initiator_instances[i]);
       cs_initiator_display_update_data(i,
                                        cs_initiator_instances[i].conn_handle,
                                        CS_INITIATOR_DISPLAY_STATUS_CONNECTED,
@@ -320,6 +271,7 @@ void app_process_action(void)
                                        cs_initiator_instances[i].measurement_progress.progress_percentage,
                                        rtl_config.algo_mode,
                                        initiator_config.cs_main_mode);
+      measurement_counter++;
     } else if (cs_initiator_instances[i].measurement_progress_changed) {
       // write measurement progress to the display without changing the last valid
       // measurement results
@@ -346,7 +298,6 @@ void app_process_action(void)
                                        initiator_config.cs_main_mode);
     }
   }
-
   /////////////////////////////////////////////////////////////////////////////
   // Put your additional application code here!                              //
   // This is called infinitely.                                              //
@@ -776,6 +727,63 @@ static void check_supported_capabilities(const sl_bt_msg_t *evt)
       app_assert(false, APP_PREFIX "RTT random is not supported by the local/remote device" APP_LOG_NL);
     }
   }
+}
+
+/******************************************************************************
+ * Write measurement results to the display and to the iostream
+ *****************************************************************************/
+
+static void print_head_and_data(cs_initiator_instances_t *initiator)
+{
+      const bd_addr *bt_address = ble_peer_manager_get_bt_address(initiator->conn_handle);
+      for (uint8_t is_data = ((measurement_counter % CS_INITIATOR_HEADER_LOG) > 0); is_data <= 1; is_data++) {
+        log_info(APP_INSTANCE_PREFIX, initiator->conn_handle);
+        cs_initiator_print_bt_address(!is_data, bt_address);
+
+        cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_MAINMODE,
+                                  !is_data,
+                                  &(initiator->measurement_mainmode.distance_filtered));
+        // Distance submode
+        if (initiator_config.cs_sub_mode != sl_bt_cs_submode_disabled) {
+          cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_SUBMODE,
+                                    !is_data,
+                                    &(initiator->measurement_submode.distance_filtered));
+        }
+        // Distance RAW
+        cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_RAW_MAINMODE,
+                                  !is_data,
+                                  &(initiator->measurement_mainmode.distance_raw));
+        // Distance submode RAW
+        if (initiator_config.cs_sub_mode != sl_bt_cs_submode_disabled) {
+          cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_RAW_SUBMODE,
+                                    !is_data,
+                                    &(initiator->measurement_submode.distance_raw));
+        }
+        // Likeliness
+        cs_initiator_print_result(CS_RESULT_FIELD_LIKELINESS_MAINMODE,
+                                  !is_data,
+                                  &(initiator->measurement_mainmode.likeliness));
+        // Likeliness submode
+        if (initiator_config.cs_sub_mode != sl_bt_cs_submode_disabled) {
+          cs_initiator_print_result(CS_RESULT_FIELD_LIKELINESS_SUBMODE,
+                                    !is_data,
+                                    &(initiator->measurement_submode.likeliness));
+        }
+        // RSSI distance
+        cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_RSSI,
+                                  !is_data,
+                                  &(initiator->measurement_mainmode.distance_estimate_rssi));
+        // Velocity
+        cs_initiator_print_result(CS_RESULT_FIELD_VELOCITY_MAINMODE,
+                                  !is_data,
+                                  &(initiator->measurement_mainmode.velocity));
+
+        // BER
+        cs_initiator_print_result(CS_RESULT_FIELD_BIT_ERROR_RATE,
+                                  !is_data,
+                                  &(initiator->measurement_mainmode.bit_error_rate));
+        log_append(APP_LOG_NL);
+      }
 }
 
 /******************************************************************************

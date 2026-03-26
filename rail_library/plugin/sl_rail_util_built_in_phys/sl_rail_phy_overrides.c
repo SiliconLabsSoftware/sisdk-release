@@ -40,15 +40,18 @@
 #define SL_RAIL_PHY_INIT_HFXO_FREQ   SL_DEVICE_INIT_HFXO_FREQ
 #endif // defined(SL_CATALOG_CLOCK_MANAGER_PRESENT)
 
+#include "sl_rail_features.h"
 #include "sl_rail_ble_config_38M4Hz.h"
 #include "sl_rail_ieee802154_config_38M4Hz.h"
-#include "sl_rail_rfsense_ook_config_38M4Hz.h"
 #include "sl_rail_ble_config_39MHz.h"
 #include "sl_rail_ieee802154_config_39MHz.h"
-#include "sl_rail_rfsense_ook_config_39MHz.h"
 #include "sl_rail_ble_config_40MHz.h"
 #include "sl_rail_ieee802154_config_40MHz.h"
+#if SL_RAIL_SUPPORTS_RF_SENSE_OOK_PHY
+#include "sl_rail_rfsense_ook_config_38M4Hz.h"
+#include "sl_rail_rfsense_ook_config_39MHz.h"
 #include "sl_rail_rfsense_ook_config_40MHz.h"
+#endif
 
 #if SL_RAIL_PHY_INIT_HFXO_FREQ == 38400000
 
@@ -70,9 +73,12 @@ const RAIL_ChannelConfig_t *const RAIL_BLE_Phy1MbpsViterbi =
 #if RAIL_BLE_SUPPORTS_2MBPS_VITERBI
 const RAIL_ChannelConfig_t *const RAIL_BLE_Phy2MbpsViterbi =
   &sl_rail_ble_phy_2Mbps_viterbi_38M4Hz_channelConfig;
-#if RAIL_BLE_SUPPORTS_AOX
+#if RAIL_BLE_SUPPORTS_AOX && ((_SILICON_LABS_32B_SERIES_2_CONFIG == 4) || (_SILICON_LABS_32B_SERIES_2_CONFIG == 6))
 const RAIL_ChannelConfig_t *const RAIL_BLE_Phy2MbpsAox =
   &sl_rail_ble_phy_2Mbps_aox_38M4Hz_channelConfig;
+#else
+const RAIL_ChannelConfig_t *const RAIL_BLE_Phy2MbpsAox =
+  &sl_rail_ble_phy_2Mbps_viterbi_38M4Hz_channelConfig;
 #endif
 #endif
 
@@ -94,8 +100,13 @@ const RAIL_ChannelConfig_t *const RAIL_BLE_PhySimulscan =
 #endif
 
 #if RAIL_SUPPORTS_2P4GHZ_BAND && RAIL_SUPPORTS_PROTOCOL_IEEE802154
+#if ((_SILICON_LABS_32B_SERIES_2_CONFIG == 4) || (_SILICON_LABS_32B_SERIES_2_CONFIG == 6))
 const RAIL_ChannelConfig_t *const RAIL_IEEE802154_Phy2p4GHz =
   &sl_rail_ieee802154_phy_2G4Hz_38M4Hz_channelConfig;
+#else
+const RAIL_ChannelConfig_t *const RAIL_IEEE802154_Phy2p4GHz =
+  &sl_rail_ieee802154_phy_2G4Hz_coherent_38M4Hz_channelConfig;
+#endif
 #endif
 
 #if RAIL_IEEE802154_SUPPORTS_2MBPS_PHY
@@ -118,7 +129,7 @@ const RAIL_ChannelConfig_t *const RAIL_IEEE802154_Phy2p4GHzAntDiv =
   &sl_rail_ieee802154_phy_2G4Hz_antdiv_38M4Hz_channelConfig;
 #endif
 
-#if RAIL_IEEE802154_SUPPORTS_RX_CHANNEL_SWITCHING && (_SILICON_LABS_32B_SERIES_2_CONFIG != 1)
+#if RAIL_IEEE802154_SUPPORTS_RX_CHANNEL_SWITCHING && (_SILICON_LABS_32B_SERIES_2_CONFIG > 1)
 const RAIL_ChannelConfig_t *const RAIL_IEEE802154_Phy2p4GHzRxChSwitching =
   &sl_rail_ieee802154_phy_2G4Hz_fast_switch_38M4Hz_channelConfig;
 #endif
@@ -154,8 +165,12 @@ const RAIL_ChannelConfig_t *const RAIL_IEEE802154_Phy2p4GHzAntDivCoexFem =
   &sl_rail_ieee802154_phy_2G4Hz_antdiv_coex_fem_38M4Hz_channelConfig;
 #endif
 
+#if SL_RAIL_SUPPORTS_RF_SENSE_OOK_PHY
 const RAIL_ChannelConfig_t *const RAIL_RFSENSE_OOK_Phy1kbps =
   &sl_rfsense_ook_1kbps_38M4Hz_channelConfig;
+#else
+const RAIL_ChannelConfig_t *const RAIL_RFSENSE_OOK_Phy1kbps = NULL;
+#endif
 
 #elif SL_RAIL_PHY_INIT_HFXO_FREQ == 39000000
 
@@ -177,9 +192,12 @@ const RAIL_ChannelConfig_t *const RAIL_BLE_Phy1MbpsViterbi =
 #if RAIL_BLE_SUPPORTS_2MBPS_VITERBI
 const RAIL_ChannelConfig_t *const RAIL_BLE_Phy2MbpsViterbi =
   &sl_rail_ble_phy_2Mbps_viterbi_39MHz_channelConfig;
-#if RAIL_BLE_SUPPORTS_AOX
+#if RAIL_BLE_SUPPORTS_AOX && ((_SILICON_LABS_32B_SERIES_2_CONFIG == 4) || (_SILICON_LABS_32B_SERIES_2_CONFIG == 6))
 const RAIL_ChannelConfig_t *const RAIL_BLE_Phy2MbpsAox =
   &sl_rail_ble_phy_2Mbps_aox_39MHz_channelConfig;
+#else
+const RAIL_ChannelConfig_t *const RAIL_BLE_Phy2MbpsAox =
+  &sl_rail_ble_phy_2Mbps_viterbi_39MHz_channelConfig;
 #endif
 #endif
 
@@ -201,8 +219,13 @@ const RAIL_ChannelConfig_t *const RAIL_BLE_PhySimulscan =
 #endif
 
 #if RAIL_SUPPORTS_2P4GHZ_BAND && RAIL_SUPPORTS_PROTOCOL_IEEE802154
+#if ((_SILICON_LABS_32B_SERIES_2_CONFIG == 4) || (_SILICON_LABS_32B_SERIES_2_CONFIG == 6))
 const RAIL_ChannelConfig_t *const RAIL_IEEE802154_Phy2p4GHz =
   &sl_rail_ieee802154_phy_2G4Hz_39MHz_channelConfig;
+#else
+const RAIL_ChannelConfig_t *const RAIL_IEEE802154_Phy2p4GHz =
+  &sl_rail_ieee802154_phy_2G4Hz_coherent_39MHz_channelConfig;
+#endif
 #endif
 
 #if RAIL_SUPPORTS_ANTENNA_DIVERSITY && RAIL_SUPPORTS_2P4GHZ_BAND \
@@ -211,7 +234,7 @@ const RAIL_ChannelConfig_t *const RAIL_IEEE802154_Phy2p4GHzAntDiv =
   &sl_rail_ieee802154_phy_2G4Hz_antdiv_39MHz_channelConfig;
 #endif
 
-#if RAIL_IEEE802154_SUPPORTS_RX_CHANNEL_SWITCHING && (_SILICON_LABS_32B_SERIES_2_CONFIG != 1)
+#if RAIL_IEEE802154_SUPPORTS_RX_CHANNEL_SWITCHING && (_SILICON_LABS_32B_SERIES_2_CONFIG > 1)
 const RAIL_ChannelConfig_t *const RAIL_IEEE802154_Phy2p4GHzRxChSwitching =
   &sl_rail_ieee802154_phy_2G4Hz_fast_switch_39MHz_channelConfig;
 #endif
@@ -261,8 +284,12 @@ const RAIL_ChannelConfig_t *const RAIL_IEEE802154_Phy2p4GHzAntDivCoexFem =
   &sl_rail_ieee802154_phy_2G4Hz_antdiv_coex_fem_39MHz_channelConfig;
 #endif
 
+#if SL_RAIL_SUPPORTS_RF_SENSE_OOK_PHY
 const RAIL_ChannelConfig_t *const RAIL_RFSENSE_OOK_Phy1kbps =
   &sl_rfsense_ook_1kbps_39MHz_channelConfig;
+#else
+const RAIL_ChannelConfig_t *const RAIL_RFSENSE_OOK_Phy1kbps = NULL;
+#endif
 
 #elif SL_RAIL_PHY_INIT_HFXO_FREQ == 40000000
 
@@ -284,9 +311,12 @@ const RAIL_ChannelConfig_t *const RAIL_BLE_Phy1MbpsViterbi =
 #if RAIL_BLE_SUPPORTS_2MBPS_VITERBI
 const RAIL_ChannelConfig_t *const RAIL_BLE_Phy2MbpsViterbi =
   &sl_rail_ble_phy_2Mbps_viterbi_40MHz_channelConfig;
-#if RAIL_BLE_SUPPORTS_AOX
+#if RAIL_BLE_SUPPORTS_AOX && ((_SILICON_LABS_32B_SERIES_2_CONFIG == 4) || (_SILICON_LABS_32B_SERIES_2_CONFIG == 6))
 const RAIL_ChannelConfig_t *const RAIL_BLE_Phy2MbpsAox =
   &sl_rail_ble_phy_2Mbps_aox_40MHz_channelConfig;
+#else
+const RAIL_ChannelConfig_t *const RAIL_BLE_Phy2MbpsAox =
+  &sl_rail_ble_phy_2Mbps_viterbi_40MHz_channelConfig;
 #endif
 #endif
 
@@ -310,8 +340,13 @@ const RAIL_ChannelConfig_t *const RAIL_BLE_PhySimulscan =
 #endif
 
 #if RAIL_SUPPORTS_2P4GHZ_BAND && RAIL_SUPPORTS_PROTOCOL_IEEE802154
+#if ((_SILICON_LABS_32B_SERIES_2_CONFIG == 4) || (_SILICON_LABS_32B_SERIES_2_CONFIG == 6))
 const RAIL_ChannelConfig_t *const RAIL_IEEE802154_Phy2p4GHz =
   &sl_rail_ieee802154_phy_2G4Hz_40MHz_channelConfig;
+#else
+const RAIL_ChannelConfig_t *const RAIL_IEEE802154_Phy2p4GHz =
+  &sl_rail_ieee802154_phy_2G4Hz_coherent_40MHz_channelConfig;
+#endif
 #endif
 
 #if RAIL_SUPPORTS_ANTENNA_DIVERSITY && RAIL_SUPPORTS_2P4GHZ_BAND \
@@ -320,7 +355,7 @@ const RAIL_ChannelConfig_t *const RAIL_IEEE802154_Phy2p4GHzAntDiv =
   &sl_rail_ieee802154_phy_2G4Hz_antdiv_40MHz_channelConfig;
 #endif
 
-#if RAIL_IEEE802154_SUPPORTS_RX_CHANNEL_SWITCHING && (_SILICON_LABS_32B_SERIES_2_CONFIG != 1)
+#if RAIL_IEEE802154_SUPPORTS_RX_CHANNEL_SWITCHING && (_SILICON_LABS_32B_SERIES_2_CONFIG > 1)
 const RAIL_ChannelConfig_t *const RAIL_IEEE802154_Phy2p4GHzRxChSwitching =
   &sl_rail_ieee802154_phy_2G4Hz_fast_switch_40MHz_channelConfig;
 #endif
@@ -370,7 +405,11 @@ const RAIL_ChannelConfig_t *const RAIL_IEEE802154_Phy2p4GHzAntDivCoexFem =
   &sl_rail_ieee802154_phy_2G4Hz_antdiv_coex_fem_40MHz_channelConfig;
 #endif
 
+#if SL_RAIL_SUPPORTS_RF_SENSE_OOK_PHY
 const RAIL_ChannelConfig_t *const RAIL_RFSENSE_OOK_Phy1kbps =
   &sl_rfsense_ook_1kbps_40MHz_channelConfig;
+#else
+const RAIL_ChannelConfig_t *const RAIL_RFSENSE_OOK_Phy1kbps = NULL;
+#endif
 
 #endif // SL_RAIL_PHY_INIT_HFXO_FREQ

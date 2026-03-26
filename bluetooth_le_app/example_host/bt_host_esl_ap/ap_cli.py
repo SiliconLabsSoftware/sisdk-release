@@ -43,7 +43,6 @@ from ap_constants import (
     LED_DEFAULT_PATTERN,
     LED_DEFAULT_PERIOD,
     LED_DEFAULT_DURATION,
-    LED_DEFAULT_REPEATS,
     PA_INTERVAL_ABS_MIN,
     PA_INTERVAL_ABS_MAX,
     PA_RESPONSE_SLOT_NUMBERS_MIN,
@@ -62,12 +61,14 @@ from ap_constants import (
     VALID_GROUP_ID_NUMBER_REGEX,
     VALID_BD_ADDRESS_REGEX,
 )
-from PIL import Image
+from esl_lib import Address, EventType, EVENT_PREFIX
 from esl_lib_wrapper import (
     ESL_LIB_CONNECTION_MODE_SINGLE,
     ESL_LIB_CONNECTION_MODE_LIST,
 )
 
+# Known event names for script wait (lowercase, no prefix; matches EventDispatcher.notify)
+KNOWN_EVENT_NAMES = {et.name for et in EventType.all()}
 
 def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)
@@ -89,11 +90,13 @@ def ble_address_type_all(arg_value):
 
 def address_type(arg_value):
     pat = re.compile(
-        "("
-        + VALID_ESL_ID_NUMBER_REGEX
-        + "|"
-        + VALID_BD_ADDRESS_REGEX
-        + r"|^(?=\s*$)|all)"
+        r"^("
+            + VALID_ESL_ID_NUMBER_REGEX
+            + r"|"
+            + VALID_BD_ADDRESS_REGEX
+            + r"|all"
+            + r"|\s*"
+        + r")$"
     )
     if not pat.match(arg_value):
         raise argparse.ArgumentTypeError("Invalid address type.")
@@ -106,12 +109,32 @@ def esl_id_type(arg_value):
         raise argparse.ArgumentTypeError("Invalid ESL ID value. Please select from the allowed range of 0 to 254, or you may use 'all' as a substitute for 255 in some contexts.")
     return arg_value
 
+
 def esl_group_id_type(arg_value):
     re_str = VALID_GROUP_ID_NUMBER_REGEX if not IOP_TEST else VALID_ESL_ID_NUMBER_REGEX # IOP_TEST mode allows full <u8> range for RFU bit tests 
     pat = re.compile(r"(" + re_str + ")")
     if not pat.match(arg_value):
         raise argparse.ArgumentTypeError("Invalid ESL Group ID. Please select from the allowed range of 0 to 127!")
-    return arg_value
+    return int(arg_value)
+
+
+def event_type(arg_value):
+    """Validate and normalize event name for script wait (e.g. connection_opened, tag_found).
+    Accepts any case and optional EVENT_PREFIX (e.g. ESL_LIB_EVT_ or esl_lib_evt_).
+    """
+    if not arg_value or not str(arg_value).strip():
+        raise argparse.ArgumentTypeError("Event name must not be empty.")
+    normalized = str(arg_value).strip().lower()
+    prefix_lower = EVENT_PREFIX.lower()
+    if normalized.startswith(prefix_lower):
+        normalized = normalized[len(prefix_lower):]
+    if normalized not in KNOWN_EVENT_NAMES:
+        raise argparse.ArgumentTypeError(
+            "Invalid event name: '%s'. Known events: %s."
+            % (arg_value, ", ".join(sorted(KNOWN_EVENT_NAMES)))
+        )
+    return normalized
+
 
 def time_type(arg_value):
     try:
@@ -682,14 +705,14 @@ class CliProcessor(cmd.Cmd):
             "-on",
             type=int,
             help="""Integer value from 1 to 255, meaning 'delay *2ms' for on state bits of the pattern. '0' is prohibited""",
-            metavar="<int[0,3]>",
+            metavar="<u8>",
         )
         parser_led.add_argument(
             "--off_period",
             "-of",
             type=int,
             help="""Integer value from 1 to 255, meaning 'delay *2ms' for off state bits of the pattern. '0' is prohibited""",
-            metavar="<int[0,3]>",
+            metavar="<u8>",
         )
         parser_led.add_argument(
             "--brightness",
@@ -2016,19 +2039,64 @@ class CliProcessor(cmd.Cmd):
             ),
             description=self.do_script.__doc__,
             epilog="""
-        Notes: Scripting is an experimental feature, only - it is lack of advanced features like programmed reactions
-               to events or configuration dependent and / or conditional execution, etc. Recorded script files may
-               contain script commands also, recursively. However, it is strongly advised to keep the recursion level
-               low as possible. Use with care.""",
+        Notes: Scripting is an experimental feature only – it also supports basic waiting with timeout and
+               optional device filtering for events, but it lacks any configuration‑dependent and/or conditional
+               execution capabilities. Recorded script files may contain script commands as well, even recursively.
+               However, it is strongly advised to avoid it, as recursive execution cannot be interrupted and may
+               lead to uncontrolled behavior.""",
         )
-        parser_script.add_argument(
-            "record_run_wait",
-            choices=["record", "run", "wait"],
-            help="""Record/run commands to/from an output file <filename> or wait before running the next command. Note: If 'stop' given as a filename then recording of commands will stop.""",
+
+        # create subparsers for record / run / wait
+        sub = parser_script.add_subparsers(dest="record_run_wait", required=True)
+
+        # subcommand: record
+        p_record = sub.add_parser(
+            "record",
+            help="Record commands to an output file. Issue 'script record stop' to stop recording and close the file."
         )
-        parser_script.add_argument(
-            "file_or_sec",
-            help="Filename to write / read AP commands or second in case of wait command",
+        p_record.add_argument(
+            "filename",
+            help="Filename to write AP commands to. Note: the word 'stop' is reserved, can't be used as a valid file name."
+        )
+
+        # subcommand: run
+        p_run = sub.add_parser(
+            "run",
+            help="Run commands from an input file."
+        )
+        p_run.add_argument(
+            "filename",
+            help="Filename to read AP commands from."
+        )
+
+        # subcommand: wait
+        p_wait = sub.add_parser(
+            "wait",
+            help="Wait before running the next command. "
+        )
+        p_wait.add_argument(
+            "seconds",
+            type=int,
+            help="Seconds to wait"
+        )
+        p_wait.add_argument(
+            "event",
+            nargs="?",
+            type=event_type,
+            help="Event name (e.g. connection_opened, ESL_LIB_EVT_TAG_FOUND)"
+        )
+        p_wait.add_argument(
+            "address",
+            nargs="?",
+            type=address_type,
+            help="ESL ID (0-254), BLE address, or 'all'"
+        )
+        p_wait.add_argument(
+            "--group_id",
+            "-g",
+            metavar="<u7>",
+            type=esl_group_id_type,
+            help="ESL group ID (optional, default 0 if an address is given, None otherwise); with address 'all', wait for first event from this group"
         )
 
     def do_script(self, arg):
@@ -2036,29 +2104,51 @@ class CliProcessor(cmd.Cmd):
         Record commands to an output file or execute them from an input file.
         """
         if arg.record_run_wait == "record":
-            try:
-                filename = str(arg.file_or_sec)
-                self.record_commands(filename)
-            except:
-                self.log.error(
-                    "Invalid argument for script record: filename has to be string"
-                )
+            filename = arg.filename
+            self.record_commands(filename)
+
         elif arg.record_run_wait == "run":
-            try:
-                filename = str(arg.file_or_sec)
-                self.playback_commands(filename)
-            except:
-                self.log.error(
-                    "Invalid argument for script run: filename has to be string"
-                )
+            filename = arg.filename
+            self.playback_commands(filename)
+
         elif arg.record_run_wait == "wait":
-            try:
-                seconds = int(arg.file_or_sec)
-                self.ap_wait(seconds)
-            except:
-                self.log.error(
-                    "Invalid argument for script wait: seconds has to be integer"
-                )
+            seconds = arg.seconds
+            event_name = arg.event
+            address = arg.address
+            wait_group_id = arg.group_id
+
+            device_tag = None
+            if address is None:
+                # no device filtering
+                pass
+            elif address == "all":
+                # group filtering only
+                wait_group_id = arg.group_id # May be None if not given, integer in range 0..127, otherwise
+            else:
+                # address is guaranteed valid by address_type()
+                if ":" in address:
+                    # arg.address is BLE address → create Address object
+                    node_id = Address.from_str(address)
+                else:
+                    # arg.address is an ESL ID
+                    esl_id = int(address)
+                    group_id = arg.group_id if arg.group_id is not None else 0
+                    node_id = (esl_id, group_id)
+
+                device_tag = self.ap.tag_db.find(node_id)
+
+                if device_tag is None:
+                    self.log.error(
+                        "Unknown device: %s. Device must exist in tag database (use 'list' to see known devices).",
+                        address,
+                    )
+                    return
+            self.ap_wait(
+                seconds,
+                event_name=event_name,
+                device_tag=device_tag,
+                group_id=wait_group_id if device_tag is None else device_tag.group_id,
+            )
 
     def arg_update_complete(self):
         parser_update_complete = self.subparsers.add_parser(
@@ -2168,14 +2258,72 @@ class CliProcessor(cmd.Cmd):
                         "Help not available for unknown command: " + subparser_given
                     )
 
-    def ap_wait(self, w_time):
+    def ap_wait(self, w_time, event_name=None, device_tag=None, group_id=None):
         """
-        Wait <w_time> seconds before running the next command
+        Wait <w_time> seconds before running the next command.
+        If event_name is given, wait until that event occurs or timeout.
+        If device_tag is given with event_name, only resume when the event
+        originates from that device. If group_id is given (and device_tag is None),
+        resume on the first event from any device in that group.
 
-        Note: Pending commands continue to execute.
+        Note: The wait blocks the CLI pipeline until the event or timeout occurs.
+        However, internal system operations not handled by the command interpreter
+        will proceed concurrently.
         """
-        self.log.info("Waiting " + str(w_time) + " seconds")
-        time.sleep(int(w_time))
+        if event_name is None:
+            self.log.info("Waiting " + str(w_time) + " seconds")
+            time.sleep(int(w_time))
+            return
+        # Wait for event with optional device filter
+        condition = threading.Condition()
+        event_received = [False]  # list to allow closure to mutate
+
+        def _tag_from_event(event):
+            """Resolve tag from event (same logic as ap_core)."""
+            if hasattr(event, "node_id"):
+                return self.ap.tag_db.find(event.node_id)
+            if hasattr(event, "address"):
+                return self.ap.tag_db.find(event.address)
+            if hasattr(event, "connection_handle"):
+                return self.ap.tag_db.find(event.connection_handle)
+            return None
+
+        def _on_event(event):
+            tag = _tag_from_event(event)
+            if device_tag is not None:
+                if tag is not device_tag:
+                    return
+            elif group_id is not None:
+                if tag is None or getattr(tag, "group_id", None) != group_id:
+                    return
+            with condition:
+                event_received[0] = True
+                condition.notify()
+
+        prefix = "script_wait_" + str(threading.get_ident())
+        event_display = EVENT_PREFIX + event_name.upper() if event_name else ""
+        try:
+            self.ap.evt_dispatcher.subscribe(event_name, _on_event, prefix=prefix)
+            if device_tag is not None:
+                device_desc = " from ESL ID " + str(device_tag)
+            elif group_id is not None:
+                device_desc = " from group " + str(group_id)
+            else:
+                device_desc = ""
+            self.log.info(
+                "Waiting up to %s s for event %s%s",
+                w_time,
+                event_display,
+                device_desc,
+            )
+            with condition:
+                condition.wait(timeout=float(w_time))
+            if event_received[0]:
+                self.log.info("Event %s received%s", event_display, device_desc)
+            else:
+                self.log.info("Timeout waiting for event %s%s", event_display, device_desc)
+        finally:
+            self.ap.evt_dispatcher.unsubscribe_prefix(prefix)
 
     def playback_commands(self, fname):
         """Playback commands from an input file"""

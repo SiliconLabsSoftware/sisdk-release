@@ -22,6 +22,8 @@
 #include "sl_assert.h"
 #include "sl_memory_manager.h"
 #include "sl_wisun_api.h"
+#include "sl_rail.h"
+#include "sl_wisun_rf_test.h"
 #include "sl_sleeptimer.h"
 #include "app_event_log.h"
 
@@ -90,6 +92,15 @@ static void app_event_log_print_event(const app_event_log_event_t *evt)
         APP_EVENT_FRAME_TYPE[evt->logger_event.u.tx_failure.type],
         address);
       break;
+    case SL_WISUN_LOGGER_EVENT_TYPE_RF_TEST:
+      if (evt->logger_event.u.rf_test.events & SL_RAIL_EVENT_RX_PACKET_RECEIVED) {
+        printf("RF test RX");
+      } else if (evt->logger_event.u.rf_test.events & SL_RAIL_EVENT_TX_PACKET_SENT) {
+        printf("RF test TX");
+      } else {
+        printf("RF test Rail event");
+      }
+      break;
     default:
       printf("Unknown event %llu", evt->logger_event.type);
       break;
@@ -143,4 +154,8 @@ void app_handle_event_logger_ind(sl_wisun_evt_t *evt) {
   printf("[");
   app_event_log_print_event(event_log_event);
   printf("]\r\n");
+
+  if (logger_event.type == SL_WISUN_LOGGER_EVENT_TYPE_RF_TEST) {
+    sl_wisun_rf_test_event_callback(logger_event.u.rf_test.events, logger_event.u.rf_test.u.rx.rssi);
+  }
 }

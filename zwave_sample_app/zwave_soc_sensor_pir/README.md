@@ -2,14 +2,14 @@
 
 The Z-Wave certified Sensor PIR application shows a presence/movement detector implementation for controlling other devices and for sending notifications.
 
-| <!-- -->                  | <!-- -->                                  |
-|---------------------------|-------------------------------------------|
-| Role Type                 | Reporting Sleeping End device (RSS)       |
-| Supporting Device Type    | Data reporting                            |
-| Device Type               | Notification sensor                       |
-| Generic Type              | Sensor Notification                       |
-| Specific Type             | Notification Sensor                       |
-| Requested security keys   | S2_UNAUTHENTICATED, and S2_AUTHENTICATED  |
+| <!-- -->                  | <!-- -->                                       |
+|---------------------------|------------------------------------------------|
+| Role Type                 | Reporting Sleeping End device (RSS)            |
+| Supporting Device Type    | Data reporting                                 |
+| Device Type               | Notification sensor                            |
+| Generic Type              | Sensor Notification                            |
+| Specific Type             | Notification Sensor                            |
+| Requested security keys   | S0, S2\_UNAUTHENTICATED, and S2\_AUTHENTICATED |
 
 Sensor PIR transmits the following notification types/events:
 
@@ -163,6 +163,8 @@ This section will describe backward compatibility when upgrading the Switch On/O
 ## CLI Support
 
 In case CLI support is needed, please install zw_cli_common component to the project. Please note that the zw_cli_common component will significantly increase the power consumption of this application, as it must always be in an active state in order to receive CLI commands. The CLI cannot function during EM4 sleep mode. After a reset, the application stays awake for 10 seconds. During this timeframe, the sleeping disable CLI command can be issued to keep the application awake.
+
+The default baud rate is 9600, which allows the underlying EUSART module to work in EM2. On some development kits (e.g. BRD2603A and BRD2705A), the following command should be applied in Simplicity Studio via the Admin console to adjust the baudrate: `serial vcom config speed 9600`.
 
 ### Available CLI commands
 

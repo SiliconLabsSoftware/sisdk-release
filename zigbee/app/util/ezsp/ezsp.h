@@ -119,7 +119,8 @@ sl_status_t sl_zigbee_set_preinstalled_cbke_data_283k1(sl_zigbee_public_key_283k
                                                        sl_zigbee_certificate_283k1_data_t *myCert,
                                                        sl_zigbee_private_key_283k1_data_t *myKey);
 
-#define sl_zigbee_is_node_id_valid(nodeId) ((nodeId) < SL_ZIGBEE_DISCOVERY_ACTIVE_NODE_ID);
+#define sl_zigbee_is_node_id_valid(nodeId) ((nodeId) < SL_ZIGBEE_DISCOVERY_ACTIVE_NODE_ID)
+
 
 //----------------------------------------------------------------
 // ZLL methods

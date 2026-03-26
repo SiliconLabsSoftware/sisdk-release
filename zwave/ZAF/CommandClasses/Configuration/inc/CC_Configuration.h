@@ -159,22 +159,6 @@ bool
 cc_configuration_get(uint16_t parameter_number, cc_config_parameter_buffer_t* parameter_buffer);
 
 /**
- * Sets new interface set to manipulate non volatile memory to store and read configuration values
- *
- * @param[in]  interface pointer to the new interface set
- */
-void
-cc_configuration_set_interface(cc_configuration_io_interface_t const* interface);
-
-/**
- * Sets default configuration in the Command Class
- *
- * @param[in]  configuration pointer to a configuration set
- */
-void
-cc_configuration_set_default_configuration(cc_configuration_t const* configuration);
-
-/**
  * Limit a value by the parameter's limits
  *
  * @param[in]  parameter_buffer pointer to the parameter buffer which holds the limit values

@@ -35,6 +35,8 @@
 #include "sl_component_catalog.h"
 #endif
 
+#include <stdbool.h>
+
 #include "sl_rail_types.h"
 #include "sl_rail_ieee802154.h"
 #include "rail_types.h"
@@ -132,6 +134,18 @@ sl_rail_util_ieee802154_stack_status_t sl_rail_util_ieee802154_phy_select_on_eve
  * @return Active IEEE 802.15.4 2.4Ghz radio configuration
  */
 sl_rail_util_radio_config_t sl_rail_util_ieee802154_get_active_radio_config(void);
+
+/**
+ * Check if the specified PHY features are supported.
+ *
+ * This function checks if a PHY configuration exists that supports all
+ * of the desired features. It can be used to verify PHY support before
+ * attempting to configure the radio.
+ *
+ * @param[in] desired_features The PHY features to check for support.
+ * @return true if a PHY supporting all desired features exists, false otherwise.
+ */
+bool sl_rail_util_ieee802154_is_phy_supported(sl_rail_ieee802154_phy_features_t desired_features);
 
 /**
  * Configure IEEE 802.15.4 2.4Ghz radio configuration.

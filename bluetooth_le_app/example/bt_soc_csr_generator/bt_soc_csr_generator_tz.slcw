@@ -1,4 +1,4 @@
-workspace_name: bt_soc_csr_generator_tz_workspace
+workspace_name: bt_soc_csr_generator_tz
 package: bluetooth_le_app
 label: Bluetooth - SoC Certificate Signing Request Generator (TrustZone)
 description: >

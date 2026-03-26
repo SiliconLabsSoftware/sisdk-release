@@ -45,6 +45,7 @@ extern "C" {
 // Includes needed for ember related functions for the EZSP host
 #include "stack/include/sl_zigbee_types.h"
 #include "stack/include/sl_zigbee_random_api.h"
+#include "stack/include/stack-info.h"
 #ifdef EZSP_HOST
   #include "app/util/ezsp/ezsp-protocol.h"
   #include "app/util/ezsp/ezsp.h"

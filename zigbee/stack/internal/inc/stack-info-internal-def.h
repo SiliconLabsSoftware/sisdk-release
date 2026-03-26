@@ -28,8 +28,6 @@ sl_status_t sli_802154_stack_radio_get_scheduler_priorities(sl_802154_radio_prio
 
 sl_status_t sli_802154_stack_radio_get_scheduler_sliptime(uint32_t *slipTime);
 
-sl_status_t sli_802154_stack_radio_set_scheduler_priorities(const sl_802154_radio_priorities_t *priorities);
-
 sl_status_t sli_802154_stack_radio_set_scheduler_sliptime(uint32_t slipTime);
 
 sl_status_t sli_802154_stack_set_tx_power_mode(uint16_t txPowerMode);

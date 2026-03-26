@@ -3,7 +3,7 @@
 * @brief BT Mesh Host Provisioner Example Project - CLI mode handler.
 *******************************************************************************
 * # License
-* <b>Copyright 2024 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * SPDX-License-Identifier: Zlib
@@ -58,12 +58,18 @@
 #ifdef SL_CATALOG_BTMESH_HOST_APP_PROV_CBP_PRESENT
 #include "btmesh_app_prov_cbp.h"
 #endif // SL_CATALOG_BTMESH_HOST_APP_PROV_CBP_PRESENT
+#ifdef SL_CATALOG_BTMESH_HOST_APP_PROV_OOB_PRESENT
+#include "btmesh_app_prov_oob.h"
+#endif // SL_CATALOG_BTMESH_HOST_APP_PROV_OOB_PRESENT
 #include "btmesh_app_remote_prov.h"
 #include "btmesh_remote_prov.h"
 #else
 #ifdef SL_CATALOG_BTMESH_HOST_APP_PROV_CBP_PRESENT
 #include "btmesh_app_prov_cbp.h"
 #endif // SL_CATALOG_BTMESH_HOST_APP_PROV_CBP_PRESENT
+#ifdef SL_CATALOG_BTMESH_HOST_APP_PROV_OOB_PRESENT
+#include "btmesh_app_prov_oob.h"
+#endif // SL_CATALOG_BTMESH_HOST_APP_PROV_OOB_PRESENT
 #include "app_prov_only.h"
 #endif // SL_CATALOG_BTMESH_HOST_APP_REMOTE_PROV_PRESENT
 
@@ -129,6 +135,10 @@ void app_init(int argc, char *argv[])
 
         if (sc != SL_STATUS_OK) {
           sc = btmesh_cbp_on_check_cmd_options(opt, optarg);
+        }
+
+        if (sc != SL_STATUS_OK) {
+          sc = btmesh_oob_on_check_cmd_options(opt, optarg);
         }
 
         if (sc != SL_STATUS_OK) {
@@ -294,6 +304,7 @@ void btmesh_app_build_long_options(struct option *long_options)
 
   btmesh_app_on_build_cmd_options(long_options + PROV_OPTLENGTH);
   btmesh_cbp_on_build_cmd_options(long_options + PROV_OPTLENGTH + REMOTE_PROV_OPTLENGTH);
+  btmesh_oob_on_build_cmd_options(long_options + PROV_OPTLENGTH + REMOTE_PROV_OPTLENGTH + CBP_OPTLENGTH);
 }
 
 void app_parse_uuid(char *input, size_t length, uuid_128 *parsed_uuid)
@@ -395,6 +406,11 @@ SL_WEAK void btmesh_cbp_on_build_cmd_options(struct option *long_options)
   (void)long_options;
 }
 
+SL_WEAK void btmesh_oob_on_build_cmd_options(struct option *long_options)
+{
+  (void)long_options;
+}
+
 SL_WEAK sl_status_t btmesh_app_on_check_cmd_options(int cmd_opt, char *cmd_optarg)
 {
   (void)cmd_opt;
@@ -404,6 +420,15 @@ SL_WEAK sl_status_t btmesh_app_on_check_cmd_options(int cmd_opt, char *cmd_optar
 }
 
 SL_WEAK sl_status_t btmesh_cbp_on_check_cmd_options(int cmd_opt, char *cmd_optarg)
+{
+  (void)cmd_opt;
+  (void)cmd_optarg;
+
+  return SL_STATUS_NOT_FOUND;
+}
+
+
+SL_WEAK sl_status_t btmesh_oob_on_check_cmd_options(int cmd_opt, char *cmd_optarg)
 {
   (void)cmd_opt;
   (void)cmd_optarg;

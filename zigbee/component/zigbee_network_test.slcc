@@ -13,8 +13,11 @@ provides:
 config_file:
 - path: app/framework/plugin/network_test/config/network_test_config.h
 requires:
-- name: zigbee_system_common
 - name: zigbee_fragmentation
+- name: zigbee_system_common
+  condition: [device_efx]
+- name: zigbee_host_framework_common
+  condition: [native_host]
 
 source:
 - path: app/test/zigbee_network_test.c

@@ -317,7 +317,8 @@ sl_status_t sl_wisun_set_channel_mask(const sl_wisun_channel_mask_t *channel_mas
  * address does not match any of addresses on the list. By default, all MAC
  * addresses are allowed. Up to 10 MAC addresses may be added to the list.
  * The access list affects only directly connected nodes such as parents,
- * children, and neighbors.
+ * children, and neighbors. The list is persistent when the device disconnects
+ * or stops.
  *
  * Available in libraries: Full, FFN, LFN, BR (see @ref API_AVAILABILITY)
  *****************************************************************************/
@@ -337,7 +338,8 @@ sl_status_t sl_wisun_allow_mac_address(const sl_wisun_mac_address_t *address);
  * address matches any of the addresses on the list. By default, all MAC
  * addresses are allowed. Up to 10 MAC addresses may be added to the list.
  * The access list affects only directly connected nodes such as parents,
- * children, and neighbors.
+ * children, and neighbors. The list is persistent when the device disconnects
+ * os stops.
  *
  * Available in libraries: Full, FFN, LFN, BR (see @ref API_AVAILABILITY)
  *****************************************************************************/

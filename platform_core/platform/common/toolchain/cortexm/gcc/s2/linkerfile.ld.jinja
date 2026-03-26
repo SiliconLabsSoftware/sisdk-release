@@ -69,7 +69,7 @@
 {%- if memory_ram_size is defined %}
   {%- set app_ram_size = memory_ram_size | first %}
 {%- else %}
-  {%- set app_ram_size = sram_size %}
+  {%- set app_ram_size = sram_size - (app_ram_start - sram_addr) %}
 {%- endif %}
 
 {%- if bootloader_enable or bootloader_interface_enable %}
@@ -97,10 +97,7 @@
 {%- if memory_flash_size is defined %}
   {%- set app_flash_size = memory_flash_size | first %}
 {%- else %}
-  {%- set app_flash_size = flash_size %}
-  {%- if app_bootloader_size > 0 %}
-    {%- set app_flash_size = app_flash_size - app_bootloader_size %}
-  {%- endif %}
+  {%- set app_flash_size = flash_size - (app_flash_start - flash_addr) %}
 {#-
   We reserve the last flash page for tokens and key storage
 #}
@@ -476,11 +473,4 @@ heap_size = heap_limit - __HeapBase;
   {%- endif %}
 {%- endif %} {#- trustzone_secure #}
 
-{%- if (memory_ram_start and not memory_ram_size) or (memory_ram_size and not memory_ram_start)  %}
-  ASSERT( 0, "memory_ram_start and memory_ram_size, Should define/undefine both!")
-{%- endif %}
-
-{%- if (memory_flash_start and not memory_flash_size) or (memory_flash_size and not memory_flash_start) %}
-  ASSERT( 0, "memory_flash_start and memory_flash_size, Should define/undefine both!")
-{%- endif %}
 } {#- END of SECTIONS #}

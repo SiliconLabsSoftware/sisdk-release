@@ -11,10 +11,10 @@
 # sure it is a valid GitHub version.  Avoid merge or local commit hashes.
 
 id=com.silabs.sdk.stack.openthread_app
-version=3.0.0.0
+version=3.0.1.0
 label=OpenThread SDK
 description=OpenThread stack support for EFR32 devices
-prop.subLabel=OpenThread\\ 3.0.0.0\\ (GitHub-61e43cffb)
+prop.subLabel=OpenThread\\ 3.0.1.0\\ (GitHub-61e43cffb)
 
 prop.file.docsFile=documentation/slOpenThread_docContent.xml
 prop.file.templatesFile=openthread_production_templates.xml

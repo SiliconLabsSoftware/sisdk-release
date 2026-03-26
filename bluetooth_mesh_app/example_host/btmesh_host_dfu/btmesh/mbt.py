@@ -1,4 +1,4 @@
-# Copyright 2022 Silicon Laboratories Inc. www.silabs.com
+# Copyright 2026 Silicon Laboratories Inc. www.silabs.com
 #
 # SPDX-License-Identifier: Zlib
 #
@@ -442,6 +442,8 @@ class BlobTransferClient(BtmeshComponent):
         # If the MBT Client model was setup by an upper layer model then the
         # setup API shall not be called.
         if servers:
+            for server_addr in servers:
+                util.validate_unicast_address(server_addr)
             self.lib.btmesh.mbt_client.setup(
                 elem_index,
                 blob.id,
@@ -453,7 +455,7 @@ class BlobTransferClient(BtmeshComponent):
                 group_addr,
                 virtual_addr,
                 multicast_threshold,
-                (addr.to_bytes(2, byteorder="little") for addr in servers),
+                b"".join(addr.to_bytes(2, byteorder="little") for addr in servers),
             )
         else:
             server_idx = 0

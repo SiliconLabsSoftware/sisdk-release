@@ -1867,7 +1867,7 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     otEXPECT_ACTION(sl_ot_rtos_task_can_access_pal(), error = OT_ERROR_REJECTED);
 
     shouldDefer = sli_ot_radio_instance_energy_scan_should_defer();
-    otEXPECT_ACTION(!shouldDefer, sli_ot_radio_instance_energy_scan_defer(aInstance, aScanChannel, aScanDuration));
+    otEXPECT_ACTION(!shouldDefer, error = OT_ERROR_BUSY);
 
     error = sli_ot_energy_scan_status_to_ot_error(
         sli_ot_energy_scan_async(aInstance, aScanChannel, (sl_rail_time_t)aScanDuration * US_IN_MS));

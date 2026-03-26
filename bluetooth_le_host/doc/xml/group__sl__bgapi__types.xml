@@ -22,7 +22,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="85" column="27" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="85" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="85" column="27" bodyfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="85" bodyend="-1"/>
       </memberdef>
       </sectiondef>
       <sectiondef kind="define">
@@ -34,7 +34,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="70" column="9" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="70" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="70" column="9" bodyfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="70" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bgapi__types_1ga253166438a8eef1a0f124c0d4e666a5a" prot="public" static="no">
         <name>SL_BT_TYPE_BYTE_ARRARY</name>
@@ -44,7 +44,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="79" column="9" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="79" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="79" column="9" bodyfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="79" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bgapi__types_1gaafbfd975e4108e0800b2514e4620e3fe" prot="public" static="no">
         <name>SL_BT_TYPE_BDADDR</name>
@@ -54,7 +54,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="89" column="9" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="89" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="89" column="9" bodyfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="89" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bgapi__types_1gadf14f7d846c7814be79f8a8c42598c47" prot="public" static="no">
         <name>SL_BT_TYPE_UUID128</name>
@@ -64,7 +64,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="97" column="9" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="97" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="97" column="9" bodyfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="97" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bgapi__types_1ga90a686db62e237997747ce3c801932f9" prot="public" static="no">
         <name>SL_BT_TYPE_AES_KEY128</name>
@@ -74,7 +74,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="105" column="9" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="105" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="105" column="9" bodyfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="105" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bgapi__types_1ga07ead9236e64f2f39c2cfb0552a1780c" prot="public" static="no">
         <name>SL_BT_TYPE_UUID16</name>
@@ -84,7 +84,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="113" column="9" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="113" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="113" column="9" bodyfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="113" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bgapi__types_1ga244785a8656dadd8c2974431fddb4a92" prot="public" static="no">
         <name>SL_BT_TYPE_UUID64</name>
@@ -94,7 +94,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="121" column="9" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="121" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="121" column="9" bodyfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="121" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bgapi__types_1ga6bb011435286a47a9c4de1f6ef519c12" prot="public" static="no">
         <name>SL_BGAPI_MSG_HEADER_LEN</name>
@@ -106,7 +106,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="172" column="9" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="172" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="172" column="9" bodyfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="172" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bgapi__types_1ga72e6465679d444647bd983ad6ccc04ab" prot="public" static="no">
         <name>SL_BGAPI_MSG_ERROR_PAYLOAD_LEN</name>
@@ -119,7 +119,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="180" column="9" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="180" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="180" column="9" bodyfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="180" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bgapi__types_1ga4671b66da59b89c387be047d4e32c855" prot="public" static="no">
         <name>SL_BGAPI_MSG_TYPE</name>
@@ -142,7 +142,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="187" column="9" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="187" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="187" column="9" bodyfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="187" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bgapi__types_1gaab00659f64d4181303b12b0c4fef8ece" prot="public" static="no">
         <name>SL_BGAPI_MSG_DEVICE_TYPE</name>
@@ -165,7 +165,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="194" column="9" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="194" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="194" column="9" bodyfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="194" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bgapi__types_1ga7a3cec618d880b1644cf9fac82757ca5" prot="public" static="no">
         <name>SL_BGAPI_MSG_ID</name>
@@ -188,7 +188,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="202" column="9" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="202" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="202" column="9" bodyfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="202" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bgapi__types_1gac8bc7ba3742a4b869a16010cb00b8f3a" prot="public" static="no">
         <name>SL_BGAPI_HEADER_MAX_PAYLOAD_LEN</name>
@@ -200,7 +200,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="207" column="9" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="207" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="207" column="9" bodyfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="207" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bgapi__types_1ga0072fe93eccf2839b954ec5f04f17db4" prot="public" static="no">
         <name>SL_BGAPI_MSG_LEN</name>
@@ -223,7 +223,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="219" column="9" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="219" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="219" column="9" bodyfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="219" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bgapi__types_1ga41f5c362bad074d82588d1a75e8a8583" prot="public" static="no">
         <name>SL_BGAPI_BIT_ENCRYPTED</name>
@@ -235,7 +235,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="224" column="9" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="224" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="224" column="9" bodyfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="224" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bgapi__types_1ga6d6214448a73d76f19bbc958933f3125" prot="public" static="no">
         <name>SL_BGAPI_MSG_ENCRYPTED</name>
@@ -258,7 +258,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="231" column="9" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="231" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="231" column="9" bodyfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="231" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bgapi__types_1ga335896cc750f109d2b622a6254261c8d" prot="public" static="no">
         <name>SL_BGAPI_MSG_HEADER_FROM_ID_AND_LEN</name>
@@ -295,7 +295,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="245" column="9" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="245" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="245" column="9" bodyfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="245" bodyend="-1"/>
       </memberdef>
       </sectiondef>
     <briefdescription>

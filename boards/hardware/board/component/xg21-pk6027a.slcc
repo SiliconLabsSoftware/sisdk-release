@@ -17,10 +17,10 @@
   - name: SL_KIT_NAME
     value: '"XG21-PK6027A"'
   - name: SL_KIT_REV
-    value: '"A02"'
+    value: '"A03"'
 - tag:
   - kit:opn:xG21-PK6027A
   - kit:pn:PK6027
   - kit:variant:A
-  - kit:revision:A02
+  - kit:revision:A03
 - root_path: boards

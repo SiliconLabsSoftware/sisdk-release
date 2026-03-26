@@ -35,8 +35,6 @@ template_contribution:
     count: 1
 - name: component_catalog
   value: ibeacon
-#validation_helper:
-#  - path: ibeacon_validation.py
 documentation:
   docset: bluetooth
   document: bluetooth-service-api/ibeacon

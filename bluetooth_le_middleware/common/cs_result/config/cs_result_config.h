@@ -112,9 +112,21 @@
 #endif
 
 // <o CS_INITIATOR_HEADER_LOG> Header log of measurements results <1..20>
-// <i> Sets how many measurements are written between header logs
+// <i> Sets how many measurements are written between header logs in SoC Initiator example
+// <i> Only kept for backward compatibility, moved to app_config.h
 // <i> Default: 5
+#ifndef CS_INITIATOR_HEADER_LOG
 #define CS_INITIATOR_HEADER_LOG                5
+#endif
+
+// <o CS_HOST_HEADER_LOG> Header log of measurements results <1..20>
+// <i> Sets how many measurements are written between header logs in NCP host example
+// <i> Only kept for backward compatibility, moved to app_config.h
+// <i> Default: 5
+#ifndef CS_HOST_HEADER_LOG
+#define CS_HOST_HEADER_LOG                5
+#endif
+
 // </h>
 
 // <<< end of configuration section >>>

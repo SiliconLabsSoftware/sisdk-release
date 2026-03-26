@@ -60,6 +60,8 @@ config_file:
   - path: config/app_config.h
 
 configuration:
+  - name: APP_LOG_LEVEL_FILTER_DYNAMIC 
+    value: 1
   - name: BLE_PEER_MANAGER_PERIPHERAL_CONFIG_ADV_PHY
     value: sl_bt_gap_phy_2m
   - name: BLE_PEER_MANAGER_CENTRAL_CONFIG_DEFAULT_SCAN_INTERVAL

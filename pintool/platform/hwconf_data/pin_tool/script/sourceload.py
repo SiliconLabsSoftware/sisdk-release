@@ -72,6 +72,11 @@ def load_requirement(requirement, candidates, options, changeset):
 
   else:
     peripheral_name = options.get('PERIPHERAL')
+    if peripheral_name is None:
+      # PERIPHERAL should be defined in the config file for this requirement type
+      print("## ERROR ## PERIPHERAL not specified for requirement {} of type {}".format(
+        requirement.getName(), requirement.getType()))
+      return
     for peripheral in candidates:
       if peripheral.getName() != peripheral_name:
         continue
@@ -103,6 +108,9 @@ def load_requirement(requirement, candidates, options, changeset):
                 prefix = channel_name
 
               signal = signal_prefix + channel_number
+              # Check if signal is configured before processing
+              if '{}_PORT'.format(prefix) not in options or '{}_PIN'.format(prefix) not in options:
+                continue
               for selector in sourcegen.get_selectors(peripheral):
                 for route in selector.routes:
                   if route.getName() == signal:
@@ -116,9 +124,13 @@ def load_requirement(requirement, candidates, options, changeset):
           signals = list(signals)
 
         for signal in signals:
-          if signal.startswith('('):
+          is_optional = signal.startswith('(')
+          if is_optional:
             # Strip parantheses indicating that the signal is optional
             signal = signal[1:-1]
+            # Check if optional signal is configured before processing
+            if '{}_PORT'.format(signal) not in options or '{}_PIN'.format(signal) not in options:
+              continue
 
           for selector in sourcegen.get_selectors(peripheral):
             for route in selector.routes:
@@ -196,6 +208,11 @@ def remove_requirement(requirement, candidates, options, changeset):
 
   else:
     peripheral_name = options.get('PERIPHERAL')
+    if peripheral_name is None:
+      # PERIPHERAL should be defined in the config file for this requirement type
+      print("## ERROR ## PERIPHERAL not specified for requirement {} of type {} during removal".format(
+        requirement.getName(), requirement.getType()))
+      return
     for peripheral in candidates:
       if peripheral.getName() != peripheral_name:
         continue
@@ -227,6 +244,9 @@ def remove_requirement(requirement, candidates, options, changeset):
                 prefix = channel_name
 
               signal = signal_prefix + channel_number
+              # Check if signal is configured before processing
+              if '{}_PORT'.format(prefix) not in options or '{}_PIN'.format(prefix) not in options:
+                continue
               for selector in sourcegen.get_selectors(peripheral):
                 for route in selector.routes:
                   if route.getName() == signal:
@@ -240,9 +260,13 @@ def remove_requirement(requirement, candidates, options, changeset):
           signals = list(signals)
 
         for signal in signals:
-          if signal.startswith('('):
+          is_optional = signal.startswith('(')
+          if is_optional:
             # Strip parantheses indicating that the signal is optional
             signal = signal[1:-1]
+            # Check if optional signal is configured before processing
+            if '{}_PORT'.format(signal) not in options or '{}_PIN'.format(signal) not in options:
+              continue
 
           for selector in sourcegen.get_selectors(peripheral):
             for route in selector.routes:
@@ -259,6 +283,13 @@ def remove_requirement(requirement, candidates, options, changeset):
 def update_signal(options, selector, route, pin_prefix, location_prefix, changeset, readonly):
   port = options.get('{}_PORT'.format(pin_prefix))
   pin_number = options.get('{}_PIN'.format(pin_prefix))
+
+  # Skip processing if port or pin is not specified
+  # This handles optional signals that are not configured (e.g., (DCLK) in UART mode)
+  # The explicit check before calling this function should have already filtered these,
+  # but this serves as a safety net to prevent location mismatch errors
+  if port is None or pin_number is None:
+    return
 
   for loc in route.locations:
     if str(loc.pin.getIndex()) == pin_number and str(loc.pin.getPortBank().getName()) == port:
@@ -297,6 +328,13 @@ def update_signal(options, selector, route, pin_prefix, location_prefix, changes
 def remove_signal(options, selector, route, pin_prefix, location_prefix, changeset, readonly):
   port = options.get('{}_PORT'.format(pin_prefix))
   pin_number = options.get('{}_PIN'.format(pin_prefix))
+
+  # Skip processing if port or pin is not specified
+  # This handles optional signals that are not configured (e.g., (DCLK) in UART mode)
+  # The explicit check before calling this function should have already filtered these,
+  # but this serves as a safety net to prevent location mismatch errors
+  if port is None or pin_number is None:
+    return
 
   for loc in route.locations:
     if str(loc.pin.getIndex()) == pin_number and str(loc.pin.getPortBank().getName()) == port:

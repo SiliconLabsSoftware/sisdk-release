@@ -121,7 +121,7 @@
 {%- if memory_ram_size is defined %}
   {%- set app_ram_size = memory_ram_size | first %}
 {%- else %}
-  {%- set app_ram_size = sram_size %}
+  {%- set app_ram_size = sram_size - (app_ram_start - sram_addr) %}
 {%- endif %}
 
 {%- if memory_flash_start is defined %}
@@ -153,10 +153,7 @@
 {%- if memory_flash_size is defined %}
   {%- set app_flash_size = memory_flash_size | first %}
 {%- else %}
-  {%- set app_flash_size = flash_size %}
-  {%- if app_bootloader_size > 0 %}
-    {%- set app_flash_size = app_flash_size - app_bootloader_size %}
-  {%- endif %}
+  {%- set app_flash_size = flash_size - (app_flash_start - flash_addr) %}
 {%- endif %}
 
 {%- set app_flash_size = app_flash_size - flash_static_secure_tokens_storage_size%}

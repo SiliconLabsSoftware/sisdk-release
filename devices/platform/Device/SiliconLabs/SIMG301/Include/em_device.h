@@ -14,7 +14,7 @@
  * @endverbatim
  ******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories, Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories, Inc. www.silabs.com</b>
  ******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -43,6 +43,9 @@
 #define EM_DEVICE_H
 #if defined(SIMG301M103LIH)
 #include "simg301m103lih.h"
+
+#elif defined(SIMG301M103WIH)
+#include "simg301m103wih.h"
 
 #elif defined(SIMG301M104LGH)
 #include "simg301m104lgh.h"

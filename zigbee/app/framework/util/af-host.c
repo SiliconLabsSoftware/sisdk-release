@@ -18,10 +18,14 @@
 #include "app/framework/include/af.h"
 #include "micro.h"
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 #ifdef SL_COMPONENT_CATALOG_PRESENT
 #include "sl_component_catalog.h"
 #endif
 
+#include "sl_status.h"
+#include "stack/include/sl_zigbee_dhc.h"
 #include "app/framework/util/af-main.h"
 #include "app/framework/util/common.h"
 #include "app/framework/util/attribute-storage.h"
@@ -39,6 +43,8 @@
 #endif // SL_CATALOG_ZIGBEE_FRAGMENTATION_PRESENT
 
 #define MAX_CLUSTER (EZSP_MAX_FRAME_LENGTH) / 2 //currently == 94
+
+extern char *sl_zigbee_ezsp_get_dhc_json_path(void);
 
 // This is used to store the local EUI of the NCP when using
 // fake certificates.
@@ -262,6 +268,16 @@ sl_status_t sl_zigbee_af_set_ezsp_config_value(sl_zigbee_ezsp_config_id_t config
   // ZLL where not all NCPs need or support it.
   SL_ZIGBEE_TEST_ASSERT((ezspStatus == SL_ZIGBEE_EZSP_SUCCESS) || (ezspStatus == SL_ZIGBEE_EZSP_ERROR_INVALID_ID));
   return status;
+}
+
+void sl_zigbee_ezsp_set_stack_profile(uint8_t stackProfile)
+{
+  (void) sl_zigbee_af_set_ezsp_config_value(SL_ZIGBEE_EZSP_CONFIG_STACK_PROFILE, stackProfile, "stack profile");
+}
+
+void sl_zigbee_ezsp_set_security_level(uint8_t securityLevel)
+{
+  (void) sl_zigbee_af_set_ezsp_config_value(SL_ZIGBEE_EZSP_CONFIG_SECURITY_LEVEL, securityLevel, "security level");
 }
 
 // this function sets an EZSP policy and
@@ -493,6 +509,35 @@ void sli_zigbee_af_reset_and_init_ncp(void)
 
   // Initialize messageSentCallbacks table
   sli_zigbee_af_initialize_message_sent_callback_array();
+
+#ifdef SL_CATALOG_ZIGBEE_DHC_PRESENT
+  {
+    char *dhcPath = sl_zigbee_ezsp_get_dhc_json_path();
+    if (dhcPath != NULL && dhcPath[0] != '\0') {
+      char *dhcPathCopy = NULL;
+      size_t dhcPathLen = strlen(dhcPath) + 1U;
+
+      dhcPathCopy = malloc(dhcPathLen);
+      if (dhcPathCopy != NULL) {
+        memcpy(dhcPathCopy, dhcPath, dhcPathLen);
+      } else {
+        sl_zigbee_af_core_println("Unable to duplicate DHC path; using original buffer.");
+        dhcPathCopy = dhcPath;
+      }
+
+      sl_status_t dhcStatus = sl_zigbee_dhc_init_from_json(dhcPathCopy, false, true);
+      if (dhcStatus != SL_STATUS_OK) {
+        sl_zigbee_af_core_println("DHC JSON load failed (0x%04X): %s",
+                                  (uint16_t)dhcStatus,
+                                  dhcPathCopy);
+      }
+
+      if (dhcPathCopy != dhcPath) {
+        free(dhcPathCopy);
+      }
+    }
+  }
+#endif
 }
 #ifdef EZSP_CPC
 extern bool in_ncp_reset(void);

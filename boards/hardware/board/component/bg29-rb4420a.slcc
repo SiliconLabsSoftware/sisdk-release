@@ -17,10 +17,10 @@
   - name: SL_KIT_NAME
     value: '"BG29-RB4420A"'
   - name: SL_KIT_REV
-    value: '"A00"'
+    value: '"A01"'
 - tag:
   - kit:opn:BG29-RB4420A
   - kit:pn:RB4420
   - kit:variant:A
-  - kit:revision:A00
+  - kit:revision:A01
 - root_path: boards

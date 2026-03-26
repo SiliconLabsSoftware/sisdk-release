@@ -18,6 +18,7 @@
   - name: hardware_board_from_tb
   - name: hardware_board_from_pg26-ek2711a
   - name: hardware_board_has_vcom
+  - name: hardware_board_has_vcom_hardware_flowcontrol
   - name: board_config_clock_manager
   - name: hardware_board_has_hfxo_freq_39mhz
   - name: hardware_board_has_hfxo
@@ -53,6 +54,7 @@
   - board:revision:A03
   - board:device:efm32pg26b500f3200im68
   - hardware:has:vcom
+  - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:led:2
   - hardware:has:button:2
 - root_path: boards

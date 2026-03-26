@@ -24,14 +24,36 @@ ESL Tag.
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
 
-import threading
 from collections import namedtuple
 from datetime import datetime as dt
 from image_converter import XbmConverter
-from ap_constants import *
+from ap_constants import (
+    AUX_SYNC_IND_PDU_MAX_SKIP_COUNT,
+    BASIC_STATE_FLAG_SERVICE_NEEDED,
+    BASIC_STATE_FLAG_SYNCHRONIZED,
+    BASIC_STATE_STRINGS,
+    EAD_KEY_MATERIAL_SIZE,
+    ESL_DISPLAY_TYPE_FULL_RGB,
+    ESL_IMAGE_FLAGS_BIT_FLIP,
+    ESL_IMAGE_FLAGS_CROP_FIT,
+    ESL_IMAGE_FLAGS_FORMAT_MASK,
+    ESL_IMAGE_FLAGS_ROTATE_180,
+    ESL_IMAGE_FLAGS_ROTATE_270,
+    ESL_IMAGE_FLAGS_ROTATE_90,
+    ESL_IMAGE_FLAGS_ROTATION_MASK,
+    ESL_WSTK_DISPLAY_TYPE,
+    OTS_FEATURES_REQUIRED_MASK,
+    SIG_VENDOR_ID_SILABS,
+    TLV_OPCODE_FACTORY_RST,
+    TLV_OPCODE_UNASSOCIATE,
+    TLV_OPCODE_UPDATE_COMPLETE,
+    TLV_RESPONSE_BASIC_STATE,
+    VENDOR_ID_STRINGS,
+)
 from ap_config import IOP_TEST, ADVERTISING_TIMEOUT, CONNECTING_TIMEOUT, UNSUCCESSFUL_ONBOARDING_LIMIT
 from ap_logger import getLogger
 from ap_sensor import SENSOR_INFO_LENGTH_SHORT, SENSOR_INFO_LENGTH_LONG, SENSOR_TYPES
+from ap_soft_timer import SoftTimer
 import esl_lib_wrapper as elw
 import esl_lib
 
@@ -103,7 +125,41 @@ class EslState(int):
 
 class Tag:
     """ESL Tag"""
-
+    __slots__ = (
+        "id",
+        "lib",
+        "_state",
+        "_associated",
+        "_full_config_to_write",
+        "_state_timestamp",
+        "_current_time_last_set",
+        "_disconnection_counter",
+        "_connection_handle",
+        "ble_address",
+        "ots_image_type",
+        "ots_image_flags",
+        "pending_unassociate",
+        "_advertising_timer",
+        "_connection_timer",
+        "last_req_timestamp",
+        "last_resp_timestamp",
+        "basic_state_flags",
+        "gatt_values",
+        "gatt_write_values",
+        "gattdb_handles",
+        "auto_image_count",
+        "_blocked",
+        "_past_timer",
+        "_past_subevents_max",
+        "_advertising",
+        "raw_image",
+        "image_file",
+        "rotation",
+        "label",
+        "xbm_converter",
+        "busy",
+        "_observers",
+    )
     _counter = 0
 
     def __init__(self, lib: esl_lib.Lib, address: esl_lib.Address, dummy=False):
@@ -117,22 +173,22 @@ class Tag:
         self._state_timestamp = dt.now()
         self._current_time_last_set = dt.now().timestamp()
         self._disconnection_counter = 0
+        self._connection_handle = None
         # ESL specific attributes
         self.ble_address = address
         self.ots_image_type = {}
         self.ots_image_flags = {}
         self.pending_unassociate = False
-        self._advertising_timer = threading.Timer(
+        self._advertising_timer = SoftTimer(
             ADVERTISING_TIMEOUT, self.__advertising_timeout
         )
         self._advertising_timer.daemon = True
-        self._connection_timer = threading.Timer(
+        self._connection_timer = SoftTimer(
             CONNECTING_TIMEOUT, self.__connecting_timeout
         )
         self._connection_timer.daemon = True
         self.last_req_timestamp = dt.now().timestamp()
         self.last_resp_timestamp = dt.now().timestamp()
-        self.unresp_command_number = 0
         self.basic_state_flags = 0
         self.gatt_values = {}
         self.gatt_write_values = {}
@@ -141,7 +197,7 @@ class Tag:
         self.connection_handle = None
         self._blocked = elw.ESL_LIB_STATUS_NO_ERROR
         # PAST timer, Note: interval is re-initialized properly after PA interval is set below
-        self._past_timer = threading.Timer(10, self.__past_timeout)
+        self._past_timer = SoftTimer(10, self.__past_timeout)
         self._past_timer.daemon = True
         self._past_subevents_max = None
         self._advertising = False
@@ -210,7 +266,15 @@ class Tag:
 
     @esl_address.setter
     def esl_address(self, esl_address: int):
+        old_address = self.esl_address
+        old_esl_state = self.esl_state
         self.gatt_values[elw.ESL_LIB_DATA_TYPE_GATT_ESL_ADDRESS] = esl_address.to_bytes(2, "little")
+        if old_address != esl_address:
+            self._notify("esl_address", old_address, esl_address)
+        new_esl_state = self.esl_state
+        if old_esl_state != new_esl_state:
+            self._notify("esl_state", old_esl_state, new_esl_state)
+
 
     @property
     def esl_id(self):
@@ -384,9 +448,11 @@ class Tag:
                 now - self._state_timestamp,
             )
             self._state_timestamp = now
+            previous_state = self._state
             self._state = new_state
             if (new_state == TagState.IDLE):
                 self.limit_connection_retries()
+            self._notify("state", previous_state, new_state)
 
     @property
     def connection_handle(self):
@@ -406,15 +472,33 @@ class Tag:
             self.state = TagState.IDLE
         else:
             self.state = TagState.CONNECTED
+        previous_handle = self._connection_handle
         self._connection_handle = value
+        if previous_handle != value: # notify if changed
+            self._notify("connection_handle", previous_handle, value)
 
     def __lt__(self, other):
         if None not in (self.esl_address, other.esl_address):
             return self.esl_address < other.esl_address
         return False
 
-    def reset(self):
+    def add_observer(self, callback):
+        if not hasattr(self, "_observers"):
+            self._observers = []
+        self._observers.append(callback)
+
+    def remove_observer(self, callback):
+        if hasattr(self, "_observers"):
+            self._observers.remove(callback)
+
+    def _notify(self, field, old, new):
+        if hasattr(self, "_observers"):
+            for cb in self._observers:
+                cb(self, field, old, new)
+
+    def reset(self, keep_esl_address=False):
         """Reset object states"""
+        old_esl_state = self.esl_state
         keys = [
             elw.ESL_LIB_DATA_TYPE_GATT_AP_SYNC_KEY,
             elw.ESL_LIB_DATA_TYPE_GATT_RESPONSE_KEY,
@@ -424,7 +508,10 @@ class Tag:
         self.gattdb_handles = None
         self.pending_unassociate = False
         self.update_response_timestamp()
-        self.__update_flags(BASIC_STATE_FLAG_SYNCHRONIZED, False)
+        # Modify only the SYNCHRONIZED bit without invoking the __update_flags(),
+        # because that might cause an immediate esl_state change notification,
+        # which will be handled separately.
+        self.basic_state_flags = self.basic_state_flags & ~BASIC_STATE_FLAG_SYNCHRONIZED
         self.gatt_write_values = {
             key: value for key, value in self.gatt_values.items() if key in keys
         }
@@ -434,7 +521,7 @@ class Tag:
             key: value
             for key, value in self.gatt_values.items()
             if key == elw.ESL_LIB_DATA_TYPE_GATT_ESL_ADDRESS
-            and self._full_config_to_write
+            and (self._full_config_to_write or keep_esl_address)
         }
         if len(self.gatt_values) == 0:
             # Reset the image counter also in this corner case
@@ -450,6 +537,9 @@ class Tag:
         self.connection_handle = None
         self._past_subevents_max = None
         self._associated = False
+        new_esl_state = self.esl_state
+        if new_esl_state != old_esl_state:
+            self._notify("esl_state", old_esl_state, new_esl_state)
 
     def block(self, lib_status=elw.ESL_LIB_STATUS_UNSPECIFIED_ERROR):
         """Set blocked state if not set already"""
@@ -470,30 +560,17 @@ class Tag:
 
     def start_advertising_governor(self):
         """(Re)start a governor timeout for an advertising tag"""
-        try:
-            new_timer = threading.Timer(
-                ADVERTISING_TIMEOUT, self.__advertising_timeout
-            )
-        except Exception:
-            # Nothing to do if we run out of resources, but it's better to keep the old one than to have none at all.
-            return
-        else:
-            if self._advertising_timer.is_alive():
-                self._advertising_timer.cancel()
-            self._advertising_timer = new_timer
-            self._advertising_timer.daemon = True
-            self._advertising_timer.start()
+        self._advertising_timer.restart(ADVERTISING_TIMEOUT)
 
     def unassociate(self):
         """Unassociate tag object"""
         self.gatt_values = {}
         self.reset()
-        self._associated = False
 
     def unsynchronize(self):
         """Clear the BASIC_STATE_FLAG_SYNCHRONIZED flag internally to consider a tag unsynced"""
         # while clearing the bit it is still possible that the tag is actually synced so doing this allows it to recover silently
-        self.basic_state_flags = self.basic_state_flags & ~BASIC_STATE_FLAG_SYNCHRONIZED
+        self.__update_flags(BASIC_STATE_FLAG_SYNCHRONIZED, False)
 
     def limit_connection_retries(self):
         """Limit disconnection retries of unprovisioned tags"""
@@ -511,28 +588,11 @@ class Tag:
 
     def handle_response(self, data):
         """Handle TLV response"""
-        # Error
-        if data[0] == TLV_RESPONSE_ERROR:
-            self.unresp_command_number += 1
-            return
-        # LED state
-        elif data[0] == TLV_RESPONSE_LED_STATE:
-            pass
         # Basic state
-        elif data[0] == TLV_RESPONSE_BASIC_STATE:
+        if data[0] == TLV_RESPONSE_BASIC_STATE:
             bs_bitmap = int.from_bytes(data[1:], byteorder="little")
             self.__update_flags(bs_bitmap, None)
-        # Display state
-        elif data[0] == TLV_RESPONSE_DISPLAY_STATE:
-            pass
-        # Sensor info
-        elif (data[0] & 0x0F) == TLV_RESPONSE_READ_SENSOR:
-            pass
-        else:
-            return
-
-        if self.unresp_command_number > 0:
-            self.unresp_command_number -= 1
+        self.update_response_timestamp()
 
     def update_timestamps(self, timestamp=None):
         """Update both request and response timestamps"""
@@ -557,6 +617,7 @@ class Tag:
 
     def __update_flags(self, flags, new_state=True):
         if flags is not None:
+            old_esl_state = self.esl_state
             if new_state == True:
                 self.basic_state_flags = self.basic_state_flags | flags
             elif new_state == False:
@@ -575,6 +636,9 @@ class Tag:
                     self.esl_id,
                     self.group_id,
                 )
+            new_esl_state = self.esl_state
+            if old_esl_state != new_esl_state:
+                self._notify("esl_state", old_esl_state, new_esl_state)
 
     def find_type_matching_display_index(self, display_type):
         for x in self.display_info:
@@ -736,14 +800,8 @@ class Tag:
                 )  # change the reason until at least ESL Address is set
         elif isinstance(evt, esl_lib.EventConnectionRetry):
             self.state = TagState.CONNECTING
-            if self._connection_timer.is_alive():
-                self._connection_timer.cancel()
-            self._connection_timer = threading.Timer(
-                CONNECTING_TIMEOUT, self.__connecting_timeout
-            )
-            self._connection_timer.daemon = True
-            self._connection_timer.start()
-            self.reset_advertising()  # will stop the timeout thread, if there's any left
+            self._connection_timer.restart()
+            self.reset_advertising()  # will stop the advertiser watchdog, if there's any
             if self.esl_state != EslState.SYNCHRONIZED: # If it's synchronized, it's not advertising, and if it's advertising, it's not considered synchronized
                 self._advertising = True  # necessary step for any connect requests to undetected advertisers!
             self.log.warning(
@@ -761,11 +819,10 @@ class Tag:
                 self._past_timer.cancel()
                 self.connection_handle = None
                 if evt.reason == elw.SL_STATUS_BT_CTRL_REMOTE_USER_TERMINATED:
-                    if self.provisioned and not self.pending_unassociate and self._past_subevents_max > self.group_id:
+                    if self.provisioned and not self.pending_unassociate and self.past_initiated and self._past_subevents_max > self.group_id:
                         self.__update_flags(BASIC_STATE_FLAG_SYNCHRONIZED)
                     else:
                         self.__update_flags(BASIC_STATE_FLAG_SYNCHRONIZED, False)
-                    self.unresp_command_number = 0
                     self.update_timestamps()
                 elif (
                     evt.reason
@@ -862,12 +919,14 @@ class Tag:
                         self.ble_address,
                         esl_lib.get_sl_status_str(evt.status),
                     )
+                old_esl_state = self.esl_state
                 if evt.type == elw.ESL_LIB_DATA_TYPE_GATT_ESL_ADDRESS:
                     if evt.status == elw.SL_STATUS_OK:
                         self._associated = True
                         self.unblock()  # clear previous blocked state if the Tag becomes associated
                     else:
                         self._associated = False
+
                 if self.provisioned:
                     self.log.info(
                         "Tag fully provisioned at address %s as ESL ID %d in group %d.",
@@ -875,7 +934,11 @@ class Tag:
                         self.esl_id,
                         self.group_id,
                     )
+                new_esl_state = self.esl_state
                 self.busy = False
+                if new_esl_state != old_esl_state:
+                    self._notify("esl_state", old_esl_state, new_esl_state)
+
         elif isinstance(evt, esl_lib.EventImageType):
             if evt.connection_handle == self.connection_handle:
                 self.log.debug("Image type UUID received: %s", evt.type_data.hex())
@@ -912,8 +975,6 @@ class Tag:
         elif isinstance(evt, esl_lib.EventControlPointNotification):
             if evt.connection_handle == self.connection_handle:
                 self.handle_response(evt.data)
-                if evt.data[0] == TLV_RESPONSE_BASIC_STATE:
-                    self.basic_state_flags = int.from_bytes(evt.data[1:2], "little")
         elif isinstance(evt, esl_lib.EventTagFound):
             if evt.address == self.ble_address:
                 if self.state == TagState.IDLE:
@@ -1057,6 +1118,7 @@ class Tag:
         identity: esl_lib.Address = None,
         key_type: int = elw.ESL_LIB_KEY_TYPE_NO_KEY,
         key: bytes = None,
+        timeout: int = None,
     ):
         """Connect to the tag"""
         if self.state != TagState.IDLE:
@@ -1077,6 +1139,7 @@ class Tag:
             self.reset_advertising()  # will stop timer thread immediately, if there's any!
             if pawr is None:
                 self._advertising = True  # necessary step for any connect requests to undetected advertisers!
+            self._connection_timer.restart(timeout)
         except Exception as e:
             self.log.error(e)
 
@@ -1317,7 +1380,7 @@ class Tag:
             raise InvalidTagStateError(
                 f"Invalid ESL object state: {self._state} at address {self.ble_address}!"
             )
-        if self._past_subevents_max is not None:
+        if self.past_initiated:
             raise InvalidTagStateError(
                 f"PAST has been already initiated for ESL at address {self.ble_address}!"
             )
@@ -1332,14 +1395,7 @@ class Tag:
         try:
             self.lib.initiate_past(self.connection_handle, pawr_handle)
             self._past_subevents_max = subevent_count
-            if self._past_timer.is_alive():
-                self._past_timer.cancel()
-            # Allow one interval more grace period over the library internal PAST timer
-            self._past_timer = threading.Timer(
-                pa_interval * (AUX_SYNC_IND_PDU_MAX_SKIP_COUNT + 1), self.__past_timeout
-            )
-            self._past_timer.daemon = True
-            self._past_timer.start()
+            self._past_timer.restart()
             self.busy = True
         except esl_lib.CommandFailedError as e:
             # self.lib.initiate_past is OK to return SL_STATUS_BT_CTRL_UNKNOWN_CONNECTION_IDENTIFIER if the ESL is already synchronized.

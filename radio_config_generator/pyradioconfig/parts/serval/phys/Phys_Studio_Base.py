@@ -12,3 +12,11 @@ class PHYS_Studio_Base_Serval(IPhy):
 
     def PHY_Studio_915M_OOK_4p8kbps(self, model):
         phy = PHYS_Studio_Base_Margay().PHY_Studio_915M_OOK_4p8kbps(model)
+
+    def PHY_Studio_868M_GMSK_500Kbps(self, model, phy_name=None):
+        phy = PHYS_Studio_Base_Margay().PHY_Studio_868M_GMSK_500Kbps(model, phy_name)
+        return phy
+
+    def PHY_Studio_915M_2GFSK_500Kbps_175K_mi0p7(self, model, phy_name=None):
+        phy = PHYS_Studio_Base_Margay().PHY_Studio_915M_2GFSK_500Kbps_175K_mi0p7(model, phy_name)
+        return phy

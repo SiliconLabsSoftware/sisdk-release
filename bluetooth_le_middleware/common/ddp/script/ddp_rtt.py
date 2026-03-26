@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2025 Silicon Laboratories Inc. www.silabs.com
+# Copyright 2026 Silicon Laboratories Inc. www.silabs.com
 #
 # SPDX-License-Identifier: Zlib
 #
@@ -24,28 +24,54 @@
 
 # Metadata
 __author__ = 'Silicon Laboratories, Inc'
-__copyright__ = 'Copyright 2025, Silicon Laboratories, Inc.'
+__copyright__ = 'Copyright 2026, Silicon Laboratories, Inc.'
 
+import os
 import time
 import re
 import pylink
 import socket
+import subprocess
 
 _MSG_MAX_SIZE = 1200
 
 class RTT:
-    def __init__(self, chip_name: str, serial_no: int = None, hostname: str = None, msg_max_size: int = _MSG_MAX_SIZE):
+    def __init__(self,
+                 chip_name: str,
+                 serial_no: int = None,
+                 hostname: str = None,
+                 msg_max_size: int = _MSG_MAX_SIZE,
+                 xml_path = None):
         """Communication interface to device.
 
         :param chip_name: Chip name
         :param serial_no: J-Link serial number to use USB interface
         :param hostname: Hostname to use Ethernet interface
+        :msg_max_size: Message chunk size limit
+        :xml_path: JLinkDevices.xml file to extend/overwrite J-Link devices database with new devices
         """
         self.jlink = pylink.JLink()
         self.chip_name = self.get_device_jlink_name(chip_name)
         self.serial_no = serial_no
         self.hostname = hostname
         self.msg_max_size = msg_max_size
+
+        if not xml_path:
+            try:
+                p = subprocess.run(["slt", "where", "commander", "--ignore-slconf"],
+                                    text=True,
+                                    capture_output=True)
+                if p.returncode == 0 and p.stdout:
+                    xml_path = os.path.join(p.stdout.strip(), 'resources/jlink/JLinkDevices.xml')
+            except:
+                # SLT and/or Simplicity Commander is not installed. J-Link devices database will not be extended.
+                pass
+        if xml_path:
+            if os.path.exists(xml_path):
+                self.jlink.exec_command(f"JLinkDevicesXMLPath = \"{xml_path}\"")
+                print("J-Link Device XML extension added: " + xml_path)
+            else:
+                print(xml_path + " does not exist!")
 
     @property
     def is_connected(self) -> bool:

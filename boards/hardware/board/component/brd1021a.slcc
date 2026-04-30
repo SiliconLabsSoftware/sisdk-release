@@ -32,7 +32,7 @@
 - recommends:
   - id: EFR32BG29B221F1024CJ45
     vendor: silabs
-  - id: brd4002a
+  - id: brd4002b
     vendor: silabs
   - id: iostream_eusart
     instance:

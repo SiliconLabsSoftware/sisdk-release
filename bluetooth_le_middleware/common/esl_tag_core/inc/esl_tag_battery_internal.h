@@ -36,12 +36,6 @@
  **************************************************************************************************/
 #include <stdint.h>
 #include "sl_status.h"
-#ifdef IADC_PRESENT
-#include "em_iadc.h"
-#endif // IADC_PRESENT
-#ifdef ADC_PRESENT
-#include "em_adc.h"
-#endif // ADC_PRESENT
 
 /// Definition for unknown battery voltage level (an implausible value)
 #define ESL_TAG_BATTERY_LEVEL_UNKNOWN   0

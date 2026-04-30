@@ -126,23 +126,14 @@ post_build:
     condition: [device_series_2, bootloader_app_properties]
 
 tag:
-  - hardware:device:sdid:!205
   - hardware:board_only
-  - hardware:component:button:2+
-  - hardware:component:display:ls013b7dh03
-  - hardware:component:led:2+
-  - hardware:component:sensor:!si1133
-  - hardware:component:sensor:si7021
-  - hardware:device:flash:512
-  - hardware:device:ram:32
-  - hardware:rf:band:2400
   - prebuilt_demo
   - hwfilter:device:device_series_2
   - hwfilter:device:device_supports_bluetooth
   - hwfilter:!device:device_generic_family_efr32xg22
   - hwfilter:board:hardware_board_supports_wstk_lcd
   - hwfilter:!board:hardware:has:sensor:si1133
-  - hwfilter:board:hardware_board_has_si70xx
+  - hwfilter:board:hardware_board_has_tempsensor
   - hwfilter:board:simple_button:btn0
   - hwfilter:board:simple_button:btn1
   - hwfilter:board:simple_led:led0

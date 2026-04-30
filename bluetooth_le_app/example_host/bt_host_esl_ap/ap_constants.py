@@ -226,7 +226,7 @@ TAG_SYNC_TIMEOUT = 3600  # one hour according to ESLP spec.
 TAG_UNASSOCIATE_TIMEOUT = 2 * TAG_SYNC_TIMEOUT
 
 # Tags in a group, overall limit
-ESL_MAX_TAGS_IN_GROUP = 255
+ESL_MAX_TAGS_IN_GROUP = 254
 BROADCAST_ADDRESS = 0xFF
 
 VALID_BD_ADDRESS_REGEX = r"(([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2})(?=\s|$)"

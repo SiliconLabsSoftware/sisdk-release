@@ -17,7 +17,6 @@
   - name: brd4408a_a02
   - name: hardware_board
   - name: hardware_board_rb
-  - name: hardware_board_has_si70xx
   - name: hardware_board_has_tempsensor
   - name: hardware_board_supports_wstk_lcd
   - name: hardware_board_has_vcom
@@ -45,7 +44,7 @@
   - name: hardware_board_default_rf_band
   - name: hardware_board_default_rf_band_2400
 - recommends:
-  - id: brd4002a
+  - id: brd4002b
     vendor: silabs
   - id: iostream_eusart
     instance:
@@ -94,7 +93,6 @@
   - hardware:has:vcom
   - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:pti
-  - hardware:has:sensor:si7021
   - hardware:has:display:ls013b7dh03
   - hardware:has:led:2
   - hardware:has:joystick:skrhaae010

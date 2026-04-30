@@ -28,6 +28,7 @@
  *
  ******************************************************************************/
 #include <stdbool.h>
+#include <string.h>
 #include "sl_core.h"
 #include "sl_bt_ncp_host.h"
 #include "sl_bt_ncp_transport.h"
@@ -39,24 +40,93 @@
 #include "sl_wake_lock.h"
 #endif // SL_CATALOG_WAKE_LOCK_PRESENT
 
-// Reception buffer
+#include "sl_bgapi.h"
+
+/* Single RX buffer: [ complete_msg_1 | complete_msg_2 | ... | incomplete/garbage ]
+ * ready_len = bytes at buf[0] that the upper layer may read: either a complete
+ * message not yet started, or the remainder of a message currently being read in chunks.
+ * We do not re-parse (and thus never expose partial frames) until the current message
+ * has been fully read out (ready_len goes to 0), so blocking mode without peek is safe.
+ */
 typedef struct {
-  uint16_t len;
+  uint16_t len;        // total bytes in buf
+  uint16_t ready_len;  // bytes at start that are complete message(s)
   uint8_t buf[SL_NCP_HOST_COM_BUF_SIZE];
-  bool available;
-} buf_t;
+} rx_buf_t;
 
 static volatile bool write_completed = false;
-static buf_t buf = { 0 };
+static rx_buf_t rx = { 0 };
 
+#if defined(SL_CATALOG_BLUETOOTH_NCP_TRANSPORT_USART_PRESENT)
 extern void sli_bt_ncp_transport_usart_cancel_receive(void);
+#endif // SL_CATALOG_BLUETOOTH_NCP_TRANSPORT_USART_PRESENT
+
+/******************************************************************************
+ * Set ready_len to the length of leading complete BGAPI message(s) at buf[0],
+ * so peek/read only expose full frames. Do not re-parse while we are still
+ * delivering the current message (ready_len > 0), so chunked read by the
+ * upper layer (e.g. sli_wait_for_bgapi_message: 1 byte, then 3, then payload)
+ * keeps getting positive return until the message is fully consumed.
+ *****************************************************************************/
+static void sl_ncp_host_com_refill_ready(void)
+{
+  uint32_t offset = 0;
+  uint32_t msg_len_bytes;
+
+  // Still delivering current message in chunks; do not re-parse the buffer
+  // (buffer front is the remainder of that message, not a new header).
+  if (rx.ready_len > 0) {
+    return;
+  }
+
+  while (rx.len > 0) {
+    uint32_t header = 0;
+    uint32_t payload_len;
+
+    if ((uint32_t)rx.len - offset < SL_BGAPI_MSG_HEADER_LEN) {
+      break;
+    }
+    memcpy((uint8_t *)&header, rx.buf + offset, SL_BGAPI_MSG_HEADER_LEN);
+
+    if ((header & 0xf8) != (uint32_t)(sl_bgapi_dev_type_bt | sl_bgapi_msg_type_evt)
+        && (header & 0xf8) != (uint32_t)(sl_bgapi_dev_type_bt)) {
+      // Invalid header: discard one byte and resync
+      CORE_DECLARE_IRQ_STATE;
+      CORE_ENTER_ATOMIC();
+      memmove(rx.buf + offset, rx.buf + offset + 1, (size_t)(rx.len - offset - 1));
+      rx.len--;
+      CORE_EXIT_ATOMIC();
+      continue;
+    }
+
+    payload_len = SL_BGAPI_MSG_LEN(header);
+    if (payload_len > SL_BGAPI_MAX_PAYLOAD_SIZE) {
+      CORE_DECLARE_IRQ_STATE;
+      CORE_ENTER_ATOMIC();
+      memmove(rx.buf + offset, rx.buf + offset + 1, (size_t)(rx.len - offset - 1));
+      rx.len--;
+      CORE_EXIT_ATOMIC();
+      continue;
+    }
+
+    msg_len_bytes = SL_BGAPI_MSG_HEADER_LEN + payload_len;
+    if (offset + msg_len_bytes > (uint32_t)rx.len) {
+      // Incomplete message; do not expose anything yet
+      break;
+    }
+
+    rx.ready_len += (uint16_t)msg_len_bytes;
+    offset += msg_len_bytes;
+  }
+}
 
 /******************************************************************************
  * NCP host communication initialization.
  *****************************************************************************/
 void sl_ncp_host_com_init(void)
 {
-  buf.len = 0;
+  rx.len = 0;
+  rx.ready_len = 0;
   // Register communication interface functions in adaptation layer
   sl_status_t sc = sl_bt_api_initialize_nonblock(sl_ncp_host_com_write,
                                                  sl_ncp_host_com_read,
@@ -87,8 +157,10 @@ void sl_ncp_host_com_write(uint32_t len, uint8_t *data)
   while (!write_completed) {
     sli_bt_ncp_transport_step();
   }
-  // Start to receive the response as soon as the transmit is completed
+  #if defined(SL_CATALOG_BLUETOOTH_NCP_TRANSPORT_USART_PRESENT)
+  // Force finish any ongoing packet receiving
   sli_bt_ncp_transport_usart_cancel_receive();
+  #endif // SL_CATALOG_BLUETOOTH_NCP_TRANSPORT_USART_PRESENT
   // Start to receive the response as soon as the transmit is completed
   sl_bt_ncp_transport_receive();
   // Execute receive request
@@ -107,22 +179,22 @@ void sl_ncp_host_com_write(uint32_t len, uint8_t *data)
  *****************************************************************************/
 int32_t sl_ncp_host_com_read(uint32_t len, uint8_t *data)
 {
-  (void)data;
   // Handle receive
   sli_bt_ncp_transport_step();
+  sl_ncp_host_com_refill_ready();
   CORE_DECLARE_IRQ_STATE;
   CORE_ENTER_ATOMIC();
   // Check if there is data in the buffer from transport layer
-  if (len <= buf.len) {
-    // Copy data to adaptation layer
-    memcpy((void *)data, (void *)buf.buf, (size_t)len);
-    buf.len -= len;
-    memmove((void *)buf.buf, (void *)&buf.buf[len], buf.len);
+  if (len <= rx.ready_len) {
+    memcpy((void *)data, (void *)rx.buf, (size_t)len);
+    memmove(rx.buf, rx.buf + len, (size_t)(rx.len - len));
+    rx.len -= (uint16_t)len;
+    rx.ready_len -= (uint16_t)len;
   } else {
-    len = -1;
+    len = (uint32_t)-1;
   }
   CORE_EXIT_ATOMIC();
-  return len;
+  return (int32_t)len;
 }
 
 /******************************************************************************
@@ -138,9 +210,9 @@ int32_t sl_ncp_host_com_read(uint32_t len, uint8_t *data)
  *****************************************************************************/
 int32_t sl_ncp_host_com_peek(void)
 {
-  // Handle receive
   sli_bt_ncp_transport_step();
-  return buf.len;
+  sl_ncp_host_com_refill_ready();
+  return (int32_t)rx.ready_len;
 }
 
 /******************************************************************************
@@ -179,19 +251,18 @@ void sl_bt_ncp_transport_on_receive(sl_status_t status,
   (void)status;
   CORE_DECLARE_IRQ_STATE;
   CORE_ENTER_ATOMIC();
-  // command fits into command buffer; otherwise discard it
-  if (len <= (sizeof(buf.buf) - buf.len)) {
-    memcpy((void *)&buf.buf[buf.len], (void *)data, (size_t)len);
-    buf.len += len;
+  // frame fits into command buffer; otherwise discard it
+  if (len > 0 && len <= (sizeof(rx.buf) - rx.len)) {
+    memcpy((void *)&rx.buf[rx.len], (void *)data, (size_t)len);
+    rx.len += (uint16_t)len;
   }
   CORE_EXIT_ATOMIC();
 }
 
 bool sl_ncp_host_is_ok_to_sleep(void)
 {
-  if (buf.len != 0) {
+  if (rx.len != 0) {
     return false;
-  } else {
-    return true;
   }
+  return true;
 }

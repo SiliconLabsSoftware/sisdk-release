@@ -158,7 +158,7 @@
 #endif
 // <q>  Thread over Infrastructure
 #ifndef OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-#define OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE       1
+#define OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE       0
 #endif
 // </h>
 

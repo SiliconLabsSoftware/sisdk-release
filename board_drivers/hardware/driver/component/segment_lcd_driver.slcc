@@ -26,6 +26,10 @@ include:
   file_list:
   - path: sl_segmentlcd_pin_config.h
   condition: [brd2600a]
+- path: inc/brd2611a/
+  file_list:
+  - path: sl_segmentlcd_pin_config.h
+  condition: [brd2611a]
 - path: inc/brd2504a/
   file_list:
   - path: sl_segmentlcd_pin_config.h
@@ -47,6 +51,9 @@ config_file:
 - path: config/ce322_1002/sl_segmentlcd_config.h
   file_id: sl_segmentlcd_config
   condition: [brd2504a]
+- path: config/ce322_1002/sl_segmentlcd_config.h
+  file_id: sl_segmentlcd_config
+  condition: [brd2611a]
 - path: config/cl010_1087/sl_segmentlcd_config.h
   file_id: sl_segmentlcd_config
   condition: [brd2505a]

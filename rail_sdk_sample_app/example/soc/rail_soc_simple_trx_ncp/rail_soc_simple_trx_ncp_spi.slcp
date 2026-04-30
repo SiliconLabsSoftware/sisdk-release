@@ -280,6 +280,7 @@ tag:
   - hwfilter:board:hardware:has:pti
   - hwfilter:board:simple_led:led0
   - hwfilter:board:simple_button:btn0
+  - hwfilter:board:hardware:has:exp_header:spi
   - hwfilter:!board:hardware:shares:button:led
   - hwfilter:ram:11k
   - hwfilter:flash:169k
@@ -290,29 +291,15 @@ tag:
   - hwfilter:!device:device_family_mgm27
   - hwfilter:!device:device_family_bgm24
   - hwfilter:!device:device_family_mgm24
-  - hwfilter:!board:brd4183b
-  - hwfilter:!board:brd2608a
-  - hwfilter:!board:brd2703a
-  - hwfilter:!board:brd2705a
-  - hwfilter:!board:brd2709a
-  - hwfilter:!board:brd2710a
-  - hwfilter:!board:brd2719a
-  - hwfilter:!board:brd4108a
   - hwfilter:!board:brd4118a
   - hwfilter:!board:brd4120a
   - hwfilter:!board:brd4121a
-  - hwfilter:!board:brd4183a
-  - hwfilter:!board:brd4183c
   - hwfilter:!board:brd4400a
   - hwfilter:!board:brd4400b
   - hwfilter:!board:brd4400c
   - hwfilter:!board:brd4401a
   - hwfilter:!board:brd4401b
   - hwfilter:!board:brd4401c
-  - hwfilter:!board:brd4403a
-  - hwfilter:!board:brd4403b
-  - hwfilter:!board:brd4403c
-  - hwfilter:!board:brd4421a
 
 
 filter:

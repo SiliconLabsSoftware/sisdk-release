@@ -25,6 +25,8 @@ ESL Library
 # 3. This notice may not be removed or altered from any source distribution.
 
 import ctypes
+import inspect
+import re
 
 # True multiprocessing is temporarily disabled.
 import multiprocessing.dummy as mp
@@ -186,7 +188,7 @@ class Address:
             return (self.addr == other.addr) and (
                 self.address_type == other.address_type
             )
-        if len(other) >= 12:
+        if isinstance(other, str) and len(other) >= 12:
             val_b = bytes.fromhex(other.replace(":", ""))[::-1]
             return val_b == self.addr
         return other == self.addr
@@ -729,6 +731,24 @@ class EventGeneral:
 
     def __repr__(self) -> str:
         return f"{self.evt_code}, {self.data.hex()}"
+
+
+def get_event_fields():
+    """Build mapping from event name to set of instance field names by introspecting Event classes."""
+    mapping = {}
+    for _, cls in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+        evt_code = getattr(cls, 'evt_code', None)
+        if isinstance(evt_code, EventType):
+            event_name = evt_code.name
+            try:
+                src = inspect.getsource(cls.__init__)
+                fields = set(re.findall(r'self\.(\w+)\s*=', src))
+                mapping[event_name] = fields
+            except (TypeError, OSError):
+                mapping[event_name] = set()
+    return mapping
+
+EVENT_FIELDS = get_event_fields()
 
 
 class CommandFailedError(Exception):

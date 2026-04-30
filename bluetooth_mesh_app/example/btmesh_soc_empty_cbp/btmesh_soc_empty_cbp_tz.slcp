@@ -127,9 +127,6 @@ post_build:
 
 tag:
   - companion:bootloader-apploader-secure
-  - hardware:device:flash:512
-  - hardware:device:ram:32
-  - hardware:rf:band:2400
   - hwfilter:device:device_series_2
   - hwfilter:device:device_supports_bluetooth
   - hwfilter:!device:device_security_vault

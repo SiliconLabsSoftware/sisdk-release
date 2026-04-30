@@ -35,7 +35,6 @@
 #include "gpiointerrupt.h"
 #include "sl_wake_lock.h"
 #include "sl_power_manager.h"
-#include "uartdrv_config.h"
 #include "app_assert.h"
 
 #if SL_WAKE_LOCK_ENABLE_LOCAL == 1

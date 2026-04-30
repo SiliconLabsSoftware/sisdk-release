@@ -3,7 +3,7 @@
  * @brief internal wrappers for 'pro_compliance_stack_interface' ipc commands
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -374,6 +374,12 @@ void slxi_zigbee_stack_gu_zdo_toggle_dlk_process_ipc_command(sli_zigbee_ipc_cmd_
 void slxi_zigbee_stack_ignore_incoming_aps_acks_process_ipc_command(sli_zigbee_ipc_cmd_t *msg)
 {
   slxi_zigbee_stack_ignore_incoming_aps_acks(msg->data.ignore_incoming_aps_acks.request.ignore);
+}
+
+void slxi_zigbee_stack_insecure_debug_generate_trace_process_ipc_command(sli_zigbee_ipc_cmd_t *msg)
+{
+  slxi_zigbee_stack_insecure_debug_generate_trace(msg->data.insecure_debug_generate_trace.request.msg_type,
+                                                  msg->data.insecure_debug_generate_trace.request.debug_data);
 }
 
 // public entrypoints
@@ -1182,4 +1188,21 @@ void slx_zigbee_ignore_incoming_aps_acks(bool ignore)
   sli_zigbee_ipc_cmd_t msg = { 0, };
   msg.data.ignore_incoming_aps_acks.request.ignore = ignore;
   sli_zigbee_send_ipc_cmd(slxi_zigbee_stack_ignore_incoming_aps_acks_process_ipc_command, &msg);
+}
+
+void slx_zigbee_insecure_debug_generate_trace(uint8_t msg_type,
+                                              uint8_t *debug_data)
+{
+  sli_zigbee_ipc_cmd_t msg = { 0, };
+  msg.data.insecure_debug_generate_trace.request.msg_type = msg_type;
+
+  if (debug_data != NULL) {
+    memmove(msg.data.insecure_debug_generate_trace.request.debug_data, debug_data, sizeof(uint8_t) * MAX_IPC_VEC_ARG_CAPACITY);
+  }
+
+  sli_zigbee_send_ipc_cmd(slxi_zigbee_stack_insecure_debug_generate_trace_process_ipc_command, &msg);
+
+  if (debug_data != NULL) {
+    memmove(debug_data, msg.data.insecure_debug_generate_trace.request.debug_data, sizeof(uint8_t) * MAX_IPC_VEC_ARG_CAPACITY);
+  }
 }

@@ -5,7 +5,7 @@
   <option  id='PROJECT_NUMBER' default='yes' type='string'><value><![CDATA[]]></value></option>
   <option  id='PROJECT_BRIEF' default='yes' type='string'><value><![CDATA[]]></value></option>
   <option  id='PROJECT_LOGO' default='yes' type='string'><value><![CDATA[]]></value></option>
-  <option  id='OUTPUT_DIRECTORY' default='no' type='string'><value><![CDATA[/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/doc]]></value></option>
+  <option  id='OUTPUT_DIRECTORY' default='no' type='string'><value><![CDATA[/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/doc]]></value></option>
   <option  id='CREATE_SUBDIRS' default='yes' type='bool'><value>NO</value></option>
   <option  id='CREATE_SUBDIRS_LEVEL' default='yes' type='int'><value>8</value></option>
   <option  id='ALLOW_UNICODE_NAMES' default='yes' type='bool'><value>NO</value></option>
@@ -119,11 +119,11 @@
   <option  id='WARN_LOGFILE' default='yes' type='string'><value><![CDATA[]]></value></option>
   <option  id='INPUT' default='no' type='stringlist'>
     <value><![CDATA[doc]]></value>
-    <value><![CDATA[/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc]]></value>
-    <value><![CDATA[/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/]]></value>
-    <value><![CDATA[/var/lib/jenkins/github@3/bgapi_protocol/api3/ble_indexPage.md]]></value>
-    <value><![CDATA[/var/lib/jenkins/github@3/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h]]></value>
-    <value><![CDATA[/var/lib/jenkins/github@3/bluetooth_le_host/event_system/inc/sli_bt_event_system.h]]></value>
+    <value><![CDATA[/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc]]></value>
+    <value><![CDATA[/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/]]></value>
+    <value><![CDATA[/var/lib/jenkins/github@2/bgapi_protocol/api3/ble_indexPage.md]]></value>
+    <value><![CDATA[/var/lib/jenkins/github@2/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h]]></value>
+    <value><![CDATA[/var/lib/jenkins/github@2/bluetooth_le_host/event_system/inc/sli_bt_event_system.h]]></value>
   </option>
   <option  id='INPUT_ENCODING' default='yes' type='string'><value><![CDATA[UTF-8]]></value></option>
   <option  id='FILE_PATTERNS' default='yes' type='stringlist'>
@@ -188,7 +188,7 @@
   <option  id='EXCLUDE_SYMBOLS' default='yes' type='stringlist'>
   </option>
   <option  id='EXAMPLE_PATH' default='no' type='stringlist'>
-    <value><![CDATA[/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/doc_autogen/]]></value>
+    <value><![CDATA[/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/doc_autogen/]]></value>
   </option>
   <option  id='EXAMPLE_PATTERNS' default='yes' type='stringlist'>
     <value><![CDATA[*]]></value>
@@ -202,7 +202,7 @@
   <option  id='FILTER_SOURCE_FILES' default='yes' type='bool'><value>NO</value></option>
   <option  id='FILTER_SOURCE_PATTERNS' default='yes' type='stringlist'>
   </option>
-  <option  id='USE_MDFILE_AS_MAINPAGE' default='no' type='string'><value><![CDATA[/var/lib/jenkins/github@3/bgapi_protocol/api3/ble_indexPage.md]]></value></option>
+  <option  id='USE_MDFILE_AS_MAINPAGE' default='no' type='string'><value><![CDATA[/var/lib/jenkins/github@2/bgapi_protocol/api3/ble_indexPage.md]]></value></option>
   <option  id='SOURCE_BROWSER' default='yes' type='bool'><value>NO</value></option>
   <option  id='INLINE_SOURCES' default='yes' type='bool'><value>NO</value></option>
   <option  id='STRIP_CODE_COMMENTS' default='yes' type='bool'><value>YES</value></option>

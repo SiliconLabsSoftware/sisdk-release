@@ -31,6 +31,13 @@
       vendor: silabs
     path: brd4191a_brd4002a/sl_board_control_config.h
   - condition:
+    - brd4002b
+    override:
+      component: board_control
+      file_id: board_control_config
+      vendor: silabs
+    path: brd4191a_brd4002b/sl_board_control_config.h
+  - condition:
     - brd4001a
     override:
       component: bootloader_euart_driver
@@ -163,12 +170,26 @@
       vendor: silabs
     path: brd4191a_brd4002a/btl_euart_driver_cfg.h
   - condition:
+    - brd4002b
+    override:
+      component: bootloader_euart_driver
+      file_id: btl_euart_driver_cfg
+      vendor: silabs
+    path: brd4191a_brd4002b/btl_euart_driver_cfg.h
+  - condition:
     - brd4002a
     override:
       component: bootloader_gpio_activation
       file_id: btl_gpio_activation_cfg
       vendor: silabs
     path: brd4191a_brd4002a/btl_gpio_activation_cfg.h
+  - condition:
+    - brd4002b
+    override:
+      component: bootloader_gpio_activation
+      file_id: btl_gpio_activation_cfg
+      vendor: silabs
+    path: brd4191a_brd4002b/btl_gpio_activation_cfg.h
   - condition:
     - brd4002a
     override:
@@ -177,6 +198,13 @@
       vendor: silabs
     path: brd4191a_brd4002a/btl_uart_driver_cfg.h
   - condition:
+    - brd4002b
+    override:
+      component: bootloader_uart_driver
+      file_id: btl_uart_driver_cfg
+      vendor: silabs
+    path: brd4191a_brd4002b/btl_uart_driver_cfg.h
+  - condition:
     - brd4002a
     override:
       component: clock_manager
@@ -184,12 +212,26 @@
       vendor: silabs
     path: brd4191a_brd4002a/sl_clock_manager_oscillator_config.h
   - condition:
+    - brd4002b
+    override:
+      component: clock_manager
+      file_id: clock_manager_oscillator_config
+      vendor: silabs
+    path: brd4191a_brd4002b/sl_clock_manager_oscillator_config.h
+  - condition:
     - brd4002a
     override:
       component: clock_manager
       file_id: clock_manager_tree_config
       vendor: silabs
     path: brd4191a_brd4002a/sl_clock_manager_tree_config.h
+  - condition:
+    - brd4002b
+    override:
+      component: clock_manager
+      file_id: clock_manager_tree_config
+      vendor: silabs
+    path: brd4191a_brd4002b/sl_clock_manager_tree_config.h
   - condition:
     - brd4002a
     override:
@@ -199,6 +241,14 @@
       vendor: silabs
     path: brd4191a_brd4002a/sl_cpc_drv_uart_eusart_vcom_config.h
   - condition:
+    - brd4002b
+    override:
+      component: cpc_secondary_driver_uart_eusart
+      file_id: cpc_drv_uart_eusart_config
+      instance: vcom
+      vendor: silabs
+    path: brd4191a_brd4002b/sl_cpc_drv_uart_eusart_vcom_config.h
+  - condition:
     - brd4002a
     override:
       component: cpc_secondary_driver_uart_usart
@@ -207,12 +257,27 @@
       vendor: silabs
     path: brd4191a_brd4002a/sl_cpc_drv_uart_usart_vcom_config.h
   - condition:
+    - brd4002b
+    override:
+      component: cpc_secondary_driver_uart_usart
+      file_id: cpc_drv_uart_usart_config
+      instance: vcom
+      vendor: silabs
+    path: brd4191a_brd4002b/sl_cpc_drv_uart_usart_vcom_config.h
+  - condition:
     - brd4002a
     override:
       component: device_init_hfxo
       file_id: device_init_hfxo_config
       vendor: silabs
     path: brd4191a_brd4002a/sl_device_init_hfxo_config.h
+  - condition:
+    - brd4002b
+    override:
+      component: device_init_hfxo
+      file_id: device_init_hfxo_config
+      vendor: silabs
+    path: brd4191a_brd4002b/sl_device_init_hfxo_config.h
   - condition:
     - brd4002a
     override:
@@ -222,6 +287,14 @@
       vendor: silabs
     path: brd4191a_brd4002a/sl_iostream_eusart_vcom_config.h
   - condition:
+    - brd4002b
+    override:
+      component: iostream_eusart
+      file_id: iostream_eusart_config
+      instance: vcom
+      vendor: silabs
+    path: brd4191a_brd4002b/sl_iostream_eusart_vcom_config.h
+  - condition:
     - brd4002a
     override:
       component: iostream_usart
@@ -230,12 +303,27 @@
       vendor: silabs
     path: brd4191a_brd4002a/sl_iostream_usart_vcom_config.h
   - condition:
+    - brd4002b
+    override:
+      component: iostream_usart
+      file_id: iostream_usart_config
+      instance: vcom
+      vendor: silabs
+    path: brd4191a_brd4002b/sl_iostream_usart_vcom_config.h
+  - condition:
     - brd4002a
     override:
       component: mx25_flash_shutdown_usart
       file_id: mx25_flash_shutdown_usart_config
       vendor: silabs
     path: brd4191a_brd4002a/sl_mx25_flash_shutdown_usart_config.h
+  - condition:
+    - brd4002b
+    override:
+      component: mx25_flash_shutdown_usart
+      file_id: mx25_flash_shutdown_usart_config
+      vendor: silabs
+    path: brd4191a_brd4002b/sl_mx25_flash_shutdown_usart_config.h
   - condition:
     - brd4002a
     override:
@@ -244,12 +332,26 @@
       vendor: silabs
     path: brd4191a_brd4002a/sl_rail_util_pa_config.h
   - condition:
+    - brd4002b
+    override:
+      component: rail_util_pa
+      file_id: rail_util_pa_config
+      vendor: silabs
+    path: brd4191a_brd4002b/sl_rail_util_pa_config.h
+  - condition:
     - brd4002a
     override:
       component: sl_rail_util_aox
       file_id: rail_util_aox_config
       vendor: silabs
     path: brd4191a_brd4002a/sl_rail_util_aox_config.h
+  - condition:
+    - brd4002b
+    override:
+      component: sl_rail_util_aox
+      file_id: rail_util_aox_config
+      vendor: silabs
+    path: brd4191a_brd4002b/sl_rail_util_aox_config.h
   - condition:
     - brd4002a
     override:
@@ -258,12 +360,26 @@
       vendor: silabs
     path: brd4191a_brd4002a/sl_rail_util_pa_config.h
   - condition:
+    - brd4002b
+    override:
+      component: sl_rail_util_pa
+      file_id: sl_rail_util_pa_config
+      vendor: silabs
+    path: brd4191a_brd4002b/sl_rail_util_pa_config.h
+  - condition:
     - brd4002a
     override:
       component: sl_rail_util_pti
       file_id: rail_util_pti_config
       vendor: silabs
     path: brd4191a_brd4002a/sl_rail_util_pti_config.h
+  - condition:
+    - brd4002b
+    override:
+      component: sl_rail_util_pti
+      file_id: rail_util_pti_config
+      vendor: silabs
+    path: brd4191a_brd4002b/sl_rail_util_pti_config.h
   - condition:
     - brd4002a
     override:
@@ -273,6 +389,14 @@
       vendor: silabs
     path: brd4191a_brd4002a/sl_uartdrv_eusart_vcom_config.h
   - condition:
+    - brd4002b
+    override:
+      component: uartdrv_eusart
+      file_id: uartdrv_eusart_config
+      instance: vcom
+      vendor: silabs
+    path: brd4191a_brd4002b/sl_uartdrv_eusart_vcom_config.h
+  - condition:
     - brd4002a
     override:
       component: uartdrv_usart
@@ -280,3 +404,11 @@
       instance: vcom
       vendor: silabs
     path: brd4191a_brd4002a/sl_uartdrv_usart_vcom_config.h
+  - condition:
+    - brd4002b
+    override:
+      component: uartdrv_usart
+      file_id: uartdrv_usart_config
+      instance: vcom
+      vendor: silabs
+    path: brd4191a_brd4002b/sl_uartdrv_usart_vcom_config.h

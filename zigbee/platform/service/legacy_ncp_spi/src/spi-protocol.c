@@ -15,13 +15,20 @@
  *
  ******************************************************************************/
 #include PLATFORM_HEADER
+#include "sl_component_catalog.h"
 #include "stack/include/sl_zigbee.h"
 #include "hal/hal.h"
 #include "serial/serial.h"
 #include "../inc/spi-protocol.h"
 #include "spidrv.h"
+
+#ifdef _SILICON_LABS_32B_SERIES_3
+#include "sl_gpio.h"
+#elif defined(_SILICON_LABS_32B_SERIES_2)
 #include "em_gpio.h"
 #include "gpiointerrupt.h"
+#endif
+
 #include "../inc/spi-protocol-device.h"
 //#include "sl_spi_ncp_config.h"
 
@@ -65,8 +72,15 @@ static SPIDRV_HandleData_t spiHandleData;
 static SPIDRV_Handle_t spiHandle = &spiHandleData;
 
 static bool halInternalHostSerialTick(bool responseReady);
+
+#ifdef _SILICON_LABS_32B_SERIES_2
 static void nSSEL_ISR(uint8_t pin);
 static void nWAKE_ISR(uint8_t pin);
+#elif defined(_SILICON_LABS_32B_SERIES_3)
+static void nSSEL_ISR(uint8_t interrupt_no, void *ctx);
+static void nWAKE_ISR(uint8_t interrupt_no, void *ctx);
+#endif // _SILICON_LABS_32B_SERIES_2
+
 static void processSpipCommandAndRespond(uint8_t spipResponse);
 static void setSpipErrorBuffer(uint8_t spiByte);
 
@@ -116,24 +130,48 @@ void halHostSerialPowerup(void)
   SPIDRV_Init_t initData = SPI_NCP_USART_INIT;
   SPIDRV_Init(spiHandle, &initData);
 
-  // Initialize nHOST_INT as output
+#if defined(_SILICON_LABS_32B_SERIES_3)
+  // Series 3 GPIO initialization
+  const sl_gpio_t n_host_int_gpio = { .port = BSP_SPINCP_NHOSTINT_PORT,
+                                      .pin  = BSP_SPINCP_NHOSTINT_PIN };
+  (void)sl_gpio_set_pin_mode(&n_host_int_gpio, SL_GPIO_MODE_PUSH_PULL, 1);
+
+  (void)sl_gpio_init();
+#else
+  // Series 2 GPIO initialization
   GPIO_PinModeSet(BSP_SPINCP_NHOSTINT_PORT,
                   BSP_SPINCP_NHOSTINT_PIN,
                   gpioModePushPull,
                   1);
 
   GPIOINT_Init();
+#endif
 
   #if (!defined(DISABLE_NWAKE)) && (!defined(HAL_CONFIG) || defined(BSP_SPINCP_NWAKE_PIN))
+  #if defined(_SILICON_LABS_32B_SERIES_3)
   // Disable the interrupt before configuration in case there's a conflict in
   // interrupt numbering.
-  GPIO_IntDisable(1 << BSP_SPINCP_NWAKE_PIN);
+  (void)sl_gpio_disable_interrupts(1 << BSP_SPINCP_NWAKE_PIN);
+  const sl_gpio_t n_wake_int_gpio = { .port = BSP_SPINCP_NWAKE_PORT,
+                                      .pin  = BSP_SPINCP_NWAKE_PIN };
   // Initialize nWAKE as input with falling edge interrupt.
+  (void)sl_gpio_set_pin_mode(&n_wake_int_gpio, SL_GPIO_MODE_INPUT_PULL_FILTER, 1);
+
+  int32_t interrupt_em4 = SL_GPIO_INTERRUPT_UNAVAILABLE;
+  (void)sl_gpio_configure_wakeup_em4_interrupt(&n_wake_int_gpio, &interrupt_em4, false, NULL, NULL);
+
+  int32_t interrupt_ext = BSP_SPINCP_NWAKE_PIN;
+  (void)sl_gpio_configure_external_interrupt(&n_wake_int_gpio,
+                                       &interrupt_ext,
+                                       SL_GPIO_INTERRUPT_FALLING_EDGE,
+                                       nWAKE_ISR,
+                                       NULL);
+  #else
+  GPIO_IntDisable(1 << BSP_SPINCP_NWAKE_PIN);
   GPIO_PinModeSet(BSP_SPINCP_NWAKE_PORT,
                   BSP_SPINCP_NWAKE_PIN,
                   gpioModeInputPullFilter,
                   1);
-  #if defined(_SILICON_LABS_32B_SERIES_2)
   uint32_t interrupt;
   interrupt = GPIOINT_EM4WUCallbackRegisterExt(BSP_SPINCP_NWAKE_PORT,
                                                BSP_SPINCP_NWAKE_PIN,
@@ -146,7 +184,6 @@ void halHostSerialPowerup(void)
                            false,
                            true);
   }
-  #endif // defined(_SILICON_LABS_32B_SERIES_2)
   GPIO_ExtIntConfig(BSP_SPINCP_NWAKE_PORT,
                     BSP_SPINCP_NWAKE_PIN,
                     BSP_SPINCP_NWAKE_PIN,
@@ -155,24 +192,43 @@ void halHostSerialPowerup(void)
                     true);
   GPIOINT_CallbackRegister(BSP_SPINCP_NWAKE_PIN, nWAKE_ISR);
   #endif
+  #endif
 
+  // nSSEL configuration
+#if defined(_SILICON_LABS_32B_SERIES_3)
   // Disable the interrupt before configuration in case there's a conflict in
   // interrupt numbering.
-  GPIO_IntDisable(1 << SPI_NCP_CS_PIN);
+  sl_gpio_disable_interrupts(1 << SPI_NCP_CS_PIN);
   // Initialize nSSEL as input with rising/falling edge interrupts
+  const sl_gpio_t nSSEL_int_gpio = { .port = SPI_NCP_CS_PORT,
+                                     .pin  = SPI_NCP_CS_PIN };
+  sl_gpio_set_pin_mode(&nSSEL_int_gpio, SL_GPIO_MODE_INPUT_PULL_FILTER, 1);
+  int32_t interrupt_ssel_ext = SPI_NCP_CS_PIN;
+  sl_gpio_configure_external_interrupt(&nSSEL_int_gpio,
+                                       &interrupt_ssel_ext,
+                                       SL_GPIO_INTERRUPT_RISING_FALLING_EDGE,
+                                       nSSEL_ISR,
+                                       NULL);
+#else
+  GPIO_IntDisable(1 << SPI_NCP_CS_PIN);
   GPIO_PinModeSet(SPI_NCP_CS_PORT, SPI_NCP_CS_PIN, gpioModeInputPullFilter, 1);
   GPIOINT_CallbackRegister(SPI_NCP_CS_PIN, nSSEL_ISR);
   GPIO_ExtIntConfig(SPI_NCP_CS_PORT, SPI_NCP_CS_PIN, SPI_NCP_CS_PIN, true, true, true);
+#endif
 
   // ----- Account for Noise and Crosstalk ------ //
   // on some hardware configurations there is a lot of noise and bootloading can fail
   // due to crosstalk. to avoid this, the slewrate is lowered here from 6 to 4, and the
   // drivestrength is lowered from 10mA to 1mA. if noise related errors still occur,
   // the slewrate can be lowered further
+#if defined(_SILICON_LABS_32B_SERIES_3)
+  (void)sl_gpio_set_slew_rate(&n_host_int_gpio, 4);
+#else
   GPIO_SlewrateSet(BSP_SPINCP_NHOSTINT_PORT, 4, 4);
+  #if defined (_GPIO_P_CTRL_DRIVEMODE_MASK)
   // the drivestrength is lowered from 10mA to 1mA by setting DRIVESTRENGTH to 1
-#if defined (_GPIO_P_CTRL_DRIVEMODE_MASK)
   GPIO_DriveStrengthSet(BSP_SPINCP_NHOSTINT_PORT, 1);
+  #endif
 #endif
 }
 
@@ -185,7 +241,11 @@ void halHostSerialPowerdown(void)
 
   // Disable the interrupt on CS first so that it won't be triggered by the pin
   // configuration done by SPIDRV_DeInit().
+#if defined(_SILICON_LABS_32B_SERIES_3)
+  (void)sl_gpio_disable_interrupts(1 << SPI_NCP_CS_PIN);
+#elif defined(_SILICON_LABS_32B_SERIES_2)
   GPIO_IntDisable(1 << SPI_NCP_CS_PIN);
+#endif // _SILICON_LABS_32B_SERIES_3
   // Deinitialize spidrv to remove requirement on em1.
   SPIDRV_DeInit(spiHandle);
 }
@@ -297,7 +357,11 @@ static bool findHostCommand(void)
         // command). See the comment when the SPIDRV transfer is started in the
         // spipNcpWait case of halInternalHostSerialTick's switch statement for
         // the rationale.
+#if defined(SL_CATALOG_IOSTREAM_EUSART_PRESENT)
+        spiHandle->peripheral.eusartPort->CMD = EUSART_CMD_RXBLOCKEN;
+#elif defined(SL_CATALOG_IOSTREAM_USART_PRESENT)
         spiHandle->peripheral.usartPort->CMD = USART_CMD_RXBLOCKEN;
+#endif // SL_CATALOG_IOSTREAM_EUSART_PRESENT
 
         // Transition state to wait for TX buffer ready
         spipNcpState.state = spipNcpWait;
@@ -372,7 +436,11 @@ static bool halInternalHostSerialTick(bool responseReady)
 
       if (spiHandle->state == spidrvStateIdle) {
         // Clear out anything remaining in the USART's FIFOs
+#if defined(SL_CATALOG_IOSTREAM_EUSART_PRESENT)
+        spiHandle->peripheral.eusartPort->CMD = EUSART_CMD_CLEARRX | EUSART_CMD_CLEARTX;
+#elif defined(SL_CATALOG_IOSTREAM_USART_PRESENT)
         spiHandle->peripheral.usartPort->CMD = USART_CMD_CLEARRX | USART_CMD_CLEARTX;
+#endif // SL_CATALOG_IOSTREAM_EUSART_PRESENT
         SPIDRV_SReceive(spiHandle,
                         commandBuffer,
                         SPIP_BUFFER_SIZE,
@@ -381,7 +449,11 @@ static bool halInternalHostSerialTick(bool responseReady)
         // Disable RX blocking so we can receive the next command. See the
         // comment when the SPIDRV transfer is started in the spipNcpWait case
         // of halInternalHostSerialTick's switch statement for the rationale.
+#if defined(SL_CATALOG_IOSTREAM_EUSART_PRESENT)
+        spiHandle->peripheral.eusartPort->CMD = EUSART_CMD_RXBLOCKDIS;
+#elif defined(SL_CATALOG_IOSTREAM_USART_PRESENT)
         spiHandle->peripheral.usartPort->CMD = USART_CMD_RXBLOCKDIS;
+#endif // SL_CATALOG_IOSTREAM_EUSART_PRESENT
         break;
       } else if (nSSEL_IS_ASSERTED()) {
         SET_nHOST_INT();
@@ -446,7 +518,11 @@ static bool halInternalHostSerialTick(bool responseReady)
         // respective FIFOs (although apparently not the shift register, so
         // there is an extra 0xFF byte sent when switching from receiving the
         // command to sending the response).
+#if defined(SL_CATALOG_IOSTREAM_EUSART_PRESENT)
+        spiHandle->peripheral.eusartPort->CMD = EUSART_CMD_CLEARRX | EUSART_CMD_CLEARTX;
+#elif defined(SL_CATALOG_IOSTREAM_USART_PRESENT)
         spiHandle->peripheral.usartPort->CMD = USART_CMD_CLEARRX | USART_CMD_CLEARTX;
+#endif // SL_CATALOG_IOSTREAM_EUSART_PRESENT
 
         // Start a new transfer to send the response and also double as a
         // backstop receive for the next command (in case the nSSEL ISR can't
@@ -478,7 +554,11 @@ static bool halInternalHostSerialTick(bool responseReady)
         // because either the transfer would eventually be aborted anyway due to
         // the rising edge of the chip select line or we'd capture the next
         // command as part of the backstop receive set up above.
+#if defined(SL_CATALOG_IOSTREAM_EUSART_PRESENT)
+        spiHandle->peripheral.eusartPort->CMD = EUSART_CMD_RXBLOCKDIS;
+#elif defined(SL_CATALOG_IOSTREAM_USART_PRESENT)
         spiHandle->peripheral.usartPort->CMD = USART_CMD_RXBLOCKDIS;
+#endif // SL_CATALOG_IOSTREAM_EUSART_PRESENT
         spipNcpState.state = spipNcpResponse;
         // Indicate to the host that it should start clocking out the response
         CLR_nHOST_INT();
@@ -516,9 +596,18 @@ static bool halInternalHostSerialTick(bool responseReady)
 }
 
 // nSSEL signal (rising and falling edge triggered)
+#ifdef _SILICON_LABS_32B_SERIES_2
 static void nSSEL_ISR(uint8_t pin)
+#elif defined(_SILICON_LABS_32B_SERIES_3)
+static void nSSEL_ISR(uint8_t interrupt_no, void *ctx)
+#endif // _SILICON_LABS_32B_SERIES_2
 {
+#ifdef _SILICON_LABS_32B_SERIES_2
   UNUSED_VAR(pin);
+#elif defined(_SILICON_LABS_32B_SERIES_3)
+  UNUSED_VAR(interrupt_no);
+  UNUSED_VAR(ctx);
+#endif // _SILICON_LABS_32B_SERIES_2
   // Are we in a transaction?
   if (nSSEL_IS_ASSERTED()) {
     // If we are starting a transaction, deassert nHOST_INT and reset the tick
@@ -538,7 +627,11 @@ static void nSSEL_ISR(uint8_t pin)
       SPIDRV_GetTransferStatus(spiHandle, &itemsTransferred, &itemsRemaining);
 
       // Clear out anything remaining in the USART's FIFOs
+#if defined(SL_CATALOG_IOSTREAM_EUSART_PRESENT)
+      spiHandle->peripheral.eusartPort->CMD = EUSART_CMD_CLEARRX | EUSART_CMD_CLEARTX;
+#elif defined(SL_CATALOG_IOSTREAM_USART_PRESENT)
       spiHandle->peripheral.usartPort->CMD = USART_CMD_CLEARRX | USART_CMD_CLEARTX;
+#endif // SL_CATALOG_IOSTREAM_EUSART_PRESENT
       SPIDRV_SReceive(spiHandle,
                       commandBuffer,
                       SPIP_BUFFER_SIZE,
@@ -548,7 +641,11 @@ static void nSSEL_ISR(uint8_t pin)
       // Disable RX blocking so we can receive the next command. See the comment
       // when the SPIDRV transfer is started in the spipNcpWait case of
       // halInternalHostSerialTick's switch statement for the rationale.
+#if defined(SL_CATALOG_IOSTREAM_EUSART_PRESENT)
+      spiHandle->peripheral.eusartPort->CMD = EUSART_CMD_RXBLOCKDIS;
+#elif defined(SL_CATALOG_IOSTREAM_USART_PRESENT)
       spiHandle->peripheral.usartPort->CMD = USART_CMD_RXBLOCKDIS;
+#endif // SL_CATALOG_IOSTREAM_EUSART_PRESENT
 
       if ((spipNcpState.state >= spipNcpResponse)
           && (itemsTransferred < spipNcpState.responseLength)) {
@@ -568,9 +665,18 @@ static void nSSEL_ISR(uint8_t pin)
 }
 
 // nWAKE signal (falling edge-triggered)
+#ifdef _SILICON_LABS_32B_SERIES_2
 static void nWAKE_ISR(uint8_t pin)
+#elif defined(_SILICON_LABS_32B_SERIES_3)
+static void nWAKE_ISR(uint8_t interrupt_no, void *ctx)
+#endif // _SILICON_LABS_32B_SERIES_2
 {
+#ifdef _SILICON_LABS_32B_SERIES_2
   UNUSED_VAR(pin);
+#elif defined(_SILICON_LABS_32B_SERIES_3)
+  UNUSED_VAR(interrupt_no);
+  UNUSED_VAR(ctx);
+#endif // _SILICON_LABS_32B_SERIES_2
   spipNcpState.wakeup = true;
   spipFlagWakeFallingEdge = true;
 }
@@ -585,7 +691,11 @@ static void processSpipCommandAndRespond(uint8_t spipResponse)
   // that point, when we start the receive for the next command). See the
   // comment when the SPIDRV transfer is started in the spipNcpWait case of
   // halInternalHostSerialTick's switch statement for the rationale.
+#if defined(SL_CATALOG_IOSTREAM_EUSART_PRESENT)
+  spiHandle->peripheral.eusartPort->CMD = EUSART_CMD_RXBLOCKEN;
+#elif defined(SL_CATALOG_IOSTREAM_USART_PRESENT)
   spiHandle->peripheral.usartPort->CMD = USART_CMD_RXBLOCKEN;
+#endif // SL_CATALOG_IOSTREAM_EUSART_PRESENT
 
   //check for Frame Terminator, it must be there!
   if (getHostByte(1) == SPIP_FRAME_TERMINATOR) {

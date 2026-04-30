@@ -428,11 +428,12 @@ tag:
   - hwfilter:!device:device_no_rail_api
   - hwfilter:!board:brd2600a
   - hwfilter:!board:brd4272a
-  - hwfilter:!board:brd4277a
   - hwfilter:!device:device_family_mgm26
   - hwfilter:!device:device_family_mgm27
   - hwfilter:!device:device_family_efr32zg23
   - hwfilter:!device:device_family_efr32fg23
+  - hwfilter:!device:device_family_efr32xg2d    # tmp
+  - hwfilter:!device:device_family_efr32fg2d    # tmp
   - hwfilter:!device:device_family_mgm24
   - hwfilter:!device:device_family_fgm23
 

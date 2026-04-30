@@ -3,7 +3,7 @@ examples:
 sample_apps:
 description:
 dependencies:
-  - platform/6.0.0@silabs
+  - platform/6.0.2@silabs
 components:
   - rail_lib
   - rail_util_power_manager_init

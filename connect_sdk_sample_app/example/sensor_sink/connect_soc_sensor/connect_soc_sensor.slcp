@@ -32,14 +32,8 @@ component:
   - id: connect_poll
   - id: connect_parent_support
   - id: connect_frequency_hopping
-  - id: si70xx_driver
-    condition:
-      - hardware_board_has_si70xx
-  - id: i2cspm
-    instance:
-      - sensor
-    condition:
-      - hardware_board_has_si70xx
+  - id: rht_unidriver_driver
+    condition: [hardware_board_has_tempsensor]
   - id: simple_button
     instance: [btn0]
   - id: simple_led

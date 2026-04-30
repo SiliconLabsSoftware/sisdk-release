@@ -156,4 +156,6 @@ config_file:
   file_id: config_rf
 - path: sample_apps/config/zw_hardware/zw_hardware_config.h
   file_id: zw_hardware_config
+- path: sample_apps/config/zw_dtpa_config.h
+  file_id: zw_dtpa_config
 root_path: zwave

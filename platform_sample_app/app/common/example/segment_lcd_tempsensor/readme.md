@@ -2,7 +2,8 @@
 
 ## Summary
 
-This project demonstrates how to use the Si70xx temperature sensor to measure
+This project demonstrates how to use the on-board relative humidity and
+temperature (RHT) sensor—Si70xx or SHT4x, via the RHT UniDriver—to measure
 and record temperature values and how to use the Segment LCD to display those
 values.
 
@@ -20,14 +21,14 @@ Connect the board via a micro-USB or USB-C cable to your PC to flash the example
 6. Reset the board by pressing the Reset button on the board.
 7. Observe the LCD displaying 00000 after the board is reset; 25.000 for PG28
 8. After 5 seconds, the LCD will update with the current temperature reading 
-from the Si70xx RHT sensor. Every 5 seconds the LCD will update with the new
+from the RHT sensor. Every 5 seconds the LCD will update with the new
 temperature reading.
 
 ## How It Works
 
 The project uses a periodic sleeptimer that executes a callback function every
-5 seconds. This callback function calls APIs from the Si70xx driver library that
-measure and read the temperature and relative humidity values from the sensor. 
+5 seconds. This callback function calls the RHT UniDriver APIs that measure and
+read the temperature and relative humidity values from the sensor. 
 This value is then displayed on the segment LCD using APIs from the Segment LCD
 driver library. 
 

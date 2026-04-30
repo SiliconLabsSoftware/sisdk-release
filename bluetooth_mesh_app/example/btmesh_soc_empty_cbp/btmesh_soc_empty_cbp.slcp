@@ -83,9 +83,6 @@ post_build:
     condition: [device_series_2, bootloader_app_properties]
 
 tag:
-  - hardware:device:flash:512
-  - hardware:device:ram:32
-  - hardware:rf:band:2400
   - hwfilter:device:device_series_2
   - hwfilter:device:device_supports_bluetooth
   - hwfilter:ram:32k

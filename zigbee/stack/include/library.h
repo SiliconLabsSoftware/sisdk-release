@@ -41,7 +41,8 @@
 
 /** @brief This indicates the presence, absence, or status of an Ember
  *    stack library.
- */#ifdef DOXYGEN_SHOULD_SKIP_THIS
+ */
+#ifdef DOXYGEN_SHOULD_SKIP_THIS
 enum sl_zigbee_library_status_t
 #else
 typedef uint8_t sl_zigbee_library_status_t;

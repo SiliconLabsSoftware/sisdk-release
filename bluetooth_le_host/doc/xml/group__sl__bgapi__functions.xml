@@ -47,7 +47,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="290" column="13" declfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" declline="290" declcolumn="13"/>
+        <location file="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" line="290" column="13" declfile="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" declline="290" declcolumn="13"/>
       </memberdef>
       <memberdef kind="function" id="group__sl__bgapi__functions_1ga1a21829a9a326f28b529554b05c321d6" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -75,7 +75,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="298" column="6" declfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" declline="298" declcolumn="6"/>
+        <location file="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" line="298" column="6" declfile="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" declline="298" declcolumn="6"/>
       </memberdef>
       <memberdef kind="function" id="group__sl__bgapi__functions_1gaed25854ac5561ae0467c2c329a10b974" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>sl_status_t</type>
@@ -118,7 +118,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="317" column="13" declfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" declline="317" declcolumn="13"/>
+        <location file="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" line="317" column="13" declfile="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" declline="317" declcolumn="13"/>
       </memberdef>
       <memberdef kind="function" id="group__sl__bgapi__functions_1ga079fb06ff4ff1036071bf394a36941ce" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>sl_status_t</type>
@@ -186,7 +186,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="350" column="13" declfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" declline="350" declcolumn="13"/>
+        <location file="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" line="350" column="13" declfile="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" declline="350" declcolumn="13"/>
       </memberdef>
       <memberdef kind="function" id="group__sl__bgapi__functions_1gae2d5118429c4fec3f1448381cc994f38" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>SL_BGAPI_DEPRECATED sl_status_t</type>
@@ -209,7 +209,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="375" column="33" declfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" declline="375" declcolumn="33"/>
+        <location file="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" line="375" column="33" declfile="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" declline="375" declcolumn="33"/>
       </memberdef>
       <memberdef kind="function" id="group__sl__bgapi__functions_1gaf193a0e2a09007de8ff79bc58944ca1a" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>SL_BGAPI_DEPRECATED void</type>
@@ -229,7 +229,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="395" column="26" declfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" declline="395" declcolumn="26"/>
+        <location file="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" line="395" column="26" declfile="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" declline="395" declcolumn="26"/>
       </memberdef>
       <memberdef kind="function" id="group__sl__bgapi__functions_1ga866a91ee450f902d0036a4ee196049f9" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>SL_BGAPI_DEPRECATED void</type>
@@ -292,7 +292,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="445" column="26" declfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" declline="445" declcolumn="26"/>
+        <location file="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" line="445" column="26" declfile="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" declline="445" declcolumn="26"/>
       </memberdef>
       <memberdef kind="function" id="group__sl__bgapi__functions_1gac7b30151a238436c59e93a76aedbee0c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>SL_BGAPI_DEPRECATED void *</type>
@@ -315,7 +315,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="467" column="26" declfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" declline="467" declcolumn="26"/>
+        <location file="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" line="467" column="26" declfile="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" declline="467" declcolumn="26"/>
       </memberdef>
       <memberdef kind="function" id="group__sl__bgapi__functions_1gab41d467ade795af855161f208b81c491" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>void</type>
@@ -381,7 +381,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" line="500" column="6" declfile="/var/lib/jenkins/github@3/bgapi_protocol/protocol/inc/sl_bgapi.h" declline="500" declcolumn="6"/>
+        <location file="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" line="500" column="6" declfile="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" declline="500" declcolumn="6"/>
       </memberdef>
       </sectiondef>
     <briefdescription>

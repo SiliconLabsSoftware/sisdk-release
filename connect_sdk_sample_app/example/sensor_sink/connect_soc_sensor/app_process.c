@@ -32,13 +32,13 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include PLATFORM_HEADER
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "stack/include/ember.h"
 #include "em_system.h"
 #include "app_log.h"
-#ifdef SL_CATALOG_SI70XX_DRIVER_PRESENT
-#include "sl_si70xx.h"
-#include "sl_i2cspm_instances.h"
+#if defined(SL_CATALOG_RHT_UNIDRIVER_DRIVER_PRESENT)
+#include "sl_rht_unidriver.h"
 #endif
 #include "poll.h"
 #include "sl_app_common.h"
@@ -112,14 +112,10 @@ void report_handler(void)
 
     // Sample temperature and humidity from sensors.
     // Temperature is sampled in "millicelsius".
-    #ifndef UNIX_HOST
-    #ifdef SL_CATALOG_SI70XX_DRIVER_PRESENT
-    if (sl_si70xx_measure_rh_and_temp(sl_i2cspm_sensor,
-                                      SI7021_ADDR,
-                                      &rh_data,
-                                      &temp_data)) {
-      sensor_status = EMBER_ERR_FATAL;
-      app_log_info("Warning! Invalid Si7021 reading: %lu %ld\n", rh_data, temp_data);
+  #ifndef UNIX_HOST
+    #if defined(SL_CATALOG_RHT_UNIDRIVER_DRIVER_PRESENT)
+    if (SL_STATUS_OK != sl_rht_unidriver_measure_rh_and_temp(&rh_data, &temp_data)) {
+      app_log_error("Invalid sensor reading: 0x%08" PRIX32 "\n");
     }
     #else
     rh_data += 100;
@@ -129,7 +125,7 @@ void report_handler(void)
       rh_data = 55000;
     }
     #endif
-    #endif
+  #endif
     if (sensor_status == EMBER_SUCCESS) {
       emberStoreLowHighInt32u(buffer, temp_data);
       emberStoreLowHighInt32u(buffer + 4, rh_data);

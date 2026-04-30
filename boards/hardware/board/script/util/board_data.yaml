@@ -46,6 +46,9 @@ brd2601b:
 brd2606a:
   hfxo_ctune: 82
   lfxo_ctune: 44
+brd2611a:
+  hfxo_ctune: 123
+  lfxo_ctune: 41
 brd2703a:
   hfxo_ctune: 100
   lfxo_ctune: 37

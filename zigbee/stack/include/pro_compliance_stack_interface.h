@@ -221,4 +221,14 @@ sl_status_t sl_zigbee_request_link_key_with_option_encrypt(sl_802154_long_addr_t
 sl_status_t sl_zigbee_send_aps_ack(sl_zigbee_aps_frame_t apsStruct, sl_802154_short_addr_t dest);
 
 void slx_zigbee_ignore_incoming_aps_acks(bool ignore);
+
+/**
+ * @brief generates a debug message of the given type using the data parameter
+ * @param msg_type an enumeration representing which kind of debug msg to generate
+ * @param debug_data an opaque pointer type. semantics are specific to each message
+ * @internal SL_ZIGBEE_IPC_ARGS
+ * {# debug_data | length: MAX_IPC_VEC_ARG_CAPACITY | max: MAX_IPC_VEC_ARG_CAPACITY #}
+ */
+void slx_zigbee_insecure_debug_generate_trace(uint8_t msg_type, uint8_t *debug_data);
+
 #endif //PRO_COMPLIANCE_STACK_INTERFACE_H

@@ -189,13 +189,13 @@ class HelpersMixin:
                 self.log.warning(
                     "Group %d is empty, the command will have no effect!", group_id
                 )
-        elif re.fullmatch(VALID_BD_ADDRESS_REGEX, str(addr)) is not None:
+        elif isinstance(addr, esl_lib.Address) or re.fullmatch(VALID_BD_ADDRESS_REGEX, str(addr)) is not None:
             tag = self.tag_db.find(addr)
         elif addr is not None:
             try:
                 esl_id = int(addr)
-            except TypeError:
-                self.log.error("%d is not a valid address, request ignored!", str(addr))
+            except (TypeError, ValueError):
+                self.log.error("%s is not a valid address, request ignored!", str(addr))
             else:
                 tag = self.tag_db.find((esl_id, group_id))
 
@@ -248,6 +248,27 @@ class HelpersMixin:
                 blocked_count,
             )
             self.stat_sum = stat_sum
+
+    def find_next_optimal_tag(self, esl_id=None):
+        """Find the next synchronized tag in the optimal group/subevent."""
+        # 1. Filter tags: Synchronized and IDLE (not connected/connecting)
+        candidates = [
+            tag for tag in self.tag_db.list_state(TagState.IDLE)
+            if tag.esl_state == EslState.SYNCHRONIZED and not tag.blocked
+        ]
+
+        if esl_id is not None:
+            candidates = [tag for tag in candidates if tag.esl_id == esl_id]
+
+        if not candidates:
+            return None
+
+        # 2. Sort by optimal group (proximity to next_subevent)
+        candidates.sort(
+            key=lambda t: (t.group_id - self.next_subevent) % self.subevent_count
+        )
+
+        return candidates[0]
 
     def check_address_list(self, target=None):  # no specific tag by default
         """Check address list, or try connect to particular tag"""
@@ -302,10 +323,21 @@ class HelpersMixin:
                             "Scanning is disabled, auto commissioning stopped until scanning is enabled!"
                         )
                     else:
+                        unsynced_tags = self.tag_db.list_esl_state(EslState.UNSYNCHRONIZED)
                         self.log.warning(
                             "No advertising ESL found within RSSI threshold of %d dBm, auto commissioning suspended until further detection!",
                             self.rssi_threshold,
                         )
+                        if unsynced_tags:
+                            device_count = len(unsynced_tags)
+                            self.log.warning(
+                                "%d unsynchronized ESL%s still detected in the database. Initiating basic state check.",
+                                device_count,
+                                "" if device_count == 1 else "s",
+                            )
+                            for tag in unsynced_tags:
+                                self.ap_ping(tag.esl_id, tag.group_id)
+
                     self.log.debug("TagDB deep size: %d bytes", deep_size(self.tag_db))
                     log("Auto mode summary:", _half_indent_log=True)
                     time = None

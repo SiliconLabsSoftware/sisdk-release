@@ -41,6 +41,7 @@ requires:
 - name: "sl_mempool"
 - name: "sl_wisun_trace_util"
 - name: "sl_string"
+- name: "sl_wisun_app_core"
 provides:
 - name: "sl_wisun_coap"
 

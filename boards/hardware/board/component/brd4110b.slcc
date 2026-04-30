@@ -43,7 +43,7 @@
   - name: hardware_board_default_rf_band
   - name: hardware_board_default_rf_band_2400
 - recommends:
-  - id: brd4002a
+  - id: brd4002b
     vendor: silabs
   - id: iostream_eusart
     instance:

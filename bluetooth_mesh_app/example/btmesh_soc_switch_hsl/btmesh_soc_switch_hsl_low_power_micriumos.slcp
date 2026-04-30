@@ -129,11 +129,6 @@ post_build:
 
 tag:
   - hardware:board_only
-  - hardware:component:button:1+
-  - hardware:component:led:1+
-  - hardware:device:flash:512
-  - hardware:device:ram:64
-  - hardware:rf:band:2400
   - hwfilter:device:device_supports_bluetooth
   - hwfilter:device:device_series_2
   - hwfilter:board:simple_button:btn0

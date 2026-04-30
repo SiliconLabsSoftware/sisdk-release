@@ -1,4 +1,4 @@
-workspace_name: btmesh_soc_empty_cbp_tz_workspace
+workspace_name: btmesh_soc_empty_cbp_tz_apploader
 package: bluetooth_mesh_app
 label: Bluetooth Mesh - SoC Empty with Certificate-Based Provisioning support (TrustZone)
 description: >

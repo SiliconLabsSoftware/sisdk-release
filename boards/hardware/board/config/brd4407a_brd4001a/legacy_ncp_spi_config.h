@@ -45,14 +45,14 @@
 // <gpio> LEGACY_NCP_SPI_HOST_INT
 // $[GPIO_LEGACY_NCP_SPI_HOST_INT]
 #define LEGACY_NCP_SPI_HOST_INT_PORT             SL_GPIO_PORT_D
-#define LEGACY_NCP_SPI_HOST_INT_PIN              0
+#define LEGACY_NCP_SPI_HOST_INT_PIN              4
 
 // [GPIO_LEGACY_NCP_SPI_HOST_INT]$
 
 // <gpio> LEGACY_NCP_SPI_WAKE_INT
 // $[GPIO_LEGACY_NCP_SPI_WAKE_INT]
-#define LEGACY_NCP_SPI_WAKE_INT_PORT             SL_GPIO_PORT_D
-#define LEGACY_NCP_SPI_WAKE_INT_PIN              1
+#define LEGACY_NCP_SPI_WAKE_INT_PORT             SL_GPIO_PORT_C
+#define LEGACY_NCP_SPI_WAKE_INT_PIN              4
 
 // [GPIO_LEGACY_NCP_SPI_WAKE_INT]$
 // <<< sl:end pin_tool >>>

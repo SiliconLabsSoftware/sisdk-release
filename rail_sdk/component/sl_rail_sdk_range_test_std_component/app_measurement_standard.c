@@ -52,6 +52,8 @@
 #include "sl_rail_util_ant_div.h"
 #endif
 
+#include <inttypes.h>
+
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
@@ -392,7 +394,7 @@ bool ble_protocol_change(void)
         status = sl_rail_ble_config_phy_coded(rail_handles[PROT_BLE],
                                               SL_RAIL_BLE_CODING_125_KBPS);
         if (status != SL_RAIL_STATUS_NO_ERROR) {
-          app_log_error("SL_RAIL_BLE_CODING_125_KBPS failed with %lu\n", status);
+          app_log_error("Setting PHY SL_RAIL_BLE_CODING_125_KBPS failed with 0x%08" PRIX32 "\n", status);
         }
       }
       break;
@@ -401,7 +403,7 @@ bool ble_protocol_change(void)
         status = sl_rail_ble_config_phy_coded(rail_handles[PROT_BLE],
                                               SL_RAIL_BLE_CODING_500_KBPS);
         if (status != SL_RAIL_STATUS_NO_ERROR) {
-          app_log_error("SL_RAIL_BLE_CODING_500_KBPS failed with %lu\n", status);
+          app_log_error("Setting PHY SL_RAIL_BLE_CODING_500_KBPS failed with 0x%08" PRIX32 "\n", status);
         }
       }
       break;
@@ -596,7 +598,7 @@ range_test_packet_t* get_start_of_payload_for_standard(uint8_t* received_buffer)
     payload = (range_test_packet_t*)&received_buffer[16];
   } else {
     // Can not happen
-    app_log_info("Unknown PHY \n");
+    app_log_error("Unknown PHY \n");
   }
   return payload;
 }
@@ -713,36 +715,38 @@ void prepare_ble_advertising_channel_pdu(uint16_t packet_number, uint8_t *tx_buf
  ******************************************************************************/
 void menu_set_std_phy(bool init)
 {
+  if (init) {
+    range_test_settings.current_phy = 0;
+  }
+  sl_status_t status;
   if (is_current_phy_standard()) {
     if (range_test_std_phys[current_phy_standard_value()].is_supported
         && current_phy_standard_value() == IEEE802154_250KBPS) {
-#ifdef SL_CATALOG_RAIL_UTIL_ANT_DIV_PRESENT
+      #ifdef SL_CATALOG_RAIL_UTIL_ANT_DIV_PRESENT
       sl_rail_util_ant_div_set_rx_antenna_mode(SL_RAIL_UTIL_ANTENNA_MODE_DISABLED);
       sl_rail_util_ant_div_update_antenna_config();
-#endif
-      sl_rail_ieee802154_config_2p4_ghz_radio(rail_handles[PROT_IEEE802154]);
+      #endif
+      status = sl_rail_ieee802154_config_2p4_ghz_radio(rail_handles[PROT_IEEE802154]);
+      if (SL_RAIL_STATUS_NO_ERROR != status) {
+        app_log_error("Setting PHY IEEE 802.15.4 failed with error code 0x%08" PRIX32 "\n", status);
+      }
     } else if (range_test_std_phys[current_phy_standard_value()].is_supported
                && current_phy_standard_value() == IEEE802154_250KBPS_ANTDIV) {
-#ifdef SL_CATALOG_RAIL_UTIL_ANT_DIV_PRESENT
+      #ifdef SL_CATALOG_RAIL_UTIL_ANT_DIV_PRESENT
       sl_rail_util_ant_div_set_rx_antenna_mode(SL_RAIL_UTIL_ANTENNA_MODE_DIVERSITY);
       sl_rail_util_ant_div_update_antenna_config();
-      sl_rail_ieee802154_config_2p4_ghz_radio_ant_div(rail_handles[PROT_IEEE802154]);
-#else
-      range_test_settings.current_phy++;
-      menu_set_std_phy(false);
-#endif
-    } else {
-      if (init) {
-        range_test_settings.current_phy = 0;
+      status = sl_rail_ieee802154_config_2p4_ghz_radio_ant_div(rail_handles[PROT_IEEE802154]);
+      if (SL_RAIL_STATUS_NO_ERROR != status) {
+        app_log_error("Setting PHY IEEE 802.15.4 (with antenna diversity) failed with error code 0x%08" PRIX32 "\n", status);
       }
+      #endif
+    } else {
       while (true) {
+        // search for next available PHY
         if (!ble_protocol_change()) {
           range_test_settings.current_phy++;
           if (range_test_settings.current_phy >= get_number_of_phys()) {
             range_test_settings.current_phy = 0;
-            break;
-          }
-          if (range_test_std_phys[current_phy_standard_value()].is_supported) {
             break;
           }
         } else {

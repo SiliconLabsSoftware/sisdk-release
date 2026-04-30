@@ -121,13 +121,7 @@ post_build:
     condition: [device_series_2, bootloader_app_properties]
 
 tag:
-  - hardware:device:sdid:205
   - hardware:board_only
-  - hardware:component:button:1+
-  - hardware:component:led:1+
-  - hardware:device:flash:512
-  - hardware:device:ram:32
-  - hardware:rf:band:2400
   - prebuilt_demo
   - hwfilter:device:device_series_2
   - hwfilter:device:device_supports_bluetooth

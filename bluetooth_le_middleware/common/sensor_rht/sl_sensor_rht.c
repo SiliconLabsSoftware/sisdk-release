@@ -30,15 +30,10 @@
 
 #include <stddef.h>
 #include "sl_board_control.h"
-#include "sl_si70xx.h"
+#include "sl_rht_unidriver.h"
 #include "sl_i2cspm_instances.h"
 #include "app_assert.h"
 #include "sl_sensor_rht.h"
-
-// -----------------------------------------------------------------------------
-// Configuration
-
-#define RHT_ADDRESS  SI7021_ADDR
 
 // -----------------------------------------------------------------------------
 // Private variables
@@ -52,7 +47,7 @@ sl_status_t sl_sensor_rht_init(void)
 {
   sl_status_t sc;
   (void)sl_board_enable_sensor(SL_BOARD_SENSOR_RHT);
-  sc = sl_si70xx_init(sl_i2cspm_sensor, RHT_ADDRESS);
+  sc = sl_rht_unidriver_init(sl_i2cspm_sensor);
   if (SL_STATUS_OK == sc) {
     initialized = true;
   } else {
@@ -72,7 +67,7 @@ sl_status_t sl_sensor_rht_get(uint32_t *rh, int32_t *t)
   sl_status_t sc;
 
   if (initialized) {
-    sc = sl_si70xx_measure_rh_and_temp(sl_i2cspm_sensor, RHT_ADDRESS, rh, t);
+    sc = sl_rht_unidriver_measure_rh_and_temp(rh, t);
   } else {
     sc = SL_STATUS_NOT_INITIALIZED;
   }

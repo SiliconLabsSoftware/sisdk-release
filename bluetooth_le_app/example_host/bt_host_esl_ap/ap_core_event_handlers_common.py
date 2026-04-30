@@ -30,7 +30,7 @@ from ap_constants import (
 )
 from ap_logger import log, logLevel, LEVELS
 from ap_response_parser import ResponseParser
-from esl_tag import TagState, EslState
+from esl_tag import TagState, EslState, ImageUpdateFailed
 import esl_lib
 import esl_lib_wrapper as elw
 import esl_key_lib
@@ -296,6 +296,9 @@ class CommonEventHandlersMixin:
 
     def esl_event_pawr_data_request(self, evt: esl_lib.EventPawrDataRequest):
         """Generic handler for the PAwR data request event of the ESL library"""
+        self.next_subevent = (
+            evt.subevent_start + evt.subevent_data_count
+        ) % self.subevent_count
         subevents = list(
             range(evt.subevent_start, evt.subevent_start + evt.subevent_data_count)
         )
@@ -444,13 +447,16 @@ class CommonEventHandlersMixin:
         """Generic handler for the image type received event of the ESL library"""
         # Cache image type
         tag = self.tag_db.find(evt.connection_handle)
-        self.ap_imageupdate(
-            evt.img_index,
-            tag.image_file,
-            address=tag.ble_address,
-            label=tag.label,
-            rotation=tag.rotation,
-        )
+        try:
+            self.ap_imageupdate(
+                evt.img_index,
+                tag.image_file,
+                address=tag.ble_address,
+                label=tag.label,
+                rotation=tag.rotation,
+            )
+        except ImageUpdateFailed as e:
+            self.log.error(e)
 
     def esl_event_bonding_data(self, evt: esl_lib.EventBondingData):
         """Generic handler for the (new) bonding data ready event of the ESL library"""

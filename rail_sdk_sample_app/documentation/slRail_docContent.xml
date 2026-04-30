@@ -166,14 +166,14 @@
     <property key="core.partCompatibility" value=".*efr32[bfmz]g2.* .*mgm2.* .*rm21.* .*fgm230s.* .*zgm2.* .*bgm220sc2[2-3]hna.*"/>
     <property key="core.boardCompatibility" value=".*"/>
   </contentItemData>
-  <contentItemData name="" label="RAIL SDK Release Notes" itemURI="https://docs.silabs.com/sisdk-release-notes/2025.12.2/sisdk-rail-release-notes/index.html" category="Release Notes" priority="1">
+  <contentItemData name="" label="RAIL SDK Release Notes" itemURI="https://docs.silabs.com/sisdk-release-notes/2025.12.3/sisdk-rail-release-notes/index.html" category="Release Notes" priority="1">
     <description>Lists compatibility requirements and sources for all software components in the development environment. Discusses the latest changes to the Silicon Labs RAIL SDK, including added/deleted/deprecated features/API. Reviews fixed and known issues.  </description>
     <property key="core.category" value="Release Notes"/>
     <property key="core.priority" value="1"/>
     <property key="core.partCompatibility" value=".*efr32[bfmz]g2.* .*mgm2.* .*rm21.* .*fgm230s.* .*zgm2.* .*bgm220sc2[2-3]hna.*"/>
     <property key="core.boardCompatibility" value=".*"/>
   </contentItemData>
-  <contentItemData name="" label="Gecko Platform Release Notes" itemURI="https://docs.silabs.com/sisdk-release-notes/2025.12.2/sisdk-platform-release-notes/index.html" category="Release Notes" priority="1">
+  <contentItemData name="" label="Gecko Platform Release Notes" itemURI="https://docs.silabs.com/sisdk-release-notes/2025.12.3/sisdk-platform-release-notes/index.html" category="Release Notes" priority="1">
     <description>A detailed overview of the changes, additions, and fixes in the Gecko Platform components. The Gecko Platform includes EMLIB, EMDRV, RAIL Library, NVM3, and the component-based infrastructure.    </description>
     <property key="core.category" value="Release Notes"/>
     <property key="core.priority" value="1"/>

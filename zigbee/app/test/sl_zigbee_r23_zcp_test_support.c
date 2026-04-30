@@ -733,7 +733,7 @@ void tc_backup_restore(sl_cli_command_arg_t *arguments)
                                                &hashed_key);        // Set the hash key in the key slot for the same device
       slx_zigbee_insecure_debug_generate_trace(
         SLX_ZIGBEE_INSECURE_DEBUG_NWK_REPORT_KEY_PACKET,
-        (void *) hashed_key.key
+        (uint8_t *) hashed_key.key
         );
     }
   }

@@ -91,7 +91,11 @@ sl_status_t adv_cte_start(void)
 
   // Stop advertising.
   if (advertising_initialized) {
-    sc = sl_bt_periodic_advertiser_stop(advertising_set_handle);
+    // Stop the CTE transmitter if it was enabled before.
+    sc = sl_bt_cte_transmitter_disable_connectionless_cte(advertising_set_handle);
+    if (sc == SL_STATUS_OK) {
+      sc = sl_bt_periodic_advertiser_stop(advertising_set_handle);
+    }
 
     if (sc == SL_STATUS_OK) {
       sc = sl_bt_advertiser_stop(advertising_set_handle);

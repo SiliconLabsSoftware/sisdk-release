@@ -33,6 +33,8 @@
 #include "aoa_util.h"
 #include "aoa_cte_config.h"
 #include "app_log.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 // Module shared variables.
 extern uint8_t cte_switch_pattern[ANTENNA_ARRAY_MAX_PIN_PATTERN_SIZE];
@@ -54,6 +56,10 @@ static const uint8_t cte_enable_char[] = { 0xAD, 0x2B };
 
 // Flag indicating that SL_BT_CONFIG_MAX_CONNECTIONS is reached.
 static bool connections_unavailable = false;
+
+// Connection handle of the connection currently being opened, or
+// SL_BT_INVALID_CONNECTION_HANDLE when no connection open is in progress.
+static uint8_t connection_open_in_progress = SL_BT_INVALID_CONNECTION_HANDLE;
 
 static sl_status_t cte_conn_process_advertisement_report(bd_addr *address, uint8_t address_type, uint8_t event_flags, const uint8array *adv_data);
 
@@ -126,6 +132,12 @@ sl_status_t cte_bt_on_event_conn(sl_bt_msg_t *evt)
       sc = sl_bt_gatt_discover_primary_services_by_uuid(evt->data.evt_connection_opened.connection,
                                                         sizeof(cte_service),
                                                         cte_service);
+      break;
+
+    case sl_bt_evt_connection_parameters_id:
+      if (evt->data.evt_connection_parameters.connection == connection_open_in_progress) {
+        connection_open_in_progress = SL_BT_INVALID_CONNECTION_HANDLE;
+      }
       break;
 
     // -------------------------------
@@ -241,6 +253,9 @@ sl_status_t cte_bt_on_event_conn(sl_bt_msg_t *evt)
     // -------------------------------
     // This event is generated when a connection is dropped
     case sl_bt_evt_connection_closed_id:
+      if (evt->data.evt_connection_closed.connection == connection_open_in_progress) {
+        connection_open_in_progress = SL_BT_INVALID_CONNECTION_HANDLE;
+      }
       connections_unavailable = false;
       // Remove connection from active connections
       aoa_db_remove_tag((uint16_t)evt->data.evt_connection_closed.connection);
@@ -332,12 +347,22 @@ static sl_status_t cte_conn_process_advertisement_report(bd_addr *address,
     return sc;
   }
 
+  // Only open a new connection when the previous attempt has completed.
+  if (connection_open_in_progress != SL_BT_INVALID_CONNECTION_HANDLE) {
+    return sc;
+  }
+
   // Establish connection with the advertising device.
   uint8_t conn_handle;
   sc = sl_bt_connection_open(*address,
                              address_type,
                              sl_bt_gap_phy_1m,
                              &conn_handle);
+  if (SL_STATUS_OK == sc) {
+    connection_open_in_progress = conn_handle;
+  } else {
+    connection_open_in_progress = SL_BT_INVALID_CONNECTION_HANDLE;
+  }
   if (SL_STATUS_BT_CTRL_CONNECTION_LIMIT_EXCEEDED == sc) {
     app_log_warning("SL_BT_CONFIG_MAX_CONNECTIONS reached, stop scanning." APP_LOG_NL);
     connections_unavailable = true;

@@ -49,6 +49,7 @@ board_release_whitelist:
     - BRD2603A
     - BRD2606A
     - BRD2608A
+    - BRD2611A
     - BRD2703A
     - BRD2704A
     - BRD2705A

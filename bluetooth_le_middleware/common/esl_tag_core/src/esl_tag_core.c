@@ -34,6 +34,7 @@
 #include <stdbool.h>
 #include "sl_core.h"
 #include "em_emu.h"
+#include "em_gpio.h"
 #include "gatt_db.h"
 #include "app_scheduler.h"
 #include "sl_sleeptimer.h"

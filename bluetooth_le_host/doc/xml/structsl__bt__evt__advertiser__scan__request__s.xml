@@ -17,7 +17,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="2414" column="11" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="2414" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="2414" column="11" bodyfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="2414" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structsl__bt__evt__advertiser__scan__request__s_1a8758a891cf5ec5c684304ea275f75311" prot="public" static="no" mutable="no">
         <type><ref refid="structbd__addr" kindref="compound">bd_addr</ref></type>
@@ -32,7 +32,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="2416" column="11" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="2416" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="2416" column="11" bodyfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="2416" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structsl__bt__evt__advertiser__scan__request__s_1a41706457c633741e3267967359e740d2" prot="public" static="no" mutable="no">
         <type>uint8_t</type>
@@ -62,7 +62,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="2417" column="11" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="2417" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="2417" column="11" bodyfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="2417" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structsl__bt__evt__advertiser__scan__request__s_1af62187d5e331c374a0866a4702d71740" prot="public" static="no" mutable="no">
         <type>uint8_t</type>
@@ -81,7 +81,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="2447" column="11" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="2447" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="2447" column="11" bodyfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="2447" bodyend="-1"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
@@ -102,7 +102,7 @@
         </childnode>
       </node>
     </collaborationgraph>
-    <location file="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="2412" column="1" bodyfile="/var/lib/jenkins/github@3/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="2413" bodyend="2452"/>
+    <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="2412" column="1" bodyfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="2413" bodyend="2452"/>
     <listofallmembers>
       <member refid="structsl__bt__evt__advertiser__scan__request__s_1a8758a891cf5ec5c684304ea275f75311" prot="public" virt="non-virtual"><scope>sl_bt_evt_advertiser_scan_request_s</scope><name>address</name></member>
       <member refid="structsl__bt__evt__advertiser__scan__request__s_1a41706457c633741e3267967359e740d2" prot="public" virt="non-virtual"><scope>sl_bt_evt_advertiser_scan_request_s</scope><name>address_type</name></member>

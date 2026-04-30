@@ -3,7 +3,7 @@
  * @brief defines structured format for 'pro_compliance_stack_interface' ipc messages
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -646,5 +646,14 @@ typedef struct {
 typedef struct {
   slxi_zigbee_stack_ignore_incoming_aps_acks_ipc_req_t request;
 } slxi_zigbee_stack_ignore_incoming_aps_acks_ipc_msg_t;
+
+typedef struct {
+  uint8_t msg_type;
+  uint8_t debug_data[MAX_IPC_VEC_ARG_CAPACITY];
+} slxi_zigbee_stack_insecure_debug_generate_trace_ipc_req_t;
+
+typedef struct {
+  slxi_zigbee_stack_insecure_debug_generate_trace_ipc_req_t request;
+} slxi_zigbee_stack_insecure_debug_generate_trace_ipc_msg_t;
 
 #endif // PRO_COMPLIANCE_STACK_INTERFACE_IPC_COMMAND_MESSAGES_H

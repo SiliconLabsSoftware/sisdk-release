@@ -245,7 +245,7 @@ git_extra_files:
   - app/wisun/test/wisun_unit_test/test/support/mock_headers/sensor/sl_board_control.h
   - app/wisun/test/wisun_unit_test/test/support/mock_headers/sensor/sl_i2cspm.h
   - app/wisun/test/wisun_unit_test/test/support/mock_headers/sensor/sl_i2cspm_instances.h
-  - app/wisun/test/wisun_unit_test/test/support/mock_headers/sensor/sl_si70xx.h
+  - app/wisun/test/wisun_unit_test/test/support/mock_headers/sensor/sl_rht_unidriver.h
   - app/wisun/test/wisun_unit_test/test/support/mock_headers/sensor/sl_udelay.h
   - app/wisun/test/wisun_unit_test/test/support/mock_headers/sl_cli.h
   - app/wisun/test/wisun_unit_test/test/tcp_client/test_sl_wisun_tcp_client.c

@@ -24,6 +24,9 @@ source:
 other_file:
   - path: air_compressor.py
   - path: ap_cli.py
+  - path: ap_cli_argtypes.py
+  - path: ap_cli_resolvers.py
+  - path: ap_cli_scripting.py
   - path: ap_config.py
   - path: ap_constants.py
   - path: ap_core.py
@@ -35,6 +38,7 @@ other_file:
   - path: ap_core_event_handlers_cli.py
   - path: ap_core_event_handlers_common.py
   - path: ap_core_event_handlers_demo.py
+  - path: ap_core_event_handlers_itp.py
   - path: ap_core_helpers.py
   - path: ap_core_pawr_responses.py
   - path: ap_core_scan.py

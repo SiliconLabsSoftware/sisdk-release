@@ -27,7 +27,7 @@ def get_board_id(hw):
     # so we strip off the last part of the name which is separate by underscore.
     board_id = ''
     for bc in hw.board_components:
-        if bc.name != 'brd4001a' and bc.name != 'brd4002a':
+        if bc.name != 'brd4001a' and bc.name != 'brd4002a' and bc.name != 'brd4002b':
             board_id = bc.name
     return board_id.split('_')[0]
 

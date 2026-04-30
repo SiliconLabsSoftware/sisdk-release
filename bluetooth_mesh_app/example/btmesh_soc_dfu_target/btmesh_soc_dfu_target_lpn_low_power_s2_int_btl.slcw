@@ -1,4 +1,4 @@
-workspace_name: btmesh_soc_dfu_target_s2_int_btl
+workspace_name: btmesh_soc_dfu_target_lpn_low_power_s2_int_btl
 package: bluetooth_mesh_app
 label: Bluetooth Mesh - SoC DFU Target with Internal Storage Bootloader
 description: >

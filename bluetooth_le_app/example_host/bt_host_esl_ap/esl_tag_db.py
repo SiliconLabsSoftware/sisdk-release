@@ -174,7 +174,9 @@ class TagDB:
     def find(self, node_id):
         """Find tag by BLE address, connection handle, or (esl_id, group_id)."""
 
-        if isinstance(node_id, (esl_lib.Address, str)):
+        if isinstance(node_id, str):
+            node_id = esl_lib.Address.from_str(node_id)
+        if isinstance(node_id, esl_lib.Address):
             return self.by_ble_address.get(node_id)
 
         elif isinstance(node_id, esl_lib.ConnectionHandle):

@@ -3,7 +3,7 @@
  * @brief internal implementations for 'pro_compliance_stack_interface' as a thin-wrapper
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -436,4 +436,11 @@ void slx_zigbee_gu_zdo_toggle_dlk(bool do_dlk,
 void slx_zigbee_ignore_incoming_aps_acks(bool ignore)
 {
   slxi_zigbee_stack_ignore_incoming_aps_acks(ignore);
+}
+
+void slx_zigbee_insecure_debug_generate_trace(uint8_t msg_type,
+                                              uint8_t *debug_data)
+{
+  slxi_zigbee_stack_insecure_debug_generate_trace(msg_type,
+                                                  debug_data);
 }

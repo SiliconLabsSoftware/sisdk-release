@@ -125,11 +125,6 @@ post_build:
 
 tag:
   - hardware:board_only
-  - hardware:component:button:1
-  - hardware:component:display:!ls013b7dh03
-  - hardware:component:led:1
-  - hardware:device:sdid:!205
-  - hardware:rf:band:2400
   - prebuilt_demo
   - hwfilter:device:device_series_2
   - hwfilter:device:device_supports_bluetooth

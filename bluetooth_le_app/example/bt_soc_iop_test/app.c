@@ -51,7 +51,7 @@ static const char *connection_security_str[] = {
   "(0x00) No security",
   "(0x01) Unauthenticated pairing",
   "(0x02) Authenticated pairing",
-  "(0x03) Bonding"
+  "(0x03) Authenticated secure connections pairing (128-bit key)"
 };
 
 /***************************************************************************//**
@@ -190,7 +190,7 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
       uint8_t connection_handle = evt->data.evt_connection_opened.connection;
       app_log_info("Connection opened. Handle: [%d]. "
                    "Address: [%02X:%02X:%02X:%02X:%02X:%02X]. Address type: [%d]. "
-                   "Bonded: [%d]" APP_LOG_NL,
+                   "%s." APP_LOG_NL,
                    connection_handle,
                    evt->data.evt_connection_opened.address.addr[5],
                    evt->data.evt_connection_opened.address.addr[4],
@@ -199,7 +199,7 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
                    evt->data.evt_connection_opened.address.addr[1],
                    evt->data.evt_connection_opened.address.addr[0],
                    evt->data.evt_connection_opened.address_type,
-                   evt->data.evt_connection_opened.bonding != SL_BT_INVALID_BONDING_HANDLE);
+                   evt->data.evt_connection_opened.bonding == SL_BT_INVALID_BONDING_HANDLE ? "Not bonded" : "Bonded");
 
       set_display(DISPLAY_STATE_CONNECTED, NULL);
 
@@ -224,17 +224,15 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
 
     // Triggered after the pairing or bonding procedure is successfully completed.
     case sl_bt_evt_sm_bonded_id: {
-      app_log_info("Security increased to [%s]" APP_LOG_NL,
+      app_log_info("Security increased to [%s]. ",
                    connection_security_str[evt->data.evt_sm_bonded.security_mode]);
 
-      if (evt->data.evt_sm_bonded.security_mode == sl_bt_connection_mode1_level4) {
-        if (evt->data.evt_sm_bonded.bonding != SL_BT_INVALID_BONDING_HANDLE) {
-          bonding_handle = evt->data.evt_sm_bonded.bonding;
-          app_log_info("Bonding handle: %lu" APP_LOG_NL, bonding_handle);
-          set_display(DISPLAY_STATE_BONDING, NULL);
-        } else {
-          app_log_error("Invalid bonding handle." APP_LOG_NL);
-        }
+      if (evt->data.evt_sm_bonded.bonding != SL_BT_INVALID_BONDING_HANDLE) {
+        bonding_handle = evt->data.evt_sm_bonded.bonding;
+        app_log_append("Bonded. Bonding handle: %lu" APP_LOG_NL, bonding_handle);
+        set_display(DISPLAY_STATE_BONDING, NULL);
+      } else {
+        app_log_append("Not bonded." APP_LOG_NL);
       }
       break;
     }
@@ -312,8 +310,8 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
           app_log_status_error(sc);
 
           if (sc == SL_STATUS_OK) {
-            app_log_info("Bondings deleted. Preparing for security level: [%s]." APP_LOG_NL,
-                         connection_security_str[(sl_bt_connection_security_t)security_level]);
+            app_log_info("Bondings deleted. Preparing for security level: [%d]." APP_LOG_NL,
+                         (int)security_level);
           }
 
           sc = sl_bt_sm_configure(BONDING_WITHOUT_MITM, sl_bt_sm_io_capability_noinputnooutput);
@@ -332,8 +330,8 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
           app_log_status_error(sc);
 
           if (sc == SL_STATUS_OK) {
-            app_log_info("Bondings deleted. Preparing for security level: [%s]." APP_LOG_NL,
-                         connection_security_str[(sl_bt_connection_security_t)security_level]);
+            app_log_info("Bondings deleted. Preparing for security level: [%d]." APP_LOG_NL,
+                         (int)security_level);
           }
 
           sc = sl_bt_sm_configure(BONDING_WITH_MITM, sl_bt_sm_io_capability_displayonly);
@@ -356,8 +354,8 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
           app_log_status_error(sc);
 
           if (sc == SL_STATUS_OK) {
-            app_log_info("Bondings deleted. Preparing for security level: [%s]." APP_LOG_NL,
-                         connection_security_str[(sl_bt_connection_security_t)security_level]);
+            app_log_info("Bondings deleted. Preparing for security level: [%d]." APP_LOG_NL,
+                         (int)security_level);
           }
 
           sc = sl_bt_sm_configure(BONDING_WITH_MITM, sl_bt_sm_io_capability_displayonly);

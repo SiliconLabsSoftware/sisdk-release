@@ -36,7 +36,7 @@
 #include "sl_assert.h"
 #include "sl_wisun_types.h"
 #include "sl_wisun_rht_measurement.h"
-#include "sl_si70xx.h"
+#include "sl_rht_unidriver.h"
 #include "sl_i2cspm_instances.h"
 #include "sl_board_control.h"
 #include "sl_component_catalog.h"
@@ -125,8 +125,6 @@ __STATIC_INLINE void _rht_mutex_release(void)
 /* Init Sensor */
 void sl_wisun_rht_init(void)
 {
-  bool sensor_init_res = true;
-
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   osKernelState_t kernel_state = osKernelLocked;
 
@@ -147,15 +145,8 @@ void sl_wisun_rht_init(void)
   // init board
   EFM_ASSERT(sl_board_enable_sensor(SL_BOARD_SENSOR_RHT) == SL_STATUS_OK);
 
-  // init sensor
-  if (!sl_si70xx_present(_rht_sensor, SL_WISUN_RHT_SENSOR_ADDRESS, NULL)) {
-    // Wait for sensor to become ready
-    sl_udelay_wait(SL_WISUN_RHT_SENSOR_INIT_DELAY_US); // 80 ms and try again
-    if (!sl_si70xx_present(_rht_sensor, SL_WISUN_RHT_SENSOR_ADDRESS, NULL)) {
-      sensor_init_res = false;
-    }
-  }
-  EFM_ASSERT(sensor_init_res == true);
+  // init sensor (UniDriver probes Si70xx then SHT4x with internal retry/delay)
+  EFM_ASSERT(sl_rht_unidriver_init(_rht_sensor) == SL_STATUS_OK);
 
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   if (kernel_state == osKernelRunning) {
@@ -195,7 +186,7 @@ sl_status_t sl_wisun_rht_get(uint32_t *rh, int32_t *t)
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   _rht_mutex_acquire();
 #endif
-  stat = sl_si70xx_measure_rh_and_temp(_rht_sensor, SL_WISUN_RHT_SENSOR_ADDRESS, rh, t);
+  stat = sl_rht_unidriver_measure_rh_and_temp(rh, t);
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   _rht_mutex_release();
 #endif

@@ -51,6 +51,7 @@
 #include "sl_component_catalog.h"
 #include "border_router/sl_wisun_br_api.h"
 #include "sl_wisun_br_dhcpv6_server.h"
+#include "sl_wisun_br_config.h"
 #include "sl_wisun_keychain.h"
 
 #if defined(SL_CATALOG_WISUN_BR_AGENT_SERVICE_PRESENT)
@@ -538,8 +539,10 @@ void sl_wisun_app_br_core_start(void)
   EFM_ASSERT(sl_wisun_br_set_lfn_parameters(&lfn_params) == SL_STATUS_OK);
 
   // Get channel mask
+#if defined(SL_CATALOG_WISUN_APP_SETTING_PRESENT)
   EFM_ASSERT(app_settings_get_channel_mask(_br_setting.allowed_channels,
                                            &channel_mask) == SL_STATUS_OK);
+#endif
 
   // Set Channel Mask
   EFM_ASSERT(sl_wisun_set_channel_mask(&channel_mask) == SL_STATUS_OK);

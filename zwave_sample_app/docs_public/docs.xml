@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <contentItems xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.silabs.com/ss/ContentItem.ecore">
+  <contentItemData name="" label="Z-Wave SDK Release Notes" itemURI="https://docs.silabs.com/sisdk-release-notes/2025.12.3/sisdk-zwave-release-notes/index.html">
+    <description>A detailed overview of the changes, additions, fixes and known issues in the Z-Wave SDK.</description>
+    <property key="core.category" value="Release Notes"/>
+    <property key="core.priority" value="1"/>
+    <property key="core.partCompatibility" value=".*efr32zg23.* .*zgm230.* .*efr32zg28.*"/>
+  </contentItemData>
   <contentItemData name="" label="Setting Tx Power in your final Z-Wave product" itemURI="file:INS14664.xlsm">
     <description>This MS Excel file describes how to measure the Tx power of a Z-Wave frame and use this to calibrate the Tx Power of your final Z-Wave product.</description>
     <property key="core.category" value="Application Notes"/>

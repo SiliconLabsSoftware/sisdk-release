@@ -31,8 +31,8 @@
 static uint8_t insecure_debug_trace_enabled = SLX_ZIGBEE_INSECURE_DEBUG_DEFAULT_STATE;
 
 #define WIRESHARK_NWK_REPORT_FRAME_LENGTH (2 + EXTENDED_PAN_ID_SIZE + SL_ZIGBEE_ENCRYPTION_KEY_SIZE)
-void slx_zigbee_insecure_debug_generate_trace(slx_zigbee_insecure_debug_message_type msg_type,
-                                              void *debug_data)
+void slxi_zigbee_stack_insecure_debug_generate_trace(slx_zigbee_insecure_debug_message_type msg_type,
+                                                     uint8_t *debug_data)
 {
   if (debug_data == NULL || !insecure_debug_trace_enabled) {
     return;

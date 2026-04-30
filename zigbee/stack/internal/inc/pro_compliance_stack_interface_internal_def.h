@@ -3,7 +3,7 @@
  * @brief internal names for 'pro_compliance_stack_interface' declarations
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -203,5 +203,8 @@ void slxi_zigbee_stack_gu_zdo_toggle_dlk(bool do_dlk,
                                          bool allow_anon_psk);
 
 void slxi_zigbee_stack_ignore_incoming_aps_acks(bool ignore);
+
+void slxi_zigbee_stack_insecure_debug_generate_trace(uint8_t msg_type,
+                                                     uint8_t *debug_data);
 
 #endif // PRO_COMPLIANCE_STACK_INTERFACE_INTERNAL_DEF_H

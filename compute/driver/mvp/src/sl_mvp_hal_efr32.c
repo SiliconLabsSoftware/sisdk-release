@@ -348,7 +348,13 @@ void sli_mvp_hal_cmd_wait_for_completion()
 #if SL_MVP_POWER_MODE == 1
     CORE_ENTER_CRITICAL();
     if (!(MVP->STATUS & MVP_STATUS_IDLE)) {
+#if defined(SL_ML_ENABLE_SILABS_PROFILER) || defined(SL_ML_MODEL_PROFILER)
+      DWT->CTRL &= ~DWT_CTRL_CYCCNTENA_Msk;
+#endif  // SL_ML_ENABLE_SILABS_PROFILER
       EMU_EnterEM1();
+#if defined(SL_ML_ENABLE_SILABS_PROFILER) || defined(SL_ML_MODEL_PROFILER)
+      DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+#endif  // SL_ML_ENABLE_SILABS_PROFILER
     }
     CORE_EXIT_CRITICAL();
 #endif

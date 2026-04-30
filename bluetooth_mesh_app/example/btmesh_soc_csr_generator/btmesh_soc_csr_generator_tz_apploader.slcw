@@ -1,4 +1,4 @@
-workspace_name: btmesh_soc_csr_generator_tz_workspace
+workspace_name: btmesh_soc_csr_generator_tz_apploader
 package: bluetooth_mesh_app
 label: Bluetooth Mesh - SoC CSR Generator (TrustZone)
 description: >

@@ -50,7 +50,7 @@ from ap_sensor import S_ID_PRESENT_DEVICE_OPERATING_TEMPERATURE, S_ID_PRESENT_IN
 import esl_lib
 import esl_lib_wrapper as elw
 import struct
-from esl_tag import TagState, EslState
+from esl_tag import ImageUpdateFailed, TagState, EslState
 
 
 class DemoEventHandlersMixin:
@@ -176,7 +176,11 @@ class DemoEventHandlersMixin:
             )
         elif data[0] == CONTROLLER_REQUEST_LAST_DATA:
             # This was the last data, starting image update
-            self.ap_imageupdate(self.controller_image_index, self.image_from_controller)
+            try:
+                self.ap_imageupdate(self.controller_image_index, self.image_from_controller)
+            except ImageUpdateFailed as e:
+                self.log.error(e)
+                self.notify_controller(CCMD_IMAGE_UPDATE, CONTROLLER_COMMAND_FAIL)
         else:
             self.log.error("Invalid data chunk arrived during image_update")
             self.notify_controller(CCMD_IMAGE_UPDATE, CONTROLLER_COMMAND_FAIL)

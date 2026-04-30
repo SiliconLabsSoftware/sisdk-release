@@ -56,6 +56,7 @@ from ap_core_event_handlers_common import CommonEventHandlersMixin
 from ap_core_event_handlers_cli import CLIEventHandlersMixin
 from ap_core_event_handlers_auto import AutoEventHandlersMixin
 from ap_core_event_handlers_demo import DemoEventHandlersMixin
+from ap_core_event_handlers_itp import ImageThroughputEventHandlersMixin
 
 # sanity check
 if ESL_MAX_TAGS_IN_GROUP < ESL_MAX_TAGS_IN_AUTO_GROUP:
@@ -71,6 +72,7 @@ class AccessPoint(
     CLIEventHandlersMixin,
     AutoEventHandlersMixin,
     DemoEventHandlersMixin,
+    ImageThroughputEventHandlersMixin,
     # CLI commands
     CLICommandsMixin,
     # PAwR control
@@ -97,6 +99,7 @@ class AccessPoint(
         self.lib_connection_mode = elw.ESL_LIB_CONNECTION_MODE_SINGLE
         self.skip_mode_evt_after_boot = False
         self.demo_mode = demo_mode
+        self.image_throughput_test = False
         self.demo_controller_connected = False
         self.evt_dispatcher = esl_lib.EventDispatcher()
         self.event_handler_prefix_list = [""]
@@ -161,6 +164,7 @@ class AccessPoint(
         # State of connection count for demo/auto modes
         self.max_conn_count_reached = False
         self.bonding_finished = True
+        self.next_subevent = 0
 
         self.stop_event = threading.Event()
         self.consumer = threading.Thread(target=self.dequeue, daemon=True)
@@ -199,6 +203,8 @@ class AccessPoint(
             self.event_handler_prefix_list.append("auto_")
         if self.demo_mode:
             self.event_handler_prefix_list.append("demo_")
+        if self.image_throughput_test:
+            self.event_handler_prefix_list.append("itp_")
         self.subscribe_event_handlers()
 
     def revert_auto_mode(self):

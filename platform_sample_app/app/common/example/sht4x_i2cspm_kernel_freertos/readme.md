@@ -15,3 +15,9 @@ If only the console is available:
 
 - Regardless of the LED status, the application will output "Temperature is high" or "Temperature is low" on the VCOM serial console whenever the temperature goes above the upper limit or below the lower limit, respectively.
 
+## Note
+
+This project talks to the **SHT4x** using explicit I2C writes and reads in `i2cspm.c`, so the I2CSPM usage stays easy to step through. It does **not** add the SHT4x driver component or the **RHT UniDriver**—those wrap the same sensor protocol for normal application code.
+
+The **SHT4x** RHT is on **Wireless Pro Kit BRD4002B**; **BRD4002A** uses Si70xx instead. To build **one** firmware that discovers and works with either mainboard, use an **RHT UniDriver** example such as **`rht_unidriver_baremetal`** or **`segment_lcd_tempsensor`**.
+

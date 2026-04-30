@@ -43,8 +43,6 @@ component:
   - id: sl_rail_sdk_wmbus_sensor_pulse_counter
   - id: sl_rail_sdk_wmbus_sensor_virtual_water_meter
   - id: sl_rail_sdk_wmbus_sensor_thermometer
-    condition:
-      - "hardware_board_has_si70xx"
   - id: sl_rail_sdk_wmbus_sensor_cli
 #------------Memory Protection Unit-------------------
   - id: mpu
@@ -68,6 +66,7 @@ requires:
     condition:
       - "device_family_fgm23"
   - name: simple_led
+  - name: hardware_board_has_tempsensor
 
 #----------------- Project files ---------------------
 include:
@@ -297,8 +296,6 @@ configuration:
     value: "0"
   - name: SL_BOARD_ENABLE_SENSOR_RHT
     value: "1"
-    condition:
-      - "hardware_board_has_si70xx"
 #------------- Other project settings ----------------
 
 #--------------------- Toolchain ------------------------
@@ -316,6 +313,7 @@ ui_hints:
 tag:
   - hwfilter:board:hardware:has:vcom
   - hwfilter:board:hardware:has:pti
+  - hwfilter:board:hardware_board_has_tempsensor
   - hwfilter:board:simple_led:led0
   - hwfilter:ram:12k
   - hwfilter:flash:115k

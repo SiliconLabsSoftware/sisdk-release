@@ -54,20 +54,20 @@ extern "C" {
 // -----------------------------------------------------------------------------
 
 /**************************************************************************//**
- * @brief Init I2C SI7021 sensor.
- * @details Used sl_i2cspm_instances
+ * @brief Init I2C RHT sensor (RHT UniDriver: Si70xx / SHT4x).
+ * @details Uses sl_i2cspm_instances
  *****************************************************************************/
 void sl_wisun_rht_init(void);
 
 /**************************************************************************//**
- * @brief Deinit I2C SI7021 sensor.
- * @details Used sl_i2cspm_instances
+ * @brief Deinit I2C RHT sensor.
+ * @details Uses sl_i2cspm_instances
  *****************************************************************************/
 void sl_wisun_rht_deinit(void);
 
 /**************************************************************************//**
  * @brief Get temperature and relative humidity.
- * @details Used sl_i2cspm_instances
+ * @details Uses sl_i2cspm_instances
  * @param[out] rh Relative Humidity in [% * 1000]
  * @param[out] t Temperature in [milliCelsius degree]
  * @return sl_status_t Status value SL_STATUS_OK Success

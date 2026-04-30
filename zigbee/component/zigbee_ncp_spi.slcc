@@ -15,6 +15,7 @@ requires:
   condition:
   - device_cortexm
 - name: gpiointerrupt
+  condition: [device_series_2]
 - name: zigbee_ncp_spi_implementation
 - name: zigbee_ncp_spi_library
   condition:

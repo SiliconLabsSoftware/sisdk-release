@@ -127,14 +127,6 @@ post_build:
 
 tag:
   - hardware:board_only
-  - hardware:device:sdid:!205
-  - hardware:component:button:1+
-  - hardware:component:display:ls013b7dh03
-  - hardware:component:sensor:!si1133
-  - hardware:component:sensor:!veml6035
-  - hardware:device:flash:512
-  - hardware:device:ram:32
-  - hardware:rf:band:2400
   - prebuilt_demo
   - hwfilter:device:device_series_2
   - hwfilter:device:device_supports_bluetooth

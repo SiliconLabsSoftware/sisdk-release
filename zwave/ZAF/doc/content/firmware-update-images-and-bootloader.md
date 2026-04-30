@@ -74,10 +74,10 @@ This should be done each time a new firmware is produced.
    ```bat
    commander.exe flash --tokengroup znet --tokenfile sample_encrypt.key --tokenfile sample_sign.keytokens.txt -s <board_jlink_serial>
    ```
-6.  Reset device:
-    ```bat
-    commander.exe device reset -s <board_jlink_serial>
-    ```
+6. Reset device:
+   ```bat
+   commander.exe device reset -s <board_jlink_serial>
+   ```
 7. Connect a controller or a device running a controller firmware to the PC and start the PC controller application.
 8. Include the node into the network and make sure the device is visible.
 9. Initiate the OTA update in the PC controller application using an OTA-ready .gbl file with a firmware version greater than that of the current binary (see the *v255 generation* section below).

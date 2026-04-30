@@ -3,7 +3,7 @@
 - package: devices
 - description: Silicon Labs CMSIS-Device part headers for EFR32FG2DA010F256IM48.
 - category: Platform|Device|EFR32FG2D
-- quality: evaluation
+- quality: production
 - define:
   - name: EFR32FG2DA010F256IM48
     unless:

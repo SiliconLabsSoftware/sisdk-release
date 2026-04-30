@@ -91,9 +91,6 @@ other_file:
   - path: scripts/token_definition.json
 
 tag:
-  - hardware:device:flash:512
-  - hardware:device:ram:32
-  - hardware:rf:band:2400
   - hwfilter:device:device_series_2
   - hwfilter:device:device_supports_bluetooth
   - hwfilter:ram:32k

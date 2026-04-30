@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform - Segment LCD Tempsensor
 description: |
-  This project demonstrates how to use the Si70xx temperature sensor to measure and record temperature values and how to use the Segment LCD to display those values.
+  This project demonstrates how to use the on-board RHT sensor (Si70xx or SHT4x via the RHT UniDriver) to measure and record temperature values and how to use the Segment LCD to display those values.
 category: Example|Platform
 filter:
   - name: "Device Type"
@@ -26,7 +26,7 @@ component:
   - id: device_init
   - id: clock_manager
   - id: segment_lcd_driver
-  - id: si70xx_driver
+  - id: rht_unidriver_driver
 define:
   - name: DEBUG_EFM
 readme:

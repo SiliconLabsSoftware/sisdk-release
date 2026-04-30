@@ -90,7 +90,7 @@ sl_status_t read_xyz_acceleration(int16_t *xyz_acceleration)
 }
 
 bool
-cc_multilevel_sensor_endpoint_0_motion_axis_x_read_value(sensor_read_result_t* o_result, __attribute__((unused)) uint8_t i_scale)
+cc_multilevel_sensor_endpoint_0_motion_axis_x_interface_read_value(sensor_read_result_t* o_result, __attribute__((unused)) uint8_t i_scale)
 {
   int16_t ma_x_data = 0;
 
@@ -108,7 +108,7 @@ cc_multilevel_sensor_endpoint_0_motion_axis_x_read_value(sensor_read_result_t* o
 }
 
 bool
-cc_multilevel_sensor_endpoint_0_motion_axis_y_read_value(sensor_read_result_t* o_result, __attribute__((unused)) uint8_t i_scale)
+cc_multilevel_sensor_endpoint_0_motion_axis_y_interface_read_value(sensor_read_result_t* o_result, __attribute__((unused)) uint8_t i_scale)
 {
   int16_t ma_y_data = 0;
 
@@ -126,7 +126,7 @@ cc_multilevel_sensor_endpoint_0_motion_axis_y_read_value(sensor_read_result_t* o
 }
 
 bool
-cc_multilevel_sensor_endpoint_0_motion_axis_z_read_value(sensor_read_result_t* o_result, __attribute__((unused)) uint8_t i_scale)
+cc_multilevel_sensor_endpoint_0_motion_axis_z_interface_read_value(sensor_read_result_t* o_result, __attribute__((unused)) uint8_t i_scale)
 {
   int16_t ma_z_data = 0;
 
@@ -144,37 +144,37 @@ cc_multilevel_sensor_endpoint_0_motion_axis_z_read_value(sensor_read_result_t* o
 }
 
 bool
-cc_multilevel_sensor_endpoint_0_motion_axis_x_init(void)
+cc_multilevel_sensor_endpoint_0_motion_axis_x_interface_init(void)
 {
   return acceleration_sensor_init();
 }
 
 bool
-cc_multilevel_sensor_endpoint_0_motion_axis_y_init(void)
+cc_multilevel_sensor_endpoint_0_motion_axis_y_interface_init(void)
 {
   return acceleration_sensor_init();
 }
 
 bool
-cc_multilevel_sensor_endpoint_0_motion_axis_z_init(void)
+cc_multilevel_sensor_endpoint_0_motion_axis_z_interface_init(void)
 {
   return acceleration_sensor_init();
 }
 
 bool
-cc_multilevel_sensor_endpoint_0_motion_axis_x_deinit(void)
+cc_multilevel_sensor_endpoint_0_motion_axis_x_interface_deinit(void)
 {
   return acceleration_sensor_deinit();
 }
 
 bool
-cc_multilevel_sensor_endpoint_0_motion_axis_y_deinit(void)
+cc_multilevel_sensor_endpoint_0_motion_axis_y_interface_deinit(void)
 {
   return acceleration_sensor_deinit();
 }
 
 bool
-cc_multilevel_sensor_endpoint_0_motion_axis_z_deinit(void)
+cc_multilevel_sensor_endpoint_0_motion_axis_z_interface_deinit(void)
 {
   return acceleration_sensor_deinit();
 }

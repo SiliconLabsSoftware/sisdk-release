@@ -43,7 +43,7 @@ from ap_config import (
     KEY_MATERIAL_REUSE_ENABLED,
 )
 from esl_command import ESLCommand
-from esl_tag import Tag, TagState, EslState, InvalidTagStateError, PAwRSyncLostError
+from esl_tag import Tag, TagState, EslState, InvalidTagStateError, PAwRSyncLostError, ImageUpdateFailed
 import esl_lib
 import esl_lib_wrapper as elw
 import random
@@ -129,7 +129,7 @@ class TagCommandsMixin:
 
     def past(self, tag: Tag):
         """Do Periodic Advertisement Sync Transfer over connection"""
-        if tag.past_initiated:
+        if tag.past_initiated and not tag.synchronized:
             return
         elif not self.pawr_active:
             if self.cmd_mode:
@@ -153,7 +153,11 @@ class TagCommandsMixin:
         image_path = self.image_path + random.choice(
             random.sample(self.image_files, len(self.image_files))
         )
-        self.ap_imageupdate(image_index, image_path, address=tag.ble_address)
+        try:
+            self.ap_imageupdate(image_index, image_path, address=tag.ble_address)
+        except ImageUpdateFailed as e:
+            self.log.warning(e)
+            self.past(tag) # try gentle closing on unexpected failure
 
     def upload_next_image(self, tag: Tag):
         """Upload next image in the automatic image upload sequence (kept here for tag-related logic)"""

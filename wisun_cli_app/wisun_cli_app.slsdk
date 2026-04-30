@@ -2,7 +2,7 @@
 # Package ID should prefer format: com.silabs.sdk.<package_name>
 id=com.silabs.sdk.wisun_cli_app
 
-version=2.11.0
+version=2.11.1
 
 label=wisun_soc_cli_app
 description=Wi-SUN CLI Application

@@ -28,7 +28,6 @@ from collections import namedtuple
 from datetime import datetime as dt
 from image_converter import XbmConverter
 from ap_constants import (
-    AUX_SYNC_IND_PDU_MAX_SKIP_COUNT,
     BASIC_STATE_FLAG_SERVICE_NEEDED,
     BASIC_STATE_FLAG_SYNCHRONIZED,
     BASIC_STATE_STRINGS,
@@ -438,6 +437,7 @@ class Tag:
     def state(self, value: TagState):
         """Connection state setter - for class internal use, only!"""
         if self._state != value:
+            old_esl_state = self.esl_state
             now = dt.now()
             new_state = TagState(value)
             self.log.debug(
@@ -452,6 +452,9 @@ class Tag:
             self._state = new_state
             if (new_state == TagState.IDLE):
                 self.limit_connection_retries()
+            new_esl_state = self.esl_state
+            if old_esl_state != new_esl_state:
+                self._notify("esl_state", old_esl_state, new_esl_state)
             self._notify("state", previous_state, new_state)
 
     @property
@@ -534,12 +537,26 @@ class Tag:
             self._connection_timer.cancel()
         # Reset busy state
         self.busy = False
-        self.connection_handle = None
+        # SILENT state change to IDLE during reset to avoid redundant esl_state notification
+        previous_state = self._state
+        previous_handle = self._connection_handle
+        self._state = TagState(TagState.IDLE)
+        self._state_timestamp = dt.now()
+        self._connection_handle = None
+        self.limit_connection_retries()
         self._past_subevents_max = None
         self._associated = False
+        
+        # Notify about BOTH state and esl_state at the end of reset
         new_esl_state = self.esl_state
         if new_esl_state != old_esl_state:
             self._notify("esl_state", old_esl_state, new_esl_state)
+        
+        if previous_state != TagState.IDLE:
+            self._notify("state", previous_state, TagState.IDLE)
+        
+        if previous_handle is not None:
+            self._notify("connection_handle", previous_handle, None)
 
     def block(self, lib_status=elw.ESL_LIB_STATUS_UNSPECIFIED_ERROR):
         """Set blocked state if not set already"""
@@ -849,7 +866,13 @@ class Tag:
                             ix,
                         )
                         self.close_connection(force_close=True)
+                
+                old_esl_state = self.esl_state
                 self.gatt_values.update(evt.tlv_data)
+                new_esl_state = self.esl_state
+                if old_esl_state != new_esl_state:
+                    self._notify("esl_state", old_esl_state, new_esl_state)
+
                 if elw.ESL_LIB_DATA_TYPE_GATT_PNP_ID in evt.tlv_data:
                     if self.pnp_vendor_id is None:
                         self.log.error(
@@ -1024,6 +1047,7 @@ class Tag:
                         elw.SL_STATUS_BT_CTRL_CONNECTION_LIMIT_EXCEEDED,
                     ]
                     and not self.advertising
+                    and not self.synchronized
                 ):
                     self._advertising = True  # set _advertising back - since it should advertising - to prevent re-report of already known tag
                     self.start_advertising_governor()  # the advertising governor will take care of it if it does not advertise as we expect
@@ -1211,15 +1235,14 @@ class Tag:
                 f"Invalid ESL object state: {self._state} at address {self.ble_address}"
             )
         factory_reset = data[0] == TLV_OPCODE_FACTORY_RST
-        if (data[0] == TLV_OPCODE_UNASSOCIATE or factory_reset) and data[
-            1
-        ] == self.esl_id:
-            self.pending_unassociate = True
         try:
             self.lib.write_control_point(
                 self.connection_handle, data, (att_response or factory_reset)
             )
             self.busy = True
+            if data[1] == self.esl_id:
+                if (data[0] == TLV_OPCODE_UNASSOCIATE or factory_reset):
+                    self.pending_unassociate = True
         except esl_lib.CommandFailedError as e:
             self.log.error(e)
 

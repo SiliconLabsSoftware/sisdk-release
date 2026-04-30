@@ -19,14 +19,10 @@ requires:
 - name: "sl_rail_sdk_wmbus_sensor_core"
 - name: "sl_rail_sdk_wmbus_packet_assembler"
 - name: "segment_lcd_driver"
-  condition:
-  - "hardware_board_has_segment_lcd"
-- name: "hardware_board_has_si70xx"
+  condition: ["hardware_board_has_segment_lcd"]
 - name: "sleeptimer"
 - name: "app_assert"
-- name: "si70xx_driver"
-  condition:
-  - "hardware_board_has_si70xx"
+- name: "rht_unidriver_driver"
 
 source:
 - path: "sl_rail_sdk_wmbus_sensor_thermometer.c"

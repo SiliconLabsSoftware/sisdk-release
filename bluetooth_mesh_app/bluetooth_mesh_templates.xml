@@ -155,7 +155,7 @@
     <properties key="filters" value="Device\ Type|SoC Project\ Difficulty|Advanced Wireless\ Technology|Bluetooth\ Mesh"/>
     <properties key="hidden" value="true"/>
   </descriptors>
-  <descriptors name="btmesh_soc_csr_generator_tz_workspace" label="Bluetooth Mesh - SoC CSR Generator (TrustZone)" description="Certificate generating firmware workspace. Software is generating the device EC key pair, the signing request for the device certificate, and other related data. The generated data can be read out by the Central Authority. This example utilizes TrustZone for storing keys.
+  <descriptors name="btmesh_soc_csr_generator_tz_apploader" label="Bluetooth Mesh - SoC CSR Generator (TrustZone)" description="Certificate generating firmware workspace. Software is generating the device EC key pair, the signing request for the device certificate, and other related data. The generated data can be read out by the Central Authority. This example utilizes TrustZone for storing keys.
 ">
     <properties key="namespace" value="template.solution.uc"/>
     <properties key="keywords" value="universal\ configurator"/>
@@ -305,7 +305,7 @@
     <properties key="filters" value="Device\ Type|SoC Project\ Difficulty|Advanced Wireless\ Technology|Bluetooth\ Mesh"/>
     <properties key="solutionProjects" value="bluetooth_mesh_app.bootloader.bootloader-storage-spiflash-single-btmesh.slcp bluetooth_mesh_app.example.btmesh_soc_dfu_target.btmesh_soc_dfu_target_display.slcp"/>
   </descriptors>
-  <descriptors name="btmesh_soc_dfu_target_s2_int_btl" label="Bluetooth Mesh - SoC DFU Target with Internal Storage Bootloader" description="Demonstrates the Firmware Update Target role. A Distributor node is responsible for delivering new firmware images to the Target nodes. This workspace combines Internal Storage Bootloader and Bluetooth Mesh Firmware Target into a single binary.
+  <descriptors name="btmesh_soc_dfu_target_display_s2_int_btl" label="Bluetooth Mesh - SoC DFU Target with Internal Storage Bootloader" description="Demonstrates the Firmware Update Target role. A Distributor node is responsible for delivering new firmware images to the Target nodes. This workspace combines Internal Storage Bootloader and Bluetooth Mesh Firmware Target into a single binary.
 ">
     <properties key="namespace" value="template.solution.uc"/>
     <properties key="keywords" value="universal\ configurator"/>
@@ -355,7 +355,7 @@
     <properties key="filters" value="Device\ Type|SoC Project\ Difficulty|Advanced Wireless\ Technology|Bluetooth\ Mesh"/>
     <properties key="solutionProjects" value="bluetooth_mesh_app.bootloader.bootloader-storage-spiflash-single-btmesh.slcp bluetooth_mesh_app.example.btmesh_soc_dfu_target.btmesh_soc_dfu_target_log.slcp"/>
   </descriptors>
-  <descriptors name="btmesh_soc_dfu_target_s2_int_btl" label="Bluetooth Mesh - SoC DFU Target with Internal Storage Bootloader" description="Demonstrates the Firmware Update Target role. A Distributor node is responsible for delivering new firmware images to the Target nodes. This workspace combines Internal Storage Bootloader and Bluetooth Mesh Firmware Target into a single binary.
+  <descriptors name="btmesh_soc_dfu_target_log_s2_int_btl" label="Bluetooth Mesh - SoC DFU Target with Internal Storage Bootloader" description="Demonstrates the Firmware Update Target role. A Distributor node is responsible for delivering new firmware images to the Target nodes. This workspace combines Internal Storage Bootloader and Bluetooth Mesh Firmware Target into a single binary.
 ">
     <properties key="namespace" value="template.solution.uc"/>
     <properties key="keywords" value="universal\ configurator"/>
@@ -405,7 +405,7 @@
     <properties key="filters" value="Device\ Type|SoC Project\ Difficulty|Advanced Wireless\ Technology|Bluetooth\ Mesh"/>
     <properties key="solutionProjects" value="bluetooth_mesh_app.bootloader.bootloader-storage-spiflash-single-btmesh.slcp bluetooth_mesh_app.example.btmesh_soc_dfu_target.btmesh_soc_dfu_target_lpn_display.slcp"/>
   </descriptors>
-  <descriptors name="btmesh_soc_dfu_target_s2_int_btl" label="Bluetooth Mesh - SoC DFU Target with Internal Storage Bootloader" description="Demonstrates the Firmware Update Target role. A Distributor node is responsible for delivering new firmware images to the Target nodes. This workspace combines Internal Storage Bootloader and Bluetooth Mesh Firmware Target into a single binary.
+  <descriptors name="btmesh_soc_dfu_target_lpn_display_s2_int_btl" label="Bluetooth Mesh - SoC DFU Target with Internal Storage Bootloader" description="Demonstrates the Firmware Update Target role. A Distributor node is responsible for delivering new firmware images to the Target nodes. This workspace combines Internal Storage Bootloader and Bluetooth Mesh Firmware Target into a single binary.
 ">
     <properties key="namespace" value="template.solution.uc"/>
     <properties key="keywords" value="universal\ configurator"/>
@@ -455,7 +455,7 @@
     <properties key="filters" value="Device\ Type|SoC Project\ Difficulty|Advanced Wireless\ Technology|Bluetooth\ Mesh"/>
     <properties key="solutionProjects" value="bluetooth_mesh_app.bootloader.bootloader-storage-spiflash-single-btmesh.slcp bluetooth_mesh_app.example.btmesh_soc_dfu_target.btmesh_soc_dfu_target_lpn_log.slcp"/>
   </descriptors>
-  <descriptors name="btmesh_soc_dfu_target_s2_int_btl" label="Bluetooth Mesh - SoC DFU Target with Internal Storage Bootloader" description="Demonstrates the Firmware Update Target role. A Distributor node is responsible for delivering new firmware images to the Target nodes. This workspace combines Internal Storage Bootloader and Bluetooth Mesh Firmware Target into a single binary.
+  <descriptors name="btmesh_soc_dfu_target_lpn_log_s2_int_btl" label="Bluetooth Mesh - SoC DFU Target with Internal Storage Bootloader" description="Demonstrates the Firmware Update Target role. A Distributor node is responsible for delivering new firmware images to the Target nodes. This workspace combines Internal Storage Bootloader and Bluetooth Mesh Firmware Target into a single binary.
 ">
     <properties key="namespace" value="template.solution.uc"/>
     <properties key="keywords" value="universal\ configurator"/>
@@ -505,7 +505,7 @@
     <properties key="filters" value="Device\ Type|SoC Project\ Difficulty|Advanced Wireless\ Technology|Bluetooth\ Mesh"/>
     <properties key="solutionProjects" value="bluetooth_mesh_app.bootloader.bootloader-storage-spiflash-single-btmesh.slcp bluetooth_mesh_app.example.btmesh_soc_dfu_target.btmesh_soc_dfu_target_lpn_low_power.slcp"/>
   </descriptors>
-  <descriptors name="btmesh_soc_dfu_target_s2_int_btl" label="Bluetooth Mesh - SoC DFU Target with Internal Storage Bootloader" description="Demonstrates the Firmware Update Target role. A Distributor node is responsible for delivering new firmware images to the Target nodes. This workspace combines Internal Storage Bootloader and Bluetooth Mesh Firmware Target into a single binary.
+  <descriptors name="btmesh_soc_dfu_target_lpn_low_power_s2_int_btl" label="Bluetooth Mesh - SoC DFU Target with Internal Storage Bootloader" description="Demonstrates the Firmware Update Target role. A Distributor node is responsible for delivering new firmware images to the Target nodes. This workspace combines Internal Storage Bootloader and Bluetooth Mesh Firmware Target into a single binary.
 ">
     <properties key="namespace" value="template.solution.uc"/>
     <properties key="keywords" value="universal\ configurator"/>
@@ -598,7 +598,7 @@
     <properties key="filters" value="Device\ Type|SoC Project\ Difficulty|Beginner Wireless\ Technology|Bluetooth\ Mesh"/>
     <properties key="hidden" value="true"/>
   </descriptors>
-  <descriptors name="btmesh_soc_empty_cbp_tz_workspace" label="Bluetooth Mesh - SoC Empty with Certificate-Based Provisioning support (TrustZone)" description="Certificate-based provisioning firmware workspace. Demonstrates the bare minimum needed for a Bluetooth Mesh C application that allows Certificate-Based Provisioning (CBP). The application starts Unprovisioned Device Beaconing after boot waiting to be provisioned to a Mesh Network. This example utilizes TrustZone for storing keys.
+  <descriptors name="btmesh_soc_empty_cbp_tz_apploader" label="Bluetooth Mesh - SoC Empty with Certificate-Based Provisioning support (TrustZone)" description="Certificate-based provisioning firmware workspace. Demonstrates the bare minimum needed for a Bluetooth Mesh C application that allows Certificate-Based Provisioning (CBP). The application starts Unprovisioned Device Beaconing after boot waiting to be provisioned to a Mesh Network. This example utilizes TrustZone for storing keys.
 ">
     <properties key="namespace" value="template.solution.uc"/>
     <properties key="keywords" value="universal\ configurator"/>

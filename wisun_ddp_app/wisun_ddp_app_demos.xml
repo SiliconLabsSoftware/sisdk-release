@@ -5,7 +5,7 @@
     <property key="demos.blurb" value="Wi-SUN - DDP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd2705a" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.2/wisun_ddp_app/brd2705a/wisun_soc_ddp_ram-brd2705a.s37" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_ddp_app/brd2705a/wisun_soc_ddp_ram-brd2705a.s37" />
     <property key="core.readmeFiles" value="doc/readme.md" />
     <property key="filters" value="Device\ Type|SoC Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
@@ -15,7 +15,7 @@
     <property key="demos.blurb" value="Wi-SUN - DDP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4270a" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.2/wisun_ddp_app/brd4270a/wisun_soc_ddp_ram-brd4270a.s37" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_ddp_app/brd4270a/wisun_soc_ddp_ram-brd4270a.s37" />
     <property key="core.readmeFiles" value="doc/readme.md" />
     <property key="filters" value="Device\ Type|SoC Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
@@ -25,7 +25,7 @@
     <property key="demos.blurb" value="Wi-SUN - DDP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4270b" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.2/wisun_ddp_app/brd4270b/wisun_soc_ddp_ram-brd4270b.s37" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_ddp_app/brd4270b/wisun_soc_ddp_ram-brd4270b.s37" />
     <property key="core.readmeFiles" value="doc/readme.md" />
     <property key="filters" value="Device\ Type|SoC Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
@@ -35,7 +35,7 @@
     <property key="demos.blurb" value="Wi-SUN - DDP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4271a" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.2/wisun_ddp_app/brd4271a/wisun_soc_ddp_ram-brd4271a.s37" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_ddp_app/brd4271a/wisun_soc_ddp_ram-brd4271a.s37" />
     <property key="core.readmeFiles" value="doc/readme.md" />
     <property key="filters" value="Device\ Type|SoC Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
@@ -45,7 +45,7 @@
     <property key="demos.blurb" value="Wi-SUN - DDP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4272a" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.2/wisun_ddp_app/brd4272a/wisun_soc_ddp_ram-brd4272a.s37" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_ddp_app/brd4272a/wisun_soc_ddp_ram-brd4272a.s37" />
     <property key="core.readmeFiles" value="doc/readme.md" />
     <property key="filters" value="Device\ Type|SoC Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
@@ -55,7 +55,7 @@
     <property key="demos.blurb" value="Wi-SUN - DDP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4400a" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.2/wisun_ddp_app/brd4400a/wisun_soc_ddp_ram-brd4400a.s37" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_ddp_app/brd4400a/wisun_soc_ddp_ram-brd4400a.s37" />
     <property key="core.readmeFiles" value="doc/readme.md" />
     <property key="filters" value="Device\ Type|SoC Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
@@ -65,7 +65,7 @@
     <property key="demos.blurb" value="Wi-SUN - DDP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4400b" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.2/wisun_ddp_app/brd4400b/wisun_soc_ddp_ram-brd4400b.s37" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_ddp_app/brd4400b/wisun_soc_ddp_ram-brd4400b.s37" />
     <property key="core.readmeFiles" value="doc/readme.md" />
     <property key="filters" value="Device\ Type|SoC Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
@@ -75,7 +75,7 @@
     <property key="demos.blurb" value="Wi-SUN - DDP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4400c" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.2/wisun_ddp_app/brd4400c/wisun_soc_ddp_ram-brd4400c.s37" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_ddp_app/brd4400c/wisun_soc_ddp_ram-brd4400c.s37" />
     <property key="core.readmeFiles" value="doc/readme.md" />
     <property key="filters" value="Device\ Type|SoC Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
@@ -85,7 +85,7 @@
     <property key="demos.blurb" value="Wi-SUN - DDP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4401a" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.2/wisun_ddp_app/brd4401a/wisun_soc_ddp_ram-brd4401a.s37" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_ddp_app/brd4401a/wisun_soc_ddp_ram-brd4401a.s37" />
     <property key="core.readmeFiles" value="doc/readme.md" />
     <property key="filters" value="Device\ Type|SoC Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
@@ -95,7 +95,7 @@
     <property key="demos.blurb" value="Wi-SUN - DDP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4401b" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.2/wisun_ddp_app/brd4401b/wisun_soc_ddp_ram-brd4401b.s37" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_ddp_app/brd4401b/wisun_soc_ddp_ram-brd4401b.s37" />
     <property key="core.readmeFiles" value="doc/readme.md" />
     <property key="filters" value="Device\ Type|SoC Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
@@ -105,7 +105,7 @@
     <property key="demos.blurb" value="Wi-SUN - DDP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4401c" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.2/wisun_ddp_app/brd4401c/wisun_soc_ddp_ram-brd4401c.s37" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_ddp_app/brd4401c/wisun_soc_ddp_ram-brd4401c.s37" />
     <property key="core.readmeFiles" value="doc/readme.md" />
     <property key="filters" value="Device\ Type|SoC Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />

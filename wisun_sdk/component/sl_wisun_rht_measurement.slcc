@@ -1,7 +1,7 @@
 id: "sl_wisun_rht_measurement"
 label: "Wi-SUN Relative humidity and temperature measurement"
 package: "wisun_sdk"
-description: "The component provides thread-safe and bare-metal-compatible temperature and relative humidity measurement with the Si7021 I2C sensor."
+description: "The component provides thread-safe and bare-metal-compatible temperature and relative humidity measurement via the RHT UniDriver (Si70xx and SHT4x I2C sensors)."
 category: "Wi-SUN|Wi-SUN Services"
 quality: "production"
 metadata:
@@ -20,10 +20,7 @@ include:
   - "path": "sl_wisun_rht_measurement.h"
 
 requires:
-- name: si70xx_driver
-  condition:
-  - "hardware_board_has_tempsensor"
-- name: i2cspm
+- name: rht_unidriver_driver
   condition:
   - "hardware_board_has_tempsensor"
 - name: sl_wisun_app_core

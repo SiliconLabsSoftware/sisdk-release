@@ -17,6 +17,7 @@
 #ifndef __SPI_PROTOCOL_DEVICE_H__
 #define __SPI_PROTOCOL_DEVICE_H__
 
+#include "sl_component_catalog.h"
 #include "legacy_ncp_spi_config.h"
 
 // Size of SPIP VERSION and ALIVE commands (not including the frame terminator).
@@ -73,6 +74,41 @@
 #endif
 // SPI NCP USART selection
 
+#ifdef SL_CATALOG_IOSTREAM_EUSART_PRESENT
+#if (LEGACY_NCP_SPI_PERIPHERAL_NO == 0)
+  #define SPI_NCP_USART           EUSART0
+  #define SPI_NCP_USART_IRQn      EUSART0_RX_IRQn
+  #define SPI_NCP_USART_IRQ_NAME  EUSART0_RX_IRQHandler
+  #define SPI_NCP_USART_CLOCK     cmuClock_EUSART0
+#elif (LEGACY_NCP_SPI_PERIPHERAL_NO == 1)
+  #define SPI_NCP_USART           EUSART1
+  #define SPI_NCP_USART_IRQn      EUSART1_RX_IRQn
+  #define SPI_NCP_USART_IRQ_NAME  EUSART1_RX_IRQHandler
+  #define SPI_NCP_USART_CLOCK     cmuClock_EUSART1
+#elif (LEGACY_NCP_SPI_PERIPHERAL_NO == 2)
+  #define SPI_NCP_USART           EUSART2
+  #define SPI_NCP_USART_IRQn      EUSART2_RX_IRQn
+  #define SPI_NCP_USART_IRQ_NAME  EUSART2_RX_IRQHandler
+  #define SPI_NCP_USART_CLOCK     cmuClock_EUSART2
+#elif (LEGACY_NCP_SPI_PERIPHERAL_NO == 3)
+  #define SPI_NCP_USART           EUSART3
+  #define SPI_NCP_USART_IRQn      EUSART3_RX_IRQn
+  #define SPI_NCP_USART_IRQ_NAME  EUSART3_RX_IRQHandler
+  #define SPI_NCP_USART_CLOCK     cmuClock_EUSART3
+#elif (LEGACY_NCP_SPI_PERIPHERAL_NO == 4)
+  #define SPI_NCP_USART           EUSART4
+  #define SPI_NCP_USART_IRQn      EUSART4_RX_IRQn
+  #define SPI_NCP_USART_IRQ_NAME  EUSART4_RX_IRQHandler
+  #define SPI_NCP_USART_CLOCK     cmuClock_EUSART4
+#elif (LEGACY_NCP_SPI_PERIPHERAL_NO == 5)
+  #define SPI_NCP_USART           EUSART5
+  #define SPI_NCP_USART_IRQn      EUSART5_RX_IRQn
+  #define SPI_NCP_USART_IRQ_NAME  EUSART5_RX_IRQHandler
+  #define SPI_NCP_USART_CLOCK     cmuClock_EUSART5
+#else
+  #error Invalid EUSART selected for SPI NCP
+#endif
+#elif defined(SL_CATALOG_IOSTREAM_USART_PRESENT)
 #if (LEGACY_NCP_SPI_PERIPHERAL_NO == 0)
   #define SPI_NCP_USART           USART0
   #define SPI_NCP_USART_IRQn      USART0_RX_IRQn
@@ -106,6 +142,7 @@
 #else
   #error Invalid USART selected for SPI NCP
 #endif
+#endif // SL_CATALOG_IOSTREAM_EUSART_PRESENT
 
 #if defined(LEGACY_NCP_SPI_TX_LOC)
   #define SPI_NCP_MOSI_LOC        LEGACY_NCP_SPI_TX_LOC
@@ -118,8 +155,15 @@
 #define SPI_NCP_MOSI_PIN          LEGACY_NCP_SPI_TX_PIN
 #define SPI_NCP_MISO_PORT         LEGACY_NCP_SPI_RX_PORT
 #define SPI_NCP_MISO_PIN          LEGACY_NCP_SPI_RX_PIN
+
+#ifdef _SILICON_LABS_32B_SERIES_3
+#define SPI_NCP_CLK_PORT          LEGACY_NCP_SPI_SCLK_PORT
+#define SPI_NCP_CLK_PIN           LEGACY_NCP_SPI_SCLK_PIN
+#elif defined(_SILICON_LABS_32B_SERIES_2)
 #define SPI_NCP_CLK_PORT          LEGACY_NCP_SPI_CLK_PORT
 #define SPI_NCP_CLK_PIN           LEGACY_NCP_SPI_CLK_PIN
+#endif // _SILICON_LABS_32B_SERIES_3
+
 #define SPI_NCP_CS_PORT           LEGACY_NCP_SPI_CS_PORT
 #define SPI_NCP_CS_PIN            LEGACY_NCP_SPI_CS_PIN
 
@@ -186,12 +230,28 @@
 #if (!defined(DISABLE_NWAKE)) && (!defined(HAL_CONFIG) || defined(BSP_SPINCP_NWAKE_PIN))
 static inline bool nWAKE_IS_NEGATED(void)
 {
+#ifdef _SILICON_LABS_32B_SERIES_3
+  bool ret = false;
+  const sl_gpio_t gpio = { .port = BSP_SPINCP_NWAKE_PORT,
+                           .pin  = BSP_SPINCP_NWAKE_PIN };
+  (void)sl_gpio_get_pin_input(&gpio, &ret);
+  return ret;
+#elif defined(_SILICON_LABS_32B_SERIES_2)
   return (GPIO_PinInGet(BSP_SPINCP_NWAKE_PORT, BSP_SPINCP_NWAKE_PIN) != 0);
+#endif // _SILICON_LABS_32B_SERIES_3
 }
 
 static inline bool nWAKE_IS_ASSERTED(void)
 {
+#ifdef _SILICON_LABS_32B_SERIES_3
+  bool ret = false;
+  const sl_gpio_t gpio = { .port = BSP_SPINCP_NWAKE_PORT,
+                           .pin  = BSP_SPINCP_NWAKE_PIN };
+  (void)sl_gpio_get_pin_input(&gpio, &ret);
+  return !ret;
+#elif defined(_SILICON_LABS_32B_SERIES_2)
   return (GPIO_PinInGet(BSP_SPINCP_NWAKE_PORT, BSP_SPINCP_NWAKE_PIN) == 0);
+#endif // _SILICON_LABS_32B_SERIES_3
 }
 #else
 #define nWAKE_IS_NEGATED() true
@@ -200,22 +260,50 @@ static inline bool nWAKE_IS_ASSERTED(void)
 
 static inline bool nSSEL_IS_NEGATED(void)
 {
+#ifdef _SILICON_LABS_32B_SERIES_3
+  bool ret = false;
+  const sl_gpio_t gpio = { .port = SPI_NCP_CS_PORT,
+                           .pin  = SPI_NCP_CS_PIN };
+  (void)sl_gpio_get_pin_input(&gpio, &ret);
+  return (ret != false);
+#elif defined(_SILICON_LABS_32B_SERIES_2)
   return (GPIO_PinInGet(SPI_NCP_CS_PORT, SPI_NCP_CS_PIN) != 0);
+#endif // _SILICON_LABS_32B_SERIES_3
 }
 
 static inline bool nSSEL_IS_ASSERTED(void)
 {
+#ifdef _SILICON_LABS_32B_SERIES_3
+  bool ret = false;
+  const sl_gpio_t gpio = { .port = SPI_NCP_CS_PORT,
+                           .pin  = SPI_NCP_CS_PIN };
+  (void)sl_gpio_get_pin_input(&gpio, &ret);
+  return !ret;
+#elif defined(_SILICON_LABS_32B_SERIES_2)
   return (GPIO_PinInGet(SPI_NCP_CS_PORT, SPI_NCP_CS_PIN) == 0);
+#endif // _SILICON_LABS_32B_SERIES_3
 }
 
 static inline void SET_nHOST_INT(void)
 {
+#ifdef _SILICON_LABS_32B_SERIES_3
+  const sl_gpio_t gpio = { .port = BSP_SPINCP_NHOSTINT_PORT,
+                           .pin  = BSP_SPINCP_NHOSTINT_PIN };
+  (void)sl_gpio_set_pin(&gpio);
+#elif defined(_SILICON_LABS_32B_SERIES_2)
   GPIO_PinOutSet(BSP_SPINCP_NHOSTINT_PORT, BSP_SPINCP_NHOSTINT_PIN);
+#endif // _SILICON_LABS_32B_SERIES_3
 }
 
 static inline void CLR_nHOST_INT(void)
 {
+#ifdef _SILICON_LABS_32B_SERIES_3
+  const sl_gpio_t gpio = { .port = BSP_SPINCP_NHOSTINT_PORT,
+                           .pin  = BSP_SPINCP_NHOSTINT_PIN };
+  (void)sl_gpio_clear_pin(&gpio);
+#elif defined(_SILICON_LABS_32B_SERIES_2)
   GPIO_PinOutClear(BSP_SPINCP_NHOSTINT_PORT, BSP_SPINCP_NHOSTINT_PIN);
+#endif // _SILICON_LABS_32B_SERIES_3
 }
 
 #endif // __SPI_PROTOCOL_DEVICE_H__

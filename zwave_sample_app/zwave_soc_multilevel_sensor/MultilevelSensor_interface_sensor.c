@@ -24,8 +24,11 @@
 #include <stdbool.h>
 #include "sl_i2cspm.h"
 #include "sl_i2cspm_instances.h"
-#include "sl_si70xx.h"
+#include "sl_rht_unidriver.h"
+#include "sl_component_catalog.h"
+#ifdef SL_CATALOG_VEML6035_DRIVER_PRESENT
 #include "sl_veml6035.h"
+#endif
 #include <cc_multilevel_sensor_config.h>
 #include "ZW_typedefs.h"
 #include "zpal_log.h"
@@ -41,7 +44,9 @@
 //                Static Variables
 // -----------------------------------------------------------------------------
 static bool temperature_humidity_sensor_initialized = false;
+#ifdef SL_CATALOG_VEML6035_DRIVER_PRESENT
 static bool ambient_light_sensor_initialized = false;
+#endif
 
 // -----------------------------------------------------------------------------
 //              Static Function
@@ -55,7 +60,7 @@ MultilevelSensor_temperature_humidity_sensor_init(void)
     return true;
   }
 
-  sc = sl_si70xx_init(sl_i2cspm_sensor, SI7021_ADDR);
+  sc = sl_rht_unidriver_init(sl_i2cspm_sensor);
 
   temperature_humidity_sensor_initialized = (sc == SL_STATUS_OK);
 
@@ -74,6 +79,7 @@ MultilevelSensor_temperature_humidity_sensor_deinit(void)
   return true;
 }
 
+#ifdef SL_CATALOG_VEML6035_DRIVER_PRESENT
 static bool
 MultilevelSensor_ambient_light_sensor_init(void)
 {
@@ -101,6 +107,7 @@ MultilevelSensor_ambient_light_sensor_deinit(void)
 
   return true;
 }
+#endif /* SL_CATALOG_VEML6035_DRIVER_PRESENT */
 
 static bool
 MultilevelSensor_temperature_humidity_sensor_read(uint32_t *rh_data, int32_t *temp_data)
@@ -109,9 +116,11 @@ MultilevelSensor_temperature_humidity_sensor_read(uint32_t *rh_data, int32_t *te
     return false;
   }
 
-  return (sl_si70xx_measure_rh_and_temp(sl_i2cspm_sensor, SI7021_ADDR, rh_data, temp_data) == SL_STATUS_OK);
+  return (sl_rht_unidriver_measure_rh_and_temp(rh_data, temp_data)
+          == SL_STATUS_OK);
 }
 
+#ifdef SL_CATALOG_VEML6035_DRIVER_PRESENT
 static bool
 MultilevelSensor_ambient_light_sensor_read(float *al_data)
 {
@@ -121,6 +130,7 @@ MultilevelSensor_ambient_light_sensor_read(float *al_data)
 
   return (sl_veml6035_get_als_lux(sl_i2cspm_sensor, al_data));
 }
+#endif /* SL_CATALOG_VEML6035_DRIVER_PRESENT */
 
 // -----------------------------------------------------------------------------
 //              Public Function Definitions
@@ -141,7 +151,11 @@ cc_multilevel_sensor_endpoint_0_air_temperature_interface_init(void)
 bool
 cc_multilevel_sensor_endpoint_0_ambient_light_interface_init(void)
 {
+#ifdef SL_CATALOG_VEML6035_DRIVER_PRESENT
   return MultilevelSensor_ambient_light_sensor_init();
+#else
+  return true;
+#endif
 }
 
 bool
@@ -159,7 +173,11 @@ cc_multilevel_sensor_endpoint_0_air_temperature_interface_deinit(void)
 bool
 cc_multilevel_sensor_endpoint_0_ambient_light_interface_deinit(void)
 {
+#ifdef SL_CATALOG_VEML6035_DRIVER_PRESENT
   return MultilevelSensor_ambient_light_sensor_deinit();
+#else
+  return true;
+#endif
 }
 
 bool
@@ -200,7 +218,7 @@ cc_multilevel_sensor_endpoint_0_air_temperature_interface_read_value(sensor_read
 
     MultilevelSensor_temperature_humidity_sensor_read(&rh_data, &temp_data);
 
-    ZPAL_LOG_DEBUG(ZPAL_LOG_APP, "Temperature: %d\n", rh_data);
+    ZPAL_LOG_DEBUG(ZPAL_LOG_APP, "Temperature: %d\n", temp_data);
 
     if (i_scale == SENSOR_SCALE_FAHRENHEIT) {
       temperature_celsius_divided = (float)temp_data / (float)1000;
@@ -224,6 +242,7 @@ cc_multilevel_sensor_endpoint_0_air_temperature_interface_read_value(sensor_read
 bool
 cc_multilevel_sensor_endpoint_0_ambient_light_interface_read_value(sensor_read_result_t* o_result, __attribute__((unused)) uint8_t i_scale)
 {
+#ifdef SL_CATALOG_VEML6035_DRIVER_PRESENT
   float al_data;
   uint32_t al_data_int;
 
@@ -234,7 +253,7 @@ cc_multilevel_sensor_endpoint_0_ambient_light_interface_read_value(sensor_read_r
 
     MultilevelSensor_ambient_light_sensor_read(&al_data);
 
-    al_data_int = (uint32_t) (al_data * 1000);
+    al_data_int = (uint32_t)(al_data * 1000);
 
     ZPAL_LOG_DEBUG(ZPAL_LOG_APP, "Ambient light: %d\n", al_data_int);
 
@@ -245,4 +264,23 @@ cc_multilevel_sensor_endpoint_0_ambient_light_interface_read_value(sensor_read_r
   }
 
   return true;
+#else
+  /* No ambient light sensor in this board configuration (see veml6035_driver in slcp). */
+  uint32_t al_data_int = 32000;
+
+  if (o_result != NULL) {
+    memset(o_result, 0, sizeof(sensor_read_result_t));
+    o_result->precision  = SENSOR_READ_RESULT_PRECISION_3;
+    o_result->size_bytes = SENSOR_READ_RESULT_SIZE_4;
+
+    ZPAL_LOG_DEBUG(ZPAL_LOG_APP, "Ambient light: %d\n", al_data_int);
+
+    o_result->raw_result[3] = (uint8_t)(al_data_int & 0xFF);
+    o_result->raw_result[2] = (uint8_t)((al_data_int >> 8) & 0xFF);
+    o_result->raw_result[1] = (uint8_t)((al_data_int >> 16) & 0xFF);
+    o_result->raw_result[0] = (uint8_t)((al_data_int >> 24) & 0xFF);
+  }
+
+  return true;
+#endif
 }

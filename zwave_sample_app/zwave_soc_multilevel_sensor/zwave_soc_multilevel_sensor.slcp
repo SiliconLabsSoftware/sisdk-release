@@ -51,12 +51,13 @@ component:
     instance: [btn0, btn1]
   - id: i2cspm
     instance: [sensor]
-    condition: [hardware_board_has_si70xx]
+    condition: [hardware_board_has_tempsensor]
   - id: simple_led
     instance: [led0, led1]
-  - id: si70xx_driver
-    condition: [hardware_board_has_si70xx]
+  - id: rht_unidriver_driver
+    condition: [hardware_board_has_tempsensor]
   - id: veml6035_driver
+    condition: [brd2603a]
   - id: imu_driver
     condition: [brd2603a]
   - id: clock_manager
@@ -69,11 +70,11 @@ source:
     condition: [simple_button]
   - path: app_sleep_callbacks.c
   - path: "MultilevelSensor_interface_sensor.c"
-    condition: [hardware_board_has_si70xx]
+    condition: [hardware_board_has_tempsensor]
   - path: "MultilevelSensor_interface_icm20689.c"
-    condition: [brd2603a]
+    condition: [imu_driver]
   - path: "MultilevelSensor_interface_nosensor.c"
-    unless: [hardware_board_has_si70xx,brd2603a]
+    unless: [hardware_board_has_tempsensor]
 
 include:
   - path: .

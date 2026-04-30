@@ -22,7 +22,7 @@ config_file:
 provides:
 - name: sensor_rht
 requires:
-- name: si70xx_driver
+- name: rht_unidriver_driver
 - name: i2cspm
 - name: app_assert
 - name: board_control

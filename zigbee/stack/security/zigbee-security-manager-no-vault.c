@@ -292,7 +292,7 @@ sl_status_t zb_sec_man_fetch_gp_key(sl_zigbee_sec_man_context_t* context,
     memmove(plaintext_key->key, tok.gpdKey, SL_ZIGBEE_ENCRYPTION_KEY_SIZE);
   } else {
     tokTypeStackGpSinkTableEntry tok;
-    (void)sl_token_manager_get_data(COMMON_TOKEN_STACK_GP_SINK_TABLE + index, (void *)&tok, sizeof(tokTypeStackGpProxyTableEntry));
+    (void)sl_token_manager_get_data(COMMON_TOKEN_STACK_GP_SINK_TABLE + index, (void *)&tok, sizeof(tokTypeStackGpSinkTableEntry));
     memmove(plaintext_key->key, tok.gpdKey, SL_ZIGBEE_ENCRYPTION_KEY_SIZE);
   }
   return SL_STATUS_OK;
@@ -309,9 +309,9 @@ sl_status_t zb_sec_man_store_gp_key(sl_zigbee_sec_man_context_t* context,
     (void)sl_token_manager_set_data(COMMON_TOKEN_STACK_GP_PROXY_TABLE +  index, (void *)&tok, sizeof(tokTypeStackGpProxyTableEntry));
   } else {
     tokTypeStackGpSinkTableEntry tok;
-    (void)sl_token_manager_get_data(COMMON_TOKEN_STACK_GP_SINK_TABLE + index, (void *)&tok, sizeof(tokTypeStackGpProxyTableEntry));
+    (void)sl_token_manager_get_data(COMMON_TOKEN_STACK_GP_SINK_TABLE + index, (void *)&tok, sizeof(tokTypeStackGpSinkTableEntry));
     memmove(tok.gpdKey, plaintext_key->key, SL_ZIGBEE_ENCRYPTION_KEY_SIZE);
-    (void)sl_token_manager_set_data(COMMON_TOKEN_STACK_GP_SINK_TABLE + index, (void *)&tok, sizeof(tokTypeStackGpProxyTableEntry));
+    (void)sl_token_manager_set_data(COMMON_TOKEN_STACK_GP_SINK_TABLE + index, (void *)&tok, sizeof(tokTypeStackGpSinkTableEntry));
   }
   return SL_STATUS_OK;
 }

@@ -2185,6 +2185,10 @@ sl_status_t sl_btmesh_node_compare_dcd(uint8_t page_number,
  *   - @ref sl_btmesh_evt_prov_ddb_list : Device database list result
  *   - @ref sl_btmesh_prov_update_device_netkey_index : Update default network
  *     key index for a device database entry
+ *   - @ref sl_btmesh_prov_get_ddb_entry_count : Get the number of entries in
+ *     the the device database
+ *   - @ref sl_btmesh_prov_get_ddb_entry_by_count : Get the Nth entry from the
+ *     the device database
  *
  * These commands are available only if the Provisioner functionality is
  * compiled in the device. Otherwise, a "feature not implemented" error code
@@ -2230,6 +2234,8 @@ sl_status_t sl_btmesh_node_compare_dcd(uint8_t page_number,
 #define sl_btmesh_cmd_prov_get_provisioning_records_list_id              0x1c150028
 #define sl_btmesh_cmd_prov_get_provisioning_record_data_id               0x1d150028
 #define sl_btmesh_cmd_prov_init_provisioning_records_id                  0x1e150028
+#define sl_btmesh_cmd_prov_get_ddb_entry_count_id                        0x49150028
+#define sl_btmesh_cmd_prov_get_ddb_entry_by_count_id                     0x4a150028
 #define sl_btmesh_rsp_prov_init_id                                       0x00150028
 #define sl_btmesh_rsp_prov_scan_unprov_beacons_id                        0x01150028
 #define sl_btmesh_rsp_prov_create_provisioning_session_id                0x41150028
@@ -2268,6 +2274,8 @@ sl_status_t sl_btmesh_node_compare_dcd(uint8_t page_number,
 #define sl_btmesh_rsp_prov_get_provisioning_records_list_id              0x1c150028
 #define sl_btmesh_rsp_prov_get_provisioning_record_data_id               0x1d150028
 #define sl_btmesh_rsp_prov_init_provisioning_records_id                  0x1e150028
+#define sl_btmesh_rsp_prov_get_ddb_entry_count_id                        0x49150028
+#define sl_btmesh_rsp_prov_get_ddb_entry_by_count_id                     0x4a150028
 
 /**
  * @addtogroup sl_btmesh_prov_oob_capabilities OOB Capabilities
@@ -3635,6 +3643,44 @@ sl_status_t sl_btmesh_prov_get_provisioning_record_data(uuid_128 uuid,
  *
  ******************************************************************************/
 sl_status_t sl_btmesh_prov_init_provisioning_records(void);
+
+/***************************************************************************//**
+ *
+ * Get the count of Provisioner device database entries.
+ *
+ * @param[out] count Number of entries in the device database.
+ *
+ * @return SL_STATUS_OK if successful. Error code otherwise.
+ *
+ ******************************************************************************/
+sl_status_t sl_btmesh_prov_get_ddb_entry_count(uint16_t *count);
+
+/***************************************************************************//**
+ *
+ * Get a Provisioner device database entry by ordinal number. Note that if items
+ * are added or removed while the entries in the device database are being
+ * iterated using this API, the API does not guarantee that each item will be
+ * reported, or that each item will be reported only once.
+ *
+ * @param[in] which Ordinal for the entry to retrieve; must be smaller than the
+ *   entry count returned by @ref sl_btmesh_prov_get_ddb_entry_count
+ * @param[out] uuid UUID of the device
+ * @param[out] device_key Device Key
+ * @param[out] netkey_index Index of the network key with which the node was
+ *   initially provisioned. Used for network-level encryption of Configuration
+ *   Client messages.
+ * @param[out] address Unicast address of the primary element of the node
+ * @param[out] elements Number of elements in the node
+ *
+ * @return SL_STATUS_OK if successful. Error code otherwise.
+ *
+ ******************************************************************************/
+sl_status_t sl_btmesh_prov_get_ddb_entry_by_count(uint16_t which,
+                                                  uuid_128 *uuid,
+                                                  aes_key_128 *device_key,
+                                                  uint16_t *netkey_index,
+                                                  uint16_t *address,
+                                                  uint8_t *elements);
 
 /** @} */ // end addtogroup sl_btmesh_prov
 

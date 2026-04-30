@@ -169,10 +169,7 @@ configuration:
     value: SL_ZIGBEE_LARGE_PACKET_BUFFER_HEAP
   - name: SL_ZIGBEE_AF_PLUGIN_CONCENTRATOR_CONCENTRATOR_TYPE
     value: HIGH_RAM_CONCENTRATOR
-  - name: SLX_ZIGBEE_INSECURE_DEBUG_DEFAULT_STATE
-    value: 1
-  - name: SLX_ZIGBEE_INSECURE_DEBUG_TRANSPORT_KEY_PACKET_ENABLED
-    value: 0
+
 source:
   - path: main.c
     unless: [cmsis_rtos2]

@@ -4,7 +4,7 @@
 		<property key="blurb" value="Zigbee - NCP ncp-spi" />
 		<property key="partCompatibility" value=".*efr32mg21a020f1024im32.*" />
 		<property key="boardCompatibility" value="brd4180a" />
-		<property key="imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.2/zigbee_app/demos/ncp-spi/ncp-spi-brd4180a.s37" />
+		<property key="imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/zigbee_app/demos/ncp-spi/ncp-spi-brd4180a.s37" />
 		<property key="readmeFiles" value="ncp/ncp-spi/readme.md" />
 		<property key="filters" value="Device\ Type|NCP Project\ Difficulty|Beginner Wireless\ Technology|Zigbee" />
 		<property key="quality" value="PRODUCTION" />
@@ -14,7 +14,7 @@
 		<property key="blurb" value="Zigbee - NCP UartHw" />
 		<property key="partCompatibility" value=".*efr32mg21a020f1024im32.*" />
 		<property key="boardCompatibility" value="brd4180a" />
-		<property key="imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.2/zigbee_app/demos/zigbee_ncp_uart_hw/zigbee_ncp_uart_hw-brd4180a.s37" />
+		<property key="imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/zigbee_app/demos/zigbee_ncp_uart_hw/zigbee_ncp_uart_hw-brd4180a.s37" />
 		<property key="readmeFiles" value="ncp/zigbee_ncp_uart_hw/readme.md" />
 		<property key="filters" value="Device\ Type|NCP Project\ Difficulty|Advanced Wireless\ Technology|Zigbee" />
 		<property key="quality" value="PRODUCTION" />
@@ -24,7 +24,7 @@
 		<property key="blurb" value="Zigbee - UnifiedTestHarness" />
 		<property key="partCompatibility" value=".*efr32mg24b210f1536im48.*" />
 		<property key="boardCompatibility" value="brd2703a" />
-		<property key="imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.2/zigbee_app/demos/zigbee_unified_test_harness/zigbee_unified_test_harness-brd2703a.s37" />
+		<property key="imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/zigbee_app/demos/zigbee_unified_test_harness/zigbee_unified_test_harness-brd2703a.s37" />
 		<property key="readmeFiles" value="z3/zigbee_unified_test_harness/readme.md" />
 		<property key="filters" value="Device\ Type|SoC Project\ Difficulty|Beginner Wireless\ Technology|Zigbee" />
 		<property key="quality" value="PRODUCTION" />
@@ -34,7 +34,7 @@
 		<property key="blurb" value="Zigbee - UnifiedTestHarness" />
 		<property key="partCompatibility" value=".*efr32mg24b210f1536im48.*" />
 		<property key="boardCompatibility" value="brd4186c" />
-		<property key="imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.2/zigbee_app/demos/zigbee_unified_test_harness/zigbee_unified_test_harness-brd4186c.s37" />
+		<property key="imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/zigbee_app/demos/zigbee_unified_test_harness/zigbee_unified_test_harness-brd4186c.s37" />
 		<property key="readmeFiles" value="z3/zigbee_unified_test_harness/readme.md" />
 		<property key="filters" value="Device\ Type|SoC Project\ Difficulty|Beginner Wireless\ Technology|Zigbee" />
 		<property key="quality" value="PRODUCTION" />
@@ -44,7 +44,7 @@
 		<property key="blurb" value="Zigbee - Z3Light" />
 		<property key="partCompatibility" value=".*efr32mg21a020f1024im32.*" />
 		<property key="boardCompatibility" value="brd4180a" />
-		<property key="imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.2/zigbee_app/demos/zigbee_z3_light/zigbee_z3_light-brd4180a.s37" />
+		<property key="imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/zigbee_app/demos/zigbee_z3_light/zigbee_z3_light-brd4180a.s37" />
 		<property key="readmeFiles" value="z3/zigbee_z3_light/readme.md" />
 		<property key="filters" value="Device\ Type|SoC Project\ Difficulty|Beginner Wireless\ Technology|Zigbee" />
 		<property key="quality" value="PRODUCTION" />
@@ -54,7 +54,7 @@
 		<property key="blurb" value="Zigbee - Z3Switch" />
 		<property key="partCompatibility" value=".*efr32mg21a020f1024im32.*" />
 		<property key="boardCompatibility" value="brd4180a" />
-		<property key="imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.2/zigbee_app/demos/zigbee_z3_switch/zigbee_z3_switch-brd4180a.s37" />
+		<property key="imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/zigbee_app/demos/zigbee_z3_switch/zigbee_z3_switch-brd4180a.s37" />
 		<property key="readmeFiles" value="z3/zigbee_z3_switch/readme.md" />
 		<property key="filters" value="Device\ Type|SoC Project\ Difficulty|Beginner Wireless\ Technology|Zigbee" />
 		<property key="quality" value="PRODUCTION" />
@@ -64,7 +64,7 @@
 		<property key="blurb" value="Zigbee - Z4Light" />
 		<property key="partCompatibility" value=".*efr32mg21a020f1024im32.*" />
 		<property key="boardCompatibility" value="brd4180a" />
-		<property key="imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.2/zigbee_app/demos/zigbee_z4_light/zigbee_z4_light-brd4180a.s37" />
+		<property key="imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/zigbee_app/demos/zigbee_z4_light/zigbee_z4_light-brd4180a.s37" />
 		<property key="readmeFiles" value="z4/zigbee_z4_light/readme.md" />
 		<property key="filters" value="Device\ Type|SoC Project\ Difficulty|Beginner Wireless\ Technology|Zigbee" />
 		<property key="quality" value="PRODUCTION" />
@@ -74,7 +74,7 @@
 		<property key="blurb" value="Zigbee - Z4Switch" />
 		<property key="partCompatibility" value=".*efr32mg21a020f1024im32.*" />
 		<property key="boardCompatibility" value="brd4180a" />
-		<property key="imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.2/zigbee_app/demos/zigbee_z4_switch/zigbee_z4_switch-brd4180a.s37" />
+		<property key="imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/zigbee_app/demos/zigbee_z4_switch/zigbee_z4_switch-brd4180a.s37" />
 		<property key="readmeFiles" value="z4/zigbee_z4_switch/readme.md" />
 		<property key="filters" value="Device\ Type|SoC Project\ Difficulty|Beginner Wireless\ Technology|Zigbee" />
 		<property key="quality" value="PRODUCTION" />

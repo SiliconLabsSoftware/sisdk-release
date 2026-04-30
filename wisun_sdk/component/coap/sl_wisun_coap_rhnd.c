@@ -471,6 +471,7 @@ static void _rhnd_thr_fnc(void * args)
     sl_wisun_coap_destroy_packet(resp_pkt); \
     resp_pkt = NULL;                        \
     sl_free(discovery_payload);             \
+    discovery_payload = NULL;               \
   } while (0)
 
   (void) args;
@@ -546,6 +547,8 @@ static void _rhnd_thr_fnc(void * args)
         // Handling response and empty packets
         if (!sl_wisun_coap_rhnd_is_request_packet(req_pkt)) {
           sl_wisun_coap_rhnd_service_resp_received_ext_hnd(&clnt_addr, req_pkt);
+          sl_wisun_coap_destroy_packet(req_pkt);
+          req_pkt = NULL;
           continue;
         }
 
@@ -567,6 +570,8 @@ static void _rhnd_thr_fnc(void * args)
           uri_path = sl_wisun_coap_get_uri_path_str(req_pkt);
           if (uri_path == NULL) {
             sl_wisun_coap_rhnd_service_uri_path_error_hnd(req_pkt);
+            sl_wisun_coap_destroy_packet(req_pkt);
+            req_pkt = NULL;
             continue;
           }
 

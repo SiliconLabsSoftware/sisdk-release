@@ -42,7 +42,7 @@ SL_ENUM(slx_zigbee_insecure_debug_message_type) {
  * @param msg_type an enumeration representing which kind of debug msg to generate
  * @param debug_data an opaque pointer type. semantics are specific to each message
  */
-void slx_zigbee_insecure_debug_generate_trace(slx_zigbee_insecure_debug_message_type msg_type,
-                                              void *debug_data);
+void slxi_zigbee_stack_insecure_debug_generate_trace(slx_zigbee_insecure_debug_message_type msg_type,
+                                                     uint8_t *debug_data);
 
 #endif // SLX_ZIGBEE_INSECURE_DEBUG_KEY_TRACE_H

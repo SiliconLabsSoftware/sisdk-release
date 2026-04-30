@@ -132,18 +132,11 @@ post_build:
 
 tag:
   - hardware:board_only
-  - hardware:component:button:1+
-  - hardware:component:display:ls013b7dh03
-  - hardware:component:led:1+
-  - hardware:component:sensor:!si7021
-  - hardware:device:ram:32
-  - hardware:device:flash:512
-  - hardware:rf:band:2400
   - prebuilt_demo
   - hwfilter:device:device_series_2
   - hwfilter:device:device_supports_bluetooth
   - hwfilter:board:hardware_board_supports_wstk_lcd
-  - hwfilter:!board:hardware_board_has_si70xx
+  - hwfilter:!board:hardware_board_has_tempsensor
   - hwfilter:board:simple_button:btn0
   - hwfilter:board:simple_led:led0
   - hwfilter:flash:512k

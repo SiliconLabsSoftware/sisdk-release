@@ -2640,7 +2640,7 @@ void routeRecordPolicyCommand(sl_cli_command_arg_t *arguments)
 }
 
 WEAK(void slx_zigbee_insecure_debug_generate_trace(slx_zigbee_insecure_debug_message_type msg_type,
-                                                   void *debug_data))
+                                                   uint8_t *debug_data))
 {
   UNUSED_VAR(msg_type);
   UNUSED_VAR(debug_data);
@@ -2666,10 +2666,10 @@ void slx_zigbee_application_handle_new_aps_link_key_with_partner(sl_802154_long_
   if (status == SL_STATUS_OK) {
     // dump to wireshark
     slx_zigbee_insecure_debug_generate_trace(SLX_ZIGBEE_INSECURE_DEBUG_NWK_REPORT_KEY_PACKET,
-                                             (void *) plain_text.key);
+                                             (uint8_t *) plain_text.key);
     // key transport
     slx_zigbee_insecure_debug_generate_trace(SLX_ZIGBEE_INSECURE_DEBUG_TRANSPORT_KEY_PACKET,
-                                             (void *) plain_text.key);
+                                             (uint8_t *) plain_text.key);
   } else {
     sl_zigbee_core_debug_print("WARN: error (0x%02X) getting aps link key for ", status);
     sl_zigbee_core_debug_print_buffer(partner, EUI64_SIZE, false);

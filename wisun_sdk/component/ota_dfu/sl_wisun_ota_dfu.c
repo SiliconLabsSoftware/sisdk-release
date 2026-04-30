@@ -872,6 +872,10 @@ static const char *_get_status_json_string(void)
   // Update elapsed time since reset
   (void) sl_sleeptimer_convert_time_to_date(sl_sleeptimer_get_time(), 0, &_stats.elapsed_time_since_rst);
 
+  if (_stats.global_ip_str == NULL) {
+    _stats.global_ip_str = sl_tftp_get_global_addr();
+  }
+
   (void) snprintf(str,
                   SL_WISUN_OTA_DFU_STATUS_JSON_STR_MAX_LEN,
                   SL_WISUN_OTA_DFU_STATUS_JSON_FORMAT_STR,
@@ -947,6 +951,7 @@ static void _handle_get_requests(const sl_wisun_coap_packet_t * const req_packet
   cmd = sl_wisun_coap_get_payload_str(req_packet);
   if (cmd == NULL) {
     sl_free(resp_packet->payload_ptr);
+    resp_packet->payload_ptr = NULL;
     return;
   }
   _parse_arguments(cmd, &arg);
@@ -1058,6 +1063,7 @@ static void _handle_post_requests(const sl_wisun_coap_packet_t * const req_packe
   cmd = sl_wisun_coap_get_payload_str(req_packet);
   if (cmd == NULL) {
     sl_free(resp_packet->payload_ptr);
+    resp_packet->payload_ptr = NULL;
     return;
   }
   _parse_arguments(cmd, &arg);
@@ -1501,6 +1507,8 @@ static sl_wisun_coap_packet_t * _notify_cb(const struct sl_wisun_coap_notify *no
 
   // Do not prepare the packet if notify required state is false
   if (!_is_notify_required) {
+    notify_pkt.uri_path_ptr = NULL;
+    notify_pkt.payload_ptr = NULL;
     return &notify_pkt;
   }
 

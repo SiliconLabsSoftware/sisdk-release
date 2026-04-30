@@ -36,7 +36,8 @@
 #include "sl_rail_sdk_wmbus_sensor_thermometer_config.h"
 #include "sl_rail_sdk_wmbus_support.h"
 #include "sl_sleeptimer.h"
-#include "sl_si70xx.h"
+#include "sl_component_catalog.h"
+#include "sl_rht_unidriver.h"
 #include "sl_i2cspm_instances.h"
 #include "app_assert.h"
 #include "sl_rail_sdk_wmbus_packet_assembler.h"
@@ -47,6 +48,8 @@
 #include "sl_segmentlcd.h"
 #endif
 #include "sl_code_classification.h"
+#include "app_log.h"
+#include <inttypes.h>
 
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
@@ -71,8 +74,6 @@ typedef enum {
 //                          Static Function Declarations
 // -----------------------------------------------------------------------------
 
-static void sl_rail_sdk_wmbus_sensor_thermometer_sleeptimer_callback(sl_sleeptimer_timer_handle_t *handle, void *data);
-
 // -----------------------------------------------------------------------------
 //                                Global Variables
 // -----------------------------------------------------------------------------
@@ -94,21 +95,6 @@ static lcd_print_change_t lcd_print_type = LCD_PRINT_TEMPERATURE;
 //                          Static Function Definitions
 // -----------------------------------------------------------------------------
 
-/**************************************************************************//**
- * Sleeptimer callback for the thermometer functionality. Periodically:
- * - Measure temperature and humidity
- * - Update 7 segment LCD
- *
- * @param[in] handle Not used
- * @param[in] data Not used
- *****************************************************************************/
-SL_CODE_RAM static void sl_rail_sdk_wmbus_sensor_thermometer_sleeptimer_callback(sl_sleeptimer_timer_handle_t *handle, void *data)
-{
-  (void)handle;
-  (void)data;
-  sl_rail_sdk_wmbus_sensor_thermometer_measure();
-}
-
 // -----------------------------------------------------------------------------
 //                          Public Function Definitions
 // -----------------------------------------------------------------------------
@@ -118,35 +104,23 @@ SL_CODE_RAM static void sl_rail_sdk_wmbus_sensor_thermometer_sleeptimer_callback
  ******************************************************************************/
 sl_status_t sl_rail_sdk_wmbus_sensor_thermometer_init(void)
 {
-  uint8_t device_id = 0;
   sl_status_t status = SL_STATUS_FAIL;
-  // init temperature sensor
-  if (!sl_si70xx_present(sl_i2cspm_sensor, SI7021_ADDR, &device_id)) {
-    // wait a bit before re-trying
-    // the si7021 sensor can take up to 80 ms (25 ms @25 deg C) to start up
-#if defined(SL_CATALOG_KERNEL_PRESENT)
-    // we can't use sleeptimer before the scheduler start.
-    sl_udelay_wait(80000);
-#else
-    sl_sleeptimer_delay_millisecond(80);
-#endif
-    // init temperature sensor (2nd attempt)
-    if (!sl_si70xx_present(sl_i2cspm_sensor, SI7021_ADDR, &device_id)) {
-      return SL_STATUS_FAIL;
-    }
+
+  // init RHT sensor
+  status = sl_rht_unidriver_init(sl_i2cspm_sensor);
+  if (SL_STATUS_OK != status) {
+    app_log_error("Thermometer sensor initialization error: 0x%08" PRIX32 "\n", status);
+    return status;
   }
 
-  status = sl_sleeptimer_start_periodic_timer_ms(&timer_handle,
-                                                 SL_RAIL_SDK_WMBUS_SENSOR_THERMOMETER_SLEEPTIMER_TIMEOUT,
-                                                 sl_rail_sdk_wmbus_sensor_thermometer_sleeptimer_callback,
-                                                 NULL,
-                                                 SL_RAIL_SDK_WMBUS_SENSOR_THERMOMETER_SLEEPTIMER_PRIORITY,
-                                                 0);
-  app_assert_status_f(status,
-                      "[E: 0x%04x]: Failed to start periodic sleeptimer\n",
-                      (int)status);
+  // test that the driver is working correctly
   status = sl_rail_sdk_wmbus_sensor_thermometer_measure();
-  return status;
+  if (SL_STATUS_OK != status) {
+    app_log_error("Thermometer measurement failed: 0x%08" PRIX32 "\n", status);
+    return status;
+  }
+
+  return SL_STATUS_OK;
 }
 
 /*******************************************************************************
@@ -162,13 +136,7 @@ sl_status_t sl_rail_sdk_wmbus_sensor_thermometer_deinit(void)
  ******************************************************************************/
 sl_status_t sl_rail_sdk_wmbus_sensor_thermometer_measure(void)
 {
-  if (!sl_si70xx_measure_rh_and_temp(sl_i2cspm_sensor,
-                                     SI7021_ADDR,
-                                     &rh_data,
-                                     &temp_data)) {
-    return SL_STATUS_FAIL;
-  }
-  return SL_STATUS_OK;
+  return sl_rht_unidriver_measure_rh_and_temp(&rh_data, &temp_data);
 }
 
 /*******************************************************************************
@@ -176,6 +144,10 @@ sl_status_t sl_rail_sdk_wmbus_sensor_thermometer_measure(void)
  ******************************************************************************/
 sl_rail_sdk_wmbus_sensor_data_t* sl_rail_sdk_wmbus_sensor_thermometer_get_data(void)
 {
+  sl_status_t status = sl_rail_sdk_wmbus_sensor_thermometer_measure();
+  if (SL_STATUS_OK != status) {
+    app_log_error("Thermometer measurement failed: 0x%08" PRIX32 "\n", status);
+  }
   // Sensor data for the thermometer
   static sl_rail_sdk_wmbus_sensor_data_t sensor_data_thermometer = {
     .data = 0,
@@ -190,14 +162,20 @@ sl_rail_sdk_wmbus_sensor_data_t* sl_rail_sdk_wmbus_sensor_thermometer_get_data(v
  ******************************************************************************/
 sl_status_t sl_rail_sdk_wmbus_sensor_thermometer_print(void)
 {
-#if defined(SL_CATALOG_SEGMENT_LCD_DRIVER_PRESENT)
+  #if defined(SL_CATALOG_SEGMENT_LCD_DRIVER_PRESENT)
+  // Measure
+  sl_status_t status = sl_rail_sdk_wmbus_sensor_thermometer_measure();
+  if (SL_STATUS_OK != status) {
+    app_log_error("Thermometer measurement failed: 0x%08" PRIX32 "\n", status);
+    return status;
+  }
   if (lcd_print_type == LCD_PRINT_TEMPERATURE) {
     sl_segment_lcd_temp_display(temp_data);
   } else {
     sl_segment_lcd_number(rh_data);
     sl_segment_lcd_symbol(SL_LCD_SYMBOL_P2, 1);
   }
-#endif
+  #endif
   return SL_STATUS_OK;
 }
 

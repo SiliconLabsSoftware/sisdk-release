@@ -27,9 +27,7 @@ ESL AP CLI.
 import cmd
 from shlex import split as lexical_split
 import queue
-import re
 import threading
-import time
 import argparse
 import struct
 import textwrap
@@ -57,120 +55,26 @@ from ap_constants import (
     PA_SUBEVENT_MAX,
     ADDRESS_TYPE_PUBLIC_ADDRESS,
     ADDRESS_TYPE_STATIC_ADDRESS,
-    VALID_ESL_ID_NUMBER_REGEX,
-    VALID_GROUP_ID_NUMBER_REGEX,
-    VALID_BD_ADDRESS_REGEX,
+    ESL_MAX_TAGS_IN_GROUP,
 )
-from esl_lib import Address, EventType, EVENT_PREFIX
+from esl_tag import ImageUpdateFailed
 from esl_lib_wrapper import (
     ESL_LIB_CONNECTION_MODE_SINGLE,
     ESL_LIB_CONNECTION_MODE_LIST,
 )
 
-# Known event names for script wait (lowercase, no prefix; matches EventDispatcher.notify)
-KNOWN_EVENT_NAMES = {et.name for et in EventType.all()}
-
-def clamp(n, minn, maxn):
-    return max(min(maxn, n), minn)
-
-
-def ble_address_type(arg_value):
-    pat = re.compile(r"(" + VALID_BD_ADDRESS_REGEX + ")")
-    if not pat.match(arg_value):
-        raise argparse.ArgumentTypeError("Invalid Bluetooth address type.")
-    return arg_value
-
-
-def ble_address_type_all(arg_value):
-    pat = re.compile(r"(" + VALID_BD_ADDRESS_REGEX + "|all)")
-    if not pat.match(arg_value):
-        raise argparse.ArgumentTypeError("Not a valid Bluetooth address.")
-    return arg_value
-
-
-def address_type(arg_value):
-    pat = re.compile(
-        r"^("
-            + VALID_ESL_ID_NUMBER_REGEX
-            + r"|"
-            + VALID_BD_ADDRESS_REGEX
-            + r"|all"
-            + r"|\s*"
-        + r")$"
-    )
-    if not pat.match(arg_value):
-        raise argparse.ArgumentTypeError("Invalid address type.")
-    return arg_value
-
-
-def esl_id_type(arg_value):
-    pat = re.compile(r"(" + VALID_ESL_ID_NUMBER_REGEX + "|all)")
-    if not pat.match(arg_value):
-        raise argparse.ArgumentTypeError("Invalid ESL ID value. Please select from the allowed range of 0 to 254, or you may use 'all' as a substitute for 255 in some contexts.")
-    return arg_value
-
-
-def esl_group_id_type(arg_value):
-    re_str = VALID_GROUP_ID_NUMBER_REGEX if not IOP_TEST else VALID_ESL_ID_NUMBER_REGEX # IOP_TEST mode allows full <u8> range for RFU bit tests 
-    pat = re.compile(r"(" + re_str + ")")
-    if not pat.match(arg_value):
-        raise argparse.ArgumentTypeError("Invalid ESL Group ID. Please select from the allowed range of 0 to 127!")
-    return int(arg_value)
-
-
-def event_type(arg_value):
-    """Validate and normalize event name for script wait (e.g. connection_opened, tag_found).
-    Accepts any case and optional EVENT_PREFIX (e.g. ESL_LIB_EVT_ or esl_lib_evt_).
-    """
-    if not arg_value or not str(arg_value).strip():
-        raise argparse.ArgumentTypeError("Event name must not be empty.")
-    normalized = str(arg_value).strip().lower()
-    prefix_lower = EVENT_PREFIX.lower()
-    if normalized.startswith(prefix_lower):
-        normalized = normalized[len(prefix_lower):]
-    if normalized not in KNOWN_EVENT_NAMES:
-        raise argparse.ArgumentTypeError(
-            "Invalid event name: '%s'. Known events: %s."
-            % (arg_value, ", ".join(sorted(KNOWN_EVENT_NAMES)))
-        )
-    return normalized
-
-
-def time_type(arg_value):
-    try:
-        if "." in arg_value:
-            arg_value = dt.strptime(arg_value, "%H:%M:%S.%f")
-        else:
-            arg_value = dt.strptime(arg_value, "%H:%M:%S")
-        return arg_value
-    except (
-        TypeError,
-        ValueError,
-    ) as exc:  # strptime can cause type or value error - exception chaining
-        raise argparse.ArgumentTypeError(
-            "Invalid argument [time=<hh:mm:ss[.f]>]: the execution time of the command must be in hour:min:sec[.fraction] format."
-        ) from exc
-
-
-def date_type(arg_value):
-    try:
-        arg_value = dt.strptime(arg_value, "%Y-%m-%d")
-        return arg_value
-    except (
-        ValueError,
-        TypeError,
-    ) as exc:  # strptime can cause type or value error - exception chaining
-        raise argparse.ArgumentTypeError(
-            "Invalid argument [date=<YYYY-MM-DD>]: the execution date of the command in ISO-8601 format."
-        ) from exc
-
-
-def data_type(arg_value):
-    pat = re.compile(r"((0(?i)[x])?(?i)[0-9a-f]{1,32})")
-    if not pat.match(arg_value):
-        raise argparse.ArgumentTypeError("Invalid data type for vendor opcode command.")
-    return arg_value
-
+from ap_cli_argtypes import (
+    ble_address_type,
+    ble_address_type_all,
+    address_type,
+    esl_id_type,
+    esl_group_id_type,
+    time_type,
+    date_type,
+    data_type,
+)
+from ap_cli_resolvers import normalize_hex
+from ap_cli_scripting import ScriptMixin
 
 def split_sequence(sequence, sep):
     chunk = []
@@ -197,8 +101,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 help="Show this help message.",
             )
 
-
-class CliProcessor(cmd.Cmd):
+class CliProcessor(ScriptMixin, cmd.Cmd):
     """CLI Processor"""
 
     def __init__(self, ap: AccessPoint):
@@ -206,6 +109,7 @@ class CliProcessor(cmd.Cmd):
         self.queue = queue.Queue()
         self.ap = ap
         self.record_file = None
+        self._registered_commands = {}
 
         # Parsers
         self.command_parser = ArgumentParser(usage=argparse.SUPPRESS)
@@ -240,6 +144,7 @@ class CliProcessor(cmd.Cmd):
         )
         self.arg_demo()
         self.arg_mode()
+        self.arg_image_throughput()
         self.arg_network()
         self.arg_scan()
         self.arg_config()
@@ -482,12 +387,19 @@ class CliProcessor(cmd.Cmd):
             type=address_type,
             help="Bluetooth address (e.g. 'AA:BB:CC:DD:EE:22') in case insensitive format or ESL ID of the tag.",
         )
-        parser_connect.add_argument(
+        group = parser_connect.add_mutually_exclusive_group()
+        group.add_argument(
             "--group_id",
             "-g",
             metavar="<u7>",
             type=int,
             help="ESL group ID (optional, default is group 0)",
+        )
+        group.add_argument(
+            "--next_group",
+            "-ng",
+            action="store_true",
+            help="Automatically find and connect to the next synchronized tag in the optimal group.",
         )
         parser_connect.add_argument(
             "--addr_type",
@@ -505,7 +417,7 @@ class CliProcessor(cmd.Cmd):
         """
         Connect to one or more ESL devices.
         """
-        group_id = arg.group_id
+        group_id = PA_SUBEVENT_MAX if arg.next_group else arg.group_id
         bt_addr = None
         esl_id = None
         address_type = None
@@ -1193,17 +1105,20 @@ class CliProcessor(cmd.Cmd):
             label = arg.label.encode().decode("unicode-escape")
 
         if not input_error:
-            self.ap.ap_imageupdate(
-                image_index,
-                filename,
-                raw_img,
-                display_index,
-                label,
-                rotation,
-                cropfit,
-                arg.address,
-                arg.group_id,
-            )
+            try:
+                self.ap.ap_imageupdate(
+                    image_index,
+                    filename,
+                    raw_img,
+                    display_index,
+                    label,
+                    rotation,
+                    cropfit,
+                    arg.address,
+                    arg.group_id,
+                )
+            except ImageUpdateFailed as e:
+                self.log.error(e)
 
     def arg_unassociate(self):
         parser_unassociate = self.subparsers.add_parser(
@@ -1257,7 +1172,7 @@ class CliProcessor(cmd.Cmd):
             "ap_mode",
             nargs="?",
             choices=["auto", "manual"],
-            help="Toggle between automatic and manual mode of AP operation. ",
+            help="Toggle between automatic or manual mode of AP operation. ",
         )
 
         parser_mode.add_argument(
@@ -1269,7 +1184,7 @@ class CliProcessor(cmd.Cmd):
 
     def do_mode(self, arg):
         """
-        Changes the operation mode of the ESL Access Point and the connection initiation method of the underlying ESL library.
+        Change the operation mode of the ESL Access Point and the connection initiation method of the underlying ESL library.
         Automatic mode essentially refers to a set of actions that are performed automatically according to the ESL Profile
         specification, such as automatically configuring and synchronizing newly discovered ESLs with the network.
         The connection initiation method of the library selects whether a new connection is initiated to a single target
@@ -1285,6 +1200,68 @@ class CliProcessor(cmd.Cmd):
         elif arg.lib_mode == "list":
             arg.lib_mode = ESL_LIB_CONNECTION_MODE_LIST
         self.ap.ap_mode(arg.ap_mode, arg.lib_mode)
+
+    def arg_image_throughput(self):
+        parser_itp = self.subparsers.add_parser(
+            "image_throughput",
+            formatter_class=lambda prog: argparse.RawDescriptionHelpFormatter(
+                prog, max_help_position=24
+            ),
+            description=self.do_image_throughput.__doc__,
+            epilog="""
+        Note:       While the test runs, the AP uses manual (command) control; when the test finishes,
+                    the previous automated vs manual mode is restored automatically.
+        Disclaimer: Although manual operation mode gives full control over devices on your network,
+                    it is highly recommended to avoid issuing any commands while the test is running.
+                    Depending on the verbosity level, the CLI might be flooded with messages
+                    during the operation.
+        """,
+        )
+        parser_itp.add_argument(
+            "action",
+            choices=["start", "stop"],
+            help="Start or stop the image throughput stress test.",
+        )
+        parser_itp.add_argument(
+            "--max_count",
+            "-c",
+            type=int,
+            metavar="u15",
+            help="Maximum number of synchronized tags to enroll in the test (start only; ignored for stop).",
+        )
+        parser_itp.add_argument(
+            "--max_group",
+            "-g",
+            type=int,
+            metavar="u7",
+            help="The highest ESL group id (inclusive) for tags to enroll at start; ignored for stop.",
+        )
+
+    def do_image_throughput(self, arg):
+        """
+        Run or stop the image throughput stress test across synchronized ESL tags.
+
+        This is a diagnostic utility, not an AP operating mode: on start it switches to manual
+        control for the duration of the test, then restores the prior automated vs manual mode
+        when the test completes. Requires ESLs already in synchronied state.
+        """
+        max_count = arg.max_count if arg.action == "start" else None
+        max_group = arg.max_group if arg.action == "start" else None
+        if max_count is not None and max_count < 1:
+            self.log.error(
+                "Device count must be in the range 1-%d!",
+                ESL_MAX_TAGS_IN_GROUP * PA_SUBEVENT_MAX,
+            )
+            return
+        if max_group is not None and max_group not in range(0,PA_SUBEVENT_MAX):
+            self.log.error(
+                "The highest group_id must be in the range 0-%d!",
+                PA_SUBEVENT_MAX - 1,
+            )
+            return
+        self.ap.ap_image_throughput(
+            arg.action == "start", max_tag_count=max_count, max_group_id=max_group
+        )
 
     def arg_network(self):
         parser_config = self.subparsers.add_parser(
@@ -1622,7 +1599,7 @@ class CliProcessor(cmd.Cmd):
               (Although it still makes no sense as broadcast messages doesn't solicit any
               response by the specification!)""",
         )
-        parser_ping.add_argument("esl_id", type=esl_id_type, help="ESL ID or all")
+        parser_ping.add_argument("esl_id", type=address_type, help="ESL ID, BLE address, or all")
         parser_ping.add_argument(
             "--group_id",
             "-g",
@@ -1681,14 +1658,8 @@ class CliProcessor(cmd.Cmd):
         data = None
         esl_id = arg.esl_id
         if arg.data is not None:
-            prefix_pos = arg.data.casefold().find("x")
-            if prefix_pos == -1:
-                prefix_pos = 0
-            else:
-                prefix_pos += 1
-            payload = int(arg.data, base=16)
-            length = (len(arg.data[prefix_pos:]) + 1) // 2
-            data = payload.to_bytes(length, byteorder="big")
+            hex_str = normalize_hex(arg.data)
+            data = bytes.fromhex(hex_str)
         self.ap.ap_vendor_opcode(esl_id, group_id, data)
 
     def arg_service_reset(self):
@@ -2031,125 +2002,6 @@ class CliProcessor(cmd.Cmd):
             self.record_file.flush()
         return command
 
-    def arg_script(self):
-        parser_script = self.subparsers.add_parser(
-            "script",
-            formatter_class=lambda prog: argparse.RawDescriptionHelpFormatter(
-                prog, max_help_position=30
-            ),
-            description=self.do_script.__doc__,
-            epilog="""
-        Notes: Scripting is an experimental feature only – it also supports basic waiting with timeout and
-               optional device filtering for events, but it lacks any configuration‑dependent and/or conditional
-               execution capabilities. Recorded script files may contain script commands as well, even recursively.
-               However, it is strongly advised to avoid it, as recursive execution cannot be interrupted and may
-               lead to uncontrolled behavior.""",
-        )
-
-        # create subparsers for record / run / wait
-        sub = parser_script.add_subparsers(dest="record_run_wait", required=True)
-
-        # subcommand: record
-        p_record = sub.add_parser(
-            "record",
-            help="Record commands to an output file. Issue 'script record stop' to stop recording and close the file."
-        )
-        p_record.add_argument(
-            "filename",
-            help="Filename to write AP commands to. Note: the word 'stop' is reserved, can't be used as a valid file name."
-        )
-
-        # subcommand: run
-        p_run = sub.add_parser(
-            "run",
-            help="Run commands from an input file."
-        )
-        p_run.add_argument(
-            "filename",
-            help="Filename to read AP commands from."
-        )
-
-        # subcommand: wait
-        p_wait = sub.add_parser(
-            "wait",
-            help="Wait before running the next command. "
-        )
-        p_wait.add_argument(
-            "seconds",
-            type=int,
-            help="Seconds to wait"
-        )
-        p_wait.add_argument(
-            "event",
-            nargs="?",
-            type=event_type,
-            help="Event name (e.g. connection_opened, ESL_LIB_EVT_TAG_FOUND)"
-        )
-        p_wait.add_argument(
-            "address",
-            nargs="?",
-            type=address_type,
-            help="ESL ID (0-254), BLE address, or 'all'"
-        )
-        p_wait.add_argument(
-            "--group_id",
-            "-g",
-            metavar="<u7>",
-            type=esl_group_id_type,
-            help="ESL group ID (optional, default 0 if an address is given, None otherwise); with address 'all', wait for first event from this group"
-        )
-
-    def do_script(self, arg):
-        """
-        Record commands to an output file or execute them from an input file.
-        """
-        if arg.record_run_wait == "record":
-            filename = arg.filename
-            self.record_commands(filename)
-
-        elif arg.record_run_wait == "run":
-            filename = arg.filename
-            self.playback_commands(filename)
-
-        elif arg.record_run_wait == "wait":
-            seconds = arg.seconds
-            event_name = arg.event
-            address = arg.address
-            wait_group_id = arg.group_id
-
-            device_tag = None
-            if address is None:
-                # no device filtering
-                pass
-            elif address == "all":
-                # group filtering only
-                wait_group_id = arg.group_id # May be None if not given, integer in range 0..127, otherwise
-            else:
-                # address is guaranteed valid by address_type()
-                if ":" in address:
-                    # arg.address is BLE address → create Address object
-                    node_id = Address.from_str(address)
-                else:
-                    # arg.address is an ESL ID
-                    esl_id = int(address)
-                    group_id = arg.group_id if arg.group_id is not None else 0
-                    node_id = (esl_id, group_id)
-
-                device_tag = self.ap.tag_db.find(node_id)
-
-                if device_tag is None:
-                    self.log.error(
-                        "Unknown device: %s. Device must exist in tag database (use 'list' to see known devices).",
-                        address,
-                    )
-                    return
-            self.ap_wait(
-                seconds,
-                event_name=event_name,
-                device_tag=device_tag,
-                group_id=wait_group_id if device_tag is None else device_tag.group_id,
-            )
-
     def arg_update_complete(self):
         parser_update_complete = self.subparsers.add_parser(
             "update_complete",
@@ -2257,103 +2109,6 @@ class CliProcessor(cmd.Cmd):
                     self.log.error(
                         "Help not available for unknown command: " + subparser_given
                     )
-
-    def ap_wait(self, w_time, event_name=None, device_tag=None, group_id=None):
-        """
-        Wait <w_time> seconds before running the next command.
-        If event_name is given, wait until that event occurs or timeout.
-        If device_tag is given with event_name, only resume when the event
-        originates from that device. If group_id is given (and device_tag is None),
-        resume on the first event from any device in that group.
-
-        Note: The wait blocks the CLI pipeline until the event or timeout occurs.
-        However, internal system operations not handled by the command interpreter
-        will proceed concurrently.
-        """
-        if event_name is None:
-            self.log.info("Waiting " + str(w_time) + " seconds")
-            time.sleep(int(w_time))
-            return
-        # Wait for event with optional device filter
-        condition = threading.Condition()
-        event_received = [False]  # list to allow closure to mutate
-
-        def _tag_from_event(event):
-            """Resolve tag from event (same logic as ap_core)."""
-            if hasattr(event, "node_id"):
-                return self.ap.tag_db.find(event.node_id)
-            if hasattr(event, "address"):
-                return self.ap.tag_db.find(event.address)
-            if hasattr(event, "connection_handle"):
-                return self.ap.tag_db.find(event.connection_handle)
-            return None
-
-        def _on_event(event):
-            tag = _tag_from_event(event)
-            if device_tag is not None:
-                if tag is not device_tag:
-                    return
-            elif group_id is not None:
-                if tag is None or getattr(tag, "group_id", None) != group_id:
-                    return
-            with condition:
-                event_received[0] = True
-                condition.notify()
-
-        prefix = "script_wait_" + str(threading.get_ident())
-        event_display = EVENT_PREFIX + event_name.upper() if event_name else ""
-        try:
-            self.ap.evt_dispatcher.subscribe(event_name, _on_event, prefix=prefix)
-            if device_tag is not None:
-                device_desc = " from ESL ID " + str(device_tag)
-            elif group_id is not None:
-                device_desc = " from group " + str(group_id)
-            else:
-                device_desc = ""
-            self.log.info(
-                "Waiting up to %s s for event %s%s",
-                w_time,
-                event_display,
-                device_desc,
-            )
-            with condition:
-                condition.wait(timeout=float(w_time))
-            if event_received[0]:
-                self.log.info("Event %s received%s", event_display, device_desc)
-            else:
-                self.log.info("Timeout waiting for event %s%s", event_display, device_desc)
-        finally:
-            self.ap.evt_dispatcher.unsubscribe_prefix(prefix)
-
-    def playback_commands(self, fname):
-        """Playback commands from an input file"""
-        try:
-            with open(fname) as f:
-                self.log.info("Executing commands from file: " + fname)
-                # Remove lines starting with '#' comment character
-                command_list = [
-                    i for i in f.read().splitlines() if not i.startswith("#")
-                ]
-                for line in command_list:
-                    self.onecmd(line)
-        except FileNotFoundError:
-            self.log.warning("File not found: " + fname)
-
-    def record_commands(self, fname):
-        """Record commands to a file"""
-        if fname != "stop":
-            try:
-                self.log.info("Recording commands to file: " + fname)
-                self.record_file = open(fname, "w")
-            except OSError:
-                self.log.warning("Cannot open file: " + fname)
-        else:
-            if self.record_file:
-                self.log.info("Recording of commands stopped")
-                self.record_file.close()
-                self.record_file = None
-            else:
-                self.log.info("There's no recording to stop!")
 
     def do_exit(self, arg):
         """

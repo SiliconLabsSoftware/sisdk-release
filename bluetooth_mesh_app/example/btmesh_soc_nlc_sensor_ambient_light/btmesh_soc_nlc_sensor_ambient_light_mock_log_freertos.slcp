@@ -130,14 +130,6 @@ post_build:
 
 tag:
   - hardware:board_only
-  - hardware:device:sdid:!205
-  - hardware:component:button:1+
-  - hardware:component:display:!ls013b7dh03
-  - hardware:component:sensor:!si1133
-  - hardware:component:sensor:!veml6035
-  - hardware:device:flash:512
-  - hardware:device:ram:64
-  - hardware:rf:band:2400
   - hwfilter:device:device_supports_bluetooth
   - hwfilter:!device:device_generic_family_efr32xg22
   - hwfilter:!board:hardware_board_supports_wstk_lcd

@@ -46,7 +46,7 @@ class SoftTimerScheduler:
         self.running = True
         self.thread = threading.Thread(target=self._run, daemon=True)
         self.thread.start()
-        # periodic wakeup tick – improves timer precision and minimizes drift
+        # periodic wakeup tick - improves timer precision and minimizes drift
         self.ticker = threading.Thread(target=self._ticker, daemon=True)
         self.ticker.start()
 

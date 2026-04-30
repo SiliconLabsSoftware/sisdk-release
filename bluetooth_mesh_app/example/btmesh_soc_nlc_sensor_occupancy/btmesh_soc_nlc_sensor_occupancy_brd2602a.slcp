@@ -127,14 +127,6 @@ post_build:
 
 tag:
   - hardware:board_only
-  - hardware:component:button:1
-  - hardware:component:display:!ls013b7dh03
-  - hardware:component:led:1
-  - hardware:component:sensor:veml6035
-  - hardware:component:sensor:si7021
-  - hardware:device:flash:512
-  - hardware:device:ram:32
-  - hardware:rf:band:2400
   - prebuilt_demo
   - hwfilter:board:brd2602a
   - hwfilter:device:device_generic_family_efr32xg27

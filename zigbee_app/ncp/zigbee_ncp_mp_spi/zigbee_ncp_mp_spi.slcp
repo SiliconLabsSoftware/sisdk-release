@@ -11,6 +11,13 @@ component:
   - id: iostream_usart
     instance:
       - vcom
+    condition:
+      - device_series_2
+  - id: iostream_eusart
+    instance:
+      - vcom
+    condition:
+      - device_series_3
   - id: iostream_vuart
   - id: zigbee_debug_print
   - id: zigbee_debug_basic

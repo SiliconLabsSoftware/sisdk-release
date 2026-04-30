@@ -174,6 +174,8 @@ enum sli_btmesh_command_id
     sli_btmesh_prov_get_provisioning_records_list_command_id = 0x1c,
     sli_btmesh_prov_get_provisioning_record_data_command_id = 0x1d,
     sli_btmesh_prov_init_provisioning_records_command_id = 0x1e,
+    sli_btmesh_prov_get_ddb_entry_count_command_id = 0x49,
+    sli_btmesh_prov_get_ddb_entry_by_count_command_id = 0x4a,
     sli_btmesh_proxy_connect_command_id = 0x00,
     sli_btmesh_proxy_disconnect_command_id = 0x01,
     sli_btmesh_proxy_set_filter_type_command_id = 0x02,
@@ -705,6 +707,8 @@ enum sli_btmesh_response_id
     sli_btmesh_prov_get_provisioning_records_list_response_id = 0x1c,
     sli_btmesh_prov_get_provisioning_record_data_response_id = 0x1d,
     sli_btmesh_prov_init_provisioning_records_response_id = 0x1e,
+    sli_btmesh_prov_get_ddb_entry_count_response_id = 0x49,
+    sli_btmesh_prov_get_ddb_entry_by_count_response_id = 0x4a,
     sli_btmesh_proxy_connect_response_id = 0x00,
     sli_btmesh_proxy_disconnect_response_id = 0x01,
     sli_btmesh_proxy_set_filter_type_response_id = 0x02,
@@ -1903,6 +1907,13 @@ PACKSTRUCT( struct sl_btmesh_cmd_prov_get_provisioning_record_data_s
 });
 
 typedef struct sl_btmesh_cmd_prov_get_provisioning_record_data_s sl_btmesh_cmd_prov_get_provisioning_record_data_t;
+
+PACKSTRUCT( struct sl_btmesh_cmd_prov_get_ddb_entry_by_count_s
+{
+    uint16_t which;
+});
+
+typedef struct sl_btmesh_cmd_prov_get_ddb_entry_by_count_s sl_btmesh_cmd_prov_get_ddb_entry_by_count_t;
 
 PACKSTRUCT( struct sl_btmesh_cmd_proxy_connect_s
 {
@@ -5839,6 +5850,26 @@ PACKSTRUCT( struct sl_btmesh_rsp_prov_init_provisioning_records_s
 
 typedef struct sl_btmesh_rsp_prov_init_provisioning_records_s sl_btmesh_rsp_prov_init_provisioning_records_t;
 
+PACKSTRUCT( struct sl_btmesh_rsp_prov_get_ddb_entry_count_s
+{
+    uint16_t result;
+    uint16_t count;
+});
+
+typedef struct sl_btmesh_rsp_prov_get_ddb_entry_count_s sl_btmesh_rsp_prov_get_ddb_entry_count_t;
+
+PACKSTRUCT( struct sl_btmesh_rsp_prov_get_ddb_entry_by_count_s
+{
+    uint16_t result;
+    uuid_128 uuid;
+    aes_key_128 device_key;
+    uint16_t netkey_index;
+    uint16_t address;
+    uint8_t elements;
+});
+
+typedef struct sl_btmesh_rsp_prov_get_ddb_entry_by_count_s sl_btmesh_rsp_prov_get_ddb_entry_by_count_t;
+
 PACKSTRUCT( struct sl_btmesh_rsp_proxy_connect_s
 {
     uint16_t result;
@@ -9195,6 +9226,7 @@ PACKSTRUCT( struct sl_btmesh_packet {
     sl_btmesh_cmd_prov_flush_key_refresh_state_t                 cmd_prov_flush_key_refresh_state;
     sl_btmesh_cmd_prov_get_provisioning_records_list_t           cmd_prov_get_provisioning_records_list;
     sl_btmesh_cmd_prov_get_provisioning_record_data_t            cmd_prov_get_provisioning_record_data;
+    sl_btmesh_cmd_prov_get_ddb_entry_by_count_t                  cmd_prov_get_ddb_entry_by_count;
     sl_btmesh_cmd_proxy_connect_t                                cmd_proxy_connect;
     sl_btmesh_cmd_proxy_disconnect_t                             cmd_proxy_disconnect;
     sl_btmesh_cmd_proxy_set_filter_type_t                        cmd_proxy_set_filter_type;
@@ -9635,6 +9667,8 @@ PACKSTRUCT( struct sl_btmesh_packet {
     sl_btmesh_rsp_prov_get_provisioning_records_list_t           rsp_prov_get_provisioning_records_list;
     sl_btmesh_rsp_prov_get_provisioning_record_data_t            rsp_prov_get_provisioning_record_data;
     sl_btmesh_rsp_prov_init_provisioning_records_t               rsp_prov_init_provisioning_records;
+    sl_btmesh_rsp_prov_get_ddb_entry_count_t                     rsp_prov_get_ddb_entry_count;
+    sl_btmesh_rsp_prov_get_ddb_entry_by_count_t                  rsp_prov_get_ddb_entry_by_count;
     sl_btmesh_rsp_proxy_connect_t                                rsp_proxy_connect;
     sl_btmesh_rsp_proxy_disconnect_t                             rsp_proxy_disconnect;
     sl_btmesh_rsp_proxy_set_filter_type_t                        rsp_proxy_set_filter_type;

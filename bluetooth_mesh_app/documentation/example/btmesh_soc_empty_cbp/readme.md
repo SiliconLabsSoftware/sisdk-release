@@ -59,12 +59,12 @@ As described above, an empty example does nothing except broadcast unprovisioned
     - `pip3 install jinja2`
 
     Once these modules have been installed, create the CA certificate with the following command:
-    - `python3 {SDK_folder}\app\bluetooth\script\certificate authorities\create_authority_certificate.py`
+    - `python3 {SDK_folder}\bluetooth_le_app\script\certificate authorities\create_authority_certificate.py`
 
-    The CA certificate can now be found in `{SDK_folder}\app\bluetooth\script\certificate authorities\central_authority\certificate.pem`.
+    The CA certificate can now be found in `{SDK_folder}\bluetooth_le_app\script\certificate authorities\central_authority\certificate.pem`.
 
 3. Run the production_line_tool.py python script on your computer with the following parameters:
-    - `python3 {SDK_folder}\app\bluetooth\script\certificate authorities\production_line_tool.py --serial <serialnumber>`
+    - `python3 {SDK_folder}\bluetooth_le_app\script\certificate authorities\production_line_tool.py --serial <serialnumber>`
 
 4. Build and flash the **Bluetooth Mesh - SoC Empty with Certificate-Based Provisioning Support** example to your device. Do not erase the device beforehand, just overwrite the existing content. The flashing can be done, for example, using the Simplicity Studio internal **Flash Programmer** or external **Simplicity Commander** tools.
 5. Download the Silicon Labs **Bluetooth Mesh** smartphone application available on [iOS](https://apps.apple.com/us/app/bluetooth-mesh-by-silicon-labs/id1411352948) and [Android](https://play.google.com/store/apps/details?id=com.siliconlabs.bluetoothmesh). Make sure to reset the local database by pressing the **Reset local database** button in the menu **More**.

@@ -3,12 +3,12 @@
 The changes described in this file will possibly break the build and/or functionality of an
 existing application. The description serves the purpose of helping to fix the failing build.
 
-# 8.0.1 {#section-8-0-1}
+# 8.0.1 and above {#section-8-0-1}
 
 ## Documentation update
 
 This document is discontinued.
-Information about important changes can now be found in the [Release Notes](https://docs.silabs.com/z-wave/8.0.1/sisdk-zwave-release-notes).
+Information about important changes can now be found in the [Release Notes](https://docs.silabs.com/z-wave/8.0.2/sisdk-zwave-release-notes).
 
 # 8.0.0 {#section-8-0-0}
 

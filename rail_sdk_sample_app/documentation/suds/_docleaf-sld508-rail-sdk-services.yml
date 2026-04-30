@@ -2,7 +2,7 @@ objectType: docLeaf
 id: rail-sdk-services
 access: public
 status: active
-version: "3.0.1"
+version: "3.0.2"
 authors:
   - anyone@silabs.com
 contentType: doxygen

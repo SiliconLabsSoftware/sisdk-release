@@ -355,6 +355,7 @@ typedef struct {
     sli_zigbee_stack_zigbee_remove_child_ipc_msg_t zigbee_remove_child;
     slxi_zigbee_stack_gu_zdo_toggle_dlk_ipc_msg_t gu_zdo_toggle_dlk;
     slxi_zigbee_stack_ignore_incoming_aps_acks_ipc_msg_t ignore_incoming_aps_acks;
+    slxi_zigbee_stack_insecure_debug_generate_trace_ipc_msg_t insecure_debug_generate_trace;
     #endif
     sli_zigbee_stack_get_embernet_passthrough_source_address_ipc_msg_t get_embernet_passthrough_source_address;
     sli_zigbee_stack_get_mac_passthrough_flags_ipc_msg_t get_mac_passthrough_flags;

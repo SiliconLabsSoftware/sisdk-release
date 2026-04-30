@@ -30,7 +30,7 @@
   - name: hardware_board_default_rf_band
   - name: hardware_board_default_rf_band_2400
 - recommends:
-  - id: brd4001a
+  - id: brd4002b
     vendor: silabs
   - id: simple_led
     instance:

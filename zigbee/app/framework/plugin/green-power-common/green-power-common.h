@@ -18,6 +18,8 @@
 #ifndef _SILABS_GREEN_POWER_COMMON_H_
 #define _SILABS_GREEN_POWER_COMMON_H_
 
+#include "zap-type.h"
+
 /**
  * @defgroup green-power-common Green Power Common
  * @ingroup component

@@ -30,9 +30,8 @@
 #include "sl_segmentlcd.h"
 #include "sl_clock_manager.h"
 #include "sl_gpio.h"
-#include "sl_i2cspm.h"
 #include "sl_i2cspm_instances.h"
-#include "sl_si70xx.h"
+#include "sl_rht_unidriver.h"
 #include "sl_sleeptimer.h"
 
 #define TIMEOUT_MS         5000     // Periodic timer duration in ms
@@ -52,16 +51,10 @@ void on_periodic_timeout(sl_sleeptimer_timer_handle_t *handle,
   (void)&data;
 
   // Measure the values for relative humidity and temperature
-  sl_si70xx_measure_rh_and_temp(sl_i2cspm_sensor,
-                                SI7021_ADDR,
-                                &rh_data,
-                                &temp_data);
+  sl_rht_unidriver_measure_rh_and_temp(&rh_data, &temp_data);
 
   // Read the values for relative humidity and temperature
-  sl_si70xx_read_rh_and_temp(sl_i2cspm_sensor,
-                             SI7021_ADDR,
-                             &rh_data,
-                             &temp_data);
+  sl_rht_unidriver_read_rh_and_temp(&rh_data, &temp_data);
   sl_segment_lcd_temp_display(temp_data);
 }
 
@@ -70,9 +63,9 @@ void on_periodic_timeout(sl_sleeptimer_timer_handle_t *handle,
  ******************************************************************************/
 void segment_lcd_app_init(void)
 {
-  // Initialize the Si7021 sensor, sleeptimer, and Segment LCD display
-  sl_si70xx_init(sl_i2cspm_sensor, SI7021_ADDR);
+  // Sleeptimer first: UniDriver probe uses delays. Then RHT (Si70xx or SHT4x) and Segment LCD.
   sl_sleeptimer_init();
+  sl_rht_unidriver_init(sl_i2cspm_sensor);
 
   // Configure LCD to use step down mode and disable unused segments
   // Default display value 0

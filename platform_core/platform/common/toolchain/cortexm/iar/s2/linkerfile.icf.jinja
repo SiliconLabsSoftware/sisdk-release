@@ -146,12 +146,14 @@ define block nvm with alignment = {{ flash_page_size }}
 };
 keep { block nvm };
 
-{%- if logger_enable %}
+{%- if log_section_enable %}
+{%- if log_compact_output_enable %}
 define block logger with alignment = 4
 {
   section log_fmt,
 };
 keep { block logger };
+{%- endif %}
 {%- endif %}
 {%- endif %} {#- trustzone_secure #}
 {%- if trustzone_secure %}
@@ -175,6 +177,11 @@ define block application with fixed order
 {
   readonly section .intvec,
   readonly
+{%- if log_section_enable %}
+{%- if not log_compact_output_enable %}
+  , readonly section log_fmt
+{%- endif %}
+{%- endif %}
 };
 
 define block text_application_ram with alignment = {{ram_code_alignment}}
@@ -241,6 +248,9 @@ do not initialize
   section .reset_reason,
 {%- endif %}
  section .noinit,
+{%- if crash_manager_enable and crash_manager_backend_ram %}
+ section .ram_crash_data.noinit,
+{%- endif %}
  section .stack,
 {%- if trustzone_secure %}
  section .stackseal,
@@ -251,8 +261,10 @@ do not initialize
   section .heap
 {%- endif %}
 {%- if trustzone_secure is not defined %}
-{%- if logger_enable %}
+{%- if log_section_enable %}
+{%- if log_compact_output_enable %}
   , section log_fmt
+{%- endif %}
 {%- endif %}
 {%- endif %}
 };
@@ -278,8 +290,10 @@ place at end of MAIN_FLASH_region {
   block zwavenvm,
   {%- endif %}
   block nvm,
-{%- if logger_enable %}
+{%- if log_section_enable %}
+{%- if log_compact_output_enable %}
   block logger,
+{%- endif %}
 {%- endif %}
 {%- endif %} {#- trustzone_secure #}
 {%- if trustzone_secure %}
@@ -303,4 +317,27 @@ place in RAM_region {
 place in RAM_region {
   block application_heap,
 };
+
+/* Linker file assertions. */
+{%- if memory_ram_size is defined %}
+{%- if memory_ram_start is defined %}
+define symbol memory_ram_end = 0x{{ '%0x' % (memory_ram_start | first) }} + 0x{{ '%0x' % (memory_ram_size | first) }};
+{%- else %}
+define symbol memory_ram_end = 0x{{ '%0x' % sram_addr }} + 0x{{ '%0x' % (memory_ram_size | first) }};
+{%- endif %}
+define symbol physical_ram_end = 0x{{ '%0x' % sram_addr }} + 0x{{ '%0x' % sram_size }};
+check that memory_ram_end <= physical_ram_end,
+  "The template contribution to memory_ram_size exceeds the real device RAM size. Check your SLCC or SLCP file to review the RAM size defined by memory_ram_size.";
+{%- endif %}
+
+{%- if memory_flash_size is defined %}
+{%- if memory_flash_start is defined %}
+define symbol memory_flash_end = 0x{{ '%0x' % (memory_flash_start | first) }} + 0x{{ '%0x' % (memory_flash_size | first) }};
+{%- else %}
+define symbol memory_flash_end = 0x{{ '%0x' % flash_addr }} + 0x{{ '%0x' % (memory_flash_size | first) }};
+{%- endif %}
+define symbol physical_flash_end = 0x{{ '%0x' % flash_addr }} + 0x{{ '%0x' % flash_size }};
+check that memory_flash_end <= physical_flash_end,
+  "The template contribution to memory_flash_size exceeds the available flash_size. Check your SLCC or SLCP file to review the flash size defined by memory_flash_size.";
+{%- endif %}
 

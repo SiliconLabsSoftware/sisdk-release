@@ -17,12 +17,8 @@ fi
 
 #Start VoBLE application
 if [ -e "$VOBLE_APP" ]; then
-  echo "[INFO] Running Voice over Bluetooth Low Energy aplication."
+  echo "[INFO] Running Voice over Bluetooth Low Energy application."
   ./$VOBLE_APP $VOBLE_PARAMETERS
 else
-  echo "[ERR ] Voice over Bluetooth Low Energy aplication does not exist. Exit."  
+  echo "[ERR ] Voice over Bluetooth Low Energy application does not exist. Exit."
 fi
-
-
-
-

@@ -9,10 +9,11 @@ class PhysStudioIEEE802154BPSKOcelot(IPhy):
         phy = self._makePhy(model, model.profiles.IEEE802154BPSK,
                             readable_name='Production IEEE802154 BPSK 868MHz 20kbps PHY',
                             phy_name=phy_name)
-        phy.profile_inputs.base_frequency_hz.value = 868_300_000
+        phy.profile_inputs.base_frequency_hz.value = long(868_300_000)
         phy.profile_inputs.bitrate.value = 20_000
         phy.profile_inputs.bpsk_feature.value = model.vars.bpsk_feature.var_enum.STANDARD_20KBPS
         phy.profile_inputs.xtal_frequency_hz.value = 39000000
+        phy.profile_inputs.channel_spacing_hz.value = 2_000_000
 
         phy.profile_inputs.chcfg_base_frequency_hz.value = 868_300_000
         phy.profile_inputs.chcfg_channel_spacing_hz.value = 2_000_000
@@ -29,10 +30,11 @@ class PhysStudioIEEE802154BPSKOcelot(IPhy):
         phy = self._makePhy(model, model.profiles.IEEE802154BPSK,
                             readable_name='Production IEEE802154 BPSK 915MHz 40kbps PHY',
                             phy_name=phy_name)
-        phy.profile_inputs.base_frequency_hz.value = 915_000_000
+        phy.profile_inputs.base_frequency_hz.value = long(906_000_000)
         phy.profile_inputs.bitrate.value = 40_000
         phy.profile_inputs.bpsk_feature.value = model.vars.bpsk_feature.var_enum.STANDARD_40KBPS
         phy.profile_inputs.xtal_frequency_hz.value = 39000000
+        phy.profile_inputs.channel_spacing_hz.value = 2_000_000
 
         phy.profile_inputs.chcfg_base_frequency_hz.value = 906_000_000
         phy.profile_inputs.chcfg_channel_spacing_hz.value = 2_000_000

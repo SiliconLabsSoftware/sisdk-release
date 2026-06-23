@@ -1,0 +1,21 @@
+id: btl_storage_bootloadinfo_header
+label: Series-3 bootloadinfo API header
+package: bootloader
+description: >
+  Header-only component for btl_storage_bootloadinfo.h. Single owner for package
+  analysis; implementations remain in btl_common_storage / btl_common_storage_single /
+  btl_interface_bootloadinfo* (.c).
+category: Platform|Bootloader|Storage
+quality: production
+ui_hints:
+  visibility: never
+include:
+- path: platform/bootloader/series3/storage/bootloadinfo
+  file_list:
+  - path: btl_storage_bootloadinfo.h
+provides:
+- name: btl_storage_bootloadinfo_header
+metadata:
+  sbom:
+    license: MSLA
+root_path: bootloader

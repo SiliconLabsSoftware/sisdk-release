@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <inttypes.h>
 
 #include "sl_rail.h"
 #include "rail_config.h"
@@ -111,7 +112,7 @@ void rail_app_init(void)
   // Set to IDLE (channel select automatically start RX)
   rail_status = sl_rail_idle(rail_handle, SL_RAIL_IDLE, true);
   if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_warning("Couldn't enter into IDLE, error code %lu\n", rail_status);
+    app_log_warning("Couldn't enter into IDLE, error code 0x%08" PRIX32 "\n", rail_status);
   }
 
   // Get current bitrate
@@ -127,7 +128,7 @@ void rail_app_init(void)
 #endif
 
   print_sample_app_name("Burst Duty Cycle");
-  app_log_info("Bitrate is %lu b/s with %lu us off time and %lu us on time\n",
+  app_log_info("Bitrate is %" PRIu32 " b/s with %" PRIu32 " us off time and %" PRIu32 " us on time\n",
                bit_rate,
                duty_cycle_config.delay_us,
                duty_cycle_config.parameter);

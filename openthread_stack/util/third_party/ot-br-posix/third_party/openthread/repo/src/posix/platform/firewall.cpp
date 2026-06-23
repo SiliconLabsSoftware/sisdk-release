@@ -36,8 +36,13 @@
 
 #include <string.h>
 
+#include <string>
+#include <vector>
+
+#include <openthread/ip6.h>
 #include <openthread/logging.h>
 #include <openthread/netdata.h>
+#include <openthread/thread.h>
 
 #include "common/code_utils.hpp"
 #include "posix/platform/utils.hpp"
@@ -80,20 +85,15 @@ inline otError IpSetManager::SwapIpSets(const char *aSetName1, const char *aSetN
     return ExecuteCommand("%s swap %s %s", kIpsetCommand, aSetName1, aSetName2);
 }
 
-void UpdateIpSets(otInstance *aInstance)
+static void CollectIpSetPrefixesFromNetData(otInstance               *aInstance,
+                                            std::vector<std::string> &aDenyPrefixes,
+                                            std::vector<std::string> &aAllowPrefixes)
 {
-    otError               error    = OT_ERROR_NONE;
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otBorderRouterConfig  config;
-    otIp6Prefix           prefix;
+    otIp6Prefix           meshLocalPrefix;
     char                  prefixBuf[OT_IP6_PREFIX_STRING_SIZE];
-    IpSetManager          ipSetManager;
 
-    // 1. Flush the '*-swap' ipsets
-    SuccessOrExit(error = ipSetManager.FlushIpSet(kIngressAllowDstSwapIpSet));
-    SuccessOrExit(error = ipSetManager.FlushIpSet(kIngressDenySrcSwapIpSet));
-
-    // 2. Update otbr-deny-src-swap
     while (otNetDataGetNextOnMeshPrefix(aInstance, &iterator, &config) == OT_ERROR_NONE)
     {
         if (config.mDp)
@@ -101,27 +101,79 @@ void UpdateIpSets(otInstance *aInstance)
             continue;
         }
         otIp6PrefixToString(&config.mPrefix, prefixBuf, sizeof(prefixBuf));
-        SuccessOrExit(error = ipSetManager.AddToIpSet(kIngressDenySrcSwapIpSet, prefixBuf));
+        aDenyPrefixes.emplace_back(prefixBuf);
     }
-    memcpy(prefix.mPrefix.mFields.m8, otThreadGetMeshLocalPrefix(aInstance)->m8,
-           sizeof(otThreadGetMeshLocalPrefix(aInstance)->m8));
-    prefix.mLength = OT_IP6_PREFIX_BITSIZE;
-    otIp6PrefixToString(&prefix, prefixBuf, sizeof(prefixBuf));
-    SuccessOrExit(error = ipSetManager.AddToIpSet(kIngressDenySrcSwapIpSet, prefixBuf));
 
-    // 3. Update otbr-allow-dst-swap
+    memcpy(meshLocalPrefix.mPrefix.mFields.m8, otThreadGetMeshLocalPrefix(aInstance)->m8,
+           sizeof(otThreadGetMeshLocalPrefix(aInstance)->m8));
+    meshLocalPrefix.mLength = OT_IP6_PREFIX_BITSIZE;
+    otIp6PrefixToString(&meshLocalPrefix, prefixBuf, sizeof(prefixBuf));
+    aDenyPrefixes.emplace_back(prefixBuf);
+
     iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     while (otNetDataGetNextOnMeshPrefix(aInstance, &iterator, &config) == OT_ERROR_NONE)
     {
         otIp6PrefixToString(&config.mPrefix, prefixBuf, sizeof(prefixBuf));
-        SuccessOrExit(error = ipSetManager.AddToIpSet(kIngressAllowDstSwapIpSet, prefixBuf));
+        aAllowPrefixes.emplace_back(prefixBuf);
+    }
+}
+
+static otError ApplyOtbrIngressDenyAndAllowIpSets(const std::vector<std::string> &aDenyPrefixes,
+                                                  const std::vector<std::string> &aAllowPrefixes)
+{
+    otError      error = OT_ERROR_NONE;
+    IpSetManager ipSetManager;
+
+    SuccessOrExit(error = ipSetManager.FlushIpSet(kIngressAllowDstSwapIpSet));
+    SuccessOrExit(error = ipSetManager.FlushIpSet(kIngressDenySrcSwapIpSet));
+
+    for (const std::string &prefix : aDenyPrefixes)
+    {
+        SuccessOrExit(error = ipSetManager.AddToIpSet(kIngressDenySrcSwapIpSet, prefix.c_str()));
     }
 
-    // 4. Swap ipsets to let them take effect
+    for (const std::string &prefix : aAllowPrefixes)
+    {
+        SuccessOrExit(error = ipSetManager.AddToIpSet(kIngressAllowDstSwapIpSet, prefix.c_str()));
+    }
+
     SuccessOrExit(error = ipSetManager.SwapIpSets(kIngressDenySrcSwapIpSet, kIngressDenySrcIpSet));
     SuccessOrExit(error = ipSetManager.SwapIpSets(kIngressAllowDstSwapIpSet, kIngressAllowDstIpSet));
 
 exit:
+    return error;
+}
+
+void ApplyOtbrIngressAllowDstPrefixes(const char *const *aPrefixes, size_t aCount)
+{
+    otError      error = OT_ERROR_NONE;
+    IpSetManager ipSetManager;
+
+    SuccessOrExit(error = ipSetManager.FlushIpSet(kIngressAllowDstSwapIpSet));
+
+    for (size_t i = 0; i < aCount; i++)
+    {
+        SuccessOrExit(error = ipSetManager.AddToIpSet(kIngressAllowDstSwapIpSet, aPrefixes[i]));
+    }
+
+    SuccessOrExit(error = ipSetManager.SwapIpSets(kIngressAllowDstSwapIpSet, kIngressAllowDstIpSet));
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        otLogWarnPlat("Firewall - failed to refresh otbr-ingress-allow-dst: %s", otThreadErrorToString(error));
+    }
+}
+
+void UpdateIpSets(otInstance *aInstance)
+{
+    otError                  error = OT_ERROR_NONE;
+    std::vector<std::string> denyPrefixes;
+    std::vector<std::string> allowPrefixes;
+
+    CollectIpSetPrefixesFromNetData(aInstance, denyPrefixes, allowPrefixes);
+    error = ApplyOtbrIngressDenyAndAllowIpSets(denyPrefixes, allowPrefixes);
+
     if (error != OT_ERROR_NONE)
     {
         otLogWarnPlat("Firewall - failed to update ipsets: %s", otThreadErrorToString(error));

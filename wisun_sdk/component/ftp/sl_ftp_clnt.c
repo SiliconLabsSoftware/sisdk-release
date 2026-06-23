@@ -258,12 +258,8 @@ static osThreadId_t _ftp_clnt_thr = NULL;
 static const osThreadAttr_t _ftp_clnt_thr_attr = {
   .name        = "FtpClntThread",
   .attr_bits   = osThreadDetached,
-  .cb_mem      = NULL,
-  .cb_size     = 0,
-  .stack_mem   = NULL,
   .stack_size  = (SL_FTP_CLNT_STACK_SIZE_WORD * sizeof(void *)) & 0xFFFFFFF8U,
-  .priority    = osPriorityNormal7,
-  .tz_module   = 0
+  .priority    = osPriorityNormal7
 };
 
 /// FTP Client message queue ID

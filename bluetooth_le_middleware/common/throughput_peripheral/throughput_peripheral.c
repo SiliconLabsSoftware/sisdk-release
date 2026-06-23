@@ -3,7 +3,7 @@
  * @brief Core logic for throughput test peripheral role API.
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -52,9 +52,9 @@
  *******************************  DEFINITIONS   ********************************
  ******************************************************************************/
 // Size of the arrays for sending and receiving
-#define THROUGHPUT_TX_DATA_SIZE                  255
+#define THROUGHPUT_TX_DATA_SIZE                     THROUGHPUT_MAXIMUM_MTU_SIZE
 // Refresh RSSI timer period
-#define THROUGHPUT_TX_REFRESH_TIMER_PERIOD       1000
+#define THROUGHPUT_TX_REFRESH_TIMER_PERIOD          1000
 // Hardware clock ticks that equal one second
 #define HW_TICKS_PER_SECOND                         (uint16_t)(32768)
 // GATT operation header byte count
@@ -64,7 +64,7 @@
 // Header byte count
 #define L2CAP_HEADER                                4
 // Indication timeout period
-#define THROUGHPUT_TX_INDICATION_TIMEOUT         500
+#define THROUGHPUT_TX_INDICATION_TIMEOUT            500
 // Minimum TX power
 #define CONFIG_TX_POWER_MIN                        -100
 
@@ -126,10 +126,10 @@ static bool finish_test = false;
 static bool send_transmission_state = false;
 
 /// Data size for indication
-static uint16_t indication_data_size = 0;
+static throughput_data_size_t indication_data_size = 0;
 
 /// Data size for notification
-static uint16_t notification_data_size = 0;
+static throughput_data_size_t notification_data_size = 0;
 
 /// Data for notification
 static uint8_t notification_data[THROUGHPUT_TX_DATA_SIZE] = { 0 };
@@ -187,11 +187,11 @@ static sl_bt_connection_power_reporting_mode_t power_control_enabled
   = sl_bt_connection_power_reporting_disable;
 
 /// Requested notification data size
-static uint8_t requested_notification_size =
+static throughput_data_size_t requested_notification_size =
   THROUGHPUT_PERIPHERAL_DATA_TRANSFER_SIZE_NOTIFICATIONS;
 
 /// Requested indication data size
-static uint8_t requested_indication_size =
+static throughput_data_size_t requested_indication_size =
   THROUGHPUT_PERIPHERAL_DATA_TRANSFER_SIZE_INDICATIONS;
 
 /// Service handle
@@ -360,7 +360,7 @@ static void throughput_peripheral_advertising_start(void)
                                          sl_bt_gap_phy_coded);
 
   app_assert( (sc == SL_STATUS_OK) || (sc == SL_STATUS_INVALID_PARAMETER),
-              "[E: 0x%04x] Failed to set CODED PHY for the advertistment\n",
+              "[E: 0x%04x] Failed to set CODED PHY for the advertisement\n",
               (int)sc);
 
   if (sc == SL_STATUS_OK) {
@@ -392,6 +392,11 @@ static void throughput_peripheral_calculate_notification_size(void)
                                                                     + NOTIFICATION_GATT_HEADER))
                                     / peripheral_state.pdu_size
                                     * peripheral_state.pdu_size);
+
+        app_log_info("MTU: %d, PDU: %d, notification_size: %d" APP_LOG_NL,
+                     peripheral_state.mtu_size,
+                     peripheral_state.pdu_size,
+                     notification_data_size);
       } else {
         // Single over-the-air packet, but accommodate room for headers.
         if ((peripheral_state.pdu_size - peripheral_state.mtu_size) <= L2CAP_HEADER) {
@@ -479,6 +484,12 @@ static void check_received_data(uint8_t * data, uint8_t len)
 static void throughput_peripheral_generate_notifications_data(void)
 {
   notification_data[0] = send_counter;
+
+  if (notification_data_size > sizeof(notification_data)) {
+    app_log_status_error_f(SL_STATUS_WOULD_OVERFLOW, "Please configure notification_data array size!" APP_LOG_NL);
+    notification_data_size = sizeof(notification_data);
+  }
+
   for (int i = 1; i < notification_data_size; i++) {
     notification_data[i] = (uint8_t) 'a' + (uint8_t) ((i - 1) % 26);
   }
@@ -491,6 +502,12 @@ static void throughput_peripheral_generate_notifications_data(void)
 static void throughput_peripheral_generate_indications_data(void)
 {
   indication_data[0] = send_counter;
+
+  if (indication_data_size > sizeof(indication_data)) {
+    app_log_status_error_f(SL_STATUS_WOULD_OVERFLOW, "Please configure indication_data array size!" APP_LOG_NL);
+    indication_data_size = sizeof(indication_data);
+  }
+
   for (int i = 1; i < indication_data_size; i++) {
     indication_data[i] = (uint8_t) 'a' + (uint8_t) ((i - 1) % 26);
   }
@@ -950,7 +967,7 @@ void throughput_peripheral_enable(void)
   peripheral_state.mode               = THROUGHPUT_PERIPHERAL_MODE_DEFAULT;
   peripheral_state.tx_power_requested = THROUGHPUT_PERIPHERAL_TX_POWER;
   peripheral_state.rssi               = 0;
-  peripheral_state.phy                = sl_bt_gap_phy_coding_1m_uncoded;
+  peripheral_state.phy                = sl_bt_gap_phy_coding_2m_uncoded;
   peripheral_state.interval           = 0;
   peripheral_state.pdu_size           = 0;
   peripheral_state.mtu_size           = THROUGHPUT_PERIPHERAL_MTU_SIZE;
@@ -1391,9 +1408,9 @@ sl_status_t throughput_peripheral_set_tx_power(throughput_tx_power_t tx_power,
 /**************************************************************************//**
  * Sets the the transmission sizes.
  *****************************************************************************/
-sl_status_t throughput_peripheral_set_data_size(uint8_t mtu,
-                                                uint8_t ind_data,
-                                                uint8_t not_data)
+sl_status_t throughput_peripheral_set_data_size(throughput_mtu_size_t mtu,
+                                                throughput_data_size_t ind_data,
+                                                throughput_data_size_t not_data)
 {
   throughput_peripheral_rta_acquire();
 
@@ -1848,12 +1865,12 @@ void cli_throughput_peripheral_data_set(sl_cli_command_arg_t *arguments)
     CLI_RESPONSE(CLI_ERROR);
     return;
   }
-  uint8_t mtu, ind_data, not_data;
+  uint16_t mtu, ind_data, not_data;
   sl_status_t sc;
   if (peripheral_state.state != THROUGHPUT_STATE_TEST) {
-    mtu = sl_cli_get_argument_uint8(arguments, 0);
-    ind_data = sl_cli_get_argument_uint8(arguments, 1);
-    not_data = sl_cli_get_argument_uint8(arguments, 2);
+    mtu = sl_cli_get_argument_uint16(arguments, 0);
+    ind_data = sl_cli_get_argument_uint16(arguments, 1);
+    not_data = sl_cli_get_argument_uint16(arguments, 2);
     sc = throughput_peripheral_set_data_size(mtu,
                                              ind_data,
                                              not_data);

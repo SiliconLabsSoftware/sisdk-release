@@ -40,8 +40,8 @@
 // -----------------------------------------------------------------------------
 // Error codes
 typedef enum {
-  INVALID_APP_STATE,
-  FAILED_TO_SET_RADIO_CONFIG,
+  INVALID_APP_STATE = 0,
+  FAILED_TO_SET_RADIO_CONFIG = 1,
   ERROR_CODES_COUNT
 } error_code_t;
 

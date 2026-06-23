@@ -291,8 +291,8 @@ uint16_t spi_readHalfword(void)
   uint16_t retval = 0;
   USART_Tx(BTL_DRIVER_SPI_USART, 0xFF);
   USART_Tx(BTL_DRIVER_SPI_USART, 0xFF);
-  retval = USART_Rx(BTL_DRIVER_SPI_USART) << 8;
-  retval |= USART_Rx(BTL_DRIVER_SPI_USART);
+  retval = (uint16_t)((uint16_t)USART_Rx(BTL_DRIVER_SPI_USART) << 8);
+  retval |= (uint16_t)USART_Rx(BTL_DRIVER_SPI_USART);
 
   return retval;
 }

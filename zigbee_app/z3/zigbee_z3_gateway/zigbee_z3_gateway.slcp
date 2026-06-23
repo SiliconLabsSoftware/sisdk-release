@@ -1,5 +1,5 @@
 project_name: zigbee_z3_gateway
-label: Zigbee - Z3Gateway
+label: Zigbee - Host Z3 Gateway
 package: zigbee
 category: Zigbee Host Application
 quality: production

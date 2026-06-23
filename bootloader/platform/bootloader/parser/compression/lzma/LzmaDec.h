@@ -20,10 +20,6 @@
 
 EXTERN_C_BEGIN
 
-/* #define _LZMA_PROB32 */
-/* _LZMA_PROB32 can increase the speed on some CPUs,
-   but memory usage for CLzmaDec::probs will be doubled in that case */
-
 #ifdef _LZMA_PROB32
 #define CLzmaProb UInt32
 #else

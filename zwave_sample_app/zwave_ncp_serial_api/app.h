@@ -31,6 +31,8 @@
 #include <ZW_TransportSecProtocol.h>
 #endif
 
+#include "ZW_application_transport_interface.h"
+
 #ifdef ZW_CONTROLLER
 #include <ZW_controller_api.h>
 #endif
@@ -194,6 +196,7 @@ typedef enum {
 #else
 #define SUPPORT_ZW_PORT_STATUS                          0
 #endif
+
 /* ZW_EnableSUC() no longer exists in the library */
 
 /* */
@@ -253,6 +256,28 @@ typedef enum {
 } eSerialAPIStartedCapabilities;
 
 extern void ApplicationNodeUpdate(uint8_t bStatus, uint16_t nodeID, uint8_t *pCmd, uint8_t bLen);
+
+#ifdef ZW_CONTROLLER_BRIDGE
+#include <ZW_application_transport_interface.h>
+void ApplicationCommandHandler_Bridge(SReceiveMulti *pReciveMulti);
+#else
+void ApplicationCommandHandler(void *pSubscriberContext, SZwaveReceivePackage *pRxPackage);
+#endif
+
+typedef void (*urgent_app_callback_t)(const SZwaveReceivePackage *p_rx_package);
+typedef bool (*keep_alive_callback_t)(node_id_t node_id);
+
+/**
+ * Set an application callback for reception of urgent/priority frames.
+ * @param callback Pointer to the callback function.
+ */
+void set_urgent_app_callback(urgent_app_callback_t callback);
+
+/**
+ * @brief Set the keep-alive callback invoked when a frame is received from a node.
+ * @param callback Function pointer: bool callback(node_id_t nodeId). NULL to unregister.
+ */
+void set_keep_alive_callback(keep_alive_callback_t callback);
 
 /* Should be enough */
 #define BUF_SIZE_RX 168

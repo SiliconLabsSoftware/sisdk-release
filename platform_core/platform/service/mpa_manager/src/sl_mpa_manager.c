@@ -124,17 +124,15 @@ sl_status_t sl_mpa_manager_configure_region(sl_mpa_manager_region_t* handle,
   initial_region = *handle;
 
   // Modify region and its boundaries
-  *handle = (sl_mpa_manager_region_t) {
-    .base_address = base_address,
-    .size = size,
-    .attribute = attribute,
-    .start_boundary.region = (void*)handle,
-    .start_boundary.address = (uint32_t)base_address,
-    .start_boundary.is_end = false,
-    .end_boundary.region = (void*)handle,
-    .end_boundary.address = (uint32_t)base_address + (uint32_t)size,
-    .end_boundary.is_end = true,
-  };
+  handle->base_address = base_address;
+  handle->size = size;
+  handle->attribute = attribute;
+  handle->start_boundary.region = (void*)handle;
+  handle->start_boundary.address = (uint32_t)base_address;
+  handle->start_boundary.is_end = false;
+  handle->end_boundary.region = (void*)handle;
+  handle->end_boundary.address = (uint32_t)base_address + (uint32_t)size;
+  handle->end_boundary.is_end = true;
 
   is_region_registered = is_region_handle_registered(handle);
 

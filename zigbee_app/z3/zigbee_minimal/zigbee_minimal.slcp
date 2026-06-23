@@ -1,5 +1,5 @@
 project_name: zigbee_minimal
-label: Zigbee - Minimal
+label: Zigbee - SoC Minimal
 package: zigbee
 category: Zigbee Application
 quality: production
@@ -28,8 +28,13 @@ component:
   - id: zigbee_update_tc_link_key
   - id: zigbee_application_bootloader
   - id: clock_manager
-  # Platform - enable LTO for gcc
+  # Platform - enable LTO for gcc and llvm
   - id: toolchain_gcc_lto
+    condition:
+      - toolchain_gcc
+  - id: toolchain_llvm_lto
+    condition:
+      - toolchain_llvm
 
 configuration:
   - name: SL_BOARD_ENABLE_VCOM
@@ -114,5 +119,9 @@ filter:
   - name: Project Difficulty
     value: [Advanced]
 tag:
+  - hwfilter:ram:64k
   - hwfilter:device:device_supports_zigbee
   - hwfilter:board:simple_led:led0
+  - toolchain:gcc
+  - toolchain:iar
+  - toolchain:llvm

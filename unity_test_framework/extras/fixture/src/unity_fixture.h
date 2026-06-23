@@ -1,20 +1,27 @@
-/* Copyright (c) 2010 James Grenning and Contributed to Unity Project
- * ==========================================
- *  Unity Project - A Test Framework for C
- *  Copyright (c) 2007 Mike Karlesky, Mark VanderVoord, Greg Williams
- *  [Released under MIT License. Please refer to license.txt for details]
- * ========================================== */
+/* =========================================================================
+    Unity - A Test Framework for C
+    ThrowTheSwitch.org
+    Copyright (c) 2007-25 Mike Karlesky, Mark VanderVoord, & Greg Williams
+    SPDX-License-Identifier: MIT
+========================================================================= */
 
 #ifndef UNITY_FIXTURE_H_
 #define UNITY_FIXTURE_H_
 
 #include "unity.h"
-#include "unity_internals.h"
 #include "unity_fixture_internals.h"
 
 #ifndef UNITY_FIXTURE_NO_EXTRAS
 #include "unity_memory.h"
 #endif
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+#include "unity_internals.h"
+
 
 int UnityMain(int argc, const char* argv[], void (*runAllTests)(void));
 
@@ -78,6 +85,10 @@ int UnityMain(int argc, const char* argv[], void (*runAllTests)(void));
 #define LONGS_EQUAL(expected, actual)                  TEST_ASSERT_EQUAL_INT((expected), (actual))
 #define STRCMP_EQUAL(expected, actual)                 TEST_ASSERT_EQUAL_STRING((expected), (actual))
 #define DOUBLES_EQUAL(expected, actual, delta)         TEST_ASSERT_DOUBLE_WITHIN((delta), (expected), (actual))
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* UNITY_FIXTURE_H_ */

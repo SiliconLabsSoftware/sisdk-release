@@ -80,3 +80,6 @@ readme:
   - path: readme.md
 ui_hints:
   highlight: readme.md
+tag:
+  - hardware:component:coulomb_counter
+  - hwfilter:device:device_has_coulomb_counter

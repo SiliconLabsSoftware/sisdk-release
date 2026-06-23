@@ -55,7 +55,7 @@ extern osMutexId_t sli_zigbee_af_event_mutex_id;
 #endif // SL_CATALOG_KERNEL_PRESENT
 void sl_zigbee_app_framework_force_stop(void)
 {
-  sl_zigbee_core_debug_print("Sleep\n");
+  sl_zigbee_af_cli_print("Sleep\n");
 
   sl_802154_cancel_polls();
   sl_802154_purge_transmit_queue();

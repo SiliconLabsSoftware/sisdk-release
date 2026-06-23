@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "printf.h"
 #include "app_log.h"
@@ -71,14 +72,14 @@
 typedef struct {
   uint8_t addr[8];
   int8_t rssi_dbm;
-  light_state_t light_state;
-  demo_control_command_type_t light_mode;
-  light_mode_t communication_state;
+  bool is_light_on;
+  demo_control_command_type_t last_response_type;
+  light_app_state_t state;
 } light_t;
 
 /// This structure contains the Switch module's details
 typedef struct {
-  switch_mode_t mode;
+  switch_app_state_t state;
   char *switch_text[2];
   char switch_text_buffer[10];
   bool is_paired;
@@ -102,34 +103,20 @@ static void copy_light_address_to_payload(void);
  * Check if an advertise message come from the Light device
  * @return the advertisement type came from the Light device
  *****************************************************************************/
-static demo_control_command_type_t get_light_response_type(uint8_t* rx_fifo);
+static demo_control_command_type_t get_light_response_type(const uint8_t* rx_fifo);
 
 /**************************************************************************//**
  * Get light mode from the rx_fifo
  *
- * @param[out] FIFO with the received message
- * @return the light's state: READY or ADVERT
+ * @param[out] rx_fifo with the received message
+ * @return the light bulb's state: ON / OFF
  *****************************************************************************/
-static light_state_t get_light_mode(uint8_t* rx_fifo);
+static bool get_light_bulb_state(const uint8_t* rx_fifo);
 
 /**************************************************************************//**
  * Update the RSSI an ID values of the Light module
  *****************************************************************************/
 static void update_light_RSSI(void);
-
-/**************************************************************************//**
- * The SCAN state's function in the state machine
- *
- * @param[in] rail_handle
- *****************************************************************************/
-static void  handle_scan_state(sl_rail_handle_t rail_handle);
-
-/**************************************************************************//**
- * The LINKED state's function in the state machine
- *
- * @param[in] rail_handle
- *****************************************************************************/
-static void  handle_linked_state(sl_rail_handle_t rail_handle);
 
 /**************************************************************************//**
  * Receive the wireless packet, and save it in a buffer
@@ -160,25 +147,18 @@ static void transmit_packet(sl_rail_handle_t rail_handle);
 static void get_light_state_from_rx_fifo(void);
 
 /**************************************************************************//**
- * Check if the Light node is "soc-light_rail-dmp"
- *
- * @return FALSE if it is a "soc-light_rail-dmp", TRUE anyway
+ * Write to CLI the change of the Light state
  *****************************************************************************/
-static bool is_that_a_new_light(void);
+static void cli_log_state_machine_change(void);
 
 /**************************************************************************//**
  * Write to CLI the change of the Light state
  *****************************************************************************/
-static void cli_state_machine_change(void);
-
-/**************************************************************************//**
- * Write to CLI the change of the Light state
- *****************************************************************************/
-static void cli_light_side_light_bulb_toggle(void);
+static void cli_log_light_side_light_bulb_toggle(void);
 /**************************************************************************//**
  * Write to CLI the change of the Switch state
  *****************************************************************************/
-static void cli_switch_side_light_bulb_toggle(void);
+static void cli_log_switch_side_light_bulb_toggle(void);
 
 /**************************************************************************//**
  * Check if the Switch and Light nodes are connected
@@ -189,9 +169,9 @@ static void check_paired_state(void);
 //                                Global Variables
 // -----------------------------------------------------------------------------
 // Light bulb toggle required from from CLI command
-bool cli_toggle_light_required = false;
+bool light_bulb_toggle_required = false;
 //State change in the State machine required from CLI command
-bool cli_change_state_required = false;
+bool state_change_required = false;
 
 // -----------------------------------------------------------------------------
 //                                Static Variables
@@ -199,17 +179,14 @@ bool cli_change_state_required = false;
 static light_t light_module = {
   .addr = { 0 },
   .rssi_dbm = -128,
-  .light_state = LIGHT_STATE_OFF,
+  .is_light_on = false,
 };
 
 static switch_t switch_module = {
-  .mode = SWITCH_MODE_SCAN,
+  .state = SWITCH_STATE_SCAN,
   .switch_text = { "SCAN:", "LINK:" },
   .is_paired = false,
 };
-
-/// The variable shows the actual state of the state machine
-state_t state = S_SCAN_STATE;
 
 /// Contains the last RAIL Rx/Tx error events
 static volatile uint64_t current_rail_err = 0;
@@ -230,12 +207,6 @@ static uint8_t *start_of_packet = &rx_buffer[0];
 static uint8_t app_name[7] = "Switch";
 // Increase value if packet has received, decrease after process it
 static volatile bool packet_received = false;
-// It shows if there was a transition between the state machine states
-static bool state_changed = true;
-// Light bulb toggle required from PB0 button push
-static bool light_bulb_toggle_required = false;
-// State change in the State machine required from PB1 button push
-static bool state_change_required = false;
 // Indicates a button push on the board
 static bool button_was_pushed = false;
 // Hold information about the incoming message
@@ -256,16 +227,63 @@ void app_process_action(void)
   sl_rail_handle_t rail_handle = sl_rail_util_get_handle(SL_RAIL_UTIL_HANDLE_INST0);
 
   if (current_rail_err != 0) {
-    app_log_error("RAIL Error occurred\nEvents: %lld\n", current_rail_err);
+    app_log_error("RAIL Error occurred\nEvents: 0x%" PRIX64 "\n", current_rail_err);
     current_rail_err = 0;
   }
+  if (state_change_required) {
+    state_change_required = false;
+    switch (switch_module.state) {
+      case SWITCH_STATE_LINKED:
+        switch_module.state = SWITCH_STATE_SCAN;
+        break;
+      case SWITCH_STATE_SCAN:
+        switch_module.state = SWITCH_STATE_LINKED;
+        break;
+    }
+    cli_log_state_machine_change();
+    check_paired_state();
+    display_all_information();
+  }
 
-  switch (state) {
-    case S_SCAN_STATE:
-      handle_scan_state(rail_handle);
+  switch (switch_module.state) {
+    case SWITCH_STATE_SCAN:
+      if (packet_received) {
+        packet_received = false;
+        save_received_packet(rail_handle);
+        // Get the highest Light node based on the  Received Signal Strength Indicator
+        update_light_RSSI();
+        // Display the data
+        display_all_information();
+        get_light_state_from_rx_fifo();
+      }
       break;
-    case S_LINK_STATE:
-      handle_linked_state(rail_handle);
+
+    case SWITCH_STATE_LINKED:
+      // If there is any received message, process it
+      if (packet_received) {
+        packet_received = false;
+        save_received_packet(rail_handle);
+        get_light_state_from_rx_fifo();
+        // If Switch side button push happened
+        if (button_was_pushed) {
+          button_was_pushed = false;
+          light_module.is_light_on = get_light_bulb_state(start_of_packet);
+          cli_log_switch_side_light_bulb_toggle();
+          // If not, but according to the incoming message,
+          // light bulb should toggle
+        } else if (light_module.is_light_on != get_light_bulb_state(start_of_packet)) {
+          light_module.is_light_on = get_light_bulb_state(start_of_packet);
+          cli_log_light_side_light_bulb_toggle();
+        }
+        display_all_information();
+        check_paired_state();
+      }
+      if (light_bulb_toggle_required) {
+        light_bulb_toggle_required = false;
+        button_was_pushed = true;
+        transmit_packet(rail_handle);
+        display_all_information();
+      }
       break;
   }
 }
@@ -330,113 +348,6 @@ void init_display(void)
 // -----------------------------------------------------------------------------
 //                          Static Function Definitions
 // -----------------------------------------------------------------------------
-/******************************************************************************
- * Handle SCAN-state related tasks
- *****************************************************************************/
-static void handle_scan_state(sl_rail_handle_t rail_handle)
-{
-  // Enter actual state, code just runs once
-  if (state_changed) {
-    // Store the actual state
-    switch_module.mode = SWITCH_MODE_SCAN;
-    display_all_information();
-    check_paired_state();
-    state_changed = false;
-  }
-
-  if (packet_received) {
-    packet_received = false;
-    save_received_packet(rail_handle);
-    // Get the highest Light node based on the  Received Signal Strength Indicator
-    update_light_RSSI();
-    // Display the data
-    display_all_information();
-    // Check if is there a new version of light
-    if (is_that_a_new_light()) {
-      get_light_state_from_rx_fifo();
-    }
-  }
-
-  // If CLI action occurred, move to next state
-  if (cli_change_state_required) {
-    cli_change_state_required = false;
-    cli_state_machine_change();
-    state = S_LINK_STATE;
-    state_changed = true;
-    state_change_required = false;
-  }
-  // If button was pushed, move to next state
-  if (state_change_required) {
-    state = S_LINK_STATE;
-    state_changed = true;
-    state_change_required = false;
-    cli_state_machine_change();
-  }
-}
-
-/******************************************************************************
- * Handle LINKED-state related tasks
- *****************************************************************************/
-static void handle_linked_state(sl_rail_handle_t rail_handle)
-{
-  // Enter actual state, code just runs once
-  if (state_changed) {
-    // Store the actual state
-    switch_module.mode = SWITCH_MODE_LINKED;
-    display_all_information();
-    check_paired_state();
-    state_changed = false;
-  }
-  // If there is any received message, process it
-  if (packet_received) {
-    packet_received = false;
-    save_received_packet(rail_handle);
-    get_light_state_from_rx_fifo();
-    check_paired_state();
-    // If Switch side button push happened
-    if (button_was_pushed) {
-      cli_switch_side_light_bulb_toggle();
-      // If not, but according to the incoming message,
-      // light bulb should toggle
-    } else if (light_module.light_state != get_light_mode(start_of_packet)) {
-      cli_light_side_light_bulb_toggle();
-    }
-    button_was_pushed = false;
-    light_module.light_state = get_light_mode(start_of_packet);
-    display_all_information();
-  }
-
-  // If CLI action occurred, move to next state
-  if (cli_change_state_required) {
-    cli_change_state_required = false;
-    cli_state_machine_change();
-    state = S_SCAN_STATE;
-    state_changed = true;
-    state_change_required = false;
-  }
-
-  // If CLI action occurred, toggle the light bulb
-  if (cli_toggle_light_required) {
-    cli_toggle_light_required = false;
-    button_was_pushed = true;
-    transmit_packet(rail_handle);
-    display_all_information();
-  }
-
-  // If PB1 button pushed, move to next state
-  if (state_change_required) {
-    state = S_SCAN_STATE;
-    state_changed = true;
-    state_change_required = false;
-    cli_state_machine_change();
-  }
-  // If PB0 button pushed, toggle the light bulb
-  if (light_bulb_toggle_required) {
-    transmit_packet(rail_handle);
-    button_was_pushed = true;
-    light_bulb_toggle_required = false;
-  }
-}
 
 /******************************************************************************
  * Check if the Switch and Light nodes are connected
@@ -444,34 +355,34 @@ static void handle_linked_state(sl_rail_handle_t rail_handle)
 static void check_paired_state(void)
 {
   // If Light node is in READY mode and Switch node is in LINKED mode
-  bool is_paired = ((start_of_packet[DEVICE_STATUS_PAYLOAD_BYTE] & 0x01) && (switch_module.mode == SWITCH_MODE_LINKED));
+  bool light_is_ready =
+    (start_of_packet[DEVICE_STATUS_PAYLOAD_BYTE] & DEVICE_STATUS_LIGHT_STATE_BIT);
+  bool switch_is_linked = (switch_module.state == SWITCH_STATE_LINKED);
+  bool is_paired = light_is_ready && switch_is_linked;
+
   if (switch_module.is_paired != is_paired) {
     switch_module.is_paired = is_paired;
-    char text_tmp[32];
-    snprintf(text_tmp, sizeof(text_tmp), "%s%s%s",
-             "NODES ARE IN ",
-             ((is_paired == true) ? "PAIRED " : "NOT PAIRED "),
-             "STATE\n");
-    app_log_info(text_tmp);
+    app_log_info(
+      "NODES ARE IN %s STATE\n",
+      (is_paired == true) ? "PAIRED " : "NOT PAIRED "
+      );
   }
 }
 /******************************************************************************
  * Write to CLI the change of the Light state
  *****************************************************************************/
-static void cli_state_machine_change(void)
+static void cli_log_state_machine_change(void)
 {
-  char text_tmp[64];
 #if defined(_SILICON_LABS_32B_SERIES_2)
   uint64_t sys_id = SYSTEM_GetUnique();
 #else
   uint64_t sys_id = sl_hal_system_get_unique();
 #endif
-  snprintf(text_tmp, sizeof(text_tmp), "%s%04X%s%s",
-           "State changing event at Switch Node [",
-           ((uint16_t)(sys_id & 0x0000FFFF)),
-           "]. ",
-           ((switch_module.mode == SWITCH_MODE_SCAN) ? "Mode: LINK\n" : "Mode: SCAN\n"));
-  app_log_info(text_tmp);
+  app_log_info(
+    "State changing event at Switch Node [0x%04" PRIX16 "]. %s\n",
+    (uint16_t)(sys_id & 0x0000FFFF),
+    (switch_module.state == SWITCH_STATE_LINKED) ? "Mode: LINK" : "Mode: SCAN"
+    );
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   app_task_notify();
 #endif
@@ -480,21 +391,18 @@ static void cli_state_machine_change(void)
 /******************************************************************************
  * Write to CLI the change of the Switch state
  *****************************************************************************/
-static void cli_switch_side_light_bulb_toggle(void)
+static void cli_log_switch_side_light_bulb_toggle(void)
 {
-  char text_tmp[64];
 #if defined(_SILICON_LABS_32B_SERIES_2)
   uint64_t sys_id = SYSTEM_GetUnique();
 #else
   uint64_t sys_id = sl_hal_system_get_unique();
 #endif
-  snprintf(text_tmp, sizeof(text_tmp), "%s%04X%s%s",
-           "Led Toggle event at Switch Node [",
-           ((uint16_t)(sys_id & 0x0000FFFF)),
-           "]. ",
-           ((light_module.light_state == LIGHT_STATE_OFF) ? "Light Bulb is ON\n" : "Light Bulb is OFF\n"));
-  app_log_info(text_tmp);
-  button_was_pushed = true;
+  app_log_info(
+    "Led Toggle event at Switch Node [0x%04" PRIX16 "]. %s",
+    (uint16_t)(sys_id & 0x0000FFFF),
+    (light_module.is_light_on ? "Light Bulb is ON\n" : "Light Bulb is OFF\n")
+    );
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   app_task_notify();
 #endif
@@ -503,15 +411,13 @@ static void cli_switch_side_light_bulb_toggle(void)
 /******************************************************************************
  * Write to CLI the change of the Light state
  *****************************************************************************/
-static void cli_light_side_light_bulb_toggle(void)
+static void cli_log_light_side_light_bulb_toggle(void)
 {
-  char text_tmp[64];
-  snprintf(text_tmp, sizeof(text_tmp), "%s%04X%s%s",
-           "Led Toggle event at Light Node [",
-           *((uint16_t*)light_module.addr),
-           "]. ",
-           ((light_module.light_state == LIGHT_STATE_OFF) ? "Light Bulb is ON\n" : "Light Bulb is OFF\n"));
-  app_log_info(text_tmp);
+  app_log_info(
+    "Led Toggle event at Light Node [0x%04" PRIX16 "]. %s",
+    *((uint16_t*)light_module.addr),
+    (light_module.is_light_on ? "Light Bulb is ON\n" : "Light Bulb is OFF\n")
+    );
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   app_task_notify();
 #endif
@@ -526,12 +432,12 @@ static void transmit_packet(sl_rail_handle_t rail_handle)
   set_role(&out_packet[DEMO_CONTROL_PAYLOAD_BYTE], DEMO_CONTROL_ROLE_SWITCH);
   copy_light_address_to_payload();
   // Send out a light bulb toggle command
-  set_command_type(&out_packet[DEMO_CONTROL_PAYLOAD_BYTE], LIGHT_TOGGLE);
+  set_command_type(&out_packet[DEMO_CONTROL_PAYLOAD_BYTE], CMD_TYPE_LIGHT_TOGGLE);
   set_switch_state_in_payload();
   prepare_packet(rail_handle, out_packet, sizeof(out_packet));
   rail_status = sl_rail_start_tx(rail_handle, get_selected_channel(), SL_RAIL_TX_OPTIONS_DEFAULT, NULL);
   if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_warning("sl_rail_start_tx() result: %lu\n ", rail_status);
+    app_log_warning("sl_rail_start_tx() result: 0x%08" PRIX32 "\n ", rail_status);
   }
 }
 
@@ -547,15 +453,15 @@ static void save_received_packet(sl_rail_handle_t rail_handle)
     if (packet_info.packet_bytes <= SL_RAIL_SDK_RX_FIFO_SIZE) {
       uint16_t packet_size = unpack_packet(rail_handle, rx_buffer, &packet_info, &start_of_packet);
       if (packet_size == 0) {
-        app_log_warning("Packet size is:%d", packet_size);
+        app_log_warning("Packet size is: %" PRIu16, packet_size);
       }
     }
     rail_status = sl_rail_release_rx_packet(rail_handle, SL_RAIL_RX_PACKET_HANDLE_OLDEST_COMPLETE);
     if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-      app_log_warning("sl_rail_release_rx_packet() result: %lu\n", rail_status);
+      app_log_warning("sl_rail_release_rx_packet() result: 0x%08" PRIX32 "\n", rail_status);
     }
     if (packet_info.packet_bytes <= SL_RAIL_SDK_RX_FIFO_SIZE) {
-      light_module.light_mode = get_light_response_type(start_of_packet);
+      light_module.last_response_type = get_light_response_type(start_of_packet);
     }
     rx_packet_handle = sl_rail_get_rx_packet_info(rail_handle, SL_RAIL_RX_PACKET_HANDLE_OLDEST_COMPLETE, &packet_info);
   }
@@ -567,13 +473,12 @@ static void save_received_packet(sl_rail_handle_t rail_handle)
 static void set_switch_state_in_payload(void)
 {
   // Encode the actual state in the outgoing message
-  switch (switch_module.mode) {
-    case SWITCH_MODE_SCAN:
-      out_packet[DEVICE_STATUS_PAYLOAD_BYTE] &= ~0x0C;
+  switch (switch_module.state) {
+    case SWITCH_STATE_SCAN:
+      out_packet[DEVICE_STATUS_PAYLOAD_BYTE] &= ~DEVICE_STATUS_SWITCH_STATE_BIT;
       break;
-    case SWITCH_MODE_LINKED:
-      out_packet[DEVICE_STATUS_PAYLOAD_BYTE] |=  0x04;
-      out_packet[DEVICE_STATUS_PAYLOAD_BYTE] &= ~0x08;
+    case SWITCH_STATE_LINKED:
+      out_packet[DEVICE_STATUS_PAYLOAD_BYTE] |= DEVICE_STATUS_SWITCH_STATE_BIT;
       break;
   }
 }
@@ -583,26 +488,19 @@ static void set_switch_state_in_payload(void)
  *****************************************************************************/
 static void get_light_state_from_rx_fifo(void)
 {
-  // If the light changed its state
-  if (light_module.communication_state != (start_of_packet[DEVICE_STATUS_PAYLOAD_BYTE] & 0x03)) {
-    char text_tmp[64];
-    snprintf(text_tmp, sizeof(text_tmp), "%s%04X%s%s",
-             "State changing event at Light Node [",
-             *(uint16_t*)light_module.addr,
-             "] ",
-             ((light_module.communication_state == LIGHT_MODE_ADVERTISE) ? "Mode: ADVERTISE\n" : "Mode: READY\n"));
-    light_module.communication_state = (light_mode_t)(start_of_packet[DEVICE_STATUS_PAYLOAD_BYTE] & 0x03);
-  }
-}
+  light_app_state_t light_state =
+    (start_of_packet[DEVICE_STATUS_PAYLOAD_BYTE] & DEVICE_STATUS_LIGHT_STATE_BIT)
+    ? LIGHT_STATE_READY : LIGHT_STATE_ADVERTISE;
 
-/******************************************************************************
- * Check if the Light node is "soc-light_rail-dmp"
- *****************************************************************************/
-static bool is_that_a_new_light(void)
-{
-  // In the previous Light versions this byte is 0xDD -> 0b11011101
-  // so if the 6th bit is zero, than this is a "soc-light_rail-dmp"
-  return (start_of_packet[DEVICE_STATUS_PAYLOAD_BYTE] & 0x20) ? true : false;
+  // If the light changed its state
+  if (light_module.state != light_state) {
+    light_module.state = light_state;
+    app_log_info(
+      "State changing event at Light Node [0x%04" PRIX16 "]. %s\n",
+      *(uint16_t*)light_module.addr,
+      (light_module.state == LIGHT_STATE_ADVERTISE) ? "Mode: ADVERTISE" : "Mode: READY"
+      );
+  }
 }
 
 /******************************************************************************
@@ -611,7 +509,7 @@ static bool is_that_a_new_light(void)
 static void display_all_information(void)
 {
   demoUIClearMainScreen((uint8_t *)app_name, true, false);
-  demoUIDisplayLight((bool)light_module.light_state);
+  demoUIDisplayLight(light_module.is_light_on);
   demoUIDisplayProtocol(DEMO_UI_PROTOCOL1, false);
   write_ID_to_buffer();
   demoUIDisplayId(DEMO_UI_PROTOCOL1, (uint8_t*)switch_module.switch_text_buffer);
@@ -643,10 +541,10 @@ static void write_ID_to_buffer(void)
   int ID_not_null = memcmp((void*)light_module.addr, blankAddr, sizeof(light_module.addr));
   if (ID_not_null) {
     snprintf(switch_module.switch_text_buffer, sizeof(switch_module.switch_text_buffer), \
-             "%s%04X", switch_module.switch_text[switch_module.mode], *((uint16_t*)light_module.addr));
+             "%s%04" PRIX16, switch_module.switch_text[switch_module.state], *((uint16_t*)light_module.addr));
   } else {
     snprintf(switch_module.switch_text_buffer, sizeof(switch_module.switch_text_buffer), \
-             "%s", switch_module.switch_text[switch_module.mode]);
+             "%s", switch_module.switch_text[switch_module.state]);
   }
 }
 /******************************************************************************
@@ -660,7 +558,7 @@ static void copy_light_address_to_payload(void)
 /******************************************************************************
  * Check if an advertise message come from the Light device
  *****************************************************************************/
-static demo_control_command_type_t get_light_response_type(uint8_t* rx_fifo)
+static demo_control_command_type_t get_light_response_type(const uint8_t* rx_fifo)
 {
   return (demo_control_command_type_t)(((rx_fifo[DEMO_CONTROL_PAYLOAD_BYTE]) & DEMO_CONTROL_PAYLOAD_CMD_MASK) >> DEMO_CONTROL_PAYLOAD_CMD_MASK_SHIFT);
 }
@@ -668,7 +566,7 @@ static demo_control_command_type_t get_light_response_type(uint8_t* rx_fifo)
 /******************************************************************************
  * Get light mode from the rx_fifo
  *****************************************************************************/
-static light_state_t get_light_mode(uint8_t* rx_fifo)
+static bool get_light_bulb_state(const uint8_t* rx_fifo)
 {
-  return (light_state_t)(rx_fifo[DEMO_CONTROL_PAYLOAD_BYTE] & DEMO_CONTROL_PAYLOAD_CMD_DATA);
+  return (bool)(rx_fifo[DEMO_CONTROL_PAYLOAD_BYTE] & DEMO_CONTROL_PAYLOAD_CMD_DATA);
 }

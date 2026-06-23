@@ -81,7 +81,7 @@ void app_mode_switch(const sl_cli_command_arg_t *arguments)
   // Attempt to convert the MAC address string
   res = app_util_get_mac_address(&address, address_str);
   if (res != SL_STATUS_OK) {
-    printf("[Failed: unable to parse the MAC address: %lu]\n", res);
+    printf("[Failed: unable to parse the MAC address: %"PRIu32"]\n", res);
     return;
   }
 

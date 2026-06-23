@@ -209,8 +209,7 @@ static const osThreadAttr_t _thr_attr = {
   .cb_size     = sizeof(_thr_cb),
   .stack_mem   = _thr_stack,
   .stack_size  = sizeof(_thr_stack),
-  .priority    = APP_OS_STAT_THREAD_PRIO,
-  .tz_module   = 0U
+  .priority    = APP_OS_STAT_THREAD_PRIO
 };
 
 /// Service Thread ID

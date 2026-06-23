@@ -36,7 +36,9 @@
 
 #include "sl_assert.h"
 #include "cmsis_os2.h"
-#include "socket/socket.h"
+#include "sys/socket.h"
+#include "arpa/inet.h"
+#include "netinet/in.h"
 #include "sl_iperf_network_interface.h"
 #include "sl_iperf_util.h"
 #include "sl_sleeptimer.h"

@@ -1,3 +1,4 @@
+workspace_name: zwave_ncp_zniffer_otw
 label: ZWave_NCP_Zniffer_Solution
 description: >
   Demonstrates Zniffer application combined with OTW bootloader.

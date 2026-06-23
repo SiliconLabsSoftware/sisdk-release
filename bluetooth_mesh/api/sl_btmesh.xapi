@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<api device_id="5" device_name="btmesh" version="10.2.0">
+<api device_id="5" device_name="btmesh" version="11.0.0">
     <datatypes>
         <datatype base="uint16" name="errorcode" length="2"/>
         <datatype base="int16" name="int16" length="2"/>
@@ -2740,6 +2740,12 @@
             <enum name="request_retries" value="0x3"/>
             <enum name="retry_interval" value="0x4"/>
             <enum name="clock_accuracy" value="0x5"/>
+            <enum name="max_receive_window" value="0x6"/>
+            <enum name="min_subscription_list_size" value="0x7"/>
+            <enum name="min_friend_offer_rssi" value="0x8"/>
+            <enum name="receive_window_factor" value="0x9"/>
+            <enum name="rssi_factor" value="0xa"/>
+            <enum name="friend_offer_listen_timeout_slack" value="0xb"/>
         </enums>
     </class>
     <class index="36" name="friend">
@@ -3564,6 +3570,14 @@
                 <param datatype="errorcode" name="result" type="uint16"/>
             </returns>
         </command>
+        <command index="7" name="deinit" >
+            <params>
+                <param datatype="uint16" name="elem_index" type="uint16"/>
+            </params>
+            <returns>
+                <param datatype="errorcode" name="result" type="uint16"/>
+            </returns>
+        </command>
         <command index="0" name="setup" >
             <params>
                 <param datatype="uint16" name="elem_index" type="uint16"/>
@@ -3822,6 +3836,14 @@
                 <param datatype="uint16" name="pull_mode_chunks_to_request" type="uint16"/>
                 <param datatype="uint16" name="pull_mode_retry_interval_ms" type="uint16"/>
                 <param datatype="uint16" name="pull_mode_retry_count" type="uint16"/>
+            </params>
+            <returns>
+                <param datatype="errorcode" name="result" type="uint16"/>
+            </returns>
+        </command>
+        <command index="9" name="deinit" >
+            <params>
+                <param datatype="uint16" name="elem_index" type="uint16"/>
             </params>
             <returns>
                 <param datatype="errorcode" name="result" type="uint16"/>
@@ -6214,7 +6236,7 @@
             <params>
                 <param datatype="uint16" name="elem_index" type="uint16"/>
                 <param datatype="uint16" name="dst" type="uint16"/>
-                <param datatype="uint8" name="dist_appkey_index" type="uint8"/>
+                <param datatype="uint16" name="dist_appkey_index" type="uint16"/>
                 <param datatype="uint8" name="dist_ttl" type="uint8"/>
                 <param datatype="uint16" name="dist_timeout_base" type="uint16"/>
                 <param datatype="uint8" name="transfer_mode" type="uint8"/>

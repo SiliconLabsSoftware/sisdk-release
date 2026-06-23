@@ -1,0 +1,26 @@
+!!omap
+- id: xg24_dk2601d
+- label: XG24-DK2601D
+- package: boards
+- description: Kit BSP support for the EFR32xG24 Dev Kit.
+- category: Platform|Board|Kit|Development Kit
+- quality: evaluation
+- metadata:
+    sbom:
+      license: Zlib
+- requires:
+  - name: hardware_board_from_xg24-dk2601d
+- provides:
+  - name: hardware_kit
+  - name: hardware_kit_dk
+- define:
+  - name: SL_KIT_NAME
+    value: '"XG24-DK2601D"'
+  - name: SL_KIT_REV
+    value: '"A01"'
+- tag:
+  - kit:opn:xG24-DK2601D
+  - kit:pn:DK2601
+  - kit:variant:D
+  - kit:revision:A01
+- root_path: boards

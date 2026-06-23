@@ -2,7 +2,7 @@
  * @brief RAIL Configuration
  * @details
  *   WARNING: Auto-Generated Radio Config Header  -  DO NOT EDIT
- *   Radio Configurator Version: 2504.4.6
+ *   Radio Configurator Version: 2602.5.0
  *   RAIL Adapter Version: 2.4.33
  *   RAIL Compatibility: 2.x
  *******************************************************************************
@@ -39,12 +39,15 @@
 #include "rail_types.h"
 
 extern const uint32_t sl_rail_ble_phy_1Mbps_viterbi_40MHz_modemConfigBase[];
+extern const uint32_t sl_rail_ble_phy_1Mbps_viterbi_cs_40MHz_modemConfigBase[];
 
 extern const uint32_t sl_rail_ble_phy_1Mbps_viterbi_40MHz_modemConfig[];
 extern const uint32_t sl_rail_ble_phy_2Mbps_viterbi_40MHz_0_34_modemConfig[];
 extern const uint32_t sl_rail_ble_phy_125kbps_40MHz_modemConfig[];
-extern const uint32_t sl_rail_ble_phy_500kbps_40MHz_modemConfig[];
+extern const uint32_t sl_rail_ble_lr_dsa_500kb_40MHz_modemConfig[];
 extern const uint32_t sl_rail_ble_phy_simulscan_40MHz_modemConfig[];
+extern const uint32_t sl_rail_ble_phy_1Mbps_viterbi_cs_0_78_40MHz_modemConfig[];
+extern const uint32_t sl_rail_ble_phy_2Mbps_viterbi_cs_0_78_40MHz_modemConfig[];
 
 #define RAIL0_SL_RAIL_BLE_PHY_1MBPS_VITERBI_40MHZ_PHY_BLUETOOTH_1M_AOX_PROD
 #define RAIL0_SL_RAIL_BLE_PHY_1MBPS_VITERBI_40MHZ_PROFILE_BLE
@@ -70,5 +73,15 @@ extern const RAIL_ChannelConfigEntry_t sl_rail_ble_phy_500kbps_40MHz_channels[];
 #define RAIL0_SL_RAIL_BLE_PHY_SIMULSCAN_40MHZ_PROFILE_BASE
 extern const RAIL_ChannelConfig_t sl_rail_ble_phy_simulscan_40MHz_channelConfig;
 extern const RAIL_ChannelConfigEntry_t sl_rail_ble_phy_simulscan_40MHz_channels[];
+
+#define RAIL0_SL_RAIL_BLE_PHY_1MBPS_VITERBI_CS_40MHZ_PHY_BLUETOOTH_1M_HADM_PROD
+#define RAIL0_SL_RAIL_BLE_PHY_1MBPS_VITERBI_CS_40MHZ_PROFILE_BLE
+extern const RAIL_ChannelConfig_t sl_rail_ble_phy_1Mbps_viterbi_cs_40MHz_channelConfig;
+extern const RAIL_ChannelConfigEntry_t sl_rail_ble_phy_1Mbps_viterbi_cs_40MHz_channels[];
+
+#define RAIL0_SL_RAIL_BLE_PHY_2MBPS_VITERBI_CS_40MHZ_PHY_BLUETOOTH_2M_HADM_PROD
+#define RAIL0_SL_RAIL_BLE_PHY_2MBPS_VITERBI_CS_40MHZ_PROFILE_BLE
+extern const RAIL_ChannelConfig_t sl_rail_ble_phy_2Mbps_viterbi_cs_40MHz_channelConfig;
+extern const RAIL_ChannelConfigEntry_t sl_rail_ble_phy_2Mbps_viterbi_cs_40MHz_channels[];
 
 #endif // __SL_RAIL_BLE_CONFIG_40MHZ_H__

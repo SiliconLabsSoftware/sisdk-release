@@ -35,6 +35,7 @@
 
 // <h> PA Table Configuration
 // <o SL_RAIL_UTIL_PA_TABLE_HEADER> PA Table Selection
+// <"sl_rail_util_pa_dbm_powersetting_mapping_table_10dbm_automode.h"=> 10dBm AutoMode PA powersetting mapping table
 // <"sl_rail_util_pa_dbm_powersetting_mapping_table_10dbm_HP.h"=> 10dBm HP PA powersetting mapping table
 // <"sl_rail_util_pa_dbm_powersetting_mapping_table_10dbm_MP.h"=> 10dBm MP PA powersetting mapping table
 // <"sl_rail_util_pa_dbm_powersetting_mapping_table_10dbm_LP.h"=> 10dBm LP PA powersetting mapping table

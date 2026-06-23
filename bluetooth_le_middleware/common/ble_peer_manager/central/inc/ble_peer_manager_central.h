@@ -1,9 +1,9 @@
 /***************************************************************************//**
  * @file
- * @brief Bluetooth Peer Manager - central
+ * @brief Bluetooth Peer Manager - central API compatibility header
  *******************************************************************************
  * # License
- * <b>Copyright 2024 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -30,75 +30,15 @@
 #ifndef BLE_PEER_MANAGER_CENTRAL_H
 #define BLE_PEER_MANAGER_CENTRAL_H
 
-/***********************************************************************************************//**
- * @addtogroup ble_peer_manager_central
- * @{
- **************************************************************************************************/
+#include "sl_bt_peer_manager_central.h"
 
-#include "sl_status.h"
-#include "sl_bt_api.h"
+// ---------------------------------------------------------------------------
+// Function aliases
 
-/**************************************************************************//**
- * Initialize the Peer Manager.
- *
- * Set default values for scanner, reset filters, set state to IDLE
- * and create an emtpy connection array.
- *****************************************************************************/
-void ble_peer_manager_central_init(void);
+#define ble_peer_manager_central_init               sl_bt_peer_manager_central_init
+#define ble_peer_manager_central_set_scanner        sl_bt_peer_manager_central_set_scanner
+#define ble_peer_manager_central_create_connection  sl_bt_peer_manager_central_create_connection
+#define ble_peer_manager_central_open_connection    sl_bt_peer_manager_central_open_connection
+#define ble_peer_manager_central_close_connection   sl_bt_peer_manager_central_close_connection
 
-/**************************************************************************//**
- * Set scanner parameters.
- *
- * Set the scanner parameters if the Peer Manager is in IDLE state.
- * Call this function before starting the scanner.
- *
- * @param[in] scan_phy PHY to use for scanning.
- * @param[in] discovery_mode Discovery mode to use for scanning.
- * @param[in] scan_mode Scan mode to use for scanning (active or passive).
- * @param[in] scan_interval Scan interval to use for scanning.
- * @param[in] scan_window Scan window to use for scanning.
- *
- * @retval SL_STATUS_OK if successful otherwise error code.
- * @retval SL_STATUS_INVALID_STATE if the Peer Manager is in SCANNING state.
- *****************************************************************************/
-sl_status_t ble_peer_manager_central_set_scanner(sl_bt_gap_phy_coding_t scanning_phy,
-                                                 sl_bt_scanner_discover_mode_t scan_discovery_mode,
-                                                 sl_bt_scanner_scan_mode_t scan_mode,
-                                                 uint8_t scan_interval,
-                                                 uint8_t scan_window);
-
-/**************************************************************************//**
- * Create a central connection.
- *
- * The Peer Manager will start the scanner. If a connection opened
- * event is received, and the connection handle is the same as
- * in the sl_bt_connection_open() function, the Peer Manager will stop the
- * scanner and save the connection.
- *
- * @retval SL_STATUS_OK if successful otherwise error code.
- *****************************************************************************/
-sl_status_t ble_peer_manager_central_create_connection(void);
-
-/**************************************************************************//**
- * Open a connection as a central.
- *
- * @param[in] address Address of the peripheral device.
- * @param[in] address_type Address type of the peripheral device.
- *
- * @retval SL_STATUS_OK if successful otherwise error code.
- *****************************************************************************/
-sl_status_t ble_peer_manager_central_open_connection(bd_addr *address,
-                                                     uint8_t address_type);
-
-/**************************************************************************//**
- * Close connection.
- *
- * @param[in] conn_handle Connection handle of the connection
- *            which needs to be closed.
- *
- * @retval SL_STATUS_OK if successful otherwise error code.
- * @retval SL_STATUS_NOT_FOUND if the connection handle is not found.
- *****************************************************************************/
-sl_status_t ble_peer_manager_central_close_connection(uint8_t conn_handle);
-/** @} (end addtogroup ble_peer_manager_central) */
 #endif // BLE_PEER_MANAGER_CENTRAL_H

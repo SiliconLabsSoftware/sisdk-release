@@ -149,11 +149,15 @@ int _lseek(int file, int ptr, int dir)
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#if defined(__GNUC__) && __GNUC__ == 12
+#if defined(__GNUC__) && __GNUC__ >= 12
 
 typedef uint64_t gcov_type;
 
+#if __GNUC__ >= 14
+#define GCOV_COUNTERS               9U
+#else
 #define GCOV_COUNTERS               8U
+#endif
 #define GCOV_TAG_FUNCTION_LENGTH    12
 
 #define GCOV_DATA_MAGIC             (0x67636461)

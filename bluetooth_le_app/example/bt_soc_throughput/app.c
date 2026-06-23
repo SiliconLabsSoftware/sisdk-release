@@ -3,7 +3,7 @@
  * @brief BLE throughput example
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -230,7 +230,7 @@ void app_test(bool start)
     if (role == THROUGHPUT_ROLE_PERIPHERAL) {
       sc = throughput_peripheral_start(type);
       if (sc != SL_STATUS_OK) {
-        app_log_warning("Failed to start test; sc=0x%02lx" APP_LOG_NL, sc);
+        app_log_warning("Failed to start test: 0x%04lx" APP_LOG_NL, sc);
         if (sc == SL_STATUS_INVALID_STATE) {
           app_log_warning("Not in subscribed state!" APP_LOG_NL);
         }
@@ -254,14 +254,14 @@ void app_test(bool start)
     if (role == THROUGHPUT_ROLE_PERIPHERAL) {
       sc = throughput_peripheral_stop();
       if (sc != SL_STATUS_OK) {
-        app_log_warning("Failed to stop test." APP_LOG_NL);
+        app_log_warning("Failed to stop test: 0x%04lx" APP_LOG_NL, sc);
       } else {
         app_log_info("Test Stopped." APP_LOG_NL);
       }
     } else {
       sc = throughput_central_stop();
       if (sc != SL_STATUS_OK) {
-        app_log_warning("Failed to stop test." APP_LOG_NL);
+        app_log_warning("Failed to stop test: 0x%04lx" APP_LOG_NL, sc);
       } else {
         app_log_info("Test Stopped." APP_LOG_NL);
       }

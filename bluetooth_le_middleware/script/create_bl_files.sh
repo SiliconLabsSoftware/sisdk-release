@@ -29,7 +29,7 @@ OTA_APPLO_NAME="apploader"
 OTA_APPLI_NAME="application"
 UARTDFU_FULL_NAME="full"
 
-# names of the sign and encypt key files
+# names of the sign and encrypt key files
 GBL_SIGING_KEY_FILE="app-sign-key.pem"
 GBL_ENCRYPT_KEY_FILE="app-encrypt-key.txt"
 

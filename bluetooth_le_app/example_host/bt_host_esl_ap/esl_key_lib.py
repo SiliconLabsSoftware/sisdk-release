@@ -217,19 +217,19 @@ class Lib:
         if handle:
             status = eklw.esl_key_lib_free_threadsafe_handle(handle)
             if status != eklw.SL_STATUS_OK:
-                raise Error(status)            
+                raise Error(status)
             del handle
 
     def _copy_key_db_handle(self):
         """Create a threadsafe shallow copy of the self.key_db_handle content."""
         if not self.key_db_handle:
             raise ValueError("The ESL key library is not initialized.")
-        
+
         copy_handle = eklw.db_handle_p()
         status = eklw.esl_key_lib_split_threadsafe_handle(self.key_db_handle, byref(copy_handle))
         if status != eklw.SL_STATUS_OK:
             raise Error(status)
-   
+
         # Return the handle and a cleanup function for ease of use
         return copy_handle, lambda: self._free_key_db_handle(copy_handle)
 

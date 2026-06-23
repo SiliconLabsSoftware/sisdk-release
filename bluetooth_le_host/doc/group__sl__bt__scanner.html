@@ -348,13 +348,13 @@ policy" for a detailed description of this setting. </p>
 <p class="intertd">A variable delay occurs when switching channels at the end of each scanning interval, which is included in the scanning interval time. During the switch time, advertising packets are not received by the device. The switch time variation is use case dependent. For example, if scanning while keeping active connections, the channel switch time might be longer than when scanning without any active connections. Increasing the scanning interval reduces the amount of time in which the device can't receive advertising packets because it switches channels less often.</p>
 <p class="endtd">After every scan interval, the scanner changes the frequency at which it operates. It cycles through all three advertising channels in a round robin fashion. According to the specification, all three channels must be used by a scanner. </p>
 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">window</td><td><p class="starttd">The scan window, i.e., the duration of the scan, which must be less than or equal to the <code>interval</code> </p><ul>
+    <tr><td class="paramdir">[in]</td><td class="paramname">window</td><td><p class="starttd">The scan window, i.e., the duration of the primary channel scan, which must be less than or equal to the <code>interval</code>.</p><ul>
 <li><b>Range:</b> 0x0004 to 0xFFFF</li>
 <li>Time = Value x 0.625 ms</li>
 <li>Time Range: 2.5 ms to 40.96 s</li>
 <li><b>Default</b> : 10 ms</li>
 </ul>
-<p class="endtd">Note that the packet reception is aborted if it's started just before the scan window ends. </p>
+<p class="endtd">Packet reception is aborted if the scan window ends before the packet ends. </p>
 </td></tr>
   </table>
   </dd>
@@ -425,13 +425,13 @@ policy" for a detailed description of this setting. </p>
 <p class="intertd">A variable delay occurs when switching channels at the end of each scanning interval, which is included in the scanning interval time. During the switch time, advertising packets are not received by the device. The switch time variation is use case dependent. For example, if scanning while keeping active connections, the channel switch time might be longer than when scanning without any active connections. Increasing the scanning interval reduces the amount of time in which the device can't receive advertising packets because it switches channels less often.</p>
 <p class="endtd">After every scan interval, the scanner changes the frequency at which it operates. It cycles through all three advertising channels in a round robin fashion. According to the specification, all three channels must be used by a scanner. </p>
 </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">window</td><td><p class="starttd">The scan window, i.e., the duration of the scan, which must be less than or equal to the <code>interval</code> </p><ul>
+    <tr><td class="paramdir">[in]</td><td class="paramname">window</td><td><p class="starttd">The scan window, i.e., the duration of the primary channel scan, which must be less than or equal to the <code>interval</code>.</p><ul>
 <li><b>Range:</b> 0x0004 to 0xFFFF</li>
 <li>Time = Value x 0.625 ms</li>
 <li>Time Range: 2.5 ms to 40.96 s</li>
 <li><b>Default</b> : 10 ms</li>
 </ul>
-<p class="endtd">Note that the packet reception is aborted if it's started just before the scan window ends. </p>
+<p class="endtd">Packet reception is aborted if the scan window ends before the packet ends. </p>
 </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>Additional scanner options. Value: 0 or bitmask of <a class="el" href="group__sl__bt__scanner__option__flags.html">Option Flags to Specify Scanning Options</a>. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">filter_policy</td><td><p class="starttd">Enum <a class="el" href="group__sl__bt__scanner.html#ga273b6e90f8db94de796c5f5027fc769d">sl_bt_scanner_filter_policy_t</a>.</p>
@@ -476,6 +476,7 @@ policy" for a detailed description of this setting. </p>
       </table>
 </div><div class="memdoc">
 <p >Start the GAP discovery procedure to scan for advertising devices that use legacy or extended advertising PDUs. To cancel an ongoing discovery procedure, use the <a class="el" href="group__sl__bt__scanner.html#ga59c2a23518c18aa3106312ee8eda1c57">sl_bt_scanner_stop</a> command.</p>
+<p >If privacy is enabled, see <a class="el" href="group__sl__bt__gap.html#gab8d65fb681a00f260f8b8c49a09ab1d5">sl_bt_gap_set_privacy_mode</a> for the scanner private address behavior.</p>
 <p >The invalid parameter error will be returned if the value of scanning PHYs is invalid or the device does not support a PHY.</p>
 <p >Received advertising packets are not filtered in any way, so multiple events will be received for every advertising device in range.</p>
 <dl class="params"><dt>Parameters</dt><dd>

@@ -3,7 +3,7 @@
  * @brief internal wrappers for 'raw-message' ipc commands
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -94,6 +94,7 @@ sl_status_t sl_zigbee_send_raw_message(const uint8_t *message,
 
   if (message_length > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector message length exceeds expected maximum
+    return msg.data.send_raw_message.response.result;
   }
 
   memmove(msg.data.send_raw_message.request.message, message, sizeof(uint8_t) * message_length);
@@ -115,6 +116,7 @@ sl_status_t sl_zigbee_send_raw_message_with_tag(const uint8_t *message,
 
   if (message_length > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector message length exceeds expected maximum
+    return msg.data.send_raw_message_with_tag.response.result;
   }
 
   memmove(msg.data.send_raw_message_with_tag.request.message, message, sizeof(uint8_t) * message_length);
@@ -141,6 +143,7 @@ sl_status_t sl_zigbee_set_mac_filter_match_list(const sl_zigbee_mac_filter_match
 
   if (listLength > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector macFilterMatchList length exceeds expected maximum
+    return msg.data.set_mac_filter_match_list.response.result;
   }
 
   memmove(msg.data.set_mac_filter_match_list.request.macFilterMatchList, macFilterMatchList, sizeof(sl_zigbee_mac_filter_match_data_t) * listLength);

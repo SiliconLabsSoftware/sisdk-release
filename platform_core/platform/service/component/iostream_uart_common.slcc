@@ -17,8 +17,10 @@ include:
   file_list:
   - path: sl_iostream_uart.h
   - path: sli_iostream_uart.h
+  - path: sli_iostream_dmadrv.h
 source:
 - path: src/sl_iostream_uart.c
+- path: src/sl_iostream_dmadrv.c
 template_contribution:
 - name: component_catalog
   value: iostream_uart_common
@@ -26,13 +28,17 @@ template_contribution:
   value: true
   condition: [hardware_board_has_vcom]
 requires:
-- name: iostream
-- name: sl_string
-- name: dmadrv
-- name: status
 - name: atomic
 - name: configuration_over_swo
   condition: [hardware_board_has_vcom]
+- name: dma_channel
+- name: dma_manager
+- name: iostream
+- name: sl_string
+- name: status
 documentation:
   docset: gecko-platform
   document: platform-service/iostream-uart
+recommends:
+- id: configuration_over_swo
+  vendor: silabs

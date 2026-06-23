@@ -31,6 +31,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include PLATFORM_HEADER
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "stack/include/ember.h"
 #include "sl_connect_sdk_ota_bootloader_test_common.h"
@@ -97,7 +98,7 @@ bool emberAfPluginOtaUnicastBootloaderServerGetImageSegmentCallback(uint32_t sta
                                                                     uint8_t imageTag,
                                                                     uint8_t *imageSegment)
 {
-  app_log_info("(server): get segment, start: %d, end: %d, tag: 0x%x\n",
+  app_log_info("(server): get segment, start: %" PRIu32 ", end: %" PRIu32 ", tag: 0x%" PRIX8 "\n",
                startIndex, endIndex, imageTag);
 
   //Initialize bootloader (and flash part) if not yet initialized or in shutdown.
@@ -121,7 +122,7 @@ bool emberAfPluginOtaUnicastBootloaderServerGetImageSegmentCallback(uint32_t sta
  *****************************************************************************/
 void emberAfPluginOtaUnicastBootloaderServerImageDistributionCompleteCallback(EmberAfOtaUnicastBootloaderStatus status)
 {
-  app_log_info("image distribution completed, 0x%x\n", status);
+  app_log_info("image distribution completed, 0x%" PRIX8 "\n", status);
 }
 
 /**************************************************************************//**
@@ -129,7 +130,7 @@ void emberAfPluginOtaUnicastBootloaderServerImageDistributionCompleteCallback(Em
  *****************************************************************************/
 void emberAfPluginOtaUnicastBootloaderServerRequestTargetBootloadCompleteCallback(EmberAfOtaUnicastBootloaderStatus status)
 {
-  app_log_info("bootload request completed, 0x%x\n", status);
+  app_log_info("bootload request completed, 0x%" PRIX8 "\n", status);
 }
 
 #endif // SL_CATALOG_CONNECT_OTA_UNICAST_BOOTLOADER_SERVER_PRESENT
@@ -164,7 +165,7 @@ bool emberAfPluginOtaUnicastBootloaderClientNewIncomingImageCallback(EmberNodeId
       *startIndex = unicast_download_start_index;
     }
   }
-  app_log_info("new incoming unicast image %s (tag=0x%x)\n",
+  app_log_info("new incoming unicast image %s (tag=0x%" PRIX8 ")\n",
                ((accept) ? "ACCEPTED" : "REFUSED"),
                imageTag);
 
@@ -182,8 +183,8 @@ void emberAfPluginOtaUnicastBootloaderClientIncomingImageSegmentCallback(EmberNo
                                                                          uint8_t *imageSegment)
 {
   (void)serverId;
-  app_log_info("(client): incoming segment, start: %lu, end: %lu, tag: 0x%x\n",
-               (long unsigned int) startIndex, (long unsigned int) endIndex, imageTag);
+  app_log_info("(client): incoming segment, start: %" PRIu32 ", end: %" PRIu32 ", tag: 0x%" PRIX8 "\n",
+               startIndex, endIndex, imageTag);
 
   //Initialize bootloader (and flash part) if not yet initialized or in shutdown.
   if ( !emberAfPluginBootloaderInterfaceIsBootloaderInitialized() ) {
@@ -221,11 +222,10 @@ void emberAfPluginOtaUnicastBootloaderClientImageDownloadCompleteCallback(EmberA
                                                                           uint32_t imageSize)
 {
   if (status == EMBER_OTA_UNICAST_BOOTLOADER_STATUS_SUCCESS) {
-    app_log_info("Image download COMPLETED tag=0x%x size=%lu\n",
-                 imageTag, (long unsigned int) imageSize);
+    app_log_info("Image download COMPLETED tag=0x%" PRIX8 " size=%" PRIu32 "\n", imageTag, imageSize);
     unicast_download_start_index = 0;
   } else {
-    app_log_error("Image download FAILED status=0x%x\n", status);
+    app_log_error("Image download FAILED status=0x%" PRIX8 "\n", status);
   }
 }
 
@@ -242,13 +242,13 @@ bool emberAfPluginOtaUnicastBootloaderClientIncomingRequestBootloadCallback(Embe
   bool accept = (imageTag == ota_bootloader_test_image_tag);
 
   if (accept) {
-    app_log_info("bootload request for image with tag 0x%x accepted, will bootload in %lu ms\n",
-                 imageTag, (long unsigned int) bootloadDelayMs);
+    app_log_info("bootload request for image with tag 0x%" PRIX8 " accepted, will bootload in %" PRIu32 " ms\n",
+                 imageTag, bootloadDelayMs);
     // Schedule a bootload action.
     emberEventControlSetDelayMS(emAfPluginOtaUnicastBootloaderTestEventControl,
                                 bootloadDelayMs);
   } else {
-    app_log_info("bootload request refused (tag 0x%x doesn't match)\n",
+    app_log_info("bootload request refused (tag 0x%" PRIX8 " doesn't match)\n",
                  imageTag);
   }
 
@@ -295,7 +295,7 @@ void cli_bootloader_unicast_unicast_distribute(sl_cli_command_arg_t *arguments)
   if (status == EMBER_OTA_UNICAST_BOOTLOADER_STATUS_SUCCESS) {
     app_log_info("unicast image distribution initiated\n");
   } else {
-    app_log_error("unicast image distribution failed 0x%x\n", status);
+    app_log_error("unicast image distribution failed 0x%" PRIX8 "\n", status);
   }
 #else
   (void)arguments;
@@ -319,7 +319,7 @@ void cli_bootloader_unicast_request_bootload(sl_cli_command_arg_t *arguments)
   if (status == EMBER_OTA_UNICAST_BOOTLOADER_STATUS_SUCCESS) {
     app_log_info("bootload request initiated\n");
   } else {
-    app_log_error("bootload request failed 0x%x\n", status);
+    app_log_error("bootload request failed 0x%" PRIX8 "\n", status);
   }
 #else
   (void)arguments;

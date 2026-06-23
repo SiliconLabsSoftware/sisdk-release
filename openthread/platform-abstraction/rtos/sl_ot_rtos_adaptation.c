@@ -53,6 +53,9 @@
 #include "sl_malloc.h"
 #endif // SL_CATALOG_MEMORY_MANAGER_PRESENT
 
+#if defined(SL_CATALOG_WATCHDOG_MANAGER_PRESENT)
+#include "sli_watchdog_manager.h"
+#endif
 #if defined(SL_CATALOG_POWER_MANAGER_PRESENT)
 #include "sleep.h"
 #endif
@@ -301,13 +304,21 @@ static void sli_ot_stack_task(void *context)
 
         // Release the stack mutex
         sl_ot_rtos_release_stack_mutex();
-
+#if defined(SL_CATALOG_WATCHDOG_MANAGER_PRESENT)
+        // Keep platform watchdog alive even when the tasklets are working in this loop.
+        sli_watchdog_manager_platform_feed();
+#endif
         if (!taskletsArePending)
         {
             sli_ot_stack_task_info.active_duration += otPlatTimeGet() - timestamp;
             // If tasklets are not pending, wait for stack event..
             (void)sl_ot_rtos_wait_for_event(&sli_ot_stack_task_info, SL_OT_RTOS_EVENT_STACK);
             timestamp = otPlatTimeGet();
+        }
+        else
+        {
+            // Yield here so system can run other tasks and keep watchdog healthy.
+            (void)osThreadYield();
         }
     }
 

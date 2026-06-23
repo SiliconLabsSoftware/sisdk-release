@@ -30,7 +30,11 @@
 #include "sl_enum.h"
 #include "sl_status.h"
 
+#if __has_include("em_core.h")
 #include "em_core.h"
+#else
+#include "sl_core.h"
+#endif
 
 #include "sl_usbd_core.h"
 #include "sl_usbd_class_vendor.h"

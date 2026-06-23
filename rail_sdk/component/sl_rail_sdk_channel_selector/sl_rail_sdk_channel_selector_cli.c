@@ -31,6 +31,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include "sl_rail_sdk_channel_selector.h"
 #include "sl_cli.h"
 
@@ -60,7 +61,7 @@ void cli_get_channel(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
 #if defined(SL_CATALOG_APP_LOG_PRESENT)
-  app_log_info("Current active channel %d\n", get_selected_channel());
+  app_log_info("Current active channel %" PRIu16 "\n", get_selected_channel());
 #endif
 }
 

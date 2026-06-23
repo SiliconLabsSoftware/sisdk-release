@@ -177,7 +177,7 @@ int32_t lz4_decompress(Lz4Context_t *ctx,
   return retval;
 }
 
-int32_t lz4_finish(Lz4Context_t *ctx)
+int32_t lz4_finish(const Lz4Context_t *ctx)
 {
   // The last LZ4 block should end with literals, so the parser should end
   // in the LSB offset state. Else, something went wrong during decompression.
@@ -305,7 +305,7 @@ int32_t gbl_lz4ReadMemory(size_t backtrackOffset, uint8_t *data, size_t length)
   return BOOTLOADER_OK;
 }
 
-int32_t gbl_lz4WriteMemory(uint8_t *data, size_t length)
+int32_t gbl_lz4WriteMemory(const uint8_t *data, size_t length)
 {
   size_t offset = 0UL;
   int32_t retval = BOOTLOADER_OK;
@@ -403,24 +403,22 @@ int32_t gbl_lz4ParseProgTag(ParserContext_t *ctx,
   }
 
   // First call to function contains programming address in first word
-  if (lz4ParserContext.firstCall) {
-    if (ctx->customTagId == GBL_TAG_ID_PROG_LZ4) {
-      BTL_ASSERT(length >= 4UL);
-      lz4ParserContext.firstCall = false;
-      ctx->programmingAddress = *(uint32_t *)data;
-      dataOffset = 4UL;
-    }
-#if defined(BTL_PARSER_SUPPORT_DELTA_DFU)
-    else {
-      BTL_ASSERT(length >= 12UL);
-      lz4ParserContext.firstCall = false;
-      ctx->programmingAddress = ctx->deltaPatchAddress;
-      ctx->newFwCRC = GBL_PARSER_ARRAY_TO_U32((uint8_t *)data, 0);
-      ctx->newFwSize = GBL_PARSER_ARRAY_TO_U32((uint8_t *)data, 4);
-      dataOffset = 12UL;
-    }
-#endif
+  if (lz4ParserContext.firstCall && (ctx->customTagId == GBL_TAG_ID_PROG_LZ4)) {
+    BTL_ASSERT(length >= 4UL);
+    lz4ParserContext.firstCall = false;
+    ctx->programmingAddress = *(uint32_t *)data;
+    dataOffset = 4UL;
   }
+#if defined(BTL_PARSER_SUPPORT_DELTA_DFU)
+  else if (lz4ParserContext.firstCall) {
+    BTL_ASSERT(length >= 12UL);
+    lz4ParserContext.firstCall = false;
+    ctx->programmingAddress = ctx->deltaPatchAddress;
+    ctx->newFwCRC = GBL_PARSER_ARRAY_TO_U32((uint8_t *)data, 0);
+    ctx->newFwSize = GBL_PARSER_ARRAY_TO_U32((uint8_t *)data, 4);
+    dataOffset = 12UL;
+  }
+#endif
   lz4ParserContext.parserCallbacks = callbacks;
 
   // Attempt to decompress this chunk of data
@@ -432,7 +430,7 @@ int32_t gbl_lz4ParseProgTag(ParserContext_t *ctx,
   return retval;
 }
 
-size_t gbl_lz4NumBytesRequired(ParserContext_t *ctx)
+size_t gbl_lz4NumBytesRequired(const ParserContext_t *ctx)
 {
   if (ctx->offsetInTag == 0) {
     if (ctx->customTagId == GBL_TAG_ID_DELTA_LZ4) {

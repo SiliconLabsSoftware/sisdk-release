@@ -49,6 +49,8 @@ component:
       - rgb_led0
   - id: sl_main
   - id: toolchain_gcc_lto
+    condition:
+      - toolchain_gcc
   - id: udelay
 
 source:

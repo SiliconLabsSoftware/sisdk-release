@@ -306,7 +306,6 @@ sl_status_t sl_zigbee_dhc_write_dhc_version(uint8_t dhc_version);
  */
 sl_status_t sl_zigbee_dhc_read_pa_version(sl_zigbee_dhc_pa_version_t *pa_version);
 
-
 /**
  * @brief Read PA signature wrapper.
  * @param[out] pa_signature Output signature.

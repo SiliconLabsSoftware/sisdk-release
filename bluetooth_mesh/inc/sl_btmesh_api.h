@@ -413,33 +413,33 @@ typedef enum
  */
 
 /** Message does not have flags */
-#define SL_BTMESH_NODE_MESSAGE_FLAG_NONE            0x0       
+#define SL_BTMESH_NODE_MESSAGE_FLAG_NONE            0x0
 
 /** Message is an access layer reply to a unicast request */
-#define SL_BTMESH_NODE_MESSAGE_FLAG_REPLY           0x1       
+#define SL_BTMESH_NODE_MESSAGE_FLAG_REPLY           0x1
 
 /** Message is an access layer reply to a multicast request */
-#define SL_BTMESH_NODE_MESSAGE_FLAG_MULTICAST_REPLY 0x2       
+#define SL_BTMESH_NODE_MESSAGE_FLAG_MULTICAST_REPLY 0x2
 
 /** Message is either received with TTL=0 or is a response to such a message and
  * should be sent out with TTL=0 */
-#define SL_BTMESH_NODE_MESSAGE_FLAG_TTL0            0x4       
+#define SL_BTMESH_NODE_MESSAGE_FLAG_TTL0            0x4
 
 /** Message is segmented in transport layer, can be used to force the use of
  * transport layer segmentation */
-#define SL_BTMESH_NODE_MESSAGE_FLAG_SEGTRANS        0x10      
+#define SL_BTMESH_NODE_MESSAGE_FLAG_SEGTRANS        0x10
 
 /** Use friendship credentials instead of normal credentials when sending data;
  * used when publishing with friendship credential flag on in model publish
  * settings */
-#define SL_BTMESH_NODE_MESSAGE_FLAG_FRIENDCRED      0x20      
+#define SL_BTMESH_NODE_MESSAGE_FLAG_FRIENDCRED      0x20
 
 /** Use extended packet size instead of standard */
-#define SL_BTMESH_NODE_MESSAGE_FLAG_EXTENDED        0x40      
+#define SL_BTMESH_NODE_MESSAGE_FLAG_EXTENDED        0x40
 
 /** long delay needed in sending two messages in reply that need to be sent in
  * order */
-#define SL_BTMESH_NODE_MESSAGE_FLAG_LONG_DELAY      0x80      
+#define SL_BTMESH_NODE_MESSAGE_FLAG_LONG_DELAY      0x80
 
 /** @} */ // end addtogroup sl_btmesh_node_message_flags
 
@@ -2127,6 +2127,7 @@ sl_status_t sl_btmesh_node_compare_dcd(uint8_t page_number,
  *
  * <b>Initialization:</b>
  *   - @ref sl_btmesh_prov_init
+ *   - @ref sl_btmesh_prov_init_provisioning_records
  *   - @ref sl_btmesh_evt_prov_initialized
  *   - @ref sl_btmesh_evt_prov_initialization_failed
  *
@@ -2139,9 +2140,15 @@ sl_status_t sl_btmesh_node_compare_dcd(uint8_t page_number,
  *   - @ref sl_btmesh_evt_prov_uri : URI advertisement seen
  *   - @ref sl_btmesh_prov_create_provisioning_session : Create provisioning
  *     session
+ *   - @ref sl_btmesh_prov_set_provisioning_suspend_event : Set up control
+ *     points in the provisioning flow
+ *   - @ref sl_btmesh_prov_set_oob_requirements : Set requirements for device
+ *     OOB capabilties
  *   - @ref sl_btmesh_prov_provision_adv_device : Provision a device over PB-ADV
  *   - @ref sl_btmesh_prov_provision_gatt_device : Provision a device over
  *     PB-GATT
+ *   - @ref sl_btmesh_prov_provision_remote_device : Provision a device over
+ *     PB-Remote
  *   - @ref sl_btmesh_evt_prov_oob_display_input : Request to display input
  *     out-of-band data to the user to input on the node
  *   - @ref sl_btmesh_evt_prov_oob_pkey_request : Request for out-of-band public
@@ -2152,9 +2159,118 @@ sl_status_t sl_btmesh_node_compare_dcd(uint8_t page_number,
  *     authentication data of a node
  *   - @ref sl_btmesh_prov_send_oob_auth_response : Provide stack with
  *     out-of-band authentication data of a node
+ *   - @ref sl_btmesh_evt_prov_capabilities : Device capabilities received
+ *   - @ref sl_btmesh_evt_prov_provisioning_suspended : Provisioning flow
+ *     suspended for controlling of the provisioning behavior
+ *   - @ref sl_btmesh_prov_continue_provisioning : Continue a suspended
+ *     provisioning session
+ *   - @ref sl_btmesh_prov_abort_provisioning : Abort a suspended provisioning
+ *     session
+ *   - @ref sl_btmesh_prov_set_device_address : Explicitly set the device
+ *     primary address
+ *   - @ref sl_btmesh_prov_get_provisioning_records_list : Get the list of
+ *     provisioning record on the device
+ *   - @ref sl_btmesh_evt_prov_provisioning_records_list : List of provisioning
+ *     records on the device, if any
+ *   - @ref sl_btmesh_prov_get_provisioning_record_data : Get a fragment of a
+ *     specific provisioning record's contents
+ *   - @ref sl_btmesh_evt_prov_provisioning_record_data : Provisioning record
+ *     data fragment
+ *   - @ref sl_btmesh_evt_prov_start_sent : Provisioning Start PDU sent
  *   - @ref sl_btmesh_evt_prov_device_provisioned : Device Provisioned
  *   - @ref sl_btmesh_evt_prov_provisioning_failed : Provisioning a device
  *     failed
+ *
+ * Provisiong can be executed either with default behavior and parameters, or
+ * with fine-grained control over the provisioning process and explicitly set
+ * provisioning parameters. The overall process for provisioning a nearby device
+ * is as follows:
+ *   - The Provisioner starts to scan for devices to be provisioned by calling
+ *     @ref sl_btmesh_prov_scan_unprov_beacons. Devices that are available for
+ *     provisioning are reported with @ref sl_btmesh_evt_prov_unprov_beacon
+ *     events that indicate the device UUID and the provisioning bearer the
+ *     device supports. The scanning stops either by calling @ref
+ *     sl_btmesh_prov_stop_scan_unprov_beacons or by starting to provision a
+ *     device.
+ *   - A provisioning session is created by calling @ref
+ *     sl_btmesh_prov_create_provisioning_session. At this point, the
+ *     Provisioner must decide which initial network key is provisioned to the
+ *     device if the provisioning succeeds. This choice only affects the initial
+ *     access to the network, though. For example, the device could initially be
+ *     provisioned to a guest network while later the primary network key could
+ *     be added to the device and the guest network key dropped, to make the
+ *     device part of the primary network.
+ *   - Optionally, if fine-grained control over the provisioning process
+ *     execution is required, @ref sl_btmesh_prov_set_provisioning_suspend_event
+ *     can be called to suspend the provisioning process at the time when a
+ *     provisioning link is opened, or at the time when a Provisioning
+ *     Capabilities PDU is received from the device. Whenever a provisioning
+ *     process is suspended, the Provisioner can make a decision whether to
+ *     proceed with provisioning or to abort it based on the information
+ *     received from the device.
+ *   - A provisioning link to the device is opened by calling either @ref
+ *     sl_btmesh_prov_provision_adv_device or @ref
+ *     sl_btmesh_prov_provision_gatt_device, depending on which provision bearer
+ *     is being used. Note that for PB-GATT a LE connection must first be
+ *     established with the device to be provisioned, or provisioning will fail.
+ *   - Optionally, if the provisioning was set to be suspended at the opening of
+ *     the provisioning link, @ref sl_btmesh_evt_prov_provisioning_suspended
+ *     event will be generated once the link is formed. At this point, the
+ *     Provisioner may query the device's provisioning records by calling @ref
+ *     sl_btmesh_prov_get_provisioning_records_list and @ref
+ *     sl_btmesh_prov_get_provisioning_record_data; provisioning records may
+ *     contain information related to the device, such as X.509 certificates
+ *     stored on the device. Once done examining the provisioning records, the
+ *     Provisioner must call either @ref sl_btmesh_prov_continue_provisioning or
+ *     @ref sl_btmesh_prov_abort_provisioning depending on whether it wants to
+ *     continue the suspended provisioning process or not.
+ *   - Once the provisioning link has been opened and provisioning has been
+ *     resumed if suspended, the Provisioner will query the device for its
+ *     capabilities, which are reported as a @ref
+ *     sl_btmesh_evt_prov_capabilities event.
+ *   - Optionally, if the provisioning was set to be suspended at the reception
+ *     of the Provisioning Capabilities PDU, @ref
+ *     sl_btmesh_evt_prov_provisioning_suspended event will be generated once
+ *     the capabilities have been reported. At this point, the Provisioner may
+ *     examine the received capabilities and make decisions based on the number
+ *     of elements the device has, the provisioning algorithms it supports, and
+ *     the out-of-band information it has. The Provisioner may set the primary
+ *     Mesh address to be assigned to the device by calling @ref
+ *     sl_btmesh_prov_set_device_address (if not used, the Mesh stack will
+ *     auto-assign an address); it may set the OOB public key and OOB
+ *     authentication data requirements it wants to use in provisioning the
+ *     device by @ref sl_btmesh_prov_set_oob_requirements (if not used, the Mesh
+ *     stack will automatically choose an authentication method). Then, the
+ *     Provisioner must again call either @ref
+ *     sl_btmesh_prov_continue_provisioning or @ref
+ *     sl_btmesh_prov_abort_provisioning depending on whether it wants to
+ *     continue the suspended provisioning process or not.
+ *   - Once the device's provisioning capabilities have been received, the
+ *     Provisioner has made a selection of the provisioning parameters to use,
+ *     and provisioning has been resumed if suspended, the Provisioner will send
+ *     a Provisioning Start PDU to the device, and a @ref
+ *     sl_btmesh_evt_prov_start_sent event that contains the choices made will
+ *     be generated.
+ *   - If the device has an out-of-band public key and the key was chosen to be
+ *     used in provisioning the device, a @ref
+ *     sl_btmesh_evt_prov_oob_pkey_request will be generated when the key is
+ *     needed. The Provisioner must respond with @ref
+ *     sl_btmesh_prov_send_oob_pkey_response that contains the key data.
+ *   - If the device supports output out-of-band authentication or static
+ *     out-of-band authentication, and either of those was chosen to be used in
+ *     provisioning the device, a @ref sl_btmesh_evt_prov_oob_auth_request event
+ *     will be generated when the authentication data is needed. The Provisioner
+ *     must respond with @ref sl_btmesh_prov_send_oob_auth_response that
+ *     contains the authentication data.
+ *   - If the device support input out-of-band authentication and it was chosen
+ *     to be used in provisioning the device, a @ref
+ *     sl_btmesh_evt_prov_oob_display_input event that contains authentication
+ *     data will be generated. The Provisioner must display the authentication
+ *     data to the user, so that they may input the data into the device.
+ *   - Once the necessary cryptographic exchanges have been completed, the
+ *     Provisioner will provision the device with the chosen primary unicast
+ *     address and the chosen initial network key. The process will conclude by
+ *     the generation of a @ref sl_btmesh_evt_prov_device_provisioned event.
  *
  * <b>Key Management</b>
  *   - @ref sl_btmesh_prov_create_network : Create a new network key on the
@@ -2285,55 +2401,55 @@ sl_status_t sl_btmesh_node_compare_dcd(uint8_t page_number,
  */
 
 /** Uncategorized */
-#define SL_BTMESH_PROV_OOB_OTHER      0x1       
+#define SL_BTMESH_PROV_OOB_OTHER      0x1
 
 /** URI or other electronic */
-#define SL_BTMESH_PROV_OOB_URI        0x2       
+#define SL_BTMESH_PROV_OOB_URI        0x2
 
 /** 2D machine-readable code */
-#define SL_BTMESH_PROV_OOB_2D_MR_CODE 0x4       
+#define SL_BTMESH_PROV_OOB_2D_MR_CODE 0x4
 
 /** Barcode */
-#define SL_BTMESH_PROV_OOB_BAR_CODE   0x8       
+#define SL_BTMESH_PROV_OOB_BAR_CODE   0x8
 
 /** NFC */
-#define SL_BTMESH_PROV_OOB_NFC        0x10      
+#define SL_BTMESH_PROV_OOB_NFC        0x10
 
 /** Number */
-#define SL_BTMESH_PROV_OOB_NUMBER     0x20      
+#define SL_BTMESH_PROV_OOB_NUMBER     0x20
 
 /** String */
-#define SL_BTMESH_PROV_OOB_STRING     0x40      
+#define SL_BTMESH_PROV_OOB_STRING     0x40
 
 /** Reserved */
-#define SL_BTMESH_PROV_OOB_RFU_7      0x80      
+#define SL_BTMESH_PROV_OOB_RFU_7      0x80
 
 /** Reserved */
-#define SL_BTMESH_PROV_OOB_RFU_8      0x100     
+#define SL_BTMESH_PROV_OOB_RFU_8      0x100
 
 /** Reserved */
-#define SL_BTMESH_PROV_OOB_RFU_9      0x200     
+#define SL_BTMESH_PROV_OOB_RFU_9      0x200
 
 /** Reserved */
-#define SL_BTMESH_PROV_OOB_RFU_A      0x400     
+#define SL_BTMESH_PROV_OOB_RFU_A      0x400
 
 /** On the box */
-#define SL_BTMESH_PROV_OOB_LOC_ON_BOX 0x800     
+#define SL_BTMESH_PROV_OOB_LOC_ON_BOX 0x800
 
 /** Inside the box */
-#define SL_BTMESH_PROV_OOB_LOC_IN_BOX 0x1000    
+#define SL_BTMESH_PROV_OOB_LOC_IN_BOX 0x1000
 
 /** On a piece of paper */
-#define SL_BTMESH_PROV_OOB_LOC_PAPER  0x2000    
+#define SL_BTMESH_PROV_OOB_LOC_PAPER  0x2000
 
 /** In the device manual */
-#define SL_BTMESH_PROV_OOB_LOC_MANUAL 0x4000    
+#define SL_BTMESH_PROV_OOB_LOC_MANUAL 0x4000
 
 /** On the device */
-#define SL_BTMESH_PROV_OOB_LOC_DEVICE 0x8000    
+#define SL_BTMESH_PROV_OOB_LOC_DEVICE 0x8000
 
 /** Mask of reserved bits */
-#define SL_BTMESH_PROV_OOB_RFU_MASK   0x780     
+#define SL_BTMESH_PROV_OOB_RFU_MASK   0x780
 
 /** @} */ // end addtogroup sl_btmesh_prov_oob_capabilities
 
@@ -2601,6 +2717,10 @@ typedef struct sl_btmesh_evt_prov_oob_display_input_s sl_btmesh_evt_prov_oob_dis
  * @addtogroup sl_btmesh_evt_prov_ddb_list sl_btmesh_evt_prov_ddb_list
  * @{
  * @brief Provisioner's device database list entry
+ *
+ * This event is generated by a deprecated function. Please use @ref
+ * sl_btmesh_prov_get_ddb_entry_count and @ref
+ * sl_btmesh_prov_get_ddb_entry_by_count instead.
  */
 
 /** @brief Identifier of the ddb_list event */
@@ -3072,6 +3192,19 @@ sl_status_t sl_btmesh_prov_abort_provisioning(uuid_128 uuid, uint8_t reason);
  * Set the address for the device after the provisioning has been suspended, as
  * indicated by @ref sl_btmesh_evt_prov_provisioning_suspended event.
  *
+ * Note the following: every element of the device is assigned an address when a
+ * device is successfully provisioned. The primary element is assigned the
+ * address given by this command, while the following elements are assigned
+ * addresses in a consecutive sequence. Care must be taken to give the device a
+ * primary address so that the range of addresses it receives does not overlap
+ * with any other active device's address range.
+ *
+ * Note also that on reusing an address range that was previously used by
+ * another device that is no longer active in the network, an IV index update
+ * must have been fully completed in between device removal and address reuse.
+ * Otherwise, messages sent by the new device may be considered as replay
+ * attacks and be discarded by the receiving nodes.
+ *
  * @param[in] uuid UUID of the device being provisioned
  * @param[in] address Unicast address to be assigned for the primary element of
  *   the node.
@@ -3396,7 +3529,9 @@ sl_status_t sl_btmesh_prov_add_ddb_entry(uuid_128 uuid,
 /***************************************************************************//**
  *
  * List nodes known by this Provisioner. A number of @ref
- * sl_btmesh_evt_prov_ddb_list events will be generated.
+ * sl_btmesh_evt_prov_ddb_list events will be generated. This is a deprecated
+ * function. Please use @ref sl_btmesh_prov_get_ddb_entry_count and @ref
+ * sl_btmesh_prov_get_ddb_entry_by_count instead.
  *
  * @param[out] count Number of events that will follow
  *
@@ -3406,7 +3541,7 @@ sl_status_t sl_btmesh_prov_add_ddb_entry(uuid_128 uuid,
  *   - @ref sl_btmesh_evt_prov_ddb_list
  *
  ******************************************************************************/
-sl_status_t sl_btmesh_prov_list_ddb_entries(uint16_t *count);
+SL_BGAPI_DEPRECATED sl_status_t sl_btmesh_prov_list_ddb_entries(uint16_t *count);
 
 /***************************************************************************//**
  *
@@ -5253,109 +5388,109 @@ sl_status_t sl_btmesh_health_server_send_test_response(uint16_t client_address,
  */
 
 /** Generic on/off get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_ON_OFF                    0x0       
+#define SL_BTMESH_GENERIC_CLIENT_STATE_ON_OFF                    0x0
 
 /** Generic on power up get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_ON_POWER_UP               0x1       
+#define SL_BTMESH_GENERIC_CLIENT_STATE_ON_POWER_UP               0x1
 
 /** Generic level get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_LEVEL                     0x2       
+#define SL_BTMESH_GENERIC_CLIENT_STATE_LEVEL                     0x2
 
 /** Generic power level get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_POWER_LEVEL               0x3       
+#define SL_BTMESH_GENERIC_CLIENT_STATE_POWER_LEVEL               0x3
 
 /** Generic power level last get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_POWER_LEVEL_LAST          0x4       
+#define SL_BTMESH_GENERIC_CLIENT_STATE_POWER_LEVEL_LAST          0x4
 
 /** Generic power level default get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_POWER_LEVEL_DEFAULT       0x5       
+#define SL_BTMESH_GENERIC_CLIENT_STATE_POWER_LEVEL_DEFAULT       0x5
 
 /** Generic power level range get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_POWER_LEVEL_RANGE         0x6       
+#define SL_BTMESH_GENERIC_CLIENT_STATE_POWER_LEVEL_RANGE         0x6
 
 /** Generic transition time get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_TRANSITION_TIME           0x6       
+#define SL_BTMESH_GENERIC_CLIENT_STATE_TRANSITION_TIME           0x6
 
 /** Generic battery get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_BATTERY                   0x8       
+#define SL_BTMESH_GENERIC_CLIENT_STATE_BATTERY                   0x8
 
 /** Generic global location get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_LOCATION_GLOBAL           0x9       
+#define SL_BTMESH_GENERIC_CLIENT_STATE_LOCATION_GLOBAL           0x9
 
 /** Generic local location get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_LOCATION_LOCAL            0xa       
+#define SL_BTMESH_GENERIC_CLIENT_STATE_LOCATION_LOCAL            0xa
 
 /** Generic user property get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_PROPERTY_USER             0xb       
+#define SL_BTMESH_GENERIC_CLIENT_STATE_PROPERTY_USER             0xb
 
 /** Generic admin property get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_PROPERTY_ADMIN            0xc       
+#define SL_BTMESH_GENERIC_CLIENT_STATE_PROPERTY_ADMIN            0xc
 
 /** Generic manufacturer property get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_PROPERTY_MANUF            0xd       
+#define SL_BTMESH_GENERIC_CLIENT_STATE_PROPERTY_MANUF            0xd
 
 /** Generic user property list get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_PROPERTY_LIST_USER        0xe       
+#define SL_BTMESH_GENERIC_CLIENT_STATE_PROPERTY_LIST_USER        0xe
 
 /** Generic admin property list get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_PROPERTY_LIST_ADMIN       0xf       
+#define SL_BTMESH_GENERIC_CLIENT_STATE_PROPERTY_LIST_ADMIN       0xf
 
 /** Generic manufacturer property list get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_PROPERTY_LIST_MANUF       0x10      
+#define SL_BTMESH_GENERIC_CLIENT_STATE_PROPERTY_LIST_MANUF       0x10
 
 /** Generic client property list get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_PROPERTY_LIST_CLIENT      0x11      
+#define SL_BTMESH_GENERIC_CLIENT_STATE_PROPERTY_LIST_CLIENT      0x11
 
 /** Light actual lightness get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_LIGHTNESS_ACTUAL          0x80      
+#define SL_BTMESH_GENERIC_CLIENT_STATE_LIGHTNESS_ACTUAL          0x80
 
 /** Light linear lightness get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_LIGHTNESS_LINEAR          0x81      
+#define SL_BTMESH_GENERIC_CLIENT_STATE_LIGHTNESS_LINEAR          0x81
 
 /** Light last lightness get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_LIGHTNESS_LAST            0x82      
+#define SL_BTMESH_GENERIC_CLIENT_STATE_LIGHTNESS_LAST            0x82
 
 /** Light default lightness get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_LIGHTNESS_DEFAULT         0x83      
+#define SL_BTMESH_GENERIC_CLIENT_STATE_LIGHTNESS_DEFAULT         0x83
 
 /** Light lightness range get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_LIGHTNESS_RANGE           0x84      
+#define SL_BTMESH_GENERIC_CLIENT_STATE_LIGHTNESS_RANGE           0x84
 
 /** Light lightness, color temperature, and delta UV server state identifier.
  * Not to be used by client get requests. */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_CTL                       0x85      
+#define SL_BTMESH_GENERIC_CLIENT_STATE_CTL                       0x85
 
 /** Light color temperature and delta UV get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_CTL_TEMPERATURE           0x86      
+#define SL_BTMESH_GENERIC_CLIENT_STATE_CTL_TEMPERATURE           0x86
 
 /** Light lightness, color temperature, and delta UV default get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_CTL_DEFAULT               0x87      
+#define SL_BTMESH_GENERIC_CLIENT_STATE_CTL_DEFAULT               0x87
 
 /** Light color temperature range get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_CTL_RANGE                 0x88      
+#define SL_BTMESH_GENERIC_CLIENT_STATE_CTL_RANGE                 0x88
 
 /** Light lightness and color temperature get request. */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_CTL_LIGHTNESS_TEMPERATURE 0x89      
+#define SL_BTMESH_GENERIC_CLIENT_STATE_CTL_LIGHTNESS_TEMPERATURE 0x89
 
 /** Light lightness, color hue, and color saturation current value get request.
  * */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_HSL                       0x8a      
+#define SL_BTMESH_GENERIC_CLIENT_STATE_HSL                       0x8a
 
 /** Light color hue get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_HSL_HUE                   0x8b      
+#define SL_BTMESH_GENERIC_CLIENT_STATE_HSL_HUE                   0x8b
 
 /** Light color saturation get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_HSL_SATURATION            0x8c      
+#define SL_BTMESH_GENERIC_CLIENT_STATE_HSL_SATURATION            0x8c
 
 /** Light lightness, color hue, and color saturation default get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_HSL_DEFAULT               0x8d      
+#define SL_BTMESH_GENERIC_CLIENT_STATE_HSL_DEFAULT               0x8d
 
 /** Light color hue and saturation range get request */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_HSL_RANGE                 0x8e      
+#define SL_BTMESH_GENERIC_CLIENT_STATE_HSL_RANGE                 0x8e
 
 /** Light lightness, color hue, and color saturation target value get request.
  * */
-#define SL_BTMESH_GENERIC_CLIENT_STATE_HSL_TARGET                0x8f      
+#define SL_BTMESH_GENERIC_CLIENT_STATE_HSL_TARGET                0x8f
 
 /** @} */ // end addtogroup sl_btmesh_generic_client_get_state_type
 
@@ -5368,88 +5503,88 @@ sl_status_t sl_btmesh_health_server_send_test_response(uint16_t client_address,
  */
 
 /** Generic on/off set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_ON_OFF              0x0       
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_ON_OFF              0x0
 
 /** Generic on power up set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_ON_POWER_UP         0x1       
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_ON_POWER_UP         0x1
 
 /** Generic level set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LEVEL               0x2       
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LEVEL               0x2
 
 /** Generic level delta set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LEVEL_DELTA         0x3       
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LEVEL_DELTA         0x3
 
 /** Generic level move set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LEVEL_MOVE          0x4       
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LEVEL_MOVE          0x4
 
 /** Generic level halt request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LEVEL_HALT          0x5       
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LEVEL_HALT          0x5
 
 /** Generic power level set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_POWER_LEVEL         0x6       
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_POWER_LEVEL         0x6
 
 /** Generic power level default set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_POWER_LEVEL_DEFAULT 0x7       
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_POWER_LEVEL_DEFAULT 0x7
 
 /** Generic power level range set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_POWER_LEVEL_RANGE   0x8       
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_POWER_LEVEL_RANGE   0x8
 
 /** Generic transition time set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_TRANSITION_TIME     0x9       
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_TRANSITION_TIME     0x9
 
 /** Generic global location set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LOCATION_GLOBAL     0xa       
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LOCATION_GLOBAL     0xa
 
 /** Generic local location set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LOCATION_LOCAL      0xb       
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LOCATION_LOCAL      0xb
 
 /** Generic user property set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_PROPERTY_USER       0xc       
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_PROPERTY_USER       0xc
 
 /** Generic admin property set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_PROPERTY_ADMIN      0xd       
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_PROPERTY_ADMIN      0xd
 
 /** Generic manufacturer property set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_PROPERTY_MANUF      0xe       
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_PROPERTY_MANUF      0xe
 
 /** Light actual lightness set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LIGHTNESS_ACTUAL    0x80      
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LIGHTNESS_ACTUAL    0x80
 
 /** Light linear lightness set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LIGHTNESS_LINEAR    0x81      
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LIGHTNESS_LINEAR    0x81
 
 /** Light default lightness set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LIGHTNESS_DEFAULT   0x82      
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LIGHTNESS_DEFAULT   0x82
 
 /** Light lightness range set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LIGHTNESS_RANGE     0x83      
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_LIGHTNESS_RANGE     0x83
 
 /** Light lightness, color temperature, and delta UV set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_CTL                 0x84      
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_CTL                 0x84
 
 /** Light color temperature and delta UV set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_CTL_TEMPERATURE     0x85      
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_CTL_TEMPERATURE     0x85
 
 /** Light lightness, color temperature, and delta UV default set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_CTL_DEFAULT         0x86      
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_CTL_DEFAULT         0x86
 
 /** Light color temperature range set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_CTL_RANGE           0x87      
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_CTL_RANGE           0x87
 
 /** Light lightness, color hue, and color saturation set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_HSL                 0x88      
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_HSL                 0x88
 
 /** Light color hue set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_HSL_HUE             0x89      
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_HSL_HUE             0x89
 
 /** Light color saturation set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_HSL_SATURATION      0x8a      
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_HSL_SATURATION      0x8a
 
 /** Light lightness, color hue, and color saturation default set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_HSL_DEFAULT         0x8b      
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_HSL_DEFAULT         0x8b
 
 /** Light color hue and color saturation range set request */
-#define SL_BTMESH_GENERIC_CLIENT_REQUEST_HSL_RANGE           0x8c      
+#define SL_BTMESH_GENERIC_CLIENT_REQUEST_HSL_RANGE           0x8c
 
 /** @} */ // end addtogroup sl_btmesh_generic_client_set_request_type
 
@@ -7669,52 +7804,241 @@ sl_status_t sl_btmesh_test_adv_use_random_address(uint8_t address_type);
  */
 typedef enum
 {
-  sl_btmesh_lpn_queue_length    = 0x0, /**< (0x0) Minimum queue length that the
-                                            friend must support. Choose an
-                                            appropriate length based on the
-                                            expected message frequency and LPN
-                                            sleep period because messages that
-                                            do not fit into the friend queue are
-                                            dropped. Note that the given value
-                                            is rounded up to the nearest power
-                                            of 2. Range: 2..128 */
-  sl_btmesh_lpn_poll_timeout    = 0x1, /**< (0x1) Poll timeout in milliseconds,
-                                            which is the longest time that LPN
-                                            sleeps in between querying its
-                                            friend for queued messages. Long
-                                            poll timeout allows the LPN to sleep
-                                            for longer periods, at the expense
-                                            of increased latency for receiving
-                                            messages. Note that the given value
-                                            is rounded up to the nearest 100 ms
-                                            Range: 1 s to 95 h 59 min 59 s 900
-                                            ms */
-  sl_btmesh_lpn_receive_delay   = 0x2, /**< (0x2) Receive delay in milliseconds.
-                                            Receive delay is the time between
-                                            the LPN sending a request and
-                                            listening for a response. Receive
-                                            delay allows the friend node time to
-                                            prepare the message and LPN to
-                                            sleep. Range: 10 ms to 255 ms The
-                                            default receive delay in 10 ms. */
-  sl_btmesh_lpn_request_retries = 0x3, /**< (0x3) Request retry is the number of
-                                            retry attempts to repeat e.g., the
-                                            friend poll message if the friend
-                                            update was not received by the LPN.
-                                            Range is from 0 to 239, default is 5 */
-  sl_btmesh_lpn_retry_interval  = 0x4, /**< (0x4) Time interval between retry
-                                            attempts in milliseconds. Range is 0
-                                            to 60000 ms (1 minute), default is
-                                            100 ms. */
-  sl_btmesh_lpn_clock_accuracy  = 0x5  /**< (0x5) Clock accuracy in ppm, which
-                                            will be taken into account when
-                                            opening and closing the receive
-                                            window, and determining the poll
-                                            timeout. Should be used with care,
-                                            because inaccurate clock can
-                                            increase the receive window lenght
-                                            to up to 2,5 times in some cases.
-                                            Default value is 0. */
+  sl_btmesh_lpn_queue_length                      = 0x0, /**< (0x0) Minimum
+                                                              queue length that
+                                                              the friend must
+                                                              support. Choose an
+                                                              appropriate length
+                                                              based on the
+                                                              expected message
+                                                              frequency and LPN
+                                                              sleep period
+                                                              because messages
+                                                              that do not fit
+                                                              into the friend
+                                                              queue are dropped.
+                                                              Note that the
+                                                              given value is
+                                                              rounded up to the
+                                                              nearest power of
+                                                              2. Range: 2..128 */
+  sl_btmesh_lpn_poll_timeout                      = 0x1, /**< (0x1) Poll timeout
+                                                              in milliseconds,
+                                                              which is the
+                                                              longest time that
+                                                              LPN sleeps in
+                                                              between querying
+                                                              its friend for
+                                                              queued messages.
+                                                              Long poll timeout
+                                                              allows the LPN to
+                                                              sleep for longer
+                                                              periods, at the
+                                                              expense of
+                                                              increased latency
+                                                              for receiving
+                                                              messages. Note
+                                                              that the given
+                                                              value is rounded
+                                                              up to the nearest
+                                                              100 ms Range: 1 s
+                                                              to 95 h 59 min 59
+                                                              s 900 ms */
+  sl_btmesh_lpn_receive_delay                     = 0x2, /**< (0x2) Receive
+                                                              delay in
+                                                              milliseconds.
+                                                              Receive delay is
+                                                              the time between
+                                                              the LPN sending a
+                                                              request and
+                                                              listening for a
+                                                              response. Receive
+                                                              delay allows the
+                                                              friend node time
+                                                              to prepare the
+                                                              message and LPN to
+                                                              sleep. Range: 10
+                                                              ms to 255 ms The
+                                                              default receive
+                                                              delay in 10 ms. */
+  sl_btmesh_lpn_request_retries                   = 0x3, /**< (0x3) Request
+                                                              retry is the
+                                                              number of retry
+                                                              attempts to repeat
+                                                              e.g., the friend
+                                                              poll message if
+                                                              the friend update
+                                                              was not received
+                                                              by the LPN. Range
+                                                              is from 0 to 239,
+                                                              default is 5 */
+  sl_btmesh_lpn_retry_interval                    = 0x4, /**< (0x4) Time
+                                                              interval between
+                                                              retry attempts in
+                                                              milliseconds.
+                                                              Range is 0 to
+                                                              60000 ms (1
+                                                              minute), default
+                                                              is 100 ms. */
+  sl_btmesh_lpn_clock_accuracy                    = 0x5, /**< (0x5) Clock
+                                                              accuracy in ppm,
+                                                              which will be
+                                                              taken into account
+                                                              when opening and
+                                                              closing the
+                                                              receive window,
+                                                              and determining
+                                                              the poll timeout.
+                                                              Should be used
+                                                              with care, because
+                                                              inaccurate clock
+                                                              can increase the
+                                                              receive window
+                                                              lenght to up to
+                                                              2,5 times in some
+                                                              cases. Default
+                                                              value is 0. */
+  sl_btmesh_lpn_max_receive_window                = 0x6, /**< (0x6) Maximum
+                                                              acceptable friend
+                                                              receive window in
+                                                              milliseconds.
+                                                              Friend offers with
+                                                              a larger receive
+                                                              window will be
+                                                              rejected. This
+                                                              configuration also
+                                                              limits how long
+                                                              the LPN waits for
+                                                              friend offers,
+                                                              because friends
+                                                              with large receive
+                                                              windows will delay
+                                                              their friend offer
+                                                              messages longer.
+                                                              Range: 1 ms to 255
+                                                              ms. Default is 255
+                                                              ms. */
+  sl_btmesh_lpn_min_subscription_list_size        = 0x7, /**< (0x7) Minimum
+                                                              subscription list
+                                                              size that the
+                                                              friend must
+                                                              support. Friend
+                                                              offers with a
+                                                              smaller
+                                                              subscription list
+                                                              size will be
+                                                              rejected. Range:
+                                                              0..255 Default is
+                                                              0. */
+  sl_btmesh_lpn_min_friend_offer_rssi             = 0x8, /**< (0x8) Minimum
+                                                              acceptable RSSI
+                                                              value in dBm
+                                                              reported by friend
+                                                              offer messages.
+                                                              This configuration
+                                                              also limits how
+                                                              long the LPN waits
+                                                              for friend offers,
+                                                              because friends
+                                                              with low RSSI
+                                                              values will delay
+                                                              their friend offer
+                                                              messages longer.
+                                                              Note that in
+                                                              practice the RSSI
+                                                              value is a
+                                                              negative number,
+                                                              and values larger
+                                                              than -20 dBm are
+                                                              not frequently
+                                                              observed in real
+                                                              life scenarios.
+                                                              The friend may
+                                                              also report that
+                                                              it does not
+                                                              support RSSI
+                                                              reporting, in
+                                                              which case an
+                                                              empty RSSI value
+                                                              is also accepted.
+                                                              The value is
+                                                              interpreted as a
+                                                              two's complement
+                                                              8-bit signed
+                                                              integer, even
+                                                              though the type of
+                                                              the parameter is
+                                                              uint32. The most
+                                                              significant 24
+                                                              bits of the uint32
+                                                              value are ignored,
+                                                              so it does not
+                                                              matter whether the
+                                                              value -55 is given
+                                                              as 0x000000c9 or
+                                                              0xffffffc9, as an
+                                                              example. Range:
+                                                              \-128..127.
+                                                              Default is -128. */
+  sl_btmesh_lpn_receive_window_factor             = 0x9, /**< (0x9) Value for
+                                                              ReceiveWindowFactor.
+                                                              This informs the
+                                                              friend how much it
+                                                              should delay
+                                                              sending its friend
+                                                              offer message
+                                                              based on its
+                                                              receive window
+                                                              capability. The
+                                                              factor value is 1
+                                                              + 0.5 *
+                                                              receive_window_factor.
+                                                              Range: 0..3.
+                                                              Default is 0
+                                                              (factor of 1). */
+  sl_btmesh_lpn_rssi_factor                       = 0xa, /**< (0xa) Value for
+                                                              RSSIFactor. This
+                                                              informs the friend
+                                                              how much it should
+                                                              delay sending its
+                                                              friend offer
+                                                              message based on
+                                                              its measured RSSI
+                                                              of the friend
+                                                              request. The
+                                                              factor value is 1
+                                                              + 0.5 *
+                                                              rssi_factor.
+                                                              Range: 0..3.
+                                                              Default is 0
+                                                              (factor of 1). */
+  sl_btmesh_lpn_friend_offer_listen_timeout_slack = 0xb  /**< (0xb) Amount of
+                                                              time in
+                                                              milliseconds to
+                                                              listen for friend
+                                                              offers after their
+                                                              expected arrival
+                                                              time based on the
+                                                              maximum receive
+                                                              window and minimum
+                                                              RSSI and their
+                                                              respective
+                                                              factors. Since the
+                                                              advertisement
+                                                              message timings
+                                                              are generally not
+                                                              exact, some slack
+                                                              should be allowed
+                                                              to avoid missing
+                                                              valid friend
+                                                              offers. If the
+                                                              calculated time
+                                                              plus slack exceeds
+                                                              1000 ms, then the
+                                                              time is clamped to
+                                                              1000 ms. Range:
+                                                              1..1000 ms.
+                                                              Default is 20 ms. */
 } sl_btmesh_lpn_settings_t;
 
 /**
@@ -10271,6 +10595,7 @@ sl_status_t sl_btmesh_config_client_prepare_key_refresh(aes_key_128 net_key,
 
 /* Command and Response IDs */
 #define sl_btmesh_cmd_mbt_client_init_id                                 0x09280028
+#define sl_btmesh_cmd_mbt_client_deinit_id                               0x07280028
 #define sl_btmesh_cmd_mbt_client_setup_id                                0x00280028
 #define sl_btmesh_cmd_mbt_client_query_information_id                    0x01280028
 #define sl_btmesh_cmd_mbt_client_get_server_status_id                    0x0d280028
@@ -10285,6 +10610,7 @@ sl_status_t sl_btmesh_config_client_prepare_key_refresh(aes_key_128 net_key,
 #define sl_btmesh_cmd_mbt_client_cancel_transfer_id                      0x0b280028
 #define sl_btmesh_cmd_mbt_client_abort_id                                0x0c280028
 #define sl_btmesh_rsp_mbt_client_init_id                                 0x09280028
+#define sl_btmesh_rsp_mbt_client_deinit_id                               0x07280028
 #define sl_btmesh_rsp_mbt_client_setup_id                                0x00280028
 #define sl_btmesh_rsp_mbt_client_query_information_id                    0x01280028
 #define sl_btmesh_rsp_mbt_client_get_server_status_id                    0x0d280028
@@ -10785,6 +11111,17 @@ sl_status_t sl_btmesh_mbt_client_init(uint16_t elem_index,
 
 /***************************************************************************//**
  *
+ * De-initializes the MBT Client.
+ *
+ * @param[in] elem_index The client model element index.
+ *
+ * @return SL_STATUS_OK if successful. Error code otherwise.
+ *
+ ******************************************************************************/
+sl_status_t sl_btmesh_mbt_client_deinit(uint16_t elem_index);
+
+/***************************************************************************//**
+ *
  * Set up a new BLOB transfer.
  *
  * This is the first step in starting a transfer. Basic information of the BLOB
@@ -11208,6 +11545,7 @@ sl_status_t sl_btmesh_mbt_client_abort(uint16_t elem_index);
 
 /* Command and Response IDs */
 #define sl_btmesh_cmd_mbt_server_init_id                                 0x02290028
+#define sl_btmesh_cmd_mbt_server_deinit_id                               0x09290028
 #define sl_btmesh_cmd_mbt_server_start_id                                0x00290028
 #define sl_btmesh_cmd_mbt_server_get_transfer_status_id                  0x01290028
 #define sl_btmesh_cmd_mbt_server_transfer_complete_id                    0x03290028
@@ -11217,6 +11555,7 @@ sl_status_t sl_btmesh_mbt_client_abort(uint16_t elem_index);
 #define sl_btmesh_cmd_mbt_server_enable_block_start_req_id               0x07290028
 #define sl_btmesh_cmd_mbt_server_block_start_rsp_id                      0x08290028
 #define sl_btmesh_rsp_mbt_server_init_id                                 0x02290028
+#define sl_btmesh_rsp_mbt_server_deinit_id                               0x09290028
 #define sl_btmesh_rsp_mbt_server_start_id                                0x00290028
 #define sl_btmesh_rsp_mbt_server_get_transfer_status_id                  0x01290028
 #define sl_btmesh_rsp_mbt_server_transfer_complete_id                    0x03290028
@@ -11628,6 +11967,17 @@ sl_status_t sl_btmesh_mbt_server_init(uint16_t elem_index,
                                       uint16_t pull_mode_chunks_to_request,
                                       uint16_t pull_mode_retry_interval_ms,
                                       uint16_t pull_mode_retry_count);
+
+/***************************************************************************//**
+ *
+ * De-initializes the MBT Client.
+ *
+ * @param[in] elem_index The client model element index.
+ *
+ * @return SL_STATUS_OK if successful. Error code otherwise.
+ *
+ ******************************************************************************/
+sl_status_t sl_btmesh_mbt_server_deinit(uint16_t elem_index);
 
 /***************************************************************************//**
  *
@@ -14505,10 +14855,11 @@ sl_status_t sl_btmesh_lc_server_init_all_properties(uint16_t elem_index);
 /***************************************************************************//**
  *
  * Update the bitmask that controls which messages are sent when the LC Server
- * publishes. By default, the bitmask will be enabled to publish all three
- * status messages. NOTE: This API will be deprecated in future releases because
- * the publish behaviour defines only Light LC State Machine OnOff State changes
- * to be reported.
+ * publishes. By default, the bitmask will be enabled to publish a Light LC
+ * Light OnOff Status message. This is a deprecated function. The LC Server is
+ * intended to publish only Light LC Light OnOff Status message when the Light
+ * LC State Machine Light OnOff state changes, so this function should not be
+ * used.
  *
  * @param[in] elem_index Index of the element.
  * @param[in] status_type @parblock
@@ -14523,9 +14874,9 @@ sl_status_t sl_btmesh_lc_server_init_all_properties(uint16_t elem_index);
  * @return SL_STATUS_OK if successful. Error code otherwise.
  *
  ******************************************************************************/
-sl_status_t sl_btmesh_lc_server_set_publish_mask(uint16_t elem_index,
-                                                 uint16_t status_type,
-                                                 uint8_t value);
+SL_BGAPI_DEPRECATED sl_status_t sl_btmesh_lc_server_set_publish_mask(uint16_t elem_index,
+                                                                     uint16_t status_type,
+                                                                     uint8_t value);
 
 /***************************************************************************//**
  *
@@ -19052,7 +19403,7 @@ sl_status_t sl_btmesh_fw_dist_client_get(uint16_t elem_index, uint16_t dst);
  ******************************************************************************/
 sl_status_t sl_btmesh_fw_dist_client_start_distribution(uint16_t elem_index,
                                                         uint16_t dst,
-                                                        uint8_t dist_appkey_index,
+                                                        uint16_t dist_appkey_index,
                                                         uint8_t dist_ttl,
                                                         uint16_t dist_timeout_base,
                                                         uint8_t transfer_mode,

@@ -1,0 +1,36 @@
+id: "wisun_event_task"
+label: "Wi-SUN event task plugin"
+description: "Wi-SUN event subscription task"
+package: "wisun"
+category: "Wi-SUN|Application|Wi-SUN CLI"
+quality: "production"
+
+requires:
+- name: "a_wisun_stack"
+- name: "event_system"
+
+provides:
+- name: "wisun_event_task"
+- name: "event_queue_task"
+
+source:
+- path: "plugin/sl_wisun_event_task.c"
+- path: "plugin/sl_wisun_event_task.h"
+
+include:
+- path: "plugin"
+
+template_contribution:
+- name: "event_handler"
+  value:
+    event: "internal_app_init"
+    include: "sl_wisun_event_task.h"
+    handler: "sl_wisun_event_task_init"
+- name: component_catalog
+  value: wisun_event_task
+
+metadata:
+  sbom:
+    license: MSLA
+
+root_path: wisun

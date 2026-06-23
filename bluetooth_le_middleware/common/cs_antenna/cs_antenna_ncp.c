@@ -30,6 +30,7 @@
 
 #include <stdint.h>
 #include "cs_antenna.h"
+#include "cs_antenna_config.h"
 #include "sl_bt_api.h"
 #include "cs_acp.h"
 
@@ -46,4 +47,16 @@ sl_status_t cs_antenna_configure(bool wired)
                                                  0,
                                                  NULL,
                                                  NULL);
+}
+
+bool cs_antenna_on_bt_event(sl_bt_msg_t *evt)
+{
+#if defined(CS_ANTENNA_CONFIG_SET_ON_BOOT) && (CS_ANTENNA_CONFIG_SET_ON_BOOT == 1)
+  if (SL_BT_MSG_ID(evt->header) == sl_bt_evt_system_boot_id) {
+    (void)cs_antenna_configure((bool)CS_ANTENNA_CONFIG_DEFAULT_ANTENNA_OFFSET);
+  }
+#else
+  (void)evt;
+#endif
+  return false;
 }

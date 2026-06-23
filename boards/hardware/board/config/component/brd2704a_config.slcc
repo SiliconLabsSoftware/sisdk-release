@@ -99,16 +99,21 @@
       vendor: silabs
     path: brd2704a/sl_pwm_init_led0_config.h
   - override:
-      component: simple_led
-      file_id: simple_led_config
-      instance: led0
+      component: rail_util_pti
+      file_id: rail_util_pti_config
       vendor: silabs
-    path: brd2704a/sl_simple_led_led0_config.h
+    path: brd2704a/sl_rail_util_pti_config.h
   - override:
       component: sl_rail_util_pti
       file_id: rail_util_pti_config
       vendor: silabs
     path: brd2704a/sl_rail_util_pti_config.h
+  - override:
+      component: simple_led
+      file_id: simple_led_config
+      instance: led0
+      vendor: silabs
+    path: brd2704a/sl_simple_led_led0_config.h
   - override:
       component: spidrv_eusart
       file_id: spidrv_eusart_config

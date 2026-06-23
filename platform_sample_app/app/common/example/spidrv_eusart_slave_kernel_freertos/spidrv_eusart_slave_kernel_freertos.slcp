@@ -1,7 +1,7 @@
 project_name: spidrv_eusart_slave_kernel_freertos
 package: platform
 quality: production
-label: Platform - SPIDRV Slave on freeRTOS kernel using EUSART
+label: Platform - SPIDRV Slave on FreeRTOS kernel using EUSART
 description: >
   This example project demonstrates how to use the slave mode of the Serial Peripheral Interface driver in a FreeRTOS kernel task.
 category: Example|Platform
@@ -45,3 +45,4 @@ ui_hints:
   highlight: readme.md
 tag:
   - hardware:component:exp_header:spi
+  - hwfilter:board:hardware:has:exp_header:spi

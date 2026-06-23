@@ -57,7 +57,7 @@
  * @param[in]  port Serial port to use.
  * @param[in]  baudRate Baud rate to use.
  * @param[in]  rtsCts Enable/disable hardware flow control.
- * @param[in]  timeout Constant used to calculate the total time-out period fo
+ * @param[in]  timeout Constant used to calculate the total time-out period for
  *                     read operations, in milliseconds.
  * @return  -1 on failure; on Win 0 on success,
  *          on Posix serial handler on success

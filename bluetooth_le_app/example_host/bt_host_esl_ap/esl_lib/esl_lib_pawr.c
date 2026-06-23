@@ -488,7 +488,7 @@ static sl_status_t validate_pawr_config(uint8_t pawr_handle, esl_lib_pawr_config
     }
 
     // --- Advanced check against misconfiguration ---
-    // The product of subevent count and subevent interval can't be greather than the minimum advertising interval
+    // The product of subevent count and subevent interval can't be greater than the minimum advertising interval
     if (new_config.subevent.count * new_config.subevent.interval > new_config.adv_interval.min) {
       sc = SL_STATUS_INVALID_CONFIGURATION;
     }
@@ -652,7 +652,7 @@ static sl_status_t run_command(esl_lib_command_list_cmd_t *cmd)
                              pawr->pawr_handle);
       sc = validate_pawr_config(pawr->pawr_handle, cmd->data.cmd_pawr_config.pawr_config);
       if (sc == SL_STATUS_OK) {
-        // Copy data on succesful validation
+        // Copy data on successful validation
         memcpy(&pawr->config,
                &cmd->data.cmd_pawr_config.pawr_config,
                sizeof(esl_lib_pawr_config_t));

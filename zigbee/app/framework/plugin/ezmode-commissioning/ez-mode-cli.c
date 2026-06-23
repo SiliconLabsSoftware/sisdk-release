@@ -33,7 +33,7 @@ void sl_zigbee_af_ez_mode_commissioning_client_command(sl_cli_command_arg_t *arg
   uint8_t count = sl_cli_get_argument_count(arguments) - 2;
   if (MAX_CLUSTER_IDS < count) {
     count = MAX_CLUSTER_IDS;
-    sl_zigbee_af_app_println("Cluster ids truncated to %d", count);
+    sl_zigbee_af_cli_println("Cluster ids truncated to %d", count);
   }
   for (clusterIdLength = 0; clusterIdLength < count; clusterIdLength++) {
     clusterIds[clusterIdLength]
@@ -44,7 +44,7 @@ void sl_zigbee_af_ez_mode_commissioning_client_command(sl_cli_command_arg_t *arg
                                                  clusterIds,
                                                  clusterIdLength);
   UNUSED_VAR(status);
-  sl_zigbee_af_app_println("%s 0x%02X", "client", status);
+  sl_zigbee_af_cli_println("%s 0x%02X", "client", status);
 }
 
 // plugin ezmode-commissioning server <endpoint:1> <identify time:1>
@@ -58,5 +58,5 @@ void sl_zigbee_af_ez_mode_commissioning_server_command(sl_cli_command_arg_t *arg
   }
   status = sl_zigbee_af_ezmode_server_commission_with_timeout(endpoint, identifyTimeS);
   UNUSED_VAR(status);
-  sl_zigbee_af_app_println("%s 0x%02X", "server", status);
+  sl_zigbee_af_cli_println("%s 0x%02X", "server", status);
 }

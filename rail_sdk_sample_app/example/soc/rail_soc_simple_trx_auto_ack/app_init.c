@@ -32,7 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
-
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "sl_common.h"
 #include "sl_rail.h"
@@ -105,7 +105,7 @@ void rail_app_init(void)
 
   status = sl_rail_set_state_timing(rail_handle, &timings);
   if (status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_warning("After sl_rail_set_state_timing() result: %lu\n ", status);
+    app_log_warning("After sl_rail_set_state_timing() result: 0x%08" PRIX32 "\n ", status);
   }
 
   // Setup Auto-ACK message
@@ -125,12 +125,12 @@ void rail_app_init(void)
 #endif
   status = sl_rail_write_auto_ack_fifo(rail_handle, ackData, sizeof(ackData));
   if (status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_warning("After sl_rail_write_auto_ack_fifo() result: %lu\n", status);
+    app_log_warning("After sl_rail_write_auto_ack_fifo() result: 0x%08" PRIX32 "\n", status);
   }
   // Enable Auto-ACK
   status = sl_rail_config_auto_ack(rail_handle, &autoAckConfig);
   if (status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_warning("After sl_rail_config_auto_ack() result: %lu\n", status);
+    app_log_warning("After sl_rail_config_auto_ack() result: 0x%08" PRIX32 "\n", status);
   }
 
   // CLI info message

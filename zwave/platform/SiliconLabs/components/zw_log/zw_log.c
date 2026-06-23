@@ -60,7 +60,7 @@ void zpal_log(
   int32_t msg_len = 0;
   char * p_buffer = (char *)log_buffer;
   if (ZW_LOG_DISPLAY_TIMESTAMP) {
-    msg_len += snprintf(p_buffer, ZW_LOG_BUFFER_SIZE, "%09lu ", xTaskGetTickCount());
+    msg_len += snprintf(p_buffer, ZW_LOG_BUFFER_SIZE, "%09u ", (unsigned int)xTaskGetTickCount());
   }
   if (ZW_LOG_DISPLAY_LEVEL) {
     msg_len += snprintf(p_buffer + msg_len, ZW_LOG_BUFFER_SIZE - msg_len, "[%c] ", level_char);

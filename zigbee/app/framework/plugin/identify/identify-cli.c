@@ -33,10 +33,10 @@ void sli_zigbee_af_identify_cli_print(sl_cli_command_arg_t *arguments)
   uint8_t i;
   for (i = 0; i < sl_zigbee_af_endpoint_count(); ++i) {
     uint8_t endpoint = sl_zigbee_af_endpoint_from_index(i);
-    sl_zigbee_af_identify_cluster_println("Endpoint 0x%02X is identifying: %s",
-                                          endpoint,
-                                          (sl_zigbee_af_is_device_identifying(endpoint)
-                                           ? "true"
-                                           : "false"));
+    sl_zigbee_af_cli_println("Endpoint 0x%02X is identifying: %s",
+                             endpoint,
+                             (sl_zigbee_af_is_device_identifying(endpoint)
+                              ? "true"
+                              : "false"));
   }
 }

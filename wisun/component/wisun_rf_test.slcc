@@ -22,6 +22,7 @@ source:
 
 include:
 - path: "stack/inc"
+- path: "stack/inc/posix"
 - path: plugin
   file_list:
   - path: sl_wisun_rf_test_tools.h

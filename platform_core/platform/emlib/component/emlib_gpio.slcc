@@ -26,6 +26,9 @@ requires:
 - name: enum
 conflicts:
 - name: device_series_3
+template_contribution:
+- name: component_catalog
+  value: emlib_gpio
 documentation:
   docset: gecko-platform
   document:

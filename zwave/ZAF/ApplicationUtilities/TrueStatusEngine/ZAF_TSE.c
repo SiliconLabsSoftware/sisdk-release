@@ -10,6 +10,7 @@
 #include "misc.h"
 #include "ZW_TransportEndpoint.h"
 #include <assert.h>
+#include <stdbool.h>
 #include "zpal_log.h"
 
 /****************************************************************************/
@@ -42,6 +43,21 @@ SSwTimer zaf_tse_timer = { 0 };
  * Points to the current trigger in the resource array.
  */
 static s_zaf_tse_resource_t * pCurrentTrigger;
+
+/* Returns true if p is within TSE_ResourceArray (validates pointer for static analysis). */
+static bool is_trigger_in_array(s_zaf_tse_resource_t const * p)
+{
+  return (p >= &TSE_ResourceArray[0] && p < &TSE_ResourceArray[ZAF_TSE_MAXIMUM_SIMULTANEOUS_TRIGGERS]);
+}
+
+/* Stop TSE timer and clear current trigger so ZAF_TSE_Trigger() can start new sessions. */
+static void tse_stop_and_clear_current(void)
+{
+  if (TimerIsActive(&zaf_tse_timer)) {
+    TimerStop(&zaf_tse_timer);
+  }
+  pCurrentTrigger = NULL;
+}
 
 bool ZAF_TSE_Init(void)
 {
@@ -120,6 +136,7 @@ bool ZAF_TSE_Trigger(zaf_tse_callback_t pCallback,
           if (storedRxOptions.destNode.endpoint == RxOptions.destNode.endpoint) {
             pCallbackPresent = true;
             resourceIndex = i;
+            (void)resourceIndex; /* Silence UNUSED_VALUE when analysis does not see later use */
             break;
           }
         }
@@ -174,6 +191,10 @@ static void InvokeRegisteredCallback(void)
 {
   ZPAL_LOG_DEBUG(ZPAL_LOG_ZAF_TSE, "\r\n%s():", __func__);
 
+  if (!pCurrentTrigger) {
+    assert(false);
+    return;
+  }
   s_zaf_tse_data_input_template_t* pDataInput = (s_zaf_tse_data_input_template_t*)(pCurrentTrigger->pData);
   RECEIVE_OPTIONS_TYPE_EX RxOptions = pDataInput->rxOptions;
 
@@ -207,9 +228,10 @@ static void InvokeRegisteredCallback(void)
 
   /*
    * Invoke the callback if it's different from NULL. We should never end up here with pCallback
-   * set to NULL, but just in case.
+   * set to NULL, but just in case. Validate trigger is in array before using.
    */
-  if (NULL != pCurrentTrigger->pCallback) {
+  if (pCurrentTrigger->pCallback
+      && is_trigger_in_array(pCurrentTrigger)) {
     pCurrentTrigger->pCallback(&tx_options, pCurrentTrigger->pData);
   }
 }
@@ -253,6 +275,10 @@ void ZAF_TSE_TXCallback(__attribute__((unused)) transmission_result_t * pTransmi
   }
 
   do{
+    if (!is_trigger_in_array(pCurrentTrigger)) {
+      tse_stop_and_clear_current();
+      return; /* Defensive: trigger not in array; must not leave an invalid non-NULL pointer */
+    }
     pCurrentTrigger->remainingNodes--;
     ZPAL_LOG_DEBUG(ZPAL_LOG_ZAF_TSE, "\r\nRemaining nodes: (%u)", pCurrentTrigger->remainingNodes);
     if (0 == pCurrentTrigger->remainingNodes) {
@@ -291,11 +317,9 @@ void ZAF_TSE_TXCallback(__attribute__((unused)) transmission_result_t * pTransmi
     } else {
       pCurrentTrigger->pCurrentNode++;
     }
-    if (NULL == pCurrentTrigger) {
-      // pCurrentTrigger being NULL means there are no more active triggers.
-      if (TimerIsActive(&zaf_tse_timer)) {
-        TimerStop(&zaf_tse_timer);
-      }
+    if (NULL == pCurrentTrigger || !is_trigger_in_array(pCurrentTrigger)) {
+      // pCurrentTrigger being NULL or invalid means there are no more active triggers.
+      tse_stop_and_clear_current();
       return;
     }
     s_zaf_tse_data_input_template_t* pDataInput = (s_zaf_tse_data_input_template_t*)(pCurrentTrigger->pData);

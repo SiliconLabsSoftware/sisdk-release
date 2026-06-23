@@ -39,6 +39,7 @@
 #include "sl_status.h"
 #include "sl_code_classification.h"
 #include "sxsymcrypt/interrupts.h"
+#include "sl_interrupt_manager.h"
 
 #include <stdbool.h>
 
@@ -111,10 +112,14 @@ sl_status_t sli_sxsymcrypt_init_locks(void)
   }
 #endif
   EFM_ASSERT(sl_clock_manager_enable_bus_clock(SL_BUS_CLOCK_SYMCRYPTO) == SL_STATUS_OK);
+#if !defined(_SILICON_LABS_32B_SERIES_3_CONFIG_353) && !defined(SIXG300XIWIFI74000XFULL_FPGA)
   EFM_ASSERT(sl_clock_manager_enable_bus_clock(SL_BUS_CLOCK_LPWAES) == SL_STATUS_OK);
+#endif
   sx_interrupts_enable();
   EFM_ASSERT(sl_clock_manager_disable_bus_clock(SL_BUS_CLOCK_SYMCRYPTO) == SL_STATUS_OK);
+#if !defined(_SILICON_LABS_32B_SERIES_3_CONFIG_353) && !defined(SIXG300XIWIFI74000XFULL_FPGA)
   EFM_ASSERT(sl_clock_manager_disable_bus_clock(SL_BUS_CLOCK_LPWAES) == SL_STATUS_OK);
+#endif
   return ret;
 }
 

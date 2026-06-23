@@ -228,10 +228,13 @@ exit:
 #ifdef SL_CATALOG_RAIL_UTIL_ANT_DIV_PRESENT
 void sli_ot_radio_interface_init_antenna_config(void)
 {
-    sl_rail_status_t status;
-    sl_rail_util_ant_div_init();
-    status = sl_rail_util_ant_div_update_antenna_config();
-    OT_ASSERT(status == SL_RAIL_STATUS_NO_ERROR);
+    if (sl_rail_util_ant_div_get_rx_antenna_mode() != SL_RAIL_UTIL_ANTENNA_MODE_DISABLED)
+    {
+        sl_rail_status_t status;
+        sl_rail_util_ant_div_init();
+        status = sl_rail_util_ant_div_update_antenna_config();
+        OT_ASSERT(status == SL_RAIL_STATUS_NO_ERROR);
+    }
 }
 #endif // SL_CATALOG_RAIL_UTIL_ANT_DIV_PRESENT
 

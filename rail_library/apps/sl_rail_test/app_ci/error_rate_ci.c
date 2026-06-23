@@ -47,6 +47,11 @@ BerStatus_t berStats = { 0 };
 bool berTestModeEnabled = false;
 static uint32_t berBytesToTest = 0;
 
+// Variables for BER testing in packet mode
+BerPacketStatus_t berPacketStats = { 0 };
+uint32_t berPacketPrbsSeedOffsetBytes = 0;
+uint32_t berPacketPrbsLengthBytes = 0;
+
 void startPerMode(sl_cli_command_arg_t *args)
 {
 #if defined(SL_RAIL_TEST_PER_PORT) && defined(SL_RAIL_TEST_PER_PIN)
@@ -292,4 +297,80 @@ void throughput(sl_cli_command_arg_t *args)
   uint32_t stop = sl_rail_get_time(railHandle);
   responsePrint(sl_cli_get_command_string(args, 0),
                 "elapsedTime:%u", (stop - start));
+}
+
+void berPacketRx(sl_cli_command_arg_t *args)
+{
+  bool enable = !!sl_cli_get_argument_uint8(args, 0);
+  sl_rail_status_t status = sl_rail_idle(railHandle, SL_RAIL_IDLE_ABORT, true);
+  if (status != SL_RAIL_STATUS_NO_ERROR) {
+    responsePrintError(sl_cli_get_command_string(args, 0), status, "Error calling sl_rail_idle().");
+  }
+  berPacketPrbsSeedOffsetBytes = sl_cli_get_argument_uint32(args, 1);
+  berPacketPrbsLengthBytes = sl_cli_get_argument_uint32(args, 2);
+  if (!enableAppModeSync(BER_PACKET, enable, sl_cli_get_command_string(args, 0))) {
+    return;
+  }
+  if (enable) {
+    // Free LastRxPacket if not null.
+    if (berPacketStats.LastRxPacket != NULL) {
+      sl_free((void *)berPacketStats.LastRxPacket);
+    }
+    // Reset test statistics.
+    memset(&berPacketStats, 0, sizeof(BerPacketStatus_t));
+    // Enable SL_RAIL_RX_OPTION_IGNORE_CRC_ERRORS.
+    status = sl_rail_config_rx_options(railHandle,
+                                       SL_RAIL_RX_OPTION_IGNORE_CRC_ERRORS,
+                                       SL_RAIL_RX_OPTION_IGNORE_CRC_ERRORS);
+    if (status != SL_RAIL_STATUS_NO_ERROR) {
+      responsePrintError(sl_cli_get_command_string(args, 0), status, "Error calling sl_rail_config_rx_options().");
+    }
+    // Force rxTransitions to rx.
+    sl_rail_state_transitions_t transitions = {
+      .success = SL_RAIL_RF_STATE_RX,
+      .error = SL_RAIL_RF_STATE_RX
+    };
+    status = sl_rail_set_rx_transitions(railHandle, &transitions);
+    if (status != SL_RAIL_STATUS_NO_ERROR) {
+      responsePrintError(sl_cli_get_command_string(args, 0), status, "Error calling sl_rail_set_rx_transitions().");
+    }
+    status = sl_rail_start_rx(railHandle, channel, NULL);
+    if (status != SL_RAIL_STATUS_NO_ERROR) {
+      responsePrintError(sl_cli_get_command_string(args, 0), status, "Error calling sl_rail_start_rx().");
+    }
+  } else {
+    // When disabling BER_PACKET test mode, disable SL_RAIL_RX_OPTION_IGNORE_CRC_ERRORS if not already enabled in rxOptions global.
+    if ((rxOptions & SL_RAIL_RX_OPTION_IGNORE_CRC_ERRORS) == 0U) {
+      status = sl_rail_config_rx_options(railHandle,
+                                         SL_RAIL_RX_OPTION_IGNORE_CRC_ERRORS,
+                                         0U);
+      if (status != SL_RAIL_STATUS_NO_ERROR) {
+        responsePrintError(sl_cli_get_command_string(args, 0), status, "Error calling sl_rail_config_rx_options().");
+      }
+    }
+  }
+}
+
+void berPacketStatusGet(sl_cli_command_arg_t *args)
+{
+  bool berPacketPrintLast = (sl_cli_get_argument_count(args) >= 1) ? !!sl_cli_get_argument_uint8(args, 0) : false;
+  if (berPacketPrintLast && (berPacketStats.LastRxPacket != NULL)) {
+    printPacket("BER packet test last received",
+                berPacketStats.LastRxPacket->rxPacket.dataPtr,
+                berPacketStats.LastRxPacket->rxPacket.dataLength,
+                &berPacketStats.LastRxPacket->rxPacket);
+  }
+  responsePrint(sl_cli_get_command_string(args, 0),
+                "packetsReceived:%u,"
+                "packetsCrcError:%u,"
+                "syncWordsReceived:%u,"
+                "prbsSeedCrcFails:%u,"
+                "prbsBytesTested:%u,"
+                "prbsBitErrors:%u",
+                berPacketStats.packetsReceived,
+                berPacketStats.packetsCrcError,
+                berPacketStats.syncWordsReceived,
+                berPacketStats.prbsSeedCrcFails,
+                berPacketStats.prbsBytesTested,
+                berPacketStats.prbsBitErrors);
 }

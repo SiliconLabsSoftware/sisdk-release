@@ -145,17 +145,6 @@ typedef int Bool;
 #define MY_FORCE_INLINE
 #define MY_CDECL
 #define MY_FAST_CALL
-
-/* inline keyword : for C++ / C99 */
-
-/* GCC, clang: */
-/*
-#if defined (__GNUC__) && (__GNUC__ >= 4)
-#define MY_FORCE_INLINE __attribute__((always_inline))
-#define MY_NO_INLINE __attribute__((noinline))
-#endif
-*/
-
 #endif
 
 
@@ -181,8 +170,6 @@ typedef struct ISeqInStream ISeqInStream;
 struct ISeqInStream
 {
   SRes (*Read)(const ISeqInStream *p, void *buf, size_t *size);
-    /* if (input(*size) != 0 && output(*size) == 0) means end_of_stream.
-       (output(*size) < input(*size)) is allowed */
 };
 #define ISeqInStream_Read(p, buf, size) (p)->Read(p, buf, size)
 
@@ -223,9 +210,6 @@ typedef struct ILookInStream ILookInStream;
 struct ILookInStream
 {
   SRes (*Look)(const ILookInStream *p, const void **buf, size_t *size);
-    /* if (input(*size) != 0 && output(*size) == 0) means end_of_stream.
-       (output(*size) > input(*size)) is not allowed
-       (output(*size) < input(*size)) is allowed */
   SRes (*Skip)(const ILookInStream *p, size_t offset);
     /* offset must be <= output(*size) of Look */
 
@@ -321,9 +305,6 @@ struct ISzAlloc
 #ifndef MY_offsetof
   #ifdef offsetof
     #define MY_offsetof(type, m) offsetof(type, m)
-    /*
-    #define MY_offsetof(type, m) FIELD_OFFSET(type, m)
-    */
   #else
     #define MY_offsetof(type, m) ((size_t)&(((type *)0)->m))
   #endif
@@ -333,19 +314,6 @@ struct ISzAlloc
 
 #ifndef MY_container_of
 
-/*
-#define MY_container_of(ptr, type, m) container_of(ptr, type, m)
-#define MY_container_of(ptr, type, m) CONTAINING_RECORD(ptr, type, m)
-#define MY_container_of(ptr, type, m) ((type *)((char *)(ptr) - offsetof(type, m)))
-#define MY_container_of(ptr, type, m) (&((type *)0)->m == (ptr), ((type *)(((char *)(ptr)) - MY_offsetof(type, m))))
-*/
-
-/*
-  GCC shows warning: "perhaps the 'offsetof' macro was used incorrectly"
-    GCC 3.4.4 : classes with constructor
-    GCC 4.8.1 : classes with non-public variable members"
-*/
-
 #define MY_container_of(ptr, type, m) ((type *)((char *)(1 ? (ptr) : &((type *)0)->m) - MY_offsetof(type, m)))
 
 
@@ -353,15 +321,10 @@ struct ISzAlloc
 
 #define CONTAINER_FROM_VTBL_SIMPLE(ptr, type, m) ((type *)(ptr))
 
-/*
-#define CONTAINER_FROM_VTBL(ptr, type, m) CONTAINER_FROM_VTBL_SIMPLE(ptr, type, m)
-*/
+
 #define CONTAINER_FROM_VTBL(ptr, type, m) MY_container_of(ptr, type, m)
 
 #define CONTAINER_FROM_VTBL_CLS(ptr, type, m) CONTAINER_FROM_VTBL_SIMPLE(ptr, type, m)
-/*
-#define CONTAINER_FROM_VTBL_CLS(ptr, type, m) CONTAINER_FROM_VTBL(ptr, type, m)
-*/
 
 
 

@@ -1,3 +1,4 @@
+workspace_name: zwave_soc_power_strip_ota
 label: ZWave_SoC_PowerStrip_Solution
 description: >
   Demonstrates Power Strip application combined with OTA bootloader.

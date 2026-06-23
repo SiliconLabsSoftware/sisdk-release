@@ -111,14 +111,18 @@ SL_ENUM(sl_pwm_polarity_t) {
 };
 
 /**
- * PWM driver instance
+ * PWM driver instance.
+ * Allocated by the application. The application must
+ * not modify the contents of this handle and should not depend on its values.
  */
 typedef struct sl_pwm_instance {
+  /** @cond DO_NOT_INCLUDE_WITH_DOXYGEN */
   TIMER_TypeDef *timer; /**< TIMER instance */
   uint8_t channel;      /**< TIMER channel */
   uint8_t port;         /**< GPIO port */
   uint8_t pin;          /**< GPIO pin */
   uint8_t location;     /**< GPIO location */
+  /** @endcond */
 } sl_pwm_instance_t;
 
 /**

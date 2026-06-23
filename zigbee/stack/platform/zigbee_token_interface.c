@@ -76,7 +76,7 @@ void sli_zigbee_stack_token_factory_reset(bool exclude_outgoing_fc, bool exclude
         assert(status == SL_STATUS_OK);
         for (uint8_t arrayIndex = 0; arrayIndex < token_info.arraySize; arrayIndex++) {
           // restore to default token value
-          sl_token_manager_set_data(token_info.nvm3Key + arrayIndex, token_default, token_info.size);
+          slx_zigbee_token_manager_set_data(token_info.nvm3Key + arrayIndex, token_default, token_info.size);
           halResetWatchdog();
         }
         free(token_default);
@@ -94,7 +94,7 @@ void sl_zigbee_get_restored_eui64(sl_802154_long_addr_t eui64)
 {
   uint8_t blank[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
   uint8_t restoredEui64[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-  sl_status_t status = sl_token_manager_get_data(COMMON_TOKEN_STACK_RESTORED_EUI64,
+  sl_status_t status = slx_zigbee_token_manager_get_data(COMMON_TOKEN_STACK_RESTORED_EUI64,
                                                  restoredEui64,
                                                  sizeof(sl_802154_long_addr_t));
   if (status == SL_STATUS_OK) {
@@ -123,7 +123,7 @@ void sl_zigbee_get_restored_eui64(sl_802154_long_addr_t eui64)
 {
   uint8_t blank[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
   uint8_t restoredEui64[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-  sl_status_t status = sl_token_manager_get_data(COMMON_TOKEN_STACK_RESTORED_EUI64,
+  sl_status_t status = slx_zigbee_token_manager_get_data(COMMON_TOKEN_STACK_RESTORED_EUI64,
                                                  restoredEui64,
                                                  sizeof(sl_802154_long_addr_t));
   if (status == SL_STATUS_OK) {

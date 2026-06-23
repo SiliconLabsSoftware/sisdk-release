@@ -262,6 +262,27 @@
   - condition:
     - brd4001a
     override:
+      component: sl_rail_util_pa
+      file_id: sl_rail_util_pa_config
+      vendor: silabs
+    path: brd4183b_brd4001a/sl_rail_util_pa_config.h
+  - condition:
+    - brd4001a
+    override:
+      component: rail_util_pti
+      file_id: rail_util_pti_config
+      vendor: silabs
+    path: brd4183b_brd4001a/sl_rail_util_pti_config.h
+  - condition:
+    - brd4001a
+    override:
+      component: sl_rail_util_pti
+      file_id: rail_util_pti_config
+      vendor: silabs
+    path: brd4183b_brd4001a/sl_rail_util_pti_config.h
+  - condition:
+    - brd4001a
+    override:
       component: simple_button
       file_id: simple_button_config
       instance: btn0
@@ -275,20 +296,6 @@
       instance: led0
       vendor: silabs
     path: brd4183b_brd4001a/sl_simple_led_led0_config.h
-  - condition:
-    - brd4001a
-    override:
-      component: sl_rail_util_pa
-      file_id: sl_rail_util_pa_config
-      vendor: silabs
-    path: brd4183b_brd4001a/sl_rail_util_pa_config.h
-  - condition:
-    - brd4001a
-    override:
-      component: sl_rail_util_pti
-      file_id: rail_util_pti_config
-      vendor: silabs
-    path: brd4183b_brd4001a/sl_rail_util_pti_config.h
   - condition:
     - brd4001a
     override:
@@ -768,11 +775,18 @@
   - condition:
     - brd4002a
     override:
+      component: sl_rail_util_pa
+      file_id: sl_rail_util_pa_config
+      vendor: silabs
+    path: brd4183b_brd4002a/sl_rail_util_pa_config.h
+  - condition:
+    - brd4002b
+    override:
       component: simple_button
       file_id: simple_button_config
       instance: btn0
       vendor: silabs
-    path: brd4183b_brd4002a/sl_simple_button_btn0_config.h
+    path: brd4183b_brd4002b/sl_simple_button_btn0_config.h
   - condition:
     - brd4002b
     override:
@@ -784,11 +798,18 @@
   - condition:
     - brd4002a
     override:
+      component: rail_util_pti
+      file_id: rail_util_pti_config
+      vendor: silabs
+    path: brd4183b_brd4002a/sl_rail_util_pti_config.h
+  - condition:
+    - brd4002b
+    override:
       component: simple_led
       file_id: simple_led_config
       instance: led0
       vendor: silabs
-    path: brd4183b_brd4002a/sl_simple_led_led0_config.h
+    path: brd4183b_brd4002b/sl_simple_led_led0_config.h
   - condition:
     - brd4002b
     override:
@@ -800,10 +821,10 @@
   - condition:
     - brd4002a
     override:
-      component: sl_rail_util_pa
-      file_id: sl_rail_util_pa_config
+      component: sl_rail_util_pti
+      file_id: rail_util_pti_config
       vendor: silabs
-    path: brd4183b_brd4002a/sl_rail_util_pa_config.h
+    path: brd4183b_brd4002a/sl_rail_util_pti_config.h
   - condition:
     - brd4002b
     override:
@@ -814,10 +835,33 @@
   - condition:
     - brd4002a
     override:
+      component: simple_button
+      file_id: simple_button_config
+      instance: btn0
+      vendor: silabs
+    path: brd4183b_brd4002a/sl_simple_button_btn0_config.h
+  - condition:
+    - brd4002b
+    override:
+      component: sl_rail_util_pa
+      file_id: sl_rail_util_pa_config
+      vendor: silabs
+    path: brd4183b_brd4002b/sl_rail_util_pa_config.h
+  - condition:
+    - brd4002a
+    override:
+      component: simple_led
+      file_id: simple_led_config
+      instance: led0
+      vendor: silabs
+    path: brd4183b_brd4002a/sl_simple_led_led0_config.h
+  - condition:
+    - brd4002b
+    override:
       component: sl_rail_util_pti
       file_id: rail_util_pti_config
       vendor: silabs
-    path: brd4183b_brd4002a/sl_rail_util_pti_config.h
+    path: brd4183b_brd4002b/sl_rail_util_pti_config.h
   - condition:
     - brd4002b
     override:

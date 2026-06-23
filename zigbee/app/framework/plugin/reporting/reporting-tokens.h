@@ -19,12 +19,9 @@
 #include "sl_token_manager_defines.h"
 #include "reporting-config.h"
 
-#if (SL_ZIGBEE_AF_PLUGIN_REPORTING_ENABLE_EXPANDED_TABLE == 0)
-#define CREATOR_REPORT_TABLE  (0x8725)
-// This key is used for an indexed token and the subsequent 0x7F keys are also reserved
-#define NVM3KEY_REPORT_TABLE (NVM3KEY_DOMAIN_ZIGBEE | 0x4000)
-#define COMMON_TOKEN_REPORT_TABLE SL_TOKEN_GET_DYNAMIC_TOKEN((SL_TOKEN_NVM3_REGION_ZIGBEE | 0x4000), 0)
-
+// Default value for an unused reporting table slot. Defined once for all builds:
+// - SoC non-expanded: used by DEFINE_INDEXED_TOKEN(REPORT_TABLE, ...) below.
+// - SoC expanded: used by sl_zigbee_initialize_index_token() with CTM_REPORTING_TABLE
 #define TOKEN_REPORT_TABLE_DEFAULT {                  \
     SL_ZIGBEE_ZCL_REPORTING_DIRECTION_REPORTED,       \
     SL_ZIGBEE_AF_PLUGIN_REPORTING_UNUSED_ENDPOINT_ID, \
@@ -34,6 +31,12 @@
     0x00, /* manufacturerCode */                      \
     .data.reported = { 0, 0, 0 }                      \
 }
+
+#if (SL_ZIGBEE_AF_PLUGIN_REPORTING_ENABLE_EXPANDED_TABLE == 0)
+#define CREATOR_REPORT_TABLE  (0x8725)
+// This key is used for an indexed token and the subsequent 0x7F keys are also reserved
+#define NVM3KEY_REPORT_TABLE (NVM3KEY_DOMAIN_ZIGBEE | 0x4000)
+
 
 #if defined SL_ZIGBEE_ZCL_GENERATED_REPORTING_CONFIG_DEFAULTS_TABLE_SIZE
 #define REPORT_TABLE_SIZE (SL_ZIGBEE_ZCL_GENERATED_REPORTING_CONFIG_DEFAULTS_TABLE_SIZE + SL_ZIGBEE_AF_PLUGIN_REPORTING_TABLE_SIZE)

@@ -1,0 +1,23 @@
+id: cs_ras_common
+package: bluetooth_le_middleware
+label: CS Ranging Service Client
+description: >
+  Channel Sounding (CS) Ranging Service (RAS) common component.
+category: Bluetooth|Application|GATT Profiles
+metadata:
+  sbom:
+    license: Zlib
+quality: production
+root_path: bluetooth_le_middleware/common/cs_ras
+include:
+- path: common/inc
+  file_list:
+  - path: cs_ras_common.h
+requires:
+- name: bluetooth_api
+provides:
+- name: cs_ras_common
+
+documentation:
+  docset: bluetooth
+  document: bluetooth-service-api/cs-ras-common

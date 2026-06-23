@@ -9,7 +9,7 @@ class RM_SIXG301_Info(object):
     short_name = 'sixg301'
     val_die_name = 'SIXG301XFULL'
     arm_core_revs = []
-    rtl_revs = ['A0', 'A1', 'B0']
+    rtl_revs = ['A0', 'A1', 'B0', 'B1']
     di_revs = []
     pte_revs = []
     pkg_path = _PKG_PATH

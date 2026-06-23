@@ -175,6 +175,11 @@ uint16_t sl_zigbee_af_get_int16u(const uint8_t* message, uint16_t currentIndex, 
   return (uint16_t)sl_zigbee_af_get_int(message, currentIndex, msgLen, 2);
 }
 
+uint8_t sl_zigbee_af_get_int8u(const uint8_t* message, uint16_t currentIndex, uint16_t msgLen)
+{
+  return (uint8_t)sl_zigbee_af_get_int(message, currentIndex, msgLen, 1);
+}
+
 uint8_t* sl_zigbee_af_get_string(uint8_t* message, uint16_t currentIndex, uint16_t msgLen)
 {
   // Strings must contain at least one byte for the length.
@@ -246,7 +251,7 @@ uint8_t sl_zigbee_af_get_date(uint8_t* message,
 
 uint8_t sli_decode_parse_one_byte(sl_zigbee_af_cluster_command_t *cmd, uint16_t payloadOffset)
 {
-  return (cmd->buffer)[payloadOffset];
+  return sl_zigbee_af_get_int8u(cmd->buffer, payloadOffset, cmd->bufLen);
 }
 
 uint16_t sli_decode_parse_two_bytes(sl_zigbee_af_cluster_command_t * cmd, uint16_t payloadOffset)

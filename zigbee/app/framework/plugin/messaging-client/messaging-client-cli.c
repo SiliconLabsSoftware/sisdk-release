@@ -24,7 +24,7 @@ void sli_zigbee_af_messaging_client_cli_confirm(sl_cli_command_arg_t *arguments)
 {
   uint8_t endpoint = sl_cli_get_argument_uint8(arguments, 0);
   sl_zigbee_af_status_t status = sl_zigbee_af_messaging_client_confirm_message(endpoint);
-  sl_zigbee_af_messaging_cluster_println("%s 0x%02X", "confirm", status);
+  sl_zigbee_af_cli_println("%s 0x%02X", "confirm", status);
 }
 
 // plugin messaging-client print <endpoint:1>

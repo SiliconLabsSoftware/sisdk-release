@@ -227,8 +227,8 @@ class PhysRailBaseStandardBleRainier(PHYS_Bluetooth_LE_Bobcat):
                     phy_name=phy_name)
         model.vars.adc_clock_mode.value_forced = model.vars.adc_clock_mode.var_enum.HFXOMULT
         self.Bluetooth_LE_Viterbi_noDSA_base(phy, model)
-        model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.LE_1M
         phy.profile_inputs.modulator_select.value = model.vars.modulator_select.var_enum.PH_MOD
+        model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.LE_1M
         phy.profile_inputs.base_frequency_hz.value = long(2494630022)
 
         # default bandwidth will cause halfrate unless forced
@@ -715,20 +715,6 @@ class PhysRailBaseStandardBleRainier(PHYS_Bluetooth_LE_Bobcat):
 
         return phy
 
-    def PHY_Bluetooth_LE_HDT(self, model, phy_name=None):
-        phy = self._makePhy(model, model.profiles.Base, readable_name='BLE HDT PHY', phy_name=phy_name)
-        self.Bluetooth_LE_2M_Viterbi_noDSA_base(phy, model)
-        model.vars.protocol_id.value_forced = model.vars.protocol_id.var_enum.HDT
-        phy.profile_inputs.demod_select.value = model.vars.demod_select.var_enum.HDT
-        phy.profile_inputs.shaping_filter.value = model.vars.shaping_filter.var_enum.Root_Raised_Cosine
-        phy.profile_inputs.shaping_filter_param.value = 0.4
-
-        # IFPKD thresholds
-        phy.profile_outputs.RAC_TIACTRL0_TIATHRPKDHISEL.override = 4  #250 mV
-        phy.profile_outputs.RAC_TIACTRL0_TIATHRPKDLOSEL.override = 1  #100 mV
-
-        return phy
-
     def PHY_Bluetooth_LE_Viterbi_noDSA_fullrate_iqmod(self, model, phy_name='PHY_Bluetooth_LE_Viterbi_noDSA_fullrate_iqmod'):
         phy = self.PHY_Bluetooth_LE_Viterbi_noDSA_fullrate(model, phy_name=phy_name)
         phy.profile_inputs.modulator_select.value = model.vars.modulator_select.var_enum.IQ_MOD
@@ -970,47 +956,6 @@ class PhysRailBaseStandardBleRainier(PHYS_Bluetooth_LE_Bobcat):
     # Prod PHY definition with new names
     # #############
 
-    def PHY_Bluetooth_1M_HADM(self, model, phy_name='PHY_Bluetooth_1M_HADM'):
-        phy = super().PHY_Bluetooth_1M_HADM(model)
-        phy.profile_inputs.modulator_select.value = model.vars.modulator_select.var_enum.IQ_MOD
-        phy.profile_inputs.synchronous_ifadc_clk.value = True
-        phy.profile_inputs.synchronous_mixdac_clk.value = True
-        self.BLE_TX_Shaping_Coeffs_IQMOD(phy, model)
-        # IQMOD uses MODE1 for synth_tx_mode
-        model.vars.synth_tx_mode.value_forced = model.vars.synth_tx_mode.var_enum.MODE_IQMOD
-        phy.profile_inputs.tx_rdm_state.value = model.vars.tx_rdm_state.var_enum.TX_HADM
-        phy.profile_inputs.rx_rdm_state.value = model.vars.rx_rdm_state.var_enum.RX_HADM_RFPKD
-
-        return phy
-
-    def PHY_Bluetooth_2M_HADM(self, model, phy_name='PHY_Bluetooth_2M_HADM'):
-        phy = super().PHY_Bluetooth_2M_HADM(model)
-        phy.profile_inputs.modulator_select.value = model.vars.modulator_select.var_enum.IQ_MOD
-        phy.profile_inputs.synchronous_ifadc_clk.value = True
-        phy.profile_inputs.synchronous_mixdac_clk.value = True
-        self.BLE_2M_TX_Shaping_Coeffs_IQMOD(phy, model)
-        # IQMOD uses MODE1 for synth_tx_mode
-        model.vars.synth_tx_mode.value_forced = model.vars.synth_tx_mode.var_enum.MODE_IQMOD
-        phy.profile_inputs.tx_rdm_state.value = model.vars.tx_rdm_state.var_enum.TX_HADM
-        phy.profile_inputs.rx_rdm_state.value = model.vars.rx_rdm_state.var_enum.RX_HADM_RFPKD
-
-        return phy
-
-    def PHY_Bluetooth_2M_HADM_2BT(self, model, phy_name='PHY_Bluetooth_2M_HADM_2bt'):
-        phy = self.PHY_Bluetooth_2M_HADM(model)
-        # --------------
-        # this has no effect as of now but will reflect correct shaping coeff in cfg
-        phy.profile_inputs.shaping_filter_param.value = 2.0
-        # ---------------
-        self.BLE_2M_TX_Shaping_Coeffs_2bt_IQMOD(phy, model)
-        model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.HADM_2M_2BT
-        # IQMOD uses MODE1 for synth_tx_mode
-        model.vars.synth_tx_mode.value_forced = model.vars.synth_tx_mode.var_enum.MODE_IQMOD
-        phy.profile_inputs.tx_rdm_state.value = model.vars.tx_rdm_state.var_enum.TX_HADM
-        phy.profile_inputs.rx_rdm_state.value = model.vars.rx_rdm_state.var_enum.RX_HADM_RFPKD
-
-        return phy
-
     def PHY_Bluetooth_1M_AOX(self, model, phy_name='PHY_Bluetooth_1M_AOX'):
         # bobcat uses half-rate PHY compared to Lynx, due to jitter and settling improvements
         # For Bobcat BLE 1M, use PHY_Bluetooth_1M_AOX_prod as there is no difference in TX SYNTH PLL BW
@@ -1053,45 +998,6 @@ class PhysRailBaseStandardBleRainier(PHYS_Bluetooth_LE_Bobcat):
         phy.profile_outputs.tx_sync_delay_ns.override = 3000
         phy.profile_outputs.tx_eof_delay_ns.override = 535
 
-        return phy
-
-    def PHY_Bluetooth_1M_HADM_prod(self, model, phy_name=None):
-        phy = self._makePhy(model, model.profiles.BLE, readable_name='Production BLE HADM 1Mbps PHY',
-                            phy_name=phy_name)
-        phy.profile_inputs.xtal_frequency_hz.value = 40000000
-        phy.profile_inputs.ble_feature.value = model.vars.ble_feature.var_enum.HADM_1M
-
-        phy.profile_inputs.chcfg_channel_number_start.value = 0
-        phy.profile_inputs.chcfg_channel_number_end.value = 39
-        phy.profile_inputs.chcfg_physical_channel_offset.value = 0
-
-        phy.profile_inputs.rail_tx_power_max.value = [-1] * 40
-        return phy
-
-    def PHY_Bluetooth_2M_HADM_prod(self, model, phy_name=None):
-        phy = self._makePhy(model, model.profiles.BLE, readable_name='Production BLE HADM 2Mbps PHY',
-                            phy_name=phy_name)
-        phy.profile_inputs.xtal_frequency_hz.value = 40000000
-        phy.profile_inputs.ble_feature.value = model.vars.ble_feature.var_enum.HADM_2M
-
-        phy.profile_inputs.chcfg_channel_number_start.value = 0
-        phy.profile_inputs.chcfg_channel_number_end.value = 39
-        phy.profile_inputs.chcfg_physical_channel_offset.value = 0
-
-        phy.profile_inputs.rail_tx_power_max.value = [-1] * 40
-        return phy
-
-    def PHY_Bluetooth_2M_HADM_2BT_prod(self, model, phy_name=None):
-        phy = self._makePhy(model, model.profiles.BLE, readable_name='Production BLE HADM 2Mbps 2BT PHY',
-                            phy_name=phy_name)
-        phy.profile_inputs.xtal_frequency_hz.value = 40000000
-        phy.profile_inputs.ble_feature.value = model.vars.ble_feature.var_enum.HADM_2M_2BT
-
-        phy.profile_inputs.chcfg_channel_number_start.value = 0
-        phy.profile_inputs.chcfg_channel_number_end.value = 39
-        phy.profile_inputs.chcfg_physical_channel_offset.value = 0
-
-        phy.profile_inputs.rail_tx_power_max.value = [-1] * 40
         return phy
 
 

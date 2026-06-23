@@ -17,7 +17,6 @@ root_path: bluetooth_le_middleware/common/cs_ras
 include:
 - path: common/inc
   file_list:
-  - path: cs_ras_common.h
   - path: cs_ras_format_converter.h
 - path: server/inc
   file_list:
@@ -64,9 +63,8 @@ requires:
 - name: slist
 - name: app_queue
 - name: app_timer
-- name: power_manager
-  condition:
-  - device_cortexm
+- name: app_rta
+- name: cs_ras_common
 provides:
 - name: cs_ras_server
 template_contribution:
@@ -87,29 +85,14 @@ template_contribution:
     function: cs_ras_server_on_bt_event
   unless:
   - ncp
-- name: event_handler
+- name: app_rta_init
   value:
-    event: internal_app_process_action
     include: cs_ras_server_internal.h
-    handler: cs_ras_server_step
-- name: power_manager_handler
+    handler: cs_ras_server_rta_init
+- name: app_rta_ready
   value:
-    event: is_ok_to_sleep
     include: cs_ras_server_internal.h
-    handler: cs_ras_server_is_ok_to_sleep
-  condition:
-  - power_manager
-  unless:
-  - kernel
-- name: power_manager_handler
-  value:
-    event: sleep_on_isr_exit
-    include: cs_ras_server_internal.h
-    handler: cs_ras_server_sleep_on_isr_exit
-  condition:
-  - power_manager
-  unless:
-  - kernel
+    handler: cs_ras_server_rta_ready
 documentation:
   docset: bluetooth
   document: bluetooth-service-api/cs-ras-server

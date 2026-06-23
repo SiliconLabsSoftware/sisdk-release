@@ -28,6 +28,9 @@ requires:
 - name: "a_radio_config"
 - name: "event_system"
 - name: "errno"
+- name: "event_queue_task"
+- name: "hal_prs"
+- name: "clock_manager_runtime"
 
 recommends:
 - id: "wisun_stack_library"
@@ -35,6 +38,8 @@ recommends:
 - id: "wisun_stack_ffn"
   vendor: silabs
 - id: "rail_lib_singleprotocol"
+  vendor: silabs
+- id: "wisun_event_task"
 
   vendor: silabs
 provides:
@@ -63,6 +68,7 @@ include:
   - path: "sl_wisun_types.h"
   - path: "sl_wisun_version.h"
   - path: "sl_wisun_trace_api.h"
+  - path: "sl_wisun_alloc.h"
   - path: "sli_wisun_internal_api.h"
   - path: "sli_wisun_timer_service.h"
   - path: "sl_wisun_connection_params_api.h"
@@ -72,9 +78,12 @@ include:
 - path: "inc/socket/"
   file_list:
   - path: "socket.h"
-- path: "inc/arpa/"
+- path: "inc/posix/"
   file_list:
-  - path: "inet.h"
+  - path: "sys/socket.h"
+  - path: "arpa/inet.h"
+  - path: "netinet/in.h"
+  - path: "netinet/ip6.h"
 - path: "src/"
   file_list:
   - path: "common/endian.h"

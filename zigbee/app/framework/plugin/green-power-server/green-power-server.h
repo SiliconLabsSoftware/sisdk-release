@@ -154,7 +154,7 @@ typedef struct {
   uint8_t endpoint; /**< GP endpoint ID */
 } sl_zigbee_af_green_power_server_commissioning_state_t;
 
-/** 
+/**
  * @brief GPD Device-Command map entry
  */
 typedef struct {
@@ -162,7 +162,7 @@ typedef struct {
   const uint8_t * cmd; /**< Pointer to command */
 }sli_zigbee_gp_device_id_and_command_map_t;
 
-/** 
+/**
  * @brief GPD Device-Cluster map entry
  */
 typedef struct {
@@ -171,7 +171,7 @@ typedef struct {
   const uint16_t * cluster; /**< Pointer to clusters */
 }sli_zigbee_gp_device_id_and_cluster_map_t;
 
-/** 
+/**
  * @brief Zigbee cluster list entry
  */
 typedef struct {
@@ -385,7 +385,7 @@ void sl_zigbee_af_green_power_server_pairing_complete_cb(uint8_t numberOfEndpoin
  * server to the Sink Table. If returned false, the sink table remains un-accessed.
  *
  * @param[in] data Pointer to data
- * @param[in] accessType Access type        
+ * @param[in] accessType Access type
  *
  * @return true if the access is granted.
  */
@@ -413,7 +413,7 @@ bool sl_zigbee_af_green_power_server_gpd_commissioning_cb(sl_zigbee_gp_applicati
  * This function is called by the Green Power Server plugin to notify the
  * application of a Green Power Security Processing failed for an incoming notification.
  *
- * @param[in] gpdAddr  
+ * @param[in] gpdAddr
  */
 void sl_zigbee_af_green_power_server_gpd_security_failure_cb(sl_zigbee_gp_address_t *gpdAddr);
 
@@ -422,9 +422,9 @@ void sl_zigbee_af_green_power_server_gpd_security_failure_cb(sl_zigbee_gp_addres
  * This function is called by the Green Power Server to proceed with updating the InvolveTC bit
  * of the security level attribute.
  *
- * @param[in] status  
+ * @param[in] status
  *
- * @return True if application handled it and plugin will not process it 
+ * @return True if application handled it and plugin will not process it
  */
 bool sl_zigbee_af_green_power_server_update_involve_t_c_cb(sl_status_t status);
 
@@ -442,8 +442,8 @@ bool sl_zigbee_af_green_power_server_update_involve_t_c_cb(sl_status_t status);
  * @param[in] gppShortAddress GPP Short Address
  * @param[in] gppDistance GPP Distance
  *
- * @return True if application handled it and plugin will not process it anymore, 
- * else return False to process the notification by the plugin 
+ * @return True if application handled it and plugin will not process it anymore,
+ * else return False to process the notification by the plugin
  */
 bool sl_zigbee_af_green_power_cluster_gp_notification_forward_cb(uint16_t options,
                                                                  sl_zigbee_gp_address_t * addr,
@@ -473,7 +473,7 @@ bool sl_zigbee_af_green_power_cluster_gp_notification_forward_cb(uint16_t option
  * @param[in] gppDistance GPP Distance
  * @param[in] commissioningNotificationMic MIC of commissioning notification
  *
- * @return True if the user application wishes to consume the message and have the stack ignore 
+ * @return True if the user application wishes to consume the message and have the stack ignore
  * the message, false otherwise, meaning the stack will process the GP Commissioning notification.
  */
 bool sl_zigbee_af_green_power_server_gpd_commissioning_notification_cb(uint8_t commandId,
@@ -495,9 +495,9 @@ bool sl_zigbee_af_green_power_server_gpd_commissioning_notification_cb(uint8_t c
  * proxy commissioning enter message submission to network layer.
  *
  * @param[in] commissioningState Sink commissioning state
- * @param[in] apsFrame APS frame header       
+ * @param[in] apsFrame APS frame header
  * @param[in] messageType Unicast or broadcast
- * @param[in] destination Destination node    
+ * @param[in] destination Destination node
  * @param[in] status Status of the network submission
  */
 void sl_zigbee_af_green_power_cluster_commissioning_message_status_notification_cb(sl_zigbee_af_green_power_server_commissioning_state_t *commissioningState,
@@ -575,10 +575,14 @@ bool sli_zigbee_af_gp_calculate_incoming_command_mic(sl_zigbee_gp_address_t * gp
                                                      uint8_t * gpdCommandPayload,
                                                      bool encryptedPayload,
                                                      uint8_t mic[4]);
-bool sli_zigbee_af_gp_calculate_incoming_command_decrypt(sl_zigbee_gp_address_t * gpdAddr,
-                                                         uint32_t gpdSecurityFrameCounter,
-                                                         uint8_t payloadLength,
-                                                         uint8_t * payload);
+bool sli_zigbee_af_gp_incoming_command_decrypt_and_validate_mic(sl_zigbee_gp_address_t * gpdAddr,
+                                                                bool rxAfterTx,
+                                                                uint8_t keyType,
+                                                                uint8_t securityLevel,
+                                                                uint32_t gpdSecurityFrameCounter,
+                                                                uint8_t * gpdCommandId,
+                                                                uint8_t * gpdCommandPayload,
+                                                                uint32_t commissioningNotificationMic);
 uint8_t sli_zigbee_af_gp_outgoing_command_encrypt(sl_zigbee_gp_address_t * gpdAddr,
                                                   uint32_t gpdSecurityFrameCounter,
                                                   uint8_t keyType,

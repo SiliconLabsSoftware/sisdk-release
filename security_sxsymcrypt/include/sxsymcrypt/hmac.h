@@ -142,7 +142,7 @@ int sx_mac_create_hmac_sha1(struct sxmac *c, struct sxkeyref *keyref);
  */
 int sx_mac_create_hmac_sha2_224(struct sxmac *c, struct sxkeyref *keyref);
 
-#if !defined(_SILICON_LABS_32B_SERIES_3_CONFIG_301)
+#if !defined(_SILICON_LABS_DEFEATURE_SHA3)
 /** Prepares an HMAC SHA3-224 MAC operation
  *
  * This function initializes the user allocated object \p c with a new MAC

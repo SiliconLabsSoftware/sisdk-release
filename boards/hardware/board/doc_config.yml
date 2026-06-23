@@ -5,8 +5,8 @@ content:
 doxygen:
   - name: "hardware-board"
     output: doc_tmp
-    output_dir: "hardware/board/doc_tmp"
-    mainpage: 'hardware/board/doc/hardware-board-api/mainpage.md'
+    output_dir: "package/boards/hardware/board/doc_tmp"
+    mainpage: 'package/boards/hardware/board/doc/hardware-board-api/mainpage.md'
     component_path:
       - component
     quality:

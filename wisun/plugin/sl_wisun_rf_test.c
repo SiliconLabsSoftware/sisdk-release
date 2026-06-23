@@ -55,8 +55,8 @@ do {\
 } while(0)
 
 static uint8_t rf_test_running = RF_TEST_OFF;
-static sl_rail_tx_power_t stack_tx_power;
-static int8_t test_tx_power;
+static sl_rail_tx_power_t stack_tx_power_ddbm;
+static sl_rail_tx_power_t test_tx_power_ddbm;
 static uint8_t rf_test_phy_mode_id;
 static uint8_t rf_test_reg_domain;
 static uint16_t rf_test_physical_channel_offset;
@@ -64,6 +64,7 @@ static uint16_t rf_test_channel_start;
 static uint16_t rf_test_channel_end;
 static uint32_t rf_test_rx_packet_count;
 static uint16_t rf_test_tx_remaining_count;
+static uint32_t rf_test_base_frequency_hz;
 
 static sl_rail_fifo_buffer_align_t rf_test_tx_fifo[SL_RAIL_MAXIMUM_FIFO_BYTES / sizeof(sl_rail_fifo_buffer_align_t)];
 
@@ -74,7 +75,7 @@ static sl_rail_scheduler_info_t rf_scheduler_info =
   .transaction_time = 0
 };
 
-static uint8_t rf_test_crc_length = 2;
+static uint8_t rf_test_crc_length = 4;
 
 static sl_rail_cal_values_t rf_phy_cal_values = SL_RAIL_CAL_VALUES_UNINIT;
 
@@ -106,9 +107,9 @@ bool sl_wisun_is_running_rf_test()
   return (rf_test_running != RF_TEST_OFF);
 }
 
-sl_status_t sl_wisun_set_test_tx_power(int8_t tx_power)
+sl_status_t sl_wisun_set_test_tx_power(int8_t tx_power_dbm)
 {
-  test_tx_power = tx_power;
+  test_tx_power_ddbm = 10 * tx_power_dbm;
   return SL_STATUS_OK;
 }
 
@@ -155,13 +156,14 @@ sl_status_t sl_wisun_rf_test_set_phy_config(sl_wisun_phy_config_t *phy_config)
   status = check_rf_test(false);
   SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_STATUS_OK == status, status);
 
-  status = rf_test_phy_config_to_chan_config(phy_config, &chan_config, &phy_mode_id, &reg_domain, &rf_test_physical_channel_offset, &rf_test_channel_start, &rf_test_channel_end);
+  status = rf_test_phy_config_to_chan_config(phy_config, &chan_config, &phy_mode_id, &reg_domain, &rf_test_physical_channel_offset, &rf_test_channel_start, &rf_test_channel_end, &rf_test_crc_length);
   SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_STATUS_OK == status, status);
   if (status != SL_STATUS_OK || chan_config.p_stack_info == NULL) {
     SLI_WISUN_ERROR_SET_STATUS(status);
   }
   rf_test_phy_mode_id = phy_mode_id;
   rf_test_reg_domain = reg_domain;
+  rf_test_base_frequency_hz = chan_config.base_frequency_hz;
 
   status = SL_STATUS_OK;
 error_handler:
@@ -185,7 +187,7 @@ static void rf_test_tx_sent_callback(void)
   }
 }
 
-static void rf_test_tx_failure_callback(void)
+static void rf_test_tx_failure_callback(uint64_t events)
 {
   sl_wisun_trace_warn("rf_test: TX failure");
   if (rf_test_running != RF_TEST_TX_ACTIVE) {
@@ -193,14 +195,13 @@ static void rf_test_tx_failure_callback(void)
     stop_rf_test(RF_TEST_TX_ACTIVE);
     return;
   }
-
-  if (rf_test_tx_remaining_count > 0) {
-    rf_test_tx_remaining_count--;
+  if (events & SL_RAIL_EVENT_TX_UNDERFLOW) {
+    sl_wisun_trace_error("rf_test: TX underflow");
   }
-
-  if (rf_test_tx_remaining_count == 0) {
-    stop_rf_test(RF_TEST_TX_ACTIVE);
+  if (events & SL_RAIL_EVENT_TX_CHANNEL_BUSY) {
+    sl_wisun_trace_error("rf_test: TX channel busy");
   }
+  stop_rf_test(RF_TEST_TX_ACTIVE);
 }
 
 static void rf_test_rx_received_callback(int8_t rssi)
@@ -211,6 +212,21 @@ static void rf_test_rx_received_callback(int8_t rssi)
          (unsigned long)rf_test_rx_packet_count);
 }
 
+static void rf_test_cal_needed_callback(void)
+{
+  sl_rail_handle_t rail_handle;
+  sl_status_t status;
+  status = sli_wisun_get_rail_handle(&rail_handle);
+  SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_STATUS_OK == status, status);
+  status = sl_rail_calibrate(rail_handle, &rf_phy_cal_values, SL_RAIL_CAL_ALL_PENDING);
+  SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_RAIL_STATUS_NO_ERROR == status, SL_STATUS_FAIL);
+error_handler:
+  if (status != SL_STATUS_OK) {
+    sl_wisun_trace_error("rf_test: rail calibration failed");
+    stop_rf_test(RF_TEST_TX_ACTIVE);
+  }
+}
+
 void sl_wisun_rf_test_event_callback(uint64_t events, int8_t rssi)
 {
   if (events & SL_RAIL_EVENT_TX_PACKET_SENT) {
@@ -219,8 +235,12 @@ void sl_wisun_rf_test_event_callback(uint64_t events, int8_t rssi)
   if (events & SL_RAIL_EVENT_RX_PACKET_RECEIVED) {
     rf_test_rx_received_callback(rssi);
   }
-  if (events & SL_RAIL_EVENT_TX_UNDERFLOW) {
-    rf_test_tx_failure_callback();
+  if (events & SL_RAIL_EVENT_TX_UNDERFLOW ||
+      events & SL_RAIL_EVENT_TX_CHANNEL_BUSY) {
+    rf_test_tx_failure_callback(events);
+  }
+  if (events & SL_RAIL_EVENT_CAL_NEEDED) {
+    rf_test_cal_needed_callback();
   }
 }
 
@@ -242,6 +262,10 @@ sl_status_t sl_wisun_rf_test_start_tx(uint16_t channel,
   sl_rail_tx_options_t options = SL_RAIL_TX_OPTIONS_DEFAULT | SL_RAIL_TX_OPTION_RESEND;
   sl_rail_handle_t rail_handle;
   sl_rail_csma_config_t csma_config = SL_RAIL_CSMA_CONFIG_SINGLE_CCA;
+  sl_rail_state_transitions_t tx_transitions = {
+    .success = SL_RAIL_RF_STATE_IDLE,
+    .error = SL_RAIL_RF_STATE_IDLE
+  };
   uint16_t fifo_size_bytes = 0;
   uint16_t init_bytes = 0;
   uint8_t phr_length = 0;
@@ -253,18 +277,15 @@ sl_status_t sl_wisun_rf_test_start_tx(uint16_t channel,
   status = check_rf_test(true);
   SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_STATUS_OK == status, status);
 
+  status = sli_wisun_enable_rf_test_event_callback();
+  SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_STATUS_OK == status, status);
+
   if (count == 0 || data_length == 0 || interval_ms == 0 || data_length > MAX_PACKET_LENGTH) {
     SLI_WISUN_ERROR_SET_STATUS(SL_STATUS_INVALID_PARAMETER);
   }
 
   rail_status = sli_wisun_get_rail_handle(&rail_handle);
   SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_STATUS_OK == rail_status, SL_STATUS_FAIL);
-
-  // Backup stack Tx Power
-  stack_tx_power = sl_rail_get_tx_power_dbm(rail_handle);
-
-  rail_status = sl_rail_set_tx_power_dbm(rail_handle, 10*test_tx_power);
-  SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_RAIL_STATUS_NO_ERROR == rail_status, SL_STATUS_FAIL);
 
   // Add the physical channel offset to the channel
   channel = rf_test_physical_channel_offset + channel;
@@ -275,6 +296,14 @@ sl_status_t sl_wisun_rf_test_start_tx(uint16_t channel,
     sl_wisun_trace_error("rf_test: channel %u is out of range", channel);
     SLI_WISUN_ERROR_SET_STATUS(SL_STATUS_INVALID_PARAMETER);
   }
+
+  rail_status = sl_rail_prepare_channel(rail_handle, channel);
+  SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_RAIL_STATUS_NO_ERROR == rail_status, SL_STATUS_FAIL);
+  rail_status = rf_test_config_pa(rail_handle, rf_test_base_frequency_hz, rf_test_phy_mode_id);
+  SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_RAIL_STATUS_NO_ERROR == rail_status, SL_STATUS_FAIL);
+
+  stack_tx_power_ddbm = sl_rail_get_tx_power_dbm(rail_handle);
+  rail_status = sl_rail_set_tx_power_dbm(rail_handle, test_tx_power_ddbm);
 
   sl_rail_calibrate(rail_handle, &rf_phy_cal_values, SL_RAIL_CAL_ALL_PENDING);
 
@@ -295,10 +324,6 @@ sl_status_t sl_wisun_rf_test_start_tx(uint16_t channel,
   }
 
   rf_scheduler_info.priority = RF_PRIORITY_PROTECTED;
-  sl_rail_state_transitions_t tx_transitions = {
-    .success = SL_RAIL_RF_STATE_IDLE,
-    .error = SL_RAIL_RF_STATE_IDLE
-  };
   rail_status = sl_rail_set_tx_transitions(rail_handle, &tx_transitions);
   SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_RAIL_STATUS_NO_ERROR == rail_status, SL_STATUS_FAIL);
 
@@ -355,6 +380,9 @@ sl_status_t sl_wisun_rf_test_start_rx(uint16_t channel, uint32_t duration)
   status = check_rf_test(true);
   SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_STATUS_OK == status, status);
 
+  status = sli_wisun_enable_rf_test_event_callback();
+  SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_STATUS_OK == status, status);
+
   rail_status = sli_wisun_get_rail_handle(&rail_handle);
   SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_STATUS_OK == rail_status, SL_STATUS_FAIL);
 
@@ -370,7 +398,7 @@ sl_status_t sl_wisun_rf_test_start_rx(uint16_t channel, uint32_t duration)
   rf_test_running = RF_TEST_RX_ACTIVE;
   rf_scheduler_info.priority = RF_PRIORITY_PROTECTED;
   //tx power will be set during the stop proceedure
-  stack_tx_power = sl_rail_get_tx_power_dbm(rail_handle);
+  stack_tx_power_ddbm = sl_rail_get_tx_power_dbm(rail_handle);
 
   rail_status = sl_rail_start_rx(rail_handle, channel, &rf_scheduler_info);
   SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_RAIL_STATUS_NO_ERROR == rail_status, SL_STATUS_FAIL);
@@ -405,6 +433,9 @@ static sl_status_t start_rf_test(uint16_t channel, sl_rail_stream_mode_t mode)
   status = check_rf_test(true);
   SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_STATUS_OK == status, status);
 
+  status = sli_wisun_enable_rf_test_event_callback();
+  SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_STATUS_OK == status, status);
+
   status = sli_wisun_get_rail_handle(&rail_handle);
   // Add the physical channel offset to the channel
   channel = rf_test_physical_channel_offset + channel;
@@ -416,11 +447,14 @@ static sl_status_t start_rf_test(uint16_t channel, sl_rail_stream_mode_t mode)
     SLI_WISUN_ERROR_SET_STATUS(SL_STATUS_INVALID_PARAMETER);
   }
 
-  // Backup stack Tx Power
-  stack_tx_power = sl_rail_get_tx_power_dbm(rail_handle);
-
-  rail_status = sl_rail_set_tx_power_dbm(rail_handle, 10*test_tx_power);
+  rail_status = sl_rail_prepare_channel(rail_handle, channel);
   SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_RAIL_STATUS_NO_ERROR == rail_status, SL_STATUS_FAIL);
+  rail_status = rf_test_config_pa(rail_handle, rf_test_base_frequency_hz, rf_test_phy_mode_id);
+  SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_RAIL_STATUS_NO_ERROR == rail_status, SL_STATUS_FAIL);
+  stack_tx_power_ddbm = sl_rail_get_tx_power_dbm(rail_handle);
+  rail_status = sl_rail_set_tx_power_dbm(rail_handle, test_tx_power_ddbm);
+  SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_RAIL_STATUS_NO_ERROR == rail_status, SL_STATUS_FAIL);
+  sl_rail_calibrate(rail_handle, &rf_phy_cal_values, SL_RAIL_CAL_ALL_PENDING);
 
   rail_status = sl_rail_start_tx_stream(rail_handle, channel, mode, SL_RAIL_TX_OPTIONS_DEFAULT);
   SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_RAIL_STATUS_NO_ERROR == rail_status, SL_STATUS_FAIL);
@@ -445,6 +479,9 @@ static sl_status_t stop_rf_test(uint8_t mode)
   sl_status_t status;
   sl_rail_handle_t rail_handle;
 
+  status = sli_wisun_disable_rf_test_event_callback();
+  SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_STATUS_OK == status, status);
+
   status = sli_wisun_get_rail_handle(&rail_handle);
   SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_STATUS_OK == status, SL_STATUS_NOT_READY);
 
@@ -457,8 +494,12 @@ static sl_status_t stop_rf_test(uint8_t mode)
     rail_status = sl_rail_idle(rail_handle, SL_RAIL_IDLE_ABORT, true);
     SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_RAIL_STATUS_NO_ERROR == rail_status, SL_STATUS_FAIL);
   }
+  if (mode == RF_TEST_TX_ACTIVE) {
+    rf_test_tx_remaining_count = 0;
+    sl_rail_stop_tx(rail_handle, SL_RAIL_STOP_MODES_ALL);
+  }
 
-  rail_status = sl_rail_set_tx_power_dbm(rail_handle, stack_tx_power);
+  rail_status = sl_rail_set_tx_power_dbm(rail_handle, stack_tx_power_ddbm);
   SLI_WISUN_ERROR_CHECK_SET_STATUS(SL_RAIL_STATUS_NO_ERROR == rail_status, SL_STATUS_FAIL);
 
   rf_test_running = RF_TEST_OFF;

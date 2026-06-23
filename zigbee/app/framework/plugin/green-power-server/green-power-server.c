@@ -83,8 +83,8 @@ static uint8_t gpSinkTableSize = 0;
 
 #ifdef SL_CATALOG_ZIGBEE_ZCL_FRAMEWORK_CORE_PRESENT
 // wrapper for common token manager APIs if GP adapter isn't present
-#define sl_zigbee_gp_set_token(token, data, length) (void)sl_token_manager_set_data(token, data, length)
-#define sl_zigbee_gp_get_token(token, data, length) (void)sl_token_manager_get_data(token, data, length)
+#define sl_zigbee_gp_set_token(token, data, length) (void)slx_zigbee_token_manager_set_data(token, data, length)
+#define sl_zigbee_gp_get_token(token, data, length) (void)slx_zigbee_token_manager_get_data(token, data, length)
 #endif
 
 typedef struct {
@@ -2186,57 +2186,31 @@ static bool processCommNotificationsWithSecurityProcessingFailedFlag(uint16_t co
                                                                      uint8_t securityKeyType)
 {
   sl_zigbee_af_green_power_cluster_println("\nGP CN Security Processing Failed is set");
-  // MIC is only present if security processing failed is set, so validate MIC
-  uint8_t mic[4] = { 0 };
+
   uint8_t secLevel = (commNotificationOptions & SL_ZIGBEE_AF_GP_COMMISSIONING_NOTIFICATION_OPTION_SECURITY_LEVEL)
                      >> SL_ZIGBEE_AF_GP_COMMISSIONING_NOTIFICATION_OPTION_SECURITY_LEVEL_OFFSET;
-  bool securityProcessing = sli_zigbee_af_gp_calculate_incoming_command_mic(gpdAddr,
-                                                                            ((commNotificationOptions & SL_ZIGBEE_AF_GP_COMMISSIONING_NOTIFICATION_OPTION_RX_AFTER_TX) ? true : false),
-                                                                            ((securityKeyType == SL_ZIGBEE_ZCL_GP_SECURITY_KEY_TYPE_INDIVIDIGUAL_GPD_KEY
-                                                                              || securityKeyType == SL_ZIGBEE_ZCL_GP_SECURITY_KEY_TYPE_DERIVED_INDIVIDUAL_GPD_KEY) \
-                                                                             ? SL_ZIGBEE_AF_GREEN_POWER_GP_INDIVIDUAL_KEY : SL_ZIGBEE_AF_GREEN_POWER_GP_SHARED_KEY),
-                                                                            secLevel,
-                                                                            gpdSecurityFrameCounter,
-                                                                            *gpdCommandId,
-                                                                            gpdCommandPayload,
-                                                                            ((secLevel > SL_ZIGBEE_GP_SECURITY_LEVEL_FC_MIC) ? true : false),
-                                                                            mic);
+  bool securityProcessing = sli_zigbee_af_gp_incoming_command_decrypt_and_validate_mic(gpdAddr,
+                                                                                       ((commNotificationOptions & SL_ZIGBEE_AF_GP_COMMISSIONING_NOTIFICATION_OPTION_RX_AFTER_TX) ? true : false),
+                                                                                       ((securityKeyType == SL_ZIGBEE_ZCL_GP_SECURITY_KEY_TYPE_INDIVIDIGUAL_GPD_KEY
+                                                                                         || securityKeyType == SL_ZIGBEE_ZCL_GP_SECURITY_KEY_TYPE_DERIVED_INDIVIDUAL_GPD_KEY) \
+                                                                                        ? SL_ZIGBEE_AF_GREEN_POWER_GP_INDIVIDUAL_KEY : SL_ZIGBEE_AF_GREEN_POWER_GP_SHARED_KEY),
+                                                                                       secLevel,
+                                                                                       gpdSecurityFrameCounter,
+                                                                                       gpdCommandId,
+                                                                                       gpdCommandPayload,
+                                                                                       commissioningNotificationMic);
   sl_zigbee_af_green_power_cluster_print("\n GP CN Sec Level = %d, App Id = %d, MIC Validation : %s"
-                                         "\n GP CN Calculated Mic : %08X"
                                          "\n GP CN Received Mic   : %08X\n",
                                          secLevel,
                                          gpdAddr->applicationId,
                                          (securityProcessing ? "SUCCESS" : "FAILED"),
-                                         (*(uint32_t*)mic),
                                          commissioningNotificationMic);
-  if (!securityProcessing
-      || ((*(uint32_t*)mic) != commissioningNotificationMic)) {
+  if (!securityProcessing) {
     sl_zigbee_af_green_power_cluster_println("DROP - GP CN MIC Mismatch");
     sl_zigbee_af_green_power_server_gpd_security_failure_cb(gpdAddr);
     return false;
   }
 
-  if (SL_ZIGBEE_GP_SECURITY_LEVEL_FC_MIC_ENCRYPTED == secLevel) {
-    // Temp Payload to be decrypted without payloadLengthe in between in the form of : {commandId,{command payload}}
-    uint8_t payload[GP_COMMISSIONING_MAX_BYTES + 1] = { 0 };
-    payload[0] = *gpdCommandId;
-    uint8_t length = 1;
-    if ((gpdCommandPayload != NULL)
-        && (gpdCommandPayload[0] < GP_COMMISSIONING_MAX_BYTES)) {
-      memcpy((payload + 1), gpdCommandPayload + 1, gpdCommandPayload[0]);
-      length += gpdCommandPayload[0];
-    }
-    sli_zigbee_af_gp_calculate_incoming_command_decrypt(gpdAddr,
-                                                        gpdSecurityFrameCounter,
-                                                        length,
-                                                        payload);
-    // Copy back the decrypted command with octate string payload format.
-    *gpdCommandId = payload[0];
-    if ((gpdCommandPayload != NULL)
-        && (gpdCommandPayload[0] < GP_COMMISSIONING_MAX_BYTES)) {
-      memcpy((gpdCommandPayload + 1), (payload + 1), gpdCommandPayload[0]);
-    }
-  }
   return true;
 }
 
@@ -2978,7 +2952,7 @@ sl_zigbee_af_zcl_request_status_t sl_zigbee_af_green_power_cluster_gp_pairing_co
     }
 
     uint8_t sinkEntryIndex = sl_zigbee_gp_sink_table_lookup(&gpdAddr);
-    if (sinkEntryIndex != 0xFF) {
+    if (sinkEntryIndex != 0xFF && sli_zigbee_af_gp_check_communication_mode_support(gpPairingConfigCommunicationMode)) {
       sl_zigbee_gp_sink_table_entry_t entry = { 0 };
       if (sl_zigbee_gp_sink_table_get_entry(sinkEntryIndex, &entry) != SL_STATUS_OK) {
         // return if entry not found
@@ -2999,24 +2973,24 @@ sl_zigbee_af_zcl_request_status_t sl_zigbee_af_green_power_cluster_gp_pairing_co
             return SL_ZIGBEE_ZCL_STATUS_INTERNAL_COMMAND_HANDLED;
           }
 
-          bool found = false;
+          uint8_t cnt = 0u;
+          sl_zigbee_gp_sink_group_t gpPairingConfigGroupID[GP_SINK_LIST_ENTRIES];
 
           for (uint8_t i = 0; i < cmd_data.groupListCount; i++) {
-            sl_zigbee_gp_sink_group_t gpPairingConfigGroupID = { 0 };
-            memcpy(&gpPairingConfigGroupID, &(cmd_data.groupList[i * sizeof(sl_zigbee_gp_sink_group_t)]), sizeof(sl_zigbee_gp_sink_group_t));
+            memcpy(&gpPairingConfigGroupID[cnt], &(cmd_data.groupList[i * sizeof(sl_zigbee_gp_sink_group_t)]), sizeof(sl_zigbee_gp_sink_group_t));
             for (uint8_t j = 0; j < GP_SINK_LIST_ENTRIES; j++) {
               if (entry.sinkList[j].type == SL_ZIGBEE_GP_SINK_TYPE_GROUPCAST
-                  && entry.sinkList[j].target.groupcast.groupID == gpPairingConfigGroupID.groupID) {
+                  && entry.sinkList[j].target.groupcast.groupID == gpPairingConfigGroupID[cnt].groupID) {
                 // Remove paring if group id match
-                sl_zigbee_af_green_power_cluster_println("Remove GPD group ID: 0x%04X", gpPairingConfigGroupID.groupID);
-                sl_zigbee_gp_sink_table_remove_group(sinkEntryIndex, gpPairingConfigGroupID.groupID, gpPairingConfigGroupID.alias);
-                found = true;
+                sl_zigbee_af_green_power_cluster_println("Remove GPD group ID: 0x%04X", gpPairingConfigGroupID[cnt].groupID);
+                sl_zigbee_gp_sink_table_remove_group(sinkEntryIndex, gpPairingConfigGroupID[cnt].groupID, gpPairingConfigGroupID[cnt].alias);
+                cnt++;
                 break;
               }
             }
           }
 
-          if (!found) {
+          if (cnt == 0u) {
             sl_zigbee_af_green_power_cluster_println("Group ID mismatch found");
             return SL_ZIGBEE_ZCL_STATUS_INTERNAL_COMMAND_HANDLED;
           }
@@ -3038,6 +3012,25 @@ sl_zigbee_af_zcl_request_status_t sl_zigbee_af_green_power_cluster_gp_pairing_co
           if (isRemoved) {
             sl_zigbee_af_green_power_cluster_println("decommission GPD!");
             decommissionGpd(0, 0, &gpdAddr, false, cmd_data.actions & SL_ZIGBEE_AF_GP_PAIRING_CONFIGURATION_ACTIONS_SEND_GP_PAIRING);
+          } else {
+            if (cmd_data.actions & SL_ZIGBEE_AF_GP_PAIRING_CONFIGURATION_ACTIONS_SEND_GP_PAIRING) {
+              for (uint8_t i = 0u; i < cnt; i++) {
+                uint32_t pairingOptions = (cmd_data.options & SL_ZIGBEE_AF_GP_PAIRING_CONFIGURATION_OPTION_APPLICATION_ID);
+                pairingOptions |= (2 << SL_ZIGBEE_AF_GP_PAIRING_OPTION_COMMUNICATION_MODE_OFFSET);
+                sl_status_t retval = sendGpPairingMessage(SL_ZIGBEE_OUTGOING_BROADCAST,
+                                                          SL_ZIGBEE_RX_ON_WHEN_IDLE_BROADCAST_ADDRESS,
+                                                          pairingOptions,
+                                                          &(entry.gpd),
+                                                          gpPairingConfigGroupID[i].groupID,
+                                                          0xFF,
+                                                          0xFFFFFFFFu,
+                                                          NULL,
+                                                          0xFFFF,
+                                                          0xFF,
+                                                          true);
+                sl_zigbee_af_green_power_cluster_println("Send GP Pairing, returned: %d", retval);
+              }
+            }
           }
           return SL_ZIGBEE_ZCL_STATUS_SUCCESS;
         }

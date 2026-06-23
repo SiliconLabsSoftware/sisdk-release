@@ -126,23 +126,19 @@ sl_status_t sli_bt_publish_to_event_system(sl_bt_msg_t *event)
   // Choose the right publisher and event mask
   sl_event_publisher_t *event_publisher = NULL;
   uint32_t event_mask = 0;
-  switch (SL_BGAPI_MSG_DEVICE_TYPE(event->header)) {
-    case sl_bgapi_dev_type_bt:
-      event_publisher = &bt_event_publisher;
-      event_mask = SL_BT_EVENT_MASK_PUBLIC;
-      break;
 
+  uint32_t event_type = SL_BGAPI_MSG_DEVICE_TYPE(event->header);
+  if (event_type == sl_bgapi_dev_type_bt) {
+    event_publisher = &bt_event_publisher;
+    event_mask = SL_BT_EVENT_MASK_PUBLIC;
 #if defined(SL_CATALOG_BTMESH_PRESENT)
-    case sl_bgapi_dev_type_btmesh:
-      event_publisher = &btmesh_event_publisher;
-      event_mask = SL_BTMESH_EVENT_MASK_PUBLIC;
-      break;
+  } else if (event_type == sl_bgapi_dev_type_btmesh) {
+    event_publisher = &btmesh_event_publisher;
+    event_mask = SL_BTMESH_EVENT_MASK_PUBLIC;
 #endif
-
-    default:
-      // The device type was unknown. We leave `event_publisher` NULL so that
-      // we'll skip publishing and free the event below.
-      break;
+  } else {
+    // The device type was unknown. We leave `event_publisher` NULL so that
+    // we'll skip publishing and free the event below.
   }
 
   // Publish to Event System

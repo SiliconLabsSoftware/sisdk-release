@@ -314,11 +314,13 @@ sl_status_t sli_token_manager_get_size_from_klv(uint32_t klv_start_address,
 
   uint8_t *obj_adr = (uint8_t *)klv_start_address + sizeof(uint32_t);
   uint32_t security_offset = SLI_TOKEN_MANAGER_GET_SECURITY_OFFSET(klv_start_address);
-
+  sl_status_t status = SL_STATUS_OK;
+  
   while ((uint32_t *)obj_adr < (uint32_t *)klv_end_address) {
     sl_klv_header_t klv_header_info;
-    if (sli_token_manager_decode_klv_header(obj_adr, &klv_header_info) != SL_STATUS_OK) {
-      return SL_STATUS_INVALID_PARAMETER;
+    status = sli_token_manager_decode_klv_header(obj_adr, &klv_header_info);
+    if (status != SL_STATUS_OK) {
+      return status;
     }
 
     if (klv_header_info.key == (token & 0xFFFFU)) {

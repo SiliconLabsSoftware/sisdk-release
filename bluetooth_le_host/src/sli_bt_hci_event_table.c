@@ -20,14 +20,15 @@
 #include "sl_component_catalog.h"
 #include "sli_bt_hci_event_table.h"
 
-// Some features do not correspond directly to a particular component but are
-// needed depending on a specific combination of components. Decide the derived
-// feature selections here to simplify the feature inclusion rules below.
+#if defined(SL_CATALOG_BLUETOOTH_FEATURE_LOCAL_PRIVACY_PRESENT) \
+  && defined(SL_CATALOG_BLUETOOTH_FEATURE_ADVERTISER_PRESENT)
+#define SLI_BT_LOCAL_PRIVACY_ADV_TIMERS_PRESENT
+#endif
 
-// CTE receiver is present if either AoA or AoD receiver is present
-#if defined(SL_CATALOG_BLUETOOTH_FEATURE_AOA_RECEIVER_PRESENT) \
-  || defined(SL_CATALOG_BLUETOOTH_FEATURE_AOD_RECEIVER_PRESENT)
-#define SLI_BT_CTE_RECEIVER_PRESENT
+#if defined(SL_CATALOG_BLUETOOTH_FEATURE_LOCAL_PRIVACY_PRESENT) \
+  && (defined(SL_CATALOG_BLUETOOTH_FEATURE_SCANNER_PRESENT) \
+      || defined(SL_CATALOG_BLUETOOTH_FEATURE_PAWR_ADVERTISER_PRESENT))
+#define SLI_BT_LOCAL_PRIVACY_CENTRAL_TIMER_PRESENT
 #endif
 
 // -----------------------------------------------------------------------------
@@ -64,6 +65,7 @@ extern sli_bt_hci_event_handler_func_t sli_bt_channel_sounding_handle_hci_event_
 extern sli_bt_hci_event_handler_func_t sli_bt_channel_sounding_handle_hci_event_le_cs_subevent_result_continue;
 extern sli_bt_hci_event_handler_func_t sli_bt_channel_sounding_test_handle_hci_event_le_cs_test_end_complete;
 extern sli_bt_hci_event_handler_func_t sli_bt_scanner_handle_hci_event_le_silabs_advertising_report;
+extern sli_bt_hci_event_handler_func_t sli_bt_channel_sounding_handle_hci_event_vs_siliconlabs_cs_sync_established;
 extern sli_bt_hci_event_handler_func_t sli_bt_channel_classification_handle_hci_event_vs_silabs_channel_classification;
 extern sli_bt_hci_event_handler_func_t sli_bt_past_receiver_handle_hci_event_vs_siliconlabs_periodic_advertising_sync_transfer_received;
 extern sli_bt_hci_event_handler_func_t sli_bt_sm_handle_hci_event_le_silabs_sk_request;
@@ -72,6 +74,9 @@ extern sli_bt_hci_event_handler_func_t sli_bt_connection_statistics_handle_hci_e
 extern sli_bt_hci_event_handler_func_t sli_bt_connection_analyzer_handle_hci_event_le_silabs_sniff_connection;
 extern sli_bt_hci_event_handler_func_t sli_bt_connection_analyzer_handle_hci_event_le_silabs_sniff_complete;
 extern sli_bt_hci_event_handler_func_t sli_bt_linklayer_handle_hci_event_vs_silabs_event_info_report;
+extern sli_bt_hci_event_handler_func_t sli_bt_channel_sounding_handle_hci_event_vs_siliconlabs_cs_subevent_result;
+extern sli_bt_hci_event_handler_func_t sli_bt_channel_sounding_handle_hci_event_vs_siliconlabs_cs_subevent_result_continue;
+extern sli_bt_hci_event_handler_func_t sli_bt_channel_sounding_handle_hci_event_vs_siliconlabs_cs_complete;
 extern sli_bt_hci_event_handler_func_t sli_bt_periodic_advertiser_handle_hci_event_le_silabs_periodic_advertising_tx;
 
 // -----------------------------------------------------------------------------
@@ -105,11 +110,11 @@ const sli_bt_hci_event_key_t sli_bt_hci_event_lookup_keys[] = {
   0x3e12,
   0x3e13,
 #endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_ADVERTISER_PRESENT)
-#if defined(SLI_BT_CTE_RECEIVER_PRESENT)
+#if defined(SL_CATALOG_BLUETOOTH_FEATURE_CTE_RECEIVER_PRESENT)
   0x3e15,
   0x3e16,
   0x3e17,
-#endif // defined(SLI_BT_CTE_RECEIVER_PRESENT)
+#endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_CTE_RECEIVER_PRESENT)
 #if defined(SL_CATALOG_BLUETOOTH_FEATURE_CONNECTION_PRESENT)
   0x3e21,
 #endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_CONNECTION_PRESENT)
@@ -146,6 +151,9 @@ const sli_bt_hci_event_key_t sli_bt_hci_event_lookup_keys[] = {
 #if defined(SL_CATALOG_BLUETOOTH_FEATURE_SCANNER_PRESENT)
   0xff0d,
 #endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_SCANNER_PRESENT)
+#if defined(SL_CATALOG_BLUETOOTH_FEATURE_CS_PRESENT)
+  0xffea,
+#endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_CS_PRESENT)
 #if defined(SL_CATALOG_BLUETOOTH_FEATURE_CHANNEL_CLASSIFICATION_PRESENT)
   0xffeb,
 #endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_CHANNEL_CLASSIFICATION_PRESENT)
@@ -155,9 +163,9 @@ const sli_bt_hci_event_key_t sli_bt_hci_event_lookup_keys[] = {
 #if defined(SL_CATALOG_BLUETOOTH_FEATURE_SM_PRESENT)
   0xffed,
 #endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_SM_PRESENT)
-#if defined(SLI_BT_CTE_RECEIVER_PRESENT)
+#if defined(SL_CATALOG_BLUETOOTH_FEATURE_CTE_RECEIVER_PRESENT)
   0xffee,
-#endif // defined(SLI_BT_CTE_RECEIVER_PRESENT)
+#endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_CTE_RECEIVER_PRESENT)
 #if defined(SL_CATALOG_BLUETOOTH_FEATURE_CONNECTION_STATISTICS_PRESENT)
   0xffef,
 #endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_CONNECTION_STATISTICS_PRESENT)
@@ -168,6 +176,11 @@ const sli_bt_hci_event_key_t sli_bt_hci_event_lookup_keys[] = {
 #if defined(SL_CATALOG_BLUETOOTH_FEATURE_LINKLAYER_INTERFACE_PRESENT)
   0xfff2,
 #endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_LINKLAYER_INTERFACE_PRESENT)
+#if defined(SL_CATALOG_BLUETOOTH_FEATURE_CS_PRESENT)
+  0xfff3,
+  0xfff4,
+  0xfff5,
+#endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_CS_PRESENT)
 #if defined(SL_CATALOG_BLUETOOTH_FEATURE_PERIODIC_ADVERTISER_PRESENT)
   0xffff,
 #endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_PERIODIC_ADVERTISER_PRESENT)
@@ -202,11 +215,11 @@ sli_bt_hci_event_handler_func_t * const sli_bt_hci_event_lookup_data[] = {
   sli_bt_gap_adv_handle_hci_event_le_advertising_set_terminated,
   sli_bt_advertiser_handle_hci_event_le_scan_request_received,
 #endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_ADVERTISER_PRESENT)
-#if defined(SLI_BT_CTE_RECEIVER_PRESENT)
+#if defined(SL_CATALOG_BLUETOOTH_FEATURE_CTE_RECEIVER_PRESENT)
   sli_bt_cte_receiver_handle_hci_event_le_connectionless_iq_report,
   sli_bt_cte_receiver_handle_hci_event_le_connection_iq_report,
   sli_bt_cte_receiver_handle_hci_event_le_cte_request_failed,
-#endif // defined(SLI_BT_CTE_RECEIVER_PRESENT)
+#endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_CTE_RECEIVER_PRESENT)
 #if defined(SL_CATALOG_BLUETOOTH_FEATURE_CONNECTION_PRESENT)
   sli_bt_connection_handle_hci_event_le_transmit_power_reporting,
 #endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_CONNECTION_PRESENT)
@@ -243,6 +256,9 @@ sli_bt_hci_event_handler_func_t * const sli_bt_hci_event_lookup_data[] = {
 #if defined(SL_CATALOG_BLUETOOTH_FEATURE_SCANNER_PRESENT)
   sli_bt_scanner_handle_hci_event_le_silabs_advertising_report,
 #endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_SCANNER_PRESENT)
+#if defined(SL_CATALOG_BLUETOOTH_FEATURE_CS_PRESENT)
+  sli_bt_channel_sounding_handle_hci_event_vs_siliconlabs_cs_sync_established,
+#endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_CS_PRESENT)
 #if defined(SL_CATALOG_BLUETOOTH_FEATURE_CHANNEL_CLASSIFICATION_PRESENT)
   sli_bt_channel_classification_handle_hci_event_vs_silabs_channel_classification,
 #endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_CHANNEL_CLASSIFICATION_PRESENT)
@@ -252,9 +268,9 @@ sli_bt_hci_event_handler_func_t * const sli_bt_hci_event_lookup_data[] = {
 #if defined(SL_CATALOG_BLUETOOTH_FEATURE_SM_PRESENT)
   sli_bt_sm_handle_hci_event_le_silabs_sk_request,
 #endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_SM_PRESENT)
-#if defined(SLI_BT_CTE_RECEIVER_PRESENT)
+#if defined(SL_CATALOG_BLUETOOTH_FEATURE_CTE_RECEIVER_PRESENT)
   sli_bt_cte_receiver_handle_hci_event_le_silabs_iq_report,
-#endif // defined(SLI_BT_CTE_RECEIVER_PRESENT)
+#endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_CTE_RECEIVER_PRESENT)
 #if defined(SL_CATALOG_BLUETOOTH_FEATURE_CONNECTION_STATISTICS_PRESENT)
   sli_bt_connection_statistics_handle_hci_event_vs_siliconlabs_connection_statistics,
 #endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_CONNECTION_STATISTICS_PRESENT)
@@ -265,6 +281,11 @@ sli_bt_hci_event_handler_func_t * const sli_bt_hci_event_lookup_data[] = {
 #if defined(SL_CATALOG_BLUETOOTH_FEATURE_LINKLAYER_INTERFACE_PRESENT)
   sli_bt_linklayer_handle_hci_event_vs_silabs_event_info_report,
 #endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_LINKLAYER_INTERFACE_PRESENT)
+#if defined(SL_CATALOG_BLUETOOTH_FEATURE_CS_PRESENT)
+  sli_bt_channel_sounding_handle_hci_event_vs_siliconlabs_cs_subevent_result,
+  sli_bt_channel_sounding_handle_hci_event_vs_siliconlabs_cs_subevent_result_continue,
+  sli_bt_channel_sounding_handle_hci_event_vs_siliconlabs_cs_complete,
+#endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_CS_PRESENT)
 #if defined(SL_CATALOG_BLUETOOTH_FEATURE_PERIODIC_ADVERTISER_PRESENT)
   sli_bt_periodic_advertiser_handle_hci_event_le_silabs_periodic_advertising_tx,
 #endif // defined(SL_CATALOG_BLUETOOTH_FEATURE_PERIODIC_ADVERTISER_PRESENT)

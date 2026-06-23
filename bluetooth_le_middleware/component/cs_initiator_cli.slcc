@@ -8,7 +8,7 @@ category: Bluetooth|Application|Miscellaneous
 metadata:
   sbom:
     license: Zlib
-quality: experimental
+quality: production
 root_path: bluetooth_le_middleware/common/cs_initiator_cli
 include:
 - path: .

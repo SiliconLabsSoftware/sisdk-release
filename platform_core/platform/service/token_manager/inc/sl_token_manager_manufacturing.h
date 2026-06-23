@@ -44,8 +44,20 @@
 #include "sl_token_manager_config.h"
 #include "sl_token_manufacturing_generic.h"
 
-// For series 2 devices, the static tokens need to be stored at well-defined
-// locations. None of these addresses should ever change without extremely great care.
+//--- Static device token Data ---
+#ifndef SL_TOKEN_STATIC_DEVICE_TOKENS
+#define SL_TOKEN_STATIC_DEVICE_TOKENS             (0x1000)
+#endif
+
+//--- Static secure token Data    ---
+#ifndef SL_TOKEN_STATIC_SECURE_DATA_TOKENS
+#define SL_TOKEN_STATIC_SECURE_DATA_TOKENS        (0x3000)
+#endif
+
+#if defined(SL_TOKEN_MANAGER_FORMAT_LEGACY)
+// NOTE: The legacy token format is used for series 2 devices.
+//       On these devices, the static tokens are stored at well-defined
+//       locations. None of these addresses should ever change without extremely great care.
 
 // NOTE: On the EFM32 platform the EMBER_EUI64_TOKEN is taken from the
 //       DEVINFO info UNIQUEL and UNIQUEH register.
@@ -55,10 +67,6 @@
 //       enough buffer space to allow the next value to start at a 4 byte
 //       aligned address.
 
-// Note: In series 3, since the tokens are stored in klv chain format,
-//       these key don't specify the memory offset, rather treated as a key.
-//       The key is used in KLV header for identification purposes.
-
 //--- Static device token Data ---
 // Appending the static device token with 0x1000 will keep the token out of NVM and
 // indicate it is a token living in static device Data space.
@@ -67,18 +75,12 @@
 // 0x1000, which is appended to the token, is stripped off when computing the location of a token in the flash
 // to get the correct static device Data offset.
 
-// In case of series 3 device, static device space is located in SE MTP region. The 16 bit
-// token is used as a key in KLV header for identification purposes. The token is not mapped to any
-// specific address in the SE MTP region.
-
 // MAX token length that that can be embedded as part of token is 0x1FFF
 
 // Incase of coexistence of series2 legacy token defines and new common token manager token defines,
 // the legacy token defines should be used. The new common token manager token defines should not be used.
 // Note that the common token manager token values are not changed, they are kept same as the legacy token values.
-#ifndef SL_TOKEN_STATIC_DEVICE_TOKENS
-#define SL_TOKEN_STATIC_DEVICE_TOKENS             (0x1000)
-#endif
+
 #ifndef TOKEN_MFG_EMBER_EUI_64
 #define TOKEN_MFG_EMBER_EUI_64                    (SL_TOKEN_STATIC_DEVICE_TOKENS | 0x1f0)
 #define TOKEN_MFG_EMBER_EUI_64_SIZE               (8u)                //   8 bytes
@@ -186,15 +188,6 @@
 #define TOKEN_MFG_LOCKBITS_DLW_SIZE               (4U)                //   4 bytes
 #endif
 
-//--- Static secure token Data    ---
-// In case of series 3 device, static secure space is located in data region of flash,
-// appending the token with 0x3000 will indicate that the token belongs to static secure range.
-// This resulting 16-bit key will be used in KLV header for identification purposes.
-// Note: Since the tokens are stored in klv chain format, these key don't specify the memory offset,
-// rather treated as a key.
-#ifndef SL_TOKEN_STATIC_SECURE_DATA_TOKENS
-#define SL_TOKEN_STATIC_SECURE_DATA_TOKENS        (0x3000)
-#endif
 // Intentionally skipping the first four bytes.  The location might be
 // best for a version or other type of information.
 #ifndef TOKEN_MFG_CBKE_DATA
@@ -257,6 +250,96 @@
 #define TOKEN_MFG_ZW_QR_CODE_EXT                  (SL_TOKEN_STATIC_SECURE_DATA_TOKENS | 0x460)
 #define TOKEN_MFG_ZW_QR_CODE_EXT_SIZE             (16u)               //  16 bytes
 #endif
+#else
+// Note: In series 3, since the tokens are stored in klv chain format,
+//       these key don't specify the memory offset, rather treated as a key.
+//       The 16-bit key value is used in KLV header for identification purposes.
+//       CTM has reserved dedicated token key ranges for each domain, 
+//       with a total of 128 token keys allocated per domain.
+//       The token key ranges are defined in sl_token_manager_defines.h
+
+//--- Static device token Data ---
+// In case of series 3 device, static device space is located in SE MTP region. The 16 bit
+// token is used as a key in KLV header for identification purposes. The token is not mapped to any
+// specific address in the SE MTP region.
+
+// MAX token length that can be embedded as part of token is 0x1FFF.
+
+// Below defined tokens are reserved and should not be used for defining new tokens in the specific domain.
+//    | Static device token (Domain : Token IDs)                  | Static secure token (Domain : Token IDs)     |
+//    |-----------------------------------------------------------|----------------------------------------------|
+//    | Common : 0x002, 0x00C, 0x020, 0x030, 0x034, 0x038, 0x064  | Bluetooth : 0x204, 0x260, 0x270              |
+//    | Zigbee : 0x09C                                            | Z-Wave : 0x298                               |
+//    | Thread : 0x100                                            |                                              |
+//    | Connect : 0x1f0                                           |                                              |
+
+#ifndef TOKEN_MFG_EMBER_EUI_64
+#define TOKEN_MFG_EMBER_EUI_64                    (SL_TOKEN_STATIC_DEVICE_TOKENS | 0x1f0)
+#define TOKEN_MFG_EMBER_EUI_64_SIZE               (8u)                //   8 bytes
+#endif
+#ifndef TOKEN_MFG_CUSTOM_EUI_64
+#define TOKEN_MFG_CUSTOM_EUI_64                   (SL_TOKEN_STATIC_DEVICE_TOKENS | 0x002)
+#define TOKEN_MFG_CUSTOM_EUI_64_SIZE              (8u)                //   8 bytes
+#endif
+#ifndef TOKEN_MFG_CUSTOM_VERSION
+#define TOKEN_MFG_CUSTOM_VERSION                  (SL_TOKEN_STATIC_DEVICE_TOKENS | 0x00C)
+#define TOKEN_MFG_CUSTOM_VERSION_SIZE             (2u)                //   2 bytes
+#endif
+#ifndef TOKEN_MFG_LFXO_TUNE
+#define TOKEN_MFG_LFXO_TUNE                       (SL_TOKEN_STATIC_DEVICE_TOKENS | 0x09C)
+#define TOKEN_MFG_LFXO_TUNE_SIZE                  (1u)                //   1 bytes
+#endif
+#ifndef TOKEN_MFG_CTUNE
+#define TOKEN_MFG_CTUNE                           (SL_TOKEN_STATIC_DEVICE_TOKENS | 0x100)
+#define TOKEN_MFG_CTUNE_SIZE                      (2u)                //   2 bytes
+#endif
+#ifndef TOKEN_MFG_BOARD_NAME
+#define TOKEN_MFG_BOARD_NAME                      (SL_TOKEN_STATIC_DEVICE_TOKENS | 0x020)
+#define TOKEN_MFG_BOARD_NAME_SIZE                 (16u)               //  16 bytes
+#endif
+#ifndef TOKEN_MFG_MANUF_ID
+#define TOKEN_MFG_MANUF_ID                        (SL_TOKEN_STATIC_DEVICE_TOKENS | 0x030)
+#define TOKEN_MFG_MANUF_ID_SIZE                   (2u)                //   2 bytes
+#endif
+#ifndef TOKEN_MFG_PHY_CONFIG
+#define TOKEN_MFG_PHY_CONFIG                      (SL_TOKEN_STATIC_DEVICE_TOKENS | 0x034)
+#define TOKEN_MFG_PHY_CONFIG_SIZE                 (2u)                //   2 bytes
+#endif
+#ifndef TOKEN_MFG_ASH_CONFIG
+#define TOKEN_MFG_ASH_CONFIG                      (SL_TOKEN_STATIC_DEVICE_TOKENS | 0x038)
+#define TOKEN_MFG_ASH_CONFIG_SIZE                 (2u)                //   2 bytes
+#endif
+#ifndef TOKEN_MFG_CCA_THRESHOLD
+#define TOKEN_MFG_CCA_THRESHOLD                   (SL_TOKEN_STATIC_DEVICE_TOKENS | 0x064)
+#define TOKEN_MFG_CCA_THRESHOLD_SIZE              (2u)                //   2 bytes
+#endif
+
+//--- Static secure token ---
+// In case of series 3 device, static secure space is located in data region of flash,
+// appending the token with 0x3000 will indicate that the token belongs to static secure range.
+// This resulting 16-bit key will be used in KLV header for identification purposes.
+// Note: Since the tokens are stored in klv chain format, these key don't specify the memory offset,
+// rather treated as a key.
+
+// MAX token length that can be embedded as part of token is 0x1FFF.
+
+#ifndef TOKEN_MFG_CBKE_DATA
+#define TOKEN_MFG_CBKE_DATA                       (SL_TOKEN_STATIC_SECURE_DATA_TOKENS | 0x204)
+#define TOKEN_MFG_CBKE_DATA_SIZE                  (92u)               //  92 bytes
+#endif
+#ifndef TOKEN_MFG_SECURITY_CONFIG
+#define TOKEN_MFG_SECURITY_CONFIG                 (SL_TOKEN_STATIC_SECURE_DATA_TOKENS | 0x260)
+#define TOKEN_MFG_SECURITY_CONFIG_SIZE            (2u)                //   2 bytes
+#endif
+#ifndef TOKEN_MFG_INSTALLATION_CODE
+#define TOKEN_MFG_INSTALLATION_CODE               (SL_TOKEN_STATIC_SECURE_DATA_TOKENS | 0x270)
+#define TOKEN_MFG_INSTALLATION_CODE_SIZE          (20u)               //  20 bytes
+#endif
+#ifndef TOKEN_MFG_CBKE_283K1_DATA
+#define TOKEN_MFG_CBKE_283K1_DATA                 (SL_TOKEN_STATIC_SECURE_DATA_TOKENS | 0x298)
+#define TOKEN_MFG_CBKE_283K1_DATA_SIZE            (148u)              // 148 bytes
+#endif
+#endif // SL_TOKEN_MANAGER_FORMAT_LEGACY
 
 //--- Virtual manufacturing Tokens ---
 #ifndef TOKEN_MFG_EUI_64

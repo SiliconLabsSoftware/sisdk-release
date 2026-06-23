@@ -876,8 +876,8 @@ sl_zigbee_packet_action_t sl_zigbee_pre_incoming_packet_filter_cb(sl_zigbee_zigb
  * @return void This function does not return a value as it is informative only.
  *
  * @internal SL_ZIGBEE_IPC_ARGS
- * {# packetData | length: size_p | max: MAX_IPC_VEC_ARG_CAPACITY #}
- * {# data | length: size_d | max: MAX_IPC_VEC_ARG_CAPACITY #}
+ * {# packetData | length: size_p | max: MAX_IPC_PACKET_HANDOFF_DATA_LENGTH_ARG_CAPACITY #}
+ * {# data | length: size_d | max: MAX_IPC_PACKET_HANDOFF_DATA_LENGTH_ARG_CAPACITY #}
  */
 void sl_zigbee_post_incoming_packet_filter_cb(sl_zigbee_zigbee_packet_type_t packetType,
                                               uint8_t* packetData,
@@ -886,6 +886,33 @@ void sl_zigbee_post_incoming_packet_filter_cb(sl_zigbee_zigbee_packet_type_t pac
                                               uint8_t size_d,
                                               sl_zigbee_packet_action_t action);
 
+/** @brief Called after the stack has processed an incoming packet that was meant
+ * for one of the protocol layers specified in ::sl_zigbee_zigbee_packet_type_t.
+ * This function is equivalent to ::sl_zigbee_post_incoming_packet_filter_cb, but it
+ * includes radio-level link quality metrics (RSSI, LQI, channel), which are
+ * useful for applications that wish to be informed of the peer link connection
+ * quality.
+ *
+ * @param packetType The type of packet received. See
+ * ::sl_zigbee_zigbee_packet_type_t.
+ * @param linkQuality  Radio-level link quality metrics (RSSI, LQI, channel).
+ * See ::sl_zigbee_packet_link_quality_t.
+ * @param packetData A flat buffer containing the packet contents.
+ * @param size_p The size of the packet data.
+ * @param data Additional auxiliary data associated with the packet.
+ * @param size_d The size of the auxiliary data.
+ * @param action The action that the pre-filter callback took for this packet.
+ * @internal SL_ZIGBEE_IPC_ARGS
+ * {# packetData | length: size_p | max: MAX_IPC_PACKET_HANDOFF_DATA_LENGTH_ARG_CAPACITY #}
+ * {# data | length: size_d | max: MAX_IPC_PACKET_HANDOFF_DATA_LENGTH_ARG_CAPACITY #}
+ */
+void sl_zigbee_post_incoming_packet_filter_with_lqi_and_rssi_cb(sl_zigbee_zigbee_packet_type_t packetType,
+                                                                sl_zigbee_packet_link_quality_t *linkQuality,
+                                                                uint8_t* packetData,
+                                                                uint8_t size_p,
+                                                                uint8_t *data,
+                                                                uint8_t size_d,
+                                                                sl_zigbee_packet_action_t action);
 /** @brief The stack is preparing to send a protocol layer packet
  * and a ::sl_zigbee_packet_action_t action has been decided.
  *
@@ -948,8 +975,8 @@ sl_zigbee_packet_action_t sl_zigbee_pre_outgoing_packet_filter_cb(sl_zigbee_zigb
  * SL_ZIGBEE_ACCEPT_PACKET, SL_ZIGBEE_DROP_PACKET, or SL_ZIGBEE_MANGLE_PACKET
  *
  * @internal SL_ZIGBEE_IPC_ARGS
- * {# packetData | length: size_p | max: MAX_IPC_VEC_ARG_CAPACITY #}
- * {# data | length: size_d | max: MAX_IPC_VEC_ARG_CAPACITY #}
+ * {# packetData | length: size_p | max: MAX_IPC_PACKET_HANDOFF_DATA_LENGTH_ARG_CAPACITY #}
+ * {# data | length: size_d | max: MAX_IPC_PACKET_HANDOFF_DATA_LENGTH_ARG_CAPACITY #}
  */
 void sl_zigbee_post_outgoing_packet_filter_cb(sl_zigbee_zigbee_packet_type_t packetType,
                                               uint8_t* packetData,
@@ -1048,7 +1075,7 @@ sl_status_t slx_zigbee_add_to_incoming_network_queue(int8_t rssi,
 //retrieve packet info from stack globals for callbacks
 void sli_zigbee_fill_rx_packet_info(sl_zigbee_rx_packet_info_t* packetInfo);
 
-// Sending broadcsts and unicasts.
+// An internal utility to send frames. Not to be called by the user application
 bool slx_zigbee_network_send_command(sl_802154_short_addr_t destination,
                                      uint8_t *commandFrame,
                                      uint8_t length,

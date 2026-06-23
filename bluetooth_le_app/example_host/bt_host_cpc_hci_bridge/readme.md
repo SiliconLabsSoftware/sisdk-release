@@ -59,4 +59,3 @@ sudo bluetoothctl
 - [Multiprotocol Co-Processor](https://www.silabs.com/documents/public/application-notes/an1333-concurrent-protocols-with-802-15-4-rcp.pdf)
 - [Using the CPC daemon](https://www.silabs.com/documents/public/application-notes/an1351-using-co-processor-communication_daemon.pdf)
 - [CPC daemon repository](https://github.com/SiliconLabs/cpc-daemon)
-

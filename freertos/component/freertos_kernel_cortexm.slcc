@@ -54,15 +54,15 @@ source:
   condition:
   - toolchain_iar
   - cortexm33
-- path: kernel/portable/IAR/ARM_CM33_NTZ/non_secure/port.c
+- path: kernel/portable/IAR/ARM_CM55_NTZ/non_secure/port.c
   condition:
   - toolchain_iar
   - cortexm55
-- path: kernel/portable/IAR/ARM_CM33_NTZ/non_secure/portasm.s
+- path: kernel/portable/IAR/ARM_CM55_NTZ/non_secure/portasm.s
   condition:
   - toolchain_iar
   - cortexm55
-- path: kernel/portable/IAR/ARM_CM33_NTZ/non_secure/mpu_wrappers_v2_asm.S
+- path: kernel/portable/IAR/ARM_CM55_NTZ/non_secure/mpu_wrappers_v2_asm.S
   condition:
   - toolchain_iar
   - cortexm55
@@ -82,6 +82,12 @@ source:
   condition:
   - toolchain_gcc
   - cortexm4
+  unless:
+  - device_si91x
+- path: kernel/portable/SiliconLabs/SiWx91X/port.c
+  condition:
+  - toolchain_gcc
+  - device_si91x
 - path: kernel/portable/GCC/ARM_CM33_NTZ/non_secure/port.c
   condition:
   - toolchain_gcc
@@ -94,15 +100,15 @@ source:
   condition:
   - toolchain_gcc
   - cortexm33
-- path: kernel/portable/GCC/ARM_CM33_NTZ/non_secure/port.c
+- path: kernel/portable/GCC/ARM_CM55_NTZ/non_secure/port.c
   condition:
   - toolchain_gcc
   - cortexm55
-- path: kernel/portable/GCC/ARM_CM33_NTZ/non_secure/portasm.c
+- path: kernel/portable/GCC/ARM_CM55_NTZ/non_secure/portasm.c
   condition:
   - toolchain_gcc
   - cortexm55
-- path: kernel/portable/GCC/ARM_CM33_NTZ/non_secure/mpu_wrappers_v2_asm.c
+- path: kernel/portable/GCC/ARM_CM55_NTZ/non_secure/mpu_wrappers_v2_asm.c
   condition:
   - toolchain_gcc
   - cortexm55
@@ -122,6 +128,12 @@ source:
   condition:
   - toolchain_llvm
   - cortexm4
+  unless:
+  - device_si91x
+- path: kernel/portable/SiliconLabs/SiWx91X/port.c
+  condition:
+  - toolchain_llvm
+  - device_si91x
 - path: kernel/portable/GCC/ARM_CM33_NTZ/non_secure/port.c
   condition:
   - toolchain_llvm
@@ -134,21 +146,25 @@ source:
   condition:
   - toolchain_llvm
   - cortexm33
-- path: kernel/portable/GCC/ARM_CM33_NTZ/non_secure/port.c
+- path: kernel/portable/GCC/ARM_CM55_NTZ/non_secure/port.c
   condition:
   - toolchain_llvm
   - cortexm55
-- path: kernel/portable/GCC/ARM_CM33_NTZ/non_secure/portasm.c
+- path: kernel/portable/GCC/ARM_CM55_NTZ/non_secure/portasm.c
   condition:
   - toolchain_llvm
   - cortexm55
-- path: kernel/portable/GCC/ARM_CM33_NTZ/non_secure/mpu_wrappers_v2_asm.c
+- path: kernel/portable/GCC/ARM_CM55_NTZ/non_secure/mpu_wrappers_v2_asm.c
   condition:
   - toolchain_llvm
   - cortexm55
 - path: kernel/portable/SiliconLabs/cortexm/tick_power_manager.c
   condition:
   - power_manager
+  unless: [device_si91x]
+- path: kernel/portable/SiliconLabs/cortexm/sl_si91x_low_power_tickless_mode.c
+  condition:
+  - si91x_tickless_mode
 include:
 - path: cmsis/Include
   file_list:
@@ -250,7 +266,7 @@ include:
   condition:
   - toolchain_llvm
   - cortexm33
-- path: kernel/portable/IAR/ARM_CM33_NTZ/non_secure
+- path: kernel/portable/IAR/ARM_CM55_NTZ/non_secure
   file_list:
   - path: portmacro.h
   - path: portasm.h
@@ -258,7 +274,7 @@ include:
   condition:
   - toolchain_iar
   - cortexm55
-- path: kernel/portable/GCC/ARM_CM33_NTZ/non_secure
+- path: kernel/portable/GCC/ARM_CM55_NTZ/non_secure
   file_list:
   - path: portmacro.h
   - path: portasm.h
@@ -266,7 +282,7 @@ include:
   condition:
   - toolchain_gcc
   - cortexm55
-- path: kernel/portable/GCC/ARM_CM33_NTZ/non_secure
+- path: kernel/portable/GCC/ARM_CM55_NTZ/non_secure
   file_list:
   - path: portmacro.h
   - path: portasm.h

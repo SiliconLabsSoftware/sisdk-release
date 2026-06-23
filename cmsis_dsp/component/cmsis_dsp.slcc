@@ -10,11 +10,11 @@ metadata:
     license: Apache-2.0
     upstream:
       name: CMSIS-DSP
-      version: 1.15.0
+      version: 1.16.2
       supplier: ARM-software
       url: https://github.com/ARM-software/CMSIS-DSP
-      package_url: pkg:github/ARM-software/CMSIS-DSP@v1.15.0
-      comment: CMSIS DSP Library as packaged and released by ARM-software, version 1.15.0
+      package_url: pkg:github/ARM-software/CMSIS-DSP@v1.16.2
+      comment: CMSIS DSP Library as packaged and released by ARM-software, version 1.16.2
 root_path: cmsis_dsp/.
 provides:
 - name: cmsis_dsp

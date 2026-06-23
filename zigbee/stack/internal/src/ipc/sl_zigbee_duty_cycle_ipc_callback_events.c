@@ -3,7 +3,7 @@
  * @brief callback event handlers for sl_zigbee_duty_cycle
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -29,10 +29,19 @@ void sli_zigbee_stack_duty_cycle_handler(uint8_t channelPage,
                                          sl_zigbee_per_device_duty_cycle_t *arrayOfDeviceDutyCycles)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.duty_cycle_handler.channelPage = channelPage;
   cb_event->data.duty_cycle_handler.channel = channel;
   cb_event->data.duty_cycle_handler.state = state;
   cb_event->data.duty_cycle_handler.totalDevices = totalDevices;
+
+  if (totalDevices > SL_ZIGBEE_MAX_CHILDREN_FOR_PER_DEVICE_DUTY_CYCLE_MONITOR) {
+    assert(false); // "vector arrayOfDeviceDutyCycles length exceeds expected maximum
+    totalDevices = SL_ZIGBEE_MAX_CHILDREN_FOR_PER_DEVICE_DUTY_CYCLE_MONITOR;
+  }
 
   if (arrayOfDeviceDutyCycles != NULL) {
     memmove(cb_event->data.duty_cycle_handler.arrayOfDeviceDutyCycles, arrayOfDeviceDutyCycles, sizeof(sl_zigbee_per_device_duty_cycle_t) * totalDevices);

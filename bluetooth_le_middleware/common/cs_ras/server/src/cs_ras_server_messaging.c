@@ -38,9 +38,6 @@
 #include "sl_slist.h"
 #include "sl_core.h"
 #include "sl_component_catalog.h"
-#ifdef SL_CATALOG_POWER_MANAGER_PRESENT
-#include "sl_power_manager.h"
-#endif // SL_CATALOG_POWER_MANAGER_PRESENT
 
 // -----------------------------------------------------------------------------
 // Definitions
@@ -227,14 +224,10 @@ sl_status_t cs_ras_server_messaging_cancel(cs_ras_server_messaging_transmit_t *t
   return sc;
 }
 
-#ifdef SL_CATALOG_POWER_MANAGER_PRESENT
-
-bool cs_ras_server_messaging_is_ok_to_sleep(void)
+bool cs_ras_server_messaging_has_data_to_process(void)
 {
-  return (transmit_list_head == NULL);
+  return (transmit_list_head != NULL);
 }
-
-#endif // SL_CATALOG_POWER_MANAGER_PRESENT
 
 // -----------------------------------------------------------------------------
 // Private functions
@@ -452,7 +445,7 @@ static sl_status_t transmit_segment(cs_ras_server_messaging_transmit_t *tx)
                             tx->config.conn_handle,
                             tx->segment_counter);
     tx->message_status.sent = true;
-    // Set confirmation automatically in case of notificaion
+    // Set confirmation automatically in case of notification
     if (tx->config.indication == false) {
       // Require to create message
       tx->message_status.created   = false;

@@ -23,14 +23,29 @@ library:
   - toolchain_gcc
   - cortexm33
   - bgapi_protocol_libraries_release
+- path: build/gcc/cortex-m55/bgapi_service/system/release/libbgapi_service_system.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  - bgapi_protocol_libraries_release
 - path: build/iar/cortex-m33/bgapi_service/system/release/libbgapi_service_system.a
   condition:
   - toolchain_iar
   - cortexm33
   - bgapi_protocol_libraries_release
+- path: build/iar/cortex-m55/bgapi_service/system/release/libbgapi_service_system.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  - bgapi_protocol_libraries_release
 - path: build/llvm/cortex-m33/bgapi_service/system/release/libbgapi_service_system.a
   condition:
   - toolchain_llvm
   - cortexm33
+  - bgapi_protocol_libraries_release
+- path: build/llvm/cortex-m55/bgapi_service/system/release/libbgapi_service_system.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
   - bgapi_protocol_libraries_release
 root_path: bgapi_protocol

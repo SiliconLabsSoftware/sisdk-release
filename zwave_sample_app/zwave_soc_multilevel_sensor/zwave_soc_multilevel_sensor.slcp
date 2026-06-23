@@ -138,7 +138,7 @@ configuration:
     value: 14
     condition: ["device_series_2", "device_security_vault"]
   - name: SL_SLEEPTIMER_PERIPHERAL
-    value: SL_SLEEPTIMER_PERIPHERAL_BURTC
+    value: SL_SLEEPTIMER_PERIPHERAL_DEFAULT
     condition: ["device_series_2"]
   - name: SL_BOARD_ENABLE_SENSOR_RHT
     value: 1
@@ -224,6 +224,7 @@ tag:
   - hwfilter:device:device_supports_zwave
   - hwfilter:!board:brd4205a
   - toolchain:gcc
+  - toolchain:llvm
 
 filter:
   - name: "Wireless Technology"

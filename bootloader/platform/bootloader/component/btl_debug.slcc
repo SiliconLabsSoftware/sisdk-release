@@ -1,0 +1,21 @@
+id: btl_debug
+label: Bootloader Debug Extension Component
+package: bootloader
+description: >
+  Extension component providing debug functionality for bootloader.
+category: Platform|Bootloader|Utils
+quality: production
+include:
+- path: platform/bootloader
+  file_list:
+  - path: debug/btl_debug.h
+requires:
+- name: bootloader_interface_common
+provides:
+- name: btl_debug
+metadata:
+  sbom:
+    license: MSLA
+ui_hints:
+  visibility: never
+root_path: bootloader

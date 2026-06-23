@@ -156,6 +156,7 @@ tag:
 - hwfilter:!board:brd4270b
 - hwfilter:!board:brd4272a
 - hwfilter:!board:brd2705a
+- toolchain:gcc
 
 #--------------------- Toolchain ------------------------
 toolchain_settings:
@@ -172,4 +173,4 @@ filter:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.2
+  version: 4.1.0

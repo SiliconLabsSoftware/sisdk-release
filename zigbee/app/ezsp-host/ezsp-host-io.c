@@ -42,7 +42,7 @@
 #include "app/ezsp-host/ezsp-host-io.h"
 #include "app/ezsp-host/ezsp-host-ui.h"
 
-#if defined(SL_CATALOG_ZIGBEE_AARCH64_CORTEX_A72_GCC_12_3_0_MUSL_PRESENT) || defined(SL_CATALOG_ZIGBEE_AARCH64_ANDROID_NDK_R25C_PRESENT)
+#if defined(SL_CATALOG_ZIGBEE_AARCH64_CORTEX_A72_GCC_12_3_0_MUSL_PRESENT) || defined(SL_CATALOG_ZIGBEE_AARCH64_ANDROID_NDK_R25C_PRESENT) || defined(SL_CATALOG_ZIGBEE_AARCH64_ANDROID_NDK_R27D_PRESENT)
 #include <sys/ttydefaults.h>
 #endif
 

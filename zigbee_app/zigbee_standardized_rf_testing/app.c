@@ -1203,9 +1203,9 @@ void sli_srft_cli_customLpingtimeout(sl_cli_command_arg_t *arguments)
 
   globalRpingTimeout = (byte0 << 8) + byte1;
 
-  sl_zigbee_app_debug_println("globalRpingTimeout 0x%02X (%d)",
-                              globalRpingTimeout,
-                              globalRpingTimeout);
+  sl_zigbee_af_cli_println("globalRpingTimeout 0x%02X (%d)",
+                           globalRpingTimeout,
+                           globalRpingTimeout);
 }
 
 void sli_srft_cli_customSetchannel(sl_cli_command_arg_t *arguments)
@@ -1246,8 +1246,8 @@ void sli_srft_cli_customLgetchannel(sl_cli_command_arg_t *arguments)
   uint32_t channelMask = helper_from_channel_to_channel_mask(localChannel);
   helper_from_channel_mask_to_global_channel_mask_bytes(channelMask);
 
-  sl_zigbee_app_debug_println("channel 0x%02X%02X%02X%02X",
-                              globalChannelMaskByte0, globalChannelMaskByte1, globalChannelMaskByte2, globalChannelMaskByte3);
+  sl_zigbee_af_cli_println("channel 0x%02X%02X%02X%02X",
+                           globalChannelMaskByte0, globalChannelMaskByte1, globalChannelMaskByte2, globalChannelMaskByte3);
 }
 
 void sli_srft_cli_customLsetpower(sl_cli_command_arg_t *arguments)
@@ -1258,7 +1258,7 @@ void sli_srft_cli_customLsetpower(sl_cli_command_arg_t *arguments)
   // ignoring the <mode:1-0> params in CLI arguments 0-1
   int8_t pow = sl_cli_get_argument_int8(arguments, 2);
   status = mfglibSetPower(SL_SRFT_TX_POWER_MODE, pow);
-  sl_zigbee_app_debug_println("pow (st 0x%02X)", status);
+  sl_zigbee_af_cli_println("pow (st 0x%02X)", status);
 }
 
 void sli_srft_cli_customRsetpower(sl_cli_command_arg_t *arguments)
@@ -1272,7 +1272,7 @@ void sli_srft_cli_customLgetpower(sl_cli_command_arg_t *arguments)
 {
   UNUSED_VAR(arguments);
   int8_t pow = mfglibGetPower();
-  sl_zigbee_app_debug_println("power 0x%02X\r\n", pow);
+  sl_zigbee_af_cli_println("power 0x%02X\r\n", pow);
 }
 
 void sli_srft_cli_customRgetpower(sl_cli_command_arg_t *arguments)
@@ -1400,15 +1400,15 @@ void sli_srft_cli_customRsoftwareversion(sl_cli_command_arg_t *arguments)
 void sli_srft_cli_customSilabsTest(sl_cli_command_arg_t *arguments)
 {
   UNUSED_VAR(arguments);
-  sl_zigbee_app_debug_println("test1");
+  sl_zigbee_af_cli_println("test1");
 }
 
 void sli_srft_cli_customSilabsGetLocalVersion(sl_cli_command_arg_t *arguments)
 {
   UNUSED_VAR(arguments);
-  sl_zigbee_app_debug_println("Local RF Application Version 0x%02X%02X",
-                              SL_SRFT_APP_VERSION_MAJOR,
-                              SL_SRFT_APP_VERSION_MINOR);
+  sl_zigbee_af_cli_println("Local RF Application Version 0x%02X%02X",
+                           SL_SRFT_APP_VERSION_MAJOR,
+                           SL_SRFT_APP_VERSION_MINOR);
 }
 
 void sli_srft_cli_customSilabsTest16(sl_cli_command_arg_t *arguments)
@@ -1417,8 +1417,8 @@ void sli_srft_cli_customSilabsTest16(sl_cli_command_arg_t *arguments)
   uint8_t byte1 = sl_cli_get_argument_uint8(arguments, 1);
   uint16_t result = (byte0 << 8) + byte1;
 
-  sl_zigbee_app_debug_println("customSilabsTest16 0x%02X 0x%02X 0x%04X %d",
-                              byte0, byte1, result, result);
+  sl_zigbee_af_cli_println("customSilabsTest16 0x%02X 0x%02X 0x%04X %d",
+                           byte0, byte1, result, result);
 }
 
 void sli_srft_cli_customSilabsTest32(sl_cli_command_arg_t *arguments)
@@ -1429,8 +1429,8 @@ void sli_srft_cli_customSilabsTest32(sl_cli_command_arg_t *arguments)
   uint8_t byte3 = sl_cli_get_argument_uint8(arguments, 3);
   uint32_t result = (byte0 << 24) + (byte1 << 16) + (byte2 << 8) + byte3;
 
-  sl_zigbee_app_debug_print("customSilabsTest32 0x%02X 0x%02X 0x%02X 0x%02XX 0x%08X %d\r\n",
-                            byte0, byte1, byte2, byte3, result, result);
+  sl_zigbee_af_cli_println("customSilabsTest32 0x%02X 0x%02X 0x%02X 0x%02XX 0x%08X %d\r\n",
+                           byte0, byte1, byte2, byte3, result, result);
 }
 
 void sli_srft_cli_customSilabsSetChannel(sl_cli_command_arg_t *arguments)
@@ -1443,14 +1443,14 @@ void sli_srft_cli_customSilabsGetChannel(sl_cli_command_arg_t *arguments)
 {
   UNUSED_VAR(arguments);
   uint8_t channel = mfglibGetChannel();
-  sl_zigbee_app_debug_println("ch 0x%02X", channel);
+  sl_zigbee_af_cli_println("ch 0x%02X", channel);
 }
 
 void sli_srft_cli_customSilabsGetPower(sl_cli_command_arg_t *arguments)
 {
   UNUSED_VAR(arguments);
   int8_t txPower = mfglibGetPower();
-  sl_zigbee_app_debug_println("pow 0x%02X", txPower);
+  sl_zigbee_af_cli_println("pow 0x%02X", txPower);
 }
 
 void sli_srft_cli_customSilabsTx(sl_cli_command_arg_t *arguments)
@@ -1467,11 +1467,11 @@ void sli_srft_cli_customSilabsListChannelPower(sl_cli_command_arg_t *arguments)
   uint8_t channel;
   int8_t txPower;
 
-  sl_zigbee_app_debug_println("");
+  sl_zigbee_af_cli_println("");
   /* List default power value for all channels */
   for (channel = SL_SRFT_LOW_CHANNEL; channel <= SL_SRFT_HIGH_CHANNEL; channel++) {
     txPower = helper_get_tx_power(channel);
-    sl_zigbee_app_debug_println("Default power level for channel %d is %d", channel, txPower);
+    sl_zigbee_af_cli_println("Default power level for channel %d is %d", channel, txPower);
   }
 }
 
@@ -1480,8 +1480,8 @@ void sli_srft_cli_customSilabsLocalReport(sl_cli_command_arg_t *arguments)
 {
   UNUSED_VAR(arguments);
   /* Print report */
-  sl_zigbee_app_debug_println("Local Report: [total]0x%02X [protocol]0x%02X [totalLqi]0x%02X [totalRssiMgnitude]0x%02X",
-                              numPackets, numProtocolPackets, totalLqi, totalRssi);
+  sl_zigbee_af_cli_println("Local Report: [total]0x%02X [protocol]0x%02X [totalLqi]0x%02X [totalRssiMgnitude]0x%02X",
+                           numPackets, numProtocolPackets, totalLqi, totalRssi);
 
   //clear values after printing report
   helper_init();

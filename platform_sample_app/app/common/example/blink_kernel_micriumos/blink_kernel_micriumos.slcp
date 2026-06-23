@@ -37,3 +37,6 @@ ui_hints:
 tag:
   - hardware:component:led:1+
   - hardware:device:ram:18
+  - hwfilter:board:simple_led:led0
+  - hwfilter:ram:18k
+  - hwfilter:device:device_series_2

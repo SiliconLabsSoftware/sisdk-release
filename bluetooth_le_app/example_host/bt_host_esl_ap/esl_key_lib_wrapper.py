@@ -947,14 +947,14 @@ class struct_sl_bt_ead_key_material_s(Structure):
 sl_bt_ead_key_material_p = POINTER(struct_sl_bt_ead_key_material_s)# sl_bt_ead_core.h: 60
 
 # sl_bt_ead_core.h: 70
-class union_anon_74(Union):
+class union_anon_79(Union):
     pass
 
-union_anon_74.__slots__ = [
+union_anon_79.__slots__ = [
     'key',
     'key_id',
 ]
-union_anon_74._fields_ = [
+union_anon_79._fields_ = [
     ('key', sl_bt_ead_session_key_t),
     ('key_id', psa_key_id_t),
 ]
@@ -967,7 +967,7 @@ struct_sl_bt_ead_key_material_s._anonymous_ = [
     'unnamed_1',
 ]
 struct_sl_bt_ead_key_material_s._fields_ = [
-    ('unnamed_1', union_anon_74),
+    ('unnamed_1', union_anon_79),
     ('iv', sl_bt_ead_iv_t),
 ]
 
@@ -985,7 +985,7 @@ class struct_db_record_s(Structure):
 
 db_record_p = POINTER(struct_db_record_s)# esl_key_lib.h: 56
 
-enum_anon_76 = c_int# esl_key_lib.h: 63
+enum_anon_81 = c_int# esl_key_lib.h: 63
 
 ESL_KEY_LIB_INVALID_RECORD = 0# esl_key_lib.h: 63
 
@@ -993,7 +993,7 @@ ESL_KEY_LIB_AP_RECORD = (ESL_KEY_LIB_INVALID_RECORD + 1)# esl_key_lib.h: 63
 
 ESL_KEY_LIB_TAG_RECORD = (ESL_KEY_LIB_AP_RECORD + 1)# esl_key_lib.h: 63
 
-esl_key_lib_record_type_t = enum_anon_76# esl_key_lib.h: 63
+esl_key_lib_record_type_t = enum_anon_81# esl_key_lib.h: 63
 
 # esl_key_lib.h: 81
 for _lib in _libs.values():

@@ -1,7 +1,11 @@
 /***************************************************************************//**
- * @file
- * The file token-stack.h should not be included directly.
- * It is accessed by the other token files.
+ * @brief Stack token definitions
+ * This file should not be included directly. It is accessed by the other token
+ * files.
+ *
+ * This file is used by the legacy token manager, and should be deleted once
+ * it is fully deprecated. The stack tokens are defined in the new (CTM) format
+ * in config/sl_connect_token_defines.h.
  *******************************************************************************
  * # License
  * <b>Copyright 2018 Silicon Laboratories Inc. www.silabs.com</b>
@@ -331,7 +335,7 @@ DEFINE_BASIC_TOKEN(STACK_PARENT_LONG_ID,
 #ifdef MAC_DEBUG_TOKEN
 //////////////////////////////////////////////////////////////////////////////
 // MAC DEBUG DATA
-#include "stack/mac/token-mac-debug.h"
+#include "stack/mac/token-mac-debug-legacy.h"
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////

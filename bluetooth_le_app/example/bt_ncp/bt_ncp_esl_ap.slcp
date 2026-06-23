@@ -19,17 +19,20 @@ filter:
 
 component:
   - id: ncp
+  - id: bluetooth_ncp_transport_iostream
   - id: ncp_sec
   - id: sl_main
   - id: app_os_helper
   - id: clock_manager
   - id: device_init
-  - id: uartdrv_usart
+  - id: iostream_eusart
     instance:
       - vcom
+    condition:
+      - device_has_euart
   - id: mpu
   - id: app_assert
-  - id: bluetooth_feature_connection_pawr_scheduling
+  - id: bluetooth_controller_anchor_selection
 
 requires:
   - name: bluetooth_stack
@@ -88,12 +91,14 @@ configuration:
     value: "50"
   - name: SL_BT_CONFIG_MAX_CONNECTIONS
     value: "5"
+  - name: SL_BT_CONFIG_CONNECTION_DATA_LENGTH
+    value: "247"
   - name: SL_BT_CONFIG_USER_L2CAP_COC_CHANNELS
     value: "5"
   - name: SL_BT_CONFIG_MAX_SOFTWARE_TIMERS
     value: "0"
   - name: SL_BT_CONFIG_BUFFER_SIZE
-    value: "6144"
+    value: "8192"
   - name: SL_BT_CONFIG_ACCEPT_LIST_SIZE
     value: "63"
   - name: SL_BT_CONFIG_USER_ADVERTISERS
@@ -101,8 +106,10 @@ configuration:
   - name: SL_BT_CONFIG_MAX_PERIODIC_ADVERTISERS
     value: "2"
   - name: SL_BT_CONFIG_MAX_PAWR_ADVERTISED_DATA_LENGTH_HINT
-    value: "74"
+    value: "61"
   - name: SL_BT_CONFIG_MAX_PAWR_ADVERTISERS
+    value: "2"
+  - name: SL_BT_CONFIG_PAWR_PACKET_REQUEST_ADVANCE
     value: "2"
   - name: SL_BT_CONFIG_EXTERNAL_LOCAL_IRK
     value: "1"
@@ -117,23 +124,41 @@ configuration:
   - name: SL_BT_CONTROLLER_SCHEDULER_PRI_SCAN_MAX
     value: "212"
   - name: SL_BT_CONTROLLER_SCHEDULER_PRI_SCAN_STEP
-    value: "2"
+    value: "1"
   - name: SL_BT_CONTROLLER_SCHEDULER_PRI_ADV_MIN
-    value: "212"
+    value: "211"
+  - name: SL_BT_CONTROLLER_SCHEDULER_PRI_ADV_MAX
+    value: "127"
   - name: SL_BT_CONTROLLER_SCHEDULER_PRI_ADV_STEP
     value: "6"
   - name: SL_BT_CONTROLLER_SCHEDULER_PRI_CONN_MIN
-    value: "140"
+    value: "126"
+  - name: SL_BT_CONTROLLER_SCHEDULER_PRI_CONN_MAX
+    value: "40"
   - name: SL_BT_CONTROLLER_SCHEDULER_PRI_INIT_MIN
-    value: "48"
+    value: "39"
   - name: SL_BT_CONTROLLER_SCHEDULER_PRI_INIT_MAX
-    value: "7"
+    value: "16"
+  - name: SL_BT_CONTROLLER_SCHEDULER_PRI_RAIL_WINDOW_MIN
+    value: "32"
+  - name: SL_BT_CONTROLLER_SCHEDULER_PRI_RAIL_WINDOW_MAX
+    value: "16"
+  - name: SL_BT_CONTROLLER_SCHEDULER_PRI_PAWR_TX_MIN
+    value: "10"
+  - name: SL_BT_CONTROLLER_SCHEDULER_PRI_PAWR_TX_MAX
+    value: "0"
+  - name: SL_BT_CONTROLLER_SCHEDULER_PRI_PAWR_RX_MIN
+    value: "20"
+  - name: SL_BT_CONTROLLER_SCHEDULER_PRI_PAWR_RX_MAX
+    value: "11"
   - name: SL_BT_CONTROLLER_COMPLETED_PACKETS_THRESHOLD
     value: "3"
   - name: SL_BT_CONTROLLER_COMPLETED_PACKETS_EVENTS_TIMEOUT
     value: "2"
   - name: SL_BT_CONTROLLER_CONN_EVENT_LENGTH_MIN
     value: "1"
+  - name: SL_BTCTRL_ANCHOR_SELECTION_ALGORITHM
+    value: SL_BTCTRL_ANCHOR_SELECTION_ALGORITHM_EMPTY_CENTER
   - name: SL_CLOCK_MANAGER_LFRCO_PRECISION
     value: "cmuPrecisionHigh"
   - name: SL_CLOCK_MANAGER_LFXO_PRECISION
@@ -148,29 +173,10 @@ configuration:
     value: "1"
   - name: SL_BOARD_ENABLE_VCOM
     value: "1"
-  - name: SL_UARTDRV_USART_VCOM_TX_BUFFER_SIZE
-    value: "2"
-  - name: SL_UARTDRV_USART_VCOM_RX_BUFFER_SIZE
-    value: "2"
-  - name: SL_UARTDRV_USART_VCOM_FLOW_CONTROL_TYPE
-    value: uartdrvFlowControlHw
-    condition:
-      - brd4002a
-  - name: SL_UARTDRV_USART_VCOM_FLOW_CONTROL_TYPE
-    value: uartdrvFlowControlHw
-    condition:
-      - brd4001c
-  - name: SL_UARTDRV_USART_VCOM_FLOW_CONTROL_TYPE
-    value: uartdrvFlowControlHw
-    condition:
-      # Does not work out of the box with uartdrvFlowControlHwUart because of the adapter FW VCOM default config.
-      - brd2710a
-  - name: SL_UARTDRV_USART_VCOM_FLOW_CONTROL_TYPE
-    value: uartdrvFlowControlHwUart
-    unless:
-      - brd2710a
-      - brd4002a
-      - brd4001c
+  - name: SL_IOSTREAM_EUSART_VCOM_FLOW_CONTROL_TYPE
+    value: SL_IOSTREAM_EUSART_UART_FLOW_CTRL_CTS_RTS
+  - name: SL_IOSTREAM_USART_VCOM_FLOW_CONTROL_TYPE
+    value: usartHwFlowControlCtsAndRts
   - name: SL_PSA_KEY_USER_SLOT_COUNT
     value: "1"
     condition:
@@ -194,7 +200,7 @@ tag:
   - prebuilt_demo
   - hwfilter:device:device_supports_bluetooth
   - hwfilter:device:device_series_2
-  - hwfilter:!board:hardware:vcom:no:rts:cts
+  - hwfilter:board:hardware_board_has_vcom_hardware_flowcontrol
   - hwfilter:ram:32k
 
 ui_hints:

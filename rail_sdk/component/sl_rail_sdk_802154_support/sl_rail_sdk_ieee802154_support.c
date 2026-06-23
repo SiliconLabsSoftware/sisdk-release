@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <inttypes.h>
 #include <string.h>
 #include "app_assert.h"
 #include "em_device.h"
@@ -224,7 +225,7 @@ void sl_rail_sdk_ieee802154_print_frame(sl_rail_sdk_ieee802154_std_t std,
   // prints the PHR information in case of g option
   if ((std == SL_RAIL_SDK_IEEE802154_STD_IEEE802154G_863MHZ)
       || (std == SL_RAIL_SDK_IEEE802154_STD_IEEE802154G_915MHZ)) {
-    app_log_info("PHR DW,CRC cfg (0x%02X):\n", frame->phr_config);
+    app_log_info("PHR DW,CRC cfg (0x%02" PRIX8 "):\n", frame->phr_config);
     app_log_info("  Whitening:         %s\n",
                  frame->phr_config & SL_RAIL_SDK_IEEE802154G_PHR_DATA_WHITENING_ON ? "ON" : "OFF");
     app_log_info("  CRC length:        %s\n",
@@ -233,16 +234,16 @@ void sl_rail_sdk_ieee802154_print_frame(sl_rail_sdk_ieee802154_std_t std,
 
   // prints the MHR parameters
   app_log_info("MHR field:\n");
-  app_log_info("  Frame control:     0x%04X\n", frame->mhr_config.frame_control);
-  app_log_info("  Seq. number:       0x%02X\n", frame->mhr_config.sequence_number);
-  app_log_info("  PAN ID:            0x%04X\n", frame->mhr_config.destination_pan_id);
-  app_log_info("  Dest. address:     0x%04X\n", frame->mhr_config.destination_address);
-  app_log_info("  Src address:       0x%04X\n", frame->mhr_config.source_address);
+  app_log_info("  Frame control:     0x%04" PRIX16 "\n", frame->mhr_config.frame_control);
+  app_log_info("  Seq. number:       0x%02" PRIX8 "\n", frame->mhr_config.sequence_number);
+  app_log_info("  PAN ID:            0x%04" PRIX16 "\n", frame->mhr_config.destination_pan_id);
+  app_log_info("  Dest. address:     0x%04" PRIX16 "\n", frame->mhr_config.destination_address);
+  app_log_info("  Src address:       0x%04" PRIX16 "\n", frame->mhr_config.source_address);
 
   // prints the payload
   app_log_info("Payload: ");
   for (uint8_t i = 0; i < frame->payload_size; i++) {
-    app_log_info("0x%02X, ", tmp_payload[i]);
+    app_log_info("0x%02" PRIX8 ", ", tmp_payload[i]);
   }
   app_log_info("\n");
 }
@@ -265,7 +266,7 @@ void sl_rail_sdk_ieee802154_print_ack(sl_rail_sdk_ieee802154_std_t std,
 
   app_log_info("ACK: ");
   for (uint8_t i = 0; i < size; i++) {
-    app_log_info("0x%02X, ", buffer[i]);
+    app_log_info("0x%02" PRIX8 ", ", buffer[i]);
   }
   app_log_info("\n");
 }
@@ -446,7 +447,7 @@ sl_rail_status_t sl_rail_sdk_ieee802154_transmission(sl_rail_handle_t rail_handl
                                        &csma_config_2p4,
                                        scheduler_ptr);
     if (status != SL_RAIL_STATUS_NO_ERROR) {
-      app_log_error("sl_rail_start_cca_csma_tx status: %lu failed", status);
+      app_log_error("sl_rail_start_cca_csma_tx status: 0x%08" PRIX32 " failed", status);
     }
   } else {
     // starts the TX on the desired channel with the tx option and CSMA
@@ -458,7 +459,7 @@ sl_rail_status_t sl_rail_sdk_ieee802154_transmission(sl_rail_handle_t rail_handl
                                        scheduler_ptr);
 
     if (status != SL_RAIL_STATUS_NO_ERROR) {
-      app_log_error("sl_rail_start_cca_csma_tx status: %lu failed", status);
+      app_log_error("sl_rail_start_cca_csma_tx status: 0x%08" PRIX32 " failed", status);
     }
   }
 
@@ -666,7 +667,7 @@ static int16_t sl_rail_sdk_ieee802154_reinit(sl_rail_handle_t r_handle,
       status = sl_rail_sdk_util_802154_protocol_config(r_handle,
                                                        SL_RAIL_SDK_UTIL_PROTOCOL_IEEE802154_2P4GHZ);
       if (status != SL_RAIL_STATUS_NO_ERROR) {
-        app_log_error("sl_rail_util_protocol_config status: %lu failed", status);
+        app_log_error("sl_rail_util_protocol_config status: 0x%08" PRIX32 " failed", status);
         return SL_RAIL_SDK_IEEE802154_ERROR;
       }
       break;
@@ -674,7 +675,7 @@ static int16_t sl_rail_sdk_ieee802154_reinit(sl_rail_handle_t r_handle,
       status = sl_rail_sdk_util_802154_protocol_config(r_handle,
                                                        SL_RAIL_SDK_UTIL_PROTOCOL_IEEE802154_GB868_863MHZ);
       if (status != SL_RAIL_STATUS_NO_ERROR) {
-        app_log_error("sl_rail_util_protocol_config status: %lu failed", status);
+        app_log_error("sl_rail_util_protocol_config status: 0x%08" PRIX32 " failed", status);
         return SL_RAIL_SDK_IEEE802154_ERROR;
       }
       break;
@@ -682,7 +683,7 @@ static int16_t sl_rail_sdk_ieee802154_reinit(sl_rail_handle_t r_handle,
       status = sl_rail_sdk_util_802154_protocol_config(r_handle,
                                                        SL_RAIL_SDK_UTIL_PROTOCOL_IEEE802154_GB868_915MHZ);
       if (status != SL_RAIL_STATUS_NO_ERROR) {
-        app_log_error("sl_rail_util_protocol_config status: %lu failed", status);
+        app_log_error("sl_rail_util_protocol_config status: 0x%08" PRIX32 " failed", status);
         return SL_RAIL_SDK_IEEE802154_ERROR;
       }
       break;
@@ -703,7 +704,7 @@ static int16_t sl_rail_sdk_ieee802154_reinit(sl_rail_handle_t r_handle,
                                                  SL_RAIL_IEEE802154_G_OPTION_GB868,
                                                  SL_RAIL_IEEE802154_G_OPTION_GB868);
     if (status != SL_RAIL_STATUS_NO_ERROR) {
-      app_log_error("sl_rail_ieee802154_config_g_options status: %lu failed", status);
+      app_log_error("sl_rail_ieee802154_config_g_options status: 0x%08" PRIX32 " failed", status);
       return SL_RAIL_SDK_IEEE802154_ERROR;
     }
   }
@@ -730,7 +731,7 @@ static int16_t sl_rail_sdk_ieee802154_set_pan_id_filter(sl_rail_handle_t r_handl
   // sets the addresses for filtering
   status = sl_rail_ieee802154_set_pan_id(r_handle, address, ADDRESS_FILTER_INDEX);
   if (status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_error("app_ieee802154_set_pan_id_filter() status: %lu failed", status);
+    app_log_error("app_ieee802154_set_pan_id_filter() status: 0x%08" PRIX32 " failed", status);
     return SL_RAIL_SDK_IEEE802154_ERROR;
   }
 
@@ -748,7 +749,7 @@ static int16_t sl_rail_sdk_ieee802154_set_short_addr_filter(sl_rail_handle_t r_h
   status = sl_rail_ieee802154_set_short_address(r_handle, address,
                                                 ADDRESS_FILTER_INDEX);
   if (status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_error("sl_rail_ieee802154_set_short_address() status: %lu failed", status);
+    app_log_error("sl_rail_ieee802154_set_short_address() status: 0x%08" PRIX32 " failed", status);
     return SL_RAIL_SDK_IEEE802154_ERROR;
   }
 
@@ -766,7 +767,7 @@ static int16_t sl_rail_sdk_ieee802154_set_long_addr_filter(sl_rail_handle_t r_ha
   status = sl_rail_ieee802154_set_long_address(r_handle, (uint8_t*)address,
                                                ADDRESS_FILTER_INDEX);
   if (status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_error("sl_rail_ieee802154_set_long_address() status: %lu failed", status);
+    app_log_error("sl_rail_ieee802154_set_long_address() status: 0x%08" PRIX32 " failed", status);
     return SL_RAIL_SDK_IEEE802154_ERROR;
   }
 

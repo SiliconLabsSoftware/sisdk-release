@@ -32,6 +32,8 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdbool.h>
+#include <inttypes.h>
+
 #include "sl_bluetooth.h"
 #include "sl_bt_api.h"
 #include "gatt_db.h"
@@ -169,15 +171,13 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
       // Create Advertising Set
       bt_status = sl_bt_advertiser_create_set(&advertising_set_handle);
       app_assert_status_f(bt_status,
-                          "[E: 0x%04x] Failed to create advertising set\n",
-                          (int )bt_status);
+                          "[E: 0x%08" PRIX32 "] Failed to create advertising set\n", bt_status);
       // Generate the advertising data from the GATT configurator
       bt_status = sl_bt_legacy_advertiser_generate_data(advertising_set_handle,
                                                         sl_bt_advertiser_general_discoverable);
 
       app_assert_status_f(bt_status,
-                          "[E: 0x%04x] Failed to create advertising data\n",
-                          (int )bt_status);
+                          "[E: 0x%08" PRIX32 "] Failed to create advertising data\n", bt_status);
 
       // Set advertising parameters. 100ms advertisement interval.
       // The first parameter is advertising set handle
@@ -233,8 +233,8 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
           0);
         app_assert(
           (bt_status == SL_STATUS_OK),
-          "[E: 0x%04x] Failed to send_user_write_response gattdb_light_state_connect\n",
-          (int )bt_status);
+          "[E: 0x%08" PRIX32 "] Failed to send_user_write_response gattdb_light_state_connect\n",
+          bt_status);
 
         /* Send notification/indication data */
         notify_connected_ble_device(SL_DIRECTION_BLUETOOTH, ble_device_address);
@@ -261,8 +261,8 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
           0, sizeof(light_state), &light_state, &sent_len);
         app_assert_status_f(
           bt_status,
-          "[E: 0x%04x] Failed to send user read response LIGHT_STATE_GATTDB\n",
-          (int )bt_status);
+          "[E: 0x%08" PRIX32 "] Failed to send user read response LIGHT_STATE_GATTDB\n",
+          bt_status);
 
         // read request of the trigger source
       } else if (gattdb_trigger_source_connect
@@ -274,8 +274,8 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
 
         app_assert_status_f(
           bt_status,
-          "[E: 0x%04x] Failed to send user read response TRIGGER_SOURCE_GATTDB\n",
-          (int )bt_status);
+          "[E: 0x%08" PRIX32 "] Failed to send user read response TRIGGER_SOURCE_GATTDB\n",
+          bt_status);
 
         // read request of the source address
       } else if (gattdb_source_address_connect
@@ -288,8 +288,8 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
 
         app_assert_status_f(
           bt_status,
-          "[E: 0x%04x] Failed to send user read response SOURCE_ADDRESS_GATTDB\n",
-          (int )bt_status);
+          "[E: 0x%08" PRIX32 "] Failed to send user read response SOURCE_ADDRESS_GATTDB\n",
+          bt_status);
       }
       break;
 
@@ -375,7 +375,7 @@ void sl_send_bluetooth_indications(void)
                   indication->data_size,
                   indication->data);
               if (bt_status != SL_STATUS_OK) {
-                app_log_error("sl_bt_gatt_server_send_indication failed with 0x%04X\n",
+                app_log_error("sl_bt_gatt_server_send_indication failed with 0x%08" PRIX32 "\n",
                               bt_status);
               }
               indication_is_under_way = true;

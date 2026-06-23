@@ -44,7 +44,10 @@
 #include "sl_wisun_api.h"
 #include "sl_wisun_keychain.h"
 #include "sl_select_util.h"
-#include "select.h"
+#include "sys/socket.h"
+#include "arpa/inet.h"
+#include "netinet/in.h"
+#include "sys/select.h"
 #include "sl_wisun_config.h"
 #include "sl_wisun_br_config.h"
 #include "app.h"
@@ -200,6 +203,8 @@ static void app_start(void)
   // Set Device Type
   EFM_ASSERT(sl_wisun_set_device_type(SL_WISUN_BORDER_ROUTER) == SL_STATUS_OK);
 
+  EFM_ASSERT(sl_wisun_reset_parameters() == SL_STATUS_OK);
+
   // Set TX Power
 #if defined(WISUN_CONFIG_TX_POWER)
   EFM_ASSERT(sl_wisun_set_tx_power_ddbm(WISUN_CONFIG_TX_POWER) == SL_STATUS_OK);
@@ -207,25 +212,28 @@ static void app_start(void)
   EFM_ASSERT(sl_wisun_set_tx_power_ddbm(200) == SL_STATUS_OK);
 #endif
 
-  // Set Connection Parameters
-  switch (WISUN_CONFIG_NETWORK_SIZE) {
-    case SL_WISUN_NETWORK_SIZE_SMALL:
-      params = SL_WISUN_BR_PARAMS_PROFILE_SMALL;
-      break;
-    case SL_WISUN_NETWORK_SIZE_MEDIUM:
-      params = SL_WISUN_BR_PARAMS_PROFILE_MEDIUM;
-      break;
-    case SL_WISUN_NETWORK_SIZE_LARGE:
-      params = SL_WISUN_BR_PARAMS_PROFILE_LARGE;
-      break;
-    case SL_WISUN_NETWORK_SIZE_TEST:
-      params = SL_WISUN_BR_PARAMS_PROFILE_TEST;
-      break;
-    default:
-      EFM_ASSERT(0);
-      break;
+  // NOTE: Automatic network size is the default in the stack.
+  if (WISUN_CONFIG_NETWORK_SIZE != SL_WISUN_NETWORK_SIZE_AUTOMATIC) {
+    // Set Connection Parameters
+    switch (WISUN_CONFIG_NETWORK_SIZE) {
+      case SL_WISUN_NETWORK_SIZE_SMALL:
+        params = SL_WISUN_BR_PARAMS_PROFILE_SMALL;
+        break;
+      case SL_WISUN_NETWORK_SIZE_MEDIUM:
+        params = SL_WISUN_BR_PARAMS_PROFILE_MEDIUM;
+        break;
+      case SL_WISUN_NETWORK_SIZE_LARGE:
+        params = SL_WISUN_BR_PARAMS_PROFILE_LARGE;
+        break;
+      case SL_WISUN_NETWORK_SIZE_TEST:
+        params = SL_WISUN_BR_PARAMS_PROFILE_TEST;
+        break;
+      default:
+        EFM_ASSERT(0);
+        break;
+    }
+    EFM_ASSERT(sl_wisun_br_set_connection_parameters(&params) == SL_STATUS_OK);
   }
-  EFM_ASSERT(sl_wisun_br_set_connection_parameters(&params) == SL_STATUS_OK);
 
   // Set Neighbor Table
   EFM_ASSERT(sl_wisun_config_neighbor_table(SL_WISUN_BR_CONFIG_MAX_CHILD_COUNT,
@@ -278,7 +286,7 @@ static void app_start(void)
   trustedca_count = sl_wisun_keychain_get_trustedca_count();
   EFM_ASSERT(trustedca_count > 0U);
 
-  certificate_options = SL_WISUN_CERTIFICATE_OPTION_IS_REF;
+  certificate_options = SL_WISUN_CERTIFICATE_OPTION_NONE;
   for (uint8_t idx = 0U; idx < trustedca_count; ++idx) {
     trustedca = sl_wisun_keychain_get_trustedca(idx);
     EFM_ASSERT(trustedca != NULL);
@@ -307,12 +315,12 @@ static void app_start(void)
   }
 
   // Set Device Certificate
-  EFM_ASSERT(sl_wisun_set_br_device_certificate(SL_WISUN_CERTIFICATE_OPTION_IS_REF | SL_WISUN_CERTIFICATE_OPTION_HAS_KEY,
+  EFM_ASSERT(sl_wisun_set_br_device_certificate(SL_WISUN_CERTIFICATE_OPTION_NONE,
                                                 credential->certificate.data_length,
                                                 credential->certificate.data) == SL_STATUS_OK);
   if (credential->pk.type == SL_WISUN_KEYCHAIN_KEY_TYPE_PLAINTEXT) {
     // Set Device Private Key
-    EFM_ASSERT(sl_wisun_set_device_private_key(SL_WISUN_PRIVATE_KEY_OPTION_IS_REF,
+    EFM_ASSERT(sl_wisun_set_device_private_key(SL_WISUN_PRIVATE_KEY_OPTION_NONE,
                                                credential->pk.u.plaintext.data_length,
                                                credential->pk.u.plaintext.data) == SL_STATUS_OK);
   } else {

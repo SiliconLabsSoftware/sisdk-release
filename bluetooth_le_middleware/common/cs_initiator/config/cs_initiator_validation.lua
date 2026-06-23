@@ -43,6 +43,45 @@ if cs_min_ce_len ~= nil and cs_max_ce_len ~= nil then
 end
 
 
+
+-- Default min & max subevent length
+local cs_min_subevent_len =
+  slc.config('CS_INITIATOR_DEFAULT_MIN_SUBEVENT_LEN').number
+local cs_max_subevent_len =
+  slc.config('CS_INITIATOR_DEFAULT_MAX_SUBEVENT_LEN').number
+if cs_min_subevent_len ~= nil and cs_max_subevent_len ~= nil then
+  if cs_min_subevent_len > cs_max_subevent_len then
+    validation.error(
+    "Invalid default minimum and maximum subevent length values!",
+    validation.target_for_defines({'CS_INITIATOR_DEFAULT_MIN_SUBEVENT_LEN', 'CS_INITIATOR_DEFAULT_MAX_SUBEVENT_LEN'}),
+    [[Default minimum subevent length (]] .. cs_min_subevent_len .. [[ us) is greater
+    than the default maximum subevent length (]] .. cs_max_subevent_len .. [[ us)! ]] .. modify_msg,
+    nil)
+  end
+end
+
+-- When using custom procedure scheduling, minimum subevent length must not exceed
+-- the maximum procedure time.
+local procedure_scheduling = slc.config('CS_INITIATOR_DEFAULT_PROCEDURE_SCHEDULING').value
+local cs_max_proc_int = slc.config('CS_INITIATOR_DEFAULT_MAX_PROCEDURE_INTERVAL').number
+local cs_max_conn_int = slc.config('CS_INITIATOR_DEFAULT_MAX_CONNECTION_INTERVAL').number
+if procedure_scheduling == 'CS_PROCEDURE_SCHEDULING_CUSTOM'
+   and cs_min_subevent_len ~= nil and cs_max_proc_int ~= nil and cs_max_conn_int ~= nil then
+  local max_procedure_time_us = cs_max_proc_int * cs_max_conn_int * 1250
+  if cs_min_subevent_len > max_procedure_time_us then
+    validation.error(
+    "Invalid subevent length for custom procedure scheduling!",
+    validation.target_for_defines({'CS_INITIATOR_DEFAULT_MIN_SUBEVENT_LEN',
+      'CS_INITIATOR_DEFAULT_MAX_PROCEDURE_INTERVAL',
+      'CS_INITIATOR_DEFAULT_MAX_CONNECTION_INTERVAL'}),
+    [[Minimum subevent length (]] .. cs_min_subevent_len .. [[ us) is greater than the
+    maximum procedure time (]] .. max_procedure_time_us .. [[ us = ]] .. cs_max_proc_int ..
+    [[ * ]] .. cs_max_conn_int .. [[ * 1250). Subevent length must fit within the procedure interval.
+    This check applies only when using custom procedure scheduling (CS_PROCEDURE_SCHEDULING_CUSTOM). ]] .. modify_msg,
+    nil)
+  end
+end
+
 -- CS procedure execution
 local proc_cnt =
   slc.config('CS_INITIATOR_DEFAULT_MAX_PROCEDURE_COUNT').number

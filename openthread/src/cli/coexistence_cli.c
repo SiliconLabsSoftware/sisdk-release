@@ -32,6 +32,7 @@
 
 #include "radio_extension.h"
 #include "sl_ot_custom_cli.h"
+#include <inttypes.h>
 #include <openthread/cli.h>
 #include "common/code_utils.hpp"
 
@@ -455,22 +456,22 @@ static otError getCountersCommand(void *context, uint8_t argc, char *argv[])
     otError  error                                                  = OT_ERROR_NONE;
     uint32_t coexCounters[OT_PLAT_RADIO_EXTENSION_COEX_EVENT_COUNT] = {0};
     SuccessOrExit(error = otPlatRadioExtensionGetCoexCounters(OT_PLAT_RADIO_EXTENSION_COEX_EVENT_COUNT, coexCounters));
-    otCliOutputFormat("COEX %s: %lu\r\n",
+    otCliOutputFormat("COEX %s: %" PRIu32 "\r\n",
                       "Lo Pri Req",
                       coexCounters[OT_PLAT_RADIO_EXTENSION_COEX_EVENT_LO_PRI_REQUESTED]);
-    otCliOutputFormat("COEX %s: %lu\r\n",
+    otCliOutputFormat("COEX %s: %" PRIu32 "\r\n",
                       "Hi Pri Req",
                       coexCounters[OT_PLAT_RADIO_EXTENSION_COEX_EVENT_HI_PRI_REQUESTED]);
-    otCliOutputFormat("COEX %s: %lu\r\n",
+    otCliOutputFormat("COEX %s: %" PRIu32 "\r\n",
                       "Lo Pri Denied",
                       coexCounters[OT_PLAT_RADIO_EXTENSION_COEX_EVENT_LO_PRI_DENIED]);
-    otCliOutputFormat("COEX %s: %lu\r\n",
+    otCliOutputFormat("COEX %s: %" PRIu32 "\r\n",
                       "Hi Pri Denied",
                       coexCounters[OT_PLAT_RADIO_EXTENSION_COEX_EVENT_HI_PRI_DENIED]);
-    otCliOutputFormat("COEX %s: %lu\r\n",
+    otCliOutputFormat("COEX %s: %" PRIu32 "\r\n",
                       "Lo Pri Tx Abrt",
                       coexCounters[OT_PLAT_RADIO_EXTENSION_COEX_EVENT_LO_PRI_TX_ABORTED]);
-    otCliOutputFormat("COEX %s: %lu\r\n",
+    otCliOutputFormat("COEX %s: %" PRIu32 "\r\n",
                       "Hi Pri Tx Abrt",
                       coexCounters[OT_PLAT_RADIO_EXTENSION_COEX_EVENT_HI_PRI_TX_ABORTED]);
 

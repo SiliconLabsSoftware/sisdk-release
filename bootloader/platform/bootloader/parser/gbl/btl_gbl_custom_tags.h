@@ -56,7 +56,7 @@ typedef struct {
                      const BootloaderParserCallbacks_t *callbacks);
   /// @brief Function returning how many bytes should be collected before
   ///        calling parseTag the next time
-  size_t (*numBytesRequired)(ParserContext_t *ctx);
+  size_t (*numBytesRequired)(const ParserContext_t *ctx);
 } GblCustomTag_t;
 
 // -----------------------------------------------------------------------------

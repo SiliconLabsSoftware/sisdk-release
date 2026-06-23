@@ -1,0 +1,25 @@
+id: ot_crypto_ecdsa_deterministic
+label: Deterministic ECDSA Support
+package: openthread
+category: OpenThread|Crypto
+quality: production
+description: >
+  This component provides third party support and configuration needed for deterministic ecdsa.
+provides:
+- name: ot_crypto_ecdsa
+- name: ot_crypto_ecdsa_deterministic
+requires:
+- name: psa_crypto_ecdsa_deterministic
+  condition: [ot_psa_crypto]
+- name: mbedtls_ecdsa_deterministic
+  condition: [ot_mbedtls]
+conflicts:
+- name: ot_crypto_ecdsa_nondeterministic
+define:
+- name: OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE
+  value: 1
+metadata:
+  sbom:
+    license: Zlib
+
+root_path: openthread

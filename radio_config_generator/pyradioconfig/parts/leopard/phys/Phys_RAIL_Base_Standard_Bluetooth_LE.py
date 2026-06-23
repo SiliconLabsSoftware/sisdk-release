@@ -10,3 +10,8 @@ class PhysRailBaseStandardBluetoothLeLeopard(PhysRAILBaseStandardBluetoothLELynx
         phy.profile_outputs.tx_sync_delay_ns.override = 600
         phy.profile_outputs.tx_eof_delay_ns.override = 600
         return phy
+
+    def Bluetooth_LE_Viterbi_noDSA_halfrate_base(self, phy, model):
+        # Leopard calcs force ADC rate to FULLRATE by default
+        super().Bluetooth_LE_Viterbi_noDSA_halfrate_base(phy, model)
+        model.vars.adc_rate_mode.value_forced = model.vars.adc_rate_mode.var_enum.HALFRATE

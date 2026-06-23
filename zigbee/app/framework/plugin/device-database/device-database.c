@@ -88,9 +88,9 @@ const sl_zigbee_af_device_info_t* sl_zigbee_af_device_database_find_device_by_eu
 sl_status_t sl_zigbee_af_device_database_add_device_with_all_info(const sl_zigbee_af_device_info_t* newDevice)
 {
   if (NULL != findDeviceByEui64(newDevice->eui64)) {
-    sl_zigbee_af_core_print("%s: device already exists: ", PLUGIN_NAME);
+    sl_zigbee_af_cli_print("%s: device already exists: ", PLUGIN_NAME);
     sl_zigbee_af_print_big_endian_eui64(newDevice->eui64);
-    sl_zigbee_af_core_println("");
+    sl_zigbee_af_cli_println("");
     return SL_STATUS_ALREADY_EXISTS;
   }
   sl_802154_long_addr_t nullEui64;

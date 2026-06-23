@@ -1,9 +1,9 @@
 project_name: zigbee_ncp_cpc_spi
-label: Zigbee - NCP CPC over SPI link
+label: Zigbee - NCP CPC over SPI
 package: zigbee
 category: Zigbee Application
 quality: production
-description: This network coprocessor (NCP) application supports communication with a host application using the Co-Processor Communication Protocol (CPC), which acts as a protocol multiplexer and serial transport layer. The host applications connect to the CPC daemon, which in turn connects to the EFR via a SPI link. The Zigbee NCP part of this application can be built as configured, or can optionally be augmented with customized extensions for initialization, main loop processing, event definition/handling, and messaging with the host.
+description: NCP using Co-Processor Communication (CPC) over SPI. Host connects via CPC daemon to EFR. Extensible for init, events, and messaging.
 author: Silicon Laboratories, Inc.
 
 component:
@@ -20,8 +20,13 @@ component:
   - id: zigbee_r22_support
   - id: zigbee_zll
   - id: clock_manager
-  # Platform - enable LTO for gcc
+  # Platform - enable LTO for gcc and llvm
   - id: toolchain_gcc_lto
+    condition:
+      - toolchain_gcc
+  - id: toolchain_llvm_lto
+    condition:
+      - toolchain_llvm
 
 configuration:
   - name: SL_ZIGBEE_BINDING_TABLE_SIZE
@@ -34,7 +39,7 @@ configuration:
     value: 10
   - name: SL_CPC_TX_QUEUE_ITEM_MAX_COUNT
     value: 10
-  - name: EMBER_AF_PLUGIN_ZIGBEE_PRO_STACK_CHILD_TABLE_SIZE
+  - name: SL_ZIGBEE_CHILD_TABLE_SIZE
     value: 32
   - name: SL_ZIGBEE_KEY_TABLE_SIZE
     value: 12
@@ -92,7 +97,12 @@ filter:
 
 tag:
   - hardware:component:exp_header:spi
+  - hwfilter:ram:64k
   - hwfilter:device:device_supports_zigbee
   - hwfilter:!board:zb_boards_spi_incompatible
   - hwfilter:!board:zb_boards_ncp_spi_incompatible
+  - hwfilter:!board:zb_boards_no_spi_eusart_config
   - hwfilter:board:hardware_board_has_spi
+  - toolchain:gcc
+  - toolchain:iar
+  - toolchain:llvm

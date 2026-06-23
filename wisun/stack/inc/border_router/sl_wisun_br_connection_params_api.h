@@ -40,6 +40,7 @@
 
 /// API version used to check compatibility (do not edit when using this header)
 #define SL_WISUN_BR_PARAMS_API_VERSION 6
+#define SL_WISUN_BR_ADVANCED_PARAMS_API_VERSION 1
 
 /**************************************************************************//**
  * @addtogroup SL_WISUN_TYPES
@@ -96,7 +97,7 @@ typedef struct sl_wisun_br_params_eapol_s sl_wisun_br_params_eapol_t;
 /// DHCP server parameter set
 SL_PACK_START(1)
 struct sl_wisun_br_params_dhcp_s {
-  /// Lease time (seconds)
+  /// Deprecated
   uint32_t dhcp_address_lifetime_s;
 } SL_ATTRIBUTE_PACKED;
 SL_PACK_END()
@@ -172,7 +173,7 @@ typedef struct sl_wisun_br_params_lfn_parent_s sl_wisun_br_params_lfn_parent_t;
 /// Misc parameter set
 SL_PACK_START(1)
 struct sl_wisun_br_params_misc_s {
-  /// Temporary neighbor link minimum timeout
+  /// Deprecated
   uint16_t temp_link_min_timeout_s;
   /// Reserved, set to zero
   uint16_t reserved;
@@ -237,6 +238,27 @@ typedef struct {
 } SL_ATTRIBUTE_PACKED sl_wisun_br_connection_params_t;
 SL_PACK_END()
 
+/// BR advanced connection parameters for
+/// @ref sl_wisun_br_set_advanced_parameters
+SL_PACK_START(1)
+typedef struct {
+  /**
+   * Version of sl_wisun_br_advanced_parameters_t.
+   * Set to `SL_WISUN_BR_ADVANCED_PARAMS_API_VERSION`.
+   *
+   * Used to identify the layout of the structure when applying advanced
+   * BR connection parameters.
+   * Older supported versions may be accepted and updated internally to the
+   * current format, while unsupported versions are rejected.
+   */
+  uint32_t version;
+  /// PAN advertisement trickle timer parameters
+  sl_wisun_trickle_params_t trickle_pa;
+  /// PAN configuration trickle timer parameters
+  sl_wisun_trickle_params_t trickle_pc;
+} SL_ATTRIBUTE_PACKED sl_wisun_br_advanced_parameters_t;
+SL_PACK_END()
+
 /**************************************************************************//**
  * @addtogroup SL_WISUN_BR_PARAMETER_SETS Predefined BR parameter sets
  *
@@ -290,7 +312,7 @@ static const sl_wisun_br_connection_params_t SL_WISUN_BR_PARAMS_PROFILE_TEST = {
     .sec_prot_trickle_expirations = 0,
   },
   .dhcp = {
-    .dhcp_address_lifetime_s = HOUR_TO_SEC(12)
+    .dhcp_address_lifetime_s = 0
   },
   .rpl = {
     .rpl_min_hop_rank_increase = 128,
@@ -314,7 +336,7 @@ static const sl_wisun_br_connection_params_t SL_WISUN_BR_PARAMS_PROFILE_TEST = {
     .lfn_lpc_retry_count = 5,
   },
   .misc = {
-    .temp_link_min_timeout_s = 260,
+    .temp_link_min_timeout_s = 0,
   },
   .traffic = {
     .lowpan_mtu = 1576,
@@ -373,7 +395,7 @@ static const sl_wisun_br_connection_params_t SL_WISUN_BR_PARAMS_PROFILE_SMALL = 
     .sec_prot_trickle_expirations = 0,
   },
   .dhcp = {
-    .dhcp_address_lifetime_s = HOUR_TO_SEC(12)
+    .dhcp_address_lifetime_s = 0
   },
   .rpl = {
     .rpl_min_hop_rank_increase = 128,
@@ -397,7 +419,7 @@ static const sl_wisun_br_connection_params_t SL_WISUN_BR_PARAMS_PROFILE_SMALL = 
     .lfn_lpc_retry_count = 5,
   },
   .misc = {
-    .temp_link_min_timeout_s = 260,
+    .temp_link_min_timeout_s = 0,
   },
   .traffic = {
     .lowpan_mtu = 1576,
@@ -456,7 +478,7 @@ static const sl_wisun_br_connection_params_t SL_WISUN_BR_PARAMS_PROFILE_MEDIUM =
     .sec_prot_trickle_expirations = 0,
   },
   .dhcp = {
-    .dhcp_address_lifetime_s = DAY_TO_SEC(7)
+    .dhcp_address_lifetime_s = 0
   },
   .rpl = {
     .rpl_min_hop_rank_increase = 128,
@@ -480,7 +502,7 @@ static const sl_wisun_br_connection_params_t SL_WISUN_BR_PARAMS_PROFILE_MEDIUM =
     .lfn_lpc_retry_count = 20,
   },
   .misc = {
-    .temp_link_min_timeout_s = 260,
+    .temp_link_min_timeout_s = 0,
   },
   .traffic = {
     .lowpan_mtu = 1576,
@@ -539,7 +561,7 @@ static const sl_wisun_br_connection_params_t SL_WISUN_BR_PARAMS_PROFILE_LARGE = 
     .sec_prot_trickle_expirations = 0,
   },
   .dhcp = {
-    .dhcp_address_lifetime_s = DAY_TO_SEC(30)
+    .dhcp_address_lifetime_s = 0
   },
   .rpl = {
     .rpl_min_hop_rank_increase = 128,
@@ -563,7 +585,7 @@ static const sl_wisun_br_connection_params_t SL_WISUN_BR_PARAMS_PROFILE_LARGE = 
     .lfn_lpc_retry_count = 60,
   },
   .misc = {
-    .temp_link_min_timeout_s = 520,
+    .temp_link_min_timeout_s = 0,
   },
   .traffic = {
     .lowpan_mtu = 1576,

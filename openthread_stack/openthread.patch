@@ -1,0 +1,3144 @@
+diff --git a/BUILD.gn b/BUILD.gn
+index d9542f6cf93e48567ebb5a5382a6bc341df74b13..9cca5f46dc619c8595cbc6e2c201c11c20463257 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -27,6 +27,20 @@
+ 
+ import("etc/gn/openthread.gni")
+ 
++# Strict warnings for OpenThread sources only. Use private `configs +=` on OT
++# targets, not `public_configs` on shared deps, so embedders (e.g. Matter with
++# Clang) keep their own warning defaults; a late -W* can undo flags such as
++# -Wno-unused-parameter on dependent translation units.
++config("openthread_private_flags") {
++  cflags = [
++    "-Werror",
++    "-Wall",
++    "-Wextra",
++    "-Wundef",
++    "-Wformat-nonliteral",
++  ]
++}
++
+ config("openthread_config") {
+   defines = []
+   if (openthread_config_file != "") {
+diff --git a/etc/cmake/options.cmake b/etc/cmake/options.cmake
+index b3bfc46cc5b3685a2ef88b8abd5a6459e7a657c6..fedb3fa436e92dca5b99b22f0ef22ea9158400c6 100644
+--- a/etc/cmake/options.cmake
++++ b/etc/cmake/options.cmake
+@@ -237,6 +237,7 @@ ot_option(OT_MLR OPENTHREAD_CONFIG_MLR_ENABLE "Multicast Listener Registration (
+ ot_option(OT_MULTIPAN_RCP OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE "enable multi-PAN RCP")
+ ot_option(OT_MULTIPLE_INSTANCE OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE "multiple instances")
+ ot_option(OT_NAT64_BORDER_ROUTING OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE "border routing NAT64")
++ot_option(OT_NAT64_FAVORED_PREFIX_NOTIFICATION OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE "NAT64 favored prefix change notification")
+ ot_option(OT_NAT64_TRANSLATOR OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE "NAT64 translator support")
+ ot_option(OT_NEIGHBOR_DISCOVERY_AGENT OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE "neighbor discovery agent")
+ ot_option(OT_NETDATA_PUBLISHER OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE "Network Data publisher")
+diff --git a/etc/gn/toolchain/BUILD.gn b/etc/gn/toolchain/BUILD.gn
+index a67f1fd056527d435516fea773ee2e34f34db59a..e2a16d8ce8cff56a94735b6c5c25edfd1832086e 100644
+--- a/etc/gn/toolchain/BUILD.gn
++++ b/etc/gn/toolchain/BUILD.gn
+@@ -26,13 +26,6 @@
+ #
+ 
+ toolchain("toolchain") {
+-  diagnostic_cflags = [
+-    "-Werror",
+-    "-Wall",
+-    "-Wextra",
+-    "-Wundef",
+-    "-Wformat-nonliteral",
+-  ]
+   if (use_clang) {
+     cc = "clang"
+     cxx = "clang++"
+@@ -40,7 +33,9 @@ toolchain("toolchain") {
+     cc = "gcc"
+     cxx = "g++"
+   }
+-  cflags = string_join(" ", diagnostic_cflags)
++  # Warning/diagnostic flags come from GN target configs ({{cflags}}), not from
++  # a global toolchain preset, so nothing is prepended here.
++  cflags = ""
+ 
+   tool("cc") {
+     depfile = "{{output}}.d"
+diff --git a/examples/apps/cli/BUILD.gn b/examples/apps/cli/BUILD.gn
+index ab08d0361ece9d59a5215e0b17ee9fb00fa58caf..065412d44e43c7260e7de46739c4f7cfc6195700 100644
+--- a/examples/apps/cli/BUILD.gn
++++ b/examples/apps/cli/BUILD.gn
+@@ -26,6 +26,7 @@
+ #
+ 
+ static_library("cli_uart") {
++  configs += [ "../../../:openthread_private_flags" ]
+   sources = [ "cli_uart.cpp" ]
+   include_dirs = [ "../../platforms" ]
+   deps = [
+diff --git a/examples/platforms/utils/mac_frame.cpp b/examples/platforms/utils/mac_frame.cpp
+index 0152da40af90afd4dc441fbdaf8000f646482086..7e8e56b1aac5f3378acca6e6df2a25a4b8f66c7b 100644
+--- a/examples/platforms/utils/mac_frame.cpp
++++ b/examples/platforms/utils/mac_frame.cpp
+@@ -407,7 +407,8 @@ otError otMacFrameProcessTxSfd(otRadioFrame *aFrame, uint64_t aRadioTime, otRadi
+ #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+     if (aRadioContext->mCslPresent) // CSL IE should be filled for every transmit attempt
+     {
+-        otMacFrameSetCslIe(aFrame, aRadioContext->mCslPeriod, ComputeCslPhase(aRadioTime, aRadioContext));
++        otMacFrameSetCslIe(aFrame, aRadioContext->mCslPeriod,
++                           ComputeCslPhase(static_cast<uint32_t>(aRadioTime), aRadioContext));
+     }
+ #endif
+ #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+diff --git a/include/openthread/platform/border_routing.h b/include/openthread/platform/border_routing.h
+index 018b186e8e233369647d3acf99b13fa151b7cc89..4dbd9e18020a410aa38799bd2b80dbd0784ca3f5 100644
+--- a/include/openthread/platform/border_routing.h
++++ b/include/openthread/platform/border_routing.h
+@@ -96,6 +96,18 @@ extern void otPlatBorderRoutingProcessIcmp6Ra(otInstance *aInstance, const uint8
+ extern void otPlatBorderRoutingProcessDhcp6PdPrefix(otInstance                            *aInstance,
+                                                     const otBorderRoutingPrefixTableEntry *aPrefixInfo);
+ 
++/**
++ * Notifies the platform that the favored NAT64 prefix changed.
++ *
++ * This platform function is optional.
++ *
++ * Requires `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE` and
++ * `OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE`.
++ *
++ * @param[in] aInstance A pointer to an OpenThread instance.
++ */
++extern void otPlatBorderRoutingFavoredNat64PrefixChanged(otInstance *aInstance);
++
+ #ifdef __cplusplus
+ }
+ #endif
+diff --git a/include/openthread/trel.h b/include/openthread/trel.h
+index e08fad368ebc5b4209d21c061a8e1d9fd3f2b3db..0cfa4abeba6d32454229245e9334870dea5cf4f5 100644
+--- a/include/openthread/trel.h
++++ b/include/openthread/trel.h
+@@ -189,6 +189,24 @@ void otTrelResetCounters(otInstance *aInstance);
+  */
+ uint16_t otTrelGetUdpPort(otInstance *aInstance);
+ 
++/**
++ * Callback function pointer to signal state changes to the TREL.
++ *
++ * This callback is invoked whenever TREL state or TREL UDP port gets changed.
++ *
++ * @param[in] aContext   A pointer to an arbitrary context (provided when callback is set).
++ */
++typedef void (*otTrelStateChangeCallback)(void *aContext);
++
++/**
++ * Sets the callback function to notify state changes of TREL.
++ *
++ * @param[in] aInstance    The OpenThread instance.
++ * @param[in] aCallback    The callback function pointer.
++ * @param[in] aContext     The arbitrary context to use with callback.
++ */
++void otTrelSetStateChangedCallback(otInstance *aInstance, otTrelStateChangeCallback aCallback, void *aContext);
++
+ /**
+  * @}
+  */
+diff --git a/src/cli/BUILD.gn b/src/cli/BUILD.gn
+index e70ae4fc8902d2d7cb8e8bb68b16c8a04ade6abf..c938f095f7fffb5646665bffeb5bf0a0bb2b2bde 100644
+--- a/src/cli/BUILD.gn
++++ b/src/cli/BUILD.gn
+@@ -82,6 +82,7 @@ static_library("cli_config") {
+ }
+ 
+ static_library("libopenthread-cli-ftd") {
++  configs += [ "../..:openthread_private_flags" ]
+   sources = openthread_cli_sources
+   public_deps = [
+     ":cli_config",
+@@ -91,6 +92,7 @@ static_library("libopenthread-cli-ftd") {
+ }
+ 
+ static_library("libopenthread-cli-mtd") {
++  configs += [ "../..:openthread_private_flags" ]
+   sources = openthread_cli_sources
+   public_deps = [
+     ":cli_config",
+diff --git a/src/cli/cli_ping.cpp b/src/cli/cli_ping.cpp
+index c11166ccdf9220778f8bcd2c978c2ab5438ad05b..45a65e7f91eec5654b2c2fcdc70f453a88912de9 100644
+--- a/src/cli/cli_ping.cpp
++++ b/src/cli/cli_ping.cpp
+@@ -233,7 +233,7 @@ void PingSender::HandlePingStatistics(const otPingSenderStatistics *aStatistics)
+ 
+     if (aStatistics->mReceivedCount != 0)
+     {
+-        uint32_t avgRoundTripTime =
++        uint64_t avgRoundTripTime =
+             1000 * static_cast<uint64_t>(aStatistics->mTotalRoundTripTime) / aStatistics->mReceivedCount;
+ 
+         OutputFormat(" Round-trip min/avg/max = %u/%u.%03u/%u ms.", aStatistics->mMinRoundTripTime,
+diff --git a/src/core/BUILD.gn b/src/core/BUILD.gn
+index 1bc0a857a465077f6757ac36a71b7862cd7a6fae..a4f6f8919eb9933389d030b98d0811b5d4eb76db 100644
+--- a/src/core/BUILD.gn
++++ b/src/core/BUILD.gn
+@@ -959,6 +959,7 @@ group("libopenthread_platform") {
+ }
+ 
+ static_library("libopenthread-ftd") {
++  configs += [ "../..:openthread_private_flags" ]
+   sources = openthread_core_sources
+   if (openthread_enable_core_config_args && openthread_config_tcp_enable) {
+     deps = [ "../../third_party/tcplp" ]
+@@ -968,6 +969,7 @@ static_library("libopenthread-ftd") {
+ }
+ 
+ static_library("libopenthread-mtd") {
++  configs += [ "../..:openthread_private_flags" ]
+   sources = openthread_core_sources
+   if (openthread_enable_core_config_args && openthread_config_tcp_enable) {
+     deps = [ "../../third_party/tcplp" ]
+@@ -977,6 +979,7 @@ static_library("libopenthread-mtd") {
+ }
+ 
+ static_library("libopenthread-radio") {
++  configs += [ "../..:openthread_private_flags" ]
+   sources = openthread_radio_sources
+   public_deps = [ ":libopenthread_platform" ]
+   public_configs = [ "../..:openthread_radio_config" ]
+diff --git a/src/core/api/trel_api.cpp b/src/core/api/trel_api.cpp
+index a70d696e4278703f1a4ee1f3fa9f68d373680aad..206fab90f47cff33e0c9a19a8fbb7f7e436dd0d0 100644
+--- a/src/core/api/trel_api.cpp
++++ b/src/core/api/trel_api.cpp
+@@ -82,4 +82,9 @@ void otTrelResetCounters(otInstance *aInstance) { AsCoreType(aInstance).Get<Trel
+ 
+ uint16_t otTrelGetUdpPort(otInstance *aInstance) { return AsCoreType(aInstance).Get<Trel::Interface>().GetUdpPort(); }
+ 
++void otTrelSetStateChangedCallback(otInstance *aInstance, otTrelStateChangeCallback aCallback, void *aContext)
++{
++    AsCoreType(aInstance).Get<Trel::Interface>().SetStateChangeCallback(aCallback, aContext);
++}
++
+ #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+diff --git a/src/core/border_router/routing_manager.cpp b/src/core/border_router/routing_manager.cpp
+index 8348f7faed0d577c1bf2aef4b9b83b546245bd94..1c2ac3b31ea395da4d09f174d31b16bd8328d1d0 100644
+--- a/src/core/border_router/routing_manager.cpp
++++ b/src/core/border_router/routing_manager.cpp
+@@ -2290,6 +2290,9 @@ RoutingManager::Nat64PrefixManager::Nat64PrefixManager(Instance &aInstance)
+     mPlatformPrefix.Clear();
+     mLocalPrefix.Clear();
+     mPublishedPrefix.Clear();
++#if OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
++    mNotifiedFavoredPrefix.Clear();
++#endif
+ }
+ 
+ void RoutingManager::Nat64PrefixManager::SetEnabled(bool aEnabled)
+@@ -2387,6 +2390,16 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
+ 
+     prefix = GetFavoredPrefix(preference);
+ 
++#if OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
++    if (prefix != mNotifiedFavoredPrefix)
++    {
++        mNotifiedFavoredPrefix = prefix;
++        otPlatBorderRoutingFavoredNat64PrefixChanged(&GetInstance());
++    }
++#endif
++
++    VerifyOrExit(prefix.IsValidNat64(), Unpublish());
++
+     error = Get<NetworkData::Leader>().FindPreferredNat64Prefix(netdataPrefixConfig);
+ 
+     // NAT64 prefix is expected to be published from this BR
+@@ -3080,6 +3093,11 @@ extern "C" void otPlatBorderRoutingProcessDhcp6PdPrefix(otInstance
+ 
+ #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+ 
++extern "C" OT_TOOL_WEAK void otPlatBorderRoutingFavoredNat64PrefixChanged(otInstance *aInstance)
++{
++    OT_UNUSED_VARIABLE(aInstance);
++}
++
+ } // namespace BorderRouter
+ 
+ } // namespace ot
+diff --git a/src/core/border_router/routing_manager.hpp b/src/core/border_router/routing_manager.hpp
+index 551491f71a81200e94e0dd1b29849036f6bba980..5d38770932ac0aac521a62ddff7e522619eb5ffb 100644
+--- a/src/core/border_router/routing_manager.hpp
++++ b/src/core/border_router/routing_manager.hpp
+@@ -879,7 +879,10 @@ private:
+         Ip6::Prefix     mLocalPrefix;         // The local prefix (from BR ULA prefix).
+         Ip6::Prefix     mPublishedPrefix;     // The prefix to publish in Net Data (empty or local or from infra-if).
+         RoutePreference mPublishedPreference; // The published prefix preference.
+-        Nat64Timer      mTimer;
++#if OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
++        Ip6::Prefix mNotifiedFavoredPrefix;
++#endif
++        Nat64Timer mTimer;
+     };
+ 
+ #endif // OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+diff --git a/src/core/config/nat64.h b/src/core/config/nat64.h
+index 76e4eb179bfd6cbadb8f24cb474e5e38c30c5ff0..1071a06f39b58ec71885cad0df7ddc50d88591f2 100644
+--- a/src/core/config/nat64.h
++++ b/src/core/config/nat64.h
+@@ -88,6 +88,18 @@
+ #define OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE 0
+ #endif
+ 
++/**
++ * @def OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
++ *
++ * Define to 1 to notify the platform when the favored NAT64 prefix changes (for example
++ * unsolicited Spinel `SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX` on NCP).
++ *
++ * Requires `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE`.
++ */
++#ifndef OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
++#define OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE 0
++#endif
++
+ /**
+  * @def OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
+  *
+diff --git a/src/core/config/openthread-core-config-check.h b/src/core/config/openthread-core-config-check.h
+index 4cacac022affac1a956443b469e78eb5d53e0e93..f55643e20cd72b9ef6cf7cf38ea95272fb89fa6c 100644
+--- a/src/core/config/openthread-core-config-check.h
++++ b/src/core/config/openthread-core-config-check.h
+@@ -643,6 +643,11 @@
+ #error "OPENTHREAD_CONFIG_BORDER_ROUTING_NAT64_ENABLE was replaced by OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE"
+ #endif
+ 
++#if OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE && !OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
++#error \
++    "OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE requires OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE"
++#endif
++
+ #ifdef OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+ #error "OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE is removed. The feature is now supported by default (on 1.3.0)"
+ #endif
+diff --git a/src/core/config/trel.h b/src/core/config/trel.h
+index 45b2b56a8c40b0996cc35dd20ad9a4e9cff88e22..9be3c2ed0acef441c906a6f8a268782104dc884f 100644
+--- a/src/core/config/trel.h
++++ b/src/core/config/trel.h
+@@ -56,6 +56,35 @@
+ #define OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE 0
+ #endif
+ 
++/**
++ * @def OPENTHREAD_CONFIG_TREL_DELEGATE_INFRA_TO_HOST_ENABLE
++ *
++ * Define as 1 when TREL runs on a device without a local infrastructure interface and delegates
++ * infrastructure operations to the connected host.
++ *
++ * This applies to NCP (Network Co-Processor) builds where the full Thread stack runs on the
++ * co-processor and the infrastructure interface is provided by the host over Spinel.
++ */
++#ifndef OPENTHREAD_CONFIG_TREL_DELEGATE_INFRA_TO_HOST_ENABLE
++#define OPENTHREAD_CONFIG_TREL_DELEGATE_INFRA_TO_HOST_ENABLE 0
++#endif
++
++/**
++ * @def OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++ *
++ * Define as 1 to enable extra handling for platform DNS-SD browse/remove races when discovering TREL peers:
++ * debouncing browse REMOVE events, resolve epoch tracking to ignore stale resolver callbacks, and soft refresh
++ * on re-discovery.
++ *
++ * Requires `OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE`.
++ *
++ * Intended for NCP architectures where DNS-SD is proxied through a host (e.g., OTBR). Defaults to disabled so
++ * POSIX/RCP builds retain upstream discovery behavior.
++ */
++#ifndef OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++#define OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE 0
++#endif
++
+ /**
+  * @def OPENTHREAD_CONFIG_TREL_USE_HEAP_ENABLE
+  *
+diff --git a/src/core/crypto/crypto_platform_mbedtls.cpp b/src/core/crypto/crypto_platform_mbedtls.cpp
+index e946ad3fd70608b51647985090ec7893dfb2b715..7da7dd2da7dea2c42a90e316a9b34eddcb16f330 100644
+--- a/src/core/crypto/crypto_platform_mbedtls.cpp
++++ b/src/core/crypto/crypto_platform_mbedtls.cpp
+@@ -237,7 +237,7 @@ exit:
+     return error;
+ }
+ 
+-otError otPlatCryptoHkdfInit(otCryptoContext *aContext)
++OT_TOOL_WEAK otError otPlatCryptoHkdfInit(otCryptoContext *aContext)
+ {
+     Error error = kErrorNone;
+ 
+diff --git a/src/core/mac/mac.cpp b/src/core/mac/mac.cpp
+index 5a34e3670e1d8bb7063c8b0794d10814a0f3d8f2..0363c69eae062003b9dadc352bbdcda11c56d1e2 100644
+--- a/src/core/mac/mac.cpp
++++ b/src/core/mac/mac.cpp
+@@ -37,6 +37,7 @@
+ 
+ #include "crypto/aes_ccm.hpp"
+ #include "crypto/sha256.hpp"
++#include "crypto/storage.hpp"
+ #include "instance/instance.hpp"
+ #include "utils/static_counter.hpp"
+ 
+@@ -1624,6 +1625,10 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
+         ExitNow();
+     }
+ 
++#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
++    VerifyOrExit((macKey != nullptr) && Crypto::Storage::IsKeyRefValid(macKey->GetKeyRef()));
++#endif
++
+     SuccessOrExit(aFrame.ProcessReceiveAesCcm(*extAddress, *macKey));
+ 
+     if ((keyIdMode == Frame::kKeyIdMode1) && aNeighbor->IsStateValid())
+@@ -1747,6 +1752,10 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
+         VerifyOrExit(frameCounter >= neighbor->GetLinkAckFrameCounter());
+     }
+ 
++#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
++    VerifyOrExit((macKey != nullptr) && Crypto::Storage::IsKeyRefValid(macKey->GetKeyRef()));
++#endif
++
+     error = aAckFrame.ProcessReceiveAesCcm(srcAddr.GetExtended(), *macKey);
+     SuccessOrExit(error);
+ 
+diff --git a/src/core/net/srp_client.cpp b/src/core/net/srp_client.cpp
+index 769bd5c784bc0d74448459d6f1a5fc64d3e92f1a..2fad29863e47f48c6e2467f8d76aacd037570f25 100644
+--- a/src/core/net/srp_client.cpp
++++ b/src/core/net/srp_client.cpp
+@@ -2050,6 +2050,8 @@ void Client::UpdateState(void)
+         OT_FALL_THROUGH;
+ 
+     case kToAdd:
++        OT_FALL_THROUGH;
++
+     case kToRefresh:
+         // Make sure we have at least one service and at least one
+         // host address, otherwise no need to send SRP update message.
+diff --git a/src/core/radio/trel_interface.cpp b/src/core/radio/trel_interface.cpp
+index d1cedb8a843ab6b489f50e2655de064883dfe6a7..d41ba00d00aebffef1237380c95c57ad4dd283f7 100644
+--- a/src/core/radio/trel_interface.cpp
++++ b/src/core/radio/trel_interface.cpp
+@@ -35,6 +35,7 @@
+ #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+ 
+ #include "instance/instance.hpp"
++#include "net/udp6.hpp"
+ 
+ namespace ot {
+ namespace Trel {
+@@ -47,13 +48,25 @@ Interface::Interface(Instance &aInstance)
+     , mStackEnabled(false)
+     , mFiltered(false)
+     , mState(kStateUninitialized)
++    , mUdpPort(0)
++#if OPENTHREAD_CONFIG_TREL_DELEGATE_INFRA_TO_HOST_ENABLE
++    , mHostUdpPort(0)
++#endif
++    , mCallbackTask(aInstance)
+ {
+ }
+ 
++void Interface::AssignDefaultUdpPortFromEphemeral(void) { mUdpPort = Get<Ip6::Udp>().GetEphemeralPort(); }
++
+ void Interface::Init(void)
+ {
+     VerifyOrExit(mState == kStateUninitialized);
+     mState = kStateDisabled;
++
++#if OPENTHREAD_CONFIG_TREL_DELEGATE_INFRA_TO_HOST_ENABLE
++    mUserEnabled = false;
++#endif
++
+     UpdateState();
+ 
+ exit:
+@@ -67,6 +80,7 @@ void Interface::SetEnabled(bool aEnable, Requester aRequester)
+     case kRequesterUser:
+         VerifyOrExit(mUserEnabled != aEnable);
+         mUserEnabled = aEnable;
++        AssignDefaultUdpPortFromEphemeral();
+         LogInfo("User %sabled interface", aEnable ? "en" : "dis");
+         break;
+ 
+@@ -92,7 +106,14 @@ void Interface::UpdateState(void)
+         mState = kStateEnabled;
+ 
+         otPlatTrelEnable(&GetInstance(), &mUdpPort);
+-        Get<PeerDiscoverer>().Start();
++
++#if OPENTHREAD_CONFIG_TREL_DELEGATE_INFRA_TO_HOST_ENABLE
++        // Wait for the host UDP port (SPINEL_PROP_TREL_STATE) before starting peer discovery.
++        if (mHostUdpPort != 0)
++#endif
++        {
++            Get<PeerDiscoverer>().Start();
++        }
+ 
+         LogInfo("Enabled interface, local port:%u", mUdpPort);
+     }
+@@ -107,10 +128,14 @@ void Interface::UpdateState(void)
+         LogInfo("Disabled interface");
+     }
+ 
++    mCallbackTask.Post();
++
+ exit:
+     return;
+ }
+ 
++void Interface::HandleTask(void) { mCallback.InvokeIfSet(); }
++
+ const Counters *Interface::GetCounters(void) const { return otPlatTrelGetCounters(&GetInstance()); }
+ 
+ void Interface::ResetCounters(void) { otPlatTrelResetCounters(&GetInstance()); }
+@@ -199,6 +224,18 @@ exit:
+     return;
+ }
+ 
++#if OPENTHREAD_CONFIG_TREL_DELEGATE_INFRA_TO_HOST_ENABLE
++void Interface::SetHostUdpPort(uint16_t aPort)
++{
++    LogInfo("Host UDP port set to %u (threadUdpPort:%u, trelEnabled:%d)", aPort, mUdpPort, IsEnabled());
++    mHostUdpPort = aPort;
++
++    if (IsEnabled() && (aPort != 0))
++    {
++        Get<PeerDiscoverer>().Start();
++    }
++}
++#endif
+ } // namespace Trel
+ } // namespace ot
+ 
+diff --git a/src/core/radio/trel_interface.hpp b/src/core/radio/trel_interface.hpp
+index 1bbdd1b65d066a60ea9c5a0a04e0a908fe9974e1..09025641a79c0d8df483d3a26f75cef9ac48031d 100644
+--- a/src/core/radio/trel_interface.hpp
++++ b/src/core/radio/trel_interface.hpp
+@@ -41,7 +41,9 @@
+ #include <openthread/trel.h>
+ #include <openthread/platform/trel.h>
+ 
++#include "common/callback.hpp"
+ #include "common/locator.hpp"
++#include "common/tasklet.hpp"
+ #include "net/socket.hpp"
+ #include "radio/trel_packet.hpp"
+ 
+@@ -71,6 +73,13 @@ class Interface : public InstanceLocator
+                                          const otSockAddr *aSenderAddr);
+ 
+ public:
++    /**
++     * Defines the callback used by TREL interface to notify user of state changes.
++     *
++     * Please see `otTrelStateChangeCallback` for more details.
++     */
++    typedef otTrelStateChangeCallback StateChangeCallback;
++
+     /**
+      * Represents an entity requesting to enable or disable the TREL interface (via `SetEnabled()`).
+      */
+@@ -149,6 +158,36 @@ public:
+      */
+     uint16_t GetUdpPort(void) const { return mUdpPort; }
+ 
++    /**
++     * Sets the TREL UDP port.
++     *
++     * @param[in] aPort   The UDP port number.
++     */
++    void SetUdpPort(uint16_t aPort) { mUdpPort = aPort; }
++
++#if OPENTHREAD_CONFIG_TREL_DELEGATE_INFRA_TO_HOST_ENABLE
++    /**
++     * Gets the TREL interface's host UDP port.
++     *
++     * @returns The TREL interface's host UDP port.
++     */
++    uint16_t GetHostUdpPort(void) const { return mHostUdpPort; }
++
++    /**
++     * Sets the TREL interface's host UDP port.
++     *
++     * @param[in] aPort   The UDP port number.
++     */
++    void SetHostUdpPort(uint16_t aPort);
++#endif // OPENTHREAD_CONFIG_TREL_DELEGATE_INFRA_TO_HOST_ENABLE
++    /**
++     * Sets the callback.
++     *
++     * @param[in] aCallback   The callback function pointer.
++     * @param[in] aContext    The context associated and used with callback handler.
++     */
++    void SetStateChangeCallback(StateChangeCallback aCallback, void *aContext) { mCallback.Set(aCallback, aContext); }
++
+ private:
+     enum State : uint8_t
+     {
+@@ -160,20 +199,30 @@ private:
+     explicit Interface(Instance &aInstance);
+ 
+     void UpdateState(void);
++    void HandleTask(void);
+ 
+     // Methods used by `Trel::Link`.
+-    void  Init(void);
++    void Init(void);
++    /** Sets `mUdpPort` from `Ip6::Udp::GetEphemeralPort()` (see `Init()`). */
++    void  AssignDefaultUdpPortFromEphemeral(void);
+     Error Send(Packet &aPacket, bool aIsDiscovery = false);
+ 
+     // Callbacks from `otPlatTrel`.
+     void HandleReceived(uint8_t *aBuffer, uint16_t aLength, const Ip6::SockAddr &aSenderAddr);
+ 
++    using CallbackTask = TaskletIn<Interface, &Interface::HandleTask>;
++
+     bool     mUserEnabled : 1;
+     bool     mStackEnabled : 1;
+     bool     mFiltered : 1;
+     State    mState;
+     uint16_t mUdpPort;
+-    Packet   mRxPacket;
++#if OPENTHREAD_CONFIG_TREL_DELEGATE_INFRA_TO_HOST_ENABLE
++    uint16_t mHostUdpPort;
++#endif
++    Packet                        mRxPacket;
++    CallbackTask                  mCallbackTask;
++    Callback<StateChangeCallback> mCallback;
+ };
+ 
+ } // namespace Trel
+diff --git a/src/core/radio/trel_peer.cpp b/src/core/radio/trel_peer.cpp
+index 0e19519d3f3962d7ea99279da6dcf15185f89906..47722e510bce398c6ac60c998d3f86b93d89a9d9 100644
+--- a/src/core/radio/trel_peer.cpp
++++ b/src/core/radio/trel_peer.cpp
+@@ -60,7 +60,13 @@ void Peer::Init(Instance &aInstance)
+     mResolvingHost            = false;
+     mTxtDataValidated         = false;
+     mSockAddrUpdatedBasedOnRx = false;
+-    mDnssdState               = kDnssdResolving;
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++    mBrowseRemovePending = false;
++    mResolveEpoch        = 0;
++    mSrvTxtResolveEpoch  = 0;
++    mHostResolveEpoch    = 0;
++#endif
++    mDnssdState = kDnssdResolving;
+ #else
+     mDnssdState = kDnssdResolved;
+ #endif
+diff --git a/src/core/radio/trel_peer.hpp b/src/core/radio/trel_peer.hpp
+index 26b5777adfa7d656632443d4bf058ef317d0ba4e..da9f34e459d1a1a022b70badddf53878562f8fb0 100644
+--- a/src/core/radio/trel_peer.hpp
++++ b/src/core/radio/trel_peer.hpp
+@@ -278,11 +278,17 @@ private:
+     DnssdState mDnssdState;
+     UptimeSec  mLastInteractionTime;
+ #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+-    bool         mExtAddressSet : 1;
+-    bool         mResolvingService : 1;
+-    bool         mResolvingHost : 1;
+-    bool         mTxtDataValidated : 1;
+-    bool         mSockAddrUpdatedBasedOnRx : 1;
++    bool mExtAddressSet : 1;
++    bool mResolvingService : 1;
++    bool mResolvingHost : 1;
++    bool mTxtDataValidated : 1;
++    bool mSockAddrUpdatedBasedOnRx : 1;
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++    bool    mBrowseRemovePending : 1;
++    uint8_t mResolveEpoch;
++    uint8_t mSrvTxtResolveEpoch;
++    uint8_t mHostResolveEpoch;
++#endif
+     uint16_t     mPort;
+     Heap::String mServiceName;
+     Heap::String mHostName;
+diff --git a/src/core/radio/trel_peer_discoverer.cpp b/src/core/radio/trel_peer_discoverer.cpp
+index 447c55ddc2427469bda3356f090966b0d230dbd6..b90b1c28633dba4234a41e3a5f75e328e446f2d5 100644
+--- a/src/core/radio/trel_peer_discoverer.cpp
++++ b/src/core/radio/trel_peer_discoverer.cpp
+@@ -42,8 +42,9 @@ namespace Trel {
+ RegisterLogModule("TrelDiscoverer");
+ 
+ #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
++
+ const char PeerDiscoverer::kTrelServiceType[] = "_trel._udp";
+-#endif
++#endif // OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+ 
+ PeerDiscoverer::PeerDiscoverer(Instance &aInstance)
+     : InstanceLocator(aInstance)
+@@ -52,6 +53,9 @@ PeerDiscoverer::PeerDiscoverer(Instance &aInstance)
+ #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+     , mServiceName(aInstance)
+     , mBrowsing(false)
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++    , mBrowseRemoveDebounceTimer(aInstance)
++#endif
+ #endif
+ {
+ }
+@@ -87,6 +91,11 @@ void PeerDiscoverer::Stop(void)
+     VerifyOrExit(mState != kStateStopped);
+ 
+     mState = kStateStopped;
++
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++    mBrowseRemoveDebounceTimer.Stop();
++#endif
++
+     Get<PeerTable>().Clear();
+ 
+ #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+@@ -145,7 +154,12 @@ void PeerDiscoverer::RegisterService(void)
+     TxtDataEncoder txtData(GetInstance());
+     uint16_t       port;
+ 
++#if OPENTHREAD_CONFIG_TREL_DELEGATE_INFRA_TO_HOST_ENABLE
++    port = Get<Interface>().GetHostUdpPort();
++    VerifyOrExit(port != 0);
++#else
+     port = Get<Interface>().GetUdpPort();
++#endif
+ 
+     txtData.Encode();
+ 
+@@ -155,6 +169,11 @@ void PeerDiscoverer::RegisterService(void)
+     LogInfo("Registering DNS-SD service: port:%u", port);
+     otPlatTrelRegisterService(&GetInstance(), port, txtData.GetBytes(), static_cast<uint8_t>(txtData.GetLength()));
+ #endif
++
++#if OPENTHREAD_CONFIG_TREL_DELEGATE_INFRA_TO_HOST_ENABLE
++exit:
++#endif
++    return;
+ }
+ 
+ #if !OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+@@ -261,8 +280,12 @@ void PeerDiscoverer::HandleDnssdPlatformStateChange(void)
+     else
+     {
+         VerifyOrExit(mState != kStateStopped);
++
+         mState    = kStatePendingDnssd;
+         mBrowsing = false;
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++        mBrowseRemoveDebounceTimer.Stop();
++#endif
+         Get<PeerTable>().Clear();
+     }
+ 
+@@ -333,6 +356,123 @@ void PeerDiscoverer::HandleBrowseResult(otInstance *aInstance, const otPlatDnssd
+     AsCoreType(aInstance).Get<PeerDiscoverer>().HandleBrowseResult(*aResult);
+ }
+ 
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++
++bool PeerDiscoverer::IsStaleResolveCallback(const Peer &aPeer, uint8_t aCallbackEpoch)
++{
++    return aPeer.mResolveEpoch != aCallbackEpoch;
++}
++
++void PeerDiscoverer::BumpResolveEpoch(Peer &aPeer) { ++aPeer.mResolveEpoch; }
++
++void PeerDiscoverer::ResetPeerResolveState(Peer &aPeer)
++{
++    // Stop host resolver before service resolvers clear `mHostName`.
++    StopHostAddressResolver(aPeer);
++    StopServiceResolvers(aPeer);
++
++    aPeer.mTxtDataValidated = false;
++    aPeer.mPort             = 0;
++    aPeer.mHostAddresses.Free();
++}
++
++void PeerDiscoverer::ConfirmBrowseRemove(Peer &aPeer)
++{
++    BumpResolveEpoch(aPeer);
++    // Keep `mHostResolveEpoch` in sync so a late AAAA from the resolver stopped in
++    // `HandlePeerRemoval()` can still be applied while the peer is `removed`.
++    aPeer.mHostResolveEpoch = aPeer.mResolveEpoch;
++    aPeer.SetDnssdState(Peer::kDnssdRemoved);
++    aPeer.Log(Peer::kUpdated);
++}
++
++void PeerDiscoverer::BeginBrowseRefresh(Peer &aPeer)
++{
++    aPeer.mBrowseRemovePending = false;
++
++    BumpResolveEpoch(aPeer);
++    ResetPeerResolveState(aPeer);
++    aPeer.SetDnssdState(Peer::kDnssdResolving);
++    aPeer.Log(Peer::kReAdded);
++
++    StartServiceResolvers(aPeer);
++}
++
++void PeerDiscoverer::BeginBrowseSoftRefresh(Peer &aPeer)
++{
++    aPeer.mBrowseRemovePending = false;
++
++    VerifyOrExit(!aPeer.mHostName.IsNull(), BeginBrowseRefresh(aPeer));
++
++    BumpResolveEpoch(aPeer);
++    aPeer.mTxtDataValidated = false;
++    aPeer.mPort             = 0;
++
++    if (aPeer.mResolvingService)
++    {
++        StopServiceResolvers(aPeer, /* aPreserveHostName */ true);
++    }
++
++    if (aPeer.mHostAddresses.GetLength() > 0)
++    {
++        aPeer.mHostResolveEpoch = aPeer.mResolveEpoch;
++        aPeer.mResolvingHost    = true;
++    }
++    else
++    {
++        StartHostAddressResolver(aPeer);
++    }
++
++    aPeer.SetDnssdState(Peer::kDnssdResolving);
++    aPeer.Log(Peer::kReAdded);
++    StartServiceResolvers(aPeer);
++
++exit:
++    return;
++}
++
++void PeerDiscoverer::UpdateBrowseRemoveDebounceTimer(void)
++{
++    bool hasPending = false;
++
++    for (const Peer &peer : Get<PeerTable>())
++    {
++        if (peer.mBrowseRemovePending)
++        {
++            hasPending = true;
++            break;
++        }
++    }
++
++    if (hasPending)
++    {
++        mBrowseRemoveDebounceTimer.FireAtIfEarlier(TimerMilli::GetNow() + kBrowseRemoveDebounceMsec);
++    }
++    else
++    {
++        mBrowseRemoveDebounceTimer.Stop();
++    }
++}
++
++void PeerDiscoverer::HandleBrowseRemoveDebounceTimer(void)
++{
++    for (Peer &peer : Get<PeerTable>())
++    {
++        if (!peer.mBrowseRemovePending)
++        {
++            continue;
++        }
++
++        peer.mBrowseRemovePending = false;
++
++        ConfirmBrowseRemove(peer);
++    }
++
++    UpdateBrowseRemoveDebounceTimer();
++}
++
++#endif // OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++
+ void PeerDiscoverer::HandleBrowseResult(const Dnssd::BrowseResult &aResult)
+ {
+     Peer *peer;
+@@ -345,14 +485,47 @@ void PeerDiscoverer::HandleBrowseResult(const Dnssd::BrowseResult &aResult)
+     {
+         // Previously discovered service is now removed.
+ 
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++        VerifyOrExit(peer != nullptr);
++
++        peer->mBrowseRemovePending = true;
++        UpdateBrowseRemoveDebounceTimer();
++#else
+         VerifyOrExit(peer != nullptr);
+         peer->SetDnssdState(Peer::kDnssdRemoved);
+         peer->Log(Peer::kUpdated);
++#endif
+     }
+     else
+     {
+         // A new service is discovered.
+ 
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++        if (peer == nullptr)
++        {
++            peer = Get<PeerTable>().AllocateAndAddNewPeer();
++            VerifyOrExit(peer != nullptr);
++            SuccessOrAssert(peer->mServiceName.Set(aResult.mServiceInstance));
++            peer->SetDnssdState(Peer::kDnssdResolving);
++            peer->Log(Peer::kAdded);
++            StartServiceResolvers(*peer);
++        }
++        else if (peer->mBrowseRemovePending)
++        {
++            BeginBrowseSoftRefresh(*peer);
++            UpdateBrowseRemoveDebounceTimer();
++        }
++        else if (peer->GetDnssdState() == Peer::kDnssdRemoved)
++        {
++            BeginBrowseSoftRefresh(*peer);
++        }
++        else
++        {
++            peer->SetDnssdState(Peer::kDnssdResolving);
++            peer->Log(Peer::kReAdded);
++            StartServiceResolvers(*peer);
++        }
++#else
+         Peer::Action action = Peer::kAdded;
+ 
+         if (peer == nullptr)
+@@ -370,6 +543,7 @@ void PeerDiscoverer::HandleBrowseResult(const Dnssd::BrowseResult &aResult)
+         peer->Log(action);
+ 
+         StartServiceResolvers(*peer);
++#endif
+     }
+ 
+ exit:
+@@ -380,6 +554,9 @@ void PeerDiscoverer::StartServiceResolvers(Peer &aPeer)
+ {
+     VerifyOrExit(!aPeer.mResolvingService);
+ 
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++    aPeer.mSrvTxtResolveEpoch = aPeer.mResolveEpoch;
++#endif
+     aPeer.mResolvingService = true;
+     Get<Dnssd>().StartSrvResolver(SrvResolver(aPeer));
+     Get<Dnssd>().StartTxtResolver(TxtResolver(aPeer));
+@@ -390,6 +567,9 @@ exit:
+ 
+ void PeerDiscoverer::StopServiceResolvers(Peer &aPeer)
+ {
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++    StopServiceResolvers(aPeer, false);
++#else
+     VerifyOrExit(aPeer.mResolvingService);
+ 
+     aPeer.mResolvingService = false;
+@@ -400,9 +580,32 @@ void PeerDiscoverer::StopServiceResolvers(Peer &aPeer)
+     Get<Dnssd>().StopSrvResolver(SrvResolver(aPeer));
+     Get<Dnssd>().StopTxtResolver(TxtResolver(aPeer));
+ 
++exit:
++    return;
++#endif
++}
++
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++void PeerDiscoverer::StopServiceResolvers(Peer &aPeer, bool aPreserveHostName)
++{
++    VerifyOrExit(aPeer.mResolvingService);
++
++    aPeer.mResolvingService = false;
++    aPeer.mTxtDataValidated = false;
++    aPeer.mPort             = 0;
++
++    if (!aPreserveHostName)
++    {
++        aPeer.mHostName.Free();
++    }
++
++    Get<Dnssd>().StopSrvResolver(SrvResolver(aPeer));
++    Get<Dnssd>().StopTxtResolver(TxtResolver(aPeer));
++
+ exit:
+     return;
+ }
++#endif // OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
+ 
+ void PeerDiscoverer::HandleSrvResult(otInstance *aInstance, const otPlatDnssdSrvResult *aResult)
+ {
+@@ -417,6 +620,10 @@ void PeerDiscoverer::HandleSrvResult(const Dnssd::SrvResult &aResult)
+ 
+     peer = Get<PeerTable>().FindMatching(Peer::kMatchServiceName, aResult.mServiceInstance);
+     VerifyOrExit(peer != nullptr);
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++    VerifyOrExit(!peer->mBrowseRemovePending);
++    VerifyOrExit(!IsStaleResolveCallback(*peer, peer->mSrvTxtResolveEpoch));
++#endif
+ 
+     if (aResult.mTtl == 0)
+     {
+@@ -433,6 +640,16 @@ void PeerDiscoverer::HandleSrvResult(const Dnssd::SrvResult &aResult)
+             SuccessOrAssert(peer->mHostName.Set(aResult.mHostName));
+             StartHostAddressResolver(*peer);
+         }
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++        else if (peer->mHostAddresses.GetLength() == 0)
++        {
++            if (peer->mHostName.IsNull())
++            {
++                SuccessOrAssert(peer->mHostName.Set(aResult.mHostName));
++            }
++            StartHostAddressResolver(*peer);
++        }
++#endif
+     }
+ 
+     UpdatePeerState(*peer);
+@@ -456,6 +673,10 @@ void PeerDiscoverer::HandleTxtResult(const Dnssd::TxtResult &aResult)
+ 
+     peer = Get<PeerTable>().FindMatching(Peer::kMatchServiceName, aResult.mServiceInstance);
+     VerifyOrExit(peer != nullptr);
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++    VerifyOrExit(!peer->mBrowseRemovePending);
++    VerifyOrExit(!IsStaleResolveCallback(*peer, peer->mSrvTxtResolveEpoch));
++#endif
+ 
+     peer->mTxtDataValidated = false;
+ 
+@@ -491,6 +712,12 @@ void PeerDiscoverer::HandleTxtResult(const Dnssd::TxtResult &aResult)
+ exit:
+     if (peer != nullptr)
+     {
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++        if (peer->mTxtDataValidated && (peer->mHostAddresses.GetLength() == 0) && !peer->mHostName.IsNull())
++        {
++            StartHostAddressResolver(*peer);
++        }
++#endif
+         UpdatePeerState(*peer);
+     }
+ }
+@@ -499,13 +726,31 @@ void PeerDiscoverer::StartHostAddressResolver(Peer &aPeer)
+ {
+     Peer *sameHostPeer;
+ 
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++    // Re-issue lookup when a resolver is already marked active but no usable addresses yet
++    // (e.g. SRV/TXT were ignored during browse REMOVE debounce).
++    VerifyOrExit(!aPeer.mResolvingHost || aPeer.mHostAddresses.GetLength() == 0);
++
++    if (aPeer.mResolvingHost)
++    {
++        aPeer.mResolvingHost = false;
++    }
++#else
+     VerifyOrExit(!aPeer.mResolvingHost);
++#endif
+ 
+     sameHostPeer = Get<PeerTable>().FindMatching(Peer::kMatchHostName, aPeer.mHostName.AsCString());
+ 
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++    aPeer.mHostResolveEpoch = aPeer.mResolveEpoch;
++#endif
+     aPeer.mResolvingHost = true;
+ 
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++    if ((sameHostPeer != nullptr) && (sameHostPeer->mHostAddresses.GetLength() > 0))
++#else
+     if (sameHostPeer != nullptr)
++#endif
+     {
+         UpdatePeerAddresses(aPeer, sameHostPeer->mHostAddresses);
+     }
+@@ -607,10 +852,26 @@ void PeerDiscoverer::HandleAddressResult(const Dnssd::AddressResult &aResult)
+ 
+     for (Peer &peer : Get<PeerTable>())
+     {
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++        if (IsStaleResolveCallback(peer, peer.mHostResolveEpoch))
++        {
++            continue;
++        }
++
++        if (peer.GetDnssdState() == Peer::kDnssdRemoved)
++        {
++            if (peer.Matches(Peer::kMatchHostName, aResult.mHostName))
++            {
++                UpdatePeerAddresses(peer, sortedAddresses);
++            }
++            continue;
++        }
++#else
+         if (peer.GetDnssdState() == Peer::kDnssdRemoved)
+         {
+             continue;
+         }
++#endif
+ 
+         if (peer.Matches(Peer::kMatchHostName, aResult.mHostName))
+         {
+@@ -717,9 +978,18 @@ void PeerDiscoverer::HandlePeerRemoval(Peer &aPeer)
+     // The order of calls is important here since the
+     // `StopServiceResolvers()` clears the `aPeer.mHostName` which
+     // would be needed in `StopHostAddressResolver()`.
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++    // With stabilization enabled, the overload below passes
++    // `aPreserveHostName` as true, so `mHostName` is kept on the peer
++    // while SRV/TXT resolvers are stopped.
++#endif
+ 
+     StopHostAddressResolver(aPeer);
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++    StopServiceResolvers(aPeer, /* aPreserveHostName */ true);
++#else
+     StopServiceResolvers(aPeer);
++#endif
+ }
+ 
+ #endif // OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+diff --git a/src/core/radio/trel_peer_discoverer.hpp b/src/core/radio/trel_peer_discoverer.hpp
+index 4061a97a23445d8974802c51cfcd4cde77000215..afaa435637607688d9fd3a8dfd60730054ec5fd4 100644
+--- a/src/core/radio/trel_peer_discoverer.hpp
++++ b/src/core/radio/trel_peer_discoverer.hpp
+@@ -248,8 +248,21 @@ private:
+     void UnregisterService(void);
+     void HandleRegisterDone(Error aError);
+     void HandleBrowseResult(const Dnssd::BrowseResult &aResult);
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++    void        HandleBrowseRemoveDebounceTimer(void);
++    void        BumpResolveEpoch(Peer &aPeer);
++    void        ResetPeerResolveState(Peer &aPeer);
++    void        ConfirmBrowseRemove(Peer &aPeer);
++    void        BeginBrowseRefresh(Peer &aPeer);
++    void        BeginBrowseSoftRefresh(Peer &aPeer);
++    void        UpdateBrowseRemoveDebounceTimer(void);
++    static bool IsStaleResolveCallback(const Peer &aPeer, uint8_t aCallbackEpoch);
++#endif
+     void StartServiceResolvers(Peer &aPeer);
+     void StopServiceResolvers(Peer &aPeer);
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++    void StopServiceResolvers(Peer &aPeer, bool aPreserveHostName);
++#endif
+     void HandleSrvResult(const Dnssd::SrvResult &aResult);
+     void HandleTxtResult(const Dnssd::TxtResult &aResult);
+     void StartHostAddressResolver(Peer &aPeer);
+@@ -272,6 +285,12 @@ private:
+ 
+ #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+     static const char kTrelServiceType[];
++
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++    static constexpr uint32_t kBrowseRemoveDebounceMsec = 300;
++
++    using BrowseRemoveDebounceTimer = TimerMilliIn<PeerDiscoverer, &PeerDiscoverer::HandleBrowseRemoveDebounceTimer>;
++#endif
+ #endif
+ 
+     State       mState;
+@@ -279,6 +298,9 @@ private:
+ #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
+     ServiceName mServiceName;
+     bool        mBrowsing;
++#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
++    BrowseRemoveDebounceTimer mBrowseRemoveDebounceTimer;
++#endif
+ #endif
+ };
+ 
+diff --git a/src/lib/hdlc/BUILD.gn b/src/lib/hdlc/BUILD.gn
+index ee46b1b39ea50efffe5d315ace68e728d9a80440..d52cbaf7c9ba7ff7a7a0160c5e146db364856b56 100644
+--- a/src/lib/hdlc/BUILD.gn
++++ b/src/lib/hdlc/BUILD.gn
+@@ -26,6 +26,7 @@
+ #
+ 
+ static_library("libopenthread-hdlc") {
++  configs += [ "../../../:openthread_private_flags" ]
+   sources = [
+     "hdlc.cpp",
+     "hdlc.hpp",
+diff --git a/src/lib/platform/BUILD.gn b/src/lib/platform/BUILD.gn
+index 49525340f6dabb700a74e0a9aff84f026b4b9539..c7c8d0999d3652d9d5d762386f3a5fb40585124f 100644
+--- a/src/lib/platform/BUILD.gn
++++ b/src/lib/platform/BUILD.gn
+@@ -37,6 +37,7 @@ config("platform_config") {
+ }
+ 
+ static_library("libopenthread-platform") {
++  configs += [ "../../..:openthread_private_flags" ]
+   sources = platform_sources
+   public_deps = [ "../../core:libopenthread_core_headers" ]
+   public_configs = [ ":platform_config" ]
+diff --git a/src/lib/spinel/BUILD.gn b/src/lib/spinel/BUILD.gn
+index 2ff58b381acd08f37a2f30261c1d714cbd1657c3..6f4dcf99accf7a61d72ca97c62553f990283a1d4 100644
+--- a/src/lib/spinel/BUILD.gn
++++ b/src/lib/spinel/BUILD.gn
+@@ -73,6 +73,7 @@ source_set("spinel-api") {
+ }
+ 
+ static_library("libopenthread-spinel-ncp") {
++  configs += [ "../../..:openthread_private_flags" ]
+   sources = spinel_sources
+   public_deps = [
+     ":spinel-api",
+@@ -86,6 +87,7 @@ static_library("libopenthread-spinel-ncp") {
+ }
+ 
+ static_library("libopenthread-radio-spinel") {
++  configs += [ "../../..:openthread_private_flags" ]
+   sources = spinel_sources
+   public_deps = [
+     ":spinel-api",
+@@ -105,6 +107,7 @@ static_library("libopenthread-radio-spinel") {
+ }
+ 
+ static_library("libopenthread-spinel-rcp") {
++  configs += [ "../../..:openthread_private_flags" ]
+   sources = spinel_sources
+   public_deps = [
+     ":spinel-api",
+diff --git a/src/lib/spinel/spinel.c b/src/lib/spinel/spinel.c
+index 62340241e7a7a6f6534ccaba33fff57b61b82316..013f434ae0c53ca8dd8e2299e1a92c78295a5295 100644
+--- a/src/lib/spinel/spinel.c
++++ b/src/lib/spinel/spinel.c
+@@ -1423,6 +1423,12 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
+         {SPINEL_PROP_DNSSD_BROWSE_RESULT, "DNSSD_BROWSE_RESULT"},
+         {SPINEL_PROP_DNSSD_SRV_RESOLVER, "DNSSD_SRV_RESOLVER"},
+         {SPINEL_PROP_DNSSD_SRV_RESULT, "DNSSD_SRV_RESULT"},
++        {SPINEL_PROP_DNSSD_TXT_RESOLVER, "DNSSD_TXT_RESOLVER"},
++        {SPINEL_PROP_DNSSD_TXT_RESULT, "DNSSD_TXT_RESULT"},
++        {SPINEL_PROP_DNSSD_IP6_ADDRESS_RESOLVER, "DNSSD_IP6_ADDRESS_RESOLVER"},
++        {SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT, "DNSSD_IP6_ADDRESS_RESULT"},
++        {SPINEL_PROP_DNSSD_IP4_ADDRESS_RESOLVER, "DNSSD_IP4_ADDRESS_RESOLVER"},
++        {SPINEL_PROP_DNSSD_IP4_ADDRESS_RESULT, "DNSSD_IP4_ADDRESS_RESULT"},
+         {SPINEL_PROP_BORDER_AGENT_MESHCOP_SERVICE_STATE, "BORDER_AGENT_MESHCOP_SERVICE_STATE"},
+         {SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_STATE, "SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_STATE"},
+         {SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_ENABLE, "SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_ENABLE"},
+@@ -1518,6 +1524,9 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
+         {SPINEL_PROP_DEBUG_TREL_TEST_MODE_ENABLE, "DEBUG_TREL_TEST_MODE_ENABLE"},
+         {SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_ENABLE, "SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_ENABLE"},
+         {SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX, "SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX"},
++        {SPINEL_PROP_BORDER_ROUTER_NAT64_ENABLE, "SPINEL_PROP_BORDER_ROUTER_NAT64_ENABLE"},
++        {SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX, "SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX"},
++        {SPINEL_PROP_TREL_STATE, "TREL_STATE"},
+         {0, NULL},
+     };
+ 
+diff --git a/src/lib/spinel/spinel.h b/src/lib/spinel/spinel.h
+index 8a9d5f0c830833135108a29f10661aea22effadf..7b32145e8667cc22e36ae4ce6e7a16ff88d05966 100644
+--- a/src/lib/spinel/spinel.h
++++ b/src/lib/spinel/spinel.h
+@@ -4959,6 +4959,63 @@ enum
+      */
+     SPINEL_PROP_DNSSD_SRV_RESULT = SPINEL_PROP_DNSSD__BEGIN + 9,
+ 
++    /// DNS-SD TXT Resolver
++    /**
++     * Format: `UULD`: Inserted/Removed
++     *
++     * `U`: The service instance label.
++     * `U`: The service type.
++     * `L`: The infrastructure network interface index.
++     * `D`: The context of the request (pointer to `otPlatDnssdTxtCallback`).
++     */
++    SPINEL_PROP_DNSSD_TXT_RESOLVER = SPINEL_PROP_DNSSD__BEGIN + 10,
++
++    /// DNS-SD TXT Resolution Result
++    /**
++     * Format: `UUdLLD`: Set
++     *
++     * `U`: Service instance label.
++     * `U`: Service type.
++     * `d`: Encoded TXT data bytes (empty if removed).
++     * `L`: TTL in seconds (zero indicates removal).
++     * `L`: Infrastructure interface index.
++     * `D`: Callback context (`sizeof(otPlatDnssdTxtCallback)`).
++     */
++    SPINEL_PROP_DNSSD_TXT_RESULT = SPINEL_PROP_DNSSD__BEGIN + 11,
++
++    /// DNS-SD IPv6 Address Resolver
++    /**
++     * Format: `ULD`: Inserted/Removed
++     *
++     * `U`: Host name (no domain).
++     * `L`: Infrastructure interface index.
++     * `D`: Callback context (`sizeof(otPlatDnssdAddressCallback)`).
++     */
++    SPINEL_PROP_DNSSD_IP6_ADDRESS_RESOLVER = SPINEL_PROP_DNSSD__BEGIN + 12,
++
++    /// DNS-SD IPv6 Address Resolution Result
++    /**
++     * Format: `ULt(A(6)L)D`: Set
++     *
++     * `U`: Host name.
++     * `L`: Infrastructure interface index.
++     * `t(A(6)L)`: Array of (`A(6)` IPv6 address, `L` TTL) entries.
++     * `D`: Callback context (`sizeof(otPlatDnssdAddressCallback)`).
++     */
++    SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT = SPINEL_PROP_DNSSD__BEGIN + 13,
++
++    /// DNS-SD IPv4 Address Resolver
++    /**
++     * Format: `ULD`: Inserted/Removed (same as IPv6 resolver; IPv4 uses IPv4-mapped IPv6 in results).
++     */
++    SPINEL_PROP_DNSSD_IP4_ADDRESS_RESOLVER = SPINEL_PROP_DNSSD__BEGIN + 14,
++
++    /// DNS-SD IPv4 Address Resolution Result
++    /**
++     * Format: Same as `SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT`.
++     */
++    SPINEL_PROP_DNSSD_IP4_ADDRESS_RESULT = SPINEL_PROP_DNSSD__BEGIN + 15,
++
+     SPINEL_PROP_DNSSD__END = 0x950,
+ 
+     SPINEL_PROP_BORDER_AGENT__BEGIN = 0x950,
+@@ -5072,8 +5129,59 @@ enum
+      */
+     SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX = SPINEL_PROP_BORDER_ROUTER__BEGIN + 2,
+ 
++    /// Enables or disables NAT64 prefix management.
++    /**
++     * Format: `b` - Write-Only
++     *
++     * `b`: Enables or disables OpenThread NAT64 prefix management.
++     *
++     * In NCP deployments with an external NAT64 translator, this allows the NCP
++     * Border Routing Manager to publish a NAT64 prefix discovered on the
++     * infrastructure link without enabling an internal translator.
++     */
++    SPINEL_PROP_BORDER_ROUTER_NAT64_ENABLE = SPINEL_PROP_BORDER_ROUTER__BEGIN + 3,
++
++    /// Returns the favored NAT64 prefix from the Border Routing Manager.
++    /**
++     * Format: `6C` - Get and unsolicited updates (NCP to host).
++     *
++     * `6` : IPv6 prefix address
++     * `C` : Prefix length in bits
++     */
++    SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX = SPINEL_PROP_BORDER_ROUTER__BEGIN + 4,
++
+     SPINEL_PROP_BORDER_ROUTER__END = 0x9A0,
+ 
++    SPINEL_PROP_TREL__BEGIN = 0x9A0,
++
++    /// TREL service state.
++    /**
++     * Format: `bS` - Get, Set (Host to NCP), and Unsolicited notifications (NCP to Host).
++     *
++     * `b`: Meaning depends on direction. In a get response or unsolicited update from the NCP, whether TREL is
++     * enabled on the NCP. When set by the host, whether the host-side TREL UDP proxy has an active bound socket.
++     * `S`: UDP port number associated with the TREL service.
++     *
++     * In a get response and in unsolicited updates from the NCP, `S` is the Thread stack UDP port used for TREL
++     * traffic carried over `SPINEL_PROP_THREAD_UDP_FORWARD_STREAM`. When TREL is not enabled, `S` MUST be 0.
++     *
++     * When set by the host, if `b` is true, `S` is the UDP port on which the host has bound the infrastructure-facing
++     * TREL socket (for example an OS-assigned ephemeral port). If `b` is false, the host is not publishing a port
++     * and the NCP clears any stored host-side port. The NCP applies host sets only while stack TREL is enabled; the
++     * host typically sets this after receiving an unsolicited update with the stack-side port known.
++     */
++    SPINEL_PROP_TREL_STATE = SPINEL_PROP_TREL__BEGIN + 1,
++
++    /// TREL user enablement.
++    /**
++     * Format: `b` - Write-Only
++     *
++     * `b`: Whether to enable or disable TREL on the NCP (user preference).
++     */
++    SPINEL_PROP_TREL_USER_ENABLE = SPINEL_PROP_TREL__BEGIN + 2,
++
++    SPINEL_PROP_TREL__END = 0x9C0,
++
+     SPINEL_PROP_NEST__BEGIN = 0x3BC0,
+ 
+     SPINEL_PROP_NEST_STREAM_MFG = SPINEL_PROP_NEST__BEGIN + 0,
+diff --git a/src/lib/spinel/spinel_prop_codec.cpp b/src/lib/spinel/spinel_prop_codec.cpp
+index 9751d3030f973c92f1f774a6a60ef8c78b3b150f..2efab7336f04877204afd5ec64c9ba510ca57c6c 100644
+--- a/src/lib/spinel/spinel_prop_codec.cpp
++++ b/src/lib/spinel/spinel_prop_codec.cpp
+@@ -124,7 +124,16 @@ otError DecodeDnssdHost(Decoder              &aDecoder,
+ 
+     SuccessOrExit(error = aDecoder.ReadUtf8(aHost.mHostName));
+     SuccessOrExit(error = aDecoder.ReadUint16(aHost.mAddressesLength));
+-    SuccessOrExit(error = aDecoder.ReadIp6Address(aHost.mAddresses));
++    aHost.mAddresses = nullptr;
++    for (uint16_t i = 0; i < aHost.mAddressesLength; i++)
++    {
++        const otIp6Address *addrPtr;
++        SuccessOrExit(error = aDecoder.ReadIp6Address(addrPtr));
++        if (i == 0)
++        {
++            aHost.mAddresses = addrPtr;
++        }
++    }
+     SuccessOrExit(error = aDecoder.ReadUint32(aRequestId));
+     SuccessOrExit(error = aDecoder.ReadData(aCallbackData, aCallbackDataLen));
+ 
+@@ -377,5 +386,159 @@ exit:
+     return error;
+ }
+ 
++template <>
++otError EncodeDnssdDiscovery<otPlatDnssdTxtResolver>(Encoder &aEncoder, const otPlatDnssdTxtResolver &aDiscovery)
++{
++    otError error = OT_ERROR_NONE;
++
++    SuccessOrExit(error = aEncoder.WriteUtf8(aDiscovery.mServiceInstance));
++    SuccessOrExit(error = aEncoder.WriteUtf8(aDiscovery.mServiceType));
++    SuccessOrExit(error = aEncoder.WriteUint32(aDiscovery.mInfraIfIndex));
++    SuccessOrExit(error = aEncoder.WriteData(reinterpret_cast<const uint8_t *>(&aDiscovery.mCallback),
++                                             sizeof(aDiscovery.mCallback)));
++
++exit:
++    return error;
++}
++
++template <>
++otError EncodeDnssdDiscovery<otPlatDnssdAddressResolver>(Encoder                          &aEncoder,
++                                                         const otPlatDnssdAddressResolver &aDiscovery)
++{
++    otError error = OT_ERROR_NONE;
++
++    SuccessOrExit(error = aEncoder.WriteUtf8(aDiscovery.mHostName));
++    SuccessOrExit(error = aEncoder.WriteUint32(aDiscovery.mInfraIfIndex));
++    SuccessOrExit(error = aEncoder.WriteData(reinterpret_cast<const uint8_t *>(&aDiscovery.mCallback),
++                                             sizeof(aDiscovery.mCallback)));
++
++exit:
++    return error;
++}
++
++otError EncodeDnssdTxtResult(Encoder                    &aEncoder,
++                             const otPlatDnssdTxtResult &aTxtResult,
++                             const uint8_t              *aCallbackData,
++                             uint16_t                    aCallbackDataLen)
++{
++    otError error = OT_ERROR_NONE;
++
++    SuccessOrExit(error = aEncoder.WriteUtf8(aTxtResult.mServiceInstance));
++    SuccessOrExit(error = aEncoder.WriteUtf8(aTxtResult.mServiceType));
++    if (aTxtResult.mTxtData != nullptr && aTxtResult.mTxtDataLength > 0)
++    {
++        SuccessOrExit(error = aEncoder.WriteDataWithLen(aTxtResult.mTxtData, aTxtResult.mTxtDataLength));
++    }
++    else
++    {
++        SuccessOrExit(error = aEncoder.WriteDataWithLen(nullptr, 0));
++    }
++    SuccessOrExit(error = aEncoder.WriteUint32(aTxtResult.mTtl));
++    SuccessOrExit(error = aEncoder.WriteUint32(aTxtResult.mInfraIfIndex));
++    SuccessOrExit(error = aEncoder.WriteData(aCallbackData, aCallbackDataLen));
++
++exit:
++    return error;
++}
++
++otError DecodeDnssdTxtResolver(Decoder                &aDecoder,
++                               otPlatDnssdTxtResolver &aTxtResolver,
++                               const uint8_t         *&aCallbackData,
++                               uint16_t               &aCallbackDataLen)
++{
++    otError error = OT_ERROR_NONE;
++
++    SuccessOrExit(error = aDecoder.ReadUtf8(aTxtResolver.mServiceInstance));
++    SuccessOrExit(error = aDecoder.ReadUtf8(aTxtResolver.mServiceType));
++    SuccessOrExit(error = aDecoder.ReadUint32(aTxtResolver.mInfraIfIndex));
++    SuccessOrExit(error = aDecoder.ReadData(aCallbackData, aCallbackDataLen));
++
++exit:
++    return error;
++}
++
++otError DecodeDnssdTxtResult(Decoder              &aDecoder,
++                             otPlatDnssdTxtResult &aTxtResult,
++                             const uint8_t       *&aCallbackData,
++                             uint16_t             &aCallbackDataLen)
++{
++    otError error = OT_ERROR_NONE;
++
++    SuccessOrExit(error = aDecoder.ReadUtf8(aTxtResult.mServiceInstance));
++    SuccessOrExit(error = aDecoder.ReadUtf8(aTxtResult.mServiceType));
++    SuccessOrExit(error = aDecoder.ReadDataWithLen(aTxtResult.mTxtData, aTxtResult.mTxtDataLength));
++    SuccessOrExit(error = aDecoder.ReadUint32(aTxtResult.mTtl));
++    SuccessOrExit(error = aDecoder.ReadUint32(aTxtResult.mInfraIfIndex));
++    SuccessOrExit(error = aDecoder.ReadData(aCallbackData, aCallbackDataLen));
++
++exit:
++    return error;
++}
++
++otError EncodeDnssdAddressResult(Encoder                        &aEncoder,
++                                 const otPlatDnssdAddressResult &aAddressResult,
++                                 const uint8_t                  *aCallbackData,
++                                 uint16_t                        aCallbackDataLen)
++{
++    otError error = OT_ERROR_NONE;
++
++    SuccessOrExit(error = aEncoder.WriteUtf8(aAddressResult.mHostName));
++    SuccessOrExit(error = aEncoder.WriteUint32(aAddressResult.mInfraIfIndex));
++    SuccessOrExit(error = aEncoder.WriteUint16(aAddressResult.mAddressesLength));
++    for (uint16_t i = 0; i < aAddressResult.mAddressesLength; i++)
++    {
++        SuccessOrExit(error = aEncoder.WriteIp6Address(aAddressResult.mAddresses[i].mAddress));
++        SuccessOrExit(error = aEncoder.WriteUint32(aAddressResult.mAddresses[i].mTtl));
++    }
++    SuccessOrExit(error = aEncoder.WriteData(aCallbackData, aCallbackDataLen));
++
++exit:
++    return error;
++}
++
++otError DecodeDnssdAddressResolver(Decoder                    &aDecoder,
++                                   otPlatDnssdAddressResolver &aAddressResolver,
++                                   const uint8_t             *&aCallbackData,
++                                   uint16_t                   &aCallbackDataLen)
++{
++    otError error = OT_ERROR_NONE;
++
++    SuccessOrExit(error = aDecoder.ReadUtf8(aAddressResolver.mHostName));
++    SuccessOrExit(error = aDecoder.ReadUint32(aAddressResolver.mInfraIfIndex));
++    SuccessOrExit(error = aDecoder.ReadData(aCallbackData, aCallbackDataLen));
++
++exit:
++    return error;
++}
++
++otError DecodeDnssdAddressResult(Decoder                  &aDecoder,
++                                 otPlatDnssdAddressResult &aAddressResult,
++                                 otPlatDnssdAddressAndTtl *aAddressArray,
++                                 uint16_t                  aMaxAddresses,
++                                 const uint8_t           *&aCallbackData,
++                                 uint16_t                 &aCallbackDataLen)
++{
++    otError  error = OT_ERROR_NONE;
++    uint16_t count;
++
++    SuccessOrExit(error = aDecoder.ReadUtf8(aAddressResult.mHostName));
++    SuccessOrExit(error = aDecoder.ReadUint32(aAddressResult.mInfraIfIndex));
++    SuccessOrExit(error = aDecoder.ReadUint16(count));
++    VerifyOrExit(count <= aMaxAddresses, error = OT_ERROR_PARSE);
++
++    for (uint16_t i = 0; i < count; i++)
++    {
++        SuccessOrExit(error = aDecoder.ReadIp6Address(aAddressArray[i].mAddress));
++        SuccessOrExit(error = aDecoder.ReadUint32(aAddressArray[i].mTtl));
++    }
++
++    aAddressResult.mAddresses       = aAddressArray;
++    aAddressResult.mAddressesLength = count;
++    SuccessOrExit(error = aDecoder.ReadData(aCallbackData, aCallbackDataLen));
++
++exit:
++    return error;
++}
++
+ } // namespace Spinel
+ } // namespace ot
+diff --git a/src/lib/spinel/spinel_prop_codec.hpp b/src/lib/spinel/spinel_prop_codec.hpp
+index 979abd1a863dc1e8bf7df7088073ce9023239e01..ed029c3eca7135e62de4e05e96d7b4cc33e68d9c 100644
+--- a/src/lib/spinel/spinel_prop_codec.hpp
++++ b/src/lib/spinel/spinel_prop_codec.hpp
+@@ -210,6 +210,88 @@ otError DecodeDnssdSrvResult(Decoder              &aDecoder,
+                              otPlatDnssdSrvResult &aSrvResult,
+                              const uint8_t       *&aCallbackData,
+                              uint16_t             &aCallbackDataLen);
++
++/**
++ * Use Spinel::Encode to encode a Dnssd TXT result.
++ *
++ * @param[in] aEncoder          A reference to the encoder object.
++ * @param[in] aTxtResult        A reference to the TXT result.
++ * @param[in] aCallbackData     A pointer to the callback data.
++ * @param[in] aCallbackDataLen  The data length.
++ */
++otError EncodeDnssdTxtResult(Encoder                    &aEncoder,
++                             const otPlatDnssdTxtResult &aTxtResult,
++                             const uint8_t              *aCallbackData,
++                             uint16_t                    aCallbackDataLen);
++
++/**
++ * Use Spinel::Decoder to decode a SPINEL_PROP_DNSSD_TXT_RESOLVER message to a otPlatDnssdTxtResolver.
++ *
++ * @param[in]  aDecoder          A reference to the decoder object.
++ * @param[out] aTxtResolver      A reference to the TXT resolver.
++ * @param[out] aCallbackData     A reference to the pointer to the callback data.
++ * @param[out] aCallbackDataLen  A reference to the callback data length.
++ */
++otError DecodeDnssdTxtResolver(Decoder                &aDecoder,
++                               otPlatDnssdTxtResolver &aTxtResolver,
++                               const uint8_t         *&aCallbackData,
++                               uint16_t               &aCallbackDataLen);
++
++/**
++ * Use Spinel::Decoder to decode a SPINEL_PROP_DNSSD_TXT_RESULT message to a otPlatDnssdTxtResult.
++ *
++ * @param[in]  aDecoder          A reference to the decoder object.
++ * @param[out] aTxtResult        A reference to the TXT result.
++ * @param[out] aCallbackData     A reference to the pointer to the callback data.
++ * @param[out] aCallbackDataLen  A reference to the callback data length.
++ */
++otError DecodeDnssdTxtResult(Decoder              &aDecoder,
++                             otPlatDnssdTxtResult &aTxtResult,
++                             const uint8_t       *&aCallbackData,
++                             uint16_t             &aCallbackDataLen);
++
++/**
++ * Use Spinel::Encode to encode a Dnssd Address result.
++ *
++ * @param[in] aEncoder          A reference to the encoder object.
++ * @param[in] aAddressResult    A reference to the Address result.
++ * @param[in] aCallbackData     A pointer to the callback data.
++ * @param[in] aCallbackDataLen  The data length.
++ */
++otError EncodeDnssdAddressResult(Encoder                        &aEncoder,
++                                 const otPlatDnssdAddressResult &aAddressResult,
++                                 const uint8_t                  *aCallbackData,
++                                 uint16_t                        aCallbackDataLen);
++
++/**
++ * Use Spinel::Decoder to decode a SPINEL_PROP_DNSSD_IP6_ADDRESS_RESOLVER message to a otPlatDnssdAddressResolver.
++ *
++ * @param[in]  aDecoder          A reference to the decoder object.
++ * @param[out] aAddressResolver  A reference to the Address resolver.
++ * @param[out] aCallbackData     A reference to the pointer to the callback data.
++ * @param[out] aCallbackDataLen  A reference to the callback data length.
++ */
++otError DecodeDnssdAddressResolver(Decoder                    &aDecoder,
++                                   otPlatDnssdAddressResolver &aAddressResolver,
++                                   const uint8_t             *&aCallbackData,
++                                   uint16_t                   &aCallbackDataLen);
++
++/**
++ * Use Spinel::Decoder to decode a SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT message to a otPlatDnssdAddressResult.
++ *
++ * @param[in]  aDecoder          A reference to the decoder object.
++ * @param[out] aAddressResult    A reference to the Address result.
++ * @param[out] aAddressArray     A pointer to the array of Address and TTL.
++ * @param[in]  aMaxAddresses     The maximum number of addresses.
++ * @param[out] aCallbackData     A reference to the pointer to the callback data.
++ * @param[out] aCallbackDataLen  A reference to the callback data length.
++ */
++otError DecodeDnssdAddressResult(Decoder                  &aDecoder,
++                                 otPlatDnssdAddressResult &aAddressResult,
++                                 otPlatDnssdAddressAndTtl *aAddressArray,
++                                 uint16_t                  aMaxAddresses,
++                                 const uint8_t           *&aCallbackData,
++                                 uint16_t                 &aCallbackDataLen);
+ } // namespace Spinel
+ } // namespace ot
+ 
+diff --git a/src/ncp/BUILD.gn b/src/ncp/BUILD.gn
+index 2bb99814a51c901c6e2dd8031028683df9b37ddf..13d864935dd870c9160483ca57c1cdd114306712 100644
+--- a/src/ncp/BUILD.gn
++++ b/src/ncp/BUILD.gn
+@@ -50,6 +50,7 @@ config("ncp_config") {
+ }
+ 
+ static_library("libopenthread-ncp-ftd") {
++  configs += [ "../..:openthread_private_flags" ]
+   sources = openthread_ncp_sources
+   public_deps = [
+     "../core:libopenthread-ftd",
+@@ -60,6 +61,7 @@ static_library("libopenthread-ncp-ftd") {
+ }
+ 
+ static_library("libopenthread-ncp-mtd") {
++  configs += [ "../..:openthread_private_flags" ]
+   sources = openthread_ncp_sources
+   public_deps = [
+     "../core:libopenthread-mtd",
+@@ -70,6 +72,7 @@ static_library("libopenthread-ncp-mtd") {
+ }
+ 
+ static_library("libopenthread-rcp") {
++  configs += [ "../..:openthread_private_flags" ]
+   sources = openthread_ncp_sources
+   public_deps = [
+     "../core:libopenthread-radio",
+diff --git a/src/ncp/CMakeLists.txt b/src/ncp/CMakeLists.txt
+index d88fbe293b5eed1a7fd6eed5033cfe84e7cb2b42..55f95808b34434af217e83aafbba0302dd54ea5d 100644
+--- a/src/ncp/CMakeLists.txt
++++ b/src/ncp/CMakeLists.txt
+@@ -41,6 +41,7 @@ set(COMMON_SOURCES
+     ncp_hdlc.cpp
+     platform/dnssd.cpp
+     platform/infra_if.cpp
++    platform/border_routing.cpp
+ )
+ 
+ set(OT_NCP_VENDOR_HOOK_SOURCE "" CACHE STRING "set vendor hook source file for NCP")
+diff --git a/src/ncp/changed_props_set.cpp b/src/ncp/changed_props_set.cpp
+index 3133683ff7d74c56d178a7dc574ee9804cc44c41..0f70e320a173288253c262c5a1bca8d221ad27e0 100644
+--- a/src/ncp/changed_props_set.cpp
++++ b/src/ncp/changed_props_set.cpp
+@@ -103,6 +103,13 @@ const ChangedPropsSet::Entry ChangedPropsSet::mSupportedProps[] = {
+ #endif
+ #endif
+     {SPINEL_PROP_BACKBONE_ROUTER_STATE, SPINEL_STATUS_OK, false},
++#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
++    {SPINEL_PROP_TREL_STATE, SPINEL_STATUS_OK, false},
++#endif
++#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && \
++    OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
++    {SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX, SPINEL_STATUS_OK, false},
++#endif
+ };
+ 
+ uint8_t ChangedPropsSet::GetNumEntries(void) const
+diff --git a/src/ncp/ncp_base.cpp b/src/ncp/ncp_base.cpp
+index 6726380d084ee3692f365d9ed15feb65ded7434d..5312d07c0cf49ef52718dba39851563bc62bb6cc 100644
+--- a/src/ncp/ncp_base.cpp
++++ b/src/ncp/ncp_base.cpp
+@@ -382,6 +382,9 @@ NcpBase::NcpBase(Instance *aInstance)
+ #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+     otSrpClientSetCallback(mInstance, HandleSrpClientCallback, this);
+ #endif
++#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
++    otTrelSetStateChangedCallback(mInstance, &NcpBase::HandleTrelStateChanged, this);
++#endif
+ #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+ #if OPENTHREAD_CONFIG_DIAG_ENABLE
+     otDiagSetOutputCallback(mInstance, &NcpBase::HandleDiagOutput_Jump, this);
+diff --git a/src/ncp/ncp_base.hpp b/src/ncp/ncp_base.hpp
+index d9aa796ae168e2eccc54078bb898bbf37cec0803..58c83d4ac920e6ff3e3a855ee573e1d8f07002fc 100644
+--- a/src/ncp/ncp_base.hpp
++++ b/src/ncp/ncp_base.hpp
+@@ -117,6 +117,11 @@ public:
+      */
+     static NcpBase *GetNcpInstance(void);
+ 
++#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && \
++    OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
++    void HandleNat64FavoredPrefixChanged(void);
++#endif
++
+     /**
+      * Returns an IID for the given instance
+      *
+@@ -338,6 +343,48 @@ public:
+      */
+     void DnssdStopSrvResolver(const otPlatDnssdSrvResolver *aResolver);
+ 
++    /**
++     * Starts a TXT resolver.
++     *
++     * @param[in] aResolver  The resolver to be started.
++     */
++    void DnssdStartTxtResolver(const otPlatDnssdTxtResolver *aResolver);
++
++    /**
++     * Stops a TXT resolver.
++     *
++     * @param[in] aResolver  The resolver to be stopped.
++     */
++    void DnssdStopTxtResolver(const otPlatDnssdTxtResolver *aResolver);
++
++    /**
++     * Starts an IPv6 address resolver.
++     *
++     * @param[in] aResolver  The resolver to be started.
++     */
++    void DnssdStartIp6AddressResolver(const otPlatDnssdAddressResolver *aResolver);
++
++    /**
++     * Stops an IPv6 address resolver.
++     *
++     * @param[in] aResolver  The resolver to be stopped.
++     */
++    void DnssdStopIp6AddressResolver(const otPlatDnssdAddressResolver *aResolver);
++
++    /**
++     * Starts an IPv4 address resolver.
++     *
++     * @param[in] aResolver  The resolver to be started.
++     */
++    void DnssdStartIp4AddressResolver(const otPlatDnssdAddressResolver *aResolver);
++
++    /**
++     * Stops an IPv4 address resolver.
++     *
++     * @param[in] aResolver  The resolver to be stopped.
++     */
++    void DnssdStopIp4AddressResolver(const otPlatDnssdAddressResolver *aResolver);
++
+     /**
+      * Gets the Dnssd state.
+      *
+@@ -586,6 +633,11 @@ protected:
+                                        void         *aContext);
+     void HandleUdpForwardStream(otMessage *aMessage, uint16_t aPeerPort, otIp6Address &aPeerAddr, uint16_t aPort);
+ #endif // OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
++#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
++    static void HandleTrelStateChanged(void *aContext);
++    void        HandleTrelStateChanged(void);
++#endif
++
+ #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+ 
+ #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+@@ -883,6 +935,11 @@ protected:
+ 
+ #if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+ 
++    static constexpr uint16_t kDnssdMaxAddressResultEntries = OPENTHREAD_CONFIG_NCP_DNSSD_MAX_ADDRESS_RESULT_ENTRIES;
++
++    static_assert(kDnssdMaxAddressResultEntries >= 1,
++                  "OPENTHREAD_CONFIG_NCP_DNSSD_MAX_ADDRESS_RESULT_ENTRIES must be >= 1");
++
+     template <typename DnssdObjType> struct DnssdDiscoveryPropKeyFor;
+ 
+     template <typename DnssdObjType>
+@@ -903,7 +960,7 @@ protected:
+         SuccessOrExit(error = mEncoder.EndFrame());
+ 
+     exit:
+-        if (error != OT_ERROR_NONE)
++        if (error != OT_ERROR_NONE && aCallback != nullptr)
+         {
+             aCallback(mInstance, aRequestId, error);
+         }
+@@ -931,6 +988,10 @@ protected:
+         return;
+     }
+ 
++    void DnssdUpdateAddressResolverDiscovery(const otPlatDnssdAddressResolver *aDiscovery,
++                                             bool                              aStart,
++                                             spinel_prop_key_t                 aPropKey);
++
+     otPlatDnssdState mDnssdState;
+ #endif // OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+ 
+@@ -965,6 +1026,11 @@ template <> struct NcpBase::DnssdDiscoveryPropKeyFor<otPlatDnssdSrvResolver>
+ {
+     static constexpr spinel_prop_key_t Key = SPINEL_PROP_DNSSD_SRV_RESOLVER;
+ };
++
++template <> struct NcpBase::DnssdDiscoveryPropKeyFor<otPlatDnssdTxtResolver>
++{
++    static constexpr spinel_prop_key_t Key = SPINEL_PROP_DNSSD_TXT_RESOLVER;
++};
+ #endif
+ 
+ } // namespace Ncp
+diff --git a/src/ncp/ncp_base_dispatcher.cpp b/src/ncp/ncp_base_dispatcher.cpp
+index 9a8fd7ee671f81e3736b36262024957097863eee..62908778cfef0d9c23ebcbd9425dbf4517593c35 100644
+--- a/src/ncp/ncp_base_dispatcher.cpp
++++ b/src/ncp/ncp_base_dispatcher.cpp
+@@ -224,6 +224,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
+ #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_SRP_SERVER_AUTO_ENABLE_MODE),
+ #endif
++#endif
+ #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_BORDER_AGENT_MESHCOP_SERVICE_STATE),
+ #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+@@ -233,6 +234,11 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
+ #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_BACKBONE_ROUTER_STATE),
+ #endif
++#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
++        OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX),
++#endif
++#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
++        OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_TREL_STATE),
+ #endif
+         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_UNSOL_UPDATE_FILTER),
+         OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_UNSOL_UPDATE_LIST),
+@@ -549,6 +555,9 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
+         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DNSSD_REQUEST_RESULT),
+         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DNSSD_BROWSE_RESULT),
+         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DNSSD_SRV_RESULT),
++        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DNSSD_TXT_RESULT),
++        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT),
++        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DNSSD_IP4_ADDRESS_RESULT),
+ #endif
+ #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
+         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_ENABLE),
+@@ -564,7 +573,15 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
+         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX),
+ #endif
+ #endif
++#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && \
++    (OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE || OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE)
++        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_BORDER_ROUTER_NAT64_ENABLE),
++#endif
+ #endif // OPENTHREAD_FTD
++#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
++        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_TREL_STATE),
++        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_TREL_USER_ENABLE),
++#endif
+ #if OPENTHREAD_MTD || OPENTHREAD_FTD
+         OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_UNSOL_UPDATE_FILTER),
+ #if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
+diff --git a/src/ncp/ncp_base_ftd.cpp b/src/ncp/ncp_base_ftd.cpp
+index cb1ed88ec48c4e60a602375aee64cff393216649..e3daa16e7bd98355f42e852e505b6f2132b7ee82 100644
+--- a/src/ncp/ncp_base_ftd.cpp
++++ b/src/ncp/ncp_base_ftd.cpp
+@@ -47,6 +47,12 @@
+ #include <openthread/dataset_ftd.h>
+ #include <openthread/diag.h>
+ #include <openthread/icmp6.h>
++#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
++#include <openthread/border_routing.h>
++#endif
++#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE || OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
++#include <openthread/nat64.h>
++#endif
+ #include <openthread/ncp.h>
+ #include <openthread/thread_ftd.h>
+ #include <openthread/platform/misc.h>
+@@ -1690,6 +1696,46 @@ exit:
+ 
+ #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
+ 
++#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && \
++    (OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE || OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE)
++template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_BORDER_ROUTER_NAT64_ENABLE>(void)
++{
++    otError error = OT_ERROR_NONE;
++    bool    enabled;
++
++    SuccessOrExit(error = mDecoder.ReadBool(enabled));
++    otNat64SetEnabled(mInstance, enabled);
++
++exit:
++    return error;
++}
++#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && (OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE ||
++       // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE)
++
++#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
++void NcpBase::HandleNat64FavoredPrefixChanged(void)
++{
++    mChangedPropsSet.AddProperty(SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX);
++    mUpdateChangedPropsTask.Post();
++}
++#endif
++
++#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
++template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX>(void)
++{
++    otError           error = OT_ERROR_NONE;
++    otIp6Prefix       prefix;
++    otRoutePreference preference;
++
++    SuccessOrExit(error = otBorderRoutingGetFavoredNat64Prefix(mInstance, &prefix, &preference));
++    SuccessOrExit(error = mEncoder.WriteIp6Address(prefix.mPrefix));
++    SuccessOrExit(error = mEncoder.WriteUint8(prefix.mLength));
++
++exit:
++    return error;
++}
++#endif
++
+ #if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+ 
+ void NcpBase::DnssdRegisterHost(const otPlatDnssdHost      *aHost,
+@@ -1754,6 +1800,48 @@ void NcpBase::DnssdStopSrvResolver(const otPlatDnssdSrvResolver *aResolver)
+     DnssdUpdateDiscovery(aResolver, /* aStart */ false);
+ }
+ 
++void NcpBase::DnssdStartTxtResolver(const otPlatDnssdTxtResolver *aResolver) { DnssdUpdateDiscovery(aResolver, true); }
++
++void NcpBase::DnssdStopTxtResolver(const otPlatDnssdTxtResolver *aResolver) { DnssdUpdateDiscovery(aResolver, false); }
++
++void NcpBase::DnssdUpdateAddressResolverDiscovery(const otPlatDnssdAddressResolver *aDiscovery,
++                                                  bool                              aStart,
++                                                  spinel_prop_key_t                 aPropKey)
++{
++    uint8_t          header = SPINEL_HEADER_FLAG | SPINEL_HEADER_TX_NOTIFICATION_IID;
++    spinel_command_t cmd    = aStart ? SPINEL_CMD_PROP_VALUE_INSERTED : SPINEL_CMD_PROP_VALUE_REMOVED;
++
++    VerifyOrExit(aDiscovery != nullptr);
++    VerifyOrExit(mDnssdState == OT_PLAT_DNSSD_READY);
++
++    SuccessOrExit(mEncoder.BeginFrame(header, cmd, aPropKey));
++    SuccessOrExit(Spinel::EncodeDnssdDiscovery(mEncoder, *aDiscovery));
++    SuccessOrExit(mEncoder.EndFrame());
++
++exit:
++    return;
++}
++
++void NcpBase::DnssdStartIp6AddressResolver(const otPlatDnssdAddressResolver *aResolver)
++{
++    DnssdUpdateAddressResolverDiscovery(aResolver, true, SPINEL_PROP_DNSSD_IP6_ADDRESS_RESOLVER);
++}
++
++void NcpBase::DnssdStopIp6AddressResolver(const otPlatDnssdAddressResolver *aResolver)
++{
++    DnssdUpdateAddressResolverDiscovery(aResolver, false, SPINEL_PROP_DNSSD_IP6_ADDRESS_RESOLVER);
++}
++
++void NcpBase::DnssdStartIp4AddressResolver(const otPlatDnssdAddressResolver *aResolver)
++{
++    DnssdUpdateAddressResolverDiscovery(aResolver, true, SPINEL_PROP_DNSSD_IP4_ADDRESS_RESOLVER);
++}
++
++void NcpBase::DnssdStopIp4AddressResolver(const otPlatDnssdAddressResolver *aResolver)
++{
++    DnssdUpdateAddressResolverDiscovery(aResolver, false, SPINEL_PROP_DNSSD_IP4_ADDRESS_RESOLVER);
++}
++
+ otPlatDnssdState NcpBase::DnssdGetState(void) { return mDnssdState; }
+ 
+ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_STATE>(void)
+@@ -1787,7 +1875,10 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_REQUEST_RESULT>
+     SuccessOrExit(error = mDecoder.ReadData(context, contextLen));
+     VerifyOrExit(contextLen == sizeof(otPlatDnssdRegisterCallback), error = OT_ERROR_PARSE);
+     callback = *reinterpret_cast<const otPlatDnssdRegisterCallback *>(context);
+-    callback(mInstance, requestId, static_cast<otError>(result));
++    if (callback != nullptr)
++    {
++        callback(mInstance, requestId, static_cast<otError>(result));
++    }
+ 
+ exit:
+     return error;
+@@ -1804,7 +1895,10 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_BROWSE_RESULT>(
+     SuccessOrExit(error = DecodeDnssdBrowseResult(mDecoder, browseResult, context, contextLen));
+     VerifyOrExit(contextLen == sizeof(otPlatDnssdBrowseCallback), error = OT_ERROR_PARSE);
+     callback = *reinterpret_cast<const otPlatDnssdBrowseCallback *>(context);
+-    callback(mInstance, &browseResult);
++    if (callback != nullptr)
++    {
++        callback(mInstance, &browseResult);
++    }
+ 
+ exit:
+     return error;
+@@ -1821,7 +1915,74 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_SRV_RESULT>(voi
+     SuccessOrExit(error = DecodeDnssdSrvResult(mDecoder, srvResult, context, contextLen));
+     VerifyOrExit(contextLen == sizeof(otPlatDnssdSrvCallback), error = OT_ERROR_PARSE);
+     callback = *reinterpret_cast<const otPlatDnssdSrvCallback *>(context);
+-    callback(mInstance, &srvResult);
++    if (callback != nullptr)
++    {
++        callback(mInstance, &srvResult);
++    }
++
++exit:
++    return error;
++}
++
++template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_TXT_RESULT>(void)
++{
++    otError                error = OT_ERROR_NONE;
++    otPlatDnssdTxtResult   txtResult;
++    otPlatDnssdTxtCallback callback = nullptr;
++    const uint8_t         *context;
++    uint16_t               contextLen;
++
++    SuccessOrExit(error = DecodeDnssdTxtResult(mDecoder, txtResult, context, contextLen));
++    VerifyOrExit(contextLen == sizeof(otPlatDnssdTxtCallback), error = OT_ERROR_PARSE);
++    callback = *reinterpret_cast<const otPlatDnssdTxtCallback *>(context);
++    if (callback != nullptr)
++    {
++        callback(mInstance, &txtResult);
++    }
++
++exit:
++    return error;
++}
++
++template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT>(void)
++{
++    otError                    error = OT_ERROR_NONE;
++    otPlatDnssdAddressResult   addrResult;
++    otPlatDnssdAddressAndTtl   addrArray[kDnssdMaxAddressResultEntries];
++    otPlatDnssdAddressCallback callback = nullptr;
++    const uint8_t             *context;
++    uint16_t                   contextLen;
++
++    SuccessOrExit(error = DecodeDnssdAddressResult(mDecoder, addrResult, addrArray, kDnssdMaxAddressResultEntries,
++                                                   context, contextLen));
++    VerifyOrExit(contextLen == sizeof(otPlatDnssdAddressCallback), error = OT_ERROR_PARSE);
++    callback = *reinterpret_cast<const otPlatDnssdAddressCallback *>(context);
++    if (callback != nullptr)
++    {
++        callback(mInstance, &addrResult);
++    }
++
++exit:
++    return error;
++}
++
++template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_IP4_ADDRESS_RESULT>(void)
++{
++    otError                    error = OT_ERROR_NONE;
++    otPlatDnssdAddressResult   addrResult;
++    otPlatDnssdAddressAndTtl   addrArray[kDnssdMaxAddressResultEntries];
++    otPlatDnssdAddressCallback callback = nullptr;
++    const uint8_t             *context;
++    uint16_t                   contextLen;
++
++    SuccessOrExit(error = DecodeDnssdAddressResult(mDecoder, addrResult, addrArray, kDnssdMaxAddressResultEntries,
++                                                   context, contextLen));
++    VerifyOrExit(contextLen == sizeof(otPlatDnssdAddressCallback), error = OT_ERROR_PARSE);
++    callback = *reinterpret_cast<const otPlatDnssdAddressCallback *>(context);
++    if (callback != nullptr)
++    {
++        callback(mInstance, &addrResult);
++    }
+ 
+ exit:
+     return error;
+diff --git a/src/ncp/ncp_base_mtd.cpp b/src/ncp/ncp_base_mtd.cpp
+index 9095c86dcfbc39de4280a43c13de1eb5ef4ccead..98251488eeec7a06833dfbc814bfebf2bc307821 100644
+--- a/src/ncp/ncp_base_mtd.cpp
++++ b/src/ncp/ncp_base_mtd.cpp
+@@ -53,6 +53,14 @@
+ #endif
+ #include <openthread/platform/misc.h>
+ #include <openthread/platform/radio.h>
++#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
++#include <openthread/platform/mdns_socket.h>
++#endif
++#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
++#include <openthread/trel.h>
++#include <openthread/platform/trel.h>
++#include "radio/trel_interface.hpp"
++#endif
+ #if OPENTHREAD_FTD
+ #include <openthread/thread_ftd.h>
+ #endif
+@@ -65,9 +73,6 @@
+ #if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
+ #include <openthread/srp_client_buffers.h>
+ #endif
+-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+-#include <openthread/trel.h>
+-#endif
+ 
+ #include "cli/cli_config.h"
+ #include "common/code_utils.hpp"
+@@ -4191,7 +4196,72 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_TREL_TEST_MODE_
+ exit:
+     return error;
+ }
++
++void NcpBase::HandleTrelStateChanged(void *aContext) { static_cast<NcpBase *>(aContext)->HandleTrelStateChanged(); }
++
++void NcpBase::HandleTrelStateChanged(void)
++{
++    mChangedPropsSet.AddProperty(SPINEL_PROP_TREL_STATE);
++    mUpdateChangedPropsTask.Post();
++}
++
++template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_TREL_STATE>(void)
++{
++    otError  error   = OT_ERROR_NONE;
++    bool     enabled = otTrelIsEnabled(mInstance);
++    uint16_t port    = enabled ? otTrelGetUdpPort(mInstance) : 0;
++
++    SuccessOrExit(error = mEncoder.WriteBool(enabled));
++    SuccessOrExit(error = mEncoder.WriteUint16(port));
++
++exit:
++    return error;
++}
++
++template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_TREL_STATE>(void)
++{
++    bool     enabled;
++    uint16_t port;
++    otError  error = OT_ERROR_NONE;
++
++    SuccessOrExit(error = mDecoder.ReadBool(enabled));
++    SuccessOrExit(error = mDecoder.ReadUint16(port));
++
++    // Host `b`: whether the infrastructure TREL socket is active and `S` is the bound port; if false, clear the
++    // stored host port (e.g. proxy stopped). Does not change stack TREL enablement (see SPINEL_PROP_TREL_USER_ENABLE).
++    if (otTrelIsEnabled(mInstance))
++    {
++#if OPENTHREAD_CONFIG_TREL_DELEGATE_INFRA_TO_HOST_ENABLE
++        mInstance->Get<Trel::Interface>().SetHostUdpPort(enabled ? port : 0);
+ #endif
++    }
++
++exit:
++    return error;
++}
++
++template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_TREL_USER_ENABLE>(void)
++{
++    bool    enabled;
++    bool    wasEnabled;
++    otError error = OT_ERROR_NONE;
++
++    SuccessOrExit(error = mDecoder.ReadBool(enabled));
++
++    wasEnabled = otTrelIsEnabled(mInstance);
++    otTrelSetEnabled(mInstance, enabled);
++
++    // Re-notify when TREL was already enabled so a reconnecting host can sync without toggling TREL.
++    if (enabled && wasEnabled)
++    {
++        HandleTrelStateChanged();
++    }
++
++exit:
++    return error;
++}
++
++#endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+ 
+ #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_NETWORK_TIME>(void)
+diff --git a/src/ncp/ncp_config.h b/src/ncp/ncp_config.h
+index 9806b12a46ef122ff515fb269534de4972a6e403..ea411074fbaf8cbf23b1af964978064886a8b92a 100644
+--- a/src/ncp/ncp_config.h
++++ b/src/ncp/ncp_config.h
+@@ -47,6 +47,29 @@
+ #define OPENTHREAD_CONFIG_NCP_SPI_ENABLE 0
+ #endif
+ 
++/**
++ * @def OPENTHREAD_CONFIG_NCP_TREL_UDP_PORT
++ *
++ * Specifies the default TREL UDP port for NCP.
++ *
++ * Set to 0 to let the stack choose a random port.
++ */
++#ifndef OPENTHREAD_CONFIG_NCP_TREL_UDP_PORT
++#define OPENTHREAD_CONFIG_NCP_TREL_UDP_PORT 0
++#endif
++
++/**
++ * @def OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
++ *
++ * Define to 1 to enable UDP forward feature.
++ *
++ * This is required for NCP to forward UDP packets (e.g., mDNS, TREL) to the host infrastructure interface
++ * using SPINEL_PROP_THREAD_UDP_FORWARD_STREAM.
++ */
++#ifndef OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
++#define OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE 1
++#endif
++
+ /**
+  * @def OPENTHREAD_CONFIG_NCP_HDLC_ENABLE
+  *
+@@ -185,6 +208,22 @@
+ #define OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE 0
+ #endif
+ 
++/**
++ * @def OPENTHREAD_CONFIG_NCP_DNSSD_MAX_ADDRESS_RESULT_ENTRIES
++ *
++ * The maximum number of `otPlatDnssdAddressAndTtl` entries the NCP decodes from a single
++ * `SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT` or `SPINEL_PROP_DNSSD_IP4_ADDRESS_RESULT` property update.
++ *
++ * Each entry is stored on the stack while handling the property; increase this only if the host may
++ * send larger address lists and the platform can afford the extra stack usage.
++ *
++ * Must be at least 1. The Spinel payload may still advertise a larger count; in that case the NCP
++ * rejects the frame with `OT_ERROR_PARSE`.
++ */
++#ifndef OPENTHREAD_CONFIG_NCP_DNSSD_MAX_ADDRESS_RESULT_ENTRIES
++#define OPENTHREAD_CONFIG_NCP_DNSSD_MAX_ADDRESS_RESULT_ENTRIES 32
++#endif
++
+ /**
+  * @def OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE
+  *
+diff --git a/src/ncp/platform/border_routing.cpp b/src/ncp/platform/border_routing.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..45f7ff1231e1cbbe34b0dc0b754ded29b7e7bef5
+--- /dev/null
++++ b/src/ncp/platform/border_routing.cpp
+@@ -0,0 +1,45 @@
++/*
++ *  Copyright (c) 2026, The OpenThread Authors.
++ *  All rights reserved.
++ *
++ *  Redistribution and use in source and binary forms, with or without
++ *  modification, are permitted provided that the following conditions are met:
++ *  1. Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *  2. Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in the
++ *     documentation and/or other materials provided with the distribution.
++ *  3. Neither the name of the copyright holder nor the
++ *     names of its contributors may be used to endorse or promote products
++ *     derived from this software without specific prior written permission.
++ *
++ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ *  POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "openthread-core-config.h"
++
++#include <openthread/platform/border_routing.h>
++
++#include "ncp/ncp_base.hpp"
++
++#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
++
++extern "C" void otPlatBorderRoutingFavoredNat64PrefixChanged(otInstance *aInstance)
++{
++    ot::Ncp::NcpBase *ncp = ot::Ncp::NcpBase::GetNcpInstance();
++    OT_UNUSED_VARIABLE(aInstance);
++
++    ncp->HandleNat64FavoredPrefixChanged();
++}
++
++#endif
+diff --git a/src/ncp/platform/dnssd.cpp b/src/ncp/platform/dnssd.cpp
+index 9ee5fc5de3558b921043a89aec526e1b3b03cd08..efa5b0556f109e8f1e79281284a8eb26b05620ea 100644
+--- a/src/ncp/platform/dnssd.cpp
++++ b/src/ncp/platform/dnssd.cpp
+@@ -136,37 +136,37 @@ void otPlatDnssdStopSrvResolver(otInstance *aInstance, const otPlatDnssdSrvResol
+ void otPlatDnssdStartTxtResolver(otInstance *aInstance, const otPlatDnssdTxtResolver *aResolver)
+ {
+     OT_UNUSED_VARIABLE(aInstance);
+-    OT_UNUSED_VARIABLE(aResolver);
++    ot::Ncp::NcpBase::GetNcpInstance()->DnssdStartTxtResolver(aResolver);
+ }
+ 
+ void otPlatDnssdStopTxtResolver(otInstance *aInstance, const otPlatDnssdTxtResolver *aResolver)
+ {
+     OT_UNUSED_VARIABLE(aInstance);
+-    OT_UNUSED_VARIABLE(aResolver);
++    ot::Ncp::NcpBase::GetNcpInstance()->DnssdStopTxtResolver(aResolver);
+ }
+ 
+ void otPlatDnssdStartIp6AddressResolver(otInstance *aInstance, const otPlatDnssdAddressResolver *aResolver)
+ {
+     OT_UNUSED_VARIABLE(aInstance);
+-    OT_UNUSED_VARIABLE(aResolver);
++    ot::Ncp::NcpBase::GetNcpInstance()->DnssdStartIp6AddressResolver(aResolver);
+ }
+ 
+ void otPlatDnssdStopIp6AddressResolver(otInstance *aInstance, const otPlatDnssdAddressResolver *aResolver)
+ {
+     OT_UNUSED_VARIABLE(aInstance);
+-    OT_UNUSED_VARIABLE(aResolver);
++    ot::Ncp::NcpBase::GetNcpInstance()->DnssdStopIp6AddressResolver(aResolver);
+ }
+ 
+ void otPlatDnssdStartIp4AddressResolver(otInstance *aInstance, const otPlatDnssdAddressResolver *aResolver)
+ {
+     OT_UNUSED_VARIABLE(aInstance);
+-    OT_UNUSED_VARIABLE(aResolver);
++    ot::Ncp::NcpBase::GetNcpInstance()->DnssdStartIp4AddressResolver(aResolver);
+ }
+ 
+ void otPlatDnssdStopIp4AddressResolver(otInstance *aInstance, const otPlatDnssdAddressResolver *aResolver)
+ {
+     OT_UNUSED_VARIABLE(aInstance);
+-    OT_UNUSED_VARIABLE(aResolver);
++    ot::Ncp::NcpBase::GetNcpInstance()->DnssdStopIp4AddressResolver(aResolver);
+ }
+ 
+ void otPlatDnssdStartRecordQuerier(otInstance *aInstance, const otPlatDnssdRecordQuerier *aQuerier)
+diff --git a/src/ncp/platform/mdns_socket.cpp b/src/ncp/platform/mdns_socket.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..6fcaae9f4ea6ac06a65dc552ca4e4edeffe68050
+--- /dev/null
++++ b/src/ncp/platform/mdns_socket.cpp
+@@ -0,0 +1,171 @@
++/*
++ *  Copyright (c) 2025, The OpenThread Authors.
++ *  All rights reserved.
++ *
++ *  Redistribution and use in source and binary forms, with or without
++ *  modification, are permitted provided that the following conditions are met:
++ *  1. Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *  2. Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in the
++ *     documentation and/or other materials provided with the distribution.
++ *  3. Neither the name of the copyright holder nor the
++ *     names of its contributors may be used to endorse or promote products
++ *     derived from this software without specific prior written permission.
++ *
++ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ *  POSSIBILITY OF SUCH DAMAGE.
++ */
++
++/**
++ * @file
++ *   NCP mDNS platform implementation.
++ *
++ *   Sends mDNS packets to OTBR host via UDP datagrams on port 5353.
++ *   Host forwards packets to infrastructure network.
++ */
++
++#include "openthread-core-config.h"
++
++#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
++
++#include <string.h>
++
++#include <openthread/instance.h>
++#include <openthread/ip6.h>
++#include <openthread/logging.h>
++#include <openthread/message.h>
++#include <openthread/thread.h>
++#include <openthread/udp.h>
++#include <openthread/platform/mdns_socket.h>
++
++#include "common/as_core_type.hpp"
++#include "common/message.hpp"
++
++namespace {
++constexpr uint16_t kMdnsPort               = 5353;
++constexpr char     kMdnsMulticastAddress[] = "ff02::fb";
++} // namespace
++
++extern "C" otError otPlatMdnsSetListeningEnabled(otInstance *aInstance, bool aEnable, uint32_t aInfraIfIndex)
++{
++    OT_UNUSED_VARIABLE(aInstance);
++    OT_UNUSED_VARIABLE(aInfraIfIndex);
++
++    otLogInfoPlat("mDNS listening %s on NCP", aEnable ? "enabled" : "disabled");
++
++    return OT_ERROR_NONE;
++}
++
++extern "C" void otPlatMdnsSendMulticast(otInstance *aInstance, otMessage *aMessage, uint32_t aInfraIfIndex)
++{
++    otError           error = OT_ERROR_NONE;
++    otMessageInfo     messageInfo;
++    otMessageSettings messageSettings = {true, OT_MESSAGE_PRIORITY_NORMAL};
++    otMessage        *udpMessage      = nullptr;
++    uint16_t          length          = 0;
++
++    OT_UNUSED_VARIABLE(aInfraIfIndex);
++
++    VerifyOrExit(aMessage != nullptr);
++
++    length = otMessageGetLength(aMessage);
++
++    memset(&messageInfo, 0, sizeof(messageInfo));
++
++    SuccessOrExit(error = otIp6AddressFromString(kMdnsMulticastAddress, &messageInfo.mPeerAddr));
++    messageInfo.mPeerPort        = kMdnsPort;
++    messageInfo.mSockPort        = kMdnsPort;
++    messageInfo.mSockAddr        = *otThreadGetLinkLocalIp6Address(aInstance);
++    messageInfo.mIsHostInterface = true;
++
++    udpMessage = otUdpNewMessage(aInstance, &messageSettings);
++    VerifyOrExit(udpMessage != nullptr, error = OT_ERROR_NO_BUFS);
++
++    SuccessOrExit(error = ot::AsCoreType(udpMessage).AppendBytesFromMessage(ot::AsCoreType(aMessage), 0, length));
++
++    otLogInfoPlat("Sending multicast mDNS packet (%u bytes)", length);
++
++    error = otUdpSendDatagram(aInstance, udpMessage, &messageInfo);
++    if (error == OT_ERROR_NONE)
++    {
++        udpMessage = nullptr;
++    }
++
++exit:
++    if (error != OT_ERROR_NONE)
++    {
++        otLogWarnPlat("Failed to send multicast: %s", otThreadErrorToString(error));
++    }
++
++    if (udpMessage != nullptr)
++    {
++        otMessageFree(udpMessage);
++    }
++
++    if (aMessage != nullptr)
++    {
++        otMessageFree(aMessage);
++    }
++}
++
++extern "C" void otPlatMdnsSendUnicast(otInstance *aInstance, otMessage *aMessage, const otPlatMdnsAddressInfo *aAddress)
++{
++    otError           error = OT_ERROR_NONE;
++    otMessageInfo     messageInfo;
++    otMessageSettings messageSettings = {true, OT_MESSAGE_PRIORITY_NORMAL};
++    otMessage        *udpMessage      = nullptr;
++    uint16_t          length          = 0;
++
++    VerifyOrExit(aMessage != nullptr && aAddress != nullptr);
++
++    length = otMessageGetLength(aMessage);
++
++    memset(&messageInfo, 0, sizeof(messageInfo));
++
++    messageInfo.mPeerAddr        = aAddress->mAddress;
++    messageInfo.mPeerPort        = aAddress->mPort;
++    messageInfo.mSockPort        = kMdnsPort;
++    messageInfo.mSockAddr        = *otThreadGetLinkLocalIp6Address(aInstance);
++    messageInfo.mIsHostInterface = true;
++
++    udpMessage = otUdpNewMessage(aInstance, &messageSettings);
++    VerifyOrExit(udpMessage != nullptr, error = OT_ERROR_NO_BUFS);
++
++    SuccessOrExit(error = ot::AsCoreType(udpMessage).AppendBytesFromMessage(ot::AsCoreType(aMessage), 0, length));
++
++    otLogInfoPlat("Sending unicast mDNS packet (%u bytes) to port %u", length, aAddress->mPort);
++
++    error = otUdpSendDatagram(aInstance, udpMessage, &messageInfo);
++    if (error == OT_ERROR_NONE)
++    {
++        udpMessage = nullptr;
++    }
++
++exit:
++    if (error != OT_ERROR_NONE)
++    {
++        otLogWarnPlat("Failed to send unicast: %s", otThreadErrorToString(error));
++    }
++
++    if (udpMessage != nullptr)
++    {
++        otMessageFree(udpMessage);
++    }
++
++    if (aMessage != nullptr)
++    {
++        otMessageFree(aMessage);
++    }
++}
++
++#endif // OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
+diff --git a/src/ncp/platform/trel.cpp b/src/ncp/platform/trel.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..799c843d1e7d231a3ab13fcbc779da323edf6d63
+--- /dev/null
++++ b/src/ncp/platform/trel.cpp
+@@ -0,0 +1,182 @@
++/*
++ *  Copyright (c) 2025, The OpenThread Authors.
++ *  All rights reserved.
++ *
++ *  Redistribution and use in source and binary forms, with or without
++ *  modification, are permitted provided that the following conditions are met:
++ *  1. Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *  2. Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in the
++ *     documentation and/or other materials provided with the distribution.
++ *  3. Neither the name of the copyright holder nor the
++ *     names of its contributors may be used to endorse or promote products
++ *     derived from this software without specific prior written permission.
++ *
++ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ *  POSSIBILITY OF SUCH DAMAGE.
++ */
++
++/**
++ * @file
++ *   NCP TREL platform implementation.
++ *
++ *   Forwards TREL UDP datagrams between the Thread stack and the OTBR host
++ *   using SPINEL_PROP_THREAD_UDP_FORWARD_STREAM.
++ */
++
++#include "openthread-core-config.h"
++
++#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE && OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
++
++#include <string.h>
++
++#include <openthread/instance.h>
++#include <openthread/logging.h>
++#include <openthread/trel.h>
++#include <openthread/udp.h>
++#include <openthread/platform/trel.h>
++
++#include "common/code_utils.hpp"
++
++namespace {
++constexpr uint16_t kMaxTrelPacketSize = 1400;
++
++otUdpSocket sUdpForwardSocket;
++bool        sUdpForwardSocketIsOpen = false;
++} // namespace
++
++static otPlatTrelCounters sCounters;
++
++static void HandleUdpForwardReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
++{
++    otInstance *instance = static_cast<otInstance *>(aContext);
++    uint8_t     buffer[kMaxTrelPacketSize];
++    uint16_t    length;
++    uint16_t    readLength;
++    otSockAddr  senderAddr;
++
++    VerifyOrExit(otTrelIsEnabled(instance));
++
++    length = otMessageGetLength(aMessage);
++    VerifyOrExit(length > 0 && length <= sizeof(buffer));
++
++    readLength = otMessageRead(aMessage, 0, buffer, length);
++    VerifyOrExit(readLength == length);
++
++    senderAddr.mAddress = aMessageInfo->mPeerAddr;
++    senderAddr.mPort    = aMessageInfo->mPeerPort;
++
++    sCounters.mRxPackets++;
++    sCounters.mRxBytes += length;
++
++    otPlatTrelHandleReceived(instance, buffer, length, &senderAddr);
++
++exit:
++    return;
++}
++
++extern "C" void otPlatTrelSend(otInstance       *aInstance,
++                               const uint8_t    *aUdpPayload,
++                               uint16_t          aUdpPayloadLen,
++                               const otSockAddr *aDestSockAddr)
++{
++    otMessage        *message = nullptr;
++    otMessageInfo     messageInfo;
++    otMessageSettings messageSettings = {true, OT_MESSAGE_PRIORITY_NORMAL};
++    otError           error           = OT_ERROR_NONE;
++
++    VerifyOrExit(aUdpPayload != nullptr && aDestSockAddr != nullptr);
++    VerifyOrExit(otTrelIsEnabled(aInstance));
++
++    memset(&messageInfo, 0, sizeof(messageInfo));
++    messageInfo.mPeerAddr        = aDestSockAddr->mAddress;
++    messageInfo.mPeerPort        = aDestSockAddr->mPort;
++    messageInfo.mSockPort        = otTrelGetUdpPort(aInstance);
++    messageInfo.mIsHostInterface = true;
++
++    message = otUdpNewMessage(aInstance, &messageSettings);
++    VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
++
++    SuccessOrExit(error = otMessageAppend(message, aUdpPayload, aUdpPayloadLen));
++
++    error = otUdpSendDatagram(aInstance, message, &messageInfo);
++    if (error == OT_ERROR_NONE)
++    {
++        message = nullptr;
++        sCounters.mTxPackets++;
++        sCounters.mTxBytes += aUdpPayloadLen;
++    }
++exit:
++    if (message != nullptr)
++    {
++        otMessageFree(message);
++    }
++    return;
++}
++
++extern "C" void otPlatTrelEnable(otInstance *aInstance, uint16_t *aUdpPort)
++{
++    otError    error = OT_ERROR_NONE;
++    otSockAddr sockAddr;
++
++    VerifyOrExit(aInstance != nullptr && aUdpPort != nullptr);
++    VerifyOrExit(!sUdpForwardSocketIsOpen);
++
++    memset(&sockAddr, 0, sizeof(sockAddr));
++    sockAddr.mPort = *aUdpPort;
++
++    SuccessOrExit(error = otUdpOpen(aInstance, &sUdpForwardSocket, HandleUdpForwardReceive, aInstance));
++    SuccessOrExit(error = otUdpBind(aInstance, &sUdpForwardSocket, &sockAddr, OT_NETIF_UNSPECIFIED));
++
++    sUdpForwardSocketIsOpen = true;
++
++exit:
++    if (error != OT_ERROR_NONE)
++    {
++        otLogWarnPlat("Failed to bind TREL UDP forward socket on port %u: %s", *aUdpPort, otThreadErrorToString(error));
++        IgnoreError(otUdpClose(aInstance, &sUdpForwardSocket));
++        sUdpForwardSocketIsOpen = false;
++    }
++}
++
++extern "C" void otPlatTrelDisable(otInstance *aInstance)
++{
++    if (sUdpForwardSocketIsOpen)
++    {
++        IgnoreError(otUdpClose(aInstance, &sUdpForwardSocket));
++        sUdpForwardSocketIsOpen = false;
++    }
++}
++
++extern "C" void otPlatTrelNotifyPeerSocketAddressDifference(otInstance       *aInstance,
++                                                            const otSockAddr *aPeerSockAddr,
++                                                            const otSockAddr *aRxSockAddr)
++{
++    OT_UNUSED_VARIABLE(aInstance);
++    OT_UNUSED_VARIABLE(aPeerSockAddr);
++    OT_UNUSED_VARIABLE(aRxSockAddr);
++}
++
++extern "C" const otPlatTrelCounters *otPlatTrelGetCounters(otInstance *aInstance)
++{
++    OT_UNUSED_VARIABLE(aInstance);
++    return &sCounters;
++}
++
++extern "C" void otPlatTrelResetCounters(otInstance *aInstance)
++{
++    OT_UNUSED_VARIABLE(aInstance);
++    memset(&sCounters, 0, sizeof(sCounters));
++}
++
++#endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE && OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
+diff --git a/src/posix/platform/firewall.cpp b/src/posix/platform/firewall.cpp
+index 7e9d47eaea89d70263dab09323e66528aeb1bc44..9bfb3ea04a87bcd373208c55a491087438c3e1ea 100644
+--- a/src/posix/platform/firewall.cpp
++++ b/src/posix/platform/firewall.cpp
+@@ -36,8 +36,13 @@
+ 
+ #include <string.h>
+ 
++#include <string>
++#include <vector>
++
++#include <openthread/ip6.h>
+ #include <openthread/logging.h>
+ #include <openthread/netdata.h>
++#include <openthread/thread.h>
+ 
+ #include "common/code_utils.hpp"
+ #include "posix/platform/utils.hpp"
+@@ -80,20 +85,15 @@ inline otError IpSetManager::SwapIpSets(const char *aSetName1, const char *aSetN
+     return ExecuteCommand("%s swap %s %s", kIpsetCommand, aSetName1, aSetName2);
+ }
+ 
+-void UpdateIpSets(otInstance *aInstance)
++static void CollectIpSetPrefixesFromNetData(otInstance               *aInstance,
++                                            std::vector<std::string> &aDenyPrefixes,
++                                            std::vector<std::string> &aAllowPrefixes)
+ {
+-    otError               error    = OT_ERROR_NONE;
+     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+     otBorderRouterConfig  config;
+-    otIp6Prefix           prefix;
++    otIp6Prefix           meshLocalPrefix;
+     char                  prefixBuf[OT_IP6_PREFIX_STRING_SIZE];
+-    IpSetManager          ipSetManager;
+-
+-    // 1. Flush the '*-swap' ipsets
+-    SuccessOrExit(error = ipSetManager.FlushIpSet(kIngressAllowDstSwapIpSet));
+-    SuccessOrExit(error = ipSetManager.FlushIpSet(kIngressDenySrcSwapIpSet));
+ 
+-    // 2. Update otbr-deny-src-swap
+     while (otNetDataGetNextOnMeshPrefix(aInstance, &iterator, &config) == OT_ERROR_NONE)
+     {
+         if (config.mDp)
+@@ -101,27 +101,79 @@ void UpdateIpSets(otInstance *aInstance)
+             continue;
+         }
+         otIp6PrefixToString(&config.mPrefix, prefixBuf, sizeof(prefixBuf));
+-        SuccessOrExit(error = ipSetManager.AddToIpSet(kIngressDenySrcSwapIpSet, prefixBuf));
++        aDenyPrefixes.emplace_back(prefixBuf);
+     }
+-    memcpy(prefix.mPrefix.mFields.m8, otThreadGetMeshLocalPrefix(aInstance)->m8,
++
++    memcpy(meshLocalPrefix.mPrefix.mFields.m8, otThreadGetMeshLocalPrefix(aInstance)->m8,
+            sizeof(otThreadGetMeshLocalPrefix(aInstance)->m8));
+-    prefix.mLength = OT_IP6_PREFIX_BITSIZE;
+-    otIp6PrefixToString(&prefix, prefixBuf, sizeof(prefixBuf));
+-    SuccessOrExit(error = ipSetManager.AddToIpSet(kIngressDenySrcSwapIpSet, prefixBuf));
++    meshLocalPrefix.mLength = OT_IP6_PREFIX_BITSIZE;
++    otIp6PrefixToString(&meshLocalPrefix, prefixBuf, sizeof(prefixBuf));
++    aDenyPrefixes.emplace_back(prefixBuf);
+ 
+-    // 3. Update otbr-allow-dst-swap
+     iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+     while (otNetDataGetNextOnMeshPrefix(aInstance, &iterator, &config) == OT_ERROR_NONE)
+     {
+         otIp6PrefixToString(&config.mPrefix, prefixBuf, sizeof(prefixBuf));
+-        SuccessOrExit(error = ipSetManager.AddToIpSet(kIngressAllowDstSwapIpSet, prefixBuf));
++        aAllowPrefixes.emplace_back(prefixBuf);
++    }
++}
++
++static otError ApplyOtbrIngressDenyAndAllowIpSets(const std::vector<std::string> &aDenyPrefixes,
++                                                  const std::vector<std::string> &aAllowPrefixes)
++{
++    otError      error = OT_ERROR_NONE;
++    IpSetManager ipSetManager;
++
++    SuccessOrExit(error = ipSetManager.FlushIpSet(kIngressAllowDstSwapIpSet));
++    SuccessOrExit(error = ipSetManager.FlushIpSet(kIngressDenySrcSwapIpSet));
++
++    for (const std::string &prefix : aDenyPrefixes)
++    {
++        SuccessOrExit(error = ipSetManager.AddToIpSet(kIngressDenySrcSwapIpSet, prefix.c_str()));
++    }
++
++    for (const std::string &prefix : aAllowPrefixes)
++    {
++        SuccessOrExit(error = ipSetManager.AddToIpSet(kIngressAllowDstSwapIpSet, prefix.c_str()));
+     }
+ 
+-    // 4. Swap ipsets to let them take effect
+     SuccessOrExit(error = ipSetManager.SwapIpSets(kIngressDenySrcSwapIpSet, kIngressDenySrcIpSet));
+     SuccessOrExit(error = ipSetManager.SwapIpSets(kIngressAllowDstSwapIpSet, kIngressAllowDstIpSet));
+ 
+ exit:
++    return error;
++}
++
++void ApplyOtbrIngressAllowDstPrefixes(const char *const *aPrefixes, size_t aCount)
++{
++    otError      error = OT_ERROR_NONE;
++    IpSetManager ipSetManager;
++
++    SuccessOrExit(error = ipSetManager.FlushIpSet(kIngressAllowDstSwapIpSet));
++
++    for (size_t i = 0; i < aCount; i++)
++    {
++        SuccessOrExit(error = ipSetManager.AddToIpSet(kIngressAllowDstSwapIpSet, aPrefixes[i]));
++    }
++
++    SuccessOrExit(error = ipSetManager.SwapIpSets(kIngressAllowDstSwapIpSet, kIngressAllowDstIpSet));
++
++exit:
++    if (error != OT_ERROR_NONE)
++    {
++        otLogWarnPlat("Firewall - failed to refresh otbr-ingress-allow-dst: %s", otThreadErrorToString(error));
++    }
++}
++
++void UpdateIpSets(otInstance *aInstance)
++{
++    otError                  error = OT_ERROR_NONE;
++    std::vector<std::string> denyPrefixes;
++    std::vector<std::string> allowPrefixes;
++
++    CollectIpSetPrefixesFromNetData(aInstance, denyPrefixes, allowPrefixes);
++    error = ApplyOtbrIngressDenyAndAllowIpSets(denyPrefixes, allowPrefixes);
++
+     if (error != OT_ERROR_NONE)
+     {
+         otLogWarnPlat("Firewall - failed to update ipsets: %s", otThreadErrorToString(error));
+diff --git a/src/posix/platform/firewall.hpp b/src/posix/platform/firewall.hpp
+index faaae7e6a03645a5f5b22deb8f3970052f1ed1bb..068318934bcc1304269e276e32ebb1c18164b86f 100644
+--- a/src/posix/platform/firewall.hpp
++++ b/src/posix/platform/firewall.hpp
+@@ -33,13 +33,24 @@
+ 
+ #if OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
+ 
+-#include <openthread/thread.h>
++#include <stddef.h>
++
++struct otInstance;
+ 
+ namespace ot {
+ namespace Posix {
+ 
+ void UpdateIpSets(otInstance *aInstance);
+ 
++/**
++ * Refreshes only the `otbr-ingress-allow-dst` ipset from caller-supplied `/64` prefix strings (e.g. NCP mode where
++ * `UpdateIpSets()` is not driven from Thread Network Data).
++ *
++ * @param[in] aPrefixes  Array of NUL-terminated strings, each an IPv6 prefix in `xxxx::/64` form.
++ * @param[in] aCount     Number of entries in @p aPrefixes.
++ */
++void ApplyOtbrIngressAllowDstPrefixes(const char *const *aPrefixes, size_t aCount);
++
+ } // namespace Posix
+ } // namespace ot
+ 
+diff --git a/tests/unit/test_spinel_prop_codec.cpp b/tests/unit/test_spinel_prop_codec.cpp
+index 458d3e75f05908919fbc7a007777c7930cd97193..0c3494d9101daa0cd701e0a9aeba2e576eef66d0 100644
+--- a/tests/unit/test_spinel_prop_codec.cpp
++++ b/tests/unit/test_spinel_prop_codec.cpp
+@@ -29,6 +29,8 @@
+ #include <string.h>
+ 
+ #include "test_util.hpp"
++
++#include "common/code_utils.hpp"
+ #include "lib/spinel/spinel_prop_codec.hpp"
+ 
+ namespace ot {
+@@ -53,6 +55,18 @@ static void FakeDnssdSrvCallback(otInstance *aInstance, const otPlatDnssdSrvResu
+     OT_UNUSED_VARIABLE(aResult);
+ }
+ 
++static void FakeDnssdTxtCallback(otInstance *aInstance, const otPlatDnssdTxtResult *aResult)
++{
++    OT_UNUSED_VARIABLE(aInstance);
++    OT_UNUSED_VARIABLE(aResult);
++}
++
++static void FakeDnssdAddressCallback(otInstance *aInstance, const otPlatDnssdAddressResult *aResult)
++{
++    OT_UNUSED_VARIABLE(aInstance);
++    OT_UNUSED_VARIABLE(aResult);
++}
++
+ static constexpr uint16_t kMaxSpinelBufferSize = 2048;
+ 
+ void TestDnssd(void)
+@@ -391,6 +405,193 @@ void TestDnssdSrvResult(void)
+     VerifyOrQuit(*reinterpret_cast<const otPlatDnssdSrvCallback *>(callbackData) == FakeDnssdSrvCallback);
+ }
+ 
++void TestDnssdTxtResolver(void)
++{
++    uint8_t         buf[kMaxSpinelBufferSize];
++    uint16_t        len;
++    Spinel::Buffer  ncpBuffer(buf, kMaxSpinelBufferSize);
++    Spinel::Encoder encoder(ncpBuffer);
++    Spinel::Decoder decoder;
++    uint8_t         header;
++    unsigned int    command;
++    unsigned int    propKey;
++    otError         error = OT_ERROR_NONE;
++
++    otPlatDnssdTxtResolver txtResolverEncode;
++    otPlatDnssdTxtResolver txtResolverDecode;
++    const uint8_t         *callbackData;
++    uint16_t               callbackDataLen;
++
++    txtResolverEncode.mServiceInstance = "svc1";
++    txtResolverEncode.mServiceType     = "_t._udp";
++    txtResolverEncode.mInfraIfIndex    = 2;
++    txtResolverEncode.mCallback        = FakeDnssdTxtCallback;
++
++    ncpBuffer.Clear();
++    SuccessOrQuit(
++        error = encoder.BeginFrame(SPINEL_HEADER_FLAG, SPINEL_CMD_PROP_VALUE_INSERTED, SPINEL_PROP_DNSSD_TXT_RESOLVER));
++    SuccessOrQuit(error = EncodeDnssdDiscovery(encoder, txtResolverEncode));
++    SuccessOrQuit(error = encoder.EndFrame());
++    SuccessOrQuit(ncpBuffer.OutFrameBegin());
++    len = ncpBuffer.OutFrameGetLength();
++    VerifyOrQuit(ncpBuffer.OutFrameRead(len, buf) == len);
++
++    decoder.Init(buf, len);
++    SuccessOrQuit(error = decoder.ReadUint8(header));
++    SuccessOrQuit(error = decoder.ReadUintPacked(command));
++    SuccessOrQuit(error = decoder.ReadUintPacked(propKey));
++    SuccessOrQuit(error = DecodeDnssdTxtResolver(decoder, txtResolverDecode, callbackData, callbackDataLen));
++    VerifyOrQuit(strcmp(txtResolverDecode.mServiceInstance, txtResolverEncode.mServiceInstance) == 0);
++    VerifyOrQuit(strcmp(txtResolverDecode.mServiceType, txtResolverEncode.mServiceType) == 0);
++    VerifyOrQuit(txtResolverDecode.mInfraIfIndex == txtResolverEncode.mInfraIfIndex);
++    VerifyOrQuit(callbackDataLen == sizeof(otPlatDnssdTxtCallback));
++    VerifyOrQuit(*reinterpret_cast<const otPlatDnssdTxtCallback *>(callbackData) == FakeDnssdTxtCallback);
++}
++
++void TestDnssdTxtResult(void)
++{
++    uint8_t         buf[kMaxSpinelBufferSize];
++    uint16_t        len;
++    Spinel::Buffer  ncpBuffer(buf, kMaxSpinelBufferSize);
++    Spinel::Encoder encoder(ncpBuffer);
++    Spinel::Decoder decoder;
++    uint8_t         header;
++    unsigned int    command;
++    unsigned int    propKey;
++    otError         error = OT_ERROR_NONE;
++
++    const uint8_t          kTxt[] = {0x01, 0x02, 0x03};
++    otPlatDnssdTxtResult   txtResultEncode;
++    otPlatDnssdTxtResult   txtResultDecode;
++    const uint8_t         *callbackData;
++    uint16_t               callbackDataLen;
++    otPlatDnssdTxtCallback callback = FakeDnssdTxtCallback;
++
++    txtResultEncode.mServiceInstance = "svc1";
++    txtResultEncode.mServiceType     = "_t._udp";
++    txtResultEncode.mTxtData         = kTxt;
++    txtResultEncode.mTxtDataLength   = sizeof(kTxt);
++    txtResultEncode.mTtl             = 60;
++    txtResultEncode.mInfraIfIndex    = 3;
++
++    ncpBuffer.Clear();
++    SuccessOrQuit(error =
++                      encoder.BeginFrame(SPINEL_HEADER_FLAG, SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_DNSSD_TXT_RESULT));
++    SuccessOrQuit(error = EncodeDnssdTxtResult(encoder, txtResultEncode, reinterpret_cast<const uint8_t *>(&callback),
++                                               sizeof(callback)));
++    SuccessOrQuit(error = encoder.EndFrame());
++    SuccessOrQuit(ncpBuffer.OutFrameBegin());
++    len = ncpBuffer.OutFrameGetLength();
++    VerifyOrQuit(ncpBuffer.OutFrameRead(len, buf) == len);
++
++    decoder.Init(buf, len);
++    SuccessOrQuit(error = decoder.ReadUint8(header));
++    SuccessOrQuit(error = decoder.ReadUintPacked(command));
++    SuccessOrQuit(error = decoder.ReadUintPacked(propKey));
++    SuccessOrQuit(error = DecodeDnssdTxtResult(decoder, txtResultDecode, callbackData, callbackDataLen));
++    VerifyOrQuit(strcmp(txtResultDecode.mServiceInstance, txtResultEncode.mServiceInstance) == 0);
++    VerifyOrQuit(strcmp(txtResultDecode.mServiceType, txtResultEncode.mServiceType) == 0);
++    VerifyOrQuit(txtResultDecode.mTxtDataLength == txtResultEncode.mTxtDataLength);
++    VerifyOrQuit(memcmp(txtResultDecode.mTxtData, txtResultEncode.mTxtData, txtResultDecode.mTxtDataLength) == 0);
++    VerifyOrQuit(txtResultDecode.mTtl == txtResultEncode.mTtl);
++    VerifyOrQuit(txtResultDecode.mInfraIfIndex == txtResultEncode.mInfraIfIndex);
++    VerifyOrQuit(callbackDataLen == sizeof(otPlatDnssdTxtCallback));
++    VerifyOrQuit(*reinterpret_cast<const otPlatDnssdTxtCallback *>(callbackData) == FakeDnssdTxtCallback);
++}
++
++void TestDnssdAddressResolver(void)
++{
++    uint8_t                    buf[kMaxSpinelBufferSize];
++    uint16_t                   len;
++    Spinel::Buffer             ncpBuffer(buf, kMaxSpinelBufferSize);
++    Spinel::Encoder            encoder(ncpBuffer);
++    Spinel::Decoder            decoder;
++    uint8_t                    header;
++    unsigned int               command;
++    unsigned int               propKey;
++    otError                    error = OT_ERROR_NONE;
++    otPlatDnssdAddressResolver addrEncode;
++    otPlatDnssdAddressResolver addrDecode;
++    const uint8_t             *callbackData;
++    uint16_t                   callbackDataLen;
++
++    addrEncode.mHostName     = "host1";
++    addrEncode.mInfraIfIndex = 4;
++    addrEncode.mCallback     = FakeDnssdAddressCallback;
++
++    ncpBuffer.Clear();
++    SuccessOrQuit(error = encoder.BeginFrame(SPINEL_HEADER_FLAG, SPINEL_CMD_PROP_VALUE_INSERTED,
++                                             SPINEL_PROP_DNSSD_IP6_ADDRESS_RESOLVER));
++    SuccessOrQuit(error = EncodeDnssdDiscovery(encoder, addrEncode));
++    SuccessOrQuit(error = encoder.EndFrame());
++    SuccessOrQuit(ncpBuffer.OutFrameBegin());
++    len = ncpBuffer.OutFrameGetLength();
++    VerifyOrQuit(ncpBuffer.OutFrameRead(len, buf) == len);
++
++    decoder.Init(buf, len);
++    SuccessOrQuit(error = decoder.ReadUint8(header));
++    SuccessOrQuit(error = decoder.ReadUintPacked(command));
++    SuccessOrQuit(error = decoder.ReadUintPacked(propKey));
++    SuccessOrQuit(error = DecodeDnssdAddressResolver(decoder, addrDecode, callbackData, callbackDataLen));
++    VerifyOrQuit(strcmp(addrDecode.mHostName, addrEncode.mHostName) == 0);
++    VerifyOrQuit(addrDecode.mInfraIfIndex == addrEncode.mInfraIfIndex);
++    VerifyOrQuit(callbackDataLen == sizeof(otPlatDnssdAddressCallback));
++    VerifyOrQuit(*reinterpret_cast<const otPlatDnssdAddressCallback *>(callbackData) == FakeDnssdAddressCallback);
++}
++
++void TestDnssdAddressResult(void)
++{
++    uint8_t                    buf[kMaxSpinelBufferSize];
++    uint16_t                   len;
++    Spinel::Buffer             ncpBuffer(buf, kMaxSpinelBufferSize);
++    Spinel::Encoder            encoder(ncpBuffer);
++    Spinel::Decoder            decoder;
++    uint8_t                    header;
++    unsigned int               command;
++    unsigned int               propKey;
++    otError                    error = OT_ERROR_NONE;
++    otPlatDnssdAddressResult   addrResultEncode;
++    otPlatDnssdAddressResult   addrResultDecode;
++    otPlatDnssdAddressAndTtl   addrArrayEncode[1];
++    otPlatDnssdAddressAndTtl   addrArrayDecode[4];
++    const uint8_t             *callbackData;
++    uint16_t                   callbackDataLen;
++    otPlatDnssdAddressCallback callback = FakeDnssdAddressCallback;
++
++    memset(&addrArrayEncode[0].mAddress, 0xab, sizeof(addrArrayEncode[0].mAddress));
++    addrArrayEncode[0].mTtl = 30;
++
++    addrResultEncode.mHostName        = "host2";
++    addrResultEncode.mAddresses       = addrArrayEncode;
++    addrResultEncode.mAddressesLength = 1;
++    addrResultEncode.mInfraIfIndex    = 5;
++
++    ncpBuffer.Clear();
++    SuccessOrQuit(error = encoder.BeginFrame(SPINEL_HEADER_FLAG, SPINEL_CMD_PROP_VALUE_SET,
++                                             SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT));
++    SuccessOrQuit(error = EncodeDnssdAddressResult(encoder, addrResultEncode,
++                                                   reinterpret_cast<const uint8_t *>(&callback), sizeof(callback)));
++    SuccessOrQuit(error = encoder.EndFrame());
++    SuccessOrQuit(ncpBuffer.OutFrameBegin());
++    len = ncpBuffer.OutFrameGetLength();
++    VerifyOrQuit(ncpBuffer.OutFrameRead(len, buf) == len);
++
++    decoder.Init(buf, len);
++    SuccessOrQuit(error = decoder.ReadUint8(header));
++    SuccessOrQuit(error = decoder.ReadUintPacked(command));
++    SuccessOrQuit(error = decoder.ReadUintPacked(propKey));
++    SuccessOrQuit(error = DecodeDnssdAddressResult(decoder, addrResultDecode, addrArrayDecode,
++                                                   OT_ARRAY_LENGTH(addrArrayDecode), callbackData, callbackDataLen));
++    VerifyOrQuit(strcmp(addrResultDecode.mHostName, addrResultEncode.mHostName) == 0);
++    VerifyOrQuit(addrResultDecode.mInfraIfIndex == addrResultEncode.mInfraIfIndex);
++    VerifyOrQuit(addrResultDecode.mAddressesLength == 1);
++    VerifyOrQuit(addrResultDecode.mAddresses[0].mTtl == addrArrayEncode[0].mTtl);
++    VerifyOrQuit(memcmp(&addrResultDecode.mAddresses[0].mAddress, &addrArrayEncode[0].mAddress, sizeof(otIp6Address)) ==
++                 0);
++    VerifyOrQuit(callbackDataLen == sizeof(otPlatDnssdAddressCallback));
++    VerifyOrQuit(*reinterpret_cast<const otPlatDnssdAddressCallback *>(callbackData) == FakeDnssdAddressCallback);
++}
++
+ } // namespace Spinel
+ } // namespace ot
+ 
+@@ -401,6 +602,10 @@ int main(void)
+     ot::Spinel::TestDnssdBrowserResult();
+     ot::Spinel::TestDnssdSrvResolver();
+     ot::Spinel::TestDnssdSrvResult();
++    ot::Spinel::TestDnssdTxtResolver();
++    ot::Spinel::TestDnssdTxtResult();
++    ot::Spinel::TestDnssdAddressResolver();
++    ot::Spinel::TestDnssdAddressResult();
+     printf("\nAll tests passed.\n");
+     return 0;
+ }
+diff --git a/third_party/mbedtls/BUILD.gn b/third_party/mbedtls/BUILD.gn
+index 35828980e565084f44866f5d4407f4b0bbb6ec95..cf26ebc296c668f8dd2b3dd73970921d9eabb581 100644
+--- a/third_party/mbedtls/BUILD.gn
++++ b/third_party/mbedtls/BUILD.gn
+@@ -57,6 +57,7 @@ group("warnings_fix") {
+ }
+ 
+ static_library("mbedtls") {
++  configs += [ ":warnings_fix_config" ]
+   sources = [
+     "repo/include/mbedtls/aes.h",
+     "repo/include/mbedtls/aria.h",
+diff --git a/third_party/tcplp/BUILD.gn b/third_party/tcplp/BUILD.gn
+index 67688ae1a2cc2a797675c71e1868a8bbb13d33f8..ad05c04c1efbbf30f8a99d7502eda99f91c538ae 100644
+--- a/third_party/tcplp/BUILD.gn
++++ b/third_party/tcplp/BUILD.gn
+@@ -35,13 +35,8 @@ config("warnings_fix_config") {
+   ]
+ }
+ 
+-group("warnings_fix") {
+-  public_configs = [
+-    ":warnings_fix_config",
+-  ]
+-}
+-
+ static_library("tcplp") {
++  configs += [ ":warnings_fix_config" ]
+   sources = [
+     "bsdtcp/tcp_seq.h",
+     "bsdtcp/tcp_output.c",
+@@ -76,8 +71,5 @@ static_library("tcplp") {
+     "lib/lbuf.c",
+     "lib/test/test_all.c",
+   ]
+-  deps = [
+-    ":warnings_fix",
+-    "../../include/openthread",
+-  ]
++  deps = [ "../../include/openthread" ]
+ }

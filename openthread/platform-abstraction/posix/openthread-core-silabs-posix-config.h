@@ -1,9 +1,20 @@
 /*******************************************************************************
  * @file
- * @brief This file includes all compile-time configuration constants used by SiLabs POSIX builds.
+ * @brief Silicon Labs POSIX compile-time configuration for OpenThread Border Router (OTBR) builds.
  *
- *   To use this configuration in your POSIX builds, copy this file into the following folder:
- *   <openthread_location>/src/posix/platform/
+ *   This file overrides OpenThread configuration constants with values recommended
+ *   for Silicon Labs certifiable OTBR deployments. Review all settings before use —
+ *   some may need adjustment for your specific scenario.
+ *
+ *   Before running the bootstrap and setup scripts below, copy this file into the
+ *   OpenThread source tree:
+ *
+ *   sudo cp $SDK_DIR/openthread/platform-abstraction/posix/openthread-core-silabs-posix-config.h \
+ *           $SDK_DIR/openthread_stack/util/third_party/openthread/src/posix/platform/
+ *
+ *   where $SDK_DIR is the root of your Silicon Labs Simplicity SDK checkout.
+ *   For full build instructions and environment variable definitions, refer to the
+ *   Silicon Labs OpenThread documentation.
  *******************************************************************************
  * # License
  * <b>Copyright 2024 Silicon Laboratories Inc. www.silabs.com</b>
@@ -36,143 +47,129 @@
 
 /* clang-format off */
 /******************************************************************************
- * Recommended setup strings for Thread certified Silicon Labs OTBRs
+ * Reference build strings for Silicon Labs OTBR
  *
- * (Examples given for Raspbian/Debian. Refer to examples/platforms/default
- *  under the `ot-br-posix` repo for defaults on other platforms)
+ * Set the following environment variables before running the scripts:
+ *
+ *   export SDK_DIR=<absolute path to SDK checkout>
+ *   export THREAD_DIR=$SDK_DIR/openthread        // OpenThread PAL (contains platform-abstraction/)
+ *   export CPCD_DIR=<absolute path to cpc-daemon checkout>  // CPC builds only
+ *
+ * Pass OTBR_MDNS, OTBR_DHCP6_PD_CLIENT, and NAT64_SERVICE explicitly to both
+ * bootstrap and setup. The values below are what Silicon Labs tests and certifies
+ * against. Alternate values are supported.
+ *
+ * OTBR_MDNS=avahi is deprecated and not recommended.
+ *
+ *   Variable              | RCP default       | NCP default
+ *   ----------------------|-------------------|------------------
+ *   OTBR_MDNS             | openthread        | mDNSResponder
+ *   OTBR_DHCP6_PD_CLIENT  | dhcpcd            | dhcpcd
+ *   NAT64_SERVICE         | openthread        | tayga
  *
  *****************************************************************************/
 
 /****************************
- * Default OTBR
+ * Default OTBR — RCP
  ****************************/
 
 /*
-sudo ./script/bootstrap
 
-// For PD-client functionality (if you have an infrastructure device offering PD prefixes)
-// add `DHCPV6_PD_REF=1` before `INFRA_IF_NAME=eth0` below.
+sudo OTBR_MDNS=openthread OTBR_DHCP6_PD_CLIENT=dhcpcd NAT64=1 NAT64_SERVICE=openthread \
+     ./script/bootstrap
 
 sudo INFRA_IF_NAME=eth0 \
+     OTBR_MDNS=openthread OTBR_DHCP6_PD_CLIENT=dhcpcd NAT64=1 NAT64_SERVICE=openthread \
      OTBR_OPTIONS="-DOT_THREAD_VERSION=1.4 \
                    -DOT_PLATFORM_CONFIG=openthread-core-silabs-posix-config.h \
                    -DOTBR_DUA_ROUTING=ON \
                    -DOTBR_DHCP6_PD=ON \
-                   -DOTBR_NAME=SL-OPENTHREAD-BR -DOTBR_VERSION=3.0.2.0_GitHub-ab0c1351e -DOT_PACKAGE_NAME=SL-OPENTHREAD -DOT_PACKAGE_VERSION=3.0.2.0_GitHub-61e43cffb" \
+                   -DOTBR_NAME=SL-OPENTHREAD-BR -DOTBR_VERSION=3.1.0.0_GitHub-717abf0dc -DOT_PACKAGE_NAME=SL-OPENTHREAD -DOT_PACKAGE_VERSION=3.1.0.0_GitHub-fb274efe6" \
      ./script/setup
 
 */
+
 /****************************
- * CPC OTBR
+ * Default OTBR — NCP
  ****************************/
 
 /*
-sudo ./script/bootstrap
 
-// For PD-client functionality (if you have an infrastructure device offering PD prefixes)
-// add `DHCPV6_PD_REF=1` before `INFRA_IF_NAME=eth0` below.
+sudo OTBR_MDNS=mDNSResponder OTBR_DHCP6_PD_CLIENT=dhcpcd NAT64=1 NAT64_SERVICE=tayga \
+     ./script/bootstrap
 
 sudo INFRA_IF_NAME=eth0 \
+     OTBR_MDNS=mDNSResponder OTBR_DHCP6_PD_CLIENT=dhcpcd NAT64=1 NAT64_SERVICE=tayga \
      OTBR_OPTIONS="-DOT_THREAD_VERSION=1.4 \
-                   -DOT_MULTIPAN_RCP=ON \
-                   -DCPCD_SOURCE_DIR=$GSDK_DIR/platform/service/cpc/daemon \
-                   -DOT_POSIX_RCP_HDLC_BUS=ON \
-                   -DOT_POSIX_RCP_SPI_BUS=ON \
-                   -DOT_POSIX_RCP_VENDOR_BUS=ON \
-                   -DOT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE=platform-abstraction/posix/posix_vendor_rcp.cmake \
-                   -DOT_POSIX_CONFIG_RCP_VENDOR_INTERFACE=platform-abstraction/posix/cpc_interface.cpp \
-                   -DOT_CLI_VENDOR_EXTENSION=platform-abstraction/posix/posix_vendor_cli.cmake \
                    -DOT_PLATFORM_CONFIG=openthread-core-silabs-posix-config.h \
                    -DOTBR_DUA_ROUTING=ON \
                    -DOTBR_DHCP6_PD=ON \
-                   -DOTBR_NAME=SL-OPENTHREAD-BR -DOTBR_VERSION=3.0.2.0_GitHub-ab0c1351e -DOT_PACKAGE_NAME=SL-OPENTHREAD -DOT_PACKAGE_VERSION=3.0.2.0_GitHub-61e43cffb" \
+                   -DOTBR_NAME=SL-OPENTHREAD-BR -DOTBR_VERSION=3.1.0.0_GitHub-717abf0dc -DOT_PACKAGE_NAME=SL-OPENTHREAD -DOT_PACKAGE_VERSION=3.1.0.0_GitHub-fb274efe6" \
      ./script/setup
+
 */
 
 /****************************
- * 1.3 certified OTBR
+ * CPC OTBR — RCP
  ****************************/
 
 /*
-sudo RELEASE=1 BACKBONE_ROUTER=1 NAT64=1 \
+
+sudo OTBR_MDNS=openthread OTBR_DHCP6_PD_CLIENT=dhcpcd NAT64=1 NAT64_SERVICE=openthread \
      ./script/bootstrap
 
 sudo INFRA_IF_NAME=eth0 \
-     RELEASE=1 BACKBONE_ROUTER=1 BORDER_ROUTING=1 NAT64=1 \
-     OTBR_OPTIONS="-DOT_THREAD_VERSION=1.3 \
+     OTBR_MDNS=openthread OTBR_DHCP6_PD_CLIENT=dhcpcd NAT64=1 NAT64_SERVICE=openthread \
+     OTBR_OPTIONS="-DOT_THREAD_VERSION=1.4 \
+                   -DOT_MULTIPAN_RCP=ON \
+                   -DCPCD_SOURCE_DIR=$CPCD_DIR \
+                   -DOT_POSIX_RCP_HDLC_BUS=ON \
+                   -DOT_POSIX_RCP_SPI_BUS=ON \
+                   -DOT_POSIX_RCP_VENDOR_BUS=ON \
+                   -DOT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE=$THREAD_DIR/platform-abstraction/posix/posix_vendor_rcp.cmake \
+                   -DOT_POSIX_CONFIG_RCP_VENDOR_INTERFACE=$THREAD_DIR/platform-abstraction/posix/cpc_interface.cpp \
+                   -DOT_CLI_VENDOR_EXTENSION=$THREAD_DIR/platform-abstraction/posix/posix_vendor_cli.cmake \
                    -DOT_PLATFORM_CONFIG=openthread-core-silabs-posix-config.h \
-                   -DOTBR_DUA_ROUTING=ON -DOTBR_DNSSD_DISCOVERY_PROXY=ON -DOTBR_SRP_ADVERTISING_PROXY=ON \
-                   -DOTBR_TREL=ON -DOTBR_DHCP6_PD=ON" \
+                   -DOTBR_DUA_ROUTING=ON \
+                   -DOTBR_DHCP6_PD=ON \
+                   -DOTBR_NAME=SL-OPENTHREAD-BR -DOTBR_VERSION=3.1.0.0_GitHub-717abf0dc -DOT_PACKAGE_NAME=SL-OPENTHREAD -DOT_PACKAGE_VERSION=3.1.0.0_GitHub-fb274efe6" \
      ./script/setup
+
 */
 
 /****************************
- * 1.3 certified CPC OTBR
+ * CPC OTBR — NCP
  ****************************/
 
 /*
-sudo RELEASE=1 BACKBONE_ROUTER=1 NAT64=1 \
+
+sudo OTBR_MDNS=mDNSResponder OTBR_DHCP6_PD_CLIENT=dhcpcd NAT64=1 NAT64_SERVICE=tayga \
      ./script/bootstrap
 
 sudo INFRA_IF_NAME=eth0 \
-     RELEASE=1 BACKBONE_ROUTER=1 BORDER_ROUTING=1 NAT64=1 \
-     OTBR_OPTIONS="-DOT_THREAD_VERSION=1.3 \
+     OTBR_MDNS=mDNSResponder OTBR_DHCP6_PD_CLIENT=dhcpcd NAT64=1 NAT64_SERVICE=tayga \
+     OTBR_OPTIONS="-DOT_THREAD_VERSION=1.4 \
                    -DOT_MULTIPAN_RCP=ON \
-                   -DCPCD_SOURCE_DIR=$GSDK_DIR/platform/service/cpc/daemon \
+                   -DCPCD_SOURCE_DIR=$CPCD_DIR \
                    -DOT_POSIX_RCP_HDLC_BUS=ON \
                    -DOT_POSIX_RCP_SPI_BUS=ON \
                    -DOT_POSIX_RCP_VENDOR_BUS=ON \
-                   -DOT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE=platform-abstraction/posix/posix_vendor_rcp.cmake \
-                   -DOT_POSIX_CONFIG_RCP_VENDOR_INTERFACE=platform-abstraction/posix/cpc_interface.cpp \
-                   -DOT_CLI_VENDOR_EXTENSION=platform-abstraction/posix/posix_vendor_cli.cmake \
+                   -DOT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE=$THREAD_DIR/platform-abstraction/posix/posix_vendor_rcp.cmake \
+                   -DOT_POSIX_CONFIG_RCP_VENDOR_INTERFACE=$THREAD_DIR/platform-abstraction/posix/cpc_interface.cpp \
+                   -DOT_CLI_VENDOR_EXTENSION=$THREAD_DIR/platform-abstraction/posix/posix_vendor_cli.cmake \
                    -DOT_PLATFORM_CONFIG=openthread-core-silabs-posix-config.h \
-                   -DOTBR_DUA_ROUTING=ON -DOTBR_DNSSD_DISCOVERY_PROXY=ON -DOTBR_SRP_ADVERTISING_PROXY=ON \
-                   -DOTBR_TREL=ON -DOTBR_DHCP6_PD=ON" \
+                   -DOTBR_DUA_ROUTING=ON \
+                   -DOTBR_DHCP6_PD=ON \
+                   -DOTBR_NAME=SL-OPENTHREAD-BR -DOTBR_VERSION=3.1.0.0_GitHub-717abf0dc -DOT_PACKAGE_NAME=SL-OPENTHREAD -DOT_PACKAGE_VERSION=3.1.0.0_GitHub-fb274efe6" \
      ./script/setup
-*/
 
-/****************************
- * 1.2 certified OTBR
- ****************************/
-
-/*
-sudo RELEASE=1 BACKBONE_ROUTER=1 NAT64=0 \
-     ./script/bootstrap
-
-sudo INFRA_IF_NAME=eth0 RELEASE=1 BACKBONE_ROUTER=1 BORDER_ROUTING=0 NAT64=0 \
-     OTBR_OPTIONS="-DOT_THREAD_VERSION=1.2 \
-                   -DOT_PLATFORM_CONFIG=openthread-core-silabs-posix-config.h \
-                   -DOTBR_DUA_ROUTING=ON -DOTBR_DNSSD_DISCOVERY_PROXY=OFF -DOTBR_SRP_ADVERTISING_PROXY=OFF" \
-     ./script/setup
-*/
-
-/****************************
- * 1.2 certified CPC OTBR
- ****************************/
-
-/*
-sudo RELEASE=1 BACKBONE_ROUTER=1 NAT64=0 \
-     ./script/bootstrap
-
-sudo INFRA_IF_NAME=eth0 RELEASE=1 BACKBONE_ROUTER=1 BORDER_ROUTING=0 NAT64=0 \
-     OTBR_OPTIONS="-DOT_THREAD_VERSION=1.2 \
-                   -DOT_MULTIPAN_RCP=ON \
-                   -DCPCD_SOURCE_DIR=$GSDK_DIR/platform/service/cpc/daemon \
-                   -DOT_POSIX_RCP_HDLC_BUS=ON \
-                   -DOT_POSIX_RCP_SPI_BUS=ON \
-                   -DOT_POSIX_RCP_VENDOR_BUS=ON \
-                   -DOT_POSIX_CONFIG_RCP_VENDOR_DEPS_PACKAGE=platform-abstraction/posix/posix_vendor_rcp.cmake \
-                   -DOT_POSIX_CONFIG_RCP_VENDOR_INTERFACE=platform-abstraction/posix/cpc_interface.cpp \
-                   -DOT_CLI_VENDOR_EXTENSION=platform-abstraction/posix/posix_vendor_cli.cmake \
-                   -DOT_PLATFORM_CONFIG=openthread-core-silabs-posix-config.h \
-                   -DOTBR_DUA_ROUTING=ON -DOTBR_DNSSD_DISCOVERY_PROXY=OFF -DOTBR_SRP_ADVERTISING_PROXY=OFF"  \
-        ./script/setup
 */
 
 /* clang-format on */
 /******************************************************************************
  * Vendor defaults
  *****************************************************************************/
+
 /**
  * OPENTHREAD_POSIX_CONFIG_SPINEL_VENDOR_INTERFACE_URL_PROTOCOL_NAME
  *
@@ -205,6 +202,14 @@ sudo INFRA_IF_NAME=eth0 RELEASE=1 BACKBONE_ROUTER=1 BORDER_ROUTING=0 NAT64=0 \
 
 #undef OPENTHREAD_CONFIG_THREAD_VERSION
 #define OPENTHREAD_CONFIG_THREAD_VERSION OT_THREAD_VERSION_1_4
+
+/**
+ * OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+ *
+ * Define to 1 to enable Thread Test Harness reference device support.
+ */
+#undef OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#define OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE 0
 
 /**
  * OPENTHREAD_CONFIG_DUA_ENABLE
@@ -313,6 +318,46 @@ sudo INFRA_IF_NAME=eth0 RELEASE=1 BACKBONE_ROUTER=1 BORDER_ROUTING=0 NAT64=0 \
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_CLIENT_ENABLE 0
 
 /**
+ * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME
+ *
+ * Set to a non-empty default to satisfy certification features, but can be changed at run time.
+ * See `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`
+ */
+#undef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME "RD:Silicon Labs"
+#else
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_NAME "Silicon Labs"
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL
+ *
+ * Set to a non-empty default to satisfy certification features, but can be changed at run time.
+ * See `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`
+ */
+#undef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_MODEL "Sample"
+
+/**
+ * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION
+ *
+ * Set to a non-empty default to satisfy certification features, but can be changed at run time.
+ * See `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`
+ */
+#undef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION "3.1.0.0"
+
+/**
+ * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_URL
+ *
+ * Set to a non-empty default to satisfy certification features, but can be changed at run time.
+ * See `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`
+ */
+#undef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_URL
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_URL "www.silabs.com"
+
+/**
  * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE
  *
  * Set to 1 to add APIs to allow Vendor Name, Model, SW Version to change at run-time.
@@ -329,9 +374,16 @@ sudo INFRA_IF_NAME=eth0 RELEASE=1 BACKBONE_ROUTER=1 BORDER_ROUTING=0 NAT64=0 \
  *
  * This value is a higher on the OTBR than the stack default.
  *
+ * Security processing is delegated to the RCP. For Series-3, we need to account for more ahead time;
+ * even though the EnhAck path is entirely in RAM, LPWCRYPTO executes from flash,
+ * adding non-deterministic latency on the critical path from MAC timer fire to RAIL scheduled TX submission.
+ * NOTE: This increased ahead time configuration on the host is compatible with both Series-2
+ * and Series-3 RCPs because this config only controls when the MAC timer fires.
+ * The actual on-air TX time is anchored to an absolute radio timestamp targeting the child's CSL receive window.
+ * A Series-2 RCP simply receives the frame with more lead time than it needs.
  */
 #undef OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US
-#define OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US 5000
+#define OPENTHREAD_CONFIG_MAC_CSL_REQUEST_AHEAD_US 18000
 
 /**
  * OPENTHREAD_CONFIG_CSL_TRANSMIT_TIME_AHEAD

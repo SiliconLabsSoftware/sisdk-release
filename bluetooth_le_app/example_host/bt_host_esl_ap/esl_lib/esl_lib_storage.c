@@ -84,7 +84,7 @@ sl_status_t esl_lib_storage_append(esl_lib_storage_handle_t handle,
 
   size_t size = sizeof(esl_lib_segment_t) + len;
 
-  // Allocate data fot the fragment
+  // Allocate data for the fragment
   esl_lib_segment_t *segment_ptr = esl_lib_memory_allocate(size);
   if (segment_ptr != NULL) {
     // Set length

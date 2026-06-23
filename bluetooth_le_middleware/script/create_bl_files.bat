@@ -23,7 +23,7 @@ set OTA_APPLO_NAME=apploader
 set OTA_APPLI_NAME=application
 set UARTDFU_FULL_NAME=full
 
-:: names of the sign and encypt key files
+:: names of the sign and encrypt key files
 set GBL_SIGING_KEY_FILE=app-sign-key.pem
 set GBL_ENCRYPT_KEY_FILE=app-encrypt-key.txt
 
@@ -205,7 +205,7 @@ if exist %GBL_SIGING_KEY_FILE% (
     copy "%PATH_GBL%\%OTA_APPLI_NAME%-signed.srec" "%PATH_GBL%\%UARTDFU_FULL_NAME%-signed.srec" >NUL
   )
   %COMMANDER% gbl create "%PATH_GBL%\%UARTDFU_FULL_NAME%-signed.gbl" --app "%PATH_GBL%\%UARTDFU_FULL_NAME%-signed.srec" --sign %GBL_SIGING_KEY_FILE%
-  
+
   :: create signed and encrypted GBL file for if both sign-key and encrypt-key file exist
   if exist %GBL_ENCRYPT_KEY_FILE% (
     echo.

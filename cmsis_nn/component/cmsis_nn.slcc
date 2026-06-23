@@ -9,16 +9,16 @@ metadata:
     license: Apache-2.0
     upstream:
       name: CMSIS-NN
-      version: 3f773cbf8f5
+      version: 22080c68d040c98139e6cb1549473e3149735f4d
       supplier: ARM-software
       url: https://github.com/ARM-software/CMSIS-NN
-      package_url: pkg:github/ARM-software/CMSIS-NN@3f773cbf8f5
-      comment: CMSIS NN Library as packaged and released by ARM-software, version 4.1.0, tag 23.08, commit hash 3f773cbf8f5
+      package_url: pkg:github/ARM-software/CMSIS-NN@22080c68d040c98139e6cb1549473e3149735f4d
+      comment: CMSIS NN Library as packaged and released by ARM-software, version 7.0.0, commit hash 22080c68d040c98139e6cb1549473e3149735f4d
 root_path: cmsis_nn/.
 provides:
 - name: cmsis_nn
 other_file:
-- path: LICENSE.txt
+- path: LICENSE
 include:
 - path: .
 - path: Include

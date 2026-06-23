@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "sl_rail_sdk_simple_assistance.h"
 #include "sl_rail_util_init.h"
@@ -329,7 +330,7 @@ void set_active_channel(const uint16_t new_channel)
   active_channel = new_channel;
   // Updating radio channels according to the new active channel
   update_radio_channels();
-  app_log_info("Active channel is set to %d\n", active_channel);
+  app_log_info("Active channel is set to %" PRIu16 "\n", active_channel);
 }
 
 /******************************************************************************
@@ -377,7 +378,7 @@ void set_direction(const direction_t new_direction)
   update_radio_channels();
   src = rx_channel;
   dest = tx_channel;
-  app_log_info("Direction set to ch%d -> ch%d\n", src, dest);
+  app_log_info("Direction set to ch%" PRIu16 " -> ch%" PRIu16 "\n", src, dest);
 }
 
 // -----------------------------------------------------------------------------
@@ -442,10 +443,10 @@ static void handle_state_packet_received(sl_rail_handle_t rail_handle)
       // Freeing up the radio buffer
       rail_status = sl_rail_release_rx_packet(rail_handle, rx_packet_handle);
       if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-        app_log_warning("sl_rail_release_rx_packet() error, status: %lu\n", rail_status);
+        app_log_warning("sl_rail_release_rx_packet() error, status: 0x%08" PRIX32 "\n", rail_status);
       }
       printf_rx_packet(start_of_packet, packet_size);
-      app_log_info("On channel %d\n", rx_channel);
+      app_log_info("On channel %" PRIu16 "\n", rx_channel);
       if (device_mode == M_RELAY) {
         // Relay devices have to forward the received packet
         tx_requested = true;
@@ -470,11 +471,11 @@ static void handle_state_packet_sent(sl_rail_handle_t rail_handle)
   (void) rail_handle;
   sl_rail_status_t status = SL_RAIL_STATUS_NO_ERROR;
 
-  app_log_info("Packet has been sent on channel %d\n", tx_channel);
+  app_log_info("Packet has been sent on channel %" PRIu16 "\n", tx_channel);
   if (device_mode == M_RELAY) {
     status = sl_rail_start_rx(rail_handle, rx_channel, NULL);
     if (status != SL_RAIL_STATUS_NO_ERROR) {
-      app_log_warning("sl_rail_start_rx() error, status: %lu\n", status);
+      app_log_warning("sl_rail_start_rx() error, status: 0x%08" PRIX32 "\n", status);
     }
   }
   toggle_led(tx_channel);
@@ -491,7 +492,7 @@ static void handle_state_rx_packet_error(sl_rail_handle_t rail_handle)
 {
   (void) rail_handle;
 
-  app_log_error("Radio RX Error occurred\nEvents: %lld\n", current_rail_err);
+  app_log_error("Radio RX Error occurred\nEvents: 0x%" PRIX64 "\n", current_rail_err);
   set_next_state(S_IDLE);
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   app_task_notify();
@@ -505,7 +506,7 @@ static void handle_state_tx_packet_error(sl_rail_handle_t rail_handle)
 {
   (void) rail_handle;
 
-  app_log_error("Radio TX Error occurred\nEvents: %lld\n", current_rail_err);
+  app_log_error("Radio TX Error occurred\nEvents: 0x%" PRIX64 "\n", current_rail_err);
   set_next_state(S_IDLE);
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   app_task_notify();
@@ -522,7 +523,7 @@ static void handle_state_calibration_error(sl_rail_handle_t rail_handle)
   sl_rail_status_t status = calibration_status;
 
   app_log_error("Radio Calibration Error occurred\n");
-  app_log_error("Events: %lld\nsl_rail_calibrate() result: %lu\n", error, status);
+  app_log_error("Events: 0x%" PRIX64 "\nsl_rail_calibrate() result: 0x%08" PRIX32 "\n", error, status);
   set_next_state(S_IDLE);
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   app_task_notify();
@@ -569,7 +570,7 @@ static void update_radio_channels(void)
   // Starting reception on the updated rx channel
   status = sl_rail_start_rx(rail_handle, rx_channel, NULL);
   if (status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_warning("sl_rail_start_rx() error, status: %lu\n", status);
+    app_log_warning("sl_rail_start_rx() error, status: 0x%08" PRIX32 "\n", status);
   }
 }
 

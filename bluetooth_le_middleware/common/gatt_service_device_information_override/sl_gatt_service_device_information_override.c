@@ -67,21 +67,21 @@
 #define FIRMWARE_REVISION_STRING_LEN (sizeof(FIRMWARE_REVISION_STRING) - 1)
 static_assert(gattdb_firmware_revision_string_len >= FIRMWARE_REVISION_STRING_LEN,
               "Bluetooth stack version does not fit into firmware revision string characteristic. Please adjust GATT configuration.");
-static const uint8_t firmware_revision_string[FIRMWARE_REVISION_STRING_LEN] = FIRMWARE_REVISION_STRING;
+static const uint8_t firmware_revision_string[] = FIRMWARE_REVISION_STRING;
 #endif
 
 #if defined(gattdb_model_number_string) && defined(gattdb_model_number_string_len) && defined(MODEL_NUMBER_STRING)
 #define MODEL_NUMBER_STRING_LEN (sizeof(MODEL_NUMBER_STRING) - 1)
 static_assert(gattdb_model_number_string_len >= MODEL_NUMBER_STRING_LEN,
               "Board name does not fit into model number string characteristic. Please adjust GATT configuration.");
-static const uint8_t model_number_string[MODEL_NUMBER_STRING_LEN] = MODEL_NUMBER_STRING;
+static const uint8_t model_number_string[] = MODEL_NUMBER_STRING;
 #endif
 
 #if defined(gattdb_hardware_revision_string) && defined(gattdb_hardware_revision_string_len) && defined(HARDWARE_REVISION_STRING)
 #define HARDWARE_REVISION_STRING_LEN (sizeof(HARDWARE_REVISION_STRING) - 1)
 static_assert(gattdb_hardware_revision_string_len >= HARDWARE_REVISION_STRING_LEN,
               "Board revision does not fit into hardware revision string characteristic. Please adjust GATT configuration.");
-static const uint8_t hardware_revision_string[HARDWARE_REVISION_STRING_LEN] = HARDWARE_REVISION_STRING;
+static const uint8_t hardware_revision_string[] = HARDWARE_REVISION_STRING;
 #endif
 
 #if defined(gattdb_system_id) && defined(gattdb_system_id_len)
@@ -103,7 +103,7 @@ void sl_gatt_service_device_information_override_on_event(sl_bt_msg_t *evt)
 #if defined(gattdb_firmware_revision_string) && defined(gattdb_firmware_revision_string_len) && defined(FIRMWARE_REVISION_STRING)
       sc = sl_bt_gatt_server_write_attribute_value(gattdb_firmware_revision_string,
                                                    0,
-                                                   sizeof(firmware_revision_string),
+                                                   FIRMWARE_REVISION_STRING_LEN,
                                                    firmware_revision_string);
       app_assert_status(sc);
 #else
@@ -115,7 +115,7 @@ void sl_gatt_service_device_information_override_on_event(sl_bt_msg_t *evt)
 #if defined(gattdb_model_number_string) && defined(gattdb_model_number_string_len) && defined(MODEL_NUMBER_STRING)
       sc = sl_bt_gatt_server_write_attribute_value(gattdb_model_number_string,
                                                    0,
-                                                   sizeof(model_number_string),
+                                                   MODEL_NUMBER_STRING_LEN,
                                                    model_number_string);
       app_assert_status(sc);
 #else
@@ -129,7 +129,7 @@ void sl_gatt_service_device_information_override_on_event(sl_bt_msg_t *evt)
 #if defined(gattdb_hardware_revision_string) && defined(gattdb_hardware_revision_string_len) && defined(HARDWARE_REVISION_STRING)
       sc = sl_bt_gatt_server_write_attribute_value(gattdb_hardware_revision_string,
                                                    0,
-                                                   sizeof(hardware_revision_string),
+                                                   HARDWARE_REVISION_STRING_LEN,
                                                    hardware_revision_string);
       app_assert_status(sc);
 #else

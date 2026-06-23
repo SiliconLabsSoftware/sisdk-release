@@ -44,28 +44,28 @@ static bool getBarrierPositionDescription(uint8_t endpoint,
 
 static void printSafetyStatus(uint16_t safetyStatus)
 {
-  sl_zigbee_af_app_print("SafetyStatus: 0x%04X (", safetyStatus);
+  sl_zigbee_af_cli_print("SafetyStatus: 0x%04X (", safetyStatus);
   if (safetyStatus != 0) {
     if (READBITS(safetyStatus,
                  SL_ZIGBEE_AF_BARRIER_CONTROL_SAFETY_STATUS_REMOTE_LOCKOUT)) {
-      sl_zigbee_af_app_print("lockout,");
+      sl_zigbee_af_cli_print("lockout,");
     }
     if (READBITS(safetyStatus,
                  SL_ZIGBEE_AF_BARRIER_CONTROL_SAFETY_STATUS_TEMPER_DETECTED)) {
-      sl_zigbee_af_app_print("tamper,");
+      sl_zigbee_af_cli_print("tamper,");
     }
     if (READBITS(safetyStatus,
                  SL_ZIGBEE_AF_BARRIER_CONTROL_SAFETY_STATUS_FAILED_COMMUNICATION)) {
-      sl_zigbee_af_app_print("communication,");
+      sl_zigbee_af_cli_print("communication,");
     }
     if (READBITS(safetyStatus,
                  SL_ZIGBEE_AF_BARRIER_CONTROL_SAFETY_STATUS_POSITION_FAILURE)) {
-      sl_zigbee_af_app_print("position,");
+      sl_zigbee_af_cli_print("position,");
     }
   } else {
-    sl_zigbee_af_app_print("OK");
+    sl_zigbee_af_cli_print("OK");
   }
-  sl_zigbee_af_app_println(")");
+  sl_zigbee_af_cli_println(")");
 }
 // plugin barrier-control-server status <endpoint:1>
 void sli_zigbee_af_barrier_control_server_status_command(sl_cli_command_arg_t *arguments)
@@ -74,11 +74,11 @@ void sli_zigbee_af_barrier_control_server_status_command(sl_cli_command_arg_t *a
   uint8_t barrierPosition
     = sli_zigbee_af_barrier_control_server_get_barrier_position(endpoint);
   const char *description;
-  sl_zigbee_af_app_print("BarrierPosition: %d%%", barrierPosition);
+  sl_zigbee_af_cli_print("BarrierPosition: %d%%", barrierPosition);
   if (getBarrierPositionDescription(endpoint, &description)) {
-    sl_zigbee_af_app_print(" (%s)", description);
+    sl_zigbee_af_cli_print(" (%s)", description);
   }
-  sl_zigbee_af_app_println("");
+  sl_zigbee_af_cli_println("");
   printSafetyStatus(sli_zigbee_af_barrier_control_server_get_safety_status(endpoint));
 }
 
@@ -97,7 +97,7 @@ void sli_zigbee_af_barrier_control_server_open_or_close_command(sl_cli_command_a
 
   const char *description;
   assert(getBarrierPositionDescription(endpoint, &description));
-  sl_zigbee_af_app_println("Barrier is now %s", description);
+  sl_zigbee_af_cli_println("Barrier is now %s", description);
 }
 
 // plugin barrier-control-server remote-lockout <endpoint:1> <setOrClear:1>

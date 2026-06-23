@@ -38,55 +38,54 @@
 extern "C" {
 #endif
 
-#define SL_RAIL_PA_TABLE_0_NUM_VALUES  (42U)
+#define SL_RAIL_PA_TABLE_0_NUM_VALUES  (41U)
 #define SL_RAIL_PA_TABLE_0_STEP_DDBM   (10U)
-#define SL_RAIL_PA_TABLE_0_MAX_POWER_DDBM     (30U)
-#define SL_RAIL_PA_TABLE_0_MIN_POWER_DDBM     (-380)
+#define SL_RAIL_PA_TABLE_0_MAX_POWER_DDBM     (25U)
+#define SL_RAIL_PA_TABLE_0_MIN_POWER_DDBM     (-370)
 
 #define SL_RAIL_PA_TABLE_0                           \
   {                                                  \
-    0x8000 /* est_deci-dBm:-380 act_deci-dBm:-375*/, \
-    0x8000 /* est_deci-dBm:-370 act_deci-dBm:-375*/, \
-    0x8002 /* est_deci-dBm:-360 act_deci-dBm:-368*/, \
-    0x8003 /* est_deci-dBm:-350 act_deci-dBm:-351*/, \
-    0x8003 /* est_deci-dBm:-340 act_deci-dBm:-351*/, \
-    0x8004 /* est_deci-dBm:-330 act_deci-dBm:-336*/, \
-    0x8004 /* est_deci-dBm:-320 act_deci-dBm:-336*/, \
-    0x8004 /* est_deci-dBm:-310 act_deci-dBm:-336*/, \
-    0x8005 /* est_deci-dBm:-300 act_deci-dBm:-307*/, \
-    0x8006 /* est_deci-dBm:-290 act_deci-dBm:-296*/, \
-    0x8007 /* est_deci-dBm:-280 act_deci-dBm:-280*/, \
-    0x8008 /* est_deci-dBm:-270 act_deci-dBm:-271*/, \
-    0x8008 /* est_deci-dBm:-260 act_deci-dBm:-271*/, \
-    0x800a /* est_deci-dBm:-250 act_deci-dBm:-250*/, \
-    0x800b /* est_deci-dBm:-240 act_deci-dBm:-242*/, \
-    0x800c /* est_deci-dBm:-230 act_deci-dBm:-236*/, \
-    0x800d /* est_deci-dBm:-220 act_deci-dBm:-224*/, \
-    0x800f /* est_deci-dBm:-210 act_deci-dBm:-212*/, \
-    0x8010 /* est_deci-dBm:-200 act_deci-dBm:-208*/, \
-    0x8012 /* est_deci-dBm:-190 act_deci-dBm:-193*/, \
-    0x8014 /* est_deci-dBm:-180 act_deci-dBm:-185*/, \
-    0x8017 /* est_deci-dBm:-170 act_deci-dBm:-171*/, \
-    0x801a /* est_deci-dBm:-160 act_deci-dBm:-160*/, \
-    0x801d /* est_deci-dBm:-150 act_deci-dBm:-150*/, \
-    0x8021 /* est_deci-dBm:-140 act_deci-dBm:-141*/, \
-    0x8026 /* est_deci-dBm:-130 act_deci-dBm:-130*/, \
-    0x802a /* est_deci-dBm:-120 act_deci-dBm:-121*/, \
-    0x802f /* est_deci-dBm:-110 act_deci-dBm:-110*/, \
-    0x8034 /* est_deci-dBm:-100 act_deci-dBm:-101*/, \
-    0x803b /* est_deci-dBm:-90 act_deci-dBm:-90*/,   \
-    0x8042 /* est_deci-dBm:-80 act_deci-dBm:-81*/,   \
-    0x804b /* est_deci-dBm:-70 act_deci-dBm:-70*/,   \
-    0x8054 /* est_deci-dBm:-60 act_deci-dBm:-60*/,   \
-    0x805e /* est_deci-dBm:-50 act_deci-dBm:-50*/,   \
-    0x806b /* est_deci-dBm:-40 act_deci-dBm:-40*/,   \
-    0x8078 /* est_deci-dBm:-30 act_deci-dBm:-30*/,   \
-    0x8088 /* est_deci-dBm:-20 act_deci-dBm:-20*/,   \
-    0x809a /* est_deci-dBm:-10 act_deci-dBm:-10*/,   \
-    0x80af /* est_deci-dBm:0 act_deci-dBm:0*/,       \
-    0x80ca /* est_deci-dBm:10 act_deci-dBm:10*/,     \
-    0x80e2 /* est_deci-dBm:20 act_deci-dBm:20*/,     \
-    0x80ec /* est_deci-dBm:30 act_deci-dBm:27*/,     \
+    0x8000 /* est_deci-dBm:-370 act_deci-dBm:-372*/, \
+    0x8000 /* est_deci-dBm:-360 act_deci-dBm:-372*/, \
+    0x8002 /* est_deci-dBm:-350 act_deci-dBm:-356*/, \
+    0x8003 /* est_deci-dBm:-340 act_deci-dBm:-342*/, \
+    0x8003 /* est_deci-dBm:-330 act_deci-dBm:-342*/, \
+    0x8003 /* est_deci-dBm:-320 act_deci-dBm:-342*/, \
+    0x8004 /* est_deci-dBm:-310 act_deci-dBm:-314*/, \
+    0x8005 /* est_deci-dBm:-300 act_deci-dBm:-303*/, \
+    0x8005 /* est_deci-dBm:-290 act_deci-dBm:-303*/, \
+    0x8006 /* est_deci-dBm:-280 act_deci-dBm:-288*/, \
+    0x8007 /* est_deci-dBm:-270 act_deci-dBm:-279*/, \
+    0x8008 /* est_deci-dBm:-260 act_deci-dBm:-262*/, \
+    0x8009 /* est_deci-dBm:-250 act_deci-dBm:-256*/, \
+    0x800b /* est_deci-dBm:-240 act_deci-dBm:-241*/, \
+    0x800c /* est_deci-dBm:-230 act_deci-dBm:-230*/, \
+    0x800d /* est_deci-dBm:-220 act_deci-dBm:-225*/, \
+    0x800f /* est_deci-dBm:-210 act_deci-dBm:-213*/, \
+    0x8010 /* est_deci-dBm:-200 act_deci-dBm:-202*/, \
+    0x8013 /* est_deci-dBm:-190 act_deci-dBm:-191*/, \
+    0x8015 /* est_deci-dBm:-180 act_deci-dBm:-182*/, \
+    0x8017 /* est_deci-dBm:-170 act_deci-dBm:-175*/, \
+    0x801b /* est_deci-dBm:-160 act_deci-dBm:-160*/, \
+    0x801d /* est_deci-dBm:-150 act_deci-dBm:-153*/, \
+    0x8022 /* est_deci-dBm:-140 act_deci-dBm:-141*/, \
+    0x8027 /* est_deci-dBm:-130 act_deci-dBm:-130*/, \
+    0x802b /* est_deci-dBm:-120 act_deci-dBm:-121*/, \
+    0x8030 /* est_deci-dBm:-110 act_deci-dBm:-110*/, \
+    0x8036 /* est_deci-dBm:-100 act_deci-dBm:-101*/, \
+    0x803d /* est_deci-dBm:-90 act_deci-dBm:-90*/,   \
+    0x8045 /* est_deci-dBm:-80 act_deci-dBm:-80*/,   \
+    0x804e /* est_deci-dBm:-70 act_deci-dBm:-70*/,   \
+    0x8057 /* est_deci-dBm:-60 act_deci-dBm:-61*/,   \
+    0x8062 /* est_deci-dBm:-50 act_deci-dBm:-50*/,   \
+    0x806f /* est_deci-dBm:-40 act_deci-dBm:-40*/,   \
+    0x807d /* est_deci-dBm:-30 act_deci-dBm:-30*/,   \
+    0x808f /* est_deci-dBm:-20 act_deci-dBm:-20*/,   \
+    0x80a1 /* est_deci-dBm:-10 act_deci-dBm:-10*/,   \
+    0x80b6 /* est_deci-dBm:0 act_deci-dBm:0*/,       \
+    0x80cf /* est_deci-dBm:10 act_deci-dBm:10*/,     \
+    0x80e6 /* est_deci-dBm:20 act_deci-dBm:20*/,     \
+    0x80ed /* est_deci-dBm:25 act_deci-dBm:25*/,     \
   }
 
 #ifdef __cplusplus

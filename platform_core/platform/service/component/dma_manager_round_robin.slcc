@@ -1,0 +1,82 @@
+id: dma_manager_round_robin
+label: 'DMA Manager: Round-Robin Channel Scheduling'
+package: platform_core
+description: >
+  Enables round-robin channel scheduling for the DMA Manager. When this component
+  is included, a configurable number of DMA channels use round-robin arbitration
+  instead of fixed-priority. The number of round-robin channels is set at
+  initialization time via the SL_DMA_MANAGER_ROUND_ROBIN_CHANNEL_COUNT configuration.
+category: Services|DMA Manager
+quality: production
+metadata:
+  sbom:
+    license: Zlib
+provides:
+- name: dma_manager_round_robin
+  condition: [device_sdid_200]
+- name: dma_manager_round_robin
+  condition: [device_sdid_205]
+- name: dma_manager_round_robin
+  condition: [device_sdid_210]
+- name: dma_manager_round_robin
+  condition: [device_sdid_215]
+- name: dma_manager_round_robin
+  condition: [device_sdid_220]
+- name: dma_manager_round_robin
+  condition: [device_sdid_225]
+- name: dma_manager_round_robin
+  condition: [device_sdid_230]
+- name: dma_manager_round_robin
+  condition: [device_sdid_235]
+- name: dma_manager_round_robin
+  condition: [device_sdid_240]
+- name: dma_manager_round_robin
+  condition: [device_sdid_260]
+- name: dma_manager_round_robin
+  condition: [device_generic_family_sixx301]
+- name: dma_manager_round_robin
+  condition: [device_sdid_265]
+requires:
+- name: dma_manager
+- name: component_catalog
+root_path: platform_core/platform/service/dma_manager
+config_file:
+- path: config/8ch/sl_dma_manager_round_robin_config.h
+  file_id: dma_manager_round_robin_config
+  condition: [device_sdid_200]
+- path: config/8ch/sl_dma_manager_round_robin_config.h
+  file_id: dma_manager_round_robin_config
+  condition: [device_sdid_205]
+- path: config/8ch/sl_dma_manager_round_robin_config.h
+  file_id: dma_manager_round_robin_config
+  condition: [device_sdid_210]
+- path: config/8ch/sl_dma_manager_round_robin_config.h
+  file_id: dma_manager_round_robin_config
+  condition: [device_sdid_215]
+- path: config/16ch/sl_dma_manager_round_robin_config.h
+  file_id: dma_manager_round_robin_config
+  condition: [device_sdid_220]
+- path: config/8ch/sl_dma_manager_round_robin_config.h
+  file_id: dma_manager_round_robin_config
+  condition: [device_sdid_225]
+- path: config/8ch/sl_dma_manager_round_robin_config.h
+  file_id: dma_manager_round_robin_config
+  condition: [device_sdid_230]
+- path: config/8ch/sl_dma_manager_round_robin_config.h
+  file_id: dma_manager_round_robin_config
+  condition: [device_sdid_235]
+- path: config/8ch/sl_dma_manager_round_robin_config.h
+  file_id: dma_manager_round_robin_config
+  condition: [device_sdid_240]
+- path: config/8ch/sl_dma_manager_round_robin_config.h
+  file_id: dma_manager_round_robin_config
+  condition: [device_sdid_260]
+- path: config/8ch/sl_dma_manager_round_robin_config.h
+  file_id: dma_manager_round_robin_config
+  condition: [device_generic_family_sixx301]
+- path: config/8ch/sl_dma_manager_round_robin_config.h
+  file_id: dma_manager_round_robin_config
+  condition: [device_sdid_265]
+template_contribution:
+- name: component_catalog
+  value: dma_manager_round_robin

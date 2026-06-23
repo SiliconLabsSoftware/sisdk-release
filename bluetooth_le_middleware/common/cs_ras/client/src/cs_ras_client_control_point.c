@@ -3,7 +3,7 @@
  * @brief CS RAS Client - RAS Control Point implementation
  *******************************************************************************
  * # License
- * <b>Copyright 2024 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -45,7 +45,7 @@
 #define CP_PREFIX "CP - "
 
 // -----------------------------------------------------------------------------
-// Forward declaration of privare functions
+// Forward declaration of private functions
 
 static void handle_complete(cs_ras_client_t          *client,
                             cs_ras_ranging_counter_t counter);

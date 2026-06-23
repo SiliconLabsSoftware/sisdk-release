@@ -170,6 +170,9 @@ ReorderGroupAfterRemove(
   destination_info_t * pNodeToMove;
   destination_info_t * pNode;
   const uint32_t iArraySize = sizeof_array(groups[ep][groupIden].subGrp);
+  if (iArraySize <= 1) {
+    return; /* Nothing to reorder */
+  }
   for (move = emptyIndx; move < (iArraySize - 1); move++) {
     pNode       = GetNode(ep, groupIden + 1, move);
     pNodeToMove = GetNode(ep, groupIden + 1, move + 1);
@@ -245,6 +248,10 @@ handleAssociationGetnodeList(
 
   *ppList = GetNode(ep, groupId, 0); // Get a pointer to the first node
   uint8_t max_nodes_in_group = get_max_nodes_in_group(groupId, ep);
+  /* Cap to avoid any overrun when iterating or reporting length */
+  if (max_nodes_in_group > CC_ASSOCIATION_MAX_NODES_IN_GROUP) {
+    max_nodes_in_group = CC_ASSOCIATION_MAX_NODES_IN_GROUP;
+  }
   *pListLen = max_nodes_in_group;
 
   for (uint8_t indx = 0; indx < max_nodes_in_group; indx++) {
@@ -913,7 +920,11 @@ AssGroupMappingLookUp(
   uint8_t grpInput = *pGroupID;
 
   for (uint8_t ep = 1; ep <= ZAF_CONFIG_NUMBER_OF_END_POINTS; ep++) {
-    uint8_t epGrpCount = CC_AGI_groupCount_handler(ep) - 1;
+    uint8_t const groupCount = CC_AGI_groupCount_handler(ep);
+    if (groupCount < 1) {
+      continue; /* Avoid underflow and dead code when no groups */
+    }
+    uint8_t epGrpCount = groupCount - 1;
     grpTest += epGrpCount;
     if (grpInput <= grpTest) {
       *pGroupID = (uint8_t)((epGrpCount - (grpTest - grpInput)) + 1);
@@ -951,6 +962,10 @@ AssociationGet(
   }
 
   nodeCountMax = get_max_nodes_in_group(*(incomingFrame + 2), endpoint);
+  /* Cap to avoid buffer overrun when writing to outgoingFrame */
+  if (nodeCountMax > CC_ASSOCIATION_MAX_NODES_IN_GROUP) {
+    nodeCountMax = CC_ASSOCIATION_MAX_NODES_IN_GROUP;
+  }
 
   *outgoingFrame = *incomingFrame; // Set the command class.
 
@@ -969,6 +984,9 @@ AssociationGet(
 
     if (false == HasEndpoint(pCurrentNode)) {
       // No endpoints in the association
+      if (nodeCountNoEndpoint >= CC_ASSOCIATION_MAX_NODES_IN_GROUP) {
+        break; /* Guard against buffer overrun */
+      }
       *(outgoingFrame + 5 + nodeCountNoEndpoint) = (uint8_t)pCurrentNode->node.nodeId;
       nodeCountNoEndpoint++;
     }
@@ -992,6 +1010,10 @@ AssociationGet(
         }
 
         if (true == HasEndpoint(pCurrentNode)) {
+          /* Guard: each endpoint node uses 2 bytes; avoid overrun */
+          if ((size_t)(6u + nodeCountNoEndpoint + nodeFieldCount + 2u) > sizeof(ZW_APPLICATION_TX_BUFFER)) {
+            break;
+          }
           // The association contains endpoints.
           *(outgoingFrame + 6 + nodeCountNoEndpoint + nodeFieldCount++) = (uint8_t)(pCurrentNode->node.nodeId & 0x00FF);
           *(outgoingFrame + 6 + nodeCountNoEndpoint + nodeFieldCount++) = (uint8_t)((pCurrentNode->node.BitAddress << 7) | pCurrentNode->node.endpoint);

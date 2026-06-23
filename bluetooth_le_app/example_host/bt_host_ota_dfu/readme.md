@@ -33,4 +33,3 @@ option.
 ## Resources
 
 [Using the Gecko Bootloader](https://docs.silabs.com/bluetooth/latest/using-gecko-bootloader-with-bluetooth-apps/03-bluetooth-ota-upgrade)
-

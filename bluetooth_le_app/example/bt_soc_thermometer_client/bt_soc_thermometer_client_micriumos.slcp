@@ -6,7 +6,7 @@ description: >
   advertising themselves as Thermometer Servers. It displays the discovery
   process and the temperature values received via UART.
 category: Bluetooth Examples
-quality: experimental
+quality: production
 
 filter:
   - name: "Wireless Technology"

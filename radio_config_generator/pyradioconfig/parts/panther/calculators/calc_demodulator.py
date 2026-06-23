@@ -132,7 +132,7 @@ class CALC_Demodulator_panther(CALC_Demodulator_nixi):
 
     def calc_ch_filt_bw_available(self, model):
         # Note Panther will overload this to reflect its different architecture.
-        model.vars.ch_filt_bw_available = [0.263]
+        model.vars.ch_filt_bw_available.value = [0.263]
 
     def calc_src1_range_available(self, model):
         # EFR32 90nm parts (Dumbo, Jumbo, Nerio, Nixi)
@@ -223,10 +223,12 @@ class CALC_Demodulator_panther(CALC_Demodulator_nixi):
         # Default to allow (the optional input)
         model.vars.input_decimation_filter_allow_dec3.value = 1
         model.vars.input_decimation_filter_allow_dec8.value = 1
+        model.vars.input_decimation_filter_allow_dec5.value = 0
 
         # Unless specified otherwise by optional inputs
         model.vars.input_decimation_filter_allow_dec3.value = model.vars.input_decimation_filter_allow_dec3.value
         model.vars.input_decimation_filter_allow_dec8.value = model.vars.input_decimation_filter_allow_dec8.value
+        model.vars.input_decimation_filter_allow_dec5.value = model.vars.input_decimation_filter_allow_dec5.value
 
     def calc_rssi_dig_adjust_db(self, model):
         #These variables are passed to RAIL so that RSSI corrections can be made to more accurately measure power

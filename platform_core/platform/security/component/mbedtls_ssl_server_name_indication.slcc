@@ -1,0 +1,20 @@
+id: mbedtls_ssl_server_name_indication
+package: platform_core
+label: SSL Server Name Indication
+description: >-
+  This component enables support for RFC 6066 SSL Server Name Indication (SNI) in Mbed TLS.
+category: Platform|Security|Mbed TLS|Upper Layer
+quality: production
+provides:
+- name: mbedtls_ssl_server_name_indication
+requires:
+- name: mbedtls_x509_crt_parse
+template_contribution:
+- name: mbedtls_config
+  value: MBEDTLS_SSL_SERVER_NAME_INDICATION
+documentation:
+  url: https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/mbedtls__config_8h/#c.MBEDTLS_SSL_SERVER_NAME_INDICATION
+metadata:
+  sbom:
+    reference: mbedtls_sbom
+root_path: platform_core

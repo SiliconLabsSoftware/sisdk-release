@@ -1,0 +1,20 @@
+workspace_name: mp-ot-ble-soc-tz
+label: OpenThread BLE DMP - SoC TrustZone Workspace
+package: multiprotocol
+description: >
+  Workspace to build TrustZone-enabled OpenThread BLE DMP - SoC FreeRTOS application and accompanying bootloader.
+quality: production
+
+project:
+  - path: ../../tz/ot-tz-secure-app/ot-tz-secure-application.slcp
+    id: ot-tz-secure-application
+    output: ot-tz-secure-application
+  - path: mp-ot-ble-soc-tz.slcp
+    id: ot-tz-nonsecure-application
+    output: mp-ot-ble-soc-tz
+  - path: ../../tz/workspace-bootloaders/bootloader-storage-internal-single/bootloader-storage-internal-single.slcp
+    id: application
+    output: bootloader-storage-internal-single
+
+post_build:
+  profile: ot-tz-workspace

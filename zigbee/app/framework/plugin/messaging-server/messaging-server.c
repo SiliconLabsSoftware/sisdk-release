@@ -170,26 +170,26 @@ void sli_zigbee_af_messaging_server_print_info(uint8_t endpoint)
     return;
   }
 
-  sl_zigbee_af_messaging_cluster_println("= Server Message =");
-  sl_zigbee_af_messaging_cluster_flush();
+  sl_zigbee_af_cli_println("= Server Message =");
+  sl_zigbee_af_cli_flush();
 
-  sl_zigbee_af_messaging_cluster_println(" vld: %s", (messageIsValid(ep) ? "YES" : "NO"));
-  sl_zigbee_af_messaging_cluster_println(" act: %s", (messageIsCurrentOrScheduled(endpoint)
-                                                      ? "YES"
-                                                      : "NO"));
-  sl_zigbee_af_messaging_cluster_println("  id: 0x%08X", msgTable[ep].messageId);
-  sl_zigbee_af_messaging_cluster_println("  mc: 0x%02X",
-                                         (msgTable[ep].messageControl
-                                          & ~ZCL_MESSAGING_CLUSTER_RESERVED_MASK));
-  sl_zigbee_af_messaging_cluster_println("  st: 0x%08X", msgTable[ep].startTime);
-  sl_zigbee_af_messaging_cluster_println(" now: %s", (messageIsNow(ep) ? "YES" : "NO"));
-  sl_zigbee_af_messaging_cluster_println("time: 0x%08X", sl_zigbee_af_get_current_time());
-  sl_zigbee_af_messaging_cluster_println(" dur: 0x%04X", msgTable[ep].durationInMinutes);
-  sl_zigbee_af_messaging_cluster_flush();
-  sl_zigbee_af_messaging_cluster_print(" mes: \"");
-  sl_zigbee_af_messaging_cluster_print_string(msgTable[ep].message);
-  sl_zigbee_af_messaging_cluster_println("\"");
-  sl_zigbee_af_messaging_cluster_flush();
+  sl_zigbee_af_cli_println(" vld: %s", (messageIsValid(ep) ? "YES" : "NO"));
+  sl_zigbee_af_cli_println(" act: %s", (messageIsCurrentOrScheduled(endpoint)
+                                        ? "YES"
+                                        : "NO"));
+  sl_zigbee_af_cli_println("  id: 0x%08X", msgTable[ep].messageId);
+  sl_zigbee_af_cli_println("  mc: 0x%02X",
+                           (msgTable[ep].messageControl
+                            & ~ZCL_MESSAGING_CLUSTER_RESERVED_MASK));
+  sl_zigbee_af_cli_println("  st: 0x%08X", msgTable[ep].startTime);
+  sl_zigbee_af_cli_println(" now: %s", (messageIsNow(ep) ? "YES" : "NO"));
+  sl_zigbee_af_cli_println("time: 0x%08X", sl_zigbee_af_get_current_time());
+  sl_zigbee_af_cli_println(" dur: 0x%04X", msgTable[ep].durationInMinutes);
+  sl_zigbee_af_cli_flush();
+  sl_zigbee_af_cli_print(" mes: \"");
+  sl_zigbee_af_cli_print_string(msgTable[ep].message);
+  sl_zigbee_af_cli_println("\"");
+  sl_zigbee_af_cli_flush();
 }
 
 void sl_zigbee_af_messaging_server_display_message(sl_802154_short_addr_t nodeId,
@@ -199,7 +199,7 @@ void sl_zigbee_af_messaging_server_display_message(sl_802154_short_addr_t nodeId
   sl_status_t status;
   sl_zigbee_af_plugin_messaging_server_message_t message;
   if (!sl_zigbee_af_messaging_server_get_message(srcEndpoint, &message)) {
-    sl_zigbee_af_messaging_cluster_println("invalid msg");
+    sl_zigbee_af_cli_println("invalid msg");
     return;
   }
 
@@ -213,7 +213,7 @@ void sl_zigbee_af_messaging_server_display_message(sl_802154_short_addr_t nodeId
   sl_zigbee_af_get_command_aps_frame()->options |= SL_ZIGBEE_APS_OPTION_SOURCE_EUI64;
   status = sl_zigbee_af_send_command_unicast(SL_ZIGBEE_OUTGOING_DIRECT, nodeId);
   if (status != SL_STATUS_OK) {
-    sl_zigbee_af_messaging_cluster_println("Error in display %02X", status);
+    sl_zigbee_af_cli_println("Error in display %02X", status);
   }
 }
 
@@ -236,7 +236,7 @@ void sl_zigbee_af_messaging_server_cancel_message(sl_802154_short_addr_t nodeId,
   sl_zigbee_af_get_command_aps_frame()->options |= SL_ZIGBEE_APS_OPTION_SOURCE_EUI64;
   status = sl_zigbee_af_send_command_unicast(SL_ZIGBEE_OUTGOING_DIRECT, nodeId);
   if (status != SL_STATUS_OK) {
-    sl_zigbee_af_messaging_cluster_println("Error in cancel %02X", status);
+    sl_zigbee_af_cli_println("Error in cancel %02X", status);
   }
 }
 

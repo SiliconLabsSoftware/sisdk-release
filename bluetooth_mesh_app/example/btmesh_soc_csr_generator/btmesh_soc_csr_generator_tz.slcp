@@ -44,6 +44,8 @@ component:
   - id: sl_main
   - id: sleeptimer
   - id: toolchain_gcc_lto
+    condition:
+      - toolchain_gcc
   - id: trustzone_nonsecure
   - id: tz_secure_key_library
 

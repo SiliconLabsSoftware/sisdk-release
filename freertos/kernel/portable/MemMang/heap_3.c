@@ -62,16 +62,46 @@
 
 /*-----------------------------------------------------------*/
 
+/*
+ * DTCM-first allocation configuration:
+ * - Enabled by default when DTCM memory manager is available and DMEM cache is not present.
+ * - Can be disabled by adding the freertos_heap_3_dtcm_first_bypass component.
+ */
+#if defined(SL_CATALOG_FREERTOS_HEAP_3_DTCM_FIRST_BYPASS_PRESENT)
+  /* Explicit bypass of DTCM-first allocation via component */
+  #define SL_FREERTOS_HEAP_3_DTCM_FIRST_EN  0
+#elif defined(SL_CATALOG_MEMORY_MANAGER_DTCM_PRESENT) && !defined(DMEMCACHE_PRESENT)
+  /* Default to enabled when DTCM is available and DMEMCACHE is not present */
+  #define SL_FREERTOS_HEAP_3_DTCM_FIRST_EN  1
+#else
+  /* DTCM not available or DMEMCACHE is present - DTCM-first allocation disabled */
+  #define SL_FREERTOS_HEAP_3_DTCM_FIRST_EN  0
+#endif
+
+/*-----------------------------------------------------------*/
+
 void * pvPortMalloc(size_t xWantedSize)
 {
 #if defined(SL_CATALOG_MEMORY_PROFILER_PRESENT)
   void * volatile return_address = sli_memory_profiler_get_return_address();
 #endif
-  void * pvReturn;
+  void * pvReturn = NULL;
 
   vTaskSuspendAll();
   {
-    pvReturn = sl_malloc(xWantedSize);
+#if (SL_FREERTOS_HEAP_3_DTCM_FIRST_EN == 1)
+    /* Try to allocate from DTCM heap first for better CPU access performance */
+    sl_memory_heap_t *dtcm_heap = sl_memory_manager_get_dtcm_heap();
+    if (dtcm_heap != NULL) {
+      (void)sl_memory_heap_alloc(dtcm_heap, xWantedSize, BLOCK_TYPE_LONG_TERM, &pvReturn);
+    }
+#endif
+
+    /* Fall back to general-purpose heap if DTCM allocation failed or unavailable */
+    if (pvReturn == NULL) {
+      pvReturn = sl_malloc(xWantedSize);
+    }
+
 #if defined(SL_CATALOG_MEMORY_PROFILER_PRESENT)
     sli_memory_profiler_track_ownership(SLI_INVALID_MEMORY_TRACKER_HANDLE, pvReturn, return_address);
 #endif

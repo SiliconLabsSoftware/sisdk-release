@@ -371,7 +371,7 @@ typedef enum esl_lib_data_type_e {
   ESL_LIB_DATA_TYPE_GATT_SERIAL_NUMBER,
   ESL_LIB_DATA_TYPE_GATT_OTS_FEATURE,
   ESL_LIB_DATA_TYPE_GATT_OTS_OBJECT_TYPE,
-  // PAWR ralated
+  // PAWR related
   ESL_LIB_DATA_TYPE_PAWR_DATA,
   ESL_LIB_DATA_TYPE_PAWR_RESP_SLOT,
   ESL_LIB_DATA_TYPE_PAWR_SUBEVENT,
@@ -487,7 +487,7 @@ typedef struct esl_lib_evt_control_point_notification_s {
 typedef struct esl_lib_evt_connection_retry_s {
   esl_lib_connection_handle_t connection_handle; ///< Connection handle
   sl_status_t                 reason;            ///< Retry (close event) reason
-  esl_lib_connection_state_t  connection_state;  ///< Last connection state when the error occured
+  esl_lib_connection_state_t  connection_state;  ///< Last connection state when the error occurred
   esl_lib_address_t           address;           ///< BLE address
   uint8_t                     retries_left;      ///< How many retry count left
 } esl_lib_evt_connection_retry_t;

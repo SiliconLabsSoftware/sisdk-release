@@ -14,9 +14,14 @@ source:
 define:
 - name: BTL_PARSER_NO_SUPPORT_ENCRYPTION
   value: 1
+include:
+- path: platform/bootloader/core
+- path: platform/bootloader
 provides:
 - name: bootloader_image_parser_nonenc
 requires:
+- name: bootloader_interface_common
+- name: btl_util_header
 - name: bootloader_crc
 - name: bootloader_aes_sha_ecdsa
 - name: bootloader_token_management

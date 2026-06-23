@@ -70,12 +70,8 @@ static osThreadId_t _tcp_server_thr_id;
 static const osThreadAttr_t _tcp_server_task_attr = {
   .name        = "TCP Server",
   .attr_bits   = osThreadDetached,
-  .cb_mem      = NULL,
-  .cb_size     = 0,
-  .stack_mem   = NULL,
   .stack_size  = app_stack_size_word_to_byte(SL_WISUN_TCP_SERVER_STACK_SIZE_WORD),
-  .priority    = osPriorityNormal,
-  .tz_module   = 0
+  .priority    = osPriorityNormal
 };
 
 // -----------------------------------------------------------------------------
@@ -141,7 +137,7 @@ static void _tcp_server_task_fnc(void *args)
     sockd_tcp_clnt = accept(sockd_tcp_srv, (struct sockaddr *)&clnt_addr_tcp, &len);
     if (sockd_tcp_clnt != SOCKET_INVALID_ID) {
       client_connected = true;
-      printf("TCP server accept() [%ld] done.\n", sockd_tcp_clnt);
+      printf("TCP server accept() [%"PRIi32"] done.\n", sockd_tcp_clnt);
     }
 
     SL_WISUN_THREAD_LOOP {
@@ -157,7 +153,7 @@ static void _tcp_server_task_fnc(void *args)
           continue;
 
         case 0: // socket closed, EOF
-          printf("[Socket closing: %ld]\n", sockd_tcp_clnt);
+          printf("[Socket closing: %"PRIi32"]\n", sockd_tcp_clnt);
           close(sockd_tcp_clnt);
           client_connected = false;
           print_prompt = true;

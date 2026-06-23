@@ -1,0 +1,27 @@
+id: "bluetooth_feature_cs_handover_leader"
+label: "Channel Sounding Handover Leader"
+package: bluetooth_le_controller
+description: >
+  This component provides the Channel Sounding Handover Leader feature. This feature initializes
+  the CS handover leader role. This allows handing over the CS procedure to a CS handover follower
+  device.
+category: Bluetooth|Bluetooth LE Controller (Link Layer)|Features with Commands and Events
+quality: "evaluation"
+requires:
+- name: "bluetooth_controller"
+- name: "bluetooth_feature_connection"
+- name: "bluetooth_feature_cs"
+- name: "device_supports_bluetooth_cs"
+provides:
+- name: "bluetooth_feature_cs_handover_leader"
+template_contribution:
+- name: component_catalog
+  value: bluetooth_feature_cs_handover_leader
+documentation:
+  docset: bluetooth
+  document: bluetooth-stack-api/sl-bt-cs
+metadata:
+  sbom:
+    license: Zlib AND MSLA
+
+root_path: bluetooth_le_controller

@@ -618,7 +618,11 @@ __STATIC_INLINE void lockBootloaderArea(void)
 /**
  * Jump to app
  */
+#if defined(__clang__)
+__attribute__ ((noreturn)) static void bootToApp(uint32_t startOfAppSpace)
+#else
 __attribute__ ((noreturn, naked)) static void bootToApp(uint32_t startOfAppSpace)
+#endif
 {
   jumpToApplicationRoutine(startOfAppSpace);
   while (1) {

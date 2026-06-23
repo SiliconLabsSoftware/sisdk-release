@@ -5,10 +5,7 @@
 - [Features](#features)
 - [Architecture Overview](#architecture-overview)
   - [Data Flow](#data-flow)
-- [Message Protocol](#message-protocol)
-  - [Message Frame Format](#message-frame-format)
-  - [Request / Response Codes](#request--response-codes)
-  - [Configuration Payload Structure](#configuration-payload-structure)
+  - [Command Line Interface (CLI) example](#command-line-interface-cli-example)
 - [Troubleshooting](#troubleshooting)
 - [Resources](#resources)
 - [Report Bugs & Get Support](#report-bugs--get-support)
@@ -38,7 +35,7 @@ This sample application is the counterpart to the external Linux "Wi-SUN SoC Bor
 For prerequisites and complete setup see, [Wi-SUN Border Router Bridge Agent](https://github.com/SiliconLabs/wisun-br-gui/tree/main/wisun-br-bridge-agent).
 
 Wi-Fi Backhaul Connectivity is based on the SiWx91x™ chipset and the WiSeConnect™ SDK v3.x.
-Follow the [Getting Started with WiSeConnect™ SDK v3.x and EFR32™ Host in NCP Mode](https://docs.silabs.com/wiseconnect/3.5.1/wiseconnect-getting-started/getting-started-with-ncp-mode-with-efr32) to configure the SiWN917 as a Network Co-Processor (NCP). This document is limited to additional commands and settings, a more detailed documentation can be found here [SoC Border Router with Wi-Fi Backhaul](https://docs.silabs.com/wisun/latest/wisun-network-configuration/06-wisun-soc-border-router-backhaul).
+Follow the [Getting Started with WiSeConnect™ SDK v3.x and EFR32™ Host in NCP Mode](https://docs.silabs.com/wiseconnect/3.5.1/wiseconnect-getting-started/getting-started-with-ncp-mode-with-efr32) to configure the SiWN917 as a Network Co-Processor (NCP). This document is limited to additional commands and settings, a more detailed documentation can be found here [SoC Border Router with Wi-Fi Backhaul](https://docs.silabs.com/wisun/latest/wisun-soc-border-router-backhaul).
 
 ## Features
 
@@ -99,8 +96,8 @@ Before programming the radio board mounted on the WSTK, ensure the power supply 
 - [Wi-SUN Stack API documentation](https://docs.silabs.com/wisun/latest)
 - [Wi-SUN Border Router GUI](https://docs.silabs.com/wisun/latest/wisun-border-router-gui/)
 - [Getting Started with WiSeConnect™ SDK v3.x and EFR32™ Host in NCP Mode](https://docs.silabs.com/wiseconnect/3.5.1/wiseconnect-getting-started/getting-started-with-ncp-mode-with-efr32)
-- [Wi-SUN Border Router Bridge Agent](https://github.com/SiliconLabs/wisun-br-gui/tree/main/wisun-br-bridge-agent).
-- [SoC Border Router with Wi-Fi Backhaul](https://docs.silabs.com/wisun/latest/wisun-network-configuration/06-wisun-soc-border-router-backhaul)
+- [Wi-SUN Border Router Bridge Agent](https://github.com/SiliconLabs/wisun-br-gui/tree/main/wisun-br-bridge-agent)
+- [SoC Border Router with Wi-Fi Backhaul](https://docs.silabs.com/wisun/latest/wisun-soc-border-router-backhaul)
 
 ## Report Bugs & Get Support
 

@@ -2,7 +2,11 @@ id: log_backend_systemview
 label: Log Segger Systemview
 package: platform_core
 description: >
-  The Debug Logger Systemview component.
+  The Debug Logger Systemview component provides a lightweight logging mechanism
+  that routes application logs to SEGGER SystemView. It encodes log messages as SystemView
+  events, enabling real-time visualization, timestamping, and analysis with minimal
+  runtime overhead. The default log level is set to Error, and users can modify this
+  configuration through the UC.
 category: Services|Log
 quality: evaluation
 metadata:
@@ -14,9 +18,22 @@ provides:
 requires:
 - name: segger_systemview
 - name: log
-root_path: platform_core/platform/service/sl_log/backend
+- name: log_platform_core
+root_path: platform_core/platform/service/sl_log
+include:
+- path: inc
+  file_list:
+  - path: sl_log_systemview_helper.h
+config_file:
+- path: config/sl_log_common_config.h
+- path: config/sl_log_platform_core_config.h
+  condition: [device_has_timer]
 source:
-- path: src/sl_log_backend_segger.c
+- path: backend/systemview/src/sl_log_backend_segger.c
 template_contribution:
+- name: log_section_enable
+  value: 1
+- name: log_compact_output_enable
+  value: 1
 - name: component_catalog
-  value: logger_backend_systemview
+  value: log_backend_systemview

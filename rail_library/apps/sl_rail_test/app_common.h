@@ -51,7 +51,7 @@
 #include "em_system.h"
 #include "em_prs.h"
 #include "em_emu.h"
-#include "em_ldma.h"
+#include "sl_hal_ldma.h"
 #else
 #include "sl_hal_prs.h"
 #include "sl_hal_emu.h"
@@ -574,6 +574,14 @@ extern sl_rail_tx_options_t concPhyIdOptions;
 // Structure that holds (default) rxOptions
 extern sl_rail_rx_options_t rxOptions;
 
+// When to apply txDelay
+typedef enum {
+  TX_WAIT_FOR_ACK_DISABLED = -1,
+  TX_WAIT_FOR_ACK_ENABLED_OFF = 0,
+  TX_WAIT_FOR_ACK_ENABLED_ON = 1
+} txWaitForAck_t;
+extern volatile txWaitForAck_t txWaitForAck;
+
 // Data Management
 typedef struct Queue {
   QueueEntryPtr_t *head;
@@ -597,6 +605,9 @@ extern bool printTxAck;
 // Strings representing the possible PA selections
 extern const char * const paStrings[];
 extern const char * const paStrings2x[]; // For RAIL 2.x compat
+
+// LQI offset variable
+extern int16_t lqiOffset;
 
 // Variable containing current RSSI
 extern float averageRssi;
@@ -633,6 +644,7 @@ typedef enum AppMode{
   BER = 13,           /**< Bit Error Rate test mode */
   RX_SCHEDULED = 14,  /**< Enable receive at a time scheduled in the future */
   TX_SCHEDULED_N_PACKETS = 15, /**< Schedule a TX for a specific number of packets */
+  BER_PACKET = 16,    /**< Bit Error Rate in packet mode test mode */
 } AppMode_t;
 
 void sl_rail_test_internal_app_init(void);
@@ -726,6 +738,7 @@ void railtest_RxChannelHoppingComplete(sl_rail_handle_t railHandle);
 void railtest_IEEE802154_DataRequestCommand(sl_rail_handle_t railHandle);
 void railtest_ZWAVE_BeamFrame(sl_rail_handle_t railHandle);
 void railtest_ZWAVE_LrAckData(sl_rail_handle_t railHandle);
+bool railtest_CheckTxWaitForAck(sl_rail_handle_t railHandle);
 
 void printAddresses(sl_cli_command_arg_t *args);
 void getAddressFilter(sl_cli_command_arg_t *args);

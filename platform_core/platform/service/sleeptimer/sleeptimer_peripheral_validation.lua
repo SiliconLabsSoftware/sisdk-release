@@ -12,12 +12,20 @@ elseif config_peripheral.value == "SL_SLEEPTIMER_PERIPHERAL_RTC" and not slc.is_
     validation.target_for_defines({"SL_SLEEPTIMER_PERIPHERAL"}),
     nil,
     nil)
-elseif config_peripheral.value == "SL_SLEEPTIMER_PERIPHERAL_PRORTC" and not slc.is_provided("device_has_prortc") then
-    validation.error(
-    "PRORTC peripheral is not available on the selected target",
-    validation.target_for_defines({"SL_SLEEPTIMER_PERIPHERAL"}),
-    nil,
-    nil)
+elseif config_peripheral.value == "SL_SLEEPTIMER_PERIPHERAL_PRORTC" then
+    if not slc.is_provided("device_has_prortc") then
+        validation.error(
+        "PRORTC peripheral is not available on the selected target",
+        validation.target_for_defines({"SL_SLEEPTIMER_PERIPHERAL"}),
+        nil,
+        nil)
+    elseif slc.is_provided("rail_lib") then
+        validation.warning(
+        "Sleeptimer over PRORTC is no longer supported when RAIL is present in the project. Please select a different peripheral via SL_SLEEPTIMER_PERIPHERAL.",
+        validation.target_for_defines({"SL_SLEEPTIMER_PERIPHERAL"}),
+        nil,
+        nil)
+    end
 elseif config_peripheral.value == "SL_SLEEPTIMER_PERIPHERAL_SYSRTC" and not slc.is_provided("device_has_sysrtc") then
     validation.error(
     "SYSRTC peripheral is not available on the selected target",

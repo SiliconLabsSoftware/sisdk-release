@@ -459,6 +459,12 @@ class CALC_Frame(ICalculator):
         self._reg_write(model.vars.FRC_MAXLENGTH_MAXLENGTH, model.vars.var_length_maxlength.value+model.vars.header_size_internal.value-1)
 
         self._reg_write(model.vars.FRC_DFLCTRL_DFLINCLUDECRC, int(model.vars.var_length_includecrc.value == True))
+
+        # Add a condition where var_length_numbits == 0 and frame_length_type == 1 generates an error, invalid length configuration
+        # Handle Invalid Variable Frame Length Configuration: MCUW_RADIO_CFG-3095
+        if model.vars.var_length_numbits.value == 0 and model.vars.frame_length_type.value == model.vars.frame_length_type.var_enum.VARIABLE_LENGTH:
+            raise CalculationException("ERROR: var_length_numbits == 0 and frame_length_type == VARIABLE_LENGTH is not allowed.")
+
         self._reg_write(model.vars.FRC_DFLCTRL_MINLENGTH, model.vars.var_length_minlength.value+model.vars.header_size_internal.value-1)
         self._reg_write(model.vars.FRC_DFLCTRL_DFLBITS, model.vars.var_length_numbits.value)
         self._reg_write(model.vars.FRC_DFLCTRL_DFLOFFSET, model.vars.header_size_internal.value + model.vars.var_length_adjust.value-1, allow_neg=True)

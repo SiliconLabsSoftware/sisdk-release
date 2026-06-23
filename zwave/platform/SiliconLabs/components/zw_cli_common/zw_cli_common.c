@@ -31,13 +31,16 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <stdarg.h>
 #include <stdint.h>
 #include <string.h>
 #include "sl_cli.h"
-#include "app_log.h"
 #include "zaf_event_distributor_soc.h"
 #include "MfgTokens.h"
 #include "events.h"
+#include "sl_iostream.h"
+#include "sl_iostream_handles.h"
+#include "zw_cli_common.h"
 
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
@@ -64,19 +67,34 @@ static const char *sli_get_region_name_as_string(zpal_radio_region_t region);
 // -----------------------------------------------------------------------------
 
 /******************************************************************************
+ * CLI - print formatted output to vCOM
+ *****************************************************************************/
+void cli_printf(const char *format, ...)
+{
+  sl_iostream_t *stream = sl_iostream_get_handle("vcom");
+  if (stream != NULL) {
+    va_list argp;
+    va_start(argp, format);
+    sl_iostream_vprintf(stream, format, argp);
+    va_end(argp);
+  }
+}
+
+/******************************************************************************
  * CLI - this function is used to log cli relevant events
+ * Output is sent to vCOM (same as CLI) so it appears in the terminal, not RTT.
  *****************************************************************************/
 void cli_log_system_events(EVENT_SYSTEM event)
 {
   switch (event) {
     case EVENT_SYSTEM_LEARNMODE_START:
-      app_log_info("Start learn mode\r\n");
+      cli_printf("[I] Start learn mode\r\n");
       break;
     case EVENT_SYSTEM_LEARNMODE_FINISHED:
-      app_log_info("Finished learn mode\r\n");
+      cli_printf("[I] Finished learn mode\r\n");
       break;
     case EVENT_SYSTEM_LEARNMODE_STOP:
-      app_log_info("Stop learn mode\r\n");
+      cli_printf("[I] Stop learn mode\r\n");
       break;
     default:
       break;
@@ -98,7 +116,7 @@ void cli_set_learn_mode(sl_cli_command_arg_t *arguments)
 void cli_factory_reset(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
-  app_log_info("Factory reset the device\r\n");
+  cli_printf("[I] Factory reset the device\r\n");
   zaf_event_distributor_enqueue_app_event(EVENT_SYSTEM_RESET);
 }
 
@@ -123,7 +141,7 @@ void cli_get_dsk(sl_cli_command_arg_t *arguments)
       strcat(qr_code_print_buffer, "-");
     }
   }
-  app_log_info("%s\r\n", qr_code_print_buffer);
+  cli_printf("[I] %s\r\n", qr_code_print_buffer);
 }
 
 /******************************************************************************
@@ -133,7 +151,7 @@ void cli_get_region(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
   zpal_radio_region_t region = zpal_radio_get_region();
-  app_log_info("%s\n", sli_get_region_name_as_string(region));
+  cli_printf("[I] %s\n", sli_get_region_name_as_string(region));
 }
 
 // -----------------------------------------------------------------------------

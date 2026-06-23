@@ -42,7 +42,7 @@
 *                                                                    *
 **********************************************************************
 *                                                                    *
-*       SystemView version: 3.20                                    *
+*       SystemView version: 4.10                                     *
 *                                                                    *
 **********************************************************************
 -------------------------- END-OF-HEADER -----------------------------
@@ -56,6 +56,7 @@ Revision: $Rev: 9599 $
 #include "sl_sysview_custom_api.h"
 #include "SEGGER_SYSVIEW.h"
 #include "SEGGER_SYSVIEW_Conf.h"
+#include "em_device.h"
 
 #if defined(SL_COMPONENT_CATALOG_PRESENT)
 #include "sl_component_catalog.h"
@@ -72,6 +73,10 @@ Revision: $Rev: 9599 $
 
 // System core clock frequency.
 extern uint32_t SystemCoreClock;
+
+static char _UpBufferCaptiveCore[SEGGER_SYSVIEW_RTT_BUFFER_SIZE];
+static char _DownBufferCaptiveCore[8];
+SEGGER_SYSVIEW_CORE_CONTEXT _ContextCaptiveCore;
 
 /*********************************************************************
 *
@@ -102,8 +107,12 @@ extern uint32_t SystemCoreClock;
 // System Frequency. SystemcoreClock is used in most CMSIS compatible projects.
 #define SYSVIEW_CPU_FREQ        (SystemCoreClock)
 
+#if defined(SLI_SI917B0) && (SLI_SI917B0 == 1)
+#define SYSVIEW_RAM_BASE        (0x400)
+#else
 // The lowest RAM address used for IDs (pointers)
 #define SYSVIEW_RAM_BASE        (0x10000000)
+#endif
 
 #if defined(SL_CATALOG_MICRIUMOS_KERNEL_PRESENT)
 #include "os.h"
@@ -116,7 +125,42 @@ extern SEGGER_SYSVIEW_OS_API SYSVIEW_X_OS_TraceAPI;
 
 static SEGGER_SYSVIEW_MODULE gecko_sdk_module;
 
-/********************************************************************* 
+int SendSystemDescription_CaptiveCore(uint8_t core_id) {
+  (void)core_id;
+  U8 aPacket[SEGGER_SYSVIEW_INFO_SIZE + 1 + SEGGER_SYSVIEW_MAX_STRING_LEN];
+  U8 EventId;
+  U8* pPayload;
+  U8* pPayloadStart;
+  int Status;
+
+  EventId = SYSVIEW_EVTID_SYSDESC;
+  pPayloadStart = SEGGER_SYSVIEW_PREPARE_PACKET(aPacket);
+  pPayload = pPayloadStart;
+
+  // Add payload.
+  pPayload = SEGGER_SYSVIEW_EncodeString(pPayload, "O=CaptiveCore", SEGGER_SYSVIEW_MAX_STRING_LEN);
+
+  // Prepend event id.
+  *--pPayloadStart = EventId;
+  Status = SEGGER_SYSVIEW_SendPacket_Ex(&_ContextCaptiveCore, 0, pPayloadStart, pPayload);
+
+  return Status;
+}
+
+static void _cbStart(void) {
+  _ContextCaptiveCore.SysFreq = SYSVIEW_TIMESTAMP_FREQ;
+  _ContextCaptiveCore.CPUFreq = SYSVIEW_CPU_FREQ;
+  _ContextCaptiveCore.RAMBaseAddress = SEGGER_SYSVIEW_ID_BASE;
+
+  SEGGER_SYSVIEW_Start_Ex(&_ContextCaptiveCore, 0);
+  SendSystemDescription_CaptiveCore(1);
+}
+
+static void _cbStop(void) {
+  SEGGER_SYSVIEW_Stop_Ex(&_ContextCaptiveCore);
+}
+
+/*********************************************************************
 *
 *       _cbSendSystemDesc()
 *
@@ -171,10 +215,10 @@ void SEGGER_SYSVIEW_Conf(void) {
   os_api = &SYSVIEW_X_OS_TraceAPI;
 #endif
 
-  SEGGER_SYSVIEW_Init(SYSVIEW_TIMESTAMP_FREQ, SYSVIEW_CPU_FREQ,
-                      os_api, _cbSendSystemDesc);
+  SEGGER_SYSVIEW_Init_Ex(SYSVIEW_TIMESTAMP_FREQ, SYSVIEW_CPU_FREQ,
+                         os_api, _cbSendSystemDesc, _cbStart, _cbStop);
+  SEGGER_SYSVIEW_InitAdditionalBuffer(&_ContextCaptiveCore, &_UpBufferCaptiveCore[0], sizeof(_UpBufferCaptiveCore), &_DownBufferCaptiveCore[0], sizeof(_DownBufferCaptiveCore));
   SEGGER_SYSVIEW_SetRAMBase(SYSVIEW_RAM_BASE);
-  SEGGER_SYSVIEW_RegisterModule(&gecko_sdk_module);
 }
 
 int sl_systemview_GetGSDKEventOffset(void) {

@@ -20,7 +20,7 @@
 #include "psa/crypto.h"
 #include "ncp-security.h"
 #include "ncp-init.h"
-#include "core/sli-connect-token.h"
+#include "stack/core/sli-connect-token.h"
 
 #define SLI_CONNECT_CRYPTO_INVALID_KEY_ID (0x00000000)
 
@@ -83,10 +83,7 @@ EmberStatus emApiSetNcpSecurityKeyPersistent(uint8_t *keyContents, uint8_t keyLe
     return emstatus;
   }
   // Store the key ID in the NVM to recover it in case of a reset
-  sl_token_set_data(TOKEN_STACK_SECURITY_KEY_ID,
-                    0,
-                    (tokTypeStackKeyID*)&key_id,
-                    TOKEN_STACK_SECURITY_KEY_ID_SIZE);
+  sl_token_manager_set_data(COMMON_TOKEN_STACK_SECURITY_KEY_ID, (void*)&key_id, COMMON_TOKEN_STACK_SECURITY_KEY_ID_SIZE);
   return emstatus;
 }
 
@@ -122,10 +119,7 @@ EmberStatus emApiSetNcpSecurityKey(uint8_t *keyContents, uint8_t keyLength)
 void sli_connect_ncp_key_loader_handler(void)
 {
   psa_key_id_t key_id;
-  sl_token_get_data(TOKEN_STACK_SECURITY_KEY_ID,
-                    0,
-                    (tokTypeStackKeyID*)&key_id,
-                    TOKEN_STACK_SECURITY_KEY_ID_SIZE);
+  sl_token_manager_get_data(COMMON_TOKEN_STACK_SECURITY_KEY_ID, (void*)key_id, COMMON_TOKEN_STACK_SECURITY_KEY_ID_SIZE);
 
   if ((key_id != SLI_CONNECT_CRYPTO_INVALID_KEY_ID) && (key_id != 0xFFFFFFFFu)) {
     emApiSetPsaSecurityKey(key_id);

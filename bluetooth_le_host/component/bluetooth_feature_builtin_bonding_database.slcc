@@ -11,6 +11,7 @@ quality: "production"
 requires:
 - name: "bluetooth_stack"
 - name: "nvm3_default"
+- name: "bluetooth_crypto"
 provides:
 - name: "bluetooth_feature_builtin_bonding_database"
 - name: "bluetooth_feature_bonding_database"
@@ -29,14 +30,29 @@ library:
   - toolchain_gcc
   - cortexm33
   - bluetooth_host_release_libraries
+- path: build/gcc/cortex-m55/bgstack/release/libbondingdb.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  - bluetooth_host_release_libraries
 - path: build/iar/cortex-m33/bgstack/release/libbondingdb.a
   condition:
   - toolchain_iar
   - cortexm33
   - bluetooth_host_release_libraries
+- path: build/iar/cortex-m55/bgstack/release/libbondingdb.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  - bluetooth_host_release_libraries
 - path: build/llvm/cortex-m33/bgstack/release/libbondingdb.a
   condition:
   - toolchain_llvm
   - cortexm33
+  - bluetooth_host_release_libraries
+- path: build/llvm/cortex-m55/bgstack/release/libbondingdb.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
   - bluetooth_host_release_libraries
 root_path: bluetooth_le_host

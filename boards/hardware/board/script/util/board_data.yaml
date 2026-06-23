@@ -30,18 +30,31 @@ brd2501a:
   lfxo_ctune: 21
 brd2504a:
   hfxo_ctune: 140
+brd2504b:
+  hfxo_ctune: 140
 brd2505a:
   lfxo_ctune: 35
   hfxo_ctune: 96
 brd2506a:
   hfxo_ctune: 114
   lfxo_ctune: 38
+brd2506b:
+  hfxo_ctune: 114
+  lfxo_ctune: 38
 brd2600a:
+  hfxo_ctune: 107
+  lfxo_ctune: 38
+brd2600b:
+  hfxo_ctune: 107
+  lfxo_ctune: 38
+brd2600c:
   hfxo_ctune: 107
   lfxo_ctune: 38
 brd2601a:
   hfxo_ctune: 140
 brd2601b:
+  hfxo_ctune: 140
+brd2601d:
   hfxo_ctune: 140
 brd2606a:
   hfxo_ctune: 82
@@ -523,6 +536,9 @@ brd4414a:
 brd4415a:
   hfxo_ctune: 120
   lfxo_ctune: 37
+brd4419a:
+  hfxo_ctune: 80
+  lfxo_ctune: 38
 brd4420a:
   hfxo_ctune: 133
   lfxo_ctune: 32

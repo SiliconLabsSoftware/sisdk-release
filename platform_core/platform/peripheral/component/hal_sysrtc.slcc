@@ -9,6 +9,13 @@ quality: production
 metadata:
   sbom:
     license: Zlib
+source:
+- path: src/sl_hal_sysrtc_subsystem.c
+include:
+- path: inc
+  file_list:
+  - path: sl_hal_sysrtc_compat.h
+  - path: sl_hal_sysrtc_subsystem.h
 provides:
 - name: hal_sysrtc
 requires:

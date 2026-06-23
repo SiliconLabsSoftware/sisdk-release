@@ -38,10 +38,10 @@
 #ifdef SL_CATALOG_ZW_CLI_COMMON_PRESENT
 
 #include <string.h>
+#include "zw_cli_common.h"
 #include "zaf_event_distributor_soc.h"
 #include "CC_UserCode.h"
 #include "sl_cli.h"
-#include "app_log.h"
 #include "ev_man.h"
 #include "events.h"
 #include "CC_DoorLock.h"
@@ -71,7 +71,7 @@ static void send_user_code_for_validation(char* user_code);
 void cli_battery_report(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
-  app_log_info("Send Battery Report\r\n");
+  cli_printf("[I] Send Battery Report\r\n");
   zaf_event_distributor_enqueue_app_event(EVENT_APP_BATTERY_REPORT);
 }
 
@@ -84,10 +84,10 @@ void cli_enter_user_code(sl_cli_command_arg_t *arguments)
   uint8_t user_code_length = strlen(user_code);
 
   if ((user_code_length < USERCODE_MIN_LEN) || (user_code_length > USERCODE_MAX_LEN)) {
-    app_log_error("User code length must be between %d and %d\r\n", USERCODE_MIN_LEN, USERCODE_MAX_LEN);
+    cli_printf("[E] User code length must be between %d and %d\r\n", USERCODE_MIN_LEN, USERCODE_MAX_LEN);
     return;
   }
-  app_log_info("Enter User Code: %s\r\n", user_code);
+  cli_printf("[I] Enter User Code: %s\r\n", user_code);
   send_user_code_for_validation(user_code);
 }
 
@@ -100,11 +100,11 @@ void cli_set_new_user_code(sl_cli_command_arg_t *arguments)
   uint8_t user_code_length = strlen(user_code);
 
   if ((user_code_length < USERCODE_MIN_LEN) || (user_code_length > USERCODE_MAX_LEN)) {
-    app_log_error("User code length must be between %d and %d\r\n", USERCODE_MIN_LEN, USERCODE_MAX_LEN);
+    cli_printf("[E] User code length must be between %d and %d\r\n", USERCODE_MIN_LEN, USERCODE_MAX_LEN);
     return;
   }
   CC_UserCode_set_usercode(user_code);
-  app_log_info("Set New User Code: %s\r\n", user_code);
+  cli_printf("[I] Set New User Code: %s\r\n", user_code);
 }
 
 /******************************************************************************
@@ -114,13 +114,13 @@ void cli_set_doorhandle_state(sl_cli_command_arg_t *arguments)
 {
   char* state = sl_cli_get_argument_string(arguments, 0);
   if (strcmp(state, "activate") == 0) {
-    app_log_info("Activate Doorhandle\r\n");
+    cli_printf("[I] Activate Doorhandle\r\n");
     zaf_event_distributor_enqueue_app_event(EVENT_APP_DOORHANDLE_ACTIVATED);
   } else if (strcmp(state, "deactivate") == 0) {
-    app_log_info("Deactivate Doorhandle\r\n");
+    cli_printf("[I] Deactivate Doorhandle\r\n");
     zaf_event_distributor_enqueue_app_event(EVENT_APP_DOORHANDLE_DEACTIVATED);
   } else {
-    app_log_error("Invalid argument\r\n");
+    cli_printf("[E] Invalid argument\r\n");
   }
 }
 
@@ -129,9 +129,9 @@ void cli_set_doorhandle_state(sl_cli_command_arg_t *arguments)
  *****************************************************************************/
 void cli_get_doorhandle_state(__attribute__((unused)) sl_cli_command_arg_t *arguments)
 {
-  app_log_info("Get Door Handle State\r\n");
+  cli_printf("[I] Get Door Handle State\r\n");
   char* state = door_lock_hw_handle_is_pressed() ? "pressed" : "released";
-  app_log_info("Door Handle is %s\r\n", state);
+  cli_printf("[I] Door Handle is %s\r\n", state);
 }
 
 /******************************************************************************
@@ -139,9 +139,9 @@ void cli_get_doorhandle_state(__attribute__((unused)) sl_cli_command_arg_t *argu
  *****************************************************************************/
 void cli_get_doorbolt_state(__attribute__((unused)) sl_cli_command_arg_t *arguments)
 {
-  app_log_info("Get Door Bolt State\r\n");
+  cli_printf("[I] Get Door Bolt State\r\n");
   char* state = door_lock_hw_bolt_is_unlocked() ? "unlocked" : "locked";
-  app_log_info("Door Bolt is %s\r\n", state);
+  cli_printf("[I] Door Bolt is %s\r\n", state);
 }
 
 /******************************************************************************
@@ -149,9 +149,9 @@ void cli_get_doorbolt_state(__attribute__((unused)) sl_cli_command_arg_t *argume
  *****************************************************************************/
 void cli_get_doorlatch_state(__attribute__((unused)) sl_cli_command_arg_t *arguments)
 {
-  app_log_info("Get Door Latch State\r\n");
+  cli_printf("[I] Get Door Latch State\r\n");
   char* state = door_lock_hw_latch_is_closed() ? "closed" : "open";
-  app_log_info("Door Latch is %s\r\n", state);
+  cli_printf("[I] Door Latch is %s\r\n", state);
 }
 
 void cli_log_cc_door_lock_events(
@@ -159,8 +159,8 @@ void cli_log_cc_door_lock_events(
 {
   switch (event) {
     case CC_DOOR_LOCK_EVENT_HW_OPERATION_DONE:
-      app_log_info("The door bolt is now %s\r\n",
-                   door_lock_hw_bolt_is_unlocked() ? "unlocked" : "locked");
+      cli_printf("[I] The door bolt is now %s\r\n",
+                 door_lock_hw_bolt_is_unlocked() ? "unlocked" : "locked");
       break;
     default:
       break;

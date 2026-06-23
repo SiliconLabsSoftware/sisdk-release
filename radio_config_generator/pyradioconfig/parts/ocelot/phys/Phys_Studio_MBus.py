@@ -113,7 +113,7 @@ class PHYS_Mbus_Studio_Ocelot(IPhy):
         # Frame formatting and encoding
         phy.profile_inputs.mbus_frame_format.value = model.vars.mbus_frame_format.var_enum.FrameA
         phy.profile_inputs.mbus_symbol_encoding.value = model.vars.mbus_symbol_encoding.var_enum.NRZ
-        phy.profile_inputs.syncword_dualsync.value = False
+        phy.profile_inputs.syncword_dualsync.value = True
 
         # Xtal frequency
         self._set_xtal_frequency(phy)

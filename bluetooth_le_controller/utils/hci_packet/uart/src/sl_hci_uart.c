@@ -4,7 +4,8 @@
 #include <em_device.h>
 #include <em_gpio.h>
 #include <em_core.h>
-#include <em_ldma.h>
+#include <sl_hal_ldma.h>
+#include "sl_device_peripheral.h"
 #include "sl_component_catalog.h"
 #include "sl_uartdrv_instances.h"
 #include "sl_uartdrv_usart_vcom_config.h"
@@ -18,7 +19,7 @@
 #define LDMA_RX_DESCRIPTORS_N       6
 
 static UARTDRV_Handle_t handle = NULL;
-static LDMA_Descriptor_t ldma_rx_descriptors[LDMA_RX_DESCRIPTORS_N];
+static sl_hal_ldma_descriptor_t ldma_rx_descriptors[LDMA_RX_DESCRIPTORS_N];
 static void (*tx_complete)(uint32_t);
 static uint8_t rx_buffer[UART_RX_BUFFER_SIZE];
 static uint16_t rx_write_idx;
@@ -144,37 +145,39 @@ void USART3_RX_IRQHandler()
 // Will still work if remote ignores the RTS line and LL reads HCI fast enough
 static void start_rx(UARTDRV_Handle_t handle)
 {
-  LDMA_Descriptor_t *descr = ldma_rx_descriptors;
-  LDMA_TransferCfg_t xferCfg = LDMA_TRANSFER_CFG_PERIPHERAL(handle->rxDmaSignal);
+  sl_hal_ldma_descriptor_t *descr = ldma_rx_descriptors;
+  sl_hal_ldma_transfer_init_t xferCfg = SL_HAL_LDMA_TRANSFER_CFG_PERIPHERAL(*handle->rxDmaSignal);
   uint8_t *src = (uint8_t *) &handle->peripheral.uart->RXDATA;
   const uint32_t size = UART_RX_BUFFER_CHUNK_SIZE;
 #ifdef _SILICON_LABS_32B_SERIES_2
-  // better to use CTRLX_SET so LDMA can't accidentally overwrite other bits
   volatile uint32_t* uartCfgPtr = &handle->peripheral.uart->CTRLX_SET;
-  const uint32_t setRts = USART_CTRLX_RTSINV; // invert signal logic to pull high RTS
+  const uint32_t setRts = USART_CTRLX_RTSINV;
 #endif
   // in these templates link address points to next descriptor
-  LDMA_Descriptor_t xferTemplate = LDMA_DESCRIPTOR_LINKREL_P2M_BYTE(src, NULL, size, 1);
-  xferTemplate.xfer.doneIfs = 0; // don't trigger interrupt
-  const LDMA_Descriptor_t wriTemplate = LDMA_DESCRIPTOR_LINKREL_WRITE(setRts, uartCfgPtr, 1);
+  sl_hal_ldma_descriptor_t xferTemplate = SL_HAL_LDMA_DESCRIPTOR_LINKREL_P2M(SL_HAL_LDMA_CTRL_SIZE_BYTE, src, NULL, size, 1);
+  xferTemplate.xfer.done_ifs = 0;
+  const sl_hal_ldma_descriptor_t wriTemplate = SL_HAL_LDMA_DESCRIPTOR_LINKREL_WRITE(setRts, uartCfgPtr, 1);
 
   // each XFER descriptor writes to its 1/3 of the buffer
   descr[0] = xferTemplate;
-  descr[0].xfer.dstAddr = (uint32_t) &rx_buffer[0];
+  descr[0].xfer.dst_addr = (uint32_t) &rx_buffer[0];
   descr[2] = xferTemplate;
-  descr[2].xfer.dstAddr = (uint32_t) &rx_buffer[size];
+  descr[2].xfer.dst_addr = (uint32_t) &rx_buffer[size];
   descr[4] = xferTemplate;
-  descr[4].xfer.dstAddr = (uint32_t) &rx_buffer[2 * size];
+  descr[4].xfer.dst_addr = (uint32_t) &rx_buffer[2 * size];
 
   // create intermediate WRI descriptors to stop data from remote
   descr[1] = wriTemplate;
   descr[3] = wriTemplate;
   // last descriptor links to 1st one
   descr[5] = wriTemplate;
-  descr[5].wri.linkAddr = -(LDMA_RX_DESCRIPTORS_N - 1)
-                          * LDMA_DESCRIPTOR_NON_EXTEND_SIZE_WORD;
+  descr[5].wri.link_addr = -(LDMA_RX_DESCRIPTORS_N - 1)
+                           * SL_HAL_LDMA_DESCRIPTOR_NON_EXTEND_SIZE_WORD;
 
-  LDMA_StartTransfer(handle->rxDmaCh, &xferCfg, descr);
+  LDMA_TypeDef *ldma = sl_device_peripheral_ldma_get_base_addr((sl_peripheral_t)handle->rxDmaCh.dma_peripheral);
+  uint8_t ch = handle->rxDmaCh.channel_number;
+  sl_hal_ldma_init_transfer(ldma, ch, &xferCfg, descr);
+  sl_hal_ldma_start_transfer(ldma, ch);
 }
 
 /**
@@ -184,16 +187,18 @@ static void update_buffer_status(UARTDRV_Handle_t handle)
 {
   uint16_t dma_idx;
   uint32_t remaining;
-  LDMA_Descriptor_t *link;
+  sl_hal_ldma_descriptor_t *link;
+  LDMA_TypeDef *ldma = sl_device_peripheral_ldma_get_base_addr((sl_peripheral_t)handle->rxDmaCh.dma_peripheral);
+  uint8_t ch = handle->rxDmaCh.channel_number;
 
   // find current descriptor based on the link address
   // (redo if DMA moved to next descriptor)
   do {
     // NOTE: `LINK` field doesn't point exactly to next descriptor, but pointer
     // difference will still work because integer division truncates results
-    link = (LDMA_Descriptor_t *) LDMA->CH[handle->rxDmaCh].LINK;
-    remaining = LDMA_TransferRemainingCount(handle->rxDmaCh);
-  } while (link != (LDMA_Descriptor_t *) LDMA->CH[handle->rxDmaCh].LINK);
+    link = (sl_hal_ldma_descriptor_t *) ldma->CH[ch].LINK;
+    remaining = sl_hal_ldma_transfer_remaining_count(ldma, ch);
+  } while (link != (sl_hal_ldma_descriptor_t *) ldma->CH[ch].LINK);
 
   // use fact that every descriptor points to next one cyclically
   dma_idx = link - ldma_rx_descriptors;

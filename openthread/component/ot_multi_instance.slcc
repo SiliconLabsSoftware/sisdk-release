@@ -1,7 +1,7 @@
 id: ot_multi_instance_cli
 label: Multi-Instance CLI Support
 package: openthread
-category: OpenThread
+category: OpenThread|Utility
 quality: production
 description: This component provides support for OpenThread multi-instance CLI enablement
 provides:
@@ -28,6 +28,8 @@ define:
 - name: OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
   value: 1
 - name: OPENTHREAD_CONFIG_MULTIPLE_STATIC_INSTANCE_ENABLE
+  value: 1
+- name: OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
   value: 1
 - name: SL_OPENTHREAD_MULTI_INSTANCE_CLI_ENABLE
   value: 1

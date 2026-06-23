@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "app_log.h"
 #include "sl_cli.h"
@@ -91,25 +92,21 @@ void cli_trig_mode_switch(sl_cli_command_arg_t *arguments)
 
   ms_request_status = set_new_phy_mode_id(new_phy_mode_id);
   if (ms_request_status != SL_STATUS_OK) {
-    app_log_warning("ERROR set_new_phy_mode_id: 0x%04X\n",
-                    (uint16_t)ms_request_status);
+    app_log_warning("ERROR set_new_phy_mode_id: 0x%08" PRIX32 "\n", ms_request_status);
     return;
   } else {
-    app_log_info("Mode switch phy mode id is set to %d\n",
-                 new_phy_mode_id);
+    app_log_info("Mode switch phy mode id is set to %" PRIu8 "\n", new_phy_mode_id);
   }
 
   ms_request_status = set_mode_switch_duration(mode_switch_duration);
   if (ms_request_status != SL_STATUS_OK) {
-    app_log_warning("ERROR set_mode_switch_duration: 0x%04X\n",
-                    (uint16_t)ms_request_status);
+    app_log_warning("ERROR set_mode_switch_duration: 0x%08" PRIX32 "\n", ms_request_status);
     return;
   }
 
   ms_request_status = request_mode_switch();
   if (ms_request_status != SL_STATUS_OK) {
-    app_log_info("Mode switch failed, status: 0x%04X\n",
-                 (uint16_t)ms_request_status);
+    app_log_info("Mode switch failed, status: 0x%08" PRIX32 "\n", ms_request_status);
   } else {
     app_log_info("Mode switch requested\n");
   }
@@ -165,12 +162,12 @@ void cli_set_channel(sl_cli_command_arg_t *arguments)
       = sl_rail_util_get_handle(SL_RAIL_UTIL_HANDLE_INST0);
     set_channel(new_channel);
     set_ms_state(MS_IDLE);
-    app_log_info("New channel: %d Previous channel: %d\n",
+    app_log_info("New channel: %" PRIu16 " Previous channel: %" PRIu16 "\n",
                  new_channel,
                  previous_channel);
     update_rail_pa_settings(rail_handle);
   } else {
-    app_log_info("ERROR: Channel %d not available\n", new_channel);
+    app_log_info("ERROR: Channel %" PRIu16 " not available\n", new_channel);
   }
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   app_task_notify();
@@ -194,7 +191,7 @@ void cli_get_fsk_fcs_type(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
 
-  app_log_info("Current FSK FCS Type: %d\n", get_fsk_fcs_type());
+  app_log_info("Current FSK FCS Type: %" PRIu8 "\n", get_fsk_fcs_type());
 }
 
 /******************************************************************************
@@ -212,7 +209,7 @@ void cli_set_fsk_fcs_type(sl_cli_command_arg_t *arguments)
   uint8_t fsk_fcs_type = sl_cli_get_argument_uint8(arguments, 0);
 
   set_fsk_fcs_type(fsk_fcs_type);
-  app_log_info("Current FSK FCS Type: %d\n", get_fsk_fcs_type());
+  app_log_info("Current FSK FCS Type: %" PRIu8 "\n", get_fsk_fcs_type());
 }
 
 /******************************************************************************
@@ -222,7 +219,7 @@ void cli_get_fsk_whitening(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
 
-  app_log_info("Current FSK whitening: %d\n", get_fsk_whitening());
+  app_log_info("Current FSK whitening: %s\n", get_fsk_whitening() ? "ON" : "OFF");
 }
 
 /******************************************************************************
@@ -240,7 +237,7 @@ void cli_set_fsk_whitening(sl_cli_command_arg_t *arguments)
   uint8_t fsk_whitening = sl_cli_get_argument_uint8(arguments, 0);
 
   set_fsk_whitening(fsk_whitening);
-  app_log_info("Current FSK whitening: %d\n", get_fsk_whitening());
+  app_log_info("Current FSK whitening: %s\n", get_fsk_whitening() ? "ON" : "OFF");
 }
 
 /******************************************************************************
@@ -250,7 +247,7 @@ void cli_get_ofdm_rate(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
 
-  app_log_info("Current OFDM rate: %d\n", get_ofdm_rate());
+  app_log_info("Current OFDM rate: %" PRIu8 "\n", get_ofdm_rate());
 }
 
 /******************************************************************************
@@ -268,7 +265,7 @@ void cli_set_ofdm_rate(sl_cli_command_arg_t *arguments)
   uint8_t ofdm_rate = sl_cli_get_argument_uint8(arguments, 0);
 
   set_ofdm_rate(ofdm_rate);
-  app_log_info("Current OFDM rate: %d\n", get_ofdm_rate());
+  app_log_info("Current OFDM rate: %" PRIu8 "\n", get_ofdm_rate());
 
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   app_task_notify();
@@ -282,7 +279,7 @@ void cli_get_ofdm_scrambler(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
 
-  app_log_info("Current OFDM scrambler: %d\n", get_ofdm_scrambler());
+  app_log_info("Current OFDM scrambler: %" PRIu8 "\n", get_ofdm_scrambler());
 }
 
 /******************************************************************************
@@ -300,7 +297,7 @@ void cli_set_ofdm_scrambler(sl_cli_command_arg_t *arguments)
   uint8_t ofdm_scrambler = sl_cli_get_argument_uint8(arguments, 0);
 
   set_ofdm_scrambler(ofdm_scrambler);
-  app_log_info("Current OFDM scrambler: %d\n", get_ofdm_scrambler());
+  app_log_info("Current OFDM scrambler: %" PRIu8 "\n", get_ofdm_scrambler());
 
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   app_task_notify();

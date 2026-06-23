@@ -73,8 +73,8 @@ class ImageTypeRequired(Exception):
 
 
 class PAwRSyncLostError(Exception):
-    """PAwR sync lost occured"""
-    def __init__(self, message, esl_id, group_id, ble_address):            
+    """PAwR sync lost occurred"""
+    def __init__(self, message, esl_id, group_id, ble_address):
         super().__init__(message)
         self.esl_id = esl_id
         self.group_id = group_id
@@ -546,15 +546,15 @@ class Tag:
         self.limit_connection_retries()
         self._past_subevents_max = None
         self._associated = False
-        
+
         # Notify about BOTH state and esl_state at the end of reset
         new_esl_state = self.esl_state
         if new_esl_state != old_esl_state:
             self._notify("esl_state", old_esl_state, new_esl_state)
-        
+
         if previous_state != TagState.IDLE:
             self._notify("state", previous_state, TagState.IDLE)
-        
+
         if previous_handle is not None:
             self._notify("connection_handle", previous_handle, None)
 
@@ -866,7 +866,7 @@ class Tag:
                             ix,
                         )
                         self.close_connection(force_close=True)
-                
+
                 old_esl_state = self.esl_state
                 self.gatt_values.update(evt.tlv_data)
                 new_esl_state = self.esl_state
@@ -934,10 +934,21 @@ class Tag:
         elif isinstance(evt, esl_lib.EventConfigureTagResponse):
             if evt.connection_handle == self.connection_handle:
                 if evt.status == elw.SL_STATUS_OK:
+                    # SL_STATUS_OK confirms the device accepted the write; notify TagDB here when
+                    # the stored ESL Address changes (setter alone runs before confirmation).
+                    old_esl_address_for_notify = self.esl_address
                     self.gatt_values[evt.type] = self.gatt_write_values[evt.type]
+                    if evt.type == elw.ESL_LIB_DATA_TYPE_GATT_ESL_ADDRESS:
+                        new_esl_address = self.esl_address
+                        if old_esl_address_for_notify != new_esl_address:
+                            self._notify(
+                                "esl_address",
+                                old_esl_address_for_notify,
+                                new_esl_address,
+                            )
                 else:
                     self.log.error(
-                        "Tag configuration failed for %s at addres %s with result %s!",
+                        "Tag configuration failed for %s at address %s with result %s!",
                         esl_lib.get_enum("ESL_LIB_DATA_TYPE_", evt.type),
                         self.ble_address,
                         esl_lib.get_sl_status_str(evt.status),

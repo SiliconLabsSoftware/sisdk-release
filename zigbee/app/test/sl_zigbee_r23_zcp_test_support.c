@@ -1234,17 +1234,17 @@ void exportTcBackupData(sl_cli_command_arg_t *arguments)
     sl_zigbee_core_debug_print("%s Key Data ", type_str);
     sl_zigbee_core_debug_print(
       MACRO_FMT_HEX_EIGHT,
-      key_data[0], key_data[1],
-      key_data[2], key_data[3],
-      key_data[4], key_data[5],
-      key_data[6], key_data[7]
+      key_data->key[0], key_data->key[1],
+      key_data->key[2], key_data->key[3],
+      key_data->key[4], key_data->key[5],
+      key_data->key[6], key_data->key[7]
       );
     sl_zigbee_core_debug_print(
       MACRO_FMT_HEX_EIGHT,
-      key_data[8], key_data[9],
-      key_data[10], key_data[11],
-      key_data[12], key_data[13],
-      key_data[14], key_data[15]
+      key_data->key[8], key_data->key[9],
+      key_data->key[10], key_data->key[11],
+      key_data->key[12], key_data->key[13],
+      key_data->key[14], key_data->key[15]
       );
     sl_zigbee_core_debug_println("");
   }

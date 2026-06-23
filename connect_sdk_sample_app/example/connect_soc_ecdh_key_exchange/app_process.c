@@ -32,6 +32,8 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdio.h>
+#include <inttypes.h>
+
 #include "sl_component_catalog.h"
 #include "app_log.h"
 #include "app_framework_common.h"
@@ -87,7 +89,7 @@ void emberAfTickCallback(void)
 void emberAfIncomingMessageCallback(EmberIncomingMessage *message)
 {
   if (message->endpoint == SL_CONNECT_DATA_ENDPOINT) {
-    app_log_info("RX: Data from 0x%04x:", message->source);
+    app_log_info("RX: Data from 0x%04" PRIX16 ":", message->source);
     app_log_hexdump_info(message->payload, message->length);
     app_log_append_info("\n");
   }
@@ -110,7 +112,7 @@ void emberAfMessageSentCallback(EmberStatus status,
 {
   (void) message;
   if (status != EMBER_SUCCESS) {
-    app_log_error("TX: 0x%02x\n", status);
+    app_log_error("TX: 0x%02" PRIX8 "\n", status);
   }
 }
 
@@ -124,7 +126,7 @@ void emberAfStackStatusCallback(EmberStatus status)
       app_log_info("Network down\n");
       break;
     default:
-      app_log_info("Stack status: 0x%02x\n", status);
+      app_log_info("Stack status: 0x%02" PRIX8 "\n", status);
       break;
   }
 }
@@ -167,9 +169,9 @@ bool set_security_key(uint8_t *key, size_t key_length)
                           &connect_network_key_id);
 
   if (status == PSA_SUCCESS) {
-    app_log_info("Security key import successful, key id: %lu\n", connect_network_key_id);
+    app_log_info("Security key import successful, key id: %" PRIu32 "\n", connect_network_key_id);
   } else {
-    app_log_info("Security Key import failed: 0x%02lx\n", status);
+    app_log_info("Security Key import failed: %" PRId32 "\n", status);
   }
 
   emstatus = emberSetPsaSecurityKey(connect_network_key_id);
@@ -178,7 +180,7 @@ bool set_security_key(uint8_t *key, size_t key_length)
     app_log_info("Security key set successful\n");
     success = true;
   } else {
-    app_log_info("Security key set failed 0x%02X\n", emstatus);
+    app_log_info("Security key set failed 0x%02" PRIX8 "\n", emstatus);
   }
 
   return success;
@@ -213,28 +215,28 @@ static void process_ecdh_key_exchange_request(EmberIncomingMessage *message)
   app_log_info("PSA: generating public/private key pair\n");
   psa_status = sl_connect_ecdh_key_exchange_generate_key_pair(&key_pair);
   if (psa_status != PSA_SUCCESS) {
-    app_log_error("PSA: generate key pair failed (status: %ld)\n", psa_status);
+    app_log_error("PSA: generate key pair failed (status: %" PRId32 ")\n", psa_status);
     return;
   }
 
   app_log_info("PSA: exporting public key\n");
   psa_status = sl_connect_ecdh_key_exchange_export_public_key(key_pair, public_key, sizeof(public_key), &public_key_length);
   if (psa_status != PSA_SUCCESS) {
-    app_log_error("PSA: export public key failed (status: %ld)\n", psa_status);
+    app_log_error("PSA: export public key failed (status: %" PRId32 ")\n", psa_status);
     return;
   }
 
   app_log_info("PSA: generating shared key\n");
   psa_status = sl_connect_ecdh_key_exchange_generate_shared_key(key_pair, peer_public_key, peer_public_key_length, &hkdf_key_id);
   if (psa_status != PSA_SUCCESS) {
-    app_log_error("PSA: generate shared key failed (status: %ld)\n", psa_status);
+    app_log_error("PSA: generate shared key failed (status: %" PRId32 ")\n", psa_status);
     return;
   }
 
   app_log_info("PSA: destroying public/private key pair\n");
   psa_status = sl_connect_ecdh_key_exchange_destroy_key(key_pair);
   if (psa_status != PSA_SUCCESS) {
-    app_log_error("PSA: destroy key pair failed (status: %ld)\n", psa_status);
+    app_log_error("PSA: destroy key pair failed (status: %" PRId32 ")\n", psa_status);
     return;
   }
 
@@ -250,7 +252,7 @@ static void process_ecdh_key_exchange_request(EmberIncomingMessage *message)
     sizeof(iv),
     &iv_length);
   if (psa_status != PSA_SUCCESS) {
-    app_log_error("PSA: encrypt network key failed (status: %ld)\n", psa_status);
+    app_log_error("PSA: encrypt network key failed (status: %" PRId32 ")\n", psa_status);
     return;
   }
 
@@ -267,7 +269,7 @@ static void process_ecdh_key_exchange_request(EmberIncomingMessage *message)
   app_log_info("PSA: destroying shared key\n");
   psa_status = sl_connect_ecdh_key_exchange_destroy_key(hkdf_key_id);
   if (psa_status != PSA_SUCCESS) {
-    app_log_error("PSA: destroy HKDF key failed (status: %ld)\n", psa_status);
+    app_log_error("PSA: destroy HKDF key failed (status: %" PRId32 ")\n", psa_status);
     return;
   }
 
@@ -319,7 +321,7 @@ static void process_ecdh_key_exchange_request(EmberIncomingMessage *message)
     ecdh_message,
     tx_options & ~EMBER_OPTIONS_SECURITY_ENABLED);
   if (em_status != EMBER_SUCCESS) {
-    app_log_error("Connect: message send failed (status: %u)\n", em_status);
+    app_log_error("Connect: message send failed (status: %" PRIu8 ")\n", em_status);
   }
 }
 
@@ -364,14 +366,14 @@ static void send_ecdh_key_exchange_reply(EmberIncomingMessage *message)
   app_log_info("PSA: generating shared key\n");
   psa_status = sl_connect_ecdh_key_exchange_generate_shared_key(requestor_key_pair, peer_public_key, peer_public_key_length, &hkdf_key_id);
   if (psa_status != PSA_SUCCESS) {
-    app_log_error("PSA: generate shared key failed (status: %ld)\n", psa_status);
+    app_log_error("PSA: generate shared key failed (status: %" PRId32 ")\n", psa_status);
     psa_fail = true;
   }
 
   app_log_info("PSA: destroying public/private key pair\n");
   psa_status = sl_connect_ecdh_key_exchange_destroy_key(requestor_key_pair);
   if (psa_status != PSA_SUCCESS || psa_fail) {
-    app_log_error("PSA: destroy key pair failed (status: %ld)\n", psa_status);
+    app_log_error("PSA: destroy key pair failed (status: %" PRId32 ")\n", psa_status);
     return;
   }
 
@@ -387,14 +389,14 @@ static void send_ecdh_key_exchange_reply(EmberIncomingMessage *message)
     sizeof(decrypted_connect_network_key),
     &decrypted_connect_network_key_length);
   if (psa_status != PSA_SUCCESS) {
-    app_log_error("PSA: decrypt failed (status: %ld)\n", psa_status);
+    app_log_error("PSA: decrypt failed (status: %" PRId32 ")\n", psa_status);
     psa_fail = true;
   }
 
   app_log_info("PSA: destroying shared key\n");
   psa_status = sl_connect_ecdh_key_exchange_destroy_key(hkdf_key_id);
   if (psa_status != PSA_SUCCESS || psa_fail) {
-    app_log_error("PSA: destroy HKDF key failed (status: %ld)\n", psa_status);
+    app_log_error("PSA: destroy HKDF key failed (status: %" PRId32 ")\n", psa_status);
     return;
   }
 

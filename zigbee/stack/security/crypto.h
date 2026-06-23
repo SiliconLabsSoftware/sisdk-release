@@ -54,12 +54,11 @@ void sli_zigbee_calculate_and_encrypt_header_mic(uint8_t *header,
 // performs decryption and authentication. Upon successful authentication of
 // the message, the buffer content is replaced with the decrypted message.
 // upon failure to authenticate, the buffer contents remains unchanged.
-bool sli_zigbee_gp_decrypt_and_authenticate(bool decrypt,
+bool sli_zigbee_gp_decrypt_and_authenticate(sl_zigbee_gp_security_level_t gpdfSecurityLevel,
                                             sli_buffer_manager_buffer_t header,
                                             uint8_t authenticationStartIndex,
                                             uint8_t encryptionStartIndex,
-                                            uint8_t *nonce,
-                                            uint8_t *rxMic);
+                                            uint8_t *nonce);
 
 // Routines for extracting timing data for the CCM* crypto operations.
 // The code currently only measures NWK encryption.  Since we are only

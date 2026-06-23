@@ -1,23 +1,53 @@
-# Sleeptimer FreeRTOS
+# Sleeptimer Kernel FreeRTOS
 
-This example application demonstrates the use of timers in an RTOS-based environment using FreeRTOS. The application uses the low-frequency RTC (Real Time Clock) peripheral to create periodic and one-shot timers. The on-board buttons control the timers' stop and start operations. Status is shown on the virtual COM serial port console.
+Demonstrates periodic and one-shot RTC timers in a FreeRTOS task. Use buttons to stop or restart timers; status is reported over VCOM.
 
-## Application Overview
+## Table of Contents
 
-The application creates **three timers**:
-- **Periodic timer**: Toggles LED0 when its timeout occurs.
-- **One-shot timer**: Toggles LED1 once when its timeout occurs.
-- **Status timer**: Prints the remaining time of the periodic & one-shot timers every second.
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-When the application starts (after flashing), both the periodic and one-shot timers are started automatically.
+## Purpose / Scope
 
-- **Button0** is used to start/stop the periodic timer.
-- **Button1** is used to start/stop the one-shot timer.
-- The status timer continuously prints the status of the other two timers whenever its timeout occurs. It cannot be stopped.
+This example demonstrates the Sleeptimer service in a FreeRTOS application. It uses the low-frequency RTC to create periodic and one-shot timers running in a FreeRTOS task. A periodic timer toggles LED0; a one-shot timer toggles LED1 once; a status timer prints the remaining time of the other two over VCOM. Button0 controls the periodic timer start/stop; Button1 controls the one-shot timer. This shows how to combine Sleeptimer with FreeRTOS for timed behavior and button-driven control.
 
-## Requirements
+## Prerequisites / Setup Requirements
 
-- Silicon Labs board with **2 buttons** and **2 LEDs**.
+**Hardware**
+- Silicon Labs kit with low-frequency RTC, at least 2 buttons and 2 LEDs.
+- USB cable for VCOM.
+
+**Software**
+- Simplicity Studio 5 (or later).
+- A terminal application to connect to VCOM.
+
+## Steps to Run Demo
+
+1. Open the project in Simplicity Studio and build it.
+2. Connect the kit via USB and flash the application.
+3. Open the Studio Console or a serial terminal and select the kit's VCOM port.
+4. After reset, both timers start. Observe LED0 (periodic) and LED1 (one-shot).
+5. Use Button0 to stop/start the periodic timer; use Button1 to stop/start the one-shot timer.
+6. Watch the terminal for status messages.
+
+## Troubleshooting
+
+- **No LED or button response:** Ensure the board has 2 buttons and 2 LEDs and pin configuration matches your board.
+- **No VCOM output:** Check kit connection and VCOM port; verify baud rate.
+- **Timers not firing:** Ensure the low-frequency oscillator and RTC are configured for the part.
 
 ## Resources
+
 - [AN0014: EFM32 Timers](https://www.silabs.com/documents/public/application-notes/an0014-efm32-timers.pdf)
+- [Sleeptimer Service](https://docs.silabs.com/gecko-platform/latest/service-api/group-sleeptimer)
+- [Silicon Labs Community](https://www.silabs.com/community)
+
+## Report Bugs & Get Support
+
+You are encouraged to report issues and get help from the community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

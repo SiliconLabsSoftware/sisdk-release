@@ -31,8 +31,8 @@
  *   This file contains definitions for the CLI util functions.
  */
 
-#ifndef CLI_UTILS_HPP_
-#define CLI_UTILS_HPP_
+#ifndef OT_CLI_CLI_UTILS_HPP_
+#define OT_CLI_CLI_UTILS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -99,7 +99,7 @@ public:
 private:
     static constexpr uint16_t kInputOutputLogStringSize = OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LOG_STRING_SIZE;
 
-    void OutputV(const char *aFormat, va_list aArguments);
+    void OutputV(const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 
     otCliOutputCallback mCallback;
     void               *mCallbackContext;
@@ -196,6 +196,15 @@ public:
      * @returns The pointer to the OpenThread instance.
      */
     otInstance *GetInstancePtr(void) { return mInstance; }
+
+    /**
+     * Converts a boolean to "yes" or "no" string.
+     *
+     * @param[in] aBool  A boolean value to convert.
+     *
+     * @returns The converted string representation of @p aBool ("yes" for TRUE and "no" for FALSE).
+     */
+    static const char *ToYesNo(bool aBool);
 
     /**
      * Represents a buffer which is used when converting a `uint64` value to string in decimal format.
@@ -341,6 +350,15 @@ public:
      * @param[in] aEnabled  A boolean indicating the status. TRUE outputs "Enabled", FALSE outputs "Disabled".
      */
     void OutputEnabledDisabledStatus(bool aEnabled);
+
+    /**
+     * Outputs a given duration interval in seconds including the msec remainder.
+     *
+     * The duration is outputted in seconds with msec remainder, e.g., 12.047.
+     *
+     * @param[in] aMsecDuration   A duration interval in msec.
+     */
+    void OutputMsecDurationInSec(uint32_t aMsecDuration);
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
@@ -553,7 +571,10 @@ public:
         otError error = OT_ERROR_NONE;
 
         VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
         OutputLine(FormatStringFor<ValueType>(), aGetHandler(GetInstancePtr()));
+#pragma GCC diagnostic pop
 
     exit:
         return error;
@@ -728,7 +749,7 @@ public:
     static const char *BorderRoutingStateToString(otBorderRoutingState aState);
 
 protected:
-    void OutputFormatV(const char *aFormat, va_list aArguments);
+    void OutputFormatV(const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
     void LogInput(const Arg *aArgs);
@@ -755,13 +776,9 @@ template <> inline constexpr const char *Utils::FormatStringFor<uint8_t>(void) {
 
 template <> inline constexpr const char *Utils::FormatStringFor<uint16_t>(void) { return "%u"; }
 
-template <> inline constexpr const char *Utils::FormatStringFor<uint32_t>(void) { return "%lu"; }
-
 template <> inline constexpr const char *Utils::FormatStringFor<int8_t>(void) { return "%d"; }
 
 template <> inline constexpr const char *Utils::FormatStringFor<int16_t>(void) { return "%d"; }
-
-template <> inline constexpr const char *Utils::FormatStringFor<int32_t>(void) { return "%ld"; }
 
 template <> inline constexpr const char *Utils::FormatStringFor<const char *>(void) { return "%s"; }
 
@@ -772,7 +789,8 @@ template <> inline otError Utils::ProcessGet<uint32_t>(Arg aArgs[], GetHandler<u
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    OutputLine(FormatStringFor<uint32_t>(), ToUlong(aGetHandler(GetInstancePtr())));
+    static_assert(sizeof(unsigned long) >= sizeof(uint32_t), "OpenThread assumes unsigned long is at least 32bit");
+    OutputLine("%lu", ToUlong(aGetHandler(GetInstancePtr())));
 
 exit:
     return error;
@@ -783,7 +801,8 @@ template <> inline otError Utils::ProcessGet<int32_t>(Arg aArgs[], GetHandler<in
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    OutputLine(FormatStringFor<int32_t>(), static_cast<long int>(aGetHandler(GetInstancePtr())));
+    static_assert(sizeof(long) >= sizeof(int32_t), "OpenThread assumes long is at least 32bit");
+    OutputLine("%ld", static_cast<long int>(aGetHandler(GetInstancePtr())));
 
 exit:
     return error;
@@ -792,4 +811,4 @@ exit:
 } // namespace Cli
 } // namespace ot
 
-#endif // CLI_UTILS_HPP_
+#endif // OT_CLI_CLI_UTILS_HPP_

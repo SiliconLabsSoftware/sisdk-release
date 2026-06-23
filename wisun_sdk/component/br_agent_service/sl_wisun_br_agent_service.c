@@ -61,7 +61,7 @@
 // -----------------------------------------------------------------------------
 
 // Agent Service Thread stack size in words
-#define SL_WISUN_BR_AGENT_SERVICE_STACK_SIZE_WORD         (256UL)
+#define SL_WISUN_BR_AGENT_SERVICE_STACK_SIZE_WORD         (512UL)
 
 // Agent Service buffer size
 #define SL_WISUN_BR_AGENT_SERVICE_BUFF_SIZE               (2048U)
@@ -196,13 +196,8 @@ static osThreadId_t _agent_service_task = NULL;
 static const osThreadAttr_t _agent_service_task_attr = {
   .name       = "AgentServiceTask",
   .attr_bits  = osThreadDetached,
-  .cb_mem     = NULL,
-  .cb_size    = 0UL,
-  .stack_mem  = NULL,
   .stack_size = (SL_WISUN_BR_AGENT_SERVICE_STACK_SIZE_WORD * sizeof(void *)) & 0xFFFFFFF8U,
-  .priority   = osPriorityNormal1,
-  .tz_module  = 0UL,
-  .reserved   = 0UL
+  .priority   = osPriorityNormal1
 };
 
 // Remote address of the host Agent Service

@@ -45,6 +45,38 @@ library:
   - cortexm33
   unless:
   - bgapi_protocol_rtos_adaptation
+- path: build/gcc/cortex-m55/bgapi_trace/release/libbgapi_trace_stub.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  unless:
+  - bgapi_trace
+- path: build/gcc/cortex-m55/protocol/command/release/libbgapi_command.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+- path: build/gcc/cortex-m55/protocol/core/release/libbgapi_core.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+- path: build/gcc/cortex-m55/protocol/device/release/libbgapi_device.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+- path: build/gcc/cortex-m55/protocol/event/release/libbgapi_event.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+- path: build/gcc/cortex-m55/protocol/release/libbgapi_protocol.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+- path: build/gcc/cortex-m55/rtos_adaptation/release/libbgapi_protocol_rtos_adaptation_stub.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  unless:
+  - bgapi_protocol_rtos_adaptation
 - path: build/iar/cortex-m33/bgapi_trace/release/libbgapi_trace_stub.a
   condition:
   - toolchain_iar
@@ -77,6 +109,38 @@ library:
   - cortexm33
   unless:
   - bgapi_protocol_rtos_adaptation
+- path: build/iar/cortex-m55/bgapi_trace/release/libbgapi_trace_stub.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  unless:
+  - bgapi_trace
+- path: build/iar/cortex-m55/protocol/command/release/libbgapi_command.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+- path: build/iar/cortex-m55/protocol/core/release/libbgapi_core.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+- path: build/iar/cortex-m55/protocol/device/release/libbgapi_device.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+- path: build/iar/cortex-m55/protocol/event/release/libbgapi_event.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+- path: build/iar/cortex-m55/protocol/release/libbgapi_protocol.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+- path: build/iar/cortex-m55/rtos_adaptation/release/libbgapi_protocol_rtos_adaptation_stub.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  unless:
+  - bgapi_protocol_rtos_adaptation
 - path: build/llvm/cortex-m33/bgapi_trace/release/libbgapi_trace_stub.a
   condition:
   - toolchain_llvm
@@ -107,6 +171,38 @@ library:
   condition:
   - toolchain_llvm
   - cortexm33
+  unless:
+  - bgapi_protocol_rtos_adaptation
+- path: build/llvm/cortex-m55/bgapi_trace/release/libbgapi_trace_stub.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  unless:
+  - bgapi_trace
+- path: build/llvm/cortex-m55/protocol/command/release/libbgapi_command.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+- path: build/llvm/cortex-m55/protocol/core/release/libbgapi_core.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+- path: build/llvm/cortex-m55/protocol/device/release/libbgapi_device.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+- path: build/llvm/cortex-m55/protocol/event/release/libbgapi_event.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+- path: build/llvm/cortex-m55/protocol/release/libbgapi_protocol.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+- path: build/llvm/cortex-m55/rtos_adaptation/release/libbgapi_protocol_rtos_adaptation_stub.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
   unless:
   - bgapi_protocol_rtos_adaptation
 metadata:

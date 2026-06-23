@@ -32,6 +32,11 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include "sl_rail_util_init.h"
+#include "sl_component_catalog.h"
+
+#if defined(SL_CATALOG_KERNEL_PRESENT)
+#include "app_task_init.h"
+#endif
 
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs

@@ -17,8 +17,6 @@ metadata:
   sbom:
     license: Zlib
 root_path: platform_core/platform/common
-source:
-- path: src/sl_tz_non_secure_execution.c
 define:
 - name: SL_TZ_NON_SECURE_EXECUTION
 - name: configRUN_FREERTOS_SECURE_ONLY
@@ -32,6 +30,10 @@ requires:
 - name: device_series_3
 - name: trustzone_unaware
 - name: sl_common
+- name: tz_non_secure_execution_impl
+recommends:
+- id: tz_non_secure_execution_prebuilt
+  vendor: silabs
 conflicts:
 - name: ram_only_execution
 template_contribution:

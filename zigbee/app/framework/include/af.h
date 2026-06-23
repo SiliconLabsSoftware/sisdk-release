@@ -84,12 +84,12 @@ extern void sl_zigbee_af_test_harness_z3_reset_event_handler(sl_zigbee_af_event_
 #endif // SL_COMPONENT_CATALOG_PRESENT
 
 #if defined(SL_CATALOG_ZIGBEE_ZCL_FRAMEWORK_CORE_PRESENT) \
-  || defined(SL_ZIGBEE_SCRIPTED_TEST) || defined(SL_CATALOG_ZIGBEE_SIMULATION_PRESENT)
+  || (defined(SL_ZIGBEE_AF_NCP) && defined(SL_CATALOG_ZIGBEE_SIMULATION_PRESENT))
 #include "app/framework/util/print.h"
 #include "app/framework/util/zcl-debug-print.h"
 #elif defined(SL_CATALOG_ZIGBEE_GREEN_POWER_ADAPTER_PRESENT)
 #include "green-power-print-wrapper.h"
-#endif // SL_CATALOG_ZIGBEE_ZCL_FRAMEWORK_CORE_PRESENT || SL_ZIGBEE_SCRIPTED_TEST || SL_CATALOG_ZIGBEE_SIMULATION_PRESENT
+#endif // SL_CATALOG_ZIGBEE_ZCL_FRAMEWORK_CORE_PRESENT
 
 #ifdef SL_CATALOG_CLI_PRESENT
 #include "sl_cli.h"
@@ -827,6 +827,10 @@ uint32_t sl_zigbee_af_get_int24u(const uint8_t* message, uint16_t currentIndex, 
  */
 uint16_t sl_zigbee_af_get_int16u(const uint8_t* message, uint16_t currentIndex, uint16_t msgLen);
 /**
+ * @brief Extract an 8-bit integer from the message buffer.
+ */
+uint8_t sl_zigbee_af_get_int8u(const uint8_t* message, uint16_t currentIndex, uint16_t msgLen);
+/**
  * @brief Extract a ZCL string from the message buffer.
  */
 uint8_t* sl_zigbee_af_get_string(uint8_t* message, uint16_t currentIndex, uint16_t msgLen);
@@ -839,11 +843,6 @@ uint8_t* sl_zigbee_af_get_long_string(uint8_t* message, uint16_t currentIndex, u
  * in the given destination. Returns the number of bytes copied.
  */
 uint8_t sl_zigbee_af_get_date(uint8_t* message, uint16_t currentIndex, uint16_t msgLen, sl_zigbee_af_date_t *destination);
-
-/**
- * @brief Extract a single byte out of the message.
- */
-#define sl_zigbee_af_get_int8u(message, currentIndex, msgLen) message[currentIndex]
 
 /**
  * @brief Copy a uint8_t from variable into buffer.

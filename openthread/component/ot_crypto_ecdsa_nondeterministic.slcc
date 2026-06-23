@@ -1,0 +1,25 @@
+id: ot_crypto_ecdsa_nondeterministic
+label: Non-Deterministic ECDSA Support
+package: openthread
+category: OpenThread|Crypto
+quality: production
+description: >
+  This component provides third party support and configuration needed for non-deterministic ecdsa.
+provides:
+- name: ot_crypto_ecdsa
+- name: ot_crypto_ecdsa_nondeterministic
+requires:
+- name: psa_crypto_ecdsa
+  condition: [ot_psa_crypto]
+- name: mbedtls_ecdsa
+  condition: [ot_mbedtls]
+conflicts:
+- name: ot_crypto_ecdsa_deterministic
+define:
+- name: OPENTHREAD_CONFIG_DETERMINISTIC_ECDSA_ENABLE
+  value: 0
+metadata:
+  sbom:
+    license: Zlib
+
+root_path: openthread

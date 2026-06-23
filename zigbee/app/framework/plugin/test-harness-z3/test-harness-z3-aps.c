@@ -172,10 +172,10 @@ void sli_zigbee_af_test_harness_z3_aps_aps_remove_device(SL_CLI_COMMAND_ARG)
     }
   }
 
-  sl_zigbee_af_core_println("%s: %s: 0x%02X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Remove device",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%02X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Remove device",
+                           status);
 }
 
 // plugin test-harness z3 aps aps-request-key <dstShort:2> <keyType:1>
@@ -292,8 +292,8 @@ void sli_zigbee_af_test_harness_z3_aps_aps_request_key_command(SL_CLI_COMMAND_AR
   done:
 #endif /* EZSP_HOST */
 
-  sl_zigbee_af_core_println("%s: %s: 0x%02X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Request key",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%02X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Request key",
+                           status);
 }

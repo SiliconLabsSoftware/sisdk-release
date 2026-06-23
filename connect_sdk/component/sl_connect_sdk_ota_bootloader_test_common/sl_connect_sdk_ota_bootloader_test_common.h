@@ -30,6 +30,8 @@
 #ifndef _SL_CONNECT_SDK_OTA_BOOTLOADER_TEST_COMMON_H_
 #define _SL_CONNECT_SDK_OTA_BOOTLOADER_TEST_COMMON_H_
 
+#include <stdbool.h>
+
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------

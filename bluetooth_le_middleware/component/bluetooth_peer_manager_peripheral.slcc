@@ -1,0 +1,56 @@
+id: bluetooth_peer_manager_peripheral
+package: bluetooth_le_middleware
+label: Bluetooth Peer Manager Peripheral
+description: >
+  Peripheral role of Peer Manager for Bluetooth Low Energy.
+  Responsible for advertising and creating connections. The user can set
+  the advertising parameters.
+category: Bluetooth|Application|Miscellaneous
+metadata:
+  sbom:
+    license: Zlib
+quality: production
+root_path: bluetooth_le_middleware/common/bluetooth_peer_manager/peripheral
+include:
+- path: inc
+  file_list:
+  - path: sl_bt_peer_manager_peripheral.h
+  - path: sli_bt_peer_manager_peripheral.h
+source:
+- path: src/sl_bt_peer_manager_peripheral.c
+requires:
+- name: app_log
+- name: bluetooth_api
+- name: bluetooth_feature_system
+  condition:
+  - device_cortexm
+- name: bluetooth_feature_connection_role_peripheral
+  condition:
+  - device_cortexm
+- name: bluetooth_feature_legacy_advertiser
+  condition:
+  - device_cortexm
+- name: bluetooth_peer_manager_common
+config_file:
+- path: config/sl_bt_peer_manager_peripheral_config.h
+- path: config/ble_peer_manager_peripheral_config_compat.h
+  condition:
+  - ble_peer_manager_peripheral
+provides:
+- name: bluetooth_peer_manager_peripheral
+template_contribution:
+- name: bluetooth_on_event
+  value:
+    include: sli_bt_peer_manager_peripheral.h
+    function: sli_bt_peer_manager_peripheral_on_bt_event
+  priority: 0
+- name: component_catalog
+  value: bluetooth_peer_manager_peripheral
+- name: event_handler
+  value:
+    event: internal_app_init
+    include: sl_bt_peer_manager_peripheral.h
+    handler: sl_bt_peer_manager_peripheral_init
+documentation:
+  docset: bluetooth
+  document: bluetooth-service-api/bluetooth-peer-manager-peripheral

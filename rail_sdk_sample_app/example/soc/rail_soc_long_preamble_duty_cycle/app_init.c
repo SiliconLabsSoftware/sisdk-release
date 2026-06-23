@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "sl_rail.h"
 #include "em_device.h"
@@ -111,7 +112,7 @@ void rail_app_init(void)
   // Set to IDLE (channel select automatically start RX)
   rail_status = sl_rail_idle(rail_handle, SL_RAIL_IDLE, true);
   if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_warning("Couldn't enter into IDLE, error code %lu\n", rail_status);
+    app_log_warning("Couldn't enter into IDLE, error code 0x%08" PRIX32 "\n", rail_status);
   }
 
   // Get current bitrate
@@ -130,13 +131,13 @@ void rail_app_init(void)
   }
   rail_status = sl_rail_set_tx_alt_preamble_length(rail_handle, preamble_bit_length);
   if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_error("sl_rail_set_tx_alt_preamble_length failed with %d \n", rail_status);
+    app_log_error("sl_rail_set_tx_alt_preamble_length failed with 0x%08" PRIX32 " \n", rail_status);
   }
 #else
   rail_status = sl_rail_get_default_rx_duty_cycle_config(rail_handle, &duty_cycle_config);
 
   if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_error("sl_rail_get_default_rx_duty_cycle_config failed with %lu \n", rail_status);
+    app_log_error("sl_rail_get_default_rx_duty_cycle_config failed with 0x%08" PRIX32 " \n", rail_status);
   }
 #endif
 
@@ -152,12 +153,12 @@ void rail_app_init(void)
   // CLI info message
   print_sample_app_name("Long Preamble Duty Cycle");
 #if defined(_SILICON_LABS_32B_SERIES_2_CONFIG_1) || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_2) || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_7) || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_9)
-  app_log_info("Preamble length %d for bitrate %lu b/s with %lu us off time\n",
+  app_log_info("Preamble length %" PRIu16 " for bitrate %" PRIu32 " b/s with %" PRIu32 " us off time\n",
                preamble_bit_length,
                bit_rate,
                duty_cycle_config.delay_us);
 #else
-  app_log_info("Bitrate %lu b/s with %lu us off time. Duty cycling with signal qualifier.\n",
+  app_log_info("Bitrate %" PRIu32 " b/s with %" PRIu32 " us off time. Duty cycling with signal qualifier.\n",
                bit_rate,
                duty_cycle_config.delay_us);
 #endif

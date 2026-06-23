@@ -1,5 +1,5 @@
-from pyradioconfig.parts.common.calculators.calc_frame_detect import CALC_Frame_Detect
+from pyradioconfig.parts.leopard.calculators.calc_frame_detect import CalcFrameDetectLeopard
 
 
-class CalcFrameDetectLion(CALC_Frame_Detect):
+class CalcFrameDetectLion(CalcFrameDetectLeopard):
     pass

@@ -18,8 +18,6 @@
 #include <stdbool.h>
 #include <cmsis_os2.h>
 #include <em_device.h>
-#include <em_ldma.h>
-#include <dmadrv.h>
 #include "sl_component_catalog.h"
 #include "sli_wisun_timer_service.h"
 

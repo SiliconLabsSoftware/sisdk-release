@@ -24,7 +24,11 @@ include:
 - path: platform/bootloader
   file_list:
   - path: config/btl_config.h
-  - path: core/btl_util.h
+requires:
+- name: bootloader_interface_common
+  condition: [trustzone_unaware]
+- name: bootloader_interface_common
+  condition: [trustzone_nonsecure]
 provides:
 - name: bootloader_debug
 - name: bootloader_nonsecure_incompatible

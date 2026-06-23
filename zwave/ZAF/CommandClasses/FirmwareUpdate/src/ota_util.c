@@ -498,7 +498,9 @@ static void cc_firmware_update_send_status_report(void)
     } else {
       status = FIRMWARE_UPDATE_ACTIVATION_STATUS_REPORT_ERROR_ACTIVATING_THE_FIRMWARE_V5;
     }
-    CC_FirmwareUpdate_ActivationStatusReport_tx(&rxOpt, file.checksum, status);
+    if (JOB_STATUS_SUCCESS != CC_FirmwareUpdate_ActivationStatusReport_tx(&rxOpt, file.checksum, status)) {
+      ZPAL_LOG_ERROR(ZPAL_LOG_CC_FIRMWARE_UPDATE, "Activation status report tx failed");
+    }
   } else {
     uint8_t status;
     if (updated_successfully) {
@@ -508,10 +510,12 @@ static void cc_firmware_update_send_status_report(void)
     }
     // Tx Status Report
     ZPAL_LOG_DEBUG(ZPAL_LOG_CC_FIRMWARE_UPDATE, "\nTX Status Report!");
-    CmdClassFirmwareUpdateMdStatusReport(&rxOpt,
-                                         status,
-                                         0,
-                                         NULL);
+    if (JOB_STATUS_SUCCESS != CmdClassFirmwareUpdateMdStatusReport(&rxOpt,
+                                                                   status,
+                                                                   0,
+                                                                   NULL)) {
+      ZPAL_LOG_ERROR(ZPAL_LOG_CC_FIRMWARE_UPDATE, "Firmware update MD status report tx failed");
+    }
   }
 }
 
@@ -829,10 +833,11 @@ handleFirmWareIdGetExtended(uint8_t n)
   } else if (0 == n) {
     /*
      * Create the firmware ID from the LSB of product type ID and the LSB of product ID.
+     * Mask before shift to avoid integer overflow.
      */
     uint32_t ptid = (uint32_t)zaf_config_get_product_type_id();
     uint32_t pid = (uint32_t)zaf_config_get_product_id();
-    uint32_t v = (ptid << 8) | (pid & 0x000000FF);
+    uint32_t v = ((ptid & 0xFFFFU) << 8) | (pid & 0xFFU);
     return (uint16_t)v;
   } else {
     // Unsupported firmware target - return firmware ID zero.
@@ -1034,7 +1039,9 @@ reboot_and_install(void)
 {
   SZwaveCommandPackage Command;
   Command.eCommandType = EZWAVECOMMANDTYPE_BOOTLOADER_REBOOT;
-  QueueNotifyingSendToBack(ZAF_getZwCommandQueue(), (uint8_t *)&Command, 0);
+  if (EQUEUENOTIFYING_STATUS_SUCCESS != QueueNotifyingSendToBack(ZAF_getZwCommandQueue(), (uint8_t *)&Command, 0)) {
+    ZPAL_LOG_ERROR(ZPAL_LOG_CC_FIRMWARE_UPDATE, "Bootloader reboot command could not be queued");
+  }
 }
 
 /**

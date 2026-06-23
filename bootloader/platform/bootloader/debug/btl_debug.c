@@ -16,6 +16,7 @@
  ******************************************************************************/
 #include "btl_debug.h"
 #include <stdbool.h>
+#include <string.h>
 
 #if defined(SL_DEBUG_ASSERT_VERBOSE)
 SL_NORETURN void btl_assert(const char* file, int line)
@@ -52,8 +53,6 @@ SL_NORETURN void btl_assert(void)
 #endif
 
 #if defined(SL_DEBUG_PRINT) && (SL_DEBUG_PRINT == 1)
-
-#include <string.h>
 
 static void btl_debugWriteNibbleHex(uint8_t nibble)
 {

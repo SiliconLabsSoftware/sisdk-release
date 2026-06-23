@@ -39,4 +39,7 @@ ui_hints:
   highlight: readme.md
 tag:
   - hardware:component:segment_lcd_driver:cl010-1087-04
-
+  - hwfilter:board:hardware_board_has_segment_lcd
+  - hwfilter:board:simple_button:btn0
+  - hwfilter:board:simple_button:btn1
+  - hwfilter:device:device_series_2

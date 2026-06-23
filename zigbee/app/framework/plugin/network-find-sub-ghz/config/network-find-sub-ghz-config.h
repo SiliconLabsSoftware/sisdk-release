@@ -30,7 +30,7 @@
 // <i> The radio output power (in dBm) at which the node will operate. Enabling getting the power from a callback in the Network Find plugin overrides this option.
 #define SL_ZIGBEE_AF_PLUGIN_NETWORK_FIND_SUB_GHZ_RADIO_TX_POWER   3
 
-// <e> Sub-GHz channel masks
+// <h> Sub-GHz channel masks
 // <i> Sub-GHz channels that the network find component will preferentially scan when forming and joining.
 // <i> The channels are distributed in 4 pages and each page has certain number of channels as
 // <i> Page 28 [26-0], Page 29 [8-0], Page 30 [26-0] and Page 31 [26-0]
@@ -514,7 +514,7 @@
 
 // </e>
 
-// </e>
+// </h>
 #define PAGE_28_CHANNEL_MASK ((SL_ZIGBEE_AF_PLUGIN_NETWORK_FIND_SUB_GHZ_PAGE_28_MASK_CHANNEL_0 << 0) | (SL_ZIGBEE_AF_PLUGIN_NETWORK_FIND_SUB_GHZ_PAGE_28_MASK_CHANNEL_1 << 1)       \
                               | (SL_ZIGBEE_AF_PLUGIN_NETWORK_FIND_SUB_GHZ_PAGE_28_MASK_CHANNEL_2 << 2) | (SL_ZIGBEE_AF_PLUGIN_NETWORK_FIND_SUB_GHZ_PAGE_28_MASK_CHANNEL_3 << 3)     \
                               | (SL_ZIGBEE_AF_PLUGIN_NETWORK_FIND_SUB_GHZ_PAGE_28_MASK_CHANNEL_4 << 4) | (SL_ZIGBEE_AF_PLUGIN_NETWORK_FIND_SUB_GHZ_PAGE_28_MASK_CHANNEL_5 << 5)     \
@@ -568,7 +568,7 @@
 
 #define SL_ZIGBEE_AF_PLUGIN_NETWORK_FIND_SUB_GHZ_CHANNEL_MASK     { PAGE_28_CHANNEL_MASK, PAGE_29_CHANNEL_MASK, PAGE_30_CHANNEL_MASK, PAGE_31_CHANNEL_MASK }
 
-// <e> All Sub-GHz channels
+// <h> All Sub-GHz channels
 // <i> All usable Sub-GHz channels.
 // <i> The channels are distributed in 4 pages and each page has certain number of channels as
 // <i> Page 28 [26-0], Page 29 [8-0], Page 30 [26-0] and Page 31 [26-0]
@@ -1056,7 +1056,7 @@
 
 // </e>
 
-// </e>
+// </h>
 
 #define PAGE_28_ALL_CHANNELS ((SL_ZIGBEE_AF_PLUGIN_NETWORK_FIND_SUB_GHZ_PAGE_28_CHANNEL_0 << 0) | (SL_ZIGBEE_AF_PLUGIN_NETWORK_FIND_SUB_GHZ_PAGE_28_CHANNEL_1 << 1)       \
                               | (SL_ZIGBEE_AF_PLUGIN_NETWORK_FIND_SUB_GHZ_PAGE_28_CHANNEL_2 << 2) | (SL_ZIGBEE_AF_PLUGIN_NETWORK_FIND_SUB_GHZ_PAGE_28_CHANNEL_3 << 3)     \

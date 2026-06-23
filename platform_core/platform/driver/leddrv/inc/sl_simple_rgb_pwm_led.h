@@ -315,26 +315,28 @@ void sl_led_get_rgb_color(const sl_led_rgb_pwm_t *rgb,    ///< LED Instance hand
 ///   The RGB PWM Led driver provides functionality for controlling Red/Green/Blue/White
 ///   LEDs that are driven by PWM. The LEDs can be turned on and off and toggled, and remember
 ///   their color and brightness state when being turned back on. The color and brightness can be
-///   set using values of 0-65535 for red, green, blue, and white. Retrieving the state gives the
-///   on/off value, while retrieving the color gives the rgb values. The following
-///   code shows how to control these LEDs. An LED should always be initialized before
-///   calling any other functions with it.
+///   set using values of 0-65535 (depending on the resolution and frequency) for red, green and blue.
+///   Retrieving the state gives the on/off value, while retrieving the color 
+///   gives the rgb values. The following code shows how to control these LEDs. An LED should
+///   always be initialized before calling any other functions with it.
 ///
 ///   @code{.c}
 ///// initialize rgb LED
-///sl_led_init(&rgb_led_inst0);
+///sl_simple_rgb_pwm_led_init((void *) rgb_led_inst0.led_common.context); 
+///
+///uint32_t max = sl_hal_timer_get_top(SL_SIMPLE_RGB_PWM_LED_INST0_PERIPHERAL);
 ///
 ///// turn on LED, set color to purple, turn off, toggle (would maintain purple color)
-///sl_led_turn_on(&rgb_led_inst0);
-///uint16_t red = 65535; // max red
+///sl_simple_rgb_pwm_led_turn_on((void *) rgb_led_inst0.led_common.context);
+///uint16_t red = max; // max red
 ///uint16_t green = 0; // no green
-///uint16_t blue = 65535; // max blue
-///sl_led_set_rgb_color(&rgb_led_inst0, red, green, blue);
-///sl_led_turn_off(&rgb_led_inst0);
-///sl_led_toggle(&rgb_led_inst0);
+///uint16_t blue = max; // max blue
+///sl_simple_rgb_pwm_led_set_color((void *) rgb_led_inst0.led_common.context, red, green, blue); 
+///sl_simple_rgb_pwm_led_turn_off((void *) rgb_led_inst0.led_common.context); 
+///sl_simple_rgb_pwm_led_toggle((void *) rgb_led_inst0.led_common.context); 
 ///
 ///// get the state of the led
-///sl_led_state_t state = sl_led_get_state(&rgb_led_inst0);
+///sl_led_state_t state = sl_simple_rgb_pwm_led_get_state((void *) rgb_led_inst0.led_common.context);
 ///   @endcode
 ///
 /// @} end group led ********************************************************/

@@ -48,7 +48,7 @@ uint8_t printTransientKeyTable(void)
   sl_zigbee_sec_man_aps_key_metadata_t key_info;
   uint8_t index = 0;
 
-  sl_zigbee_core_debug_println("Index IEEE Address         NWKIndex  In FC     TTL(s) Flag    Key    ");
+  sl_zigbee_af_cli_println("Index IEEE Address         NWKIndex  In FC     TTL(s) Flag    Key    ");
 
   status = sl_zigbee_sec_man_export_transient_key_by_index(index,
                                                            &context,
@@ -56,15 +56,15 @@ uint8_t printTransientKeyTable(void)
                                                            &key_info);
 
   while (status == SL_STATUS_OK) {
-    sl_zigbee_core_debug_print("%d     ", index);
-    sl_zigbee_af_core_debug_exec(sl_zigbee_af_print_big_endian_eui64(context.eui64));
-    sl_zigbee_core_debug_print("  %d       ", context.multi_network_index);
-    sl_zigbee_core_debug_print("  %08X  ", key_info.incoming_frame_counter);
-    sl_zigbee_core_debug_print("0x%04X", key_info.ttl_in_seconds);
-    sl_zigbee_core_debug_print(" 0x%04X  ", key_info.bitmask);
+    sl_zigbee_af_cli_print("%d     ", index);
+    sl_zigbee_af_cli_exec(sl_zigbee_af_print_big_endian_eui64(context.eui64));
+    sl_zigbee_af_cli_print("  %d       ", context.multi_network_index);
+    sl_zigbee_af_cli_print("  %08X  ", key_info.incoming_frame_counter);
+    sl_zigbee_af_cli_print("0x%04X", key_info.ttl_in_seconds);
+    sl_zigbee_af_cli_print(" 0x%04X  ", key_info.bitmask);
     sl_zigbee_af_print_zigbee_key((const uint8_t*)&(plaintext_key.key));
-    sl_zigbee_core_debug_println("");
-    sl_zigbee_af_core_flush();
+    sl_zigbee_af_cli_println("");
+    sl_zigbee_af_cli_flush();
 
     index += 1;
     status = sl_zigbee_sec_man_export_transient_key_by_index(index,
@@ -86,7 +86,7 @@ uint8_t printKeyTable(bool preconfiguredKey)
   sl_zigbee_sec_man_aps_key_metadata_t key_data;
   sl_zigbee_sec_man_init_context(&context);
 
-  sl_zigbee_core_debug_println("Index IEEE Address         In FC     Type  Auth  Key");
+  sl_zigbee_af_cli_println("Index IEEE Address         In FC     Type  Auth  Key");
 
   for (i = 0; i < loopCount; i++) {
     sl_zigbee_sec_man_context_t context;
@@ -114,25 +114,25 @@ uint8_t printKeyTable(bool preconfiguredKey)
     context.flags |= ZB_SEC_MAN_FLAG_KEY_INDEX_IS_VALID;
 
     if (!preconfiguredKey) {
-      sl_zigbee_core_debug_print("%d     ", i);
+      sl_zigbee_af_cli_print("%d     ", i);
     } else {
-      sl_zigbee_core_debug_print("-     ");
+      sl_zigbee_af_cli_print("-     ");
     }
     context.flags |= ZB_SEC_MAN_FLAG_KEY_INDEX_IS_VALID;
     (void) sl_zigbee_sec_man_get_aps_key_info(&context, &metadata);
-    sl_zigbee_af_core_debug_exec(sl_zigbee_af_print_big_endian_eui64(context.eui64));
-    sl_zigbee_core_debug_print("  %08X  ", metadata.incoming_frame_counter);
-    sl_zigbee_core_debug_print("%c     %c     ",
-                               (metadata.bitmask & SL_ZIGBEE_KEY_IS_AUTHENTICATION_TOKEN
-                                ? 'A'
-                                : 'L'),
-                               (metadata.bitmask & SL_ZIGBEE_KEY_IS_AUTHORIZED
-                                ? 'y'
-                                : 'n'));
+    sl_zigbee_af_cli_exec(sl_zigbee_af_print_big_endian_eui64(context.eui64));
+    sl_zigbee_af_cli_print("  %08X  ", metadata.incoming_frame_counter);
+    sl_zigbee_af_cli_print("%c     %c     ",
+                           (metadata.bitmask & SL_ZIGBEE_KEY_IS_AUTHENTICATION_TOKEN
+                            ? 'A'
+                            : 'L'),
+                           (metadata.bitmask & SL_ZIGBEE_KEY_IS_AUTHORIZED
+                            ? 'y'
+                            : 'n'));
 
     sl_zigbee_af_print_zigbee_key((const uint8_t *)&(plaintext_key.key));
 
-    sl_zigbee_af_core_flush();
+    sl_zigbee_af_cli_flush();
     entriesUsed++;
   }
 
@@ -155,11 +155,11 @@ void printKeyInfo(void)
     sl_zigbee_mfg_security_struct_t config;
     if (SL_STATUS_OK == sl_zigbee_get_mfg_security_config(&config)) {
       if (!(config.keySettings & SL_ZIGBEE_KEY_PERMISSIONS_READING_ALLOWED)) {
-        sl_zigbee_core_debug_println("");
-        sl_zigbee_core_debug_print("WARNING:  READING OF KEY VALUES DISABLED BY MFG TOKEN");
-        sl_zigbee_core_debug_println("");
-        sl_zigbee_core_debug_println("");
-        sl_zigbee_af_core_flush();
+        sl_zigbee_af_cli_println("");
+        sl_zigbee_af_cli_print("WARNING:  READING OF KEY VALUES DISABLED BY MFG TOKEN");
+        sl_zigbee_af_cli_println("");
+        sl_zigbee_af_cli_println("");
+        sl_zigbee_af_cli_flush();
       }
     }
   }
@@ -170,45 +170,45 @@ void printKeyInfo(void)
   }
 
   (void)sl_zigbee_sec_man_get_network_key_info(&network_key_info);
-  sl_zigbee_core_debug_println("%s out FC: %08X",
-                               "NWK Key",
-                               network_key_info.network_key_frame_counter);
-  sl_zigbee_core_debug_println("%s seq num: 0x%02X",
-                               "NWK Key",
-                               network_key_info.network_key_sequence_number);
-  sl_zigbee_core_debug_print("%s: ", "NWK Key");
+  sl_zigbee_af_cli_println("%s out FC: %08X",
+                           "NWK Key",
+                           network_key_info.network_key_frame_counter);
+  sl_zigbee_af_cli_println("%s seq num: 0x%02X",
+                           "NWK Key",
+                           network_key_info.network_key_sequence_number);
+  sl_zigbee_af_cli_print("%s: ", "NWK Key");
   sl_zigbee_af_print_zigbee_key(plaintext_key.key);
 
-  sl_zigbee_core_debug_println("%s out FC: %08x",
-                               "Link Key",
-                               getOutgoingApsFrameCounter());
+  sl_zigbee_af_cli_println("%s out FC: %08x",
+                           "Link Key",
+                           getOutgoingApsFrameCounter());
 
-  sl_zigbee_core_debug_println("TC %s ", "Link Key");
-  sl_zigbee_af_core_flush();
+  sl_zigbee_af_cli_println("TC %s ", "Link Key");
+  sl_zigbee_af_cli_flush();
   printKeyTable(true);
 
-  sl_zigbee_core_debug_println("%s Table", "Link Key");
-  sl_zigbee_af_core_flush();
+  sl_zigbee_af_cli_println("%s Table", "Link Key");
+  sl_zigbee_af_cli_flush();
   entriesUsed = printKeyTable(false);
   UNUSED_VAR(entriesUsed);
 
-  sl_zigbee_core_debug_println("%d/%d entries used.",
-                               entriesUsed,
-                               sl_zigbee_af_get_key_table_size());
-  sl_zigbee_af_core_flush();
+  sl_zigbee_af_cli_println("%d/%d entries used.",
+                           entriesUsed,
+                           sl_zigbee_af_get_key_table_size());
+  sl_zigbee_af_cli_flush();
 
-  sl_zigbee_core_debug_println("%s Table", "Transient Key");
-  sl_zigbee_af_core_flush();
+  sl_zigbee_af_cli_println("%s Table", "Transient Key");
+  sl_zigbee_af_cli_flush();
 
   entriesUsed = printTransientKeyTable();
   UNUSED_VAR(entriesUsed);
 
-  sl_zigbee_core_debug_println("%d entr%s consuming %d packet buffer%s.",
-                               entriesUsed,
-                               entriesUsed > 1 ? "ies" : "y",
-                               entriesUsed,
-                               entriesUsed > 1 ? "s" : "");
-  sl_zigbee_af_core_flush();
+  sl_zigbee_af_cli_println("%d entr%s consuming %d packet buffer%s.",
+                           entriesUsed,
+                           entriesUsed > 1 ? "ies" : "y",
+                           entriesUsed,
+                           entriesUsed > 1 ? "s" : "");
+  sl_zigbee_af_cli_flush();
 }
 
 #if !(defined(SL_ZIGBEE_LEAF_STACK))
@@ -216,20 +216,20 @@ void optionSecurityAllowTrustCenterRejoinUsingWellKnownKey(sl_cli_command_arg_t 
 {
   bool allow = (bool)sl_cli_get_argument_uint8(arguments, 0);
   sl_zigbee_set_tc_rejoins_using_well_known_key_allowed(allow);
-  sl_zigbee_af_core_println("Trust Center %s allow trust center rejoins using "
-                            "well-known key.",
-                            allow
-                            ? "WILL"
-                            : "WILL NOT");
+  sl_zigbee_af_cli_println("Trust Center %s allow trust center rejoins using "
+                           "well-known key.",
+                           allow
+                           ? "WILL"
+                           : "WILL NOT");
 }
 
 void optionSecurityAllowTrustCenterRejoinUsingWellKnownKeyTimeout(sl_cli_command_arg_t *arguments)
 {
   uint16_t timeout = sl_cli_get_argument_uint16(arguments, 0);
   sl_zigbee_set_tc_rejoins_using_well_known_key_timeout_sec(timeout);
-  sl_zigbee_af_core_println("Set timeout for Trust Center rejoins using well-known "
-                            "link key to %d seconds.",
-                            timeout);
+  sl_zigbee_af_cli_println("Set timeout for Trust Center rejoins using well-known "
+                           "link key to %d seconds.",
+                           timeout);
 }
 #endif
 
@@ -244,7 +244,7 @@ void optionSecuritySetKeyRequestPolicy(sl_cli_command_arg_t *arguments)
 void changeKeyCommand(sl_cli_command_arg_t *arguments)
 {
   if (SL_ZIGBEE_NO_NETWORK != sl_zigbee_af_network_state()) {
-    sl_zigbee_af_core_println("%sstack must be down.", "ERROR: ");
+    sl_zigbee_af_cli_println("%sstack must be down.", "ERROR: ");
   } else {
     uint8_t position = sl_cli_get_command_count(arguments) - 1;
 
@@ -252,7 +252,7 @@ void changeKeyCommand(sl_cli_command_arg_t *arguments)
     sl_zigbee_copy_hex_arg((arguments), 0, sl_zigbee_key_contents((command_first_character == 'l'
                                                                    ? &cliPreconfiguredLinkKey
                                                                    : &cliNetworkKey)), SL_ZIGBEE_ENCRYPTION_KEY_SIZE, true);
-    sl_zigbee_af_debug_println("set key");
+    sl_zigbee_af_cli_println("set key");
   }
 }
 
@@ -265,15 +265,15 @@ void getSetMfgToken(sl_cli_command_arg_t *arguments)
   if (sl_cli_get_command_string(arguments, 2)[0] == 'g') {
     status = sl_zigbee_get_mfg_security_config(&config);
     if (status == SL_STATUS_OK) {
-      sl_zigbee_af_security_println("sl_zigbee_key_settings_t: 0x%04X", config.keySettings);
-      sl_zigbee_af_security_println("  Permissions: %s",
-                                    ((config.keySettings & SL_ZIGBEE_KEY_PERMISSIONS_READING_ALLOWED)
-                                     ? "Reading Allowed"
-                                     : ((config.keySettings & SL_ZIGBEE_KEY_PERMISSIONS_HASHING_ALLOWED)
-                                        ? "Hashing only"
-                                        : "NONE")));
+      sl_zigbee_af_cli_println("sl_zigbee_key_settings_t: 0x%04X", config.keySettings);
+      sl_zigbee_af_cli_println("  Permissions: %s",
+                               ((config.keySettings & SL_ZIGBEE_KEY_PERMISSIONS_READING_ALLOWED)
+                                ? "Reading Allowed"
+                                : ((config.keySettings & SL_ZIGBEE_KEY_PERMISSIONS_HASHING_ALLOWED)
+                                   ? "Hashing only"
+                                   : "NONE")));
     } else {
-      sl_zigbee_af_security_println("Error: Failed to get config, status: 0x%08X", status);
+      sl_zigbee_af_cli_println("Error: Failed to get config, status: 0x%08X", status);
     }
   } else {
     uint32_t magicNumber = sl_cli_get_argument_uint32(arguments, 0);
@@ -282,10 +282,10 @@ void getSetMfgToken(sl_cli_command_arg_t *arguments)
   }
 
   if (status != SL_STATUS_OK) {
-    sl_zigbee_af_security_println("Failed: 0x%08X", status);
+    sl_zigbee_af_cli_println("Failed: 0x%08X", status);
   }
 #else
   UNUSED_VAR(arguments);
-  sl_zigbee_af_security_println("Cannot get/set mfg tokens with no security profile");
+  sl_zigbee_af_cli_println("Cannot get/set mfg tokens with no security profile");
 #endif // SL_ZIGBEE_AF_HAS_SECURITY_PROFILE_NONE
 }

@@ -1,3 +1,4 @@
+workspace_name: zwave_ncp_serial_api_end_device_otw
 label: ZWave_NCP_SerialAPI_EndDevice_Solution
 description: >
   Demonstrates Serial Applications Programming Interface (Serial API) combined with OTW bootloader.

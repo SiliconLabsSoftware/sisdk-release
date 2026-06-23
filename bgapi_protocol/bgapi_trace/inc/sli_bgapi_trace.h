@@ -143,6 +143,16 @@ void sli_bgapi_trace_stop(void);
  ******************************************************************************/
 void sli_bgapi_trace_sync(void);
 
+// The following helper functions are only used for unit testing
+#ifdef UTEST
+
+/**
+ * @brief Reset BGAPI Trace to initial state.
+ */
+void sli_bgapi_trace_utest_reset(void);
+
+#endif // UTEST
+
 /** @} end sli_bgapi_trace */
 
 #ifdef __cplusplus

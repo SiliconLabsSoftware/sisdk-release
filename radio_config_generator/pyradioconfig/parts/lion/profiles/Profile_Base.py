@@ -139,6 +139,9 @@ class ProfileBaseLion(profile_base_leopard):
                                    readable_name="1=Allow input decimation filter decimate by 8 in cost function",
                                    value_limit_min=0, value_limit_max=1)
         self.make_hidden_input(profile, model.vars.demod_select, 'Advanced', readable_name="Demod Selection")
+        self.make_hidden_input(profile, model.vars.adc_clock_mode, "modem",
+                                   readable_name="ADC Clock Mode (XO vs VCO)")
+        self.make_hidden_input(profile, model.vars.adc_rate_mode, 'Advanced', readable_name="ADC Rate Mode")
 
     def build_deprecated_profile_inputs(self, model, profile):
         pass

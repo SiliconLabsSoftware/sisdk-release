@@ -29,6 +29,15 @@
  ******************************************************************************/
 
 #include "sl_rail_util_ieee802154_fast_channel_switching.h"
+#ifdef _SILICON_LABS_32B_SERIES_3
+#include "sl_rail_util_ieee802154_fast_channel_switching_radio_config.h"
+#endif
+
+#if SL_RAIL_IEEE802154_SUPPORTS_RX_CHANNEL_SWITCHING && defined(_SILICON_LABS_32B_SERIES_3)
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RAIL_UTIL_IEEE802154_PHY_SELECT, SL_CODE_CLASS_TIME_CRITICAL)
+const RAIL_ChannelConfig_t * const RAIL_IEEE802154_Phy2p4GHzRxChSwitching =
+  &RAIL_IEEE802154_Phy2ChFs_channelConfig;
+#endif
 
 sl_rail_status_t sl_rail_ieee802154_config_2p4_ghz_radio_fast_channel_switching(sl_rail_handle_t rail_handle)
 {

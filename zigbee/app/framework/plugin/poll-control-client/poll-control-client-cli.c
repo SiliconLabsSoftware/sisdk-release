@@ -23,7 +23,7 @@ void mode(sl_cli_command_arg_t *arguments)
 {
   uint8_t mode = sl_cli_get_argument_uint8(arguments, 0);
   sli_zigbee_af_set_fast_polling_mode(mode);
-  sl_zigbee_af_poll_control_cluster_println("%s 0x%02X", "mode", mode);
+  sl_zigbee_af_cli_println("%s 0x%02X", "mode", mode);
 }
 
 // plugin poll-control-client timeout <timeout:2>
@@ -31,7 +31,7 @@ void timeout(sl_cli_command_arg_t *arguments)
 {
   uint16_t timeout = sl_cli_get_argument_uint16(arguments, 0);
   sli_zigbee_af_set_fast_polling_timeout(timeout);
-  sl_zigbee_af_poll_control_cluster_println("%s 0x%04X", "timeout", timeout);
+  sl_zigbee_af_cli_println("%s 0x%04X", "timeout", timeout);
 }
 
 // plugin poll-control-client respond <mode:1>
@@ -39,7 +39,7 @@ void respond(sl_cli_command_arg_t *arguments)
 {
   uint8_t mode = sl_cli_get_argument_uint8(arguments, 0);
   sli_zigbee_af_set_response_mode(mode);
-  sl_zigbee_af_poll_control_cluster_println("%s 0x%02X", "respond", mode);
+  sl_zigbee_af_cli_println("%s 0x%02X", "respond", mode);
 }
 
 void print(sl_cli_command_arg_t *arguments)

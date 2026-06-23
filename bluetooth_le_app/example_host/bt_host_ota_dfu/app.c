@@ -454,7 +454,7 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
             apploader_version_characteristic = evt->data.evt_gatt_characteristic.characteristic;
           } else if (evt->data.evt_gatt_characteristic.uuid.len == sizeof(uuid_ota_version) && !memcmp(evt->data.evt_gatt_characteristic.uuid.data, uuid_ota_version, sizeof(uuid_ota_version))) {
             ota_version_characteristic = evt->data.evt_gatt_characteristic.characteristic;
-          } else if (evt->data.evt_gatt_characteristic.uuid.len == sizeof(uuid_application_version) && !memcmp(evt->data.evt_gatt_characteristic.uuid.data, uuid_application_version, sizeof(uuid_bootloader_version))) {
+          } else if (evt->data.evt_gatt_characteristic.uuid.len == sizeof(uuid_application_version) && !memcmp(evt->data.evt_gatt_characteristic.uuid.data, uuid_application_version, sizeof(uuid_application_version))) {
             application_version_characteristic = evt->data.evt_gatt_characteristic.characteristic;
           }
           break;

@@ -123,6 +123,18 @@ Modules</h2></td></tr>
 <tr class="memitem:group__sl__bt__evt__cs__read__remote__supported__capabilities__complete"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__evt__cs__read__remote__supported__capabilities__complete.html">sl_bt_evt_cs_read_remote_supported_capabilities_complete</a></td></tr>
 <tr class="memdesc:group__sl__bt__evt__cs__read__remote__supported__capabilities__complete"><td class="mdescLeft">&#160;</td><td class="mdescRight">Report the remote controller's supported capabilities as a result of calling the <a class="el" href="group__sl__bt__cs.html#ga8c0052901c17a4c427f2b25d3c484bc7">sl_bt_cs_read_remote_supported_capabilities</a> command previously. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:group__sl__bt__evt__cs__handover__sync__established"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__evt__cs__handover__sync__established.html">sl_bt_evt_cs_handover_sync_established</a></td></tr>
+<tr class="memdesc:group__sl__bt__evt__cs__handover__sync__established"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicates that the controller either synchronized to the CS handover procedure and the connection, or completed the listening window without establishing synchronization. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:group__sl__bt__evt__cs__handover__complete"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__evt__cs__handover__complete.html">sl_bt_evt_cs_handover_complete</a></td></tr>
+<tr class="memdesc:group__sl__bt__evt__cs__handover__complete"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicates that the controller completed the CS handover procedure because synchronization was lost or the configured maximum procedure count was reached. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:group__sl__bt__evt__cs__handover__result"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__evt__cs__handover__result.html">sl_bt_evt_cs_handover_result</a></td></tr>
+<tr class="memdesc:group__sl__bt__evt__cs__handover__result"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports results of every CS handover subevent within the CS procedure. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:group__sl__bt__evt__cs__handover__result__continue"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__evt__cs__handover__result__continue.html">sl_bt_evt_cs_handover_result_continue</a></td></tr>
+<tr class="memdesc:group__sl__bt__evt__cs__handover__result__continue"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports continuation results when the number of steps exceeds the maximum HCI event size, of every CS handover subevent within the CS procedure. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
 Enumerations</h2></td></tr>
@@ -141,6 +153,16 @@ Enumerations</h2></td></tr>
  }</td></tr>
 <tr class="memdesc:ga8fd875965cf4e392514a5f4f7769bb3d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Defines the CS procedure state for the device.  <a href="group__sl__bt__cs.html#ga8fd875965cf4e392514a5f4f7769bb3d">More...</a><br /></td></tr>
 <tr class="separator:ga8fd875965cf4e392514a5f4f7769bb3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1dc74f64ec915490815e1628b118d2b5"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__cs.html#ga1dc74f64ec915490815e1628b118d2b5">sl_bt_cs_handover_handle_type_t</a> { <a class="el" href="group__sl__bt__cs.html#gga1dc74f64ec915490815e1628b118d2b5afb3359772b7ae46cd288c31cbb0d2255">sl_bt_cs_handover_handle_type_connection</a> = 0x1
+, <a class="el" href="group__sl__bt__cs.html#gga1dc74f64ec915490815e1628b118d2b5a1d5945e7d48e4cfef53216ba555f7344">sl_bt_cs_handover_handle_type_analyzer</a> = 0x2
+ }</td></tr>
+<tr class="memdesc:ga1dc74f64ec915490815e1628b118d2b5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Defines whether the command handle references a connection or a connection analyzer instance.  <a href="group__sl__bt__cs.html#ga1dc74f64ec915490815e1628b118d2b5">More...</a><br /></td></tr>
+<tr class="separator:ga1dc74f64ec915490815e1628b118d2b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8850c7bbb087a73a571cfd280a2a1a93"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__cs.html#ga8850c7bbb087a73a571cfd280a2a1a93">sl_bt_cs_handover_complete_reason_t</a> { <a class="el" href="group__sl__bt__cs.html#gga8850c7bbb087a73a571cfd280a2a1a93a0d72aa29c1c395c8393692a651bc32a6">sl_bt_cs_handover_complete_reason_max_procedure_count_reached</a> = 0x0
+, <a class="el" href="group__sl__bt__cs.html#gga8850c7bbb087a73a571cfd280a2a1a93a9a6b5e860561286bea8a6474b756de18">sl_bt_cs_handover_complete_reason_sync_lost</a> = 0x1
+ }</td></tr>
+<tr class="memdesc:ga8850c7bbb087a73a571cfd280a2a1a93"><td class="mdescLeft">&#160;</td><td class="mdescRight">Defines the reason why a CS handover procedure completed.  <a href="group__sl__bt__cs.html#ga8850c7bbb087a73a571cfd280a2a1a93">More...</a><br /></td></tr>
+<tr class="separator:ga8850c7bbb087a73a571cfd280a2a1a93"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga631ba2f05b0fb5daf637468c2f0d7dc3"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__cs.html#ga631ba2f05b0fb5daf637468c2f0d7dc3">sl_bt_cs_mode_t</a> { <a class="el" href="group__sl__bt__cs.html#gga631ba2f05b0fb5daf637468c2f0d7dc3a32778ba18934123ad7132ca191192edb">sl_bt_cs_mode_rtt</a> = 0x1
 , <a class="el" href="group__sl__bt__cs.html#gga631ba2f05b0fb5daf637468c2f0d7dc3aa489a1f39d38004f996b3b830b3f36ba">sl_bt_cs_mode_pbr</a> = 0x2
 , <a class="el" href="group__sl__bt__cs.html#gga631ba2f05b0fb5daf637468c2f0d7dc3a8d55acf36a87ff73a3a187ca6a464243">sl_bt_cs_submode_disabled</a> = 0xff
@@ -209,6 +231,16 @@ Functions</h2></td></tr>
 <tr class="separator:ga179e5b1dd30a811c3d3f53c64acf9e47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga8c0052901c17a4c427f2b25d3c484bc7"><td class="memItemLeft" align="right" valign="top">sl_status_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__cs.html#ga8c0052901c17a4c427f2b25d3c484bc7">sl_bt_cs_read_remote_supported_capabilities</a> (uint8_t connection)</td></tr>
 <tr class="separator:ga8c0052901c17a4c427f2b25d3c484bc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga2ba75f26352698b6c8cb752c16b342f7"><td class="memItemLeft" align="right" valign="top">sl_status_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__cs.html#ga2ba75f26352698b6c8cb752c16b342f7">sl_bt_cs_handover_get_procedure_parameters</a> (uint8_t connection, uint8_t config_id, size_t max_cs_parameters_size, size_t *cs_parameters_len, uint8_t *cs_parameters)</td></tr>
+<tr class="separator:ga2ba75f26352698b6c8cb752c16b342f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7be074a19c9a267769c4325feeb4b720"><td class="memItemLeft" align="right" valign="top">sl_status_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__cs.html#ga7be074a19c9a267769c4325feeb4b720">sl_bt_cs_handover_set_procedure_parameters</a> (size_t cs_parameters_len, const uint8_t *cs_parameters, uint8_t *analyzer, uint8_t *config_id)</td></tr>
+<tr class="separator:ga7be074a19c9a267769c4325feeb4b720"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga980aaeacdecec62c35335dd2ceb39727"><td class="memItemLeft" align="right" valign="top">sl_status_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__cs.html#ga980aaeacdecec62c35335dd2ceb39727">sl_bt_cs_handover_create_sync</a> (uint8_t analyzer, uint8_t config_id, uint16_t procedure_counter)</td></tr>
+<tr class="separator:ga980aaeacdecec62c35335dd2ceb39727"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga3757cf65977fcfec697aa5229ec953ed"><td class="memItemLeft" align="right" valign="top">sl_status_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__cs.html#ga3757cf65977fcfec697aa5229ec953ed">sl_bt_cs_handover_enable_procedure</a> (uint8_t enable, uint16_t start_procedure_counter, uint16_t procedure_skip, uint8_t handle_type, uint8_t handle, uint8_t config_id)</td></tr>
+<tr class="separator:ga3757cf65977fcfec697aa5229ec953ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8166fe81e523a4fa446c954a87a548bc"><td class="memItemLeft" align="right" valign="top">sl_status_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__cs.html#ga8166fe81e523a4fa446c954a87a548bc">sl_bt_cs_handover_remove_procedure</a> (uint8_t analyzer, uint8_t config_id)</td></tr>
+<tr class="separator:ga8166fe81e523a4fa446c954a87a548bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p >Channel Sounding. </p>
@@ -276,6 +308,50 @@ Functions</h2></td></tr>
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="gga8fd875965cf4e392514a5f4f7769bb3da4eeadc432c438018a20be6b27a29ba44" name="gga8fd875965cf4e392514a5f4f7769bb3da4eeadc432c438018a20be6b27a29ba44"></a>sl_bt_cs_procedure_state_disabled&#160;</td><td class="fielddoc"><p >(0x0) CS procedures are disabled </p>
 </td></tr>
 <tr><td class="fieldname"><a id="gga8fd875965cf4e392514a5f4f7769bb3da61c67251f887bd52c618ef6106176cd7" name="gga8fd875965cf4e392514a5f4f7769bb3da61c67251f887bd52c618ef6106176cd7"></a>sl_bt_cs_procedure_state_enabled&#160;</td><td class="fielddoc"><p >(0x1) CS procedures are enabled </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<a id="ga1dc74f64ec915490815e1628b118d2b5" name="ga1dc74f64ec915490815e1628b118d2b5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga1dc74f64ec915490815e1628b118d2b5">&#9670;&nbsp;</a></span>sl_bt_cs_handover_handle_type_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="group__sl__bt__cs.html#ga1dc74f64ec915490815e1628b118d2b5">sl_bt_cs_handover_handle_type_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Defines whether the command handle references a connection or a connection analyzer instance. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="gga1dc74f64ec915490815e1628b118d2b5afb3359772b7ae46cd288c31cbb0d2255" name="gga1dc74f64ec915490815e1628b118d2b5afb3359772b7ae46cd288c31cbb0d2255"></a>sl_bt_cs_handover_handle_type_connection&#160;</td><td class="fielddoc"><p >(0x1) Handle identifies a Bluetooth connection. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga1dc74f64ec915490815e1628b118d2b5a1d5945e7d48e4cfef53216ba555f7344" name="gga1dc74f64ec915490815e1628b118d2b5a1d5945e7d48e4cfef53216ba555f7344"></a>sl_bt_cs_handover_handle_type_analyzer&#160;</td><td class="fielddoc"><p >(0x2) Handle identifies a connection analyzer instance. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
+<a id="ga8850c7bbb087a73a571cfd280a2a1a93" name="ga8850c7bbb087a73a571cfd280a2a1a93"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga8850c7bbb087a73a571cfd280a2a1a93">&#9670;&nbsp;</a></span>sl_bt_cs_handover_complete_reason_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="group__sl__bt__cs.html#ga8850c7bbb087a73a571cfd280a2a1a93">sl_bt_cs_handover_complete_reason_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Defines the reason why a CS handover procedure completed. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="gga8850c7bbb087a73a571cfd280a2a1a93a0d72aa29c1c395c8393692a651bc32a6" name="gga8850c7bbb087a73a571cfd280a2a1a93a0d72aa29c1c395c8393692a651bc32a6"></a>sl_bt_cs_handover_complete_reason_max_procedure_count_reached&#160;</td><td class="fielddoc"><p >(0x0) Configured maximum procedure count was reached. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga8850c7bbb087a73a571cfd280a2a1a93a9a6b5e860561286bea8a6474b756de18" name="gga8850c7bbb087a73a571cfd280a2a1a93a9a6b5e860561286bea8a6474b756de18"></a>sl_bt_cs_handover_complete_reason_sync_lost&#160;</td><td class="fielddoc"><p >(0x1) Synchronization to the connection was lost. </p>
 </td></tr>
 </table>
 
@@ -1410,6 +1486,269 @@ Functions</h2></td></tr>
 <p><b>Events</b> </p><ul>
 <li><a class="el" href="group__sl__bt__evt__cs__read__remote__supported__capabilities__complete.html">sl_bt_evt_cs_read_remote_supported_capabilities_complete</a> - Triggered when local controller has the requested supported capabilities of the remote controller. </li>
 </ul>
+
+</div>
+</div>
+<a id="ga2ba75f26352698b6c8cb752c16b342f7" name="ga2ba75f26352698b6c8cb752c16b342f7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga2ba75f26352698b6c8cb752c16b342f7">&#9670;&nbsp;</a></span>sl_bt_cs_handover_get_procedure_parameters()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">sl_status_t sl_bt_cs_handover_get_procedure_parameters </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>connection</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>config_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>max_cs_parameters_size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>cs_parameters_len</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramname"><em>cs_parameters</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Retrieve CS handover procedure parameters for a given connection and configuration. This command is intended for the CS Leader role. If this command is sent to a non-leader device, an error is returned.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">connection</td><td>Connection handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">config_id</td><td>CS configuration identifier </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">max_cs_parameters_size</td><td>Size of output buffer passed in <code>cs_parameters</code> </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">cs_parameters_len</td><td>On return, set to the length of output data written to <code>cs_parameters</code> </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">cs_parameters</td><td>Serialized CS handover parameters</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>SL_STATUS_OK if successful. Error code otherwise. </dd></dl>
+
+</div>
+</div>
+<a id="ga7be074a19c9a267769c4325feeb4b720" name="ga7be074a19c9a267769c4325feeb4b720"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga7be074a19c9a267769c4325feeb4b720">&#9670;&nbsp;</a></span>sl_bt_cs_handover_set_procedure_parameters()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">sl_status_t sl_bt_cs_handover_set_procedure_parameters </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>cs_parameters_len</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>cs_parameters</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramname"><em>analyzer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramname"><em>config_id</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Configure CS handover procedure parameters in the controller using parameters retrieved from the CS Leader. This command creates the CS configuration and procedure, and allocates a new connection analyzer if one does not already exist for the connection. This command is intended for the CS Follower role.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">cs_parameters_len</td><td>Length of data in <code>cs_parameters</code> </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">cs_parameters</td><td>Serialized CS handover parameters retrieved from the CS Leader </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">analyzer</td><td>Connection analyzer handle assigned by the controller. This handle is valid only if the result code of this command is SL_STATUS_OK. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">config_id</td><td>CS configuration identifier</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>SL_STATUS_OK if successful. Error code otherwise. </dd></dl>
+
+</div>
+</div>
+<a id="ga980aaeacdecec62c35335dd2ceb39727" name="ga980aaeacdecec62c35335dd2ceb39727"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga980aaeacdecec62c35335dd2ceb39727">&#9670;&nbsp;</a></span>sl_bt_cs_handover_create_sync()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">sl_status_t sl_bt_cs_handover_create_sync </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>analyzer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>config_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>procedure_counter</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Start synchronization of a CS handover anchor using an existing connection analyzer handle and configuration. This command is intended for the CS Follower role.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">analyzer</td><td>Connection analyzer handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">config_id</td><td>CS configuration identifier </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">procedure_counter</td><td>CS procedure counter to synchronize to</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>SL_STATUS_OK if successful. Error code otherwise. </dd></dl>
+
+</div>
+</div>
+<a id="ga3757cf65977fcfec697aa5229ec953ed" name="ga3757cf65977fcfec697aa5229ec953ed"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga3757cf65977fcfec697aa5229ec953ed">&#9670;&nbsp;</a></span>sl_bt_cs_handover_enable_procedure()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">sl_status_t sl_bt_cs_handover_enable_procedure </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>enable</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>start_procedure_counter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>procedure_skip</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>handle_type</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>config_id</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Enable or disable CS handover procedure scheduling using either a connection or connection analyzer handle. This command can be used on both CS Leader and CS Follower roles.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">enable</td><td>Enum <a class="el" href="group__sl__bt__cs.html#ga8fd875965cf4e392514a5f4f7769bb3d">sl_bt_cs_procedure_state_t</a>. Enabled or disabled CS procedure state. Values:<ul>
+<li><b>sl_bt_cs_procedure_state_disabled (0x0):</b> CS procedures are disabled</li>
+<li><b>sl_bt_cs_procedure_state_enabled (0x1):</b> CS procedures are enabled </li>
+</ul>
+</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">start_procedure_counter</td><td>Procedure counter where execution starts </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">procedure_skip</td><td>Number of procedures to skip between executed procedures </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle_type</td><td>Enum <a class="el" href="group__sl__bt__cs.html#ga1dc74f64ec915490815e1628b118d2b5">sl_bt_cs_handover_handle_type_t</a>. Specifies if <code>handle</code> is a BGAPI connection or connection analyzer handle. Values:<ul>
+<li><b>sl_bt_cs_handover_handle_type_connection (0x1):</b> Handle identifies a Bluetooth connection.</li>
+<li><b>sl_bt_cs_handover_handle_type_analyzer (0x2):</b> Handle identifies a connection analyzer instance. </li>
+</ul>
+</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">handle</td><td>BGAPI connection or connection analyzer handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">config_id</td><td>CS configuration identifier</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>SL_STATUS_OK if successful. Error code otherwise. </dd></dl>
+
+</div>
+</div>
+<a id="ga8166fe81e523a4fa446c954a87a548bc" name="ga8166fe81e523a4fa446c954a87a548bc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga8166fe81e523a4fa446c954a87a548bc">&#9670;&nbsp;</a></span>sl_bt_cs_handover_remove_procedure()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">sl_status_t sl_bt_cs_handover_remove_procedure </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>analyzer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>config_id</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Remove a configured CS handover procedure identified by connection analyzer handle and configuration. This command is intended for the CS Follower role.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">analyzer</td><td>Connection analyzer handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">config_id</td><td>CS configuration identifier</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>SL_STATUS_OK if successful. Error code otherwise. </dd></dl>
 
 </div>
 </div>

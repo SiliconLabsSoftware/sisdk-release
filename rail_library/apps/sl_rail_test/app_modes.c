@@ -87,7 +87,7 @@ const char *appModeNames(AppMode_t appMode)
   char *appModes[] = { "None", "Stream", "Tone", "ContinuousTx", "DirectMode",
                        "PacketTx", "ScheduledTx", "SchTxAfterRx", "RxOverflow",
                        "TxUnderflow", "TxCancel", "RfSense", "PER", "BER",
-                       "ScheduledRx" };
+                       "ScheduledRx", "ScheduledNTx", "BER_PACKET" };
   return appModes[appMode];
 }
 // Has the logic for disabling and enabling AppMode

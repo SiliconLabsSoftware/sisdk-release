@@ -158,7 +158,7 @@ int32_t lz4_decompress(Lz4Context_t *ctx,
   return retval;
 }
 
-int32_t lz4_finish(Lz4Context_t *ctx)
+int32_t lz4_finish(const Lz4Context_t *ctx)
 {
   // The last LZ4 block should end with literals, so the parser should end
   // in the LSB offset state. Else, something went wrong during decompression.
@@ -254,7 +254,7 @@ int32_t gbl_lz4ReadMemory(size_t backtrackOffset, uint8_t *data, size_t length)
   return BOOTLOADER_OK;
 }
 
-int32_t gbl_lz4WriteMemory(uint8_t *data, size_t length)
+int32_t gbl_lz4WriteMemory(const uint8_t *data, size_t length)
 {
   size_t offset = 0UL;
   // We have some unaligned data from a previous iteration
@@ -377,7 +377,7 @@ int32_t gbl_lz4ParseProgTag(ParserContext_t *ctx,
   return retval;
 }
 
-size_t gbl_lz4NumBytesRequired(ParserContext_t *ctx)
+size_t gbl_lz4NumBytesRequired(const ParserContext_t *ctx)
 {
   // If this is the first data in the tag, we need a full word to
   // set the programming address correctly

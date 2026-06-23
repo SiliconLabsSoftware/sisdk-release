@@ -87,6 +87,7 @@ tag:
   - hwfilter:device:device_supports_thread
   - hwfilter:flash:1024k
   - toolchain:gcc
+  - toolchain:llvm
 
 import:
   - id: application

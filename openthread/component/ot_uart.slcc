@@ -1,7 +1,7 @@
 id: ot_uart
 label: OpenThread UART
 package: openthread
-category: OpenThread
+category: OpenThread|Utility
 quality: production
 description: This component provides the default UART support for the OpenThread stack.
 ui_hints:

@@ -31,8 +31,8 @@
  *   This file includes definitions for 6LoWPAN header compression.
  */
 
-#ifndef LOWPAN_HPP_
-#define LOWPAN_HPP_
+#ifndef OT_CORE_THREAD_LOWPAN_HPP_
+#define OT_CORE_THREAD_LOWPAN_HPP_
 
 #include "openthread-core-config.h"
 
@@ -199,7 +199,8 @@ public:
     Error Decompress(Message              &aMessage,
                      const Mac::Addresses &aMacAddrs,
                      FrameData            &aFrameData,
-                     uint16_t              aDatagramLength);
+                     uint16_t              aDatagramLength,
+                     uint8_t               aRecursionDepth = 0);
 
     /**
      * Decompresses a LOWPAN_IPHC header.
@@ -254,6 +255,8 @@ public:
     void MarkCompressedEcn(Message &aMessage, uint16_t aOffset);
 
 private:
+    static constexpr uint8_t kMaxRecursionDepth = 4;
+
     static constexpr uint16_t kHcDispatch     = 3 << 13;
     static constexpr uint16_t kHcDispatchMask = 7 << 13;
 
@@ -641,4 +644,4 @@ private:
 } // namespace Lowpan
 } // namespace ot
 
-#endif // LOWPAN_HPP_
+#endif // OT_CORE_THREAD_LOWPAN_HPP_

@@ -31,6 +31,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include "sl_cli.h"
 #include "app_log.h"
 #include "sl_rail_sdk_wmbus_sensor_core.h"
@@ -61,7 +62,7 @@ void cli_list_sensors(sl_cli_command_arg_t *arguments)
   sl_rail_sdk_wmbus_sensor_t* sensors = sl_rail_sdk_wmbus_sensor_core_list_available_sensors();
 
   for (size_t i = 0; i < sl_rail_sdk_wmbus_sensor_core_get_sensor_count(); i++) {
-    app_log_info("\t ID: %d: %s \n", sensors[i].id, sensors[i].name);
+    app_log_info("\t ID: %" PRIu8 ": %s \n", sensors[i].id, sensors[i].name);
   }
 }
 

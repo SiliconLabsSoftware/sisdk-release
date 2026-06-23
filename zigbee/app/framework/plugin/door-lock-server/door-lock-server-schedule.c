@@ -178,7 +178,7 @@ sl_zigbee_af_zcl_request_status_t sl_zigbee_af_door_lock_cluster_get_weekday_sch
     return SL_ZIGBEE_ZCL_STATUS_UNSUP_COMMAND;
   }
 
-  zclStatus = ((cmd_data.scheduleId > SL_ZIGBEE_AF_PLUGIN_DOOR_LOCK_SERVER_WEEKDAY_SCHEDULE_TABLE_SIZE)
+  zclStatus = ((cmd_data.scheduleId >= SL_ZIGBEE_AF_PLUGIN_DOOR_LOCK_SERVER_WEEKDAY_SCHEDULE_TABLE_SIZE)
                ? SL_ZIGBEE_ZCL_STATUS_INVALID_FIELD
                : SL_ZIGBEE_ZCL_STATUS_SUCCESS);
   entry = &weekdayScheduleTable[0];
@@ -228,7 +228,7 @@ sl_zigbee_af_zcl_request_status_t sl_zigbee_af_door_lock_cluster_clear_weekday_s
     return SL_ZIGBEE_ZCL_STATUS_UNSUP_COMMAND;
   }
 
-  zclStatus = ((cmd_data.scheduleId > SL_ZIGBEE_AF_PLUGIN_DOOR_LOCK_SERVER_WEEKDAY_SCHEDULE_TABLE_SIZE)
+  zclStatus = ((cmd_data.scheduleId >= SL_ZIGBEE_AF_PLUGIN_DOOR_LOCK_SERVER_WEEKDAY_SCHEDULE_TABLE_SIZE)
                ? SL_ZIGBEE_ZCL_STATUS_INVALID_FIELD
                : SL_ZIGBEE_ZCL_STATUS_SUCCESS);
   if (zclStatus == SL_ZIGBEE_ZCL_STATUS_SUCCESS) {

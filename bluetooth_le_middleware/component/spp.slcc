@@ -1,0 +1,55 @@
+id: spp
+label: Serial Port Profile
+package: bluetooth_le_middleware
+description: >
+  Provides a wire replacement over Bluetooth LE.
+category: Bluetooth|Application|GATT Profiles
+quality: experimental
+root_path: bluetooth_le_middleware/common/spp
+config_file:
+- path: config/spp_config.h
+- path: config/gatt_service_spp.xml
+  directory: btconf
+source:
+- path: spp.c
+include:
+- path: .
+  file_list:
+  - path: spp.h
+  - path: spp_internal.h
+provides:
+- name: spp
+requires:
+- name: component_catalog
+- name: gatt_configuration
+- name: silabs_core_circular_queue
+- name: sleeptimer
+- name: memory_manager
+- name: app_rta
+- name: app_assert
+template_contribution:
+- name: app_rta_init
+  value:
+    include: spp.h
+    handler: spp_rta_init
+- name: app_rta_ready
+  value:
+    include: spp.h
+    handler: spp_rta_ready
+- name: component_catalog
+  value: spp
+- name: bluetooth_on_event
+  value:
+    include: spp.h
+    function: spp_on_bt_event
+  priority: 2
+- name: event_handler
+  value:
+    event: service_init
+    include: spp.h
+    handler: spp_init
+- name: event_handler
+  value:
+    event: service_process_action
+    include: spp.h
+    handler: spp_step

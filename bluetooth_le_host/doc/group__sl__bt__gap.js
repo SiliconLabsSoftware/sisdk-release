@@ -1,5 +1,6 @@
 var group__sl__bt__gap =
 [
+    [ "sl_bt_evt_gap_random_address_refresh", "group__sl__bt__evt__gap__random__address__refresh.html", "group__sl__bt__evt__gap__random__address__refresh" ],
     [ "sl_bt_gap_address_type_t", "group__sl__bt__gap.html#gac8d5431d3062e47c5d51b9fb9f36c104", [
       [ "sl_bt_gap_public_address", "group__sl__bt__gap.html#ggac8d5431d3062e47c5d51b9fb9f36c104a9bd23a182f82727d767972fa82a41295", null ],
       [ "sl_bt_gap_static_address", "group__sl__bt__gap.html#ggac8d5431d3062e47c5d51b9fb9f36c104a0906c9f6e28dd0d93b011d7509c3d70c", null ],
@@ -26,6 +27,7 @@ var group__sl__bt__gap =
       [ "sl_bt_gap_channel_selection_algorithm_2", "group__sl__bt__gap.html#ggac8f8f7951d8100e1e969cdf90127a086aa37ef47df0d5c53d0c73ed0f50ec95ec", null ]
     ] ],
     [ "sl_bt_gap_set_privacy_mode", "group__sl__bt__gap.html#gab8d65fb681a00f260f8b8c49a09ab1d5", null ],
+    [ "sl_bt_gap_set_privacy_mode_with_rpa_randomization", "group__sl__bt__gap.html#ga3c379e284417946314ba65eeae5c9bd3", null ],
     [ "sl_bt_gap_set_data_channel_classification", "group__sl__bt__gap.html#gae1ee4d45283563a12394f5261e45f952", null ],
     [ "sl_bt_gap_set_identity_address", "group__sl__bt__gap.html#ga654072e39147679ac71c8f32935eeaf9", null ],
     [ "sl_bt_gap_get_identity_address", "group__sl__bt__gap.html#gaead984805fa3c7145da2c63354f98697", null ],

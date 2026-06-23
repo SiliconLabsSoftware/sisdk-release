@@ -31,6 +31,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #ifdef SL_CATALOG_APP_LOG_PRESENT
 #include "app_log.h"
@@ -80,14 +81,14 @@ uint8_t set_selected_phy(uint16_t new_phy)
     result = sl_rail_config_channels(sl_rail_util_get_handle(SL_RAIL_UTIL_HANDLE_INST0), (const sl_rail_channel_config_t *)channelConfigs[selected_phy], &sli_rail_util_on_channel_config_change);
     if (result != SL_RAIL_STATUS_NO_ERROR) {
 #ifdef SL_CATALOG_APP_LOG_PRESENT
-      app_log_warning("Caching failed with error code %ld\n", result);
+      app_log_warning("Caching failed with error code 0x%08" PRIX32 "\n", result);
 #endif
     }
     new_channel = channelConfigs[new_phy]->configs[0].channelNumberStart;
     result = sl_rail_prepare_channel(sl_rail_util_get_handle(SL_RAIL_UTIL_HANDLE_INST0), new_channel);
     if (result != SL_RAIL_STATUS_NO_ERROR) {
 #ifdef SL_CATALOG_APP_LOG_PRESENT
-      app_log_warning("Channel setting failed with error code %ld\n", result);
+      app_log_warning("Channel setting failed with error code 0x%08" PRIX32 "\n", result);
 #endif
     }
 #ifdef SL_CATALOG_RAIL_SDK_CHANNEL_SELECTOR_PRESENT

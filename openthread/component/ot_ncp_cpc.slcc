@@ -1,7 +1,7 @@
 id: ot_ncp_cpc
 label: NCP CPC
 package: openthread
-category: OpenThread
+category: OpenThread|NCP
 quality: production
 description: This component provides Co-Processor Communication (CPC) support over both NCP and RCP for an OpenThread stack. It requires that an OpenThread stack component be included with the project. If no OpenThread stack component is chosen, it will default to using the OpenThread stack for an RCP.
 provides:

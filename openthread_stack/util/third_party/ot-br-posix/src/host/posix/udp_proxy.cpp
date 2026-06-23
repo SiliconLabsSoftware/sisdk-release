@@ -36,12 +36,14 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <net/if.h>
 #include <netinet/in.h>
 #include <sys/select.h>
 #include <unistd.h>
 
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
+#include "common/types.hpp"
 #include "host/posix/dnssd.hpp"
 #include "utils/socket_utils.hpp"
 
@@ -66,15 +68,33 @@ UdpProxy::UdpProxy(Dependencies &aDeps)
     : mFd(-1)
     , mHostPort(0)
     , mThreadPort(0)
+    , mInfraIfIndex(0)
     , mDeps(aDeps)
 {
 }
 
-void UdpProxy::Start(uint16_t aPort)
+void UdpProxy::SetInfraInterface(const char *aInfraIfName)
+{
+    mInfraIfIndex = 0;
+
+    if (aInfraIfName == nullptr || aInfraIfName[0] == '\0')
+    {
+        return;
+    }
+
+    mInfraIfIndex = if_nametoindex(aInfraIfName);
+    if (mInfraIfIndex == 0)
+    {
+        otbrLogWarning("Failed to resolve infra interface %s for UDP proxy: %s", aInfraIfName, strerror(errno));
+    }
+}
+
+void UdpProxy::Start(uint16_t aPort, uint16_t aHostPort)
 {
     VerifyOrExit(!IsStarted());
 
-    BindToEphemeralPort();
+    mPeerLocalAddrs.clear();
+    BindToPort(aHostPort);
     mThreadPort = aPort;
 
 exit:
@@ -86,6 +106,7 @@ void UdpProxy::Stop(void)
     VerifyOrExit(IsStarted());
 
     mHostPort = 0;
+    mPeerLocalAddrs.clear();
 
     if (mFd >= 0)
     {
@@ -111,8 +132,14 @@ void UdpProxy::Process(const MainloopContext &aContext)
 
     SuccessOrExit(ReceivePacket(payload, length, remoteAddr, remotePort));
 
-    // UDP Forward to NCPq
-    mDeps.UdpForward(payload, length, remoteAddr, remotePort, *this);
+    {
+        otbrError fwdError = mDeps.UdpForward(payload, length, remoteAddr, remotePort, *this);
+
+        if (fwdError != OTBR_ERROR_NONE)
+        {
+            otbrLogWarning("UDP proxy: UdpForward to NCP failed len=%u: %s", length, otbrErrorString(fwdError));
+        }
+    }
 
 exit:
     return;
@@ -152,6 +179,11 @@ void UdpProxy::SendToPeer(const uint8_t      *aUdpPayload,
     peerAddr.sin6_port   = htons(aPeerPort);
     peerAddr.sin6_family = AF_INET6;
     memcpy(&peerAddr.sin6_addr, &aPeerAddr, sizeof(aPeerAddr));
+    if (mInfraIfIndex != 0 &&
+        (IN6_IS_ADDR_LINKLOCAL(&peerAddr.sin6_addr) || IN6_IS_ADDR_MC_LINKLOCAL(&peerAddr.sin6_addr)))
+    {
+        peerAddr.sin6_scope_id = mInfraIfIndex;
+    }
     memset(control, 0, sizeof(control));
 
     iov.iov_base = reinterpret_cast<void *>(const_cast<uint8_t *>(aUdpPayload));
@@ -165,12 +197,35 @@ void UdpProxy::SendToPeer(const uint8_t      *aUdpPayload,
     msg.msg_iovlen     = 1;
     msg.msg_flags      = 0;
 
+    cmsg = CMSG_FIRSTHDR(&msg);
+
+    if (mInfraIfIndex != 0)
+    {
+        struct in6_pktinfo *packetInfo;
+        otIp6Address        localAddr = GetPeerLocalAddr(aPeerAddr, aPeerPort);
+        struct in6_addr     localIn6Addr;
+
+        cmsg->cmsg_level = IPPROTO_IPV6;
+        cmsg->cmsg_type  = IPV6_PKTINFO;
+        cmsg->cmsg_len   = CMSG_LEN(sizeof(*packetInfo));
+        packetInfo       = reinterpret_cast<struct in6_pktinfo *>(CMSG_DATA(cmsg));
+        memset(packetInfo, 0, sizeof(*packetInfo));
+        packetInfo->ipi6_ifindex = mInfraIfIndex;
+        memcpy(&localIn6Addr, &localAddr, sizeof(localIn6Addr));
+        if (!IN6_IS_ADDR_UNSPECIFIED(&localIn6Addr))
+        {
+            packetInfo->ipi6_addr = localIn6Addr;
+        }
+
+        controlLength += CMSG_SPACE(sizeof(*packetInfo));
+        cmsg = CMSG_NXTHDR(&msg, cmsg);
+    }
+
     {
         constexpr int kIp6HopLimit = 64;
 
         int hopLimit = kIp6HopLimit;
 
-        cmsg             = CMSG_FIRSTHDR(&msg);
         cmsg->cmsg_level = IPPROTO_IPV6;
         cmsg->cmsg_type  = IPV6_HOPLIMIT;
         cmsg->cmsg_len   = CMSG_LEN(sizeof(int));
@@ -194,12 +249,26 @@ void UdpProxy::SendToPeer(const uint8_t      *aUdpPayload,
     }
 }
 
-otbrError UdpProxy::BindToEphemeralPort(void)
+otbrError UdpProxy::BindToPort(uint16_t aHostPort)
 {
     otbrError error = OTBR_ERROR_NONE;
     mFd             = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_UDP, kSocketNonBlock);
 
     VerifyOrExit(mFd != 0, error = OTBR_ERROR_ERRNO);
+
+    if (mInfraIfIndex != 0)
+    {
+#ifdef __linux__
+        char ifName[IF_NAMESIZE];
+
+        VerifyOrExit(if_indextoname(mInfraIfIndex, ifName) != nullptr, error = OTBR_ERROR_ERRNO);
+        VerifyOrExit(0 == setsockopt(mFd, SOL_SOCKET, SO_BINDTODEVICE, ifName, strlen(ifName)),
+                     error = OTBR_ERROR_ERRNO);
+#else
+        VerifyOrExit(0 == setsockopt(mFd, IPPROTO_IPV6, IPV6_BOUND_IF, &mInfraIfIndex, sizeof(mInfraIfIndex)),
+                     error = OTBR_ERROR_ERRNO);
+#endif
+    }
 
     {
         struct sockaddr_in6 sin6;
@@ -207,7 +276,7 @@ otbrError UdpProxy::BindToEphemeralPort(void)
         memset(&sin6, 0, sizeof(sin6));
         sin6.sin6_family = AF_INET6;
         sin6.sin6_addr   = in6addr_any;
-        sin6.sin6_port   = 0;
+        sin6.sin6_port   = htons(aHostPort);
 
         VerifyOrExit(0 == bind(mFd, reinterpret_cast<struct sockaddr *>(&sin6), sizeof(sin6)),
                      error = OTBR_ERROR_ERRNO);
@@ -219,9 +288,16 @@ otbrError UdpProxy::BindToEphemeralPort(void)
         VerifyOrExit(0 == setsockopt(mFd, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on, sizeof(on)), error = OTBR_ERROR_ERRNO);
     }
 
+    if (aHostPort != 0)
+    {
+        mHostPort = aHostPort;
+        otbrLogInfo("Bound to port: %u", mHostPort);
+    }
+    else
     {
         struct sockaddr_in bound_addr;
         socklen_t          addr_len = sizeof(bound_addr);
+
         getsockname(mFd, (struct sockaddr *)&bound_addr, &addr_len);
 
         mHostPort = ntohs(bound_addr.sin_port);
@@ -229,7 +305,7 @@ otbrError UdpProxy::BindToEphemeralPort(void)
     }
 
 exit:
-    otbrLogResult(error, "Bind to ephemeral port");
+    otbrLogResult(error, "Bind to port");
     if (error != OTBR_ERROR_NONE)
     {
         Stop();
@@ -268,11 +344,49 @@ otbrError UdpProxy::ReceivePacket(uint8_t      *aPayload,
     aRemotePort = ntohs(peerAddr.sin6_port);
     memcpy(&aRemoteAddr, &peerAddr.sin6_addr, sizeof(otIp6Address));
 
-    otbrLogDebug("Receive a packet, remote address:%s, remote port:%d", Ip6Address(aRemoteAddr).ToString().c_str(),
-                 aRemotePort);
+    for (struct cmsghdr *cmh = CMSG_FIRSTHDR(&msg); cmh != nullptr; cmh = CMSG_NXTHDR(&msg, cmh))
+    {
+        if (cmh->cmsg_level == IPPROTO_IPV6 && cmh->cmsg_type == IPV6_PKTINFO &&
+            cmh->cmsg_len == CMSG_LEN(sizeof(struct in6_pktinfo)))
+        {
+            const struct in6_pktinfo *pktInfo = reinterpret_cast<const struct in6_pktinfo *>(CMSG_DATA(cmh));
+            otIp6Address              localAddr;
+
+            memcpy(&localAddr, &pktInfo->ipi6_addr, sizeof(localAddr));
+            UpdatePeerLocalAddr(aRemoteAddr, aRemotePort, localAddr);
+            break;
+        }
+    }
 
 exit:
     return rval > 0 ? OTBR_ERROR_NONE : OTBR_ERROR_ERRNO;
+}
+
+void UdpProxy::UpdatePeerLocalAddr(const otIp6Address &aPeerAddr, uint16_t aPeerPort, const otIp6Address &aLocalAddr)
+{
+    struct in6_addr localIn6Addr;
+
+    memcpy(&localIn6Addr, &aLocalAddr, sizeof(localIn6Addr));
+    VerifyOrExit(!IN6_IS_ADDR_UNSPECIFIED(&localIn6Addr));
+
+    mPeerLocalAddrs[{aPeerAddr, aPeerPort}] = aLocalAddr;
+
+exit:
+    return;
+}
+
+otIp6Address UdpProxy::GetPeerLocalAddr(const otIp6Address &aPeerAddr, uint16_t aPeerPort) const
+{
+    otIp6Address localAddr = {};
+
+    auto it = mPeerLocalAddrs.find({aPeerAddr, aPeerPort});
+
+    if (it != mPeerLocalAddrs.end())
+    {
+        localAddr = it->second;
+    }
+
+    return localAddr;
 }
 
 } // namespace otbr

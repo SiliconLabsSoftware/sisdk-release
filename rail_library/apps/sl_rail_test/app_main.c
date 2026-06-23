@@ -120,6 +120,7 @@ uint8_t logLevel = PERIPHERAL_ENABLE | ASYNC_RESPONSE;
 int32_t txCount = 0;
 int32_t txRepeatCount = 0;
 int32_t txRemainingCount = 0;
+volatile txWaitForAck_t txWaitForAck = TX_WAIT_FOR_ACK_ENABLED_OFF;
 uint32_t continuousTransferPeriod = SL_RAIL_TEST_CONTINUOUS_TRANSFER_PERIOD;
 bool enableRandomTxDelay = false;
 uint32_t txAfterRxDelay = 0;
@@ -130,6 +131,7 @@ bool afterRxCancelAck = false;
 bool afterRxUseTxBufferForAck = false;
 uint32_t rssiDoneCount = 0; // HW rssi averaging
 float averageRssi = -128;
+int16_t lqiOffset = 0;
 bool printTxAck = false;
 const char buildDateTime[] = __DATE__ " " __TIME__;
 bool rxHeld = false;
@@ -215,6 +217,7 @@ uint8_t ackData[SL_RAIL_DEFAULT_AUTO_ACK_FIFO_BYTES] = {
 uint8_t ackDataLen = 16;
 
 // Static RAIL callbacks
+static uint8_t railtest_ConvertLqi(uint8_t lqi, int8_t rssi);
 static void railtest_RssiAverageDone(sl_rail_handle_t railHandle);
 
 // Structures that hold default TX & RX Options
@@ -311,20 +314,6 @@ static void changeTxPayload(uint32_t offset,
 #define sl_power_manager_em4_unlatch_pin_retention EMU_UnlatchPinRetention
 #endif
 
-#if defined(_SILICON_LABS_IP_PROJ_IS_LPWH74000) || (_SILICON_LABS_32B_SERIES_3_CONFIG == 353)
-// Not 100% sure why this works on no 74000 builds.  It has to do with us forcing SL_POWER_MANAGER_DEBUG to 1 in
-// rail_power_manager.c, but not having SL_POWER_MANAGER_DEBUG set to 1 in the fpga power_manager component.  Maybe.
-#undef sli_power_manager_debug_log_em_requirement
-static inline void sli_power_manager_debug_log_em_requirement(sl_power_manager_em_t em,
-                                                              bool                  add,
-                                                              const char            *name)
-{
-  (void) em;
-  (void) add;
-  (void) name;
-}
-#endif
-
 // Function called from sl_main_init before the main super loop.
 void sl_rail_test_internal_app_init(void)
 {
@@ -365,11 +354,15 @@ void sl_rail_test_internal_app_init(void)
 
   (void) sl_rail_get_channel(railHandle, &channel);
 
+  // Register an LQI conversion callback.
+  sl_rail_convert_lqi(railHandle, &railtest_ConvertLqi);
+
   sl_rail_config_rx_options(railHandle, SL_RAIL_RX_OPTIONS_ALL, rxOptions);
 
 #if ((_SILICON_LABS_32B_SERIES_2_CONFIG == 2) \
   || (_SILICON_LABS_32B_SERIES_2_CONFIG == 7) \
-  || (_SILICON_LABS_32B_SERIES_2_CONFIG == 9))
+  || (_SILICON_LABS_32B_SERIES_2_CONFIG == 9) \
+  || (_SILICON_LABS_32B_SERIES_2_CONFIG == 11))
   if (resetCause & EMU_RSTCAUSE_EM4) {
     responsePrint("sleepWoke", "EM:4s,SerialWakeup:No,RfSensed:%s",
                   sl_rail_is_rf_sensed(railHandle) ? "Yes" : "No");
@@ -652,6 +645,20 @@ void railtest_TimerExpired(sl_rail_handle_t railHandle)
   }
 }
 
+static uint8_t railtest_ConvertLqi(uint8_t lqi, int8_t rssi)
+{
+  (void)rssi;
+  // Put any custom LQI conversion code here.
+  // In this application, lqiOffset is between -255 and 255 but LQI is uint8_t:
+  int16_t newLqi = lqiOffset + lqi;
+  if (newLqi < 0) {
+    newLqi = 0;     // uint8_t min
+  } else if (newLqi > 0xFF) {
+    newLqi = 0xFF;  // uint8_t max
+  }
+  return (uint8_t)newLqi;
+}
+
 static void railtest_RssiAverageDone(sl_rail_handle_t railHandle)
 {
   RailAppEvent_t *rssi
@@ -723,6 +730,9 @@ void sl_rail_util_on_event(sl_rail_handle_t railHandle, sl_rail_events_t events)
   }
   if (events & (SL_RAIL_EVENT_RX_SYNC_0_DETECT | SL_RAIL_EVENT_RX_SYNC_1_DETECT)) {
     counters.syncDetect++;
+    if (inAppMode(BER_PACKET, NULL)) {
+      berPacketStats.syncWordsReceived++;
+    }
     if (events & SL_RAIL_EVENT_RX_SYNC_0_DETECT) {
       counters.syncDetect0++;
     }
@@ -769,6 +779,14 @@ void sl_rail_util_on_event(sl_rail_handle_t railHandle, sl_rail_events_t events)
       rxProcessHeld = true; // Try to avoid overflow by processing held packets
     }
     counters.rxFifoFull++;
+  }
+  if (events & SL_RAIL_EVENT_RX_FILTER_PASSED) {
+    if (afterRxUseTxBufferForAck) {
+      // Use Tx Buffer for Ack if user requested
+      afterRxUseTxBufferForAck = false;
+      sl_rail_write_tx_fifo(railHandle, txData, txDataLen, true);
+      sl_rail_use_tx_fifo_for_auto_ack(railHandle);
+    }
   }
   if (events & (SL_RAIL_EVENT_RX_FIFO_OVERFLOW
                 | SL_RAIL_EVENT_RX_ADDRESS_FILTERED
@@ -837,6 +855,17 @@ void sl_rail_util_on_event(sl_rail_handle_t railHandle, sl_rail_events_t events)
     //      this code assumes default position (PACKET_END).
     ackTimeoutDuration = sl_rail_get_time(railHandle)
                          - previousTxAppendedInfo.time_sent.packet_time;
+    if (txWaitForAck == TX_WAIT_FOR_ACK_ENABLED_ON) {
+      txWaitForAck = TX_WAIT_FOR_ACK_ENABLED_OFF;
+#if SL_RAIL_IEEE802154_SUPPORTS_G_MODE_SWITCH && defined(WISUN_MODESWITCHPHRS_ARRAY_SIZE)
+      if (modeSwitchState == TX_ON_NEW_PHY) { // Packet has been sent in a MS context
+        scheduleNextModeSwitchTx(true);
+      } else
+#endif
+      {
+        scheduleNextTx();
+      }
+    }
   }
   // End scheduled receive mode if an appropriate end or error event is received
   if ((events & (SL_RAIL_EVENT_RX_SCHEDULED_RX_END
@@ -911,6 +940,9 @@ void sl_rail_util_on_event(sl_rail_handle_t railHandle, sl_rail_events_t events)
                 | SL_RAIL_EVENT_TX_UNDERFLOW
                 | SL_RAIL_EVENT_TX_CHANNEL_BUSY
                 | SL_RAIL_EVENT_TX_SCHEDULED_TX_MISSED)) {
+    if (txWaitForAck == TX_WAIT_FOR_ACK_ENABLED_ON) {
+      txWaitForAck = TX_WAIT_FOR_ACK_ENABLED_OFF;
+    }
     if (currentAppMode() == TX_STREAM) {
       lastTxStatus = events;
       scheduleNextTx();
@@ -1045,6 +1077,10 @@ void processPendingCalibrations(void)
 
     calibrateRadio = false;
 
+    // Display the pending calibrations if CAL_NEEDED is a printed event
+    if ((enablePrintEvents & SL_RAIL_EVENT_CAL_NEEDED) != 0U) {
+      responsePrint("calibrateRadio", "PendingCalMask:0x%x", pendingCals);
+    }
     if ((pendingCals & SL_RAIL_CAL_TEMP_HFXO)
         && !isHFXOCompensationSystematic) {
       // Compensation step 1: wait for thermistor measurement
@@ -1265,24 +1301,43 @@ sl_rail_status_t chooseTxType(void)
 {
   // Invalidate the previous TX's start time
   txStartTime = 0U;
+  sl_rail_tx_options_t options = txOptions;
+#if SL_RAIL_IEEE802154_SUPPORTS_G_MODE_SWITCH && defined(WISUN_MODESWITCHPHRS_ARRAY_SIZE)
+  // If WAIT_FOR_ACK option is in effect, do not apply it to mode-switch pkt
+  // otherwise we'll wait for an ACK to the mode-switch before sending the
+  // actual WAIT_FOR_ACK packet.
+  if (modeSwitchState == TX_MS_PACKET) {
+    options &= ~SL_RAIL_TX_OPTION_WAIT_FOR_ACK;
+  }
+#endif
+  if ((txWaitForAck == TX_WAIT_FOR_ACK_ENABLED_OFF)
+      && ((options & SL_RAIL_TX_OPTION_WAIT_FOR_ACK) != 0U)) {
+    txWaitForAck = TX_WAIT_FOR_ACK_ENABLED_ON;
+  }
+  sl_rail_status_t status;
   if (currentAppMode() == TX_SCHEDULED || currentAppMode() == SCHTX_AFTER_RX
       || currentAppMode() == TX_SCHEDULED_N_PACKETS) {
     if (txType == TX_TYPE_CSMA) {
-      return sl_rail_start_scheduled_cca_csma_tx(railHandle, channel, txOptions, &nextPacketTxTime,
-                                                 csmaConfig, NULL);
+      status = sl_rail_start_scheduled_cca_csma_tx(railHandle, channel, options, &nextPacketTxTime,
+                                                   csmaConfig, NULL);
     } else if (txType == TX_TYPE_LBT) {
-      return sl_rail_start_scheduled_cca_lbt_tx(railHandle, channel, txOptions, &nextPacketTxTime,
-                                                lbtConfig, NULL);
+      status = sl_rail_start_scheduled_cca_lbt_tx(railHandle, channel, options, &nextPacketTxTime,
+                                                  lbtConfig, NULL);
     } else {
-      return sl_rail_start_scheduled_tx(railHandle, channel, txOptions, &nextPacketTxTime, NULL);
+      status = sl_rail_start_scheduled_tx(railHandle, channel, options, &nextPacketTxTime, NULL);
     }
   } else if (txType == TX_TYPE_LBT) {
-    return sl_rail_start_cca_lbt_tx(railHandle, channel, txOptions, lbtConfig, NULL);
+    status = sl_rail_start_cca_lbt_tx(railHandle, channel, options, lbtConfig, NULL);
   } else if (txType == TX_TYPE_CSMA) {
-    return sl_rail_start_cca_csma_tx(railHandle, channel, txOptions, csmaConfig, NULL);
+    status = sl_rail_start_cca_csma_tx(railHandle, channel, options, csmaConfig, NULL);
   } else {
-    return sl_rail_start_tx(railHandle, channel, txOptions, NULL);
+    status = sl_rail_start_tx(railHandle, channel, options, NULL);
   }
+  if ((status != SL_RAIL_STATUS_NO_ERROR)
+      && (txWaitForAck == TX_WAIT_FOR_ACK_ENABLED_ON)) {
+    txWaitForAck = TX_WAIT_FOR_ACK_ENABLED_OFF;
+  }
+  return status;
 }
 
 void sendPacketIfPending(void)
@@ -1329,6 +1384,9 @@ void sendPacketIfPending(void)
 void pendFinishTxSequence(void)
 {
   finishTxSequence = true;
+  if (txWaitForAck == TX_WAIT_FOR_ACK_ENABLED_ON) {
+    txWaitForAck = TX_WAIT_FOR_ACK_ENABLED_OFF; // No transmits to schedule
+  }
 }
 
 void pendFinishTxAckSequence(void)

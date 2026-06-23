@@ -3,7 +3,7 @@
  * @brief CS RAS Client - Internal header
  *******************************************************************************
  * # License
- * <b>Copyright 2024 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -42,6 +42,7 @@
 #include "cs_ras_common.h"
 #include "cs_ras_client_messaging.h"
 #include "app_timer.h"
+#include "app_rta.h"
 
 #define CS_RAS_CLIENT_INTER_EVENT_TIMEOUT_MS                     1000
 #define CS_RAS_CLIENT_GET_ON_DEMAND_RANGING_DATA_TIMEOUT_MS      5000
@@ -127,6 +128,16 @@ cs_ras_client_t *cs_ras_client_find_by_timer(app_timer_t *timer);
  * @return true to send the event to the host in NCP case.
  *****************************************************************************/
 bool cs_ras_client_on_bt_event(sl_bt_msg_t *evt);
+
+/**************************************************************************//**
+ * Initialize RTA for RAS Client.
+ *****************************************************************************/
+void cs_ras_client_rta_init(void);
+
+/**************************************************************************//**
+ * Ready RTA for RAS Client.
+ *****************************************************************************/
+void cs_ras_client_rta_ready(void);
 
 #ifdef __cplusplus
 };

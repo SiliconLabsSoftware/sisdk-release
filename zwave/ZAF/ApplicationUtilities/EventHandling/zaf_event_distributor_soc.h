@@ -35,9 +35,10 @@ typedef struct {
 } zaf_event_distributor_cc_event_handler_map_v1_t;
 
 /**
- * Redefine latest version to a common define called latest
+ * One row in the ZAF command-class event handler table (contiguous in .rodata).
+ * At present the layout is @ref zaf_event_distributor_cc_event_handler_map_v1_t.
  */
-typedef zaf_event_distributor_cc_event_handler_map_v1_t zaf_event_distributor_cc_event_handler_map_latest_t;
+typedef zaf_event_distributor_cc_event_handler_map_v1_t zaf_event_distributor_cc_event_handler_map_entry_t;
 
 /**
  * Section name
@@ -50,10 +51,10 @@ typedef zaf_event_distributor_cc_event_handler_map_v1_t zaf_event_distributor_cc
  * @param[in] command_class Command Class
  * @param[in] handler       Address of the handler function.
  */
-#define ZAF_EVENT_DISTRIBUTOR_REGISTER_CC_EVENT_HANDLER(command_class, handler)                                                           \
-  static const zaf_event_distributor_cc_event_handler_map_latest_t zaf_event_distributor_cc_event_handler_##command_class##event##handler \
-  __attribute__((aligned(4), __used__, __section__(ZAF_EVENT_DISTRIBUTOR_CC_EVENT_HANDLER_SECTION))) = { handler, command_class, 1 };     \
-  void * zaf_event_distributor_register_cc_event_handler_##table_entry##handler
+#define ZAF_EVENT_DISTRIBUTOR_REGISTER_CC_EVENT_HANDLER(command_class, handler)                                                          \
+  static const zaf_event_distributor_cc_event_handler_map_entry_t zaf_event_distributor_cc_event_handler_##command_class##event##handler \
+  __attribute__((aligned(4), __used__, __section__(ZAF_EVENT_DISTRIBUTOR_CC_EVENT_HANDLER_SECTION)))                                     \
+    = { (handler), (command_class), 1 }
 
 /**
  * @brief Used by the application to handle protocol received events

@@ -438,7 +438,6 @@ class PhysInternalBaseStandardIEEE802154Ocelot(PhysRAILBaseStandardIEEE802154Lyn
         phy.profile_inputs.timing_sample_threshold.value = 0
         phy.profile_inputs.tx_xtal_error_ppm.value = 0
         phy.profile_inputs.xtal_frequency_hz.value = 39000000
-        phy.profile_inputs.channel_spacing_hz.value = 2_000_000
 
         # Add 15.4 Packet Configuration
         PHY_COMMON_FRAME_154(phy, model)
@@ -449,7 +448,7 @@ class PhysInternalBaseStandardIEEE802154Ocelot(PhysRAILBaseStandardIEEE802154Lyn
         # Cannot use profile_inputs because hidden inputs
         model.vars.demod_select.value_forced = model.vars.demod_select.var_enum.COHERENT
 
-        phy.profile_inputs.base_frequency_hz.value = long(868000000)
+        phy.profile_inputs.base_frequency_hz.value = long(868_300_000)
         phy.profile_inputs.baudrate_tol_ppm.value = 0
         phy.profile_inputs.bitrate.value = 20000
         phy.profile_inputs.channel_spacing_hz.value = 0
@@ -647,8 +646,9 @@ class PhysInternalBaseStandardIEEE802154Ocelot(PhysRAILBaseStandardIEEE802154Lyn
     def PHY_IEEE802154_915MHz_BPSK_40kbps_coh(self, model, phy_name=None):
         phy = self.PHY_IEEE802154_868MHz_BPSK_20kbps_coh(model, phy_name=phy_name)
 
-        phy.profile_inputs.base_frequency_hz.value = 915_000_000
+        phy.profile_inputs.base_frequency_hz.value = long(906_000_000)
         phy.profile_inputs.bitrate.value = 40_000
+        phy.profile_inputs.channel_spacing_hz.value = 2_000_000
         phy.profile_inputs.rx_xtal_error_ppm.value = 20
         phy.profile_inputs.tx_xtal_error_ppm.value = 20
 

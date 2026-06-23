@@ -56,7 +56,7 @@
 // <1-31:1>
 // <i> Default: 12
 #define SL_FEM_UTIL_AUTO_PRS_LNA_BYPASS_THRESHOLD           12
-// <o SL_FEM_UTIL_AUTO_PRS_LNA_BYPASS_DELTA_RSSI_DBM> Automatic PRS LNA Bypass Delta RSSI (dB)
+// <o SL_FEM_UTIL_AUTO_PRS_LNA_BYPASS_DELTA_RSSI_DBM> Automatic PRS LNA Bypass Delta RSSI (dBm)
 // <1-255:1>
 // <i> Default: 15
 #define SL_FEM_UTIL_AUTO_PRS_LNA_BYPASS_DELTA_RSSI_DBM      15

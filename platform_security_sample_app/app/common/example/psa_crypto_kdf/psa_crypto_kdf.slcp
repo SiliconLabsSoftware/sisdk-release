@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform Security - SoC PSA Crypto KDF
 description: >
-  This example project demonstrates the Key Derivation Function (KDF) API.
+  Demonstrates how to derive keys with the PSA Crypto HKDF API, optionally chained with ECDH key agreement, producing AES, ChaCha20, HMAC, and other derived keys.
 category: Example|Platform
 filter:
   - name: "Device Type"

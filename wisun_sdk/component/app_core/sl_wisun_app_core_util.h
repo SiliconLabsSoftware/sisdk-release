@@ -61,7 +61,7 @@ extern "C" {
 /// Assert POSIX API result with thread exit
 #define assert_res(val, message)                                                     \
   do {                                                                               \
-    printf("%s [%ld] %s.\n", message, (int32_t)val, (val == -1) ? "error" : "done"); \
+    printf("%s [%"PRIi32"] %s.\n", message, (int32_t)val, (val == -1) ? "error" : "done"); \
     if ((val) == -1) {                                                               \
       exit(-1);                                                                      \
     }                                                                                \

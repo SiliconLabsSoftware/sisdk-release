@@ -46,10 +46,10 @@ Table of content:
       - [service\_reset](#service_reset)
       - [read\_sensor](#read_sensor)
       - [vendor\_opcode](#vendor_opcode)
-      - [image\_throughput](#image_throughput)
     - [Access Point control commands](#access-point-control-commands)
       - [help](#help)
       - [mode](#mode)
+      - [image\_throughput](#image_throughput)
       - [network](#network)
       - [set\_rssi\_threshold](#set_rssi_threshold)
       - [scan](#scan)
@@ -166,7 +166,7 @@ To build the required shared libraries for the Python ESL Access Point, please f
 1. **Open Simplicity Studio and start creating the workspace.**
    - Choose `Bluetooth LE` from the Wireless Technology list on the _Home_ page. This will open the _Project_ on the left and a new _Examples and Demos_ tab on the top.
    - Use the search field to filter with the keyword `esl`.
-   - Select `Blutooth` checkbox in the _Wireless Technology_ list and the `Host` option from the _Device Type_ list for better filtering. This will narrow down the list on the right to four elements: three ESL AP related projects and the workspace that combines them.
+   - Select `Bluetooth` checkbox in the _Wireless Technology_ list and the `Host` option from the _Device Type_ list for better filtering. This will narrow down the list on the right to four elements: three ESL AP related projects and the workspace that combines them.
    - Select the `Bluetooth - Host ESL Access Point` workspace, which groups the three ESL AP host projects together.
      (If you are unsure which one is the workspace, you can hide individual projects for clarity by disabling the visibility of _Example Projects_.)
 
@@ -514,7 +514,7 @@ _Notes:_
 - _Timed LED commands with a delay shorter than the actual periodic advertisement interval may be rejected on receive by Implausible Absolute Time (0x0C) ESL error response. Please refer the ESL specification on timed commands._
 - _If the delay is given in the human readable form (using `--time`) then the LED will either turn on on the same day at the specified time or the next day - the latter if the given time has passed already on your local computer's clock!_
 - _In the SoC ESL Tag example the LED at index 0 is used for special purposes, that is it can't be controlled directly as opposed to LED 1 on the WSTK. Rather, LED 0 is used as optical feedback only for various internal states of the ESL Tag. Nevertheless, the special function for LED 0 can be still switched on and off via the `led` command._
-- _Almost all of the optional led control parameters are "sticky", meaning that the last values are preserved by the AP internally and will be re-used next time, if the given parameter is omitted in the argument list. This doesn't apply on the delay, time and absolute parameters, though._
+- _Almost all of the optional led control parameters are "sticky", meaning that the last values are preserved by the AP internally and will be reused next time, if the given parameter is omitted in the argument list. This doesn't apply on the delay, time and absolute parameters, though._
 
 #### refresh\_display
     Refresh ESL Tag display.
@@ -622,40 +622,6 @@ _Notes:_
  - _The latest Silabs ESL example supports PAwR interval skipping as an experimental feature to further reduce power consumption. To enable skipping on supported ESLs, you can issue the `vendor_opcode <esl_id> -d <skip_count>` command. Skipping can be disabled by issuing the command `vendor_opcode <esl_id> -d 0`._
  - _An ESL for which PAwR skipping is currently enabled **may not receive PAwR commands immediately!** Commands are automatically retransmitted up to 3 times if not responded to, but for higher skip rates you may need to manually retry several times to succeed._
 
-#### image\_throughput
-    Run or stop the image throughput stress test across synchronized ESL Tags.
-
-Usage: `image_throughput [-h] {start,stop} [--max_count <u15>] [--max_group <u7>]`
-
-Positional arguments:
-- `{start, stop}`: Start or stop the image throughput stress test.
-
-Options:
-- `[--max_count, -c <u15>]`: Upper limit on how many **synchronized** Tags are enrolled in a deterministic order: first by ESL ID, then by group ID. This ordering spreads enrollment across groups for better performance. If omitted, all eligible synchronized Tags are considered (subject to `--max_group` and internal eligibility). The value must be at least **1** when given.
-- `[--max_group, -g <u7>]`: Highest **ESL group ID** for Tags that may be enrolled. Tags in groups above this value are skipped. If omitted, there is no group ceiling from this option. When given, the value must be in the range **0**-**127** (aligned with PAwR subevent / group limits).
-
-_Notes:_
-- _While the test is active, the current AP mode line from [`mode`](#mode) will indicate that an image throughput test is running (in addition to manual versus automated)._
-- _At high log verbosity, the console can be very noisy during the test; avoid issuing unrelated CLI commands until the test completes unless you intend to stop it._
-- _Stopping PAwR or losing sync can also end the test; the AP then reverts to the saved pre-test automated/manual state._
-- _This command is a diagnostic utility, not an Access Point operating mode. While the test runs, the AP switches to manual mode; when the test finishes normally, the previous automated versus manual mode is restored automatically. Issuing [`mode auto`](#mode) or [`mode manual`](#mode) while the test runs stops the test as well (with statistics logged)._
-- _PAwR must already be running; ESLs must be in Synchronized state and support image transfer. The AP uses image files from the `image/` folder (same default source as for the [`image_update`](#image_update) command). Demo mode must be disabled before `start`; if demo mode is on, the command is rejected._
-
-_Disclaimer: Switching to manual mode gives full control over devices on your network. Issuing other ESL commands while the test runs can interfere with timing and connection state; it is highly recommended not to issue commands manually during the test._
-
-Examples:
-- `image_throughput start`
-
-  Start the test with default enrollment (all eligible synchronized Tags, subject to eligibility checks in the AP).
-
-- `image_throughput start -c 8 -g 3`
-
-  Start the test, enrolling at most eight Tags whose ESL group ID is 3 or lower. If fewer than eight ESLs are configured in groups 0-3, the test will run on fewer devices than the number given by the `-c` option.
-
-- `image_throughput stop`
-
-  Stop the running test and print summary statistics; the AP restores the operating mode in effect before `start`.
-
 ### Access Point control commands
 ---
 #### help
@@ -697,6 +663,41 @@ Examples:
 - `mode`
 
   Ask current mode.
+
+#### image\_throughput
+    Run or stop the image throughput stress test across synchronized ESL Tags.
+
+Usage: `image_throughput [-h] {start,stop} [--max_count <u15>] [--max_group <u7>] [--parallel_connections <N>]`
+
+Positional arguments:
+- `{start, stop}`: Start or stop the image throughput stress test.
+
+Options:
+- `[--max_count, -c <u15>]`: Upper limit on how many **synchronized** Tags are enrolled in a deterministic order: first by ESL ID, then by group ID. This ordering spreads enrollment across groups for better performance. If omitted, all eligible synchronized Tags are considered (subject to `--max_group` and internal eligibility). The value must be at least **1** when given.
+- `[--max_group, -g <u7>]`: Highest **ESL group ID** for Tags that may be enrolled. Tags in groups above this value are skipped. If omitted, there is no group ceiling from this option. When given, the value must be in the range **0**-**127** (aligned with PAwR subevent / group limits).
+- `[--parallel_connections, -p <N>]` Cap on parallel **BLE** connections: if omitted, the previous or stack-discovered cap is unchanged; **0** clears it; **1**-**32** sets a fixed cap for this run. Please note that setting a cap higher than the maximum parallel connection supported by the ESL AP NCP target will have no effect.
+
+_Notes:_
+- _While the test is active, the current AP mode line from [`mode`](#mode) will indicate that an image throughput test is running (in addition to manual versus automated)._
+- _At high log verbosity, the console can be very noisy during the test; avoid issuing unrelated CLI commands until the test completes unless you intend to stop it._
+- _Stopping PAwR or losing sync can also end the test; the AP then reverts to the saved pre-test automated/manual state._
+- _This command is a diagnostic utility, not an Access Point operating mode. While the test runs, the AP switches to manual mode; when the test finishes normally, the previous automated versus manual mode is restored automatically. Issuing [`mode auto`](#mode) or [`mode manual`](#mode) while the test runs stops the test as well (with statistics logged)._
+- _PAwR must already be running; ESLs must be in Synchronized state and support image transfer. The AP uses image files from the `image/` folder (same default source as for the [`image_update`](#image_update) command). Demo mode must be disabled before `start`; if demo mode is on, the command is rejected._
+
+_Disclaimer: Switching to manual mode gives full control over devices on your network. Issuing other ESL commands while the test runs can interfere with timing and connection state; it is highly recommended not to issue commands manually during the test._
+
+Examples:
+- `image_throughput start`
+
+  Start the test with default enrollment (all eligible synchronized Tags, subject to eligibility checks in the AP).
+
+- `image_throughput start -c 8 -g 3`
+
+  Start the test, enrolling at most eight Tags whose ESL group ID is 3 or lower. If fewer than eight ESLs are configured in groups 0-3, the test will run on fewer devices than the number given by the `-c` option.
+
+- `image_throughput stop`
+
+  Stop the running test and print summary statistics; the AP restores the operating mode in effect before `start`.
 
 #### network
     Execute commands related to the network control.
@@ -834,7 +835,7 @@ Subcommands:
 
     Positional argument:
     - `filename`: Filename to read AP commands from.
-  
+
 - `wait [--group_id <u7>] seconds [event] [address]`: Wait before running the next command.
 
     Positional arguments:
@@ -854,7 +855,7 @@ Subcommands:
     Option:
     - `-v, --verbose`: With `list`, show the full command template alongside each event name (without it, only event names are shown). With `clean`, list each removed binding before the summary count.
 
-- `register <event> <command> [params ...]`: Bind a CLI command to an ESL event so that the command is executed automatically whenever the event occurs. 
+- `register <event> <command> [params ...]`: Bind a CLI command to an ESL event so that the command is executed automatically whenever the event occurs.
     Positional arguments:
     - `event`: Event name to react to (e.g. `connection_opened`, `tag_found`).
     - `command`: CLI command to execute (e.g. `ping`, `disconnect`, `led`).

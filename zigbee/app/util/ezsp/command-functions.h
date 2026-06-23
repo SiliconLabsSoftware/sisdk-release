@@ -487,40 +487,45 @@ uint8_t sl_zigbee_ezsp_get_mfg_token(
     // the size of corresponding the EZSP Mfg token,
     // please refer to app/util/ezsp/ezsp-enum.h
     switch (tokenId) {
-      // 2 bytes
+      case SL_ZIGBEE_EZSP_MFG_BOOTLOAD_AES_KEY:
+        expectedTokenDataLength = 255;
+        break;
+      case SL_ZIGBEE_EZSP_MFG_SL_ZIGBEE_EZSP_STORAGE:
+        expectedTokenDataLength = 255;
+        break;
+      case SL_ZIGBEE_EZSP_MFG_STRING:
+        expectedTokenDataLength = 255;
+        break;
       case SL_ZIGBEE_EZSP_MFG_CUSTOM_VERSION:
       case SL_ZIGBEE_EZSP_MFG_MANUF_ID:
       case SL_ZIGBEE_EZSP_MFG_PHY_CONFIG:
       case SL_ZIGBEE_EZSP_MFG_CTUNE:
         expectedTokenDataLength = 2;
         break;
-      // 8 bytes
-      case SL_ZIGBEE_EZSP_MFG_SL_ZIGBEE_EZSP_STORAGE:
       case SL_ZIGBEE_EZSP_MFG_CUSTOM_EUI_64:
         expectedTokenDataLength = 8;
         break;
-      // 16 bytes
-      case SL_ZIGBEE_EZSP_MFG_STRING:
       case SL_ZIGBEE_EZSP_MFG_BOARD_NAME:
-      case SL_ZIGBEE_EZSP_MFG_BOOTLOAD_AES_KEY:
         expectedTokenDataLength = 16;
         break;
-      // 20 bytes
       case SL_ZIGBEE_EZSP_MFG_INSTALLATION_CODE:
         expectedTokenDataLength = 20;
         break;
-      // 40 bytes
       case SL_ZIGBEE_EZSP_MFG_ASH_CONFIG:
         expectedTokenDataLength = 40;
         break;
-      // 92 bytes
       case SL_ZIGBEE_EZSP_MFG_CBKE_DATA:
         expectedTokenDataLength = 92;
         break;
       default:
         break;
     }
+    if (expectedTokenDataLength == 255) {
+      (void)fetchInt8uPointer(tokenDataLength);
+      return 255;
+    }
     if (tokenDataLength != expectedTokenDataLength) {
+      (void)fetchInt8uPointer(tokenDataLength);
       return 255;
     }
     fetchInt8uArray(tokenDataLength, tokenData);
@@ -2124,6 +2129,18 @@ void sl_zigbee_ezsp_set_binding_remote_node_id(
   startCommand(SL_ZIGBEE_EZSP_SET_BINDING_REMOTE_NODE_ID);
   appendInt8u(index);
   appendInt16u(nodeId);
+  sl_zigbee_ezsp_status_t sendStatus = sendCommand();
+  sli_zigbee_ezsp_set_last_status(sendStatus);
+  if (sendStatus == SL_ZIGBEE_EZSP_SUCCESS) {
+    EZSP_ASH_TRACE("%s(): sendCommand() error: 0x%02X", __func__, sendStatus);
+  }
+}
+
+void sl_zigbee_ezsp_clear_binding_table_on_leave(
+      bool clear)
+{
+  startCommand(SL_ZIGBEE_EZSP_CLEAR_BINDING_TABLE_ON_LEAVE);
+  appendInt8u(clear);
   sl_zigbee_ezsp_status_t sendStatus = sendCommand();
   sli_zigbee_ezsp_set_last_status(sendStatus);
   if (sendStatus == SL_ZIGBEE_EZSP_SUCCESS) {

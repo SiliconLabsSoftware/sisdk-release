@@ -1,6 +1,6 @@
 /***************************************************************************//**
  * @file
- * @brief Signal handler abstaction module.
+ * @brief Signal handler abstraction module.
  *******************************************************************************
  * # License
  * <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>

@@ -31,12 +31,15 @@ set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/core
     ${PROJECT_SOURCE_DIR}/tests/nexus
+    ${PROJECT_SOURCE_DIR}/tests/nexus/platform
+    ${PROJECT_SOURCE_DIR}/examples/platforms/utils
 )
 
 set(COMMON_COMPILE_OPTIONS
     -DOPENTHREAD_FTD=1
     -DOPENTHREAD_MTD=0
     -DOPENTHREAD_RADIO=0
+    -DOPENTHREAD_CONFIG_USE_STD_NEW=1
 )
 
 set(COMMON_LIBS

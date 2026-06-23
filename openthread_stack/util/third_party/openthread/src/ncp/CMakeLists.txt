@@ -41,6 +41,7 @@ set(COMMON_SOURCES
     ncp_hdlc.cpp
     platform/dnssd.cpp
     platform/infra_if.cpp
+    platform/border_routing.cpp
 )
 
 set(OT_NCP_VENDOR_HOOK_SOURCE "" CACHE STRING "set vendor hook source file for NCP")

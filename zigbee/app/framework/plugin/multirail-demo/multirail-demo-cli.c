@@ -29,9 +29,9 @@ void sl_zigbee_af_multirail_demo_cli_init(sl_cli_command_arg_t *arguments)
   const int16_t power = sl_cli_get_argument_uint16(arguments, 0);
 
   if (sl_zigbee_af_multirail_demo_init(NULL, NULL, true, power, NULL, 0, 0xFFFF, NULL)) {
-    sl_zigbee_af_core_println("OK");
+    sl_zigbee_af_cli_println("OK");
   } else {
-    sl_zigbee_af_core_println("Additional RAIL handle not intialized");
+    sl_zigbee_af_cli_println("Additional RAIL handle not intialized");
   }
 }
 
@@ -43,7 +43,7 @@ void sl_zigbee_af_multirail_demo_cli_init(sl_cli_command_arg_t *arguments)
 void sl_zigbee_af_multirail_demo_cli_get_handle(sl_cli_command_arg_t *arguments)
 {
   UNUSED_VAR(arguments);
-  sl_zigbee_af_core_println("%08X", (uint32_t)sl_zigbee_af_multirail_demo_get_handle);
+  sl_zigbee_af_cli_println("%08X", (uint32_t)sl_zigbee_af_multirail_demo_get_handle);
 }
 
 /** Send a packet using the second RAIL instance.
@@ -86,9 +86,9 @@ void sl_zigbee_af_multirail_demo_(sl_cli_command_arg_t *arguments)
 
   sl_rail_status_t status = sl_zigbee_af_multirail_demo_send(data, dataLength, channel, NULL, NULL);
   if (status == SL_RAIL_STATUS_NO_ERROR) {
-    sl_zigbee_af_core_println("OK");
+    sl_zigbee_af_cli_println("OK");
   } else {
-    sl_zigbee_af_core_println("Error %d", status);
+    sl_zigbee_af_cli_println("Error %d", status);
   }
 }
 

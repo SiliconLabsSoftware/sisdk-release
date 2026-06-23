@@ -24,7 +24,6 @@ post_build:
   - path: ../postbuild_profile/bt_dfu_btl.slpb
 
 tag:
-  - toolchain:gcc
   - companion:application
   - hwfilter:device:device_series_2
   - hwfilter:device:device_supports_bluetooth

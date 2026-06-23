@@ -41,6 +41,11 @@
   - name: hardware_board_supports_1_rf_band
   - name: hardware_board_default_rf_band
   - name: hardware_board_default_rf_band_2400
+  - name: hardware_board_has_led0
+  - name: hardware_board_has_led1
+  - name: hardware_board_has_btn0
+  - name: hardware_board_has_btn1
+  - name: hardware_board_has_shared_button_led
 - recommends:
   - id: brd4002b
     vendor: silabs
@@ -71,7 +76,7 @@
   - name: SL_BOARD_NAME
     value: '"BRD4420A"'
   - name: SL_BOARD_REV
-    value: '"A04"'
+    value: '"A03"'
   - name: HFXO_FREQ
     value: 38400000
   - name: HARDWARE_BOARD_SUPPORTS_RF_BAND_2400
@@ -80,7 +85,7 @@
 - tag:
   - board:pn:BRD4420
   - board:variant:A
-  - board:revision:A04
+  - board:revision:A03
   - board:device:efr32bg29b220f1024cj45
   - hardware:has:vcom
   - hardware:has:vcom:vcom_hardware_flowcontrol

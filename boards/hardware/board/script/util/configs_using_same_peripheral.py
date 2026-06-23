@@ -2,7 +2,7 @@ import re
 import argparse
 from collections import defaultdict
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Iterable, Optional, Tuple
 
 override_signals = {
   'CC0': 'OUTPUT',  # CC0 and OUTPUT are aliases for TIMER peripherals
@@ -29,42 +29,93 @@ ignore_peripherals_per_sdid = {
 }
 
 
+def _iter_board_component_dirs(gsdk_path: Path) -> Iterable[Path]:
+  legacy = gsdk_path / 'hardware' / 'board' / 'component'
+  if legacy.is_dir():
+    yield legacy
+  pkg_root = gsdk_path / 'package'
+  if pkg_root.is_dir():
+    for d in sorted(pkg_root.glob('*/hardware/board/component')):
+      if d.is_dir():
+        yield d
+
+
+def _resolve_board_slcc(gsdk_path: Path, slcc_stem: str) -> Optional[Path]:
+  for comp_dir in _iter_board_component_dirs(gsdk_path):
+    candidate = comp_dir / f'{slcc_stem}.slcc'
+    if candidate.is_file():
+      return candidate
+  return None
+
+
+def _resolve_device_component_slcc(gsdk_path: Path, device_name: str) -> Optional[Path]:
+  roots = (
+    gsdk_path / 'platform' / 'Device' / 'component',
+    gsdk_path / 'platform' / 'Device' / 'component-internal',
+  )
+  for root in roots:
+    candidate = root / f'{device_name}.slcc'
+    if candidate.is_file():
+      return candidate
+  for candidate in sorted(gsdk_path.glob(f'package/*/platform/Device/component/{device_name}.slcc')):
+    if candidate.is_file():
+      return candidate
+  for candidate in sorted(gsdk_path.glob(f'package/*/platform/Device/component-internal/{device_name}.slcc')):
+    if candidate.is_file():
+      return candidate
+  return None
+
+
+def _iter_board_config_header_files(gsdk_path: Path) -> Iterable[Path]:
+  legacy = gsdk_path / 'hardware' / 'board' / 'config'
+  if legacy.is_dir():
+    yield from legacy.rglob('*.h')
+  pkg_root = gsdk_path / 'package'
+  if pkg_root.is_dir():
+    for cfg in sorted(pkg_root.glob('*/hardware/board/config')):
+      if cfg.is_dir():
+        yield from cfg.rglob('*.h')
+
+
 def get_device_sdid(gsdk_path: Path, board_name: str) -> Optional[int]:
   """
   This function gets the SDID for a given board by opening its device component file and fetching SDID from the tags
   """
-  try:
-    with open((gsdk_path / 'hardware/board/component') / f'{board_name}.slcc') as board_file:
-      content = board_file.read()
+  board_path = _resolve_board_slcc(gsdk_path, board_name)
+  if board_path is None:
+    return None
 
-      # Try getting Board device from board component tags
+  with open(board_path) as board_file:
+    content = board_file.read()
+
+  # Try getting Board device from board component tags
+  device_match = re.search(r'board:device:(\w+)\n', content)
+
+  if device_match is None:
+    # If board device not found in the component files, this board is split into revisions.
+    # So get the recommended revision.
+    device_match = re.search(rf'id: ({board_name}_\w\d+)\n', content)
+    if device_match is None:
+      return None
+
+    board_revision = device_match.group(1)
+    rev_path = _resolve_board_slcc(gsdk_path, board_revision)
+    if rev_path is None:
+      return None
+    with open(rev_path) as board_revision_file:
+      # Get Board device from the revisioned board component
+      content = board_revision_file.read()
       device_match = re.search(r'board:device:(\w+)\n', content)
 
-      if device_match is None:
-        # If board device not found in the component files, this board is split into revisions.
-        # So get the recommended revision.
-        device_match = re.search(rf'id: ({board_name}_\w\d+)\n', content)
-        if device_match is None:
-          return None
-
-        board_revision = device_match.group(1)
-        with open((gsdk_path / 'hardware/board/component') / f'{board_revision}.slcc') as board_revision_file:
-          # Get Board device from the revisioned board component
-          content = board_revision_file.read()
-          device_match = re.search(r'board:device:(\w+)\n', content)
-
-  except FileNotFoundError:
+  if device_match is None:
     return None
 
   device_name = device_match.group(1)
 
-  if (gsdk_path / 'platform/Device/component' / f'{device_name}.slcc').exists():
-    component_file = (gsdk_path / 'platform/Device/component' / f'{device_name}.slcc')
-  elif (gsdk_path / 'platform/Device/component-internal' / f'{device_name}.slcc').exists():
-    component_file = (gsdk_path / 'platform/Device/component-internal' / f'{device_name}.slcc')
-  else:
+  component_file = _resolve_device_component_slcc(gsdk_path, device_name)
+  if component_file is None:
     return None
- 
+
   with open(component_file) as device_file:
     # Get the Device SDID from the Device component file tags
     content = device_file.read()
@@ -132,10 +183,14 @@ def main():
   device_sdid_per_board = {}
   board_peripheral_pins = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
 
-  for config_file_path in (args.gsdk_path / 'hardware/board/config').rglob('**/*.h'):
+  board_filter = None
+  if args.boards is not None:
+    board_filter = {b.strip().lower() for b in args.boards.split(',') if b.strip()}
+
+  for config_file_path in _iter_board_config_header_files(args.gsdk_path):
     board_name = config_file_path.parent.stem.split('_')[0]
 
-    if args.boards is not None and board_name not in args.boards:
+    if board_filter is not None and board_name.lower() not in board_filter:
       # If we were specified to only check a few boards, skip the other boards
       continue
 
@@ -144,9 +199,9 @@ def main():
     print(f"[DEBUG] Processing board '{board_name}', device_sdid={device_sdid}")
 
     if device_sdid is None:
-        print(f"[DEBUG] Skipping '{board_name}' — device_sdid is None")
+      print(f"[DEBUG] Skipping '{board_name}' — device_sdid is None")
       # The generic family wasn't found
-        continue
+      continue
     elif not device_sdid >= 200:
       print(f"[DEBUG] Skipping '{board_name}' — Series 1 device (sdid={device_sdid})")
       # For now, we're only testing Series 2 devices

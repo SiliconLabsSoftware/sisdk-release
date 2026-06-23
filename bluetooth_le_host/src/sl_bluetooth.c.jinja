@@ -93,13 +93,13 @@ void sl_bt_step(void)
   // Check the length of the next event, if any, and verify that the application
   // can process it. To prevent data loss, the event will be kept in the stack's
   // queue if the application cannot process it at the moment.
-  size_t event_len = sli_bgapi_device_peek_event_len(&sli_bt_bgapi_device);
+  size_t event_len = sli_bgapi_device_peek_event_len(sli_bt_bgapi_device);
   if ((event_len == 0) || (!sl_bt_can_process_event(event_len))) {
     return;
   }
 
   // Pop the event and process it if successful
-  sl_status_t status = sli_bgapi_device_pop_event(&sli_bt_bgapi_device,
+  sl_status_t status = sli_bgapi_device_pop_event(sli_bt_bgapi_device,
                                                   sizeof(evt),
                                                   &evt);
 {% else %}

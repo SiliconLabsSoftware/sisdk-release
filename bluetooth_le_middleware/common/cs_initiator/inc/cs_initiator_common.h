@@ -164,7 +164,7 @@ typedef enum {
 
 /// RAS client properties
 typedef struct {
-  cs_ras_client_config_t config;          // Defines wether notification and/or
+  cs_ras_client_config_t config;          // Defines whether notification and/or
                                           // indication is used for the
                                           // different modes
   bool real_time_mode;                    // Real-time or on-demand mode
@@ -224,6 +224,7 @@ typedef struct {
   uint8_t num_antenna_path;
   uint8_t antenna_config;
   cs_ranging_data_t ranging_data_result;
+  uint8_t subevents_per_procedure_counter;
 } cs_initiator_t;
 
 #ifdef __cplusplus

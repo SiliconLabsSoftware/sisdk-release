@@ -1,0 +1,44 @@
+id: bluetooth_peer_manager_filter
+package: bluetooth_le_middleware
+label: Bluetooth Peer Manager Filter
+description: >
+  Filter module of Peer Manager for Bluetooth Low Energy.
+  Responsible for filtering scan responses by address, address type,
+  device name, service UUID, service data, manufacturer data, and RSSI.
+category: Bluetooth|Application|Miscellaneous
+metadata:
+  sbom:
+    license: Zlib
+quality: production
+root_path: bluetooth_le_middleware/common/bluetooth_peer_manager/filter
+include:
+- path: inc
+  file_list:
+  - path: sl_bt_peer_manager_filter.h
+source:
+- path: src/sl_bt_peer_manager_filter.c
+requires:
+- name: app_log
+- name: bluetooth_api
+- name: bluetooth_feature_system
+  condition:
+  - device_cortexm
+- name: memory_manager
+provides:
+- name: bluetooth_peer_manager_filter
+config_file:
+- path: config/sl_bt_peer_manager_filter_config.h
+- path: config/ble_peer_manager_filter_config_compat.h
+  condition:
+  - ble_peer_manager_filter
+documentation:
+  docset: bluetooth
+  document: bluetooth-service-api/bluetooth-peer-manager-filter
+template_contribution:
+- name: component_catalog
+  value: bluetooth_peer_manager_filter
+- name: event_handler
+  value:
+    event: internal_app_init
+    include: sl_bt_peer_manager_filter.h
+    handler: sl_bt_peer_manager_filter_init

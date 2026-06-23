@@ -3,7 +3,7 @@
  * @brief stubbed definitions of internal implementations for sl_zigbee_token
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -38,12 +38,56 @@ SL_WEAK sl_status_t sli_zigbee_stack_get_token_data(uint32_t token,
   return SL_STATUS_NOT_AVAILABLE;
 }
 
+SL_WEAK sl_status_t sli_zigbee_stack_get_token_default(uint32_t token,
+                                                       uint8_t *default_token_value)
+{
+  // NOTE stub definition
+  (void) token;
+  (void) default_token_value;
+  return SL_STATUS_NOT_AVAILABLE;
+}
+
 SL_WEAK sl_status_t sli_zigbee_stack_get_token_info(uint8_t index,
                                                     sl_zigbee_token_info_t *tokenInfo)
 {
   // NOTE stub definition
   (void) index;
   (void) tokenInfo;
+  return SL_STATUS_NOT_AVAILABLE;
+}
+
+SL_WEAK sl_status_t sli_zigbee_stack_initialize_basic_token(uint32_t token,
+                                                            void *default_token_value,
+                                                            uint32_t token_size)
+{
+  // NOTE stub definition
+  (void) token;
+  (void) default_token_value;
+  (void) token_size;
+  return SL_STATUS_NOT_AVAILABLE;
+}
+
+SL_WEAK sl_status_t sli_zigbee_stack_initialize_counter_token(uint32_t token,
+                                                              void *default_token_value,
+                                                              uint32_t token_size)
+{
+  // NOTE stub definition
+  (void) token;
+  (void) default_token_value;
+  (void) token_size;
+  return SL_STATUS_NOT_AVAILABLE;
+}
+
+SL_WEAK sl_status_t sli_zigbee_stack_initialize_index_token(uint32_t token_base,
+                                                            void *default_token_value,
+                                                            uint32_t token_size,
+                                                            uint8_t token_index_size)
+{
+  // NOTE stub definition
+  (void) token_base;
+  (void) default_token_value;
+  (void) token_size;
+  (void) token_index_size;
   return SL_STATUS_NOT_AVAILABLE;
 }
 
@@ -55,5 +99,16 @@ SL_WEAK sl_status_t sli_zigbee_stack_set_token_data(uint32_t token,
   (void) token;
   (void) index;
   (void) tokenData;
+  return SL_STATUS_NOT_AVAILABLE;
+}
+
+SL_WEAK sl_status_t slxi_zigbee_stack_token_manager_get_data(uint32_t token,
+                                                             void *data,
+                                                             uint32_t length)
+{
+  // NOTE stub definition
+  (void) token;
+  (void) data;
+  (void) length;
   return SL_STATUS_NOT_AVAILABLE;
 }

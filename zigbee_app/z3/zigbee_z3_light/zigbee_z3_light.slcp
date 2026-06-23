@@ -1,5 +1,5 @@
 project_name: zigbee_z3_light
-label: Zigbee - Z3Light
+label: Zigbee - SoC Z3 Light
 package: zigbee
 category: Zigbee Application
 quality: production
@@ -64,8 +64,13 @@ component:
       - btn1
   # -- End of LED and BUtton GPIO Conflcit Note --
   - id: zigbee_application_bootloader
-  # Platform - enable LTO for gcc
+  # Platform - enable LTO for gcc and llvm
   - id: toolchain_gcc_lto
+    condition:
+      - toolchain_gcc
+  - id: toolchain_llvm_lto
+    condition:
+      - toolchain_llvm
 
 configuration:
   - name: SL_BOARD_ENABLE_VCOM
@@ -186,10 +191,13 @@ include:
 
 tag:
   - prebuilt_demo
-  - hardware:device:ram:32
+  - hwfilter:ram:64k
   - hwfilter:device:device_supports_zigbee
   - hwfilter:board:simple_led:led0
   - hwfilter:board:simple_button:btn1
+  - toolchain:gcc
+  - toolchain:iar
+  - toolchain:llvm
 readme:
   - path: ./readme.md
 

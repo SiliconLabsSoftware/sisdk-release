@@ -1,3 +1,4 @@
+workspace_name: zwave_ncp_serial_api_controller_otw
 label: ZWave_NCP_SerialAPI_Controller_Solution
 description: >
   Demonstrates Serial Applications Programming Interface (Serial API) combined with OTW bootloader.

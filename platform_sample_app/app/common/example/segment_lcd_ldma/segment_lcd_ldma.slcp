@@ -23,7 +23,7 @@ include:
 component:
   - id: hal_lcd
   - id: sl_main
-  - id: hal_ldma
+  - id: dma_manager
   - id: device_init
   - id: clock_manager
   - id: segment_lcd_driver
@@ -35,6 +35,8 @@ ui_hints:
   highlight: readme.md
 tag:
   - hardware:component:segment_lcd_driver:cl010-1087-04
+  - hwfilter:board:hardware_board_has_segment_lcd
+  - hwfilter:device:device_series_2
 configuration:
   - name: SL_SEGMENT_LCD_LDMA_MODE
     value: SL_HAL_LCD_DMA_MODE_FRAME_COUNTER_EVENT

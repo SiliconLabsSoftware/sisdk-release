@@ -227,6 +227,7 @@ sl_status_t sl_wisun_coap_init_srv(sl_wisun_coap_srv_t * const srv,
   if (buf == NULL) {
     srv->buf = (uint8_t *) sl_malloc(buf_size);
     if (srv->buf == NULL) {
+      close(srv->sockid);
       return SL_STATUS_FAIL;
     }
   } else {
@@ -262,6 +263,7 @@ sl_status_t sl_wisun_coap_init_clnt(sl_wisun_coap_clnt_t * const clnt,
   if (buf == NULL) {
     clnt->buf = (uint8_t *) sl_malloc(buf_size);
     if (clnt->buf == NULL) {
+      close(clnt->sockid);
       return SL_STATUS_FAIL;
     }
   } else {
@@ -425,33 +427,35 @@ sl_status_t sl_wisun_coap_clnt_sendto(sl_wisun_coap_clnt_t * const clnt,
 sl_status_t sl_wisun_coap_destroy_srv(sl_wisun_coap_srv_t * const srv)
 {
   int32_t res = 0;
+  sl_status_t status = SL_STATUS_OK;
 
   res = close(srv->sockid);
-
   if (res != SOCKET_RETVAL_OK) {
-    return SL_STATUS_FAIL;
+    status = SL_STATUS_FAIL;
   }
 
   _coap.free(srv->buf);
+
   memset(srv, 0, sizeof(sl_wisun_coap_srv_t));
 
-  return SL_STATUS_OK;
+  return status;
 }
 
 sl_status_t sl_wisun_coap_destroy_clnt(sl_wisun_coap_clnt_t * const clnt)
 {
   int32_t res = 0;
+  sl_status_t status = SL_STATUS_OK;
 
   res = close(clnt->sockid);
-
   if (res != SOCKET_RETVAL_OK) {
-    return SL_STATUS_OK;
+    status = SL_STATUS_FAIL;
   }
 
   _coap.free(clnt->buf);
+
   memset(clnt, 0, sizeof(sl_wisun_coap_clnt_t));
 
-  return SL_STATUS_OK;
+  return status;
 }
 #endif
 

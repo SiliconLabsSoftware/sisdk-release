@@ -14,6 +14,13 @@ include:
 - path: inc
   file_list:
   - path: sl_rtl_clib_api.h
+- path: clib/api/inc
+  file_list:
+  - path: sli_rtl_clib_cs_api.h
+  - path: sli_rtl_clib_ras_api.h
+source:
+- path: clib/api/src/sl_rtl_clib_cs_api.c
+- path: clib/api/src/sl_rtl_clib_ras_api.c
 
 documentation:
   docset: rtl-lib

@@ -1,0 +1,30 @@
+id: zw_host_wakeup_gpio
+label: Z-Wave Host Wakeup GPIO
+category: Z-Wave|NCP
+description: >
+  Push-pull GPIO driver for the NCP host-wake line. Include this component to
+  wake the host by driving a GPIO pin (default PA10) low on wake-worthy events
+  and high at idle. Omit this component to fall back to the unsolicited
+  SerialAPI frame (0xFE) wakeup method.
+
+  Use sl_host_wakeup_gpio_config.h to configure the GPIO port and pin.
+
+package: zwave
+quality: evaluation
+metadata:
+  sbom:
+    reference: zw_sbom_license
+config_file:
+- path: sample_apps/zwave_ncp_serial_api/config/sl_host_wakeup_gpio_config.h
+  file_id: sl_host_wakeup_gpio_config
+
+provides:
+- name: zw_host_wakeup_gpio
+
+requires:
+- name: zw_host_hibernation
+
+template_contribution:
+- name: component_catalog
+  value: zw_host_wakeup_gpio
+root_path: zwave

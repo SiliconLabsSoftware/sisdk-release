@@ -60,8 +60,7 @@ typedef enum {
 //                          Public Function Declarations
 // -----------------------------------------------------------------------------
 /*******************************************************************************
- * The function is used for Application logic.
- * @brief Application state machine, called infinitely
+ * Application state machine, called infinitely
  ******************************************************************************/
 void app_process_action(void);
 

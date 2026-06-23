@@ -40,8 +40,7 @@
 #define SL_BTCTRL_RTOS_HCI_TASK_PRIORITY osPriorityRealtime3
 #define SL_BTCTRL_RTOS_HCI_TASK_STACK_SIZE 1000
 
-//Rx semaphore
-static osSemaphoreId_t hci_rx_semaphore;
+static osSemaphoreId_t hci_cpc_signal_semaphore;
 
 //Bluetooth HCI thread
 static void hci_cpc_thread(void *p_arg);
@@ -66,8 +65,8 @@ uint8_t sl_btctrl_hci_cpc_get_stack_space(uint32_t *stack_space)
 
 void sl_btctrl_hci_cpc_rtos_deinit(void)
 {
-  (void) osSemaphoreDelete(hci_rx_semaphore);
-  hci_rx_semaphore = NULL;
+  (void) osSemaphoreDelete(hci_cpc_signal_semaphore);
+  hci_cpc_signal_semaphore = NULL;
 
   (void) osThreadTerminate(tid_thread_hci);
   tid_thread_hci = NULL;
@@ -75,10 +74,10 @@ void sl_btctrl_hci_cpc_rtos_deinit(void)
 
 sl_status_t sl_btctrl_hci_cpc_rtos_init(void)
 {
-  if (hci_rx_semaphore == NULL) {
-    hci_rx_semaphore = osSemaphoreNew(1, 0, NULL);
+  if (hci_cpc_signal_semaphore == NULL) {
+    hci_cpc_signal_semaphore = osSemaphoreNew(1, 0, NULL);
   }
-  if (hci_rx_semaphore == NULL) {
+  if (hci_cpc_signal_semaphore == NULL) {
     goto failed;
   }
 
@@ -98,19 +97,19 @@ sl_status_t sl_btctrl_hci_cpc_rtos_init(void)
   return SL_STATUS_FAIL;
 }
 
-void sl_btctrl_hci_cpc_rx(uint8_t endpoint_id, void * arg)
+void sl_btctrl_hci_cpc_on_transport_notify(uint8_t endpoint_id, void * arg)
 {
   (void)endpoint_id;
   (void)arg;
 
-  osSemaphoreRelease(hci_rx_semaphore);
+  osSemaphoreRelease(hci_cpc_signal_semaphore);
 }
 
 static void hci_cpc_thread(void *p_arg)
 {
   (void)p_arg;
   while (true) {
-    osSemaphoreAcquire(hci_rx_semaphore, osWaitForever);
+    osSemaphoreAcquire(hci_cpc_signal_semaphore, osWaitForever);
     sl_btctrl_hci_packet_step();
   }
 }

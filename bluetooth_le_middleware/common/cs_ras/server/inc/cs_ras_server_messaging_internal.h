@@ -38,9 +38,6 @@
 #include "cs_ras_server_messaging.h"
 #include "sl_slist.h"
 #include "sl_component_catalog.h"
-#ifdef SL_CATALOG_POWER_MANAGER_PRESENT
-#include "sl_power_manager.h"
-#endif // SL_CATALOG_POWER_MANAGER_PRESENT
 
 #ifdef __cplusplus
 extern "C" {
@@ -74,15 +71,11 @@ void cs_ras_server_messaging_on_transmit_finished(cs_ras_server_messaging_transm
                                                   cs_ras_messaging_status_t          status,
                                                   sl_status_t                        sc);
 
-#ifdef SL_CATALOG_POWER_MANAGER_PRESENT
-
-/***************************************************************************//**
- * Checks if it is ok to sleep now / power manager
- * @return true - if ready to sleep, false otherwise
- ******************************************************************************/
-bool cs_ras_server_messaging_is_ok_to_sleep(void);
-
-#endif // SL_CATALOG_POWER_MANAGER_PRESENT
+/**************************************************************************//**
+ * Checks if the messaging has data to process.
+ * @return true if the messaging has data to process, false otherwise.
+ *****************************************************************************/
+bool cs_ras_server_messaging_has_data_to_process(void);
 
 #ifdef __cplusplus
 };

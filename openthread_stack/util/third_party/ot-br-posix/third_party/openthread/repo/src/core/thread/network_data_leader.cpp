@@ -574,7 +574,7 @@ Coap::Message *Leader::ProcessCommissionerGetRequest(const Coap::Message &aMessa
     Coap::Message *response = nullptr;
     OffsetRange    offsetRange;
 
-    response = Get<Tmf::Agent>().NewPriorityResponseMessage(aMessage);
+    response = Get<Tmf::Agent>().AllocateAndInitPriorityResponseFor(aMessage);
     VerifyOrExit(response != nullptr, error = kErrorNoBufs);
 
     if (Tlv::FindTlvValueOffsetRange(aMessage, MeshCoP::Tlv::kGet, offsetRange) == kErrorNone)
@@ -635,7 +635,7 @@ Error Leader::FindSteeringData(MeshCoP::SteeringData &aSteeringData) const
     const MeshCoP::SteeringDataTlv *steeringDataTlv = FindInCommissioningData<MeshCoP::SteeringDataTlv>();
 
     VerifyOrExit(steeringDataTlv != nullptr, error = kErrorNotFound);
-    steeringDataTlv->CopyTo(aSteeringData);
+    error = steeringDataTlv->CopyTo(aSteeringData);
 
 exit:
     return error;

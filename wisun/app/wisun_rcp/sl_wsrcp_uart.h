@@ -20,7 +20,6 @@
 #include <em_device.h>
 #include <em_ldma.h>
 #include <em_eusart.h>
-#include <dmadrv.h>
 #include <sli_wisun_timer_service.h>
 
 #include "sl_ring.h"
@@ -28,14 +27,14 @@
 struct sl_wsrcp_uart {
     EUSART_TypeDef *hw_regs;
 
-    unsigned int dma_chan_tx;
+    uint8_t dma_chan_tx;
     int descr_cnt_tx;
     LDMA_Descriptor_t descr_tx[2];
     // Application will be less efficient if a message need to be sent in 2 or
     // more buffers. Choose a correct size depending of yours needs.
     uint8_t buf_tx[2][1024];
 
-    unsigned int dma_chan_rx;
+    uint8_t dma_chan_rx;
     int descr_cnt_rx;
     LDMA_Descriptor_t descr_rx[16];
     // Reserve enough buffers since interactive session may consume one buffer
@@ -54,6 +53,9 @@ struct sl_wsrcp_uart {
 
     struct sli_wisun_timer timer;
 };
+
+// Global variable required by IRQs
+extern struct sl_wsrcp_uart *g_uart_ctxt;
 
 void uart_init(struct sl_wsrcp_uart *uart, struct sli_wisun_timer_context *timer_ctxt);
 int uart_tx(struct sl_wsrcp_uart *uart, const void *buf, int buf_len);

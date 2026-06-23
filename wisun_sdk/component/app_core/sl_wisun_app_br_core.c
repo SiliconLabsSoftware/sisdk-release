@@ -220,7 +220,7 @@ static const app_setting_br_t _br_default_settings = {
 #if defined(WISUN_CONFIG_NETWORK_SIZE)
   .network_size = WISUN_CONFIG_NETWORK_SIZE,
 #else
-  .network_size = SL_WISUN_NETWORK_SIZE_SMALL,
+  .network_size = SL_WISUN_NETWORK_SIZE_AUTOMATIC,
 #endif
 #if defined(WISUN_CONFIG_TX_POWER)
   .tx_power_ddbm = WISUN_CONFIG_TX_POWER,
@@ -333,7 +333,7 @@ void sl_wisun_connection_lost_event_hnd(sl_wisun_evt_t *evt)
 /* Error event handler */
 void sl_wisun_error_event_hnd(sl_wisun_evt_t *evt)
 {
-  printf("[Wi-SUN network error occurred. Status: %lu\n",
+  printf("[Wi-SUN network error occurred. Status: %"PRIu32"\n",
          evt->evt.error.status);
 }
 
@@ -486,28 +486,33 @@ void sl_wisun_app_br_core_start(void)
   // Set Device Type
   EFM_ASSERT(sl_wisun_set_device_type(SL_WISUN_BORDER_ROUTER) == SL_STATUS_OK);
 
+  EFM_ASSERT(sl_wisun_reset_parameters() == SL_STATUS_OK);
+
   // Set TX Power
   EFM_ASSERT(sl_wisun_set_tx_power_ddbm(_br_setting.tx_power_ddbm) == SL_STATUS_OK);
 
-  // Set Connection Parameters
-  switch (_br_setting.network_size) {
-    case SL_WISUN_NETWORK_SIZE_SMALL:
-      params = SL_WISUN_BR_PARAMS_PROFILE_SMALL;
-      break;
-    case SL_WISUN_NETWORK_SIZE_MEDIUM:
-      params = SL_WISUN_BR_PARAMS_PROFILE_MEDIUM;
-      break;
-    case SL_WISUN_NETWORK_SIZE_LARGE:
-      params = SL_WISUN_BR_PARAMS_PROFILE_LARGE;
-      break;
-    case SL_WISUN_NETWORK_SIZE_TEST:
-      params = SL_WISUN_BR_PARAMS_PROFILE_TEST;
-      break;
-    default:
-      EFM_ASSERT(0);
-      break;
+  // NOTE: Automatic network size is the default in the stack.
+  if (_br_setting.network_size != SL_WISUN_NETWORK_SIZE_AUTOMATIC) {
+    // Set Connection Parameters
+    switch (_br_setting.network_size) {
+      case SL_WISUN_NETWORK_SIZE_SMALL:
+        params = SL_WISUN_BR_PARAMS_PROFILE_SMALL;
+        break;
+      case SL_WISUN_NETWORK_SIZE_MEDIUM:
+        params = SL_WISUN_BR_PARAMS_PROFILE_MEDIUM;
+        break;
+      case SL_WISUN_NETWORK_SIZE_LARGE:
+        params = SL_WISUN_BR_PARAMS_PROFILE_LARGE;
+        break;
+      case SL_WISUN_NETWORK_SIZE_TEST:
+        params = SL_WISUN_BR_PARAMS_PROFILE_TEST;
+        break;
+      default:
+        EFM_ASSERT(0);
+        break;
+    }
+    EFM_ASSERT(sl_wisun_br_set_connection_parameters(&params) == SL_STATUS_OK);
   }
-  EFM_ASSERT(sl_wisun_br_set_connection_parameters(&params) == SL_STATUS_OK);
 
   // Set Neighbor Table
   EFM_ASSERT(sl_wisun_config_neighbor_table(_br_setting.max_child_count,
@@ -538,8 +543,8 @@ void sl_wisun_app_br_core_start(void)
 
   EFM_ASSERT(sl_wisun_br_set_lfn_parameters(&lfn_params) == SL_STATUS_OK);
 
-  // Get channel mask
 #if defined(SL_CATALOG_WISUN_APP_SETTING_PRESENT)
+  // Get channel mask
   EFM_ASSERT(app_settings_get_channel_mask(_br_setting.allowed_channels,
                                            &channel_mask) == SL_STATUS_OK);
 #endif
@@ -558,7 +563,7 @@ void sl_wisun_app_br_core_start(void)
   trustedca_count = sl_wisun_keychain_get_trustedca_count();
   EFM_ASSERT(trustedca_count > 0U);
 
-  certificate_options = SL_WISUN_CERTIFICATE_OPTION_IS_REF;
+  certificate_options = SL_WISUN_CERTIFICATE_OPTION_NONE;
   for (uint8_t idx = 0U; idx < trustedca_count; ++idx) {
     trustedca = sl_wisun_keychain_get_trustedca(idx);
     EFM_ASSERT(trustedca != NULL);
@@ -587,12 +592,12 @@ void sl_wisun_app_br_core_start(void)
   }
 
   // Set Device Certificate
-  EFM_ASSERT(sl_wisun_set_br_device_certificate(SL_WISUN_CERTIFICATE_OPTION_IS_REF | SL_WISUN_CERTIFICATE_OPTION_HAS_KEY,
+  EFM_ASSERT(sl_wisun_set_br_device_certificate(SL_WISUN_CERTIFICATE_OPTION_NONE,
                                                 credential->certificate.data_length,
                                                 credential->certificate.data) == SL_STATUS_OK);
   if (credential->pk.type == SL_WISUN_KEYCHAIN_KEY_TYPE_PLAINTEXT) {
     // Set Device Private Key
-    EFM_ASSERT(sl_wisun_set_device_private_key(SL_WISUN_PRIVATE_KEY_OPTION_IS_REF,
+    EFM_ASSERT(sl_wisun_set_device_private_key(SL_WISUN_PRIVATE_KEY_OPTION_NONE,
                                                credential->pk.u.plaintext.data_length,
                                                credential->pk.u.plaintext.data) == SL_STATUS_OK);
   } else {

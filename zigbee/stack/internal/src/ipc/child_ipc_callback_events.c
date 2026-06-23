@@ -3,7 +3,7 @@
  * @brief callback event handlers for child
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -29,6 +29,10 @@ void sli_zigbee_stack_child_join_handler(uint8_t index,
                                          sl_zigbee_node_type_t childType)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.child_join_handler.index = index;
   cb_event->data.child_join_handler.joining = joining;
   cb_event->data.child_join_handler.childId = childId;
@@ -49,6 +53,10 @@ void sli_zigbee_stack_child_join_handler(uint8_t index,
 void sli_zigbee_stack_poll_complete_handler(sl_status_t status)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.poll_complete_handler.status = status;
   cb_event->tag = SLI_ZIGBEE_STACK_POLL_COMPLETE_HANDLER_IPC_EVENT_TYPE;
   #ifndef SL_ZIGBEE_MULTI_NETWORK_STRIPPED
@@ -62,6 +70,10 @@ void sli_zigbee_stack_poll_handler(sl_802154_short_addr_t childId,
                                    bool transmitExpected)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.poll_handler.childId = childId;
   cb_event->data.poll_handler.transmitExpected = transmitExpected;
   cb_event->tag = SLI_ZIGBEE_STACK_POLL_HANDLER_IPC_EVENT_TYPE;

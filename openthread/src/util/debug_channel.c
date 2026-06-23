@@ -212,11 +212,6 @@ exit:
 //------------------------------------------------------------------------------
 // Public functions
 
-void sl_ot_debug_channel_init(void)
-{
-    sl_iostream_debug_init();
-}
-
 void sl_debug_binary_format(sl_iostream_swo_itm_8_msg_type_t debugType, const char *formatString, ...)
 {
     va_list args;

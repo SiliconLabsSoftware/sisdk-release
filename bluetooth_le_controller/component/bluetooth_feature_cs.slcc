@@ -10,8 +10,13 @@ config_file:
 - path: "config/sl_bluetooth_cs_config.h"
 requires:
 - name: "bluetooth_controller"
-- name: "bluetooth_feature_connection"
+- name: "bluetooth_feature_cs_link"
 - name: "device_supports_bluetooth_cs"
+recommends:
+- id: "bluetooth_feature_cs_connection"
+  condition:
+  - "bluetooth_feature_connection"
+  vendor: silabs
 provides:
 - name: "bluetooth_feature_cs"
 template_contribution:

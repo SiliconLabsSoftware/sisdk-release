@@ -31,6 +31,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "sl_rail_sdk_wmbus_support.h"
 #include "sl_rail_sdk_wmbus_sensor_core.h"
@@ -42,6 +43,10 @@
 #include "app_assert.h"
 #include "sl_code_classification.h"
 
+#if defined(SL_CATALOG_KERNEL_PRESENT)
+  #include "app_task_init.h"
+#endif
+
 #if defined(SL_CATALOG_SEGMENT_LCD_DRIVER_PRESENT)
 #include "sl_segmentlcd.h"
 #endif
@@ -49,9 +54,11 @@
 #if defined(SL_CATALOG_WMBUS_SENSOR_VIRTUAL_WATER_METER_PRESENT)
   #include "sl_rail_sdk_wmbus_sensor_virtual_water_meter.h"
 #endif
+
 #if defined(SL_CATALOG_WMBUS_SENSOR_PULSE_COUNTER_PRESENT)
   #include "sl_rail_sdk_wmbus_sensor_pulse_counter.h"
 #endif
+
 #if defined(SL_CATALOG_WMBUS_SENSOR_THERMOMETER_PRESENT)
   #include "sl_rail_sdk_wmbus_sensor_thermometer.h"
 #endif
@@ -152,7 +159,7 @@ sl_status_t sl_rail_sdk_wmbus_sensor_core_init(void)
   sl_status_t status = SL_STATUS_FAIL;
   active_sensor_id = SL_RAIL_SDK_WMBUS_SENSOR_ACTIVE_SENSOR_ID;
   if (sl_rail_sdk_wmbus_sensor_core_set_active_sensor(active_sensor_id) != SL_STATUS_OK) {
-    app_log_info("Failed to set active sensor with ID: %d", active_sensor_id);
+    app_log_info("Failed to set active sensor with ID: %" PRIu8 "", active_sensor_id);
     return SL_STATUS_FAIL;
   }
 
@@ -164,8 +171,8 @@ sl_status_t sl_rail_sdk_wmbus_sensor_core_init(void)
                                                  10,
                                                  0);
   app_assert_status_f(status,
-                      "[E: 0x%04x]: Failed to start periodic sleeptimer\n",
-                      (int)status);
+                      "[E: 0x%08" PRIX32 "]: Failed to start periodic sleeptimer\n",
+                      status);
 
   return status;
 }

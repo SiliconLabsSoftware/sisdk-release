@@ -11,12 +11,15 @@
 #define BA413_HMAC_CONF (1<<8)
 /** BA413-HASH Config register -> KeySel[3:0] = [31:28], KeySel[5:4] = [27:26] */
 #define KEYREF_BA413_HWKEY_CONF(index) (((index) & 0xF) << 28 | ((((index) >> 4) & 0x3) << 26))
+
+#if !defined(_SILICON_LABS_DEFEATURE_SHA3)
 /** BA418-HASH Config register hmac */
 #define BA418_HMAC_ENABLED (1 << 29)
 /** BA418-HASH Config register Padding*/
 #define BA418_HW_PADDING (1 << 5)
 /** BA418-HASH Config register -> KeySel[4:0] = [28:24], KeySel[5] = [30] */
 #define KEYREF_BA418_HWKEY_CONF(index) ((((index) & 0x1F) << 24) | ((((index) >> 5) & 0x1) << 30))
+#endif
 
 static const struct sx_mac_cmdma_tags ba413tags = {
     .cfg = DMATAG_BA413 | DMATAG_CONFIG(0),
@@ -30,7 +33,7 @@ static const struct sx_mac_cmdma_cfg ba413cfg = {
     .dmatags = &ba413tags,
 };
 
-
+#if !defined(_SILICON_LABS_DEFEATURE_SHA3)
 static const struct sx_mac_cmdma_tags ba418tags = {
     .cfg = DMATAG_BA418 | DMATAG_CONFIG(0),
     .key = DMATAG_BA418 | DMATAG_DATATYPE(2) | DMATAG_LAST,
@@ -43,7 +46,7 @@ static struct sx_mac_cmdma_cfg ba418cfg = {
     .statesz = 0,
     .dmatags = &ba418tags,
 };
-
+#endif
 
 static int sx_hash_create_hmac_ba413(struct sxmac *c,
     const struct sxhashalg *algo, struct sxkeyref *keyref)
@@ -130,7 +133,7 @@ int sx_mac_create_hmac_sha2_224(struct sxmac *c, struct sxkeyref *keyref)
     return sx_hash_create_hmac_ba413(c, &sxhashalg_sha2_224, keyref);
 }
 
-
+#if !defined(_SILICON_LABS_DEFEATURE_SHA3)
 static int sx_hash_create_hmac_ba418(struct sxmac *c,
     const struct sxhashalg *algo, struct sxkeyref *keyref)
 {
@@ -170,7 +173,6 @@ static int sx_hash_create_hmac_ba418(struct sxmac *c,
     return SX_OK;
 }
 
-#if !defined(_SILICON_LABS_32B_SERIES_3_CONFIG_301)
 int sx_mac_create_hmac_sha3_224(struct sxmac *c, struct sxkeyref *keyref)
 {
     return sx_hash_create_hmac_ba418(c, &sxhashalg_sha3_224, keyref);

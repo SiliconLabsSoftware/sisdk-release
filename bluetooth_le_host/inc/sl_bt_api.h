@@ -1728,12 +1728,18 @@ sl_status_t sl_bt_system_set_lazy_soft_timer(uint32_t time,
  *
  * Commands and events in this class provide access to low-level Bluetooth link
  * layer functionality that is not available via higher-level APIs of the
- * Bluetooth host stack.
+ * Bluetooth host stack. This class is available when the
+ * bluetooth_feature_linklayer_interface component is included in the
+ * application.
  */
 
 /* Command and Response IDs */
 #define sl_bt_cmd_linklayer_event_info_reporting_enable_id           0x00600020
+#define sl_bt_cmd_linklayer_get_hci_connection_handle_id             0x01600020
+#define sl_bt_cmd_linklayer_get_bgapi_connection_handle_id           0x02600020
 #define sl_bt_rsp_linklayer_event_info_reporting_enable_id           0x00600020
+#define sl_bt_rsp_linklayer_get_hci_connection_handle_id             0x01600020
+#define sl_bt_rsp_linklayer_get_bgapi_connection_handle_id           0x02600020
 
 /**
  * @addtogroup sl_bt_evt_linklayer_event_info_report sl_bt_evt_linklayer_event_info_report
@@ -1788,8 +1794,9 @@ typedef struct sl_bt_evt_linklayer_event_info_report_s sl_bt_evt_linklayer_event
  * Enable or disable link layer event info reporting. This command passes the
  * parameters directly to the vendor-specific HCI command
  * HCI_VS_Siliconlabs_Event_Info_Reporting_Enable. This command is only
- * available if the bluetooth_feature_event_info_reporting component is included
- * in the application. See the documentation of the HCI command for detailed
+ * available if the bluetooth_feature_linklayer_interface and
+ * bluetooth_feature_event_info_reporting components are included in the
+ * application. See the documentation of the HCI command for detailed
  * description of each parameter and the behavior of the command.
  *
  * Events that have been succesfully enabled will be reported with the @ref
@@ -1824,6 +1831,52 @@ sl_status_t sl_bt_linklayer_event_info_reporting_enable(uint8_t enable,
                                                         uint8_t procedure_type,
                                                         size_t procedure_identifier_len,
                                                         const uint8_t* procedure_identifier);
+
+/***************************************************************************//**
+ *
+ * Get the HCI connection handle corresponding to a BGAPI connection handle.
+ *
+ * The Bluetooth host BGAPI interface and the link layer HCI interface use their
+ * own connection handles. When the application uses the @ref sl_bt_linklayer
+ * class to issue link layer commands that need connection handles, use this
+ * command to convert the BGAPI connection handle to the corresponding HCI
+ * connection handle needed for the link layer command.
+ *
+ * This command is only available when the bluetooth_feature_linklayer_interface
+ * and bluetooth_feature_connection components are included in the application.
+ *
+ * @param[in] connection BGAPI connection handle
+ * @param[out] hci_connection_handle HCI connection handle corresponding to the
+ *   given BGAPI connection handle
+ *
+ * @return SL_STATUS_OK if successful. Error code otherwise.
+ *
+ ******************************************************************************/
+sl_status_t sl_bt_linklayer_get_hci_connection_handle(uint8_t connection,
+                                                      uint16_t *hci_connection_handle);
+
+/***************************************************************************//**
+ *
+ * Get the BGAPI connection handle corresponding to an HCI connection handle.
+ *
+ * The Bluetooth host BGAPI interface and the link layer HCI interface use their
+ * own connection handles. When the application receives a link layer connection
+ * handle via the @ref sl_bt_linklayer class, use this command to convert the
+ * HCI connection handle to the corresponding BGAPI connection handle used in
+ * the Bluetooth host stack API.
+ *
+ * This command is only available when the bluetooth_feature_linklayer_interface
+ * and bluetooth_feature_connection components are included in the application.
+ *
+ * @param[in] hci_connection_handle HCI connection handle
+ * @param[out] connection BGAPI connection handle corresponding to the given HCI
+ *   connection handle
+ *
+ * @return SL_STATUS_OK if successful. Error code otherwise.
+ *
+ ******************************************************************************/
+sl_status_t sl_bt_linklayer_get_bgapi_connection_handle(uint16_t hci_connection_handle,
+                                                        uint8_t *connection);
 
 /** @} */ // end addtogroup sl_bt_linklayer
 
@@ -1880,7 +1933,7 @@ sl_status_t sl_bt_linklayer_event_info_reporting_enable(uint8_t enable,
  * the data bytes in the packets that overflowed the configured packet count.
  *
  * */
-#define SL_BT_RESOURCE_CONNECTION_TX_FLAGS_ERROR_PACKET_OVERFLOW 0x1       
+#define SL_BT_RESOURCE_CONNECTION_TX_FLAGS_ERROR_PACKET_OVERFLOW 0x1
 
 /**
  *
@@ -1890,7 +1943,7 @@ sl_status_t sl_bt_linklayer_event_info_reporting_enable(uint8_t enable,
  * be unreliable.
  *
  * */
-#define SL_BT_RESOURCE_CONNECTION_TX_FLAGS_ERROR_CORRUPT         0x2       
+#define SL_BT_RESOURCE_CONNECTION_TX_FLAGS_ERROR_CORRUPT         0x2
 
 /** @} */ // end addtogroup sl_bt_resource_connection_tx_flags
 
@@ -2015,11 +2068,13 @@ sl_status_t sl_bt_resource_disable_connection_tx_report(void);
 
 /* Command and Response IDs */
 #define sl_bt_cmd_gap_set_privacy_mode_id                            0x01020020
+#define sl_bt_cmd_gap_set_privacy_mode_with_rpa_randomization_id     0x07020020
 #define sl_bt_cmd_gap_set_data_channel_classification_id             0x02020020
 #define sl_bt_cmd_gap_set_identity_address_id                        0x04020020
 #define sl_bt_cmd_gap_get_identity_address_id                        0x05020020
 #define sl_bt_cmd_gap_get_max_connections_id                         0x06020020
 #define sl_bt_rsp_gap_set_privacy_mode_id                            0x01020020
+#define sl_bt_rsp_gap_set_privacy_mode_with_rpa_randomization_id     0x07020020
 #define sl_bt_rsp_gap_set_data_channel_classification_id             0x02020020
 #define sl_bt_rsp_gap_set_identity_address_id                        0x04020020
 #define sl_bt_rsp_gap_get_identity_address_id                        0x05020020
@@ -2103,6 +2158,34 @@ typedef enum
                                                       algorithm #2 */
 } sl_bt_gap_channel_selection_algorithm_t;
 
+/**
+ * @addtogroup sl_bt_evt_gap_random_address_refresh sl_bt_evt_gap_random_address_refresh
+ * @{
+ * @brief Sent when the controller starts using a new resolvable private address
+ * for scanning or initiating
+ *
+ * Enabling privacy alone does not generate this event.
+ */
+
+/** @brief Identifier of the random_address_refresh event */
+#define sl_bt_evt_gap_random_address_refresh_id                      0x000200a0
+
+/***************************************************************************//**
+ * @brief Data structure of the random_address_refresh event
+ ******************************************************************************/
+PACKSTRUCT( struct sl_bt_evt_gap_random_address_refresh_s
+{
+  bd_addr address;      /**< The new resolvable private address */
+  uint8_t address_type; /**< Enum @ref sl_bt_gap_address_type_t. The type of the
+                             new scanner or initiator address. Values:
+                               - <b>sl_bt_gap_random_resolvable_address
+                                 (0x2):</b> Resolvable private random address */
+});
+
+typedef struct sl_bt_evt_gap_random_address_refresh_s sl_bt_evt_gap_random_address_refresh_t;
+
+/** @} */ // end addtogroup sl_bt_evt_gap_random_address_refresh
+
 /***************************************************************************//**
  *
  * Enable or disable the privacy feature on all GAP roles. New privacy mode will
@@ -2113,19 +2196,40 @@ typedef enum
  * When privacy is enabled and the device is advertising or scanning, the stack
  * will maintain a periodic timer with the specified time interval as a timeout
  * value. At each timeout, the stack generates a new resolvable private address
- * and uses it in scanning requests. For advertisers, the stack generates a new
- * resolvable or non-resolvable private address and uses it in advertising data
- * packets for each advertising set if its address is not application-managed,
- * i.e., the address was not set by the application (with the @ref
- * sl_bt_advertiser_set_random_address command). The application is fully
- * responsible for application-managed advertiser addresses. For an
- * application-managed resolvable private address, the application should
- * schedule periodic address updates for enhancing the privacy. It is
- * recommended to use different schedules for different advertising sets.
+ * and uses it in scanning requests. Starting the scanner always generates a new
+ * scanner private address, so the application can stop and restart scanning to
+ * force an immediate address change. When opening a connection while scanning
+ * is idle, the initiator uses a new resolvable private address for each
+ * connection attempt. When opening a connection while scanning is active, the
+ * initiator uses the current scanner private address.
  *
- * Disabling the privacy during active advertising or scanning is not allowed.
+ * For advertisers, the stack generates a new resolvable or non-resolvable
+ * private address for each advertising set if its address is not
+ * application-managed, i.e., the address was not set by the application with
+ * the @ref sl_bt_advertiser_set_random_address command. Different advertising
+ * sets use different private addresses, and starting advertising on an
+ * advertising set always generates a new private address for that set. The
+ * application is fully responsible for application-managed advertiser
+ * addresses. For an application-managed resolvable private address, the
+ * application should schedule periodic address updates for enhancing the
+ * privacy. It is recommended to use different schedules for different
+ * advertising sets.
+ *
+ * When the controller starts using a new scanner or initiator resolvable
+ * private address, the stack sends @ref sl_bt_evt_gap_random_address_refresh.
+ * When the controller starts using a new stack-managed random advertiser
+ * address on an advertising set, the stack sends @ref
+ * sl_bt_evt_advertiser_random_address_refresh. Enabling privacy alone does not
+ * send these events, but the first start of scanning, initiating, or
+ * advertising after enabling privacy may do so if it causes a new private
+ * address to be programmed to the controller.
+ *
+ * Changing the privacy during active advertising or scanning is not allowed.
  *
  * By default, privacy feature is disabled.
+ *
+ * This command is supported only when the application has included the
+ * Bluetooth component bluetooth_feature_local_privacy.
  *
  * @param[in] privacy Values:
  *     - <b>0:</b> Disable privacy
@@ -2138,8 +2242,75 @@ typedef enum
  *
  * @return SL_STATUS_OK if successful. Error code otherwise.
  *
+ * @b Events
+ *   - @ref sl_bt_evt_gap_random_address_refresh - Triggered when the controller
+ *     starts using a new scanner or initiator resolvable private address
+ *   - @ref sl_bt_evt_advertiser_random_address_refresh - Triggered when the
+ *     controller starts using a new stack-managed random advertiser address on
+ *     an advertising set
+ *
  ******************************************************************************/
 sl_status_t sl_bt_gap_set_privacy_mode(uint8_t privacy, uint8_t interval);
+
+/***************************************************************************//**
+ *
+ * Enable or disable the privacy feature on all GAP roles with randomized RPA
+ * rotation intervals. New privacy mode will take effect for advertising next
+ * time advertising is enabled, for scanning next time scanning is enabled, and
+ * for initiating on the next open connection command.
+ *
+ * This command is similar to @ref sl_bt_gap_set_privacy_mode but instead of a
+ * single interval, it uses a range between @p interval_min_minutes and @p
+ * interval_max_minutes minutes. Each advertising set and the scanner
+ * independently choose random periods within this range for their RPA updates.
+ * If @p interval_min_minutes equals @p interval_max_minutes, the behavior is
+ * identical to @ref sl_bt_gap_set_privacy_mode.
+ *
+ * When the controller starts using a new scanner or initiator resolvable
+ * private address, the stack sends @ref sl_bt_evt_gap_random_address_refresh.
+ * When the controller starts using a new stack-managed random advertiser
+ * address on an advertising set, the stack sends @ref
+ * sl_bt_evt_advertiser_random_address_refresh. Enabling privacy alone does not
+ * send these events, but the first start of scanning, initiating, or
+ * advertising after enabling privacy may do so if it causes a new private
+ * address to be programmed to the controller.
+ *
+ * Changing the privacy during active advertising or scanning is not allowed.
+ *
+ * This command is supported only when the application has included the
+ * Bluetooth component bluetooth_feature_local_privacy.
+ *
+ * @param[in] privacy Values:
+ *     - <b>0:</b> Disable privacy
+ *     - <b>1:</b> Enable privacy
+ * @param[in] interval_min_minutes @parblock
+ *   The minimum time interval in minutes between private address changes. This
+ *   parameter is ignored if this command is issued to disable privacy mode.
+ *     - <b>Range:</b> 0 to 255
+ *
+ *     - Must be less than or equal to interval_max
+ *   @endparblock
+ * @param[in] interval_max_minutes @parblock
+ *   The maximum time interval in minutes between private address changes. This
+ *   parameter is ignored if this command is issued to disable privacy mode.
+ *     - <b>Range:</b> 1 to 255
+ *
+ *     - Must be at least 1 and greater than or equal to interval_min
+ *   @endparblock
+ *
+ * @return SL_STATUS_OK if successful. Error code otherwise.
+ *
+ * @b Events
+ *   - @ref sl_bt_evt_gap_random_address_refresh - Triggered when the controller
+ *     starts using a new scanner or initiator resolvable private address
+ *   - @ref sl_bt_evt_advertiser_random_address_refresh - Triggered when the
+ *     controller starts using a new stack-managed random advertiser address on
+ *     an advertising set
+ *
+ ******************************************************************************/
+sl_status_t sl_bt_gap_set_privacy_mode_with_rpa_randomization(uint8_t privacy,
+                                                              uint8_t interval_min_minutes,
+                                                              uint8_t interval_max_minutes);
 
 /***************************************************************************//**
  *
@@ -2328,7 +2499,7 @@ typedef enum
  * set, i.e., the advertising address uses the device identity address. This
  * configuration has no effect if the advertising address has been set with the
  * @ref sl_bt_advertiser_set_random_address command. */
-#define SL_BT_ADVERTISER_USE_NONRESOLVABLE_ADDRESS          0x4       
+#define SL_BT_ADVERTISER_USE_NONRESOLVABLE_ADDRESS          0x4
 
 /** Use the device identity address when privacy mode is enabled. By default,
  * this flag is not set, i.e., the advertising address uses a resolvable private
@@ -2336,7 +2507,7 @@ typedef enum
  * effect if the @ref SL_BT_ADVERTISER_USE_NONRESOLVABLE_ADDRESS flag is set or
  * the advertising address has been set with the @ref
  * sl_bt_advertiser_set_random_address command. */
-#define SL_BT_ADVERTISER_USE_DEVICE_IDENTITY_IN_PRIVACY     0x10      
+#define SL_BT_ADVERTISER_USE_DEVICE_IDENTITY_IN_PRIVACY     0x10
 
 /**
  *
@@ -2350,7 +2521,7 @@ typedef enum
  * Bluetooth component bluetooth_feature_accept_list.
  *
  * */
-#define SL_BT_ADVERTISER_USE_FILTER_FOR_SCAN_REQUESTS       0x20      
+#define SL_BT_ADVERTISER_USE_FILTER_FOR_SCAN_REQUESTS       0x20
 
 /**
  *
@@ -2364,7 +2535,7 @@ typedef enum
  * Bluetooth component bluetooth_feature_accept_list.
  *
  * */
-#define SL_BT_ADVERTISER_USE_FILTER_FOR_CONNECTION_REQUESTS 0x40      
+#define SL_BT_ADVERTISER_USE_FILTER_FOR_CONNECTION_REQUESTS 0x40
 
 /** @} */ // end addtogroup sl_bt_advertiser_flags
 
@@ -2454,6 +2625,38 @@ PACKSTRUCT( struct sl_bt_evt_advertiser_scan_request_s
 typedef struct sl_bt_evt_advertiser_scan_request_s sl_bt_evt_advertiser_scan_request_t;
 
 /** @} */ // end addtogroup sl_bt_evt_advertiser_scan_request
+
+/**
+ * @addtogroup sl_bt_evt_advertiser_random_address_refresh sl_bt_evt_advertiser_random_address_refresh
+ * @{
+ * @brief Sent when the controller starts using a new stack-managed random
+ * advertiser address on an advertising set
+ *
+ * This event is not generated for application-managed advertiser addresses.
+ */
+
+/** @brief Identifier of the random_address_refresh event */
+#define sl_bt_evt_advertiser_random_address_refresh_id               0x030400a0
+
+/***************************************************************************//**
+ * @brief Data structure of the random_address_refresh event
+ ******************************************************************************/
+PACKSTRUCT( struct sl_bt_evt_advertiser_random_address_refresh_s
+{
+  uint8_t advertising_set; /**< The advertising set handle */
+  bd_addr address;         /**< The new advertiser address */
+  uint8_t address_type;    /**< Enum @ref sl_bt_gap_address_type_t. The type of
+                                the new advertiser address. Values:
+                                  - <b>sl_bt_gap_random_resolvable_address
+                                    (0x2):</b> Resolvable private random address
+                                  - <b>sl_bt_gap_random_nonresolvable_address
+                                    (0x3):</b> Non-resolvable private random
+                                    address */
+});
+
+typedef struct sl_bt_evt_advertiser_random_address_refresh_s sl_bt_evt_advertiser_random_address_refresh_t;
+
+/** @} */ // end addtogroup sl_bt_evt_advertiser_random_address_refresh
 
 /***************************************************************************//**
  *
@@ -2644,6 +2847,9 @@ sl_status_t sl_bt_advertiser_set_report_scan_request(uint8_t advertising_set,
  * address is returned in the response. To enhance the privacy, the application
  * should schedule periodic address updates by calling this command
  * periodically. Use different schedules for different advertising sets.
+ *
+ * Setting resolvable random address is supported only when the application has
+ * included the Bluetooth component bluetooth_feature_local_privacy.
  *
  * To use the default advertiser address, remove this setting using @ref
  * sl_bt_advertiser_clear_random_address command.
@@ -2864,6 +3070,9 @@ sl_status_t sl_bt_legacy_advertiser_generate_data(uint8_t advertising_set,
  * Start undirected legacy advertising on an advertising set with the specified
  * connection mode. Use @ref sl_bt_advertiser_stop to stop the advertising.
  *
+ * If privacy is enabled, see @ref sl_bt_gap_set_privacy_mode for the advertiser
+ * private address behavior.
+ *
  * Use the @ref sl_bt_legacy_advertiser_set_data or @ref
  * sl_bt_legacy_advertiser_generate_data command to set the advertising data
  * before calling this command. The advertising data is added into the
@@ -2921,6 +3130,9 @@ sl_status_t sl_bt_legacy_advertiser_start(uint8_t advertising_set,
  * Start directed legacy advertising on an advertising set with the specified
  * peer target device and connection mode. Use @ref sl_bt_advertiser_stop to
  * stop the advertising.
+ *
+ * If privacy is enabled, see @ref sl_bt_gap_set_privacy_mode for the advertiser
+ * private address behavior.
  *
  * Directed legacy advertising does not allow any advertising data. When the
  * connection mode is @ref
@@ -3044,10 +3256,10 @@ typedef enum
 
 /** Omit advertiser's address from all PDUs (anonymous advertising). The
  * advertising cannot be connectable or scannable if this flag is set. */
-#define SL_BT_EXTENDED_ADVERTISER_ANONYMOUS_ADVERTISING 0x1       
+#define SL_BT_EXTENDED_ADVERTISER_ANONYMOUS_ADVERTISING 0x1
 
 /** Include the TX power in advertising packets. */
-#define SL_BT_EXTENDED_ADVERTISER_INCLUDE_TX_POWER      0x2       
+#define SL_BT_EXTENDED_ADVERTISER_INCLUDE_TX_POWER      0x2
 
 /** @} */ // end addtogroup sl_bt_extended_advertiser_flags
 
@@ -3178,6 +3390,9 @@ sl_status_t sl_bt_extended_advertiser_generate_data(uint8_t advertising_set,
  * specified connection mode. Use @ref sl_bt_advertiser_stop to stop the
  * advertising.
  *
+ * If privacy is enabled, see @ref sl_bt_gap_set_privacy_mode for the advertiser
+ * private address behavior.
+ *
  * Use the @ref sl_bt_extended_advertiser_set_data or @ref
  * sl_bt_extended_advertiser_generate_data command to set the advertising data
  * before calling this command. Advertising data is added into the scan response
@@ -3235,6 +3450,9 @@ sl_status_t sl_bt_extended_advertiser_start(uint8_t advertising_set,
  * Start directed extended advertising on an advertising set with the specified
  * peer target device and connection mode. Use @ref sl_bt_advertiser_stop to
  * stop the advertising.
+ *
+ * If privacy is enabled, see @ref sl_bt_gap_set_privacy_mode for the advertiser
+ * private address behavior.
  *
  * The number of concurrent connectable advertisings is limited by the
  * connection number configuration. See @ref sl_bt_legacy_advertiser_start for
@@ -3321,10 +3539,12 @@ sl_status_t sl_bt_extended_advertiser_start_directed(uint8_t advertising_set,
 /* Command and Response IDs */
 #define sl_bt_cmd_periodic_advertiser_set_data_id                    0x00580020
 #define sl_bt_cmd_periodic_advertiser_set_long_data_id               0x01580020
+#define sl_bt_cmd_periodic_advertiser_refresh_data_id_id             0x04580020
 #define sl_bt_cmd_periodic_advertiser_start_id                       0x02580020
 #define sl_bt_cmd_periodic_advertiser_stop_id                        0x03580020
 #define sl_bt_rsp_periodic_advertiser_set_data_id                    0x00580020
 #define sl_bt_rsp_periodic_advertiser_set_long_data_id               0x01580020
+#define sl_bt_rsp_periodic_advertiser_refresh_data_id_id             0x04580020
 #define sl_bt_rsp_periodic_advertiser_start_id                       0x02580020
 #define sl_bt_rsp_periodic_advertiser_stop_id                        0x03580020
 
@@ -3336,11 +3556,15 @@ sl_status_t sl_bt_extended_advertiser_start_directed(uint8_t advertising_set,
  */
 
 /** Include the TX power in advertising packets. */
-#define SL_BT_PERIODIC_ADVERTISER_INCLUDE_TX_POWER                0x1       
+#define SL_BT_PERIODIC_ADVERTISER_INCLUDE_TX_POWER                     0x1
 
 /** Automatically start the extended advertising on the advertising set. The
  * advertising will be started in non-connectable and non-scannable mode. */
-#define SL_BT_PERIODIC_ADVERTISER_AUTO_START_EXTENDED_ADVERTISING 0x2       
+#define SL_BT_PERIODIC_ADVERTISER_AUTO_START_EXTENDED_ADVERTISING      0x2
+
+/** Include Advertising Data Information (ADI) field in periodic advertising
+ * PDUs. */
+#define SL_BT_PERIODIC_ADVERTISER_INCLUDE_ADVERTISING_DATA_INFORMATION 0x4
 
 /** @} */ // end addtogroup sl_bt_periodic_advertiser_flags
 
@@ -3428,7 +3652,30 @@ sl_status_t sl_bt_periodic_advertiser_set_long_data(uint8_t advertising_set);
 
 /***************************************************************************//**
  *
+ * Refresh the Advertising Data ID (DID) of periodic advertising data.
+ *
+ * The data that was previously set using @ref
+ * sl_bt_periodic_advertiser_set_data or @ref
+ * sl_bt_periodic_advertiser_set_long_data is unchanged and only the DID
+ * changes. The DID value is transmitted in the Advertising Data Information
+ * (ADI) field of the periodic advertising PDUs if the periodic advertiser is
+ * configured to include it. See @ref
+ * SL_BT_PERIODIC_ADVERTISER_INCLUDE_ADVERTISING_DATA_INFORMATION and the @p
+ * flags parameter in command @ref sl_bt_periodic_advertiser_start.
+ *
+ * @param[in] advertising_set Advertising set handle
+ *
+ * @return SL_STATUS_OK if successful. Error code otherwise.
+ *
+ ******************************************************************************/
+sl_status_t sl_bt_periodic_advertiser_refresh_data_id(uint8_t advertising_set);
+
+/***************************************************************************//**
+ *
  * Start periodic advertising on an advertising set.
+ *
+ * If privacy is enabled, see @ref sl_bt_gap_set_privacy_mode for the
+ * advertising-set private address behavior.
  *
  * According to the Bluetooth Core specification, periodic advertising PDUs
  * cannot be transmitted until at least one extended advertising event has been
@@ -3712,16 +3959,16 @@ typedef enum
  */
 
 /** A connectable advertising data packet */
-#define SL_BT_SCANNER_EVENT_FLAG_CONNECTABLE   0x1       
+#define SL_BT_SCANNER_EVENT_FLAG_CONNECTABLE   0x1
 
 /** A scannable advertising data packet */
-#define SL_BT_SCANNER_EVENT_FLAG_SCANNABLE     0x2       
+#define SL_BT_SCANNER_EVENT_FLAG_SCANNABLE     0x2
 
 /** Directed advertising */
-#define SL_BT_SCANNER_EVENT_FLAG_DIRECTED      0x4       
+#define SL_BT_SCANNER_EVENT_FLAG_DIRECTED      0x4
 
 /** A scan response packet that can be received in active scan mode only */
-#define SL_BT_SCANNER_EVENT_FLAG_SCAN_RESPONSE 0x8       
+#define SL_BT_SCANNER_EVENT_FLAG_SCAN_RESPONSE 0x8
 
 /** @} */ // end addtogroup sl_bt_scanner_event_flag
 
@@ -3749,7 +3996,7 @@ typedef enum
  * be set to SL_BT_INVALID_BONDING_HANDLE (0xff).
  *
  * */
-#define SL_BT_SCANNER_IGNORE_BONDING 0x1       
+#define SL_BT_SCANNER_IGNORE_BONDING 0x1
 
 /** @} */ // end addtogroup sl_bt_scanner_option_flags
 
@@ -4082,8 +4329,8 @@ typedef struct sl_bt_evt_scanner_extended_advertisement_report_s sl_bt_evt_scann
  *   a scanner.
  *   @endparblock
  * @param[in] window @parblock
- *   The scan window, i.e., the duration of the scan, which must be less than or
- *   equal to the @p interval
+ *   The scan window, i.e., the duration of the primary channel scan, which must
+ *   be less than or equal to the @p interval.
  *     - <b>Range:</b> 0x0004 to 0xFFFF
  *
  *     - Time = Value x 0.625 ms
@@ -4091,8 +4338,7 @@ typedef struct sl_bt_evt_scanner_extended_advertisement_report_s sl_bt_evt_scann
  *
  *     - <b>Default</b> : 10 ms
  *
- *   Note that the packet reception is aborted if it's started just before the
- *   scan window ends.
+ *   Packet reception is aborted if the scan window ends before the packet ends.
  *   @endparblock
  *
  * @return SL_STATUS_OK if successful. Error code otherwise.
@@ -4147,8 +4393,8 @@ sl_status_t sl_bt_scanner_set_parameters(uint8_t mode,
  *   a scanner.
  *   @endparblock
  * @param[in] window @parblock
- *   The scan window, i.e., the duration of the scan, which must be less than or
- *   equal to the @p interval
+ *   The scan window, i.e., the duration of the primary channel scan, which must
+ *   be less than or equal to the @p interval.
  *     - <b>Range:</b> 0x0004 to 0xFFFF
  *
  *     - Time = Value x 0.625 ms
@@ -4156,8 +4402,7 @@ sl_status_t sl_bt_scanner_set_parameters(uint8_t mode,
  *
  *     - <b>Default</b> : 10 ms
  *
- *   Note that the packet reception is aborted if it's started just before the
- *   scan window ends.
+ *   Packet reception is aborted if the scan window ends before the packet ends.
  *   @endparblock
  * @param[in] flags Additional scanner options. Value: 0 or bitmask of @ref
  *   sl_bt_scanner_option_flags.
@@ -4206,6 +4451,9 @@ sl_status_t sl_bt_scanner_set_parameters_and_filter(uint8_t mode,
  * Start the GAP discovery procedure to scan for advertising devices that use
  * legacy or extended advertising PDUs. To cancel an ongoing discovery
  * procedure, use the @ref sl_bt_scanner_stop command.
+ *
+ * If privacy is enabled, see @ref sl_bt_gap_set_privacy_mode for the scanner
+ * private address behavior.
  *
  * The invalid parameter error will be returned if the value of scanning PHYs is
  * invalid or the device does not support a PHY.
@@ -4298,10 +4546,26 @@ sl_status_t sl_bt_scanner_stop(void);
  */
 typedef enum
 {
-  sl_bt_sync_report_none = 0x0, /**< (0x0) Data received in periodic advertising
-                                     trains is not reported to the application. */
-  sl_bt_sync_report_all  = 0x1  /**< (0x1) Data received in periodic advertising
-                                     trains is reported to the application. */
+  sl_bt_sync_report_none          = 0x0, /**< (0x0) Data received in periodic
+                                              advertising trains is not reported
+                                              to the application. */
+  sl_bt_sync_report_all           = 0x1, /**< (0x1) Data received in periodic
+                                              advertising trains is reported to
+                                              the application. */
+  sl_bt_sync_report_non_duplicate = 0x2  /**< (0x2) Data received in periodic
+                                              advertising trains is reported to
+                                              the application, but only if the
+                                              advertisement is not a duplicate
+                                              of an already received periodic
+                                              advertisement. A periodic
+                                              advertisement is considered a
+                                              duplicate if it included
+                                              Advertising Data Information (ADI)
+                                              with the same Advertising Set ID
+                                              (SID) and Advertising Data ID
+                                              (DID) as a previously received
+                                              periodic advertisement on the same
+                                              periodic advertising train. */
 } sl_bt_sync_reporting_mode_t;
 
 /**
@@ -4360,6 +4624,13 @@ typedef struct sl_bt_evt_sync_closed_s sl_bt_evt_sync_closed_t;
  *       advertising trains is not reported to the application.
  *     - <b>sl_bt_sync_report_all (0x1):</b> Data received in periodic
  *       advertising trains is reported to the application.
+ *     - <b>sl_bt_sync_report_non_duplicate (0x2):</b> Data received in periodic
+ *       advertising trains is reported to the application, but only if the
+ *       advertisement is not a duplicate of an already received periodic
+ *       advertisement. A periodic advertisement is considered a duplicate if it
+ *       included Advertising Data Information (ADI) with the same Advertising
+ *       Set ID (SID) and Advertising Data ID (DID) as a previously received
+ *       periodic advertisement on the same periodic advertising train.
  *
  * @return SL_STATUS_OK if successful. Error code otherwise.
  *
@@ -4486,6 +4757,13 @@ sl_status_t sl_bt_sync_close(uint16_t sync);
  *       advertising trains is not reported to the application.
  *     - <b>sl_bt_sync_report_all (0x1):</b> Data received in periodic
  *       advertising trains is reported to the application.
+ *     - <b>sl_bt_sync_report_non_duplicate (0x2):</b> Data received in periodic
+ *       advertising trains is reported to the application, but only if the
+ *       advertisement is not a duplicate of an already received periodic
+ *       advertisement. A periodic advertisement is considered a duplicate if it
+ *       included Advertising Data Information (ADI) with the same Advertising
+ *       Set ID (SID) and Advertising Data ID (DID) as a previously received
+ *       periodic advertisement on the same periodic advertising train.
  *
  *   Default: @ref sl_bt_sync_report_all (Data received in periodic advertising
  *   trains is reported to the application)
@@ -4769,6 +5047,13 @@ typedef enum
  *       advertising trains is not reported to the application.
  *     - <b>sl_bt_sync_report_all (0x1):</b> Data received in periodic
  *       advertising trains is reported to the application.
+ *     - <b>sl_bt_sync_report_non_duplicate (0x2):</b> Data received in periodic
+ *       advertising trains is reported to the application, but only if the
+ *       advertisement is not a duplicate of an already received periodic
+ *       advertisement. A periodic advertisement is considered a duplicate if it
+ *       included Advertising Data Information (ADI) with the same Advertising
+ *       Set ID (SID) and Advertising Data ID (DID) as a previously received
+ *       periodic advertisement on the same periodic advertising train.
  *
  *   Default: @ref sl_bt_sync_report_all (Data received in periodic advertising
  *   trains is reported to the application)
@@ -4855,6 +5140,13 @@ sl_status_t sl_bt_past_receiver_set_default_sync_receive_parameters(uint8_t mode
  *       advertising trains is not reported to the application.
  *     - <b>sl_bt_sync_report_all (0x1):</b> Data received in periodic
  *       advertising trains is reported to the application.
+ *     - <b>sl_bt_sync_report_non_duplicate (0x2):</b> Data received in periodic
+ *       advertising trains is reported to the application, but only if the
+ *       advertisement is not a duplicate of an already received periodic
+ *       advertisement. A periodic advertisement is considered a duplicate if it
+ *       included Advertising Data Information (ADI) with the same Advertising
+ *       Set ID (SID) and Advertising Data ID (DID) as a previously received
+ *       periodic advertisement on the same periodic advertising train.
  *
  *   Default: @ref sl_bt_sync_report_all (Data received in periodic advertising
  *   trains is reported to the application)
@@ -4948,6 +5240,13 @@ sl_status_t sl_bt_past_receiver_set_sync_receive_parameters(uint8_t connection,
  *       advertising trains is not reported to the application.
  *     - <b>sl_bt_sync_report_all (0x1):</b> Data received in periodic
  *       advertising trains is reported to the application.
+ *     - <b>sl_bt_sync_report_non_duplicate (0x2):</b> Data received in periodic
+ *       advertising trains is reported to the application, but only if the
+ *       advertisement is not a duplicate of an already received periodic
+ *       advertisement. A periodic advertisement is considered a duplicate if it
+ *       included Advertising Data Information (ADI) with the same Advertising
+ *       Set ID (SID) and Advertising Data ID (DID) as a previously received
+ *       periodic advertisement on the same periodic advertising train.
  *
  *   Default: @ref sl_bt_sync_report_all (Data received in periodic advertising
  *   trains is reported to the application)
@@ -5027,6 +5326,13 @@ sl_status_t sl_bt_past_receiver_set_default_sync_receive_over_sync_parameters(ui
  *       advertising trains is not reported to the application.
  *     - <b>sl_bt_sync_report_all (0x1):</b> Data received in periodic
  *       advertising trains is reported to the application.
+ *     - <b>sl_bt_sync_report_non_duplicate (0x2):</b> Data received in periodic
+ *       advertising trains is reported to the application, but only if the
+ *       advertisement is not a duplicate of an already received periodic
+ *       advertisement. A periodic advertisement is considered a duplicate if it
+ *       included Advertising Data Information (ADI) with the same Advertising
+ *       Set ID (SID) and Advertising Data ID (DID) as a previously received
+ *       periodic advertisement on the same periodic advertising train.
  *
  *   Default: @ref sl_bt_sync_report_all (Data received in periodic advertising
  *   trains is reported to the application)
@@ -5172,6 +5478,37 @@ sl_status_t sl_bt_sync_past_transfer(uint8_t connection,
  * scanning (see @ref sl_bt_sync_scanner) or by receiving Periodic Advertising
  * Synchronization Transfer (see @ref sl_bt_past_receiver).
  */
+
+/**
+ * @brief Defines the data completeness status types of periodic advertisements.
+ */
+typedef enum
+{
+  sl_bt_periodic_sync_data_status_complete          = 0x0, /**< (0x0) All data
+                                                                of the periodic
+                                                                advertisement
+                                                                has been
+                                                                reported. */
+  sl_bt_periodic_sync_data_status_incomplete_more   = 0x1, /**< (0x1) Data of
+                                                                the periodic
+                                                                advertisement is
+                                                                incomplete in
+                                                                this event, and
+                                                                more data will
+                                                                come in new
+                                                                events. */
+  sl_bt_periodic_sync_data_status_incomplete_nomore = 0x2  /**< (0x2) Data of
+                                                                the periodic
+                                                                advertisement is
+                                                                incomplete in
+                                                                this event, but
+                                                                no more data
+                                                                will come, i.e.,
+                                                                the data of the
+                                                                periodic
+                                                                advertisement is
+                                                                truncated. */
+} sl_bt_periodic_sync_data_status_t;
 
 /**
  * @addtogroup sl_bt_evt_periodic_sync_opened sl_bt_evt_periodic_sync_opened
@@ -5358,12 +5695,20 @@ PACKSTRUCT( struct sl_bt_evt_periodic_sync_report_s
                                  - <b>0x01:</b> AoD CTE with 1us slots
                                  - <b>0x02:</b> AoD CTE with 2us slots
                                  - <b>0xFF:</b> No CTE */
-  uint8_t    data_status; /**< Data completeness:
-                                 - <b>0:</b> Complete
-                                 - <b>1:</b> Incomplete, more data to come in
-                                   new events
-                                 - <b>2:</b> Incomplete, data truncated, no more
-                                   to come */
+  uint8_t    data_status; /**< Enum @ref sl_bt_periodic_sync_data_status_t. The
+                               data completeness status. Values:
+                                 - <b>sl_bt_periodic_sync_data_status_complete
+                                   (0x0):</b> All data of the periodic
+                                   advertisement has been reported.
+                                 - <b>sl_bt_periodic_sync_data_status_incomplete_more
+                                   (0x1):</b> Data of the periodic advertisement
+                                   is incomplete in this event, and more data
+                                   will come in new events.
+                                 - <b>sl_bt_periodic_sync_data_status_incomplete_nomore
+                                   (0x2):</b> Data of the periodic advertisement
+                                   is incomplete in this event, but no more data
+                                   will come, i.e., the data of the periodic
+                                   advertisement is truncated. */
   uint8_t    counter;     /**< The sequence number of this @ref
                                sl_bt_evt_periodic_sync_report event as a
                                monotonically increasing counter that wraps from
@@ -5402,6 +5747,56 @@ typedef struct sl_bt_evt_periodic_sync_report_s sl_bt_evt_periodic_sync_report_t
 #define sl_bt_cmd_pawr_sync_set_response_data_id                     0x03540020
 #define sl_bt_rsp_pawr_sync_set_sync_subevents_id                    0x02540020
 #define sl_bt_rsp_pawr_sync_set_response_data_id                     0x03540020
+
+/**
+ * @brief Defines the data completeness status types of data received in PAwR
+ * subevents.
+ */
+typedef enum
+{
+  sl_bt_pawr_sync_subevent_data_status_complete          = 0x0,  /**< (0x0) All
+                                                                      data of
+                                                                      the PAwR
+                                                                      subevent
+                                                                      has been
+                                                                      reported. */
+  sl_bt_pawr_sync_subevent_data_status_incomplete_more   = 0x1,  /**< (0x1) Data
+                                                                      of the
+                                                                      PAwR
+                                                                      subevent
+                                                                      is
+                                                                      incomplete
+                                                                      in this
+                                                                      event, and
+                                                                      more data
+                                                                      will come
+                                                                      in new
+                                                                      events. */
+  sl_bt_pawr_sync_subevent_data_status_incomplete_nomore = 0x2,  /**< (0x2) Data
+                                                                      of the
+                                                                      PAwR
+                                                                      subevent
+                                                                      is
+                                                                      incomplete
+                                                                      in this
+                                                                      event, but
+                                                                      no more
+                                                                      data will
+                                                                      come,
+                                                                      i.e., the
+                                                                      data of
+                                                                      the PAwR
+                                                                      subevent
+                                                                      is
+                                                                      truncated. */
+  sl_bt_pawr_sync_subevent_data_status_not_received      = 0xff  /**< (0xff)
+                                                                      Failed to
+                                                                      receive
+                                                                      subevent
+                                                                      data in
+                                                                      this
+                                                                      subevent. */
+} sl_bt_pawr_sync_subevent_data_status_t;
 
 /**
  * @addtogroup sl_bt_evt_pawr_sync_opened sl_bt_evt_pawr_sync_opened
@@ -5671,14 +6066,24 @@ PACKSTRUCT( struct sl_bt_evt_pawr_sync_subevent_report_s
                                  advertisement, use this field as the value of
                                  @p request_subevent parameter for the @ref
                                  sl_bt_pawr_sync_set_response_data command. */
-  uint8_t    data_status;   /**< Data completeness:
-                                   - <b>0:</b> Complete
-                                   - <b>1:</b> Incomplete, more data to come in
-                                     new events
-                                   - <b>2:</b> Incomplete, data truncated, no
-                                     more to come
-                                   - <b>255:</b> Failed to receive subevent data
-                                     in this subevent */
+  uint8_t    data_status;   /**< Enum @ref
+                                 sl_bt_pawr_sync_subevent_data_status_t. The
+                                 subevent data completeness status. Values:
+                                   - <b>sl_bt_pawr_sync_subevent_data_status_complete
+                                     (0x0):</b> All data of the PAwR subevent
+                                     has been reported.
+                                   - <b>sl_bt_pawr_sync_subevent_data_status_incomplete_more
+                                     (0x1):</b> Data of the PAwR subevent is
+                                     incomplete in this event, and more data
+                                     will come in new events.
+                                   - <b>sl_bt_pawr_sync_subevent_data_status_incomplete_nomore
+                                     (0x2):</b> Data of the PAwR subevent is
+                                     incomplete in this event, but no more data
+                                     will come, i.e., the data of the PAwR
+                                     subevent is truncated.
+                                   - <b>sl_bt_pawr_sync_subevent_data_status_not_received
+                                     (0xff):</b> Failed to receive subevent data
+                                     in this subevent. */
   uint8_t    counter;       /**< The sequence number of this @ref
                                  sl_bt_evt_pawr_sync_subevent_report event as a
                                  monotonically increasing counter that wraps
@@ -5777,6 +6182,82 @@ sl_status_t sl_bt_pawr_sync_set_response_data(uint16_t sync,
 #define sl_bt_rsp_pawr_advertiser_set_subevent_data_id               0x01550020
 #define sl_bt_rsp_pawr_advertiser_create_connection_id               0x02550020
 #define sl_bt_rsp_pawr_advertiser_stop_id                            0x03550020
+
+/**
+ * @brief Defines the data completeness status types of a response data reported
+ * by the PAwR advertiser.
+ */
+typedef enum
+{
+  sl_bt_pawr_advertiser_response_data_status_complete          = 0x0,  /**<
+                                                                            (0x0)
+                                                                            All
+                                                                            data
+                                                                            of
+                                                                            the
+                                                                            response
+                                                                            has
+                                                                            been
+                                                                            reported. */
+  sl_bt_pawr_advertiser_response_data_status_incomplete_more   = 0x1,  /**<
+                                                                            (0x1)
+                                                                            Data
+                                                                            of
+                                                                            the
+                                                                            response
+                                                                            is
+                                                                            incomplete
+                                                                            in
+                                                                            this
+                                                                            event,
+                                                                            and
+                                                                            more
+                                                                            data
+                                                                            will
+                                                                            come
+                                                                            in
+                                                                            new
+                                                                            events. */
+  sl_bt_pawr_advertiser_response_data_status_incomplete_nomore = 0x2,  /**<
+                                                                            (0x2)
+                                                                            Data
+                                                                            of
+                                                                            the
+                                                                            response
+                                                                            is
+                                                                            incomplete
+                                                                            in
+                                                                            this
+                                                                            event,
+                                                                            but
+                                                                            no
+                                                                            more
+                                                                            data
+                                                                            will
+                                                                            come,
+                                                                            i.e.,
+                                                                            the
+                                                                            data
+                                                                            of
+                                                                            the
+                                                                            response
+                                                                            is
+                                                                            truncated. */
+  sl_bt_pawr_advertiser_response_data_status_not_received      = 0xff  /**<
+                                                                            (0xff)
+                                                                            Failed
+                                                                            to
+                                                                            listen
+                                                                            to
+                                                                            or
+                                                                            receive
+                                                                            subevent
+                                                                            response
+                                                                            in
+                                                                            this
+                                                                            response
+                                                                            slot. */
+} sl_bt_pawr_advertiser_response_data_status_t;
 
 /**
  * @addtogroup sl_bt_evt_pawr_advertiser_subevent_data_request sl_bt_evt_pawr_advertiser_subevent_data_request
@@ -5882,14 +6363,25 @@ PACKSTRUCT( struct sl_bt_evt_pawr_advertiser_response_report_s
                                      - <b>0xFF:</b> No CTE */
   uint8_t    response_slot;   /**< The response slot that this report
                                    corresponds to */
-  uint8_t    data_status;     /**< Data completeness:
-                                     - <b>0:</b> Complete
-                                     - <b>1:</b> Incomplete, more data to come
-                                       in new events
-                                     - <b>2:</b> Incomplete, data truncated, no
-                                       more to come
-                                     - <b>255:</b> Failed to receive subevent
-                                       response in this response slot */
+  uint8_t    data_status;     /**< Enum @ref
+                                   sl_bt_pawr_advertiser_response_data_status_t.
+                                   The data completeness status. Values:
+                                     - <b>sl_bt_pawr_advertiser_response_data_status_complete
+                                       (0x0):</b> All data of the response has
+                                       been reported.
+                                     - <b>sl_bt_pawr_advertiser_response_data_status_incomplete_more
+                                       (0x1):</b> Data of the response is
+                                       incomplete in this event, and more data
+                                       will come in new events.
+                                     - <b>sl_bt_pawr_advertiser_response_data_status_incomplete_nomore
+                                       (0x2):</b> Data of the response is
+                                       incomplete in this event, but no more
+                                       data will come, i.e., the data of the
+                                       response is truncated.
+                                     - <b>sl_bt_pawr_advertiser_response_data_status_not_received
+                                       (0xff):</b> Failed to listen to or
+                                       receive subevent response in this
+                                       response slot. */
   uint8_t    counter;         /**< The sequence number of this @ref
                                    sl_bt_evt_pawr_advertiser_response_report
                                    event as a monotonically increasing counter
@@ -6037,6 +6529,9 @@ sl_status_t sl_bt_pawr_advertiser_start(uint8_t advertising_set,
  *   this command:
  *     - <b>@ref SL_BT_PERIODIC_ADVERTISER_INCLUDE_TX_POWER (0x1):</b> Include
  *       the TX power in advertising packets.
+ *     - <b>@ref SL_BT_PERIODIC_ADVERTISER_INCLUDE_ADVERTISING_DATA_INFORMATION
+ *       (0x4):</b> Include Advertising Data Information (ADI) field in periodic
+ *       advertising PDUs.
  * @param[in] num_subevents The new value for the number of subevents.
  *     - <b>Range:</b> 0x01 to 0x80
  * @param[in] subevent_interval @parblock
@@ -6334,7 +6829,7 @@ typedef enum
  */
 
 /** RSSI value is unavailable */
-#define SL_BT_CONNECTION_RSSI_UNAVAILABLE 0x7f      
+#define SL_BT_CONNECTION_RSSI_UNAVAILABLE 0x7f
 
 /** @} */ // end addtogroup sl_bt_connection_rssi_const
 
@@ -6346,13 +6841,13 @@ typedef enum
  */
 
 /** Remote device is not managing power levels. */
-#define SL_BT_CONNECTION_TX_POWER_UNMANAGED          0x7e      
+#define SL_BT_CONNECTION_TX_POWER_UNMANAGED          0x7e
 
 /** Transmit power level is not available. */
-#define SL_BT_CONNECTION_TX_POWER_UNAVAILABLE        0x7f      
+#define SL_BT_CONNECTION_TX_POWER_UNAVAILABLE        0x7f
 
 /** Change is not available or is out of range. */
-#define SL_BT_CONNECTION_TX_POWER_CHANGE_UNAVAILABLE 0x7f      
+#define SL_BT_CONNECTION_TX_POWER_CHANGE_UNAVAILABLE 0x7f
 
 /** @} */ // end addtogroup sl_bt_connection_tx_power_const
 
@@ -7249,6 +7744,9 @@ sl_status_t sl_bt_connection_set_default_acceptable_subrate(uint16_t min_subrate
  * target device to initiate a Bluetooth connection. To cancel an ongoing
  * connection process, use @ref sl_bt_connection_close command with the handle
  * received in response from this command.
+ *
+ * If privacy is enabled, see @ref sl_bt_gap_set_privacy_mode for the initiator
+ * private address behavior.
  *
  * A connection is opened in no-security mode. If the GATT client needs to read
  * or write the attributes on GATT server requiring encryption or
@@ -9124,7 +9622,7 @@ typedef enum
  */
 
 /** The service should be advertised. */
-#define SL_BT_GATTDB_ADVERTISED_SERVICE 0x1       
+#define SL_BT_GATTDB_ADVERTISED_SERVICE 0x1
 
 /** @} */ // end addtogroup sl_bt_gattdb_service_property_flags
 
@@ -9137,36 +9635,36 @@ typedef enum
  */
 
 /** The read property requires pairing and encrypted connection. */
-#define SL_BT_GATTDB_ENCRYPTED_READ       0x1       
+#define SL_BT_GATTDB_ENCRYPTED_READ       0x1
 
 /** The read property requires bonding and encrypted connection. */
-#define SL_BT_GATTDB_BONDED_READ          0x2       
+#define SL_BT_GATTDB_BONDED_READ          0x2
 
 /** The read property requires authenticated pairing and encrypted connection.
  * */
-#define SL_BT_GATTDB_AUTHENTICATED_READ   0x4       
+#define SL_BT_GATTDB_AUTHENTICATED_READ   0x4
 
 /** The write property requires pairing and encrypted connection. */
-#define SL_BT_GATTDB_ENCRYPTED_WRITE      0x8       
+#define SL_BT_GATTDB_ENCRYPTED_WRITE      0x8
 
 /** The write property requires bonding and encrypted connection. */
-#define SL_BT_GATTDB_BONDED_WRITE         0x10      
+#define SL_BT_GATTDB_BONDED_WRITE         0x10
 
 /** The write property requires authenticated pairing and encrypted connection.
  * */
-#define SL_BT_GATTDB_AUTHENTICATED_WRITE  0x20      
+#define SL_BT_GATTDB_AUTHENTICATED_WRITE  0x20
 
 /** The notification and indication properties require pairing and encrypted
  * connection. */
-#define SL_BT_GATTDB_ENCRYPTED_NOTIFY     0x40      
+#define SL_BT_GATTDB_ENCRYPTED_NOTIFY     0x40
 
 /** The notification and indication properties require bonding and encrypted
  * connection. */
-#define SL_BT_GATTDB_BONDED_NOTIFY        0x80      
+#define SL_BT_GATTDB_BONDED_NOTIFY        0x80
 
 /** The notification and indication properties require authenticated pairing and
  * encrypted connection. */
-#define SL_BT_GATTDB_AUTHENTICATED_NOTIFY 0x100     
+#define SL_BT_GATTDB_AUTHENTICATED_NOTIFY 0x100
 
 /** @} */ // end addtogroup sl_bt_gattdb_security_requirements
 
@@ -9179,7 +9677,7 @@ typedef enum
 
 /** Do not automatically create a Client Characteristic Configuration descriptor
  * when adding a characteristic that has the notify or indicate property. */
-#define SL_BT_GATTDB_NO_AUTO_CCCD 0x1       
+#define SL_BT_GATTDB_NO_AUTO_CCCD 0x1
 
 /** @} */ // end addtogroup sl_bt_gattdb_flags
 
@@ -9193,25 +9691,25 @@ typedef enum
  */
 
 /** A GATT client can read the characteristic value. */
-#define SL_BT_GATTDB_CHARACTERISTIC_READ              0x2       
+#define SL_BT_GATTDB_CHARACTERISTIC_READ              0x2
 
 /** A GATT client can write the characteristic value without a response. */
-#define SL_BT_GATTDB_CHARACTERISTIC_WRITE_NO_RESPONSE 0x4       
+#define SL_BT_GATTDB_CHARACTERISTIC_WRITE_NO_RESPONSE 0x4
 
 /** A GATT client can write the characteristic value. */
-#define SL_BT_GATTDB_CHARACTERISTIC_WRITE             0x8       
+#define SL_BT_GATTDB_CHARACTERISTIC_WRITE             0x8
 
 /** The characteristic value can be notified without acknowledgment. */
-#define SL_BT_GATTDB_CHARACTERISTIC_NOTIFY            0x10      
+#define SL_BT_GATTDB_CHARACTERISTIC_NOTIFY            0x10
 
 /** The characteristic value can be notified with acknowledgment. */
-#define SL_BT_GATTDB_CHARACTERISTIC_INDICATE          0x20      
+#define SL_BT_GATTDB_CHARACTERISTIC_INDICATE          0x20
 
 /** The additional characteristic properties are defined. */
-#define SL_BT_GATTDB_CHARACTERISTIC_EXTENDED_PROPS    0x80      
+#define SL_BT_GATTDB_CHARACTERISTIC_EXTENDED_PROPS    0x80
 
 /** The characteristic value supports reliable write. */
-#define SL_BT_GATTDB_CHARACTERISTIC_RELIABLE_WRITE    0x101     
+#define SL_BT_GATTDB_CHARACTERISTIC_RELIABLE_WRITE    0x101
 
 /** @} */ // end addtogroup sl_bt_gattdb_characteristic_properties
 
@@ -9223,16 +9721,16 @@ typedef enum
  */
 
 /** A GATT client can read the descriptor value. */
-#define SL_BT_GATTDB_DESCRIPTOR_READ              0x1       
+#define SL_BT_GATTDB_DESCRIPTOR_READ              0x1
 
 /** A GATT client can write the descriptor value. */
-#define SL_BT_GATTDB_DESCRIPTOR_WRITE             0x2       
+#define SL_BT_GATTDB_DESCRIPTOR_WRITE             0x2
 
 /** A GATT client can write the descriptor value without a response. */
-#define SL_BT_GATTDB_DESCRIPTOR_WRITE_NO_RESPONSE 0x4       
+#define SL_BT_GATTDB_DESCRIPTOR_WRITE_NO_RESPONSE 0x4
 
 /** The descriptor is local only and should be invisible to GATT clients. */
-#define SL_BT_GATTDB_DESCRIPTOR_LOCAL_ONLY        0x200     
+#define SL_BT_GATTDB_DESCRIPTOR_LOCAL_ONLY        0x200
 
 /** @} */ // end addtogroup sl_bt_gattdb_descriptor_properties
 
@@ -9244,22 +9742,22 @@ typedef enum
  */
 
 /** The attribute is visible to remote GATT clients. */
-#define SL_BT_GATTDB_ATTRIBUTE_STATE_FLAG_ACTIVE  0x1       
+#define SL_BT_GATTDB_ATTRIBUTE_STATE_FLAG_ACTIVE  0x1
 
 /** The attribute has been marked to be activated when the changes are
  * committed. */
-#define SL_BT_GATTDB_ATTRIBUTE_STATE_FLAG_STARTED 0x2       
+#define SL_BT_GATTDB_ATTRIBUTE_STATE_FLAG_STARTED 0x2
 
 /** The attribute has been marked to be inactivated when the changes are
  * committed. */
-#define SL_BT_GATTDB_ATTRIBUTE_STATE_FLAG_STOPPED 0x4       
+#define SL_BT_GATTDB_ATTRIBUTE_STATE_FLAG_STOPPED 0x4
 
 /** The attribute has been marked to be added when the changes are committed. */
-#define SL_BT_GATTDB_ATTRIBUTE_STATE_FLAG_ADDED   0x8       
+#define SL_BT_GATTDB_ATTRIBUTE_STATE_FLAG_ADDED   0x8
 
 /** The attribute has been marked to be deleted when the changes are committed.
  * */
-#define SL_BT_GATTDB_ATTRIBUTE_STATE_FLAG_DELETED 0x10      
+#define SL_BT_GATTDB_ATTRIBUTE_STATE_FLAG_DELETED 0x10
 
 /** @} */ // end addtogroup sl_bt_gattdb_attribute_state
 
@@ -9872,12 +10370,12 @@ typedef enum
  */
 
 /** Perform the standard notification or indication procedure. */
-#define SL_BT_GATT_SERVER_SEND_OPTION_NONE        0x0       
+#define SL_BT_GATT_SERVER_SEND_OPTION_NONE        0x0
 
 /** Send the notification or indication regardless of whether the corresponding
  * configuration in the Client Characteristic Configuration of the connected
  * client has been set. */
-#define SL_BT_GATT_SERVER_SEND_OPTION_IGNORE_CCCD 0x1       
+#define SL_BT_GATT_SERVER_SEND_OPTION_IGNORE_CCCD 0x1
 
 /** @} */ // end addtogroup sl_bt_gatt_server_send_option
 
@@ -10778,11 +11276,11 @@ sl_status_t sl_bt_gatt_server_read_client_supported_features(uint8_t connection,
 
 /** The low bound of the key range for storing user data in the Bluetooth region
  * of NVM3 */
-#define SL_BT_NVM_KEY_RANGE_USER_MIN 0x4000    
+#define SL_BT_NVM_KEY_RANGE_USER_MIN 0x4000
 
 /** The high bound of the key range for storing user data in the Bluetooth
  * region of NVM3 */
-#define SL_BT_NVM_KEY_RANGE_USER_MAX 0x5fff    
+#define SL_BT_NVM_KEY_RANGE_USER_MAX 0x5fff
 
 /** @} */ // end addtogroup sl_bt_nvm_key_range
 
@@ -11249,33 +11747,33 @@ typedef enum
  */
 
 /** Bonding requires authentication (Man-in-the-Middle protection). */
-#define SL_BT_SM_CONFIGURATION_MITM_REQUIRED                        0x1       
+#define SL_BT_SM_CONFIGURATION_MITM_REQUIRED                        0x1
 
 /** Encryption requires bonding. Note that this setting will also enable
  * bonding. */
-#define SL_BT_SM_CONFIGURATION_BONDING_REQUIRED                     0x2       
+#define SL_BT_SM_CONFIGURATION_BONDING_REQUIRED                     0x2
 
 /** Require secure connections pairing. */
-#define SL_BT_SM_CONFIGURATION_SC_ONLY                              0x4       
+#define SL_BT_SM_CONFIGURATION_SC_ONLY                              0x4
 
 /** Bonding requests need to be confirmed. Received bonding requests are
  * notified by @ref sl_bt_evt_sm_confirm_bonding. */
-#define SL_BT_SM_CONFIGURATION_BONDING_REQUEST_REQUIRED             0x8       
+#define SL_BT_SM_CONFIGURATION_BONDING_REQUEST_REQUIRED             0x8
 
 /** Allow connections only from bonded devices. This option is ignored when the
  * application includes the bluetooth_feature_external_bonding_database feature.
  * */
-#define SL_BT_SM_CONFIGURATION_CONNECTIONS_FROM_BONDED_DEVICES_ONLY 0x10      
+#define SL_BT_SM_CONFIGURATION_CONNECTIONS_FROM_BONDED_DEVICES_ONLY 0x10
 
 /** Prefer authenticated pairing when both options are possible based on the
  * settings. Otherwise just works pairing is preferred. */
-#define SL_BT_SM_CONFIGURATION_PREFER_MITM                          0x20      
+#define SL_BT_SM_CONFIGURATION_PREFER_MITM                          0x20
 
 /** Require secure connections OOB data from both devices. */
-#define SL_BT_SM_CONFIGURATION_OOB_FROM_BOTH_DEVICES_REQUIRED       0x40      
+#define SL_BT_SM_CONFIGURATION_OOB_FROM_BOTH_DEVICES_REQUIRED       0x40
 
 /** Reject pairing if remote device uses debug keys. */
-#define SL_BT_SM_CONFIGURATION_REJECT_DEBUG_KEYS                    0x80      
+#define SL_BT_SM_CONFIGURATION_REJECT_DEBUG_KEYS                    0x80
 
 /** @} */ // end addtogroup sl_bt_sm_configuration
 
@@ -12419,6 +12917,19 @@ sl_status_t sl_bt_external_bondingdb_set_local_irk(size_t irk_len,
  * @ref sl_bt_connection_open or @ref sl_bt_sync_scanner_open even if the peer
  * device is using privacy and is using a Resolvable Private Address over the
  * air.
+ *
+ * When a device is added to the Resolving List, the stack automatically sets
+ * the local Identity Resolving Key (IRK) of the entry based on the current
+ * local privacy state. If local privacy is active, the real local IRK is used,
+ * which causes the controller to use Resolvable Private Addresses for the local
+ * device's address. If local privacy is not active, an all-zero local IRK is
+ * used, which allows the controller to use the local device's identity address
+ * and to accept directed advertising packets addressed to the identity address.
+ *
+ * Because the local IRK is set at the time the device is added, the application
+ * should remove all devices from the Resolving List and re-add them after
+ * changing the local privacy mode. Existing Resolving List entries are not
+ * automatically updated when the local privacy mode changes.
  */
 
 /* Command and Response IDs */
@@ -12427,23 +12938,57 @@ sl_status_t sl_bt_external_bondingdb_set_local_irk(size_t irk_len,
 #define sl_bt_cmd_resolving_list_remove_device_by_bonding_id         0x025d0020
 #define sl_bt_cmd_resolving_list_remove_device_by_address_id         0x035d0020
 #define sl_bt_cmd_resolving_list_remove_all_devices_id               0x045d0020
+#define sl_bt_cmd_resolving_list_read_peer_resolvable_address_id     0x055d0020
 #define sl_bt_rsp_resolving_list_add_device_by_bonding_id            0x005d0020
 #define sl_bt_rsp_resolving_list_add_device_by_address_id            0x015d0020
 #define sl_bt_rsp_resolving_list_remove_device_by_bonding_id         0x025d0020
 #define sl_bt_rsp_resolving_list_remove_device_by_address_id         0x035d0020
 #define sl_bt_rsp_resolving_list_remove_all_devices_id               0x045d0020
+#define sl_bt_rsp_resolving_list_read_peer_resolvable_address_id     0x055d0020
 
 /**
  * @brief Specifies the Privacy Mode used for a peer device in the Resolving
- * List
+ * List. The privacy mode controls how the Bluetooth controller handles packets
+ * from the peer device.
  */
 typedef enum
 {
   sl_bt_resolving_list_privacy_mode_network = 0x0, /**< (0x0) Use Network
                                                         Privacy Mode for the
-                                                        peer device */
+                                                        peer device. The
+                                                        controller will only
+                                                        accept Resolvable
+                                                        Private Addresses from
+                                                        the peer device. If the
+                                                        peer device has a
+                                                        non-zero IRK in the
+                                                        Resolving List and sends
+                                                        a packet using its
+                                                        identity address, the
+                                                        controller will reject
+                                                        the packet. This is the
+                                                        default and stricter
+                                                        mode that enforces the
+                                                        use of privacy by the
+                                                        peer device. */
   sl_bt_resolving_list_privacy_mode_device  = 0x1  /**< (0x1) Use Device Privacy
-                                                        Mode for the peer device */
+                                                        Mode for the peer
+                                                        device. The controller
+                                                        will accept both
+                                                        Resolvable Private
+                                                        Addresses and the
+                                                        identity address from
+                                                        the peer device. This is
+                                                        a more permissive mode
+                                                        that allows the peer
+                                                        device to use its
+                                                        identity address even
+                                                        when it has distributed
+                                                        its IRK. Note that using
+                                                        this mode means the peer
+                                                        device's network privacy
+                                                        is not enforced by the
+                                                        local controller. */
 } sl_bt_resolving_list_privacy_mode_t;
 
 /***************************************************************************//**
@@ -12457,14 +13002,29 @@ typedef enum
  * sl_bt_resolving_list_add_device_by_address and provide the peer's identity
  * address and its Identity Resolving Key (IRK).
  *
+ * The local IRK for the Resolving List entry is set automatically based on
+ * whether local privacy is currently active. If local privacy is not active, an
+ * all-zero local IRK is used so that the local device uses its identity
+ * address.
+ *
  * @param[in] bonding The bonding handle
  * @param[in] privacy_mode @parblock
  *   Enum @ref sl_bt_resolving_list_privacy_mode_t. The Privacy Mode to use for
  *   the peer device. Values:
  *     - <b>sl_bt_resolving_list_privacy_mode_network (0x0):</b> Use Network
- *       Privacy Mode for the peer device
+ *       Privacy Mode for the peer device. The controller will only accept
+ *       Resolvable Private Addresses from the peer device. If the peer device
+ *       has a non-zero IRK in the Resolving List and sends a packet using its
+ *       identity address, the controller will reject the packet. This is the
+ *       default and stricter mode that enforces the use of privacy by the peer
+ *       device.
  *     - <b>sl_bt_resolving_list_privacy_mode_device (0x1):</b> Use Device
- *       Privacy Mode for the peer device
+ *       Privacy Mode for the peer device. The controller will accept both
+ *       Resolvable Private Addresses and the identity address from the peer
+ *       device. This is a more permissive mode that allows the peer device to
+ *       use its identity address even when it has distributed its IRK. Note
+ *       that using this mode means the peer device's network privacy is not
+ *       enforced by the local controller.
  *
  *   Default: @ref sl_bt_resolving_list_privacy_mode_network (Use Network
  *   Privacy Mode for the peer device)
@@ -12487,6 +13047,11 @@ sl_status_t sl_bt_resolving_list_add_device_by_bonding(uint32_t bonding,
  * built-in bonding database, the command @ref
  * sl_bt_resolving_list_add_device_by_bonding is more convenient.
  *
+ * The local IRK for the Resolving List entry is set automatically based on
+ * whether local privacy is currently active. If local privacy is not active, an
+ * all-zero local IRK is used so that the local device uses its identity
+ * address.
+ *
  * @param[in] address Bluetooth address of the peer device
  * @param[in] address_type Enum @ref sl_bt_gap_address_type_t. The peer device
  *   address type. Values:
@@ -12498,9 +13063,19 @@ sl_status_t sl_bt_resolving_list_add_device_by_bonding(uint32_t bonding,
  *   Enum @ref sl_bt_resolving_list_privacy_mode_t. The Privacy Mode to use for
  *   the peer device. Values:
  *     - <b>sl_bt_resolving_list_privacy_mode_network (0x0):</b> Use Network
- *       Privacy Mode for the peer device
+ *       Privacy Mode for the peer device. The controller will only accept
+ *       Resolvable Private Addresses from the peer device. If the peer device
+ *       has a non-zero IRK in the Resolving List and sends a packet using its
+ *       identity address, the controller will reject the packet. This is the
+ *       default and stricter mode that enforces the use of privacy by the peer
+ *       device.
  *     - <b>sl_bt_resolving_list_privacy_mode_device (0x1):</b> Use Device
- *       Privacy Mode for the peer device
+ *       Privacy Mode for the peer device. The controller will accept both
+ *       Resolvable Private Addresses and the identity address from the peer
+ *       device. This is a more permissive mode that allows the peer device to
+ *       use its identity address even when it has distributed its IRK. Note
+ *       that using this mode means the peer device's network privacy is not
+ *       enforced by the local controller.
  *
  *   Default: @ref sl_bt_resolving_list_privacy_mode_network (Use Network
  *   Privacy Mode for the peer device)
@@ -12557,6 +13132,34 @@ sl_status_t sl_bt_resolving_list_remove_device_by_address(bd_addr address,
  *
  ******************************************************************************/
 sl_status_t sl_bt_resolving_list_remove_all_devices(void);
+
+/***************************************************************************//**
+ *
+ * Read the peer's current Resolvable Private Address (RPA) from the controller
+ * Resolving List.
+ *
+ * The peer must already exist in the Resolving List. The command identifies the
+ * peer by its identity address. The controller returns the current peer RPA
+ * that it is tracking for that Resolving List entry.
+ *
+ * Use this command when the application needs to inspect the peer's current
+ * over-the-air RPA after the peer has been resolved to its identity address by
+ * the controller.
+ *
+ * @param[in] address Bluetooth identity address of the peer device
+ * @param[in] address_type Enum @ref sl_bt_gap_address_type_t. The peer identity
+ *   address type. Values:
+ *     - <b>sl_bt_gap_public_address (0x0):</b> Public device address
+ *     - <b>sl_bt_gap_static_address (0x1):</b> Static device address
+ * @param[out] address_out The peer's current resolvable private address tracked
+ *   by the controller.
+ *
+ * @return SL_STATUS_OK if successful. Error code otherwise.
+ *
+ ******************************************************************************/
+sl_status_t sl_bt_resolving_list_read_peer_resolvable_address(bd_addr address,
+                                                              uint8_t address_type,
+                                                              bd_addr *address_out);
 
 /** @} */ // end addtogroup sl_bt_resolving_list
 
@@ -12875,6 +13478,11 @@ sl_status_t sl_bt_coex_get_counters(uint8_t reset,
 #define sl_bt_cmd_cs_set_antenna_configuration_id                    0x07590020
 #define sl_bt_cmd_cs_read_local_supported_capabilities_id            0x08590020
 #define sl_bt_cmd_cs_read_remote_supported_capabilities_id           0x09590020
+#define sl_bt_cmd_cs_handover_get_procedure_parameters_id            0x0a590020
+#define sl_bt_cmd_cs_handover_set_procedure_parameters_id            0x0b590020
+#define sl_bt_cmd_cs_handover_create_sync_id                         0x0c590020
+#define sl_bt_cmd_cs_handover_enable_procedure_id                    0x0d590020
+#define sl_bt_cmd_cs_handover_remove_procedure_id                    0x0e590020
 #define sl_bt_rsp_cs_security_enable_id                              0x00590020
 #define sl_bt_rsp_cs_set_default_settings_id                         0x01590020
 #define sl_bt_rsp_cs_create_config_id                                0x02590020
@@ -12885,6 +13493,11 @@ sl_status_t sl_bt_coex_get_counters(uint8_t reset,
 #define sl_bt_rsp_cs_set_antenna_configuration_id                    0x07590020
 #define sl_bt_rsp_cs_read_local_supported_capabilities_id            0x08590020
 #define sl_bt_rsp_cs_read_remote_supported_capabilities_id           0x09590020
+#define sl_bt_rsp_cs_handover_get_procedure_parameters_id            0x0a590020
+#define sl_bt_rsp_cs_handover_set_procedure_parameters_id            0x0b590020
+#define sl_bt_rsp_cs_handover_create_sync_id                         0x0c590020
+#define sl_bt_rsp_cs_handover_enable_procedure_id                    0x0d590020
+#define sl_bt_rsp_cs_handover_remove_procedure_id                    0x0e590020
 
 /**
  * @brief Specifies the role for the device during CS procedure.
@@ -12914,6 +13527,42 @@ typedef enum
   sl_bt_cs_procedure_state_disabled = 0x0, /**< (0x0) CS procedures are disabled */
   sl_bt_cs_procedure_state_enabled  = 0x1  /**< (0x1) CS procedures are enabled */
 } sl_bt_cs_procedure_state_t;
+
+/**
+ * @brief Defines whether the command handle references a connection or a
+ * connection analyzer instance.
+ */
+typedef enum
+{
+  sl_bt_cs_handover_handle_type_connection = 0x1, /**< (0x1) Handle identifies a
+                                                       Bluetooth connection. */
+  sl_bt_cs_handover_handle_type_analyzer   = 0x2  /**< (0x2) Handle identifies a
+                                                       connection analyzer
+                                                       instance. */
+} sl_bt_cs_handover_handle_type_t;
+
+/**
+ * @brief Defines the reason why a CS handover procedure completed.
+ */
+typedef enum
+{
+  sl_bt_cs_handover_complete_reason_max_procedure_count_reached = 0x0, /**<
+                                                                            (0x0)
+                                                                            Configured
+                                                                            maximum
+                                                                            procedure
+                                                                            count
+                                                                            was
+                                                                            reached. */
+  sl_bt_cs_handover_complete_reason_sync_lost                   = 0x1  /**<
+                                                                            (0x1)
+                                                                            Synchronization
+                                                                            to
+                                                                            the
+                                                                            connection
+                                                                            was
+                                                                            lost. */
+} sl_bt_cs_handover_complete_reason_t;
 
 /**
  * @brief Defines the different modes for CS steps.
@@ -13417,7 +14066,7 @@ PACKSTRUCT( struct sl_bt_evt_cs_result_s
                                           sl_bt_cs_test_start command. */
   int16_t    frequency_compensation; /**< Frequency compensation value. Units:
                                           0.01 ppm (15-bit signed integer).
-                                            - <b>Range:</b> -100ppm (227680) to
+                                            - <b>Range:</b> -100ppm (-10000) to
                                               +100ppm (10000)
 
                                             - Value: 0xC000. Frequency
@@ -13434,7 +14083,7 @@ PACKSTRUCT( struct sl_bt_evt_cs_result_s
                                             - Value: 0x07F. The reference power
                                               level is not applicable */
   uint8_t    procedure_done_status;  /**< Enum @ref sl_bt_cs_done_status_t.
-                                          Current status of the CS procedure
+                                          Current status of the CS procedure.
                                           Values:
                                             - <b>sl_bt_cs_done_status_complete
                                               (0x0):</b> All results complete
@@ -13448,7 +14097,7 @@ PACKSTRUCT( struct sl_bt_evt_cs_result_s
                                               procedure aborted or current
                                               subevent aborted. */
   uint8_t    subevent_done_status;   /**< Enum @ref sl_bt_cs_done_status_t.
-                                          Current status of the CS subevent
+                                          Current status of the CS subevent.
                                           Values:
                                             - <b>sl_bt_cs_done_status_complete
                                               (0x0):</b> All results complete
@@ -13554,7 +14203,7 @@ PACKSTRUCT( struct sl_bt_evt_cs_result_continue_s
                                          sl_bt_cs_test_start command.
                                            - <b>Range:</b> 0 to 3 */
   uint8_t    procedure_done_status; /**< Enum @ref sl_bt_cs_done_status_t.
-                                         Current status of the CS procedure
+                                         Current status of the CS procedure.
                                          Values:
                                            - <b>sl_bt_cs_done_status_complete
                                              (0x0):</b> All results complete for
@@ -13568,7 +14217,7 @@ PACKSTRUCT( struct sl_bt_evt_cs_result_continue_s
                                              procedure aborted or current
                                              subevent aborted. */
   uint8_t    subevent_done_status;  /**< Enum @ref sl_bt_cs_done_status_t.
-                                         Current status of the CS subevent
+                                         Current status of the CS subevent.
                                          Values:
                                            - <b>sl_bt_cs_done_status_complete
                                              (0x0):</b> All results complete for
@@ -13893,6 +14542,325 @@ PACKSTRUCT( struct sl_bt_evt_cs_read_remote_supported_capabilities_complete_s
 typedef struct sl_bt_evt_cs_read_remote_supported_capabilities_complete_s sl_bt_evt_cs_read_remote_supported_capabilities_complete_t;
 
 /** @} */ // end addtogroup sl_bt_evt_cs_read_remote_supported_capabilities_complete
+
+/**
+ * @addtogroup sl_bt_evt_cs_handover_sync_established sl_bt_evt_cs_handover_sync_established
+ * @{
+ * @brief Indicates that the controller either synchronized to the CS handover
+ * procedure and the connection, or completed the listening window without
+ * establishing synchronization
+ *
+ * This event is intended for the CS Follower role.
+ */
+
+/** @brief Identifier of the handover_sync_established event */
+#define sl_bt_evt_cs_handover_sync_established_id                    0x065900a0
+
+/***************************************************************************//**
+ * @brief Data structure of the handover_sync_established event
+ ******************************************************************************/
+PACKSTRUCT( struct sl_bt_evt_cs_handover_sync_established_s
+{
+  uint16_t status;            /**< Status of the synchronization attempt */
+  uint8_t  analyzer;          /**< Connection analyzer handle */
+  uint8_t  config_id;         /**< CS configuration identifier */
+  uint16_t procedure_counter; /**< CS procedure counter that the controller
+                                   synchronized to */
+});
+
+typedef struct sl_bt_evt_cs_handover_sync_established_s sl_bt_evt_cs_handover_sync_established_t;
+
+/** @} */ // end addtogroup sl_bt_evt_cs_handover_sync_established
+
+/**
+ * @addtogroup sl_bt_evt_cs_handover_complete sl_bt_evt_cs_handover_complete
+ * @{
+ * @brief Indicates that the controller completed the CS handover procedure
+ * because synchronization was lost or the configured maximum procedure count
+ * was reached
+ *
+ * When this event is sent, the configured CS parameters are removed and the
+ * associated connection analyzer handle is deallocated. This event is intended
+ * for the CS Follower role.
+ */
+
+/** @brief Identifier of the handover_complete event */
+#define sl_bt_evt_cs_handover_complete_id                            0x075900a0
+
+/***************************************************************************//**
+ * @brief Data structure of the handover_complete event
+ ******************************************************************************/
+PACKSTRUCT( struct sl_bt_evt_cs_handover_complete_s
+{
+  uint8_t reason;    /**< Enum @ref sl_bt_cs_handover_complete_reason_t. Reason
+                          for completion. Values:
+                            - <b>sl_bt_cs_handover_complete_reason_max_procedure_count_reached
+                              (0x0):</b> Configured maximum procedure count was
+                              reached.
+                            - <b>sl_bt_cs_handover_complete_reason_sync_lost
+                              (0x1):</b> Synchronization to the connection was
+                              lost. */
+  uint8_t analyzer;  /**< Connection analyzer handle */
+  uint8_t config_id; /**< CS configuration identifier */
+});
+
+typedef struct sl_bt_evt_cs_handover_complete_s sl_bt_evt_cs_handover_complete_t;
+
+/** @} */ // end addtogroup sl_bt_evt_cs_handover_complete
+
+/**
+ * @addtogroup sl_bt_evt_cs_handover_result sl_bt_evt_cs_handover_result
+ * @{
+ * @brief Reports results of every CS handover subevent within the CS procedure
+ *
+ * When the number of steps exceeds the maximum HCI event size, the controller
+ * may report further results for the CS subevent using the @ref
+ * sl_bt_evt_cs_handover_result_continue event. This event is intended for the
+ * CS Follower role.
+ */
+
+/** @brief Identifier of the handover_result event */
+#define sl_bt_evt_cs_handover_result_id                              0x085900a0
+
+/***************************************************************************//**
+ * @brief Data structure of the handover_result event
+ ******************************************************************************/
+PACKSTRUCT( struct sl_bt_evt_cs_handover_result_s
+{
+  uint8_t    analyzer;               /**< Connection analyzer handle */
+  uint8_t    config_id;              /**< CS configuration identifier */
+  uint16_t   start_acl_conn_event;   /**< Starting ACL connection event count
+                                          for the results reported in the event.
+                                          This is reported only in the first
+                                          subevent in the procedure. For
+                                          subsequent subevents, this value is
+                                          set to 0. */
+  uint16_t   procedure_counter;      /**< Associated CS procedure counter for
+                                          the results reported in this event */
+  int16_t    frequency_compensation; /**< Frequency compensation value. Units:
+                                          0.01 ppm (15-bit signed integer).
+                                            - <b>Range:</b> -100ppm (-10000) to
+                                              +100ppm (10000)
+
+                                            - Value: 0xC000. Frequency
+                                              compensation value is not
+                                              available or the role is not
+                                              initiator. This is reported only
+                                              in the first subevent in the
+                                              procedure. For subsequent
+                                              subevents, this value is set to 0. */
+  int8_t     reference_power_level;  /**< Reference power level used by the
+                                          transmission. Units: dBm.
+                                            - <b>Range:</b> -127 to +20
+
+                                            - Value: 0x07F. The reference power
+                                              level is not applicable */
+  uint8_t    procedure_done_status;  /**< Enum @ref sl_bt_cs_done_status_t.
+                                          Current status of the CS procedure.
+                                          Values:
+                                            - <b>sl_bt_cs_done_status_complete
+                                              (0x0):</b> All results complete
+                                              for the CS procedure or subevent
+                                            - <b>sl_bt_cs_done_status_partial_results_continue
+                                              (0x1):</b> Partial results with
+                                              more to follow
+                                            - <b>sl_bt_cs_done_status_aborted
+                                              (0xf):</b> Current procedure and
+                                              all subsequent subevents in the
+                                              procedure aborted or current
+                                              subevent aborted. */
+  uint8_t    subevent_done_status;   /**< Enum @ref sl_bt_cs_done_status_t.
+                                          Current status of the CS subevent.
+                                          Values:
+                                            - <b>sl_bt_cs_done_status_complete
+                                              (0x0):</b> All results complete
+                                              for the CS procedure or subevent
+                                            - <b>sl_bt_cs_done_status_partial_results_continue
+                                              (0x1):</b> Partial results with
+                                              more to follow
+                                            - <b>sl_bt_cs_done_status_aborted
+                                              (0xf):</b> Current procedure and
+                                              all subsequent subevents in the
+                                              procedure aborted or current
+                                              subevent aborted. */
+  uint8_t    abort_reason;           /**< Indicates the abort reason when the @p
+                                          procedure_done_status or @p
+                                          subevent_done_status is set to 0xF,
+                                          otherwise the default value is set to
+                                          zero.
+
+                                          Bits 0-3 indicate the procedure abort
+                                          reasons:
+
+                                            - 0x0 = Report with no abort
+                                            - 0x1 = Abort because of local Host
+                                              or remote request
+                                            - 0x2 = Abort because filtered
+                                              channel map has less than 15
+                                              channels
+                                            - 0x3 = Abort because the channel
+                                              map update instant has passed
+                                            - 0xF = Abort because of unspecified
+                                              reasons
+
+                                          Bits 4-7 indicate the subevent done
+                                          reasons:
+
+                                            - 0x0 = Report with no abort
+                                            - 0x1 = Abort because of local Host
+                                              or remote request
+                                            - 0x2 = Abort because no CS_SYNC
+                                              (mode-0) received
+                                            - 0x3 = Abort because of scheduling
+                                              conflicts or limited resources
+                                            - 0xF = Abort because of unspecified
+                                              reasons */
+  uint8_t    num_antenna_paths;      /**< Number of antenna paths supported by
+                                          the local controller for the CS tone
+                                          exchanges. The number of antenna paths
+                                          used during the phase measurement
+                                          stage of the CS step.
+                                            - <b>Range:</b> 1 to 4
+
+                                            - Value: 0. Phase measurement does
+                                              not occur during the CS step,
+                                              therefore ignored */
+  uint8_t    num_steps;              /**< Number of steps in the CS subevent for
+                                          which results are reported.
+                                            - <b>Range:</b> 1 to 160 */
+  uint8array data;                   /**< The result data is structured as
+                                          follows:
+                                            - step_mode: 1 octet for each
+                                              num_steps. Mode type. Range 0 to
+                                              3.
+                                            - step_channel: 1 octet for each
+                                              num_steps. Channel index. Range 1
+                                              to 78.
+                                            - step_data_length: 1 octet for each
+                                              num_steps. Length of mode and role
+                                              specific information being
+                                              reported. Range 0x00 to 0xFF.
+                                            - step_data: step_data_length octet
+                                              for each corresponding steps in
+                                              num_steps. */
+});
+
+typedef struct sl_bt_evt_cs_handover_result_s sl_bt_evt_cs_handover_result_t;
+
+/** @} */ // end addtogroup sl_bt_evt_cs_handover_result
+
+/**
+ * @addtogroup sl_bt_evt_cs_handover_result_continue sl_bt_evt_cs_handover_result_continue
+ * @{
+ * @brief Reports continuation results when the number of steps exceeds the
+ * maximum HCI event size, of every CS handover subevent within the CS procedure
+ *
+ * This event is triggered after the @ref sl_bt_evt_cs_handover_result event.
+ * This event is intended for the CS Follower role.
+ */
+
+/** @brief Identifier of the handover_result_continue event */
+#define sl_bt_evt_cs_handover_result_continue_id                     0x095900a0
+
+/***************************************************************************//**
+ * @brief Data structure of the handover_result_continue event
+ ******************************************************************************/
+PACKSTRUCT( struct sl_bt_evt_cs_handover_result_continue_s
+{
+  uint8_t    analyzer;              /**< Connection analyzer handle */
+  uint8_t    config_id;             /**< CS configuration identifier */
+  uint8_t    procedure_done_status; /**< Enum @ref sl_bt_cs_done_status_t.
+                                         Current status of the CS procedure
+                                         Values:
+                                           - <b>sl_bt_cs_done_status_complete
+                                             (0x0):</b> All results complete for
+                                             the CS procedure or subevent
+                                           - <b>sl_bt_cs_done_status_partial_results_continue
+                                             (0x1):</b> Partial results with
+                                             more to follow
+                                           - <b>sl_bt_cs_done_status_aborted
+                                             (0xf):</b> Current procedure and
+                                             all subsequent subevents in the
+                                             procedure aborted or current
+                                             subevent aborted. */
+  uint8_t    subevent_done_status;  /**< Enum @ref sl_bt_cs_done_status_t.
+                                         Current status of the CS subevent
+                                         Values:
+                                           - <b>sl_bt_cs_done_status_complete
+                                             (0x0):</b> All results complete for
+                                             the CS procedure or subevent
+                                           - <b>sl_bt_cs_done_status_partial_results_continue
+                                             (0x1):</b> Partial results with
+                                             more to follow
+                                           - <b>sl_bt_cs_done_status_aborted
+                                             (0xf):</b> Current procedure and
+                                             all subsequent subevents in the
+                                             procedure aborted or current
+                                             subevent aborted. */
+  uint8_t    abort_reason;          /**< Indicates the abort reason when the @p
+                                         procedure_done_status or @p
+                                         subevent_done_status is set to 0xF,
+                                         otherwise the default value is set to
+                                         zero.
+
+                                         Bits 0-3 indicate the procedure abort
+                                         reasons:
+
+                                           - 0x0 = Report with no abort
+                                           - 0x1 = Abort because of local Host
+                                             or remote request
+                                           - 0x2 = Abort because filtered
+                                             channel map has less than 15
+                                             channels
+                                           - 0x3 = Abort because the channel map
+                                             update instant has passed
+                                           - 0xF = Abort because of unspecified
+                                             reasons
+
+                                         Bits 4-7 indicate the subevent done
+                                         reasons:
+
+                                           - 0x0 = Report with no abort
+                                           - 0x1 = Abort because of local Host
+                                             or remote request
+                                           - 0x2 = Abort because no CS_SYNC
+                                             (mode-0) received
+                                           - 0x3 = Abort because of scheduling
+                                             conflicts or limited resources
+                                           - 0xF = Abort because of unspecified
+                                             reasons */
+  uint8_t    num_antenna_paths;     /**< Number of antenna paths supported by
+                                         the local controller for the CS tone
+                                         exchanges. The number of antenna paths
+                                         used during the phase measurement stage
+                                         of the CS step.
+                                           - <b>Range:</b> 1 to 4
+
+                                           - Value: 0. Phase measurement does
+                                             not occur during the CS step,
+                                             therefore ignored */
+  uint8_t    num_steps;             /**< Number of steps in the CS subevent for
+                                         which results are reported.
+                                           - <b>Range:</b> 1 to 160 */
+  uint8array data;                  /**< The result data is structured as
+                                         follows:
+                                           - step_mode: 1 octet for each
+                                             num_steps. Mode type. Range 0 to 3.
+                                           - step_channel: 1 octet for each
+                                             num_steps. Channel index. Range 1
+                                             to 78.
+                                           - step_data_length: 1 octet for each
+                                             num_steps. Length of mode and role
+                                             specific information being
+                                             reported. Range 0x00 to 0xFF.
+                                           - step_data: step_data_length octet
+                                             for each corresponding steps in
+                                             num_steps. */
+});
+
+typedef struct sl_bt_evt_cs_handover_result_continue_s sl_bt_evt_cs_handover_result_continue_t;
+
+/** @} */ // end addtogroup sl_bt_evt_cs_handover_result_continue
 
 /***************************************************************************//**
  *
@@ -14470,6 +15438,117 @@ sl_status_t sl_bt_cs_read_local_supported_capabilities(uint8_t *num_config,
  ******************************************************************************/
 sl_status_t sl_bt_cs_read_remote_supported_capabilities(uint8_t connection);
 
+/***************************************************************************//**
+ *
+ * Retrieve CS handover procedure parameters for a given connection and
+ * configuration. This command is intended for the CS Leader role. If this
+ * command is sent to a non-leader device, an error is returned.
+ *
+ * @param[in] connection Connection handle
+ * @param[in] config_id CS configuration identifier
+ * @param[in] max_cs_parameters_size Size of output buffer passed in @p
+ *   cs_parameters
+ * @param[out] cs_parameters_len On return, set to the length of output data
+ *   written to @p cs_parameters
+ * @param[out] cs_parameters Serialized CS handover parameters
+ *
+ * @return SL_STATUS_OK if successful. Error code otherwise.
+ *
+ ******************************************************************************/
+sl_status_t sl_bt_cs_handover_get_procedure_parameters(uint8_t connection,
+                                                       uint8_t config_id,
+                                                       size_t max_cs_parameters_size,
+                                                       size_t *cs_parameters_len,
+                                                       uint8_t *cs_parameters);
+
+/***************************************************************************//**
+ *
+ * Configure CS handover procedure parameters in the controller using parameters
+ * retrieved from the CS Leader. This command creates the CS configuration and
+ * procedure, and allocates a new connection analyzer if one does not already
+ * exist for the connection. This command is intended for the CS Follower role.
+ *
+ * @param[in] cs_parameters_len Length of data in @p cs_parameters
+ * @param[in] cs_parameters Serialized CS handover parameters retrieved from the
+ *   CS Leader
+ * @param[out] analyzer Connection analyzer handle assigned by the controller.
+ *   This handle is valid only if the result code of this command is
+ *   SL_STATUS_OK.
+ * @param[out] config_id CS configuration identifier
+ *
+ * @return SL_STATUS_OK if successful. Error code otherwise.
+ *
+ ******************************************************************************/
+sl_status_t sl_bt_cs_handover_set_procedure_parameters(size_t cs_parameters_len,
+                                                       const uint8_t* cs_parameters,
+                                                       uint8_t *analyzer,
+                                                       uint8_t *config_id);
+
+/***************************************************************************//**
+ *
+ * Start synchronization of a CS handover anchor using an existing connection
+ * analyzer handle and configuration. This command is intended for the CS
+ * Follower role.
+ *
+ * @param[in] analyzer Connection analyzer handle
+ * @param[in] config_id CS configuration identifier
+ * @param[in] procedure_counter CS procedure counter to synchronize to
+ *
+ * @return SL_STATUS_OK if successful. Error code otherwise.
+ *
+ ******************************************************************************/
+sl_status_t sl_bt_cs_handover_create_sync(uint8_t analyzer,
+                                          uint8_t config_id,
+                                          uint16_t procedure_counter);
+
+/***************************************************************************//**
+ *
+ * Enable or disable CS handover procedure scheduling using either a connection
+ * or connection analyzer handle. This command can be used on both CS Leader and
+ * CS Follower roles.
+ *
+ * @param[in] enable Enum @ref sl_bt_cs_procedure_state_t. Enabled or disabled
+ *   CS procedure state. Values:
+ *     - <b>sl_bt_cs_procedure_state_disabled (0x0):</b> CS procedures are
+ *       disabled
+ *     - <b>sl_bt_cs_procedure_state_enabled (0x1):</b> CS procedures are
+ *       enabled
+ * @param[in] start_procedure_counter Procedure counter where execution starts
+ * @param[in] procedure_skip Number of procedures to skip between executed
+ *   procedures
+ * @param[in] handle_type Enum @ref sl_bt_cs_handover_handle_type_t. Specifies
+ *   if @p handle is a BGAPI connection or connection analyzer handle. Values:
+ *     - <b>sl_bt_cs_handover_handle_type_connection (0x1):</b> Handle
+ *       identifies a Bluetooth connection.
+ *     - <b>sl_bt_cs_handover_handle_type_analyzer (0x2):</b> Handle identifies
+ *       a connection analyzer instance.
+ * @param[in] handle BGAPI connection or connection analyzer handle
+ * @param[in] config_id CS configuration identifier
+ *
+ * @return SL_STATUS_OK if successful. Error code otherwise.
+ *
+ ******************************************************************************/
+sl_status_t sl_bt_cs_handover_enable_procedure(uint8_t enable,
+                                               uint16_t start_procedure_counter,
+                                               uint16_t procedure_skip,
+                                               uint8_t handle_type,
+                                               uint8_t handle,
+                                               uint8_t config_id);
+
+/***************************************************************************//**
+ *
+ * Remove a configured CS handover procedure identified by connection analyzer
+ * handle and configuration. This command is intended for the CS Follower role.
+ *
+ * @param[in] analyzer Connection analyzer handle
+ * @param[in] config_id CS configuration identifier
+ *
+ * @return SL_STATUS_OK if successful. Error code otherwise.
+ *
+ ******************************************************************************/
+sl_status_t sl_bt_cs_handover_remove_procedure(uint8_t analyzer,
+                                               uint8_t config_id);
+
 /** @} */ // end addtogroup sl_bt_cs
 
 /**
@@ -14603,12 +15682,9 @@ typedef struct sl_bt_evt_cs_test_end_completed_s sl_bt_evt_cs_test_end_completed
  *     - <b>sl_bt_gap_phy_2m (0x2):</b> 2M PHY
  *     - <b>sl_bt_gap_phy_coded (0x4):</b> Coded PHY, 125k (S=8) or 500k (S=2)
  *     - <b>sl_bt_gap_phy_any (0xff):</b> Any PHYs the device supports
- * @param[in] antenna_selection @parblock
- *   Antenna Identifier to be used for RTT packets
+ * @param[in] antenna_selection Antenna identifier to be used for CS_SYNC
+ *   packets, including mode-0 packets
  *     - <b>Range:</b> 1 to 4
- *
- *     - Value: 0xFE. Use antennas in repetitive order from 0x01 to 0x04
- *   @endparblock
  * @param[in] subevent_len @parblock
  *   CS subevent length in units of microseconds.
  *     - <b>Range:</b> 1250 to 3999999
@@ -15482,18 +16558,18 @@ sl_status_t sl_bt_cte_transmitter_disable_silabs_cte(uint8_t handle);
  */
 
 /** Do not sync to packets with an AoA Constant Tone Extension */
-#define SL_BT_CTE_RECEIVER_DO_NOT_SYNC_TO_AOA      0x1       
+#define SL_BT_CTE_RECEIVER_DO_NOT_SYNC_TO_AOA      0x1
 
 /** Do not sync to packets with an AoD Constant Tone Extension with 1 us slots
  * */
-#define SL_BT_CTE_RECEIVER_DO_NOT_SYNC_TO_AOD_1_US 0x2       
+#define SL_BT_CTE_RECEIVER_DO_NOT_SYNC_TO_AOD_1_US 0x2
 
 /** Do not sync to packets with an AoD Constant Tone Extension with 2 us slots
  * */
-#define SL_BT_CTE_RECEIVER_DO_NOT_SYNC_TO_AOD_2_US 0x4       
+#define SL_BT_CTE_RECEIVER_DO_NOT_SYNC_TO_AOD_2_US 0x4
 
 /** Do not sync to packets without a Constant Tone Extension */
-#define SL_BT_CTE_RECEIVER_SYNC_TO_CTE_ONLY        0x10      
+#define SL_BT_CTE_RECEIVER_SYNC_TO_CTE_ONLY        0x10
 
 /** @} */ // end addtogroup sl_bt_cte_receiver_sync_cte_type
 
@@ -15863,6 +16939,13 @@ sl_status_t sl_bt_cte_receiver_set_sync_cte_type(uint8_t sync_cte_type);
  *       advertising trains is not reported to the application.
  *     - <b>sl_bt_sync_report_all (0x1):</b> Data received in periodic
  *       advertising trains is reported to the application.
+ *     - <b>sl_bt_sync_report_non_duplicate (0x2):</b> Data received in periodic
+ *       advertising trains is reported to the application, but only if the
+ *       advertisement is not a duplicate of an already received periodic
+ *       advertisement. A periodic advertisement is considered a duplicate if it
+ *       included Advertising Data Information (ADI) with the same Advertising
+ *       Set ID (SID) and Advertising Data ID (DID) as a previously received
+ *       periodic advertisement on the same periodic advertising train.
  *
  *   Default: @ref sl_bt_sync_report_all (Data received in periodic advertising
  *   trains is reported to the application)
@@ -15964,6 +17047,13 @@ sl_status_t sl_bt_cte_receiver_set_default_sync_receive_parameters(uint8_t mode,
  *       advertising trains is not reported to the application.
  *     - <b>sl_bt_sync_report_all (0x1):</b> Data received in periodic
  *       advertising trains is reported to the application.
+ *     - <b>sl_bt_sync_report_non_duplicate (0x2):</b> Data received in periodic
+ *       advertising trains is reported to the application, but only if the
+ *       advertisement is not a duplicate of an already received periodic
+ *       advertisement. A periodic advertisement is considered a duplicate if it
+ *       included Advertising Data Information (ADI) with the same Advertising
+ *       Set ID (SID) and Advertising Data ID (DID) as a previously received
+ *       periodic advertisement on the same periodic advertising train.
  *
  *   Default: @ref sl_bt_sync_report_all (Data received in periodic advertising
  *   trains is reported to the application)
@@ -16165,8 +17255,10 @@ sl_status_t sl_bt_cte_receiver_disable_silabs_cte(void);
 
 /* Command and Response IDs */
 #define sl_bt_cmd_connection_analyzer_start_id                       0x00480020
+#define sl_bt_cmd_connection_analyzer_process_llcp_event_id          0x02480020
 #define sl_bt_cmd_connection_analyzer_stop_id                        0x01480020
 #define sl_bt_rsp_connection_analyzer_start_id                       0x00480020
+#define sl_bt_rsp_connection_analyzer_process_llcp_event_id          0x02480020
 #define sl_bt_rsp_connection_analyzer_stop_id                        0x01480020
 
 /**
@@ -16178,7 +17270,7 @@ sl_status_t sl_bt_cte_receiver_disable_silabs_cte(void);
 
 /** Indicates a given time value, e.g., @p start_time_us in @ref
  * sl_bt_connection_analyzer_start, is a value relative to the current time. */
-#define SL_BT_CONNECTION_ANALYZER_RELATIVE_TIME 0x1       
+#define SL_BT_CONNECTION_ANALYZER_RELATIVE_TIME 0x1
 
 /** @} */ // end addtogroup sl_bt_connection_analyzer_flags
 
@@ -16327,6 +17419,40 @@ sl_status_t sl_bt_connection_analyzer_start(uint32_t access_address,
                                             int32_t start_time_us,
                                             uint32_t flags,
                                             uint8_t *analyzer);
+
+/***************************************************************************//**
+ *
+ * Process a Link Layer Control Protocol (LLCP) event from the Central device.
+ *
+ * To maintain synchronization to the connection, an active connection analyzer
+ * needs to be informed of Link Layer Control Protocol (LLCP) events that impact
+ * the parameters of the connection. If the other device uses Silabs' Bluetooth
+ * stack, use the @ref sl_bt_linklayer_event_info_reporting_enable command on
+ * the Central device to enable event information reporting for channel map and
+ * connection parameter updates triggered by the LLCP procedure on the
+ * connection being analyzed. See the documentation of the vendor-specific HCI
+ * command HCI_VS_Siliconlabs_Event_Info_Reporting_Enable for detailed
+ * documentation of the link layer feature.
+ *
+ * When the event info reporting is enabled, the required LLCP event information
+ * is available in the @p event_info portion of the @p data provided in the @ref
+ * sl_bt_evt_linklayer_event_info_report event. When the application receives
+ * the event on the Central device, pass the @p event_info to this device that
+ * is analyzing the connection. The method of passing the information to this
+ * device is application layer logic.
+ *
+ * @param[in] analyzer The handle of the connection analyzer for the connection
+ *   that had the LLCP event
+ * @param[in] llcp_event_info_len Length of data in @p llcp_event_info
+ * @param[in] llcp_event_info The LLCP event information provided by the Central
+ *   device for the connection being analyzed
+ *
+ * @return SL_STATUS_OK if successful. Error code otherwise.
+ *
+ ******************************************************************************/
+sl_status_t sl_bt_connection_analyzer_process_llcp_event(uint8_t analyzer,
+                                                         size_t llcp_event_info_len,
+                                                         const uint8_t* llcp_event_info);
 
 /***************************************************************************//**
  *
@@ -16513,8 +17639,10 @@ PACKSTRUCT( struct sl_bt_msg {
     sl_bt_evt_system_soft_timer_t                                evt_system_soft_timer; /**< Data field for event sl_bt_evt_system_soft_timer_id */
     sl_bt_evt_linklayer_event_info_report_t                      evt_linklayer_event_info_report; /**< Data field for event sl_bt_evt_linklayer_event_info_report_id */
     sl_bt_evt_resource_status_t                                  evt_resource_status; /**< Data field for event sl_bt_evt_resource_status_id */
+    sl_bt_evt_gap_random_address_refresh_t                       evt_gap_random_address_refresh; /**< Data field for event sl_bt_evt_gap_random_address_refresh_id */
     sl_bt_evt_advertiser_timeout_t                               evt_advertiser_timeout; /**< Data field for event sl_bt_evt_advertiser_timeout_id */
     sl_bt_evt_advertiser_scan_request_t                          evt_advertiser_scan_request; /**< Data field for event sl_bt_evt_advertiser_scan_request_id */
+    sl_bt_evt_advertiser_random_address_refresh_t                evt_advertiser_random_address_refresh; /**< Data field for event sl_bt_evt_advertiser_random_address_refresh_id */
     sl_bt_evt_periodic_advertiser_status_t                       evt_periodic_advertiser_status; /**< Data field for event sl_bt_evt_periodic_advertiser_status_id */
     sl_bt_evt_scanner_legacy_advertisement_report_t              evt_scanner_legacy_advertisement_report; /**< Data field for event sl_bt_evt_scanner_legacy_advertisement_report_id */
     sl_bt_evt_scanner_extended_advertisement_report_t            evt_scanner_extended_advertisement_report; /**< Data field for event sl_bt_evt_scanner_extended_advertisement_report_id */
@@ -16573,6 +17701,10 @@ PACKSTRUCT( struct sl_bt_msg {
     sl_bt_evt_cs_result_t                                        evt_cs_result; /**< Data field for event sl_bt_evt_cs_result_id */
     sl_bt_evt_cs_result_continue_t                               evt_cs_result_continue; /**< Data field for event sl_bt_evt_cs_result_continue_id */
     sl_bt_evt_cs_read_remote_supported_capabilities_complete_t   evt_cs_read_remote_supported_capabilities_complete; /**< Data field for event sl_bt_evt_cs_read_remote_supported_capabilities_complete_id */
+    sl_bt_evt_cs_handover_sync_established_t                     evt_cs_handover_sync_established; /**< Data field for event sl_bt_evt_cs_handover_sync_established_id */
+    sl_bt_evt_cs_handover_complete_t                             evt_cs_handover_complete; /**< Data field for event sl_bt_evt_cs_handover_complete_id */
+    sl_bt_evt_cs_handover_result_t                               evt_cs_handover_result; /**< Data field for event sl_bt_evt_cs_handover_result_id */
+    sl_bt_evt_cs_handover_result_continue_t                      evt_cs_handover_result_continue; /**< Data field for event sl_bt_evt_cs_handover_result_continue_id */
     sl_bt_evt_cs_test_end_completed_t                            evt_cs_test_end_completed; /**< Data field for event sl_bt_evt_cs_test_end_completed_id */
     sl_bt_evt_l2cap_le_channel_open_request_t                    evt_l2cap_le_channel_open_request; /**< Data field for event sl_bt_evt_l2cap_le_channel_open_request_id */
     sl_bt_evt_l2cap_le_channel_open_response_t                   evt_l2cap_le_channel_open_response; /**< Data field for event sl_bt_evt_l2cap_le_channel_open_response_id */
@@ -16638,59 +17770,7 @@ uint32_t sl_bt_event_pending_len(void);
  * Run the Bluetooth stack to process scheduled tasks. Events for user
  * application may be generated as a result of this operation.
  */
-void sl_bt_run();
-
-/**
- * Handle an API command in binary format.
- *
- * <b>Deprecated</b> and replaced by @ref sl_bgapi_execute_binary_command. The
- * replacement provides a more flexible and efficient way to execute BGAPI
- * commands in their binary format. The new function automatically performs any
- * locking that's needed and enables re-using the command buffer memory for the
- * response.
- *
- * This is provided to NCP target applications for processing commands received
- * from NCP transport. This function is a synonym for a generic BGAPI function
- * @ref sl_bgapi_handle_command. If the NCP application uses an RTOS, use the
- * sequence documented in @ref sl_bgapi_handle_command to handle the BGAPI
- * command in a thread-safe manner.
- *
- * @param hdr the command header
- * @param data the command payload in a byte array
- */
-SL_BGAPI_DEPRECATED void sl_bt_handle_command(uint32_t hdr, void* data);
-
-/**
- * Get the response to the command currently being handled.
- *
- * <b>Deprecated</b> and replaced by @ref sl_bgapi_execute_binary_command. The
- * replacement provides a more flexible and efficient way to execute BGAPI
- * commands in their binary format. The new function automatically performs any
- * locking that's needed and enables re-using the command buffer memory for the
- * response.
- *
- * This is provided to NCP target applications for processing commands received
- * from NCP transport. This function is a synonym for a generic BGAPI function
- * @ref sl_bgapi_get_command_response.
- */
-SL_BGAPI_DEPRECATED static inline sl_bt_msg_t* sl_bt_get_command_response()
-{
-  // We intentionally call a deprecated function, so ignore the warning
-#if defined(__IAR_SYSTEMS_ICC__)
-  _Pragma("diag_suppress=Pe1215")
-#elif defined(__GNUC__)
-  #pragma GCC diagnostic push
-  #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-
-  return (sl_bt_msg_t*) sl_bgapi_get_command_response();
-
-#if defined(__IAR_SYSTEMS_ICC__)
-  _Pragma("diag_default=Pe1215")
-#elif defined(__GNUC__)
-  #pragma GCC diagnostic pop
-#endif
-}
+void sl_bt_run(void);
 
 /**
  * Priority message handler function if user application requires the use of
@@ -16737,7 +17817,7 @@ sl_status_t sl_bt_external_signal(uint32_t signals);
  * Signals stack to send system_awake event when application received wakeup
  * signal.
  */
-void sl_bt_send_system_awake();
+void sl_bt_send_system_awake(void);
 
 /**
  * Signals stack to send system_error event when in case of an error.
@@ -16827,6 +17907,61 @@ void sl_bt_send_rsp_user_cs_service_message_to_target(uint16_t result, uint8_t d
  * data. Do not use it in SoC mode.
  */
 void sl_bt_send_evt_user_cs_service_message_to_host(uint8_t data_len, uint8_t *data);
+
+// -----------------------------------------------------------------------------
+// The following functions are deprecated. Diagnostic warnings are intentionally suppressed 
+// to allow usage of these deprecated API functions for backward compatibility.
+
+#if defined(__IAR_SYSTEMS_ICC__)
+_Pragma("diag_suppress=Pe1215")
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
+/**
+ * Handle an API command in binary format.
+ *
+ * <b>Deprecated</b> and replaced by @ref sl_bgapi_execute_binary_command. The
+ * replacement provides a more flexible and efficient way to execute BGAPI
+ * commands in their binary format. The new function automatically performs any
+ * locking that's needed and enables re-using the command buffer memory for the
+ * response.
+ *
+ * This is provided to NCP target applications for processing commands received
+ * from NCP transport. This function is a synonym for a generic BGAPI function
+ * @ref sl_bgapi_handle_command. If the NCP application uses an RTOS, use the
+ * sequence documented in @ref sl_bgapi_handle_command to handle the BGAPI
+ * command in a thread-safe manner.
+ *
+ * @param hdr the command header
+ * @param data the command payload in a byte array
+ */
+SL_BGAPI_DEPRECATED void sl_bt_handle_command(uint32_t hdr, void* data);
+
+/**
+ * Get the response to the command currently being handled.
+ *
+ * <b>Deprecated</b> and replaced by @ref sl_bgapi_execute_binary_command. The
+ * replacement provides a more flexible and efficient way to execute BGAPI
+ * commands in their binary format. The new function automatically performs any
+ * locking that's needed and enables re-using the command buffer memory for the
+ * response.
+ *
+ * This is provided to NCP target applications for processing commands received
+ * from NCP transport. This function is a synonym for a generic BGAPI function
+ * @ref sl_bgapi_get_command_response.
+ */
+SL_BGAPI_DEPRECATED static inline sl_bt_msg_t* sl_bt_get_command_response()
+{
+  return (sl_bt_msg_t*) sl_bgapi_get_command_response();
+}
+
+#if defined(__IAR_SYSTEMS_ICC__)
+_Pragma("diag_default=Pe1215")
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 
 /** @} */ // end addtogroup sl_bt_utility_functions

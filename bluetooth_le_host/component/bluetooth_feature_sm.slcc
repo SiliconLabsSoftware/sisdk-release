@@ -9,6 +9,8 @@ requires:
 - name: "bluetooth_stack"
 - name: "bluetooth_feature_bonding_database"
 - name: "bluetooth_crypto"
+- name: "bluetooth_feature_local_privacy"
+- name: "bluetooth_feature_rpa_resolution"
 recommends:
 - id: "bluetooth_feature_builtin_bonding_database"
   vendor: silabs

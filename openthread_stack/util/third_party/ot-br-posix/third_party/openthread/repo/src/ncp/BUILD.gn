@@ -50,6 +50,7 @@ config("ncp_config") {
 }
 
 static_library("libopenthread-ncp-ftd") {
+  configs += [ "../..:openthread_private_flags" ]
   sources = openthread_ncp_sources
   public_deps = [
     "../core:libopenthread-ftd",
@@ -60,6 +61,7 @@ static_library("libopenthread-ncp-ftd") {
 }
 
 static_library("libopenthread-ncp-mtd") {
+  configs += [ "../..:openthread_private_flags" ]
   sources = openthread_ncp_sources
   public_deps = [
     "../core:libopenthread-mtd",
@@ -70,6 +72,7 @@ static_library("libopenthread-ncp-mtd") {
 }
 
 static_library("libopenthread-rcp") {
+  configs += [ "../..:openthread_private_flags" ]
   sources = openthread_ncp_sources
   public_deps = [
     "../core:libopenthread-radio",

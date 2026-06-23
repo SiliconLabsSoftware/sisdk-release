@@ -3,7 +3,7 @@ package: bootloader
 quality: production
 label: Bootloader - NCP UART XMODEM Secure part of Bootloader using TrustZone
 description: >
-  TrustZone is used to split into a Secure and Non-Secure bootloader. This is the secure part of the bootloader. The non-secure part of the bootloader, which contains the communication interfaces needs to be built separately and used together with the secure part of the bootloader.
+  Demonstrates how to implement the Secure part of a TrustZone-split bootloader, in a dual-image setup where the Non-Secure part with communication interfaces is built separately.
 
 category: Example|Bootloader
 filter:

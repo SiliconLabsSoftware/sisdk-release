@@ -1,0 +1,962 @@
+/***************************************************************************/ /**
+ * @file sl_log_systemview_helper.h
+ * @brief Shared symbols and macros for SystemView (included from
+ *        sl_log_helper.h)
+ * @version 1.0.0
+ *******************************************************************************
+ * # License
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
+ *******************************************************************************
+ *
+ * SPDX-License-Identifier: Zlib
+ *
+ * The licensor of this software is Silicon Laboratories Inc.
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ * 1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ * 2. Altered source versions must be plainly marked as such, and must not be
+ *    misrepresented as being the original software.
+ * 3. This notice may not be removed or altered from any source distribution.
+ *
+ ******************************************************************************/
+
+ #ifndef SL_LOG_SYSTEMVIEW_HELPER_H
+ #define SL_LOG_SYSTEMVIEW_HELPER_H
+ 
+ /**
+  * Event flag layout for SL_PRINT_* macros — must match sl_log.c.
+  */
+ #ifndef SL_LOG_FLAGS_POS
+ #define SL_LOG_FLAGS_POS 1
+ #endif
+ #ifndef SL_LOG_FLAGS_LEVEL_MASK
+ #define SL_LOG_FLAGS_LEVEL_MASK 0x7
+ #endif
+ 
+ #define SL_PRINT_ARG0_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL) \
+ do { \
+     if (!sli_log_init_stage2_done) { \
+       sl_log_send_no_args( \
+         (EVENT), \
+         (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))); \
+     } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                   >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                  >= sl_log_get_loglevel()) { \
+       SEGGER_SYSVIEW__PrintElf((EVENT), (uint32_t)(EVENT_TYPE)); \
+     } \
+ } while (0)
+ 
+ #define SL_PRINT_ARG1_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1) \
+ do { \
+   if (!sli_log_init_stage2_done) { \
+     sl_log_send_arg1( \
+           (EVENT), \
+           (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+           (ARG1)); \
+     } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                     >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                    >= sl_log_get_loglevel()) { \
+     SEGGER_SYSVIEW__PrintElf_U32((EVENT), (uint32_t)(EVENT_TYPE), (ARG1)); \
+   } \
+ } while (0)
+ 
+ #define SL_PRINT_ARG2_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1, ARG2) \
+ do { \
+   if (!sli_log_init_stage2_done) { \
+     sl_log_send_arg2( \
+       (EVENT), \
+       (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+       (ARG1), (ARG2)); \
+   } \
+   else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                     >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                    >= sl_log_get_loglevel()) { \
+     SEGGER_SYSVIEW__PrintElf_U32x2((EVENT), (uint32_t)(EVENT_TYPE), \
+     (ARG1), (ARG2)); \
+   } \
+ } while (0)
+ 
+ #define SL_PRINT_ARG3_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1, ARG2, ARG3) \
+ do { \
+   if (!sli_log_init_stage2_done) { \
+     sl_log_send_arg3( \
+       (EVENT), \
+       (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+       (ARG1), (ARG2), (ARG3)); \
+   } \
+   else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                     >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                    >= sl_log_get_loglevel()) { \
+     SEGGER_SYSVIEW__PrintElf_U32x3((EVENT), (uint32_t)(EVENT_TYPE), \
+     (ARG1), (ARG2), (ARG3)); \
+   } \
+ } while (0)
+ 
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_PRINT_ARG4_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1, ARG2, ARG3, ARG4) \
+ do { \
+   if (!sli_log_init_stage2_done) { \
+     sl_log_send_arg4( \
+       (EVENT), \
+       (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+       (ARG1), (ARG2), (ARG3), (ARG4)); \
+   } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                     >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                    >= sl_log_get_loglevel()) { \
+     SEGGER_SYSVIEW__PrintElf_U32x4((EVENT), (uint32_t)(EVENT_TYPE), \
+     (ARG1), (ARG2), (ARG3), (ARG4)); \
+   } \
+ } while (0)
+ #endif
+ 
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_PRINT_ARG5_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1, ARG2, ARG3, ARG4, ARG5) \
+ do { \
+     if (!sli_log_init_stage2_done) { \
+       sl_log_send_arg5( \
+         (EVENT), \
+         (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+         (ARG1), (ARG2), (ARG3), (ARG4), (ARG5)); \
+     } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                   >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                  >= sl_log_get_loglevel()) { \
+       SEGGER_SYSVIEW__PrintElf_U32x5((EVENT), (uint32_t)(EVENT_TYPE), \
+       (ARG1), (ARG2), (ARG3), (ARG4), (ARG5)); \
+     } \
+ } while (0)
+ #endif
+ 
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_PRINT_ARG6_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) \
+ do { \
+     if (!sli_log_init_stage2_done) { \
+       sl_log_send_arg6( \
+         (EVENT), \
+         (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+         (ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6)); \
+     } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                   >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                  >= sl_log_get_loglevel()) { \
+       SEGGER_SYSVIEW__PrintElf_U32x6((EVENT), (uint32_t)(EVENT_TYPE), \
+       (ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6)); \
+     } \
+ } while (0)
+ #endif
+ 
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_PRINT_ARG7_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) \
+ do { \
+     if (!sli_log_init_stage2_done) { \
+       sl_log_send_arg7( \
+         (EVENT), \
+         (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+         (ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6), (ARG7)); \
+     } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                   >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                  >= sl_log_get_loglevel()) { \
+       SEGGER_SYSVIEW__PrintElf_U32x7((EVENT), (uint32_t)(EVENT_TYPE), \
+       (ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6), (ARG7)); \
+     } \
+ } while (0)
+ #endif
+ 
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_PRINT_ARG8_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) \
+ do { \
+     if (!sli_log_init_stage2_done) { \
+       sl_log_send_arg8( \
+         (EVENT), \
+         (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+         (ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6), (ARG7), (ARG8)); \
+     } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                   >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                  >= sl_log_get_loglevel()) { \
+       SEGGER_SYSVIEW__PrintElf_U32x8((EVENT), (uint32_t)(EVENT_TYPE), \
+       (ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6), (ARG7), (ARG8)); \
+     } \
+ } while (0)
+ #endif
+ 
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_PRINT_ARG9_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) \
+ do { \
+     if (!sli_log_init_stage2_done) { \
+       sl_log_send_arg9( \
+         (EVENT), \
+         (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+         (ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6), (ARG7), (ARG8), (ARG9)); \
+     } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                   >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                  >= sl_log_get_loglevel()) { \
+       SEGGER_SYSVIEW__PrintElf_U32x9((EVENT), (uint32_t)(EVENT_TYPE), \
+       (ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6), (ARG7), (ARG8), (ARG9)); \
+     } \
+ } while (0)
+ #endif
+ 
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_PRINT_ARG10_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) \
+ do { \
+     if (!sli_log_init_stage2_done) { \
+       sl_log_send_arg10( \
+         (EVENT), \
+         (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+         (ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6), (ARG7), (ARG8), (ARG9), (ARG10)); \
+     } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                   >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                  >= sl_log_get_loglevel()) { \
+       SEGGER_SYSVIEW__PrintElf_U32x10((EVENT), (uint32_t)(EVENT_TYPE), \
+       (ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6), (ARG7), (ARG8), (ARG9), (ARG10)); \
+     } \
+ } while (0)
+ #endif
+ 
+ #define SL_EVENT_PRINT_ARG0_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL) \
+ do { \
+     if (!sli_log_init_stage2_done) { \
+       sl_log_send_no_args( \
+         (EVENT), \
+         (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))); \
+     } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                   >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                  >= sl_log_get_loglevel()) { \
+       SEGGER_SYSVIEW_RecordVoid((unsigned int)(EVENT)); \
+     } \
+ } while (0)
+ 
+ #define SL_EVENT_PRINT_ARG1_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1) \
+ do { \
+     if (!sli_log_init_stage2_done) { \
+       sl_log_send_arg1( \
+         (EVENT), \
+         (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+         (ARG1)); \
+     } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                   >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                  >= sl_log_get_loglevel()) { \
+       SEGGER_SYSVIEW_RecordU32((unsigned int)(EVENT), (U32)(ARG1)); \
+     } \
+ } while (0)
+ 
+ #define SL_EVENT_PRINT_ARG2_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1, ARG2) \
+ do { \
+     if (!sli_log_init_stage2_done) { \
+       sl_log_send_arg2( \
+         (EVENT), \
+         (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+         (ARG1), (ARG2)); \
+     } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                   >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                  >= sl_log_get_loglevel()) { \
+       SEGGER_SYSVIEW_RecordU32x2((unsigned int)(EVENT), (U32)(ARG1), (U32)(ARG2)); \
+     } \
+ } while (0)
+ 
+ #define SL_EVENT_PRINT_ARG3_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1, ARG2, ARG3) \
+ do { \
+     if (!sli_log_init_stage2_done) { \
+       sl_log_send_arg3( \
+         (EVENT), \
+         (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+         (ARG1), (ARG2), (ARG3)); \
+     } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                   >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                  >= sl_log_get_loglevel()) { \
+       SEGGER_SYSVIEW_RecordU32x3((unsigned int)(EVENT), (U32)(ARG1), (U32)(ARG2), (U32)(ARG3)); \
+     } \
+ } while (0)
+ 
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_EVENT_PRINT_ARG4_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1, ARG2, ARG3, ARG4) \
+ do { \
+     if (!sli_log_init_stage2_done) { \
+       sl_log_send_arg4( \
+         (EVENT), \
+         (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+         (ARG1), (ARG2), (ARG3), (ARG4)); \
+     } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                   >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                  >= sl_log_get_loglevel()) { \
+       SEGGER_SYSVIEW_RecordU32x4((unsigned int)(EVENT), (U32)(ARG1), (U32)(ARG2), (U32)(ARG3), (U32)(ARG4)); \
+     } \
+ } while (0)
+ #endif
+ 
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_EVENT_PRINT_ARG5_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1, ARG2, ARG3, ARG4, ARG5) \
+ do { \
+     if (!sli_log_init_stage2_done) { \
+       sl_log_send_arg5( \
+         (EVENT), \
+         (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+         (ARG1), (ARG2), (ARG3), (ARG4), (ARG5)); \
+     } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                   >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                  >= sl_log_get_loglevel()) { \
+       SEGGER_SYSVIEW_RecordU32x5((unsigned int)(EVENT), (U32)(ARG1), (U32)(ARG2), (U32)(ARG3), (U32)(ARG4), (U32)(ARG5)); \
+     } \
+ } while (0)
+ #endif
+ 
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_EVENT_PRINT_ARG6_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) \
+ do { \
+     if (!sli_log_init_stage2_done) { \
+       sl_log_send_arg6( \
+         (EVENT), \
+         (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+         (ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6)); \
+     } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                   >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                  >= sl_log_get_loglevel()) { \
+       SEGGER_SYSVIEW_RecordU32x6((unsigned int)(EVENT), (U32)(ARG1), (U32)(ARG2), (U32)(ARG3), (U32)(ARG4), (U32)(ARG5), (U32)(ARG6)); \
+     } \
+ } while (0)
+ #endif
+ 
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_EVENT_PRINT_ARG7_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) \
+ do { \
+     if (!sli_log_init_stage2_done) { \
+       sl_log_send_arg7( \
+         (EVENT), \
+         (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+         (ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6), (ARG7)); \
+     } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                   >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                  >= sl_log_get_loglevel()) { \
+       SEGGER_SYSVIEW_RecordU32x7((unsigned int)(EVENT), (U32)(ARG1), (U32)(ARG2), (U32)(ARG3), (U32)(ARG4), (U32)(ARG5), (U32)(ARG6), (U32)(ARG7)); \
+     } \
+ } while (0)
+ #endif
+ 
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_EVENT_PRINT_ARG8_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) \
+ do { \
+     if (!sli_log_init_stage2_done) { \
+       sl_log_send_arg8( \
+         (EVENT), \
+         (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+         (ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6), (ARG7), (ARG8)); \
+     } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                   >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                  >= sl_log_get_loglevel()) { \
+       SEGGER_SYSVIEW_RecordU32x8((unsigned int)(EVENT), (U32)(ARG1), (U32)(ARG2), (U32)(ARG3), (U32)(ARG4), (U32)(ARG5), (U32)(ARG6), (U32)(ARG7), (U32)(ARG8)); \
+     } \
+ } while (0)
+ #endif
+ 
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_EVENT_PRINT_ARG9_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) \
+ do { \
+     if (!sli_log_init_stage2_done) { \
+       sl_log_send_arg9( \
+         (EVENT), \
+         (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+         (ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6), (ARG7), (ARG8), (ARG9)); \
+     } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                   >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                  >= sl_log_get_loglevel()) { \
+       SEGGER_SYSVIEW_RecordU32x9((unsigned int)(EVENT), (U32)(ARG1), (U32)(ARG2), (U32)(ARG3), (U32)(ARG4), (U32)(ARG5), (U32)(ARG6), (U32)(ARG7), (U32)(ARG8), (U32)(ARG9)); \
+     } \
+ } while (0)
+ #endif
+ 
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_EVENT_PRINT_ARG10_IMPL(EVENT, EVENT_TYPE, LOG_LEVEL, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) \
+ do { \
+     if (!sli_log_init_stage2_done) { \
+       sl_log_send_arg10( \
+         (EVENT), \
+         (uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE)), \
+         (ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6), (ARG7), (ARG8), (ARG9), (ARG10)); \
+     } else if (((((uint8_t)((LOG_LEVEL << 1) | (EVENT_TYPE))) \
+                   >> SL_LOG_FLAGS_POS) & SL_LOG_FLAGS_LEVEL_MASK) \
+                  >= sl_log_get_loglevel()) { \
+       SEGGER_SYSVIEW_RecordU32x10((unsigned int)(EVENT), (U32)(ARG1), (U32)(ARG2), (U32)(ARG3), (U32)(ARG4), (U32)(ARG5), (U32)(ARG6), (U32)(ARG7), (U32)(ARG8), (U32)(ARG9), (U32)(ARG10)); \
+     } \
+ } while (0)
+ #endif
+ 
+ #if (SL_LOG_CONFIG_LEVEL_COMPILE_TIME <= SL_LOG_CONFIG_LEVEL_DEBUG)
+ /**
+  * @brief Debug log with no arguments — ring buffer until stage2, then
+  *        SEGGER_SYSVIEW__PrintElf
+  */
+ #define SL_PRINT_ARG0_DBG(EVENT, EVENT_TYPE) SL_PRINT_ARG0_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG)
+ #define SL_PRINT_ARG1_DBG(EVENT, EVENT_TYPE, ARG1) SL_PRINT_ARG1_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1)
+ #define SL_PRINT_ARG2_DBG(EVENT, EVENT_TYPE, ARG1, ARG2) SL_PRINT_ARG2_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1, ARG2)
+ #define SL_PRINT_ARG3_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_PRINT_ARG3_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_PRINT_ARG4_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_PRINT_ARG4_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_PRINT_ARG5_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_PRINT_ARG5_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_PRINT_ARG6_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_PRINT_ARG6_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_PRINT_ARG7_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_PRINT_ARG7_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_PRINT_ARG8_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_PRINT_ARG8_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_PRINT_ARG9_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_PRINT_ARG9_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_PRINT_ARG10_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_PRINT_ARG10_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #else
+ #define SL_PRINT_ARG0_DBG(EVENT, EVENT_TYPE) SL_PRINT_VOID_ARG0_DBG(EVENT, EVENT_TYPE)
+ #define SL_PRINT_ARG1_DBG(EVENT, EVENT_TYPE, ARG1) SL_PRINT_VOID_ARG1_DBG(EVENT, EVENT_TYPE, ARG1)
+ #define SL_PRINT_ARG2_DBG(EVENT, EVENT_TYPE, ARG1, ARG2) SL_PRINT_VOID_ARG2_DBG(EVENT, EVENT_TYPE, ARG1, ARG2)
+ #define SL_PRINT_ARG3_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_PRINT_VOID_ARG3_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_PRINT_ARG4_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_PRINT_VOID_ARG4_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_PRINT_ARG5_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_PRINT_VOID_ARG5_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_PRINT_ARG6_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_PRINT_VOID_ARG6_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_PRINT_ARG7_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_PRINT_VOID_ARG7_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_PRINT_ARG8_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_PRINT_VOID_ARG8_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_PRINT_ARG9_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_PRINT_VOID_ARG9_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_PRINT_ARG10_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_PRINT_VOID_ARG10_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #endif
+ 
+ #if (SL_LOG_CONFIG_LEVEL_COMPILE_TIME <= SL_LOG_CONFIG_LEVEL_INFO)
+ /**
+  * @brief Info log — ring buffer until stage2, then SEGGER_SYSVIEW__PrintElf
+  */
+ #define SL_PRINT_ARG0_INFO(EVENT, EVENT_TYPE) SL_PRINT_ARG0_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO)
+ #define SL_PRINT_ARG1_INFO(EVENT, EVENT_TYPE, ARG1) SL_PRINT_ARG1_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1)
+ #define SL_PRINT_ARG2_INFO(EVENT, EVENT_TYPE, ARG1, ARG2) SL_PRINT_ARG2_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1, ARG2)
+ #define SL_PRINT_ARG3_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_PRINT_ARG3_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_PRINT_ARG4_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_PRINT_ARG4_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_PRINT_ARG5_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_PRINT_ARG5_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_PRINT_ARG6_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_PRINT_ARG6_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_PRINT_ARG7_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_PRINT_ARG7_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_PRINT_ARG8_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_PRINT_ARG8_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_PRINT_ARG9_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_PRINT_ARG9_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_PRINT_ARG10_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_PRINT_ARG10_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #else
+ #define SL_PRINT_ARG0_INFO(EVENT, EVENT_TYPE) SL_PRINT_VOID_ARG0_INFO(EVENT, EVENT_TYPE)
+ #define SL_PRINT_ARG1_INFO(EVENT, EVENT_TYPE, ARG1) SL_PRINT_VOID_ARG1_INFO(EVENT, EVENT_TYPE, ARG1)
+ #define SL_PRINT_ARG2_INFO(EVENT, EVENT_TYPE, ARG1, ARG2) SL_PRINT_VOID_ARG2_INFO(EVENT, EVENT_TYPE, ARG1, ARG2)
+ #define SL_PRINT_ARG3_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_PRINT_VOID_ARG3_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_PRINT_ARG4_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_PRINT_VOID_ARG4_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_PRINT_ARG5_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_PRINT_VOID_ARG5_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_PRINT_ARG6_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_PRINT_VOID_ARG6_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_PRINT_ARG7_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_PRINT_VOID_ARG7_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_PRINT_ARG8_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_PRINT_VOID_ARG8_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_PRINT_ARG9_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_PRINT_VOID_ARG9_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_PRINT_ARG10_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_PRINT_VOID_ARG10_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #endif
+ 
+ #if (SL_LOG_CONFIG_LEVEL_COMPILE_TIME <= SL_LOG_CONFIG_LEVEL_WARN)
+ /**
+  * @brief Warning log — ring buffer until stage2, then SEGGER_SYSVIEW__PrintElf
+  */
+ #define SL_PRINT_ARG0_WRN(EVENT, EVENT_TYPE) SL_PRINT_ARG0_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN)
+ #define SL_PRINT_ARG1_WRN(EVENT, EVENT_TYPE, ARG1) SL_PRINT_ARG1_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1)
+ #define SL_PRINT_ARG2_WRN(EVENT, EVENT_TYPE, ARG1, ARG2) SL_PRINT_ARG2_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1, ARG2)
+ #define SL_PRINT_ARG3_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_PRINT_ARG3_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_PRINT_ARG4_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_PRINT_ARG4_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_PRINT_ARG5_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_PRINT_ARG5_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_PRINT_ARG6_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_PRINT_ARG6_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_PRINT_ARG7_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_PRINT_ARG7_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_PRINT_ARG8_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_PRINT_ARG8_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_PRINT_ARG9_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_PRINT_ARG9_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_PRINT_ARG10_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_PRINT_ARG10_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #else
+ #define SL_PRINT_ARG0_WRN(EVENT, EVENT_TYPE) SL_PRINT_VOID_ARG0_WRN(EVENT, EVENT_TYPE)
+ #define SL_PRINT_ARG1_WRN(EVENT, EVENT_TYPE, ARG1) SL_PRINT_VOID_ARG1_WRN(EVENT, EVENT_TYPE, ARG1)
+ #define SL_PRINT_ARG2_WRN(EVENT, EVENT_TYPE, ARG1, ARG2) SL_PRINT_VOID_ARG2_WRN(EVENT, EVENT_TYPE, ARG1, ARG2)
+ #define SL_PRINT_ARG3_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_PRINT_VOID_ARG3_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_PRINT_ARG4_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_PRINT_VOID_ARG4_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_PRINT_ARG5_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_PRINT_VOID_ARG5_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_PRINT_ARG6_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_PRINT_VOID_ARG6_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_PRINT_ARG7_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_PRINT_VOID_ARG7_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_PRINT_ARG8_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_PRINT_VOID_ARG8_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_PRINT_ARG9_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_PRINT_VOID_ARG9_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_PRINT_ARG10_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_PRINT_VOID_ARG10_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #endif
+ 
+ #if (SL_LOG_CONFIG_LEVEL_COMPILE_TIME <= SL_LOG_CONFIG_LEVEL_ERROR)
+ /**
+  * @brief Error log — ring buffer until stage2, then SEGGER_SYSVIEW__PrintElf
+  */
+ #define SL_PRINT_ARG0_ERR(EVENT, EVENT_TYPE) SL_PRINT_ARG0_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR)
+ #define SL_PRINT_ARG1_ERR(EVENT, EVENT_TYPE, ARG1) SL_PRINT_ARG1_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1)
+ #define SL_PRINT_ARG2_ERR(EVENT, EVENT_TYPE, ARG1, ARG2) SL_PRINT_ARG2_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1, ARG2)
+ #define SL_PRINT_ARG3_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_PRINT_ARG3_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_PRINT_ARG4_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_PRINT_ARG4_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_PRINT_ARG5_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_PRINT_ARG5_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_PRINT_ARG6_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_PRINT_ARG6_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_PRINT_ARG7_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_PRINT_ARG7_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_PRINT_ARG8_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_PRINT_ARG8_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_PRINT_ARG9_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_PRINT_ARG9_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_PRINT_ARG10_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_PRINT_ARG10_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #else
+ #define SL_PRINT_ARG0_ERR(EVENT, EVENT_TYPE) SL_PRINT_VOID_ARG0_ERR(EVENT, EVENT_TYPE)
+ #define SL_PRINT_ARG1_ERR(EVENT, EVENT_TYPE, ARG1) SL_PRINT_VOID_ARG1_ERR(EVENT, EVENT_TYPE, ARG1)
+ #define SL_PRINT_ARG2_ERR(EVENT, EVENT_TYPE, ARG1, ARG2) SL_PRINT_VOID_ARG2_ERR(EVENT, EVENT_TYPE, ARG1, ARG2)
+ #define SL_PRINT_ARG3_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_PRINT_VOID_ARG3_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_PRINT_ARG4_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_PRINT_VOID_ARG4_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_PRINT_ARG5_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_PRINT_VOID_ARG5_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_PRINT_ARG6_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_PRINT_VOID_ARG6_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_PRINT_ARG7_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_PRINT_VOID_ARG7_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_PRINT_ARG8_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_PRINT_VOID_ARG8_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_PRINT_ARG9_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_PRINT_VOID_ARG9_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_PRINT_ARG10_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_PRINT_VOID_ARG10_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #endif
+ 
+ #if (SL_LOG_CONFIG_LEVEL_COMPILE_TIME <= SL_LOG_CONFIG_LEVEL_CRASH)
+ /**
+  * @brief Crash log — ring buffer until stage2, then SEGGER_SYSVIEW__PrintElf
+  */
+ #define SL_PRINT_ARG0_CRASH(EVENT, EVENT_TYPE) SL_PRINT_ARG0_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH)
+ #define SL_PRINT_ARG1_CRASH(EVENT, EVENT_TYPE, ARG1) SL_PRINT_ARG1_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1)
+ #define SL_PRINT_ARG2_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2) SL_PRINT_ARG2_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1, ARG2)
+ #define SL_PRINT_ARG3_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_PRINT_ARG3_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_PRINT_ARG4_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_PRINT_ARG4_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_PRINT_ARG5_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_PRINT_ARG5_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_PRINT_ARG6_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_PRINT_ARG6_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_PRINT_ARG7_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_PRINT_ARG7_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_PRINT_ARG8_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_PRINT_ARG8_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_PRINT_ARG9_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_PRINT_ARG9_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_PRINT_ARG10_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_PRINT_ARG10_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #else
+ #define SL_PRINT_ARG0_CRASH(EVENT, EVENT_TYPE) SL_PRINT_VOID_ARG0_CRASH(EVENT, EVENT_TYPE)
+ #define SL_PRINT_ARG1_CRASH(EVENT, EVENT_TYPE, ARG1) SL_PRINT_VOID_ARG1_CRASH(EVENT, EVENT_TYPE, ARG1)
+ #define SL_PRINT_ARG2_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2) SL_PRINT_VOID_ARG2_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2)
+ #define SL_PRINT_ARG3_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_PRINT_VOID_ARG3_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_PRINT_ARG4_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_PRINT_VOID_ARG4_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_PRINT_ARG5_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_PRINT_VOID_ARG5_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_PRINT_ARG6_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_PRINT_VOID_ARG6_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_PRINT_ARG7_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_PRINT_VOID_ARG7_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_PRINT_ARG8_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_PRINT_VOID_ARG8_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_PRINT_ARG9_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_PRINT_VOID_ARG9_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_PRINT_ARG10_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_PRINT_VOID_ARG10_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #endif
+ 
+ #if (SL_LOG_CONFIG_LEVEL_COMPILE_TIME <= SL_LOG_CONFIG_LEVEL_DEBUG)
+ /**
+  * @brief Debug event log — ring buffer until stage2, then RecordVoid / RecordU32xN
+  */
+ #define SL_EVENT_PRINT_ARG0_DBG(EVENT, EVENT_TYPE) SL_EVENT_PRINT_ARG0_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG)
+ #define SL_EVENT_PRINT_ARG1_DBG(EVENT, EVENT_TYPE, ARG1) SL_EVENT_PRINT_ARG1_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1)
+ #define SL_EVENT_PRINT_ARG2_DBG(EVENT, EVENT_TYPE, ARG1, ARG2) SL_EVENT_PRINT_ARG2_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1, ARG2)
+ #define SL_EVENT_PRINT_ARG3_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_EVENT_PRINT_ARG3_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_EVENT_PRINT_ARG4_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_EVENT_PRINT_ARG4_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_EVENT_PRINT_ARG5_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_EVENT_PRINT_ARG5_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_EVENT_PRINT_ARG6_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_EVENT_PRINT_ARG6_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_EVENT_PRINT_ARG7_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_EVENT_PRINT_ARG7_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_EVENT_PRINT_ARG8_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_EVENT_PRINT_ARG8_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_EVENT_PRINT_ARG9_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_EVENT_PRINT_ARG9_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_EVENT_PRINT_ARG10_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_EVENT_PRINT_ARG10_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_DEBUG, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #else
+ #define SL_EVENT_PRINT_ARG0_DBG(EVENT, EVENT_TYPE) SL_PRINT_VOID_ARG0_DBG(EVENT, EVENT_TYPE)
+ #define SL_EVENT_PRINT_ARG1_DBG(EVENT, EVENT_TYPE, ARG1) SL_PRINT_VOID_ARG1_DBG(EVENT, EVENT_TYPE, ARG1)
+ #define SL_EVENT_PRINT_ARG2_DBG(EVENT, EVENT_TYPE, ARG1, ARG2) SL_PRINT_VOID_ARG2_DBG(EVENT, EVENT_TYPE, ARG1, ARG2)
+ #define SL_EVENT_PRINT_ARG3_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_PRINT_VOID_ARG3_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_EVENT_PRINT_ARG4_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_PRINT_VOID_ARG4_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_EVENT_PRINT_ARG5_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_PRINT_VOID_ARG5_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_EVENT_PRINT_ARG6_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_PRINT_VOID_ARG6_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_EVENT_PRINT_ARG7_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_PRINT_VOID_ARG7_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_EVENT_PRINT_ARG8_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_PRINT_VOID_ARG8_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_EVENT_PRINT_ARG9_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_PRINT_VOID_ARG9_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_EVENT_PRINT_ARG10_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_PRINT_VOID_ARG10_DBG(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #endif
+ 
+ #if (SL_LOG_CONFIG_LEVEL_COMPILE_TIME <= SL_LOG_CONFIG_LEVEL_INFO)
+ /**
+  * @brief Info event log — ring buffer until stage2, then RecordVoid / RecordU32xN
+  */
+ #define SL_EVENT_PRINT_ARG0_INFO(EVENT, EVENT_TYPE) SL_EVENT_PRINT_ARG0_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO)
+ #define SL_EVENT_PRINT_ARG1_INFO(EVENT, EVENT_TYPE, ARG1) SL_EVENT_PRINT_ARG1_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1)
+ #define SL_EVENT_PRINT_ARG2_INFO(EVENT, EVENT_TYPE, ARG1, ARG2) SL_EVENT_PRINT_ARG2_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1, ARG2)
+ #define SL_EVENT_PRINT_ARG3_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_EVENT_PRINT_ARG3_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_EVENT_PRINT_ARG4_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_EVENT_PRINT_ARG4_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_EVENT_PRINT_ARG5_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_EVENT_PRINT_ARG5_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_EVENT_PRINT_ARG6_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_EVENT_PRINT_ARG6_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_EVENT_PRINT_ARG7_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_EVENT_PRINT_ARG7_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_EVENT_PRINT_ARG8_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_EVENT_PRINT_ARG8_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_EVENT_PRINT_ARG9_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_EVENT_PRINT_ARG9_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_EVENT_PRINT_ARG10_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_EVENT_PRINT_ARG10_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_INFO, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #else
+ #define SL_EVENT_PRINT_ARG0_INFO(EVENT, EVENT_TYPE) SL_PRINT_VOID_ARG0_INFO(EVENT, EVENT_TYPE)
+ #define SL_EVENT_PRINT_ARG1_INFO(EVENT, EVENT_TYPE, ARG1) SL_PRINT_VOID_ARG1_INFO(EVENT, EVENT_TYPE, ARG1)
+ #define SL_EVENT_PRINT_ARG2_INFO(EVENT, EVENT_TYPE, ARG1, ARG2) SL_PRINT_VOID_ARG2_INFO(EVENT, EVENT_TYPE, ARG1, ARG2)
+ #define SL_EVENT_PRINT_ARG3_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_PRINT_VOID_ARG3_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_EVENT_PRINT_ARG4_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_PRINT_VOID_ARG4_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_EVENT_PRINT_ARG5_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_PRINT_VOID_ARG5_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_EVENT_PRINT_ARG6_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_PRINT_VOID_ARG6_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_EVENT_PRINT_ARG7_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_PRINT_VOID_ARG7_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_EVENT_PRINT_ARG8_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_PRINT_VOID_ARG8_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_EVENT_PRINT_ARG9_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_PRINT_VOID_ARG9_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_EVENT_PRINT_ARG10_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_PRINT_VOID_ARG10_INFO(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #endif
+ 
+ #if (SL_LOG_CONFIG_LEVEL_COMPILE_TIME <= SL_LOG_CONFIG_LEVEL_WARN)
+ /**
+  * @brief Warning event log — ring buffer until stage2, then RecordVoid / RecordU32xN
+  */
+ #define SL_EVENT_PRINT_ARG0_WRN(EVENT, EVENT_TYPE) SL_EVENT_PRINT_ARG0_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN)
+ #define SL_EVENT_PRINT_ARG1_WRN(EVENT, EVENT_TYPE, ARG1) SL_EVENT_PRINT_ARG1_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1)
+ #define SL_EVENT_PRINT_ARG2_WRN(EVENT, EVENT_TYPE, ARG1, ARG2) SL_EVENT_PRINT_ARG2_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1, ARG2)
+ #define SL_EVENT_PRINT_ARG3_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_EVENT_PRINT_ARG3_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_EVENT_PRINT_ARG4_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_EVENT_PRINT_ARG4_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_EVENT_PRINT_ARG5_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_EVENT_PRINT_ARG5_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_EVENT_PRINT_ARG6_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_EVENT_PRINT_ARG6_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_EVENT_PRINT_ARG7_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_EVENT_PRINT_ARG7_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_EVENT_PRINT_ARG8_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_EVENT_PRINT_ARG8_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_EVENT_PRINT_ARG9_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_EVENT_PRINT_ARG9_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_EVENT_PRINT_ARG10_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_EVENT_PRINT_ARG10_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_WARN, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #else
+ #define SL_EVENT_PRINT_ARG0_WRN(EVENT, EVENT_TYPE) SL_PRINT_VOID_ARG0_WRN(EVENT, EVENT_TYPE)
+ #define SL_EVENT_PRINT_ARG1_WRN(EVENT, EVENT_TYPE, ARG1) SL_PRINT_VOID_ARG1_WRN(EVENT, EVENT_TYPE, ARG1)
+ #define SL_EVENT_PRINT_ARG2_WRN(EVENT, EVENT_TYPE, ARG1, ARG2) SL_PRINT_VOID_ARG2_WRN(EVENT, EVENT_TYPE, ARG1, ARG2)
+ #define SL_EVENT_PRINT_ARG3_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_PRINT_VOID_ARG3_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_EVENT_PRINT_ARG4_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_PRINT_VOID_ARG4_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_EVENT_PRINT_ARG5_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_PRINT_VOID_ARG5_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_EVENT_PRINT_ARG6_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_PRINT_VOID_ARG6_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_EVENT_PRINT_ARG7_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_PRINT_VOID_ARG7_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_EVENT_PRINT_ARG8_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_PRINT_VOID_ARG8_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_EVENT_PRINT_ARG9_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_PRINT_VOID_ARG9_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_EVENT_PRINT_ARG10_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_PRINT_VOID_ARG10_WRN(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #endif
+ 
+ #if (SL_LOG_CONFIG_LEVEL_COMPILE_TIME <= SL_LOG_CONFIG_LEVEL_ERROR)
+ /**
+  * @brief Error event log — ring buffer until stage2, then RecordVoid / RecordU32xN
+  */
+ #define SL_EVENT_PRINT_ARG0_ERR(EVENT, EVENT_TYPE) SL_EVENT_PRINT_ARG0_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR)
+ #define SL_EVENT_PRINT_ARG1_ERR(EVENT, EVENT_TYPE, ARG1) SL_EVENT_PRINT_ARG1_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1)
+ #define SL_EVENT_PRINT_ARG2_ERR(EVENT, EVENT_TYPE, ARG1, ARG2) SL_EVENT_PRINT_ARG2_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1, ARG2)
+ #define SL_EVENT_PRINT_ARG3_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_EVENT_PRINT_ARG3_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_EVENT_PRINT_ARG4_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_EVENT_PRINT_ARG4_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_EVENT_PRINT_ARG5_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_EVENT_PRINT_ARG5_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_EVENT_PRINT_ARG6_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_EVENT_PRINT_ARG6_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_EVENT_PRINT_ARG7_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_EVENT_PRINT_ARG7_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_EVENT_PRINT_ARG8_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_EVENT_PRINT_ARG8_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_EVENT_PRINT_ARG9_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_EVENT_PRINT_ARG9_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_EVENT_PRINT_ARG10_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_EVENT_PRINT_ARG10_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_ERROR, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #else
+ #define SL_EVENT_PRINT_ARG0_ERR(EVENT, EVENT_TYPE) SL_PRINT_VOID_ARG0_ERR(EVENT, EVENT_TYPE)
+ #define SL_EVENT_PRINT_ARG1_ERR(EVENT, EVENT_TYPE, ARG1) SL_PRINT_VOID_ARG1_ERR(EVENT, EVENT_TYPE, ARG1)
+ #define SL_EVENT_PRINT_ARG2_ERR(EVENT, EVENT_TYPE, ARG1, ARG2) SL_PRINT_VOID_ARG2_ERR(EVENT, EVENT_TYPE, ARG1, ARG2)
+ #define SL_EVENT_PRINT_ARG3_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_PRINT_VOID_ARG3_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_EVENT_PRINT_ARG4_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_PRINT_VOID_ARG4_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_EVENT_PRINT_ARG5_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_PRINT_VOID_ARG5_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_EVENT_PRINT_ARG6_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_PRINT_VOID_ARG6_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_EVENT_PRINT_ARG7_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_PRINT_VOID_ARG7_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_EVENT_PRINT_ARG8_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_PRINT_VOID_ARG8_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_EVENT_PRINT_ARG9_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_PRINT_VOID_ARG9_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_EVENT_PRINT_ARG10_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_PRINT_VOID_ARG10_ERR(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #endif
+
+ #if (SL_LOG_CONFIG_LEVEL_COMPILE_TIME <= SL_LOG_CONFIG_LEVEL_CRASH)
+ /**
+  * @brief Crash event log — ring buffer until stage2, then RecordVoid / RecordU32xN
+  */
+ #define SL_EVENT_PRINT_ARG0_CRASH(EVENT, EVENT_TYPE) SL_EVENT_PRINT_ARG0_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH)
+ #define SL_EVENT_PRINT_ARG1_CRASH(EVENT, EVENT_TYPE, ARG1) SL_EVENT_PRINT_ARG1_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1)
+ #define SL_EVENT_PRINT_ARG2_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2) SL_EVENT_PRINT_ARG2_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1, ARG2)
+ #define SL_EVENT_PRINT_ARG3_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_EVENT_PRINT_ARG3_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_EVENT_PRINT_ARG4_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_EVENT_PRINT_ARG4_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_EVENT_PRINT_ARG5_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_EVENT_PRINT_ARG5_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_EVENT_PRINT_ARG6_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_EVENT_PRINT_ARG6_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_EVENT_PRINT_ARG7_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_EVENT_PRINT_ARG7_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_EVENT_PRINT_ARG8_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_EVENT_PRINT_ARG8_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_EVENT_PRINT_ARG9_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_EVENT_PRINT_ARG9_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_EVENT_PRINT_ARG10_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_EVENT_PRINT_ARG10_IMPL(EVENT, EVENT_TYPE, SL_LOG_CONFIG_LEVEL_CRASH, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #else
+ #define SL_EVENT_PRINT_ARG0_CRASH(EVENT, EVENT_TYPE) SL_PRINT_VOID_ARG0_CRASH(EVENT, EVENT_TYPE)
+ #define SL_EVENT_PRINT_ARG1_CRASH(EVENT, EVENT_TYPE, ARG1) SL_PRINT_VOID_ARG1_CRASH(EVENT, EVENT_TYPE, ARG1)
+ #define SL_EVENT_PRINT_ARG2_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2) SL_PRINT_VOID_ARG2_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2)
+ #define SL_EVENT_PRINT_ARG3_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3) SL_PRINT_VOID_ARG3_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3)
+ #if (SL_LOG_CONFIG_ARG >= 4)
+ #define SL_EVENT_PRINT_ARG4_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4) SL_PRINT_VOID_ARG4_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 5)
+ #define SL_EVENT_PRINT_ARG5_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5) SL_PRINT_VOID_ARG5_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 6)
+ #define SL_EVENT_PRINT_ARG6_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) SL_PRINT_VOID_ARG6_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 7)
+ #define SL_EVENT_PRINT_ARG7_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) SL_PRINT_VOID_ARG7_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 8)
+ #define SL_EVENT_PRINT_ARG8_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) SL_PRINT_VOID_ARG8_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 9)
+ #define SL_EVENT_PRINT_ARG9_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9) SL_PRINT_VOID_ARG9_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)
+ #endif
+ #if (SL_LOG_CONFIG_ARG >= 10)
+ #define SL_EVENT_PRINT_ARG10_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10) SL_PRINT_VOID_ARG10_CRASH(EVENT, EVENT_TYPE, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9, ARG10)
+ #endif
+ #endif
+
+ #endif /* SL_LOG_SYSTEMVIEW_HELPER_H */

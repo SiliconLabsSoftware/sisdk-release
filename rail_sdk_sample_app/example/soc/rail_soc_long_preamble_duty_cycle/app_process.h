@@ -48,10 +48,7 @@
 // -----------------------------------------------------------------------------
 
 /*******************************************************************************
- * The function is used for Application logic.
- *
- * The function is used for Application logic.
- * It is called infinitely.
+ * Application state machine, called infinitely
  ******************************************************************************/
 void app_process_action(void);
 

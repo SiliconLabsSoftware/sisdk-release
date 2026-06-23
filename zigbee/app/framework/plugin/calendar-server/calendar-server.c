@@ -844,10 +844,10 @@ void sl_zigbee_af_calendar_server_cancel_calendar_message(sl_802154_short_addr_t
   sl_status_t status;
 
   if (SL_ZIGBEE_AF_PLUGIN_CALENDAR_COMMON_TOTAL_CALENDARS <= calendarIndex) {
-    sl_zigbee_af_calendar_cluster_println("%s%s%s",
-                                          "Error: ",
-                                          "Cannot send cancel calendar: ",
-                                          "invalid calendar index");
+    sl_zigbee_af_cli_println("%s%s%s",
+                             "Error: ",
+                             "Cannot send cancel calendar: ",
+                             "invalid calendar index");
     return;
   }
 
@@ -858,10 +858,10 @@ void sl_zigbee_af_calendar_server_cancel_calendar_message(sl_802154_short_addr_t
   sl_zigbee_af_get_command_aps_frame()->options |= SL_ZIGBEE_APS_OPTION_SOURCE_EUI64;
   status = sl_zigbee_af_send_command_unicast(SL_ZIGBEE_OUTGOING_DIRECT, nodeId);
   if (status != SL_STATUS_OK) {
-    sl_zigbee_af_calendar_cluster_println("%s%s0x%02X",
-                                          "Error: ",
-                                          "Cannot publish calendar: ",
-                                          status);
+    sl_zigbee_af_cli_println("%s%s0x%02X",
+                             "Error: ",
+                             "Cannot publish calendar: ",
+                             status);
   } else {
     cancelCalendarInfo.providerId = calendars[calendarIndex].providerId;
     cancelCalendarInfo.issuerEventId = calendars[calendarIndex].issuerEventId;

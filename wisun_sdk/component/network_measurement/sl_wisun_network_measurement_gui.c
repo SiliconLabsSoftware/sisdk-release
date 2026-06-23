@@ -45,7 +45,6 @@
 #include "sl_display.h"
 #include "sl_gui.h"
 #include "sl_string.h"
-#include "socket/socket.h"
 #include "sl_wisun_ping.h"
 #include "silabs_wisun_logo.h"
 // -----------------------------------------------------------------------------
@@ -73,88 +72,8 @@
 /// Max network size count
 #define MAX_NETWORK_SIZE_COUNT          (6U)
 
-/// TX remaining string "exceeded"
-#define TX_REMAINING_EXCEEDED_STR       "[Exceeded]"
-
-/// TX remaining string "remaining"
-#define TX_REMAINING_REMAINING_STR      "[Remaining]"
-
 /// TX remaining string "not available"
 #define TX_REMAINING_NOT_AVAILABLE_STR  "[Not available]"
-
-/// Print Statistic format string
-#define PRINT_FULL_STAT_FORMAT_STR \
-  "[%s]\n\
-Packets:       %u\n\
-Packet length: %u\n\
-Lost packets:  %u\n\
-Packet loss:   %u%%\n\
-Min. Time[ms]: %lu\n\
-Max. Time[ms]: %lu\n\
-Avg. Time[ms]: %lu\n\
-lifetime:      %lu\n\
-mac_tx_count:  %lu\n\
-mac_tx_fail:   %lu\n\
-mac_tx_ms_cnt: %lu\n\
-mac_tx_ms_fail:%lu\n\
-rpl_rank:      %u\n\
-etx:           %u\n\
-rsl_out:       %u\n\
-rsl_in:        %u\n"
-
-/// Print neighbor statistic format string
-#define PRINT_NEIGHBOR_STAT_FORMAT_STR \
-  "[%s]\n\
-lifetime:      %lu\n\
-mac_tx_count:  %lu\n\
-mac_tx_fail:   %lu\n\
-mac_tx_ms_cnt: %lu\n\
-mac_tx_ms_fail:%lu\n\
-rpl_rank:      %u\n\
-etx:           %u\n\
-rsl_out:       %u\n\
-rsl_in:        %u\n"
-
-/// Print ping statistic format string
-#define PRINT_PING_STAT_FORMAT_STR \
-  "[%s]\n\
-Packets:       %u\n\
-Packet length: %u\n\
-Lost packets:  %u\n\
-Packet loss:   %u%%\n\
-Min. Time[ms]: %lu\n\
-Max. Time[ms]: %lu\n\
-Avg. Time[ms]: %lu\n"
-
-/// Print Node Info format string for FAN1.0
-#define PRINT_FAN10_NODE_INFO_FORMAT_STR \
-  "Network Name:\n%s\n\
-Nw. size: %s(%d)\n\
-TX Power: %d\n\
-Profile: %s\n\
-Reg. domain: %s(%d)\n\
-Op. class: %d\n\
-Op. mode: 0x%x\n\
-Global:\n[%s]\n\
-Border Router:\n[%s]\n\
-Primary Parent:\n[%s]\n\
-Secondary Parent:\n[%s]\n\
-TX budget: %lums\n%s\n"
-
-/// Print Node Info format string for FAN1.1
-#define PRINT_FAN11_NODE_INFO_FORMAT_STR \
-  "Network Name:\n%s\n\
-Nw. size: %s(%d)\n\
-TX Power: %d\n\
-Profile: %s\n\
-Reg. domain: %s(%d)\n\
-Ch. Plan ID: %d\n\
-Phy Mode ID: %d\n\
-Global:\n[%s]\n\
-Border Router:\n[%s]\n\
-Primary Parent:\n[%s]\n\
-Secondary Parent:\n[%s]\n\
-TX budget: %lums\n%s\n"
 
 /// Network Measurement settings structure
 typedef struct sl_wisun_nwm_setting {
@@ -239,7 +158,7 @@ void sli_wisun_nwm_logo_form(void *args)
   }
 
   sl_display_draw_string_on_line(logo_form_args->join_state_str, 10, GLIB_ALIGN_CENTER, 0, 0, false);
-  snprintf(buff, LCD_STRING_LINE_LEN, "(%ld)", logo_form_args->join_state);
+  snprintf(buff, LCD_STRING_LINE_LEN, "(%"PRIu32")", logo_form_args->join_state);
   sl_display_draw_string_on_line(buff, 11, GLIB_ALIGN_CENTER, 0, 0, false);
 }
 
@@ -403,7 +322,18 @@ static void _node_info_form(void *args)
 
   if (node_info.settings.phy.type == SL_WISUN_PHY_CONFIG_FAN10) {
     snprintf(_str_buff, STR_BUFF_SIZE,
-             PRINT_FAN10_NODE_INFO_FORMAT_STR,
+             "Network Name:\n%s\n"
+             "Nw. size: %s(%d)\n"
+             "TX Power: %d\n"
+             "Profile: %s\n"
+             "Reg. domain: %s(%d)\n"
+             "Op. class: %d\n"
+             "Op. mode: 0x%x\n"
+             "Global:\n[%s]\n"
+             "Border Router:\n[%s]\n"
+             "Primary Parent:\n[%s]\n"
+             "Secondary Parent:\n[%s]\n"
+             "TX budget: %lums\n%s\n",
              node_info.settings.network_name,
              app_wisun_trace_util_nw_size_to_str(node_info.settings.network_size),
              node_info.settings.network_size,
@@ -421,7 +351,18 @@ static void _node_info_form(void *args)
              (valid == SL_STATUS_OK ? _tx_remaining_budget(tx_remaining_budget) : TX_REMAINING_NOT_AVAILABLE_STR));
   } else if (node_info.settings.phy.type == SL_WISUN_PHY_CONFIG_FAN11) {
     snprintf(_str_buff, STR_BUFF_SIZE,
-             PRINT_FAN11_NODE_INFO_FORMAT_STR,
+             "Network Name:\n%s\n"
+             "Nw. size: %s(%d)\n"
+             "TX Power: %d\n"
+             "Profile: %s\n"
+             "Reg. domain: %s(%d)\n"
+             "Ch. Plan ID: %d\n"
+             "Phy Mode ID: %d\n"
+             "Global:\n[%s]\n"
+             "Border Router:\n[%s]\n"
+             "Primary Parent:\n[%s]\n"
+             "Secondary Parent:\n[%s]\n"
+             "TX budget: %"PRIu32"ms\n%s\n",
              node_info.settings.network_name,
              app_wisun_trace_util_nw_size_to_str(node_info.settings.network_size),
              node_info.settings.network_size,
@@ -435,10 +376,10 @@ static void _node_info_form(void *args)
              ip_str_br,
              ip_str_pp,
              ip_str_sp,
-             (valid == SL_STATUS_OK ? tx_remaining_budget : 0UL),
+             (valid == SL_STATUS_OK ? tx_remaining_budget : 0),
              (valid == SL_STATUS_OK ? _tx_remaining_budget(tx_remaining_budget) : TX_REMAINING_NOT_AVAILABLE_STR));
   } else {
-    snprintf(_str_buff, STR_BUFF_SIZE, "Wrong phy profile: %lu", node_info.settings.phy.type);
+    snprintf(_str_buff, STR_BUFF_SIZE, "Wrong phy profile: %"PRIu32"", node_info.settings.phy.type);
   }
   sl_gui_textbox_set(_str_buff);
   sl_gui_textbox_update();
@@ -465,7 +406,17 @@ static void _set_nbinfo_txtbox(void *args)
 
   sl_gui_textbox_init();
 
-  snprintf(_str_buff, STR_BUFF_SIZE, PRINT_NEIGHBOR_STAT_FORMAT_STR,
+  snprintf(_str_buff, STR_BUFF_SIZE,
+           "[%s]\n"
+           "lifetime:      %"PRIu32"\n"
+           "mac_tx_count:  %"PRIu32"\n"
+           "mac_tx_fail:   %"PRIu32"\n"
+           "mac_tx_ms_cnt: %"PRIu32"\n"
+           "mac_tx_ms_fail:%"PRIu32"\n"
+           "rpl_rank:      %u\n"
+           "etx:           %u\n"
+           "rsl_out:       %u\n"
+           "rsl_in:        %u\n",
            ip_str,
            stat->stat.lifetime,
            stat->stat.mac_tx_count,
@@ -495,8 +446,8 @@ static void _set_nbinfo_txtbox(void *args)
 __STATIC_INLINE const char* _tx_remaining_budget(const uint32_t tx_remaining_budget)
 {
   if (tx_remaining_budget == 0UL) {
-    return TX_REMAINING_EXCEEDED_STR;
+    return "[Exceeded]";
   } else {
-    return TX_REMAINING_REMAINING_STR;
+    return "[Remaining]";
   }
 }

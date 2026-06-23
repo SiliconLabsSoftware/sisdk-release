@@ -33,6 +33,7 @@
 // -----------------------------------------------------------------------------
 #include <stdio.h>
 
+#include "arpa/inet.h"
 #include "sl_cli.h"
 #include "sl_wisun_cli_core.h"
 #include "sl_wisun_ping.h"

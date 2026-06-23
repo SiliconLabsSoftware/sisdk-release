@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "sl_rail.h"
 #include "sl_rail_util_init.h"
@@ -197,7 +198,7 @@ void set_fsk_fcs_type(uint8_t new_fsk_fcs_type)
   if (new_fsk_fcs_type < 2) {
     fsk_fcs_type = new_fsk_fcs_type;
   } else {
-    app_log_warning("Set FSK type: %d is higher then 0x01\n", new_fsk_fcs_type);
+    app_log_warning("Set FSK type: %" PRIu8 " is higher then 0x01\n", new_fsk_fcs_type);
   }
 }
 
@@ -217,7 +218,7 @@ void set_fsk_whitening(uint8_t new_fsk_whitening)
   if (new_fsk_whitening < 2) {
     fsk_whitening = new_fsk_whitening;
   } else {
-    app_log_warning("Set FSK whitening: %d is higher then 0x01\n", new_fsk_whitening);
+    app_log_warning("Set FSK whitening: %" PRIu8 " is higher then 0x01\n", new_fsk_whitening);
   }
 }
 
@@ -241,7 +242,7 @@ void set_ofdm_rate(uint8_t new_ofdm_rate)
       ms_new_phy_mode_id = ms_new_phy_mode_id + ofdm_rate;
     }
   } else {
-    app_log_warning("Set OFDM rate: %d is higher then 0x06\n", new_ofdm_rate);
+    app_log_warning("Set OFDM rate: %" PRIu8 " is higher then 0x06\n", new_ofdm_rate);
   }
 }
 
@@ -306,7 +307,7 @@ void calibrate_radio(sl_rail_handle_t rail_handle)
     if (status == SL_RAIL_STATUS_NO_ERROR) {
       app_log_info("IR calibration OK\n");
     } else {
-      app_log_warning("IR calibration ERROR: %lu\n", status);
+      app_log_warning("IR calibration ERROR: 0x%08" PRIX32 "\n", status);
     }
   }
 }
@@ -323,7 +324,7 @@ void init_ieee802154_for_mode_switch(sl_rail_handle_t rail_handle)
 
   status = sl_rail_ieee802154_init(rail_handle, &config);
   app_assert(status == SL_RAIL_STATUS_NO_ERROR,
-             "sl_rail_ieee802154_init error: %lu\n",
+             "sl_rail_ieee802154_init error: 0x%08" PRIX32 "\n",
              status);
 }
 
@@ -342,7 +343,7 @@ void init_rx_option_for_mode_switch(sl_rail_handle_t rail_handle)
                                      SL_RAIL_RX_OPTIONS_ALL,
                                      enable_dualsync);
   app_assert(status == SL_RAIL_STATUS_NO_ERROR,
-             "sl_rail_config_rx_options error: %lu\n",
+             "sl_rail_config_rx_options error: 0x%08" PRIX32 "\n",
              status);
 }
 
@@ -364,7 +365,7 @@ void init_ieee802154g_option_for_mode_switch(sl_rail_handle_t rail_handle)
                                                SL_RAIL_IEEE802154_G_OPTIONS_ALL,
                                                ieee802154g_option);
   app_assert(status == SL_RAIL_STATUS_NO_ERROR,
-             "sl_rail_ieee802154_config_g_options error: %lu\n",
+             "sl_rail_ieee802154_config_g_options error: 0x%08" PRIX32 "\n",
              status);
 }
 
@@ -380,7 +381,7 @@ void enable_promiscuous_mode_for_mode_switch(sl_rail_handle_t rail_handle)
 
   status = sl_rail_ieee802154_set_promiscuous_mode(rail_handle, true);
   app_assert(status == SL_RAIL_STATUS_NO_ERROR,
-             "sl_rail_ieee802154_set_promiscuous_mode error: %lu\n",
+             "sl_rail_ieee802154_set_promiscuous_mode error: 0x%08" PRIX32 "\n",
              status);
 }
 
@@ -399,7 +400,7 @@ void enable_mode_switch_events(sl_rail_handle_t rail_handle)
 
   status = sl_rail_config_events(rail_handle, SL_RAIL_EVENTS_ALL, enable_modeswitch);
   app_assert(status == SL_RAIL_STATUS_NO_ERROR,
-             "sl_rail_config_events error: %lu\n",
+             "sl_rail_config_events error: 0x%08" PRIX32 "\n",
              status);
 }
 
@@ -414,7 +415,7 @@ void init_rail_pa_settings(sl_rail_handle_t rail_handle)
   bool ofdm_found = false;
   sl_rail_status_t status = 0;
 
-  app_log_info("Channel info for PA: %d\n", radio_info.mode_switch_capable_channels);
+  app_log_info("Channel info for PA: %" PRIu8 "\n", radio_info.mode_switch_capable_channels);
 
   for (uint8_t i = 0; i < radio_info.mode_switch_capable_channels; i++) {
     if (radio_info.channel_list[i].modulation == M_OFDM && !ofdm_found) {
@@ -435,14 +436,14 @@ void init_rail_pa_settings(sl_rail_handle_t rail_handle)
     app_assert(status == SL_RAIL_STATUS_NO_ERROR, "Prepare channel failed");
     status = sl_rail_set_tx_power_dbm(rail_handle, power);
     app_assert(status == SL_RAIL_STATUS_NO_ERROR, "PA setting failed");
-    app_log_info("Applied OFDM PA to channel %d\n", ofdm_channel);
+    app_log_info("Applied OFDM PA to channel %" PRIu16 "\n", ofdm_channel);
   }
   if (fsk_found) {
     status = sl_rail_prepare_channel(rail_handle, fsk_channel);
     app_assert(status == SL_RAIL_STATUS_NO_ERROR, "Prepare channel failed");
     status = sl_rail_set_tx_power_dbm(rail_handle, power);
     app_assert(status == SL_RAIL_STATUS_NO_ERROR, "PA setting failed");
-    app_log_info("Applied Subgiga PA to channel %d\n", fsk_channel);
+    app_log_info("Applied Subgiga PA to channel %" PRIu16 "\n", fsk_channel);
   }
 }
 
@@ -502,7 +503,7 @@ void init_mode_switch(sl_rail_handle_t rail_handle)
 
   status = sl_rail_start_rx(rail_handle, current_channel, NULL);
   app_assert(status == SL_RAIL_STATUS_NO_ERROR,
-             "sl_rail_start_rx error: %lu\n",
+             "sl_rail_start_rx error: 0x%08" PRIX32 "\n",
              status);
 }
 
@@ -570,17 +571,17 @@ void update_channel_list(sl_rail_handle_t rail_handle)
  *****************************************************************************/
 void print_channel_list(void)
 {
-  app_log_info("Found %d channels\n",
+  app_log_info("Found %" PRIu8 " channels\n",
                radio_info.mode_switch_capable_channels);
   for (uint8_t i = 0; i < radio_info.mode_switch_capable_channels; i++) {
     if (radio_info.channel_list[i].modulation == M_OFDM) {
-      app_log_info("  Ch number: %5d phyModeId: %3d modulation: %s rate: %1d\n",
+      app_log_info("  Ch number: %" PRIu16 " phyModeId: %" PRIu16 " modulation: %s rate: %" PRIu16 "\n",
                    radio_info.channel_list[i].channel_number,
                    radio_info.channel_list[i].phy_mode_id,
                    phy_modulation_strings[(uint8_t)radio_info.channel_list[i].modulation],
-                   (radio_info.channel_list[i].phy_mode_id & 0x0F));
+                   radio_info.channel_list[i].phy_mode_id);
     } else {
-      app_log_info("  Ch number: %5d phyModeId: %3d modulation: %s\n",
+      app_log_info("  Ch number: %" PRIu16 " phyModeId: %" PRIu16 " modulation: %s\n",
                    radio_info.channel_list[i].channel_number,
                    radio_info.channel_list[i].phy_mode_id,
                    phy_modulation_strings[(uint8_t)radio_info.channel_list[i].modulation]);
@@ -600,7 +601,6 @@ sl_status_t trig_mode_switch_tx(sl_rail_handle_t rail_handle)
 
   sl_rail_status_t rail_status = SL_RAIL_STATUS_NO_ERROR;
   sl_status_t status = SL_STATUS_OK;
-  uint32_t phr = 0U;
   uint32_t duration_in_sec = ms_duration * 1000U;
   uint16_t channel = CHANNEL_DOES_NOT_EXIST;
   uint16_t i = count_phy_mode_id_index(ms_new_phy_mode_id);
@@ -623,9 +623,6 @@ sl_status_t trig_mode_switch_tx(sl_rail_handle_t rail_handle)
   }
 
   if (status == SL_STATUS_OK) {
-    phr = wisun_modeSwitchPhrs[i].phr;
-    phr = __RBIT(phr);
-    phr >>= 16;
     memcpy(ms_phr, &(wisun_modeSwitchPhrs[i].phr), MSPHR_LENGTH);
     if (ms_duration) {
       status = sl_sleeptimer_start_timer_ms(&mode_switch_timer,
@@ -673,7 +670,7 @@ uint16_t unpack_packet(sl_rail_handle_t rail_handle,
   sl_rail_status_t result = sl_rail_copy_rx_packet(rail_handle, rx_destination, packet_information);
   if (result != SL_RAIL_STATUS_NO_ERROR) {
 #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_warning("sl_rail_copy_rx_packet failed with error: %ld\n", result);
+    app_log_warning("sl_rail_copy_rx_packet failed with error: 0x%08" PRIX32 "\n", result);
 #endif
   }
   if (modulation == M_2FSK) {
@@ -748,7 +745,7 @@ void prepare_packet(sl_rail_handle_t rail_handle,
                                                 true);
   app_assert(bytes_written_in_fifo == packet_size,
              "sl_rail_write_tx_fifo() failed to write in fifo"
-             "(%d bytes instead of %d bytes)\n",
+             "(%" PRIu16 " bytes instead of %" PRIu16 " bytes)\n",
              bytes_written_in_fifo,
              packet_size);
 }
@@ -891,7 +888,7 @@ sl_rail_status_t set_channel(const uint16_t new_channel)
   status = sl_rail_start_rx(rail_handle, new_channel, NULL);
   if (status == SL_RAIL_STATUS_NO_ERROR) {
     current_channel = new_channel;
-    app_log_info("Channel is set to %d\n", current_channel);
+    app_log_info("Channel is set to %" PRIu16 "\n", current_channel);
   }
 
   ms_new_phy_mode_id = get_phy_mode_id_from_channel(current_channel);

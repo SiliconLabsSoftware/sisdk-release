@@ -200,7 +200,7 @@ void fih_delay(void)
 __attribute__((always_inline)) inline
 void fih_int_validate(fih_int x)
 {
-    if (x.val != (x.msk ^ _FIH_MASK_VALUE)) {
+    if (x.val != (int32_t)(x.msk ^ _FIH_MASK_VALUE)) {
         FIH_PANIC;
     }
 }

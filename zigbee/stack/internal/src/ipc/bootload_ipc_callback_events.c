@@ -3,7 +3,7 @@
  * @brief callback event handlers for bootload
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -27,8 +27,17 @@ void sli_zigbee_stack_bootload_transmit_complete_handler(sl_status_t status,
                                                          uint8_t *messageContents)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.bootload_transmit_complete_handler.status = status;
   cb_event->data.bootload_transmit_complete_handler.messageLength = messageLength;
+
+  if (messageLength > MAX_IPC_VEC_ARG_CAPACITY) {
+    assert(false); // "vector messageContents length exceeds expected maximum
+    messageLength = MAX_IPC_VEC_ARG_CAPACITY;
+  }
 
   if (messageContents != NULL) {
     memmove(cb_event->data.bootload_transmit_complete_handler.messageContents, messageContents, sizeof(uint8_t) * messageLength);
@@ -48,6 +57,10 @@ void sli_zigbee_stack_incoming_bootload_message_handler(sl_802154_long_addr_t lo
                                                         uint8_t *messageContents)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
 
   if (longId != NULL) {
     memmove(cb_event->data.incoming_bootload_message_handler.longId, longId, sizeof(sl_802154_long_addr_t));
@@ -58,6 +71,11 @@ void sli_zigbee_stack_incoming_bootload_message_handler(sl_802154_long_addr_t lo
   }
 
   cb_event->data.incoming_bootload_message_handler.messageLength = messageLength;
+
+  if (messageLength > MAX_IPC_VEC_ARG_CAPACITY) {
+    assert(false); // "vector messageContents length exceeds expected maximum
+    messageLength = MAX_IPC_VEC_ARG_CAPACITY;
+  }
 
   if (messageContents != NULL) {
     memmove(cb_event->data.incoming_bootload_message_handler.messageContents, messageContents, sizeof(uint8_t) * messageLength);

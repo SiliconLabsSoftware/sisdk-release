@@ -64,18 +64,18 @@ void sli_zigbee_af_device_database_print_all(sl_cli_command_arg_t *arguments)
     if (device == NULL) {
       continue;
     }
-    sl_zigbee_af_core_print("%d - ", i);
+    sl_zigbee_af_cli_print("%d - ", i);
     deviceCount++;
 
     sl_zigbee_af_print_big_endian_eui64(device->eui64);
-    sl_zigbee_af_core_println(" - Capabilities: 0x%02X - EPs: %d - Status: %s - Failures:%d - Stack Revision: %d",
-                              device->capabilities,
-                              device->endpointCount,
-                              device_database_get_status_string(device->status),
-                              device->discoveryFailures,
-                              device->stackRevision);
+    sl_zigbee_af_cli_println(" - Capabilities: 0x%02X - EPs: %d - Status: %s - Failures:%d - Stack Revision: %d",
+                             device->capabilities,
+                             device->endpointCount,
+                             device_database_get_status_string(device->status),
+                             device->discoveryFailures,
+                             device->stackRevision);
   }
-  sl_zigbee_af_core_println("%d of %d devices in database", deviceCount, SL_ZIGBEE_AF_PLUGIN_DEVICE_DATABASE_MAX_DEVICES);
+  sl_zigbee_af_cli_println("%d of %d devices in database", deviceCount, SL_ZIGBEE_AF_PLUGIN_DEVICE_DATABASE_MAX_DEVICES);
 }
 
 void sli_zigbee_af_device_database_print_device(sl_cli_command_arg_t *arguments)
@@ -84,27 +84,27 @@ void sli_zigbee_af_device_database_print_device(sl_cli_command_arg_t *arguments)
   sl_zigbee_copy_eui64_arg(arguments, 0, eui64, true);
   const sl_zigbee_af_device_info_t* device = sl_zigbee_af_device_database_find_device_by_eui64(eui64);
   if (device == NULL) {
-    sl_zigbee_af_core_println("Error: Cannot find device in database.");
+    sl_zigbee_af_cli_println("Error: Cannot find device in database.");
     return;
   }
 
   uint8_t i;
   for (i = 0; i < device->endpointCount; i++) {
-    sl_zigbee_af_core_println("EP: %d - Profile ID: 0x%04X - Device ID: 0x%04X - Clusters: %d",
-                              device->endpoints[i].endpoint,
-                              device->endpoints[i].profileId,
-                              device->endpoints[i].deviceId,
-                              device->endpoints[i].clusterCount);
+    sl_zigbee_af_cli_println("EP: %d - Profile ID: 0x%04X - Device ID: 0x%04X - Clusters: %d",
+                             device->endpoints[i].endpoint,
+                             device->endpoints[i].profileId,
+                             device->endpoints[i].deviceId,
+                             device->endpoints[i].clusterCount);
     uint8_t j;
     for (j = 0; j < device->endpoints[i].clusterCount; j++) {
-      sl_zigbee_af_core_println("  Cluster: 0x%04X %s",
-                                device->endpoints[i].clusters[j].clusterId,
-                                (device->endpoints[i].clusters[j].server
-                                 ? "Server"
-                                 : "Client"));
+      sl_zigbee_af_cli_println("  Cluster: 0x%04X %s",
+                               device->endpoints[i].clusters[j].clusterId,
+                               (device->endpoints[i].clusters[j].server
+                                ? "Server"
+                                : "Client"));
     }
   }
-  sl_zigbee_af_core_println("%d total endpoints", device->endpointCount);
+  sl_zigbee_af_cli_println("%d total endpoints", device->endpointCount);
 }
 
 #define DUMMY_BASE_ENDPOINT    100
@@ -123,25 +123,25 @@ void sli_zigbee_af_device_database_add_dummy_device(sl_cli_command_arg_t *argume
   dummy.stackRevision = DUMMY_STACK_REVISION;
 
   if (dummy.endpointCount > SL_ZIGBEE_AF_MAX_ENDPOINTS_PER_DEVICE) {
-    sl_zigbee_af_core_println("Error: Cannot add more than %d endpoints", SL_ZIGBEE_AF_MAX_ENDPOINTS_PER_DEVICE);
+    sl_zigbee_af_cli_println("Error: Cannot add more than %d endpoints", SL_ZIGBEE_AF_MAX_ENDPOINTS_PER_DEVICE);
     return;
   }
 
   if ((uint16_t)dummy.endpointCount + (uint16_t)DUMMY_BASE_ENDPOINT >= 255) {
-    sl_zigbee_af_core_println("Error:  Base endpoint of %d + number of endpoints %d would exceed 254",
-                              DUMMY_BASE_ENDPOINT,
-                              dummy.endpointCount);
+    sl_zigbee_af_cli_println("Error:  Base endpoint of %d + number of endpoints %d would exceed 254",
+                             DUMMY_BASE_ENDPOINT,
+                             dummy.endpointCount);
     return;
   }
 
   if (clusterCount > SL_ZIGBEE_AF_MAX_CLUSTERS_PER_ENDPOINT) {
-    sl_zigbee_af_core_println("Error: Cannot add more than %d clusters per endpoint.", SL_ZIGBEE_AF_MAX_CLUSTERS_PER_ENDPOINT);
+    sl_zigbee_af_cli_println("Error: Cannot add more than %d clusters per endpoint.", SL_ZIGBEE_AF_MAX_CLUSTERS_PER_ENDPOINT);
     return;
   }
   if ((uint32_t)clusterCount + (uint32_t)DUMMY_BASE_CLUSTER_ID >= 65535) {
-    sl_zigbee_af_core_println("Error: Base cluster ID 0x%04X + number of clusters %d would exceed 65534",
-                              DUMMY_BASE_CLUSTER_ID,
-                              clusterCount);
+    sl_zigbee_af_cli_println("Error: Base cluster ID 0x%04X + number of clusters %d would exceed 65534",
+                             DUMMY_BASE_CLUSTER_ID,
+                             clusterCount);
     return;
   }
 
@@ -162,7 +162,7 @@ void sli_zigbee_af_device_database_add_dummy_device(sl_cli_command_arg_t *argume
   }
 
   if (SL_STATUS_OK != sl_zigbee_af_device_database_add_device_with_all_info(&dummy)) {
-    sl_zigbee_af_core_println("Error: Could not add device to database.");
+    sl_zigbee_af_cli_println("Error: Could not add device to database.");
   }
 }
 
@@ -171,6 +171,6 @@ void sli_zigbee_af_device_database_erase(sl_cli_command_arg_t *arguments)
   sl_802154_long_addr_t eui64;
   sl_zigbee_copy_eui64_arg(arguments, 0, eui64, true);
   if (!sl_zigbee_af_device_database_erase_device(eui64)) {
-    sl_zigbee_af_core_println("Error:  Could not delete device.");
+    sl_zigbee_af_cli_println("Error:  Could not delete device.");
   }
 }

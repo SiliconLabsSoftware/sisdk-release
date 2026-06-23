@@ -1199,7 +1199,7 @@ Error Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)
     }
 #endif
 
-    length = message->GetLength() - message->GetOffset();
+    length = message->DetermineLengthAfterOffset();
 
     if (aInfo.mConfig.GetTransportProto() == QueryConfig::kDnsTransportTcp)
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
@@ -1584,8 +1584,8 @@ void Client::SaveQueryResponse(Query &aQuery, const Message &aResponseMessage)
     info.ReadFrom(aQuery);
     VerifyOrExit(info.mSavedResponse == nullptr);
 
-    // If `Clone()` fails we let retry or timeout handle the error.
-    info.mSavedResponse = aResponseMessage.Clone();
+    // If clone fails we let retry or timeout handle the error.
+    info.mSavedResponse = aResponseMessage.Clone<kNoReservedHeader>();
 
     UpdateQuery(aQuery, info);
 
@@ -1823,7 +1823,7 @@ Error Client::ReplaceWithSeparateSrvTxtQueries(Query &aQuery)
 
     RecordServerAsLimitedToSingleQuestion(info.mConfig.GetServerSockAddr().GetAddress());
 
-    secondQuery = aQuery.Clone();
+    secondQuery = mSocket.CloneMessage(aQuery);
     VerifyOrExit(secondQuery != nullptr);
 
     info.mQueryType         = kServiceQueryTxt;
@@ -1893,7 +1893,7 @@ exit:
 #if OPENTHREAD_CONFIG_DNS_CLIENT_OVER_TCP_ENABLE
 void Client::PrepareTcpMessage(Message &aMessage)
 {
-    uint16_t length = aMessage.GetLength() - aMessage.GetOffset();
+    uint16_t length = aMessage.DetermineLengthAfterOffset();
 
     // Prepending the DNS query with length of the packet according to RFC1035.
     BigEndian::WriteUint16(length, mSendBufferBytes + mSendLink.mLength);

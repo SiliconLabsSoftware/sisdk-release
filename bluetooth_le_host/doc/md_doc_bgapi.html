@@ -241,6 +241,10 @@ BGAPI message summary</h1>
 <tr>
 <td class="message-name"><a class="el" href="group__sl__bt__linklayer.html#ga7626df3c11d39b180f58b2bf688eff8c">cmd_linklayer_event_info_reporting_enable</a> </td><td>0x60 </td><td>0x00 </td><td>7  </td></tr>
 <tr>
+<td class="message-name"><a class="el" href="group__sl__bt__linklayer.html#ga9a51a04253b62f6b706570b1ef930b8b">cmd_linklayer_get_hci_connection_handle</a> </td><td>0x60 </td><td>0x01 </td><td>1  </td></tr>
+<tr>
+<td class="message-name"><a class="el" href="group__sl__bt__linklayer.html#ga394c7a511b8095400378e895af4d0238">cmd_linklayer_get_bgapi_connection_handle</a> </td><td>0x60 </td><td>0x02 </td><td>2  </td></tr>
+<tr>
 <td colspan="5" class="msg-type-header">Events  </td></tr>
 <tr>
 <td class="message-name"><a class="el" href="group__sl__bt__evt__linklayer__event__info__report.html">evt_linklayer_event_info_report</a> </td><td>0x60 </td><td>0x00 </td><td>6  </td></tr>
@@ -269,6 +273,8 @@ BGAPI message summary</h1>
 <tr>
 <td class="message-name"><a class="el" href="group__sl__bt__gap.html#gab8d65fb681a00f260f8b8c49a09ab1d5">cmd_gap_set_privacy_mode</a> </td><td>0x02 </td><td>0x01 </td><td>2  </td></tr>
 <tr>
+<td class="message-name"><a class="el" href="group__sl__bt__gap.html#ga3c379e284417946314ba65eeae5c9bd3">cmd_gap_set_privacy_mode_with_rpa_randomization</a> </td><td>0x02 </td><td>0x07 </td><td>3  </td></tr>
+<tr>
 <td class="message-name"><a class="el" href="group__sl__bt__gap.html#gae1ee4d45283563a12394f5261e45f952">cmd_gap_set_data_channel_classification</a> </td><td>0x02 </td><td>0x02 </td><td>1  </td></tr>
 <tr>
 <td class="message-name"><a class="el" href="group__sl__bt__gap.html#ga654072e39147679ac71c8f32935eeaf9">cmd_gap_set_identity_address</a> </td><td>0x02 </td><td>0x04 </td><td>7  </td></tr>
@@ -276,6 +282,10 @@ BGAPI message summary</h1>
 <td class="message-name"><a class="el" href="group__sl__bt__gap.html#gaead984805fa3c7145da2c63354f98697">cmd_gap_get_identity_address</a> </td><td>0x02 </td><td>0x05 </td><td>0  </td></tr>
 <tr>
 <td class="message-name"><a class="el" href="group__sl__bt__gap.html#gac87c0807d9ae80830b80409930d71a78">cmd_gap_get_max_connections</a> </td><td>0x02 </td><td>0x06 </td><td>0  </td></tr>
+<tr>
+<td colspan="5" class="msg-type-header">Events  </td></tr>
+<tr>
+<td class="message-name"><a class="el" href="group__sl__bt__evt__gap__random__address__refresh.html">evt_gap_random_address_refresh</a> </td><td>0x02 </td><td>0x00 </td><td>7  </td></tr>
 <tr>
 <td colspan="4" class="msg-summary-header"><a class="el" href="group__sl__bt__advertiser.html">Advertiser</a>  </td></tr>
 <tr>
@@ -306,6 +316,8 @@ BGAPI message summary</h1>
 <td class="message-name"><a class="el" href="group__sl__bt__evt__advertiser__timeout.html">evt_advertiser_timeout</a> </td><td>0x04 </td><td>0x01 </td><td>1  </td></tr>
 <tr>
 <td class="message-name"><a class="el" href="group__sl__bt__evt__advertiser__scan__request.html">evt_advertiser_scan_request</a> </td><td>0x04 </td><td>0x02 </td><td>9  </td></tr>
+<tr>
+<td class="message-name"><a class="el" href="group__sl__bt__evt__advertiser__random__address__refresh.html">evt_advertiser_random_address_refresh</a> </td><td>0x04 </td><td>0x03 </td><td>8  </td></tr>
 <tr>
 <td colspan="4" class="msg-summary-header"><a class="el" href="group__sl__bt__legacy__advertiser.html">Legacy Advertiser</a>  </td></tr>
 <tr>
@@ -342,6 +354,8 @@ BGAPI message summary</h1>
 <td class="message-name"><a class="el" href="group__sl__bt__periodic__advertiser.html#ga8ddb03280f2d65373a405ce20fdbcd18">cmd_periodic_advertiser_set_data</a> </td><td>0x58 </td><td>0x00 </td><td>2  </td></tr>
 <tr>
 <td class="message-name"><a class="el" href="group__sl__bt__periodic__advertiser.html#gad70b3fd35ebf8e87f78d5ecab0117d4c">cmd_periodic_advertiser_set_long_data</a> </td><td>0x58 </td><td>0x01 </td><td>1  </td></tr>
+<tr>
+<td class="message-name"><a class="el" href="group__sl__bt__periodic__advertiser.html#gad0487b1e80033fd1ba4ee393a1f1e9fa">cmd_periodic_advertiser_refresh_data_id</a> </td><td>0x58 </td><td>0x04 </td><td>1  </td></tr>
 <tr>
 <td class="message-name"><a class="el" href="group__sl__bt__periodic__advertiser.html#gaf2a2688f53f25df2d1ba12a5f5fafbd3">cmd_periodic_advertiser_start</a> </td><td>0x58 </td><td>0x02 </td><td>9  </td></tr>
 <tr>
@@ -841,6 +855,8 @@ BGAPI message summary</h1>
 <tr>
 <td class="message-name"><a class="el" href="group__sl__bt__resolving__list.html#ga5170d52a5a449272d3747b63d5854e98">cmd_resolving_list_remove_all_devices</a> </td><td>0x5d </td><td>0x04 </td><td>0  </td></tr>
 <tr>
+<td class="message-name"><a class="el" href="group__sl__bt__resolving__list.html#ga7f27695892c85b0bc53204d0622cc2ed">cmd_resolving_list_read_peer_resolvable_address</a> </td><td>0x5d </td><td>0x05 </td><td>7  </td></tr>
+<tr>
 <td colspan="4" class="msg-summary-header"><a class="el" href="group__sl__bt__accept__list.html">Filter Accept List</a>  </td></tr>
 <tr>
 <td colspan="4" class="msg-type-header">Commands  </td></tr>
@@ -893,6 +909,16 @@ BGAPI message summary</h1>
 <tr>
 <td class="message-name"><a class="el" href="group__sl__bt__cs.html#ga8c0052901c17a4c427f2b25d3c484bc7">cmd_cs_read_remote_supported_capabilities</a> </td><td>0x59 </td><td>0x09 </td><td>1  </td></tr>
 <tr>
+<td class="message-name"><a class="el" href="group__sl__bt__cs.html#ga2ba75f26352698b6c8cb752c16b342f7">cmd_cs_handover_get_procedure_parameters</a> </td><td>0x59 </td><td>0x0a </td><td>2  </td></tr>
+<tr>
+<td class="message-name"><a class="el" href="group__sl__bt__cs.html#ga7be074a19c9a267769c4325feeb4b720">cmd_cs_handover_set_procedure_parameters</a> </td><td>0x59 </td><td>0x0b </td><td>1  </td></tr>
+<tr>
+<td class="message-name"><a class="el" href="group__sl__bt__cs.html#ga980aaeacdecec62c35335dd2ceb39727">cmd_cs_handover_create_sync</a> </td><td>0x59 </td><td>0x0c </td><td>4  </td></tr>
+<tr>
+<td class="message-name"><a class="el" href="group__sl__bt__cs.html#ga3757cf65977fcfec697aa5229ec953ed">cmd_cs_handover_enable_procedure</a> </td><td>0x59 </td><td>0x0d </td><td>8  </td></tr>
+<tr>
+<td class="message-name"><a class="el" href="group__sl__bt__cs.html#ga8166fe81e523a4fa446c954a87a548bc">cmd_cs_handover_remove_procedure</a> </td><td>0x59 </td><td>0x0e </td><td>2  </td></tr>
+<tr>
 <td colspan="5" class="msg-type-header">Events  </td></tr>
 <tr>
 <td class="message-name"><a class="el" href="group__sl__bt__evt__cs__security__enable__complete.html">evt_cs_security_enable_complete</a> </td><td>0x59 </td><td>0x00 </td><td>1  </td></tr>
@@ -906,6 +932,14 @@ BGAPI message summary</h1>
 <td class="message-name"><a class="el" href="group__sl__bt__evt__cs__result__continue.html">evt_cs_result_continue</a> </td><td>0x59 </td><td>0x05 </td><td>8  </td></tr>
 <tr>
 <td class="message-name"><a class="el" href="group__sl__bt__evt__cs__read__remote__supported__capabilities__complete.html">evt_cs_read_remote_supported_capabilities_complete</a> </td><td>0x59 </td><td>0x04 </td><td>31  </td></tr>
+<tr>
+<td class="message-name"><a class="el" href="group__sl__bt__evt__cs__handover__sync__established.html">evt_cs_handover_sync_established</a> </td><td>0x59 </td><td>0x06 </td><td>6  </td></tr>
+<tr>
+<td class="message-name"><a class="el" href="group__sl__bt__evt__cs__handover__complete.html">evt_cs_handover_complete</a> </td><td>0x59 </td><td>0x07 </td><td>3  </td></tr>
+<tr>
+<td class="message-name"><a class="el" href="group__sl__bt__evt__cs__handover__result.html">evt_cs_handover_result</a> </td><td>0x59 </td><td>0x08 </td><td>15  </td></tr>
+<tr>
+<td class="message-name"><a class="el" href="group__sl__bt__evt__cs__handover__result__continue.html">evt_cs_handover_result_continue</a> </td><td>0x59 </td><td>0x09 </td><td>8  </td></tr>
 <tr>
 <td colspan="4" class="msg-summary-header"><a class="el" href="group__sl__bt__cs__test.html">Channel Sounding Test</a>  </td></tr>
 <tr>
@@ -1008,6 +1042,8 @@ BGAPI message summary</h1>
 <td colspan="4" class="msg-type-header">Commands  </td></tr>
 <tr>
 <td class="message-name"><a class="el" href="group__sl__bt__connection__analyzer.html#gaa3898b966e74863f4e2fe159f5f7d183">cmd_connection_analyzer_start</a> </td><td>0x48 </td><td>0x00 </td><td>33  </td></tr>
+<tr>
+<td class="message-name"><a class="el" href="group__sl__bt__connection__analyzer.html#ga5d5990b00a62ef42f034e58c89e0c451">cmd_connection_analyzer_process_llcp_event</a> </td><td>0x48 </td><td>0x02 </td><td>2  </td></tr>
 <tr>
 <td class="message-name"><a class="el" href="group__sl__bt__connection__analyzer.html#gadf538d051a2f17718bbe1ca1d6941f20">cmd_connection_analyzer_stop</a> </td><td>0x48 </td><td>0x01 </td><td>1  </td></tr>
 <tr>

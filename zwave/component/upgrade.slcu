@@ -7,7 +7,13 @@ upgrade:
         description: Enable RAIL Power Manager initialization in Z-Wave applications.
   - sdk:
       id: simplicity_sdk
-      version: 2025.12.0
+      version: 2026.6.0
     configuration:
-      - script: zwave/component/scripts/rail_pm_init_upgrade.lua
-        description: Enable RAIL Power Manager initialization in Z-Wave applications.
+      - script: zwave/component/scripts/sleeptimer_peripheral_upgrade.lua
+        description: Migrate sleeptimer peripheral to SL_SLEEPTIMER_PERIPHERAL_DEFAULT for Z-Wave Core on Series 2
+    component:
+      - trigger: zw_cli_common
+        description: >
+          The app_log has been removed from zw_cli_common to use iostream. Restore app_log in old projects.
+        add:
+          - app_log

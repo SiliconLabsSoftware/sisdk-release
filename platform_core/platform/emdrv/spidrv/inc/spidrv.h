@@ -34,7 +34,9 @@
 #ifndef SLI_LIBRARY_BUILD
 #include "em_device.h"
 #include "sl_device_peripheral.h"
-#include "dmadrv.h"
+#include "sl_dma_channel.h"
+#include "sl_dma_manager.h"
+#include "sl_device_dma.h"
 
 #include "sl_gpio.h"
 #if defined(_SILICON_LABS_32B_SERIES_3)
@@ -62,16 +64,17 @@ extern "C" {
  * @{
  ******************************************************************************/
 
-#define ECODE_EMDRV_SPIDRV_OK                (ECODE_OK)                               ///< A successful return value.
-#define ECODE_EMDRV_SPIDRV_ILLEGAL_HANDLE    (ECODE_EMDRV_SPIDRV_BASE | 0x00000001)   ///< An illegal SPI handle.
-#define ECODE_EMDRV_SPIDRV_PARAM_ERROR       (ECODE_EMDRV_SPIDRV_BASE | 0x00000002)   ///< An illegal input parameter.
-#define ECODE_EMDRV_SPIDRV_BUSY              (ECODE_EMDRV_SPIDRV_BASE | 0x00000003)   ///< The SPI port is busy.
-#define ECODE_EMDRV_SPIDRV_TIMER_ALLOC_ERROR (ECODE_EMDRV_SPIDRV_BASE | 0x00000004)   ///< Unable to allocate timeout timer.
-#define ECODE_EMDRV_SPIDRV_TIMEOUT           (ECODE_EMDRV_SPIDRV_BASE | 0x00000005)   ///< An SPI transfer timeout.
-#define ECODE_EMDRV_SPIDRV_IDLE              (ECODE_EMDRV_SPIDRV_BASE | 0x00000006)   ///< No SPI transfer in progress.
-#define ECODE_EMDRV_SPIDRV_ABORTED           (ECODE_EMDRV_SPIDRV_BASE | 0x00000007)   ///< An SPI transfer has been aborted.
-#define ECODE_EMDRV_SPIDRV_MODE_ERROR        (ECODE_EMDRV_SPIDRV_BASE | 0x00000008)   ///< SPI master used slave API or vica versa.
-#define ECODE_EMDRV_SPIDRV_DMA_ALLOC_ERROR   (ECODE_EMDRV_SPIDRV_BASE | 0x00000009)   ///< Unable to allocate DMA channels.
+#define ECODE_EMDRV_SPIDRV_OK                  (ECODE_OK)                               ///< A successful return value.
+#define ECODE_EMDRV_SPIDRV_ILLEGAL_HANDLE      (ECODE_EMDRV_SPIDRV_BASE | 0x00000001)   ///< An illegal SPI handle.
+#define ECODE_EMDRV_SPIDRV_PARAM_ERROR         (ECODE_EMDRV_SPIDRV_BASE | 0x00000002)   ///< An illegal input parameter.
+#define ECODE_EMDRV_SPIDRV_BUSY                (ECODE_EMDRV_SPIDRV_BASE | 0x00000003)   ///< The SPI port is busy.
+#define ECODE_EMDRV_SPIDRV_TIMER_ALLOC_ERROR   (ECODE_EMDRV_SPIDRV_BASE | 0x00000004)   ///< Unable to allocate timeout timer.
+#define ECODE_EMDRV_SPIDRV_TIMEOUT             (ECODE_EMDRV_SPIDRV_BASE | 0x00000005)   ///< An SPI transfer timeout.
+#define ECODE_EMDRV_SPIDRV_IDLE                (ECODE_EMDRV_SPIDRV_BASE | 0x00000006)   ///< No SPI transfer in progress.
+#define ECODE_EMDRV_SPIDRV_ABORTED             (ECODE_EMDRV_SPIDRV_BASE | 0x00000007)   ///< An SPI transfer has been aborted.
+#define ECODE_EMDRV_SPIDRV_MODE_ERROR          (ECODE_EMDRV_SPIDRV_BASE | 0x00000008)   ///< SPI master used slave API or vica versa.
+#define ECODE_EMDRV_SPIDRV_DMA_ALLOC_ERROR     (ECODE_EMDRV_SPIDRV_BASE | 0x00000009)   ///< Unable to allocate DMA channels.
+#define ECODE_EMDRV_SPIDRV_ALREADY_INITIALIZED (ECODE_EMDRV_SPIDRV_BASE | 0x0000000A)   ///< The SPI handle is already initialized.
 /** @} (end addtogroup error codes) */
 
 /// SPI driver instance type.
@@ -190,10 +193,10 @@ typedef struct SPIDRV_HandleData {
     void                    *__reserved_space;
   } peripheral;
   SPIDRV_Init_t             initData;
-  unsigned int              txDMACh;
-  unsigned int              rxDMACh;
-  DMADRV_PeripheralSignal_t txDMASignal;
-  DMADRV_PeripheralSignal_t rxDMASignal;
+  sl_dma_channel_handle_t   txDMACh;
+  sl_dma_channel_handle_t   rxDMACh;
+  sl_dma_signal_t           txDMASignal;
+  sl_dma_signal_t           rxDMASignal;
   SPIDRV_Callback_t         userCallback;
   uint32_t                  dummyRx;
   int                       transferCount;

@@ -1,0 +1,25 @@
+id: mbedtls_key_exchange_ecdhe_ecdsa
+package: platform_core
+label: ECDHE-Based Key Exchange
+description: >-
+  This component enables the ECDHE-ECDSA based ciphersuite modes in SSL / TLS.
+category: Platform|Security|Mbed TLS|Upper Layer
+quality: production
+
+provides:
+- name: mbedtls_key_exchange_ecdhe_ecdsa
+- name: mbedtls_key_exchange
+  allow_multiple: true
+
+requires:
+- name: psa_crypto_ecdh
+- name: psa_crypto_ecdsa
+- name: mbedtls_x509_crt_parse
+
+template_contribution:
+- name: mbedtls_config
+  value: MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+metadata:
+  sbom:
+    reference: mbedtls_sbom
+root_path: platform_core

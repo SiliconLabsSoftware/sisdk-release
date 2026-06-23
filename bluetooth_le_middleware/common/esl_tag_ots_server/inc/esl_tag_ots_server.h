@@ -112,7 +112,7 @@ sl_status_t esl_tag_ots_prepare_object_type(esl_display_type_t display_type,
  * Tag can be only written after adding it to the OTS object list. This function
  * has to be called from @ref esl_image_add method.
  *
- * @param[in] poperties      OTS Object property flags
+ * @param[in] properties     OTS Object property flags
  * @param[in] allocated_size Allocated size for ESL Image static object
  * @param[in] type           Pointer to an OTS Object Type descriptor
  * @return    sl_status_t

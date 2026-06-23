@@ -106,7 +106,7 @@ config_file:
     vendor: silabs
   path: plugin/sl_rail_util_ieee802154/config/rail_test/sl_rail_util_ieee802154_rx_duty_cycling_config.h
 - override:
-    component: rail_util_ieee802154_high_speed
+    component: sl_rail_util_ieee802154_high_speed
     file_id: sl_rail_util_ieee802154_high_speed_phy_config
     vendor: silabs
   path: plugin/sl_rail_util_ieee802154/config/rail_test/sl_rail_util_ieee802154_high_speed_phy_config.h
@@ -421,6 +421,12 @@ template_contribution:
 
 - name: cli_command
   value:
+    name: getPaMode
+    handler: getPaMode
+    help: Get the current PA mode.
+
+- name: cli_command
+  value:
     name: printPowerCurves
     handler: printPowerCurves
     help: Print TX power curves.
@@ -481,6 +487,15 @@ template_contribution:
     name: sweepTxPower
     handler: sweepTxPower
     help: Sweep TX power for the current PA by toning at each level.
+
+- name: cli_command
+  value:
+    name: offsetLqi
+    handler: offsetLqi
+    help: "Adjust the hardware's LQI value for received packets."
+    argument:
+    - type: int16
+      help: "offset: signed value to add\\n                    The resulting LQI is capped within 0..255 range."
 
 - name: cli_command
   value:
@@ -572,6 +587,8 @@ template_contribution:
     argument:
     - type: uint32
       help: delayMilliseconds
+    - type: uint8opt
+      help: '[0=after wait-for-ACK] 1=on-transmit-complete'
 
 - name: cli_command
   value:
@@ -1139,6 +1156,27 @@ template_contribution:
     handler: berStatusGet
     help: Get status of current or last BER test.\n                    Status is reset by setBerConfig and berRx enable.
 
+- name: cli_command
+  value:
+    name: berPacketRx
+    handler: berPacketRx
+    help: Control packet mode BER (use packets and not a continuous stream).
+    argument:
+    - type: uint8
+      help: 0=Disable 1=Enable
+    - type: uint32
+      help: 'PrbsSeedOffsetBytes: number of bytes from beginning of packet to\n                    first Pseudo-Random Binary Sequence (PRBS) seed byte.'
+    - type: uint32
+      help: 'PrbsLengthBytes: number of bytes in the PRBS.'
+
+- name: cli_command
+  value:
+    name: berPacketStatus
+    handler: berPacketStatusGet
+    help: Get status of current or last BER in packet mode test.\n                    Status is reset by berPacketRx enable.
+    argument:
+    - type: uint8opt
+      help: "[0=don't] 1=print last packet received with valid PRBS seed CRC"
 - name: cli_command
   value:
     name: ______________________________

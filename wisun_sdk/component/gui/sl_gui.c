@@ -224,12 +224,8 @@ static osMutexId_t _gui_mtx = NULL;
 static const osThreadAttr_t _gui_evt_task_attr = {
   .name        = "GuiEvent",
   .attr_bits   = osThreadDetached,
-  .cb_mem      = NULL,
-  .cb_size     = 0,
-  .stack_mem   = NULL,
   .stack_size  = (SL_GUI_STACK_SIZE_WORD * sizeof(void *)) & 0xFFFFFFF8U,
-  .priority    = osPriorityLow,
-  .tz_module   = 0
+  .priority    = osPriorityLow
 };
 
 /// GUI event messagequeue attributes

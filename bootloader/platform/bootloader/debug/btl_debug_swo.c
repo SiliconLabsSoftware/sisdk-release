@@ -74,7 +74,8 @@ void btl_debugInit(void)
 #else
 #if defined(_CMU_TRACECLKCTRL_CLKSEL_MASK)
 #if defined(_SILICON_LABS_GECKO_INTERNAL_SDID_230) || defined(_SILICON_LABS_GECKO_INTERNAL_SDID_235) \
-  || defined(_SILICON_LABS_GECKO_INTERNAL_SDID_240) || defined(_SILICON_LABS_GECKO_INTERNAL_SDID_260)
+  || defined(_SILICON_LABS_GECKO_INTERNAL_SDID_240) || defined(_SILICON_LABS_GECKO_INTERNAL_SDID_260) \
+  || defined(_SILICON_LABS_GECKO_INTERNAL_SDID_250)
   /* Select SYSCLK as source for TRACECLK */
   CMU_CLOCK_SELECT_SET(TRACECLK, SYSCLK);
 #else
@@ -119,13 +120,13 @@ void btl_debugInit(void)
   DWT->CTRL = 0x400003FFUL;
 
   // Set TPIU Prescaler
-  TPI->ACPR = tpiu_prescaler_val;
+  TPIU->ACPR = tpiu_prescaler_val;
 
   // Set protocol to NRZ
-  TPI->SPPR = 2;
+  TPIU->SPPR = 2;
 
   // Disable continuous formatting
-  TPI->FFCR = 0x100;
+  TPIU->FFCR = 0x100;
 
   // Unlock ITM and output data
   ITM->LAR = 0xC5ACCE55UL;

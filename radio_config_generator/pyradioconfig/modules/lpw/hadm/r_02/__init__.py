@@ -1,0 +1,2 @@
+from pyradioconfig.calculator_model_framework.interfaces.design_status_tag import DesignStatusTag
+ip_status_tag = DesignStatusTag.DEV

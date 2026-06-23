@@ -5,7 +5,9 @@
 extern "C" {
 #endif
 
+#include "sl_status.h"
 #include "spidrv.h"
+
 {%- for instance in spidrv_instances %}
 extern SPIDRV_Handle_t sl_spidrv_{{instance}}_handle;
 {%- endfor %}
@@ -17,6 +19,22 @@ extern SPIDRV_Handle_t sl_spidrv_eusart_{{instance}}_handle;
 {%- endfor %}
 
 void sl_spidrv_init_instances(void);
+
+/***************************************************************************//**
+ * Set the handle as the default SPIDRV handle.
+ *
+ * @param[in] handle SPIDRV handle to set as default.
+ *
+ * @return  Status result
+ ******************************************************************************/
+sl_status_t sl_spidrv_set_default(SPIDRV_Handle_t handle);
+
+/***************************************************************************//**
+ * Get the default SPIDRV handle configured.
+ *
+ * @return  SPIDRV handle
+ ******************************************************************************/
+SPIDRV_Handle_t sl_spidrv_get_default(void);
 
 #ifdef __cplusplus
 }

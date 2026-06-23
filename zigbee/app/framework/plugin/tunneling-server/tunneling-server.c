@@ -483,43 +483,43 @@ static void closeInactiveTunnels(uint8_t endpoint)
 
 void sl_zigbee_af_tunneling_server_toggle_busy_command(void)
 {
-  sl_zigbee_af_tunneling_cluster_println("");
+  sl_zigbee_af_cli_println("");
   if (sl_zigbee_af_tunneling_server_busy_status) {
     sl_zigbee_af_tunneling_server_busy_status = false;
-    sl_zigbee_af_tunneling_cluster_println("  NOTE: current status is NOT BUSY (tunneling works)");
+    sl_zigbee_af_cli_println("  NOTE: current status is NOT BUSY (tunneling works)");
   } else {
     sl_zigbee_af_tunneling_server_busy_status = true;
-    sl_zigbee_af_tunneling_cluster_println("  NOTE: current status is BUSY (tunneling won't work)");
+    sl_zigbee_af_cli_println("  NOTE: current status is BUSY (tunneling won't work)");
   }
-  sl_zigbee_af_tunneling_cluster_println("");
-  sl_zigbee_af_tunneling_cluster_flush();
+  sl_zigbee_af_cli_println("");
+  sl_zigbee_af_cli_flush();
 }
 
 void sli_zigbee_af_tunneling_server_cli_print(void)
 {
   uint32_t currentTime = sl_zigbee_af_get_current_time();
   uint8_t i;
-  sl_zigbee_af_tunneling_cluster_println("");
-  sl_zigbee_af_tunneling_cluster_println("#   client              cep  sep  tid    pid  mfg    age");
-  sl_zigbee_af_tunneling_cluster_flush();
+  sl_zigbee_af_cli_println("");
+  sl_zigbee_af_cli_println("#   client              cep  sep  tid    pid  mfg    age");
+  sl_zigbee_af_cli_flush();
   for (i = 0; i < SL_ZIGBEE_AF_PLUGIN_TUNNELING_SERVER_TUNNEL_LIMIT; i++) {
-    sl_zigbee_af_tunneling_cluster_print("%02X: ", i);
+    sl_zigbee_af_cli_print("%02X: ", i);
     if (tunnels[i].clientEndpoint != UNUSED_ENDPOINT_ID) {
       sl_802154_long_addr_t eui64;
       sl_zigbee_af_address_table_lookup_by_index(tunnels[i].addressIndex, eui64);
-      sl_zigbee_af_tunneling_cluster_debug_exec(sl_zigbee_af_print_big_endian_eui64(eui64));
-      sl_zigbee_af_tunneling_cluster_print(" 0x%02X 0x%02X 0x%04X",
-                                           tunnels[i].clientEndpoint,
-                                           tunnels[i].serverEndpoint,
-                                           i);
-      sl_zigbee_af_tunneling_cluster_flush();
-      sl_zigbee_af_tunneling_cluster_print(" 0x%02X 0x%04X 0x%08X",
-                                           tunnels[i].protocolId,
-                                           tunnels[i].manufacturerCode,
-                                           currentTime - tunnels[i].lastActive);
-      sl_zigbee_af_tunneling_cluster_flush();
+      sl_zigbee_af_cli_exec(sl_zigbee_af_print_big_endian_eui64(eui64));
+      sl_zigbee_af_cli_print(" 0x%02X 0x%02X 0x%04X",
+                             tunnels[i].clientEndpoint,
+                             tunnels[i].serverEndpoint,
+                             i);
+      sl_zigbee_af_cli_flush();
+      sl_zigbee_af_cli_print(" 0x%02X 0x%04X 0x%08X",
+                             tunnels[i].protocolId,
+                             tunnels[i].manufacturerCode,
+                             currentTime - tunnels[i].lastActive);
+      sl_zigbee_af_cli_flush();
     }
-    sl_zigbee_af_tunneling_cluster_println("");
+    sl_zigbee_af_cli_println("");
   }
 }
 

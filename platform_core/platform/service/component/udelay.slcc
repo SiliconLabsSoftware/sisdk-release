@@ -13,12 +13,6 @@ metadata:
     license: Zlib
 source:
 - path: src/sl_udelay.c
-- path: src/sl_udelay_armv6m_gcc.S
-  condition: [toolchain_gcc]
-- path: src/sl_udelay_armv6m_gcc.S
-  condition: [toolchain_llvm]
-- path: src/sl_udelay_armv6m_iar.s
-  condition: [toolchain_iar]
 include:
 - path: inc
   file_list:
@@ -26,6 +20,7 @@ include:
 provides:
 - name: udelay
 requires:
+- name: udelay_arch
 - name: hal_generic_common
   condition: [device_efx]
 - name: sl_assert

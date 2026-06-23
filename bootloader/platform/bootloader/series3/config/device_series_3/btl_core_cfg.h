@@ -30,11 +30,6 @@
 // <i> Require that firmware upgrade files are encrypted.
 #define BOOTLOADER_ENFORCE_ENCRYPTED_UPGRADE                    0
 
-// <q BOOTLOADER_USE_SYMMETRIC_KEY_FROM_APP_PROPERTIES> Use symmetric key stored in Application Properties Struct
-// <i> Default: 0
-// <i> Use the symmetric key stored in Application Properties Struct for encryption and decryption.
-#define BOOTLOADER_USE_SYMMETRIC_KEY_FROM_APP_PROPERTIES                0
-
 // <e BOOTLOADER_ENFORCE_SECURE_BOOT> Enable secure boot
 // <i> Default: 0
 // <i> Enforce signature verification on the application image in internal flash before every boot.
@@ -71,15 +66,10 @@
 
 // </e>
 
-// <q BOOTLOADER_FALLBACK_LEGACY_KEY> Allow use of public key from manufacturing token storage
-// <i> Default: 1
-// <i> Allow use of the public key from the manufacturing token storage for signature verification if the public key is not stored in Secure Element.
-#define BOOTLOADER_FALLBACK_LEGACY_KEY                    1
-
 // <o BOOTLOADER_VERSION_MAIN_CUSTOMER> Bootloader Version Main Customer
 // <i> Default: 0
 // <i> Bootloader Version Main Customer
-#define BOOTLOADER_VERSION_MAIN_CUSTOMER                    1
+#define BOOTLOADER_VERSION_MAIN_CUSTOMER                    0
 
 // </h>
 

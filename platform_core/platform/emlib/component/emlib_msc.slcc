@@ -10,7 +10,7 @@ metadata:
     license: Zlib
 source:
 - path: src/em_msc.c
-  unless: [trustzone_nonsecure]
+  unless: [trustzone_nonsecure, cortexm0plus]
 include:
 - path: inc
   file_list:

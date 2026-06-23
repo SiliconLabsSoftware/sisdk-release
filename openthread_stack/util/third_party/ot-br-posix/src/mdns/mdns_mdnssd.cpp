@@ -924,6 +924,7 @@ otbrError PublisherMDnsSd::PublishHostImpl(const std::string &aName,
 
     aCallback = HandleDuplicateHostRegistration(aName, aAddresses, std::move(aCallback));
     VerifyOrExit(!aCallback.IsNull());
+    VerifyOrExit(!aAddresses.empty(), std::move(aCallback)(OTBR_ERROR_NONE));
 
     hostReg = std::make_shared<DnssdHostRegistration>(aName, aAddresses, std::move(aCallback), this);
     AddHostRegistration(hostReg);
@@ -1194,6 +1195,9 @@ void PublisherMDnsSd::ServiceSubscription::HandleBrowseResult(DNSServiceRef     
     }
     else
     {
+        otbrLogInfo("DNSSD lc mDNS (dns_sd): browse REMOVE inst=%s type=%s ifIndex=%u "
+                    "(DNSServiceBrowse callback without kDNSServiceFlagsAdd — service left or goodbye)",
+                    aInstanceName, aType, aInterfaceIndex);
         mPublisher.OnServiceRemoved(aInterfaceIndex, mType, aInstanceName);
         Remove(aInterfaceIndex, aInstanceName, aType, aDomain);
     }

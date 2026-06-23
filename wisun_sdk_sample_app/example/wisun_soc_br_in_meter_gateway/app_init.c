@@ -67,13 +67,8 @@ void app_init(void)
   const osThreadAttr_t app_task_attr = {
     .name       = "AppMain",
     .attr_bits  = osThreadDetached,
-    .cb_mem     = NULL,
-    .cb_size    = 0,
-    .stack_mem  = NULL,
     .stack_size = app_stack_size_word_to_byte(SL_WISUN_APP_CORE_MAIN_STACK_SIZE_WORD),
-    .priority   = osPriorityNormal,
-    .tz_module  = 0,
-    .reserved   = 0
+    .priority   = osPriorityNormal
   };
 
   // Register callbacks
@@ -92,13 +87,8 @@ void app_service_task_init(void)
   const osThreadAttr_t service_task_attr = {
     .name       = "AppService",
     .attr_bits  = osThreadDetached,
-    .cb_mem     = NULL,
-    .cb_size    = 0,
-    .stack_mem  = NULL,
     .stack_size = app_stack_size_word_to_byte(SL_WISUN_APP_CORE_MAIN_STACK_SIZE_WORD),
-    .priority   = osPriorityBelowNormal1,
-    .tz_module  = 0,
-    .reserved   = 0
+    .priority   = osPriorityBelowNormal1
   };
 
   osThreadId_t service_thr_id = osThreadNew(app_service_task,

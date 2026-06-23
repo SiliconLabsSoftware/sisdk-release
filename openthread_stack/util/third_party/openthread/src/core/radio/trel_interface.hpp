@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread Radio Encapsulation Link (TREL) interface.
  */
 
-#ifndef TREL_INTERFACE_HPP_
-#define TREL_INTERFACE_HPP_
+#ifndef OT_CORE_RADIO_TREL_INTERFACE_HPP_
+#define OT_CORE_RADIO_TREL_INTERFACE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -74,7 +74,7 @@ class Interface : public InstanceLocator
 
 public:
     /**
-     * Pointer type defines the callback used by TREL interface to notify user of state changes.
+     * Defines the callback used by TREL interface to notify user of state changes.
      *
      * Please see `otTrelStateChangeCallback` for more details.
      */
@@ -159,6 +159,28 @@ public:
     uint16_t GetUdpPort(void) const { return mUdpPort; }
 
     /**
+     * Sets the TREL UDP port.
+     *
+     * @param[in] aPort   The UDP port number.
+     */
+    void SetUdpPort(uint16_t aPort) { mUdpPort = aPort; }
+
+#if OPENTHREAD_CONFIG_TREL_DELEGATE_INFRA_TO_HOST_ENABLE
+    /**
+     * Gets the TREL interface's host UDP port.
+     *
+     * @returns The TREL interface's host UDP port.
+     */
+    uint16_t GetHostUdpPort(void) const { return mHostUdpPort; }
+
+    /**
+     * Sets the TREL interface's host UDP port.
+     *
+     * @param[in] aPort   The UDP port number.
+     */
+    void SetHostUdpPort(uint16_t aPort);
+#endif // OPENTHREAD_CONFIG_TREL_DELEGATE_INFRA_TO_HOST_ENABLE
+    /**
      * Sets the callback.
      *
      * @param[in] aCallback   The callback function pointer.
@@ -180,7 +202,9 @@ private:
     void HandleTask(void);
 
     // Methods used by `Trel::Link`.
-    void  Init(void);
+    void Init(void);
+    /** Sets `mUdpPort` from `Ip6::Udp::GetEphemeralPort()` (see `Init()`). */
+    void  AssignDefaultUdpPortFromEphemeral(void);
     Error Send(Packet &aPacket, bool aIsDiscovery = false);
 
     // Callbacks from `otPlatTrel`.
@@ -188,11 +212,14 @@ private:
 
     using CallbackTask = TaskletIn<Interface, &Interface::HandleTask>;
 
-    bool                          mUserEnabled : 1;
-    bool                          mStackEnabled : 1;
-    bool                          mFiltered : 1;
-    State                         mState;
-    uint16_t                      mUdpPort;
+    bool     mUserEnabled : 1;
+    bool     mStackEnabled : 1;
+    bool     mFiltered : 1;
+    State    mState;
+    uint16_t mUdpPort;
+#if OPENTHREAD_CONFIG_TREL_DELEGATE_INFRA_TO_HOST_ENABLE
+    uint16_t mHostUdpPort;
+#endif
     Packet                        mRxPacket;
     CallbackTask                  mCallbackTask;
     Callback<StateChangeCallback> mCallback;
@@ -203,4 +230,4 @@ private:
 
 #endif // #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
-#endif // TREL_INTERFACE_HPP_
+#endif // OT_CORE_RADIO_TREL_INTERFACE_HPP_

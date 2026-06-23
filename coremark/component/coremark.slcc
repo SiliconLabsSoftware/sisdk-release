@@ -37,5 +37,5 @@ requires:
 - name: emlib_timer
 define:
 - name: ITERATIONS
-  value: 1000
+  value: "1000"
 root_path: coremark

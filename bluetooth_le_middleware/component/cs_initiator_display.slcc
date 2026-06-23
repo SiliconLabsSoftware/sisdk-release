@@ -7,7 +7,7 @@ category: Bluetooth|Application|Miscellaneous
 metadata:
   sbom:
     license: Zlib
-quality: evaluation
+quality: production
 root_path: bluetooth_le_middleware/common/cs_initiator_display
 include:
 - path: ./inc

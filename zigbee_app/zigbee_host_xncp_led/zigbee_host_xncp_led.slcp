@@ -1,5 +1,5 @@
 project_name: zigbee_host_xncp_led
-label: Zigbee - Host XncpLed
+label: Zigbee - Host xNCP LED
 package: zigbee
 category: Zigbee Host Application
 quality: production
@@ -67,7 +67,7 @@ config_file:
 
 include:
   - path: ./
-  - path: ../../projects/ncp/zigbee_ncp_xncp_led
+  - path: ../ncp/zigbee_ncp_xncp_led
     file_list:
       - path: led-protocol.h
 

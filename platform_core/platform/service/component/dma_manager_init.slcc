@@ -1,0 +1,33 @@
+id: dma_manager_init
+label: DMA Manager Init
+package: platform_core
+description: >
+  Initializes DMA Manager instances during system initialization. This component
+  provides automatic DMA Manager setup for applications that need DMA functionality.
+  By default, it initializes the LDMA0 instance. On devices with multiple LDMA
+  peripherals, additional instances can be added via template contributions.
+category: Services|DMA Manager
+quality: production
+metadata:
+  sbom:
+    license: Zlib
+ui_hints:
+  visibility: never
+provides:
+- name: dma_manager_init
+requires:
+- name: dma_manager
+- name: device_peripheral
+root_path: platform_core/platform/service/dma_manager
+template_file:
+- path: template/sl_dma_manager_instances.c.jinja
+- path: template/sl_dma_manager_instances.h.jinja
+template_contribution:
+- name: event_handler
+  value:
+    event: platform_init
+    include: sl_dma_manager_instances.h
+    handler: sl_dma_manager_instances_init
+  priority: -5
+- name: dma_manager_instances
+  value: ldma0

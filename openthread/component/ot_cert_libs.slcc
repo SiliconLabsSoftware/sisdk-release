@@ -1,7 +1,7 @@
 id: ot_cert_libs
 label: OpenThread Certification Libraries
 package: openthread
-category: OpenThread
+category: OpenThread|Certification
 quality: production
 description: >
   Includes OpenThread stack libraries that could be used for certification by inheritance. Uses default certification configurations.
@@ -28,9 +28,27 @@ library:
   - ot_coap_cert_libs
   - ot_multi_instance_cert_libs
   - ot_multicast_cert_libs
+- path: libs/libsl_ot_stack_ftd_efr32mg21_llvm.a
+  condition:
+  - toolchain_llvm
+  - device_sdid_200
+  - ot_stack_ftd
+  unless:
+  - ot_coap_cert_libs
+  - ot_multi_instance_cert_libs
+  - ot_multicast_cert_libs
 - path: libs/libsl_ot_stack_mtd_efr32mg21_gcc.a
   condition:
   - toolchain_gcc
+  - device_sdid_200
+  - ot_stack_mtd
+  unless:
+  - ot_coap_cert_libs
+  - ot_multi_instance_cert_libs
+  - ot_multicast_cert_libs
+- path: libs/libsl_ot_stack_mtd_efr32mg21_llvm.a
+  condition:
+  - toolchain_llvm
   - device_sdid_200
   - ot_stack_mtd
   unless:
@@ -43,9 +61,24 @@ library:
   - device_sdid_200
   unless:
   - ot_stack_tcp_stubs
+- path: libs/libsl_ot_stack_tcp_efr32mg21_llvm.a
+  condition:
+  - toolchain_llvm
+  - device_sdid_200
+  unless:
+  - ot_stack_tcp_stubs
 - path: libs/libsl_ot_stack_ftd_efr32mg24_gcc.a
   condition:
   - toolchain_gcc
+  - device_sdid_215
+  - ot_stack_ftd
+  unless:
+  - ot_coap_cert_libs
+  - ot_multi_instance_cert_libs
+  - ot_multicast_cert_libs
+- path: libs/libsl_ot_stack_ftd_efr32mg24_llvm.a
+  condition:
+  - toolchain_llvm
   - device_sdid_215
   - ot_stack_ftd
   unless:
@@ -61,15 +94,39 @@ library:
   - ot_coap_cert_libs
   - ot_multi_instance_cert_libs
   - ot_multicast_cert_libs
+- path: libs/libsl_ot_stack_mtd_efr32mg24_llvm.a
+  condition:
+  - toolchain_llvm
+  - device_sdid_215
+  - ot_stack_mtd
+  unless:
+  - ot_coap_cert_libs
+  - ot_multi_instance_cert_libs
+  - ot_multicast_cert_libs
 - path: libs/libsl_ot_stack_tcp_efr32mg24_gcc.a
   condition:
   - toolchain_gcc
   - device_sdid_215
   unless:
   - ot_stack_tcp_stubs
+- path: libs/libsl_ot_stack_tcp_efr32mg24_llvm.a
+  condition:
+  - toolchain_llvm
+  - device_sdid_215
+  unless:
+  - ot_stack_tcp_stubs
 - path: libs/libsl_ot_stack_ftd_efr32mg26_gcc.a
   condition:
   - toolchain_gcc
+  - device_sdid_225
+  - ot_stack_ftd
+  unless:
+  - ot_coap_cert_libs
+  - ot_multi_instance_cert_libs
+  - ot_multicast_cert_libs
+- path: libs/libsl_ot_stack_ftd_efr32mg26_llvm.a
+  condition:
+  - toolchain_llvm
   - device_sdid_225
   - ot_stack_ftd
   unless:
@@ -85,15 +142,39 @@ library:
   - ot_coap_cert_libs
   - ot_multi_instance_cert_libs
   - ot_multicast_cert_libs
+- path: libs/libsl_ot_stack_mtd_efr32mg26_llvm.a
+  condition:
+  - toolchain_llvm
+  - device_sdid_225
+  - ot_stack_mtd
+  unless:
+  - ot_coap_cert_libs
+  - ot_multi_instance_cert_libs
+  - ot_multicast_cert_libs
 - path: libs/libsl_ot_stack_tcp_efr32mg26_gcc.a
   condition:
   - toolchain_gcc
   - device_sdid_225
   unless:
   - ot_stack_tcp_stubs
+- path: libs/libsl_ot_stack_tcp_efr32mg26_llvm.a
+  condition:
+  - toolchain_llvm
+  - device_sdid_225
+  unless:
+  - ot_stack_tcp_stubs
 - path: libs/libsl_ot_stack_ftd_simg301_gcc.a
   condition:
   - toolchain_gcc
+  - device_generic_family_sixx301
+  - ot_stack_ftd
+  unless:
+  - ot_coap_cert_libs
+  - ot_multi_instance_cert_libs
+  - ot_multicast_cert_libs
+- path: libs/libsl_ot_stack_ftd_simg301_llvm.a
+  condition:
+  - toolchain_llvm
   - device_generic_family_sixx301
   - ot_stack_ftd
   unless:
@@ -109,9 +190,24 @@ library:
   - ot_coap_cert_libs
   - ot_multi_instance_cert_libs
   - ot_multicast_cert_libs
+- path: libs/libsl_ot_stack_mtd_simg301_llvm.a
+  condition:
+  - toolchain_llvm
+  - device_generic_family_sixx301
+  - ot_stack_mtd
+  unless:
+  - ot_coap_cert_libs
+  - ot_multi_instance_cert_libs
+  - ot_multicast_cert_libs
 - path: libs/libsl_ot_stack_tcp_simg301_gcc.a
   condition:
   - toolchain_gcc
+  - device_generic_family_sixx301
+  unless:
+  - ot_stack_tcp_stubs
+- path: libs/libsl_ot_stack_tcp_simg301_llvm.a
+  condition:
+  - toolchain_llvm
   - device_generic_family_sixx301
   unless:
   - ot_stack_tcp_stubs

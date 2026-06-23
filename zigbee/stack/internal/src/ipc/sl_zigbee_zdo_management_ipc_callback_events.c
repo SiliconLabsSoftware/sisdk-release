@@ -3,7 +3,7 @@
  * @brief callback event handlers for sl_zigbee_zdo_management
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -29,6 +29,10 @@ void sli_zigbee_stack_beacon_survey_complete_callback(sl_zigbee_zdo_status_t sta
                                                       uint16_t pan_id_conflicts)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.beacon_survey_complete_callback.status = status;
 
   if (survey_results != NULL) {
@@ -36,6 +40,11 @@ void sli_zigbee_stack_beacon_survey_complete_callback(sl_zigbee_zdo_status_t sta
   }
 
   cb_event->data.beacon_survey_complete_callback.potential_parent_count = potential_parent_count;
+
+  if (potential_parent_count > 16) {
+    assert(false); // "vector potential_parents length exceeds expected maximum
+    potential_parent_count = 16;
+  }
 
   if (potential_parents != NULL) {
     memmove(cb_event->data.beacon_survey_complete_callback.potential_parents, potential_parents, sizeof(sl_zigbee_potential_parent_t) * potential_parent_count);

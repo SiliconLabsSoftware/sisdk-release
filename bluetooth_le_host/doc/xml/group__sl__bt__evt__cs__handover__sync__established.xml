@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.4" xml:lang="en-US">
+  <compounddef id="group__sl__bt__evt__cs__handover__sync__established" kind="group">
+    <compoundname>sl_bt_evt_cs_handover_sync_established</compoundname>
+    <title>sl_bt_evt_cs_handover_sync_established</title>
+    <innerclass refid="structsl__bt__evt__cs__handover__sync__established__s" prot="public">sl_bt_evt_cs_handover_sync_established_s</innerclass>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="group__sl__bt__evt__cs__handover__sync__established_1ga26d89514974ed978b3bb6385591f516c" prot="public" static="no">
+        <type>struct <ref refid="structsl__bt__evt__cs__handover__sync__established__s" kindref="compound">sl_bt_evt_cs_handover_sync_established_s</ref></type>
+        <definition>typedef struct sl_bt_evt_cs_handover_sync_established_s sl_bt_evt_cs_handover_sync_established_t</definition>
+        <argsstring></argsstring>
+        <name>sl_bt_evt_cs_handover_sync_established_t</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="14571" column="55" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="14571" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="group__sl__bt__evt__cs__handover__sync__established_1ga0d5570d585574bf19d453ddbc6ccb6f6" prot="public" static="no">
+        <name>sl_bt_evt_cs_handover_sync_established_id</name>
+        <initializer>0x065900a0</initializer>
+        <briefdescription>
+<para>Identifier of the handover_sync_established event. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="14557" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="14557" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Indicates that the controller either synchronized to the CS handover procedure and the connection, or completed the listening window without establishing synchronization. </para>
+    </briefdescription>
+    <detaileddescription>
+<para>This event is intended for the CS Follower role. </para>
+    </detaileddescription>
+  </compounddef>
+</doxygen>

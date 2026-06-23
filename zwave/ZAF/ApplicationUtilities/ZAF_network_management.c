@@ -11,7 +11,7 @@
 #include <ZAF_network_management.h>
 #include <ZAF_Common_interface.h>
 
-void ZAF_SetMaxInclusionRequestIntervals(uint32_t intervals)
+void ZAF_SetMaxInclusionRequestIntervals(uint8_t intervals)
 {
   SZwaveCommandPackage setMaxInclusionRequestIntervals = {
     .eCommandType = EZWAVECOMMANDTYPE_ZW_SET_MAX_INCL_REQ_INTERVALS,

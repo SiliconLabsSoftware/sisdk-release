@@ -51,7 +51,7 @@
 #include "em_system.h"
 #include "em_prs.h"
 #include "em_emu.h"
-#include "em_ldma.h"
+#include "sl_hal_ldma.h"
 #else
 #include "sl_hal_prs.h"
 #include "sl_hal_emu.h"

@@ -29,6 +29,7 @@
  ******************************************************************************/
 
 #include PLATFORM_HEADER
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "stack/include/ember.h"
 #include "sl_connect_sdk_btl-interface.h"
@@ -146,7 +147,7 @@ static bool geckoBootloaderChipEraseSlot(uint32_t slot)
 
   bootloader_getStorageInfo(&storageInfo);
   if (slot >= storageInfo.numStorageSlots) {
-    app_log_error("ERROR: invalid erase slot number(%ld)!\n", slot);
+    app_log_error("ERROR: invalid erase slot number(%" PRIu32 ")!\n", slot);
     return false;
   }
 
@@ -163,8 +164,8 @@ static bool geckoBootloaderChipEraseSlot(uint32_t slot)
   // This shouldn't happen unless the user configures something improperly, and
   // even then, the bootloader may complain when being compiled/run
   if (storageSlotInfo.length % storageInfo.info->pageSize) {
-    app_log_warning("Erase: slot length (%ld) not aligned "
-                    "to page size (%ld). The entire slot will not be erased.\n",
+    app_log_warning("Erase: slot length (%" PRIu32 ") not aligned "
+                                                   "to page size (%" PRIu32 "). The entire slot will not be erased.\n",
                     storageSlotInfo.length,
                     storageInfo.info->pageSize);
   }
@@ -182,8 +183,8 @@ static bool geckoBootloaderChipEraseSlot(uint32_t slot)
   app_log_info("\n");
 
   if (BOOTLOADER_OK != retVal) {
-    app_log_error("Erase: failed to erase %ld bytes in slot at "
-                  "address 0x%4lx (error 0x%lx)\n",
+    app_log_error("Erase: failed to erase %" PRIu32 " bytes in slot at "
+                                                    "address 0x%08" PRIX32 " (error 0x%" PRId32 ")\n",
                   storageInfo.info->pageSize,
                   address - storageInfo.info->pageSize,
                   retVal);
@@ -200,7 +201,7 @@ static bool geckoBootloaderChipEraseSlotAll(void)
   memset(&storageInfo, 0, sizeof(BootloaderStorageInformation_t));
   bootloader_getStorageInfo(&storageInfo);
   for (uint32_t index = 0; index < storageInfo.numStorageSlots; index++) {
-    app_log_info("flash erasing slot %ld started\n", index);
+    app_log_info("flash erasing slot %" PRIu32 " started\n", index);
     result = geckoBootloaderChipEraseSlot(index);
 
     if (result) {
@@ -266,7 +267,7 @@ void emberAfPluginBootloaderInterfaceBootload(void)
   result = bootloader_setImageToBootload(0);
 
   if (result != BOOTLOADER_OK) {
-    app_log_error("Failed to set bootload image (error 0x%lx)!\n", result);
+    app_log_error("Failed to set bootload image (error 0x%" PRId32 ")!\n", result);
     return;
   }
   app_log_info("Bootload image set!\n");

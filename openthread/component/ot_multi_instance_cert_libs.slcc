@@ -1,7 +1,7 @@
 id: ot_multi_instance_cert_libs
 label: OpenThread Multi-Instance Certification Libraries
 package: openthread
-category: OpenThread
+category: OpenThread|Certification
 quality: production
 description: >
   Includes OpenThread stack libraries that could be used for certification by inheritance. Uses default certification configurations.
@@ -26,10 +26,18 @@ define:
   value: 1
 - name: OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_NUM
   value: 2
+- name: OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+  value: 1
+
 library:
 - path: libs/libsl_ot_stack_ftd_mi_coap_efr32mg21_gcc.a
   condition:
   - toolchain_gcc
+  - device_sdid_200
+  - ot_stack_ftd
+- path: libs/libsl_ot_stack_ftd_mi_coap_efr32mg21_llvm.a
+  condition:
+  - toolchain_llvm
   - device_sdid_200
   - ot_stack_ftd
 - path: libs/libsl_ot_stack_mtd_mi_coap_efr32mg21_gcc.a
@@ -37,9 +45,19 @@ library:
   - toolchain_gcc
   - device_sdid_200
   - ot_stack_mtd
+- path: libs/libsl_ot_stack_mtd_mi_coap_efr32mg21_llvm.a
+  condition:
+  - toolchain_llvm
+  - device_sdid_200
+  - ot_stack_mtd
 - path: libs/libsl_ot_stack_ftd_mi_coap_efr32mg24_gcc.a
   condition:
   - toolchain_gcc
+  - device_sdid_215
+  - ot_stack_ftd
+- path: libs/libsl_ot_stack_ftd_mi_coap_efr32mg24_llvm.a
+  condition:
+  - toolchain_llvm
   - device_sdid_215
   - ot_stack_ftd
 - path: libs/libsl_ot_stack_mtd_mi_coap_efr32mg24_gcc.a
@@ -47,9 +65,19 @@ library:
   - toolchain_gcc
   - device_sdid_215
   - ot_stack_mtd
+- path: libs/libsl_ot_stack_mtd_mi_coap_efr32mg24_llvm.a
+  condition:
+  - toolchain_llvm
+  - device_sdid_215
+  - ot_stack_mtd
 - path: libs/libsl_ot_stack_ftd_mi_coap_efr32mg26_gcc.a
   condition:
   - toolchain_gcc
+  - device_sdid_225
+  - ot_stack_ftd
+- path: libs/libsl_ot_stack_ftd_mi_coap_efr32mg26_llvm.a
+  condition:
+  - toolchain_llvm
   - device_sdid_225
   - ot_stack_ftd
 - path: libs/libsl_ot_stack_mtd_mi_coap_efr32mg26_gcc.a
@@ -57,14 +85,29 @@ library:
   - toolchain_gcc
   - device_sdid_225
   - ot_stack_mtd
+- path: libs/libsl_ot_stack_mtd_mi_coap_efr32mg26_llvm.a
+  condition:
+  - toolchain_llvm
+  - device_sdid_225
+  - ot_stack_mtd
 - path: libs/libsl_ot_stack_ftd_mi_coap_simg301_gcc.a
   condition:
   - toolchain_gcc
   - device_generic_family_sixx301
   - ot_stack_ftd
+- path: libs/libsl_ot_stack_ftd_mi_coap_simg301_llvm.a
+  condition:
+  - toolchain_llvm
+  - device_generic_family_sixx301
+  - ot_stack_ftd
 - path: libs/libsl_ot_stack_mtd_mi_coap_simg301_gcc.a
   condition:
   - toolchain_gcc
+  - device_generic_family_sixx301
+  - ot_stack_mtd
+- path: libs/libsl_ot_stack_mtd_mi_coap_simg301_llvm.a
+  condition:
+  - toolchain_llvm
   - device_generic_family_sixx301
   - ot_stack_mtd
 metadata:

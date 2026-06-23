@@ -108,6 +108,7 @@ cs_procedure_state_t extract_cs_result_data(cs_initiator_t *initiator,
       = cs_result_content->cs_event->data.evt_cs_result.data.data;
     step_data_len
       = cs_result_content->cs_event->data.evt_cs_result.data.len;
+    initiator->subevents_per_procedure_counter++;
   } else {
     initiator->num_antenna_path
       = cs_result_content->cs_event->data.evt_cs_result_continue.num_antenna_paths;

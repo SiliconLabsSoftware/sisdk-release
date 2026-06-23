@@ -26,7 +26,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  *
  ******************************************************************************/
-
+#include <inttypes.h>
 #include "debug_print.h"
 #include "sl_cli.h"
 #include "sl_bluetooth.h"
@@ -45,7 +45,7 @@ void connect_ble_cli_get_address_command(sl_cli_command_arg_t *arguments)
 
   sl_status_t status = sl_bt_system_get_identity_address(&ble_address, 0);
 
-  connect_core_debug_print("BLE address: [%02X %02X %02X %02X %02X %02X]\n",
+  connect_core_debug_print("BLE address: [%02" PRIX8 " %02" PRIX8 " %02" PRIX8 " %02" PRIX8 " %02" PRIX8 " %02" PRIX8 "]\n",
                            ble_address.addr[5], ble_address.addr[4],
                            ble_address.addr[3], ble_address.addr[2],
                            ble_address.addr[1], ble_address.addr[0]);
@@ -65,7 +65,7 @@ void connect_ble_cli_set_adv_params_command(sl_cli_command_arg_t *arguments)
   if (status == SL_STATUS_OK) {
     connect_core_debug_print("success\n");
   } else {
-    connect_core_debug_print("error: 0x%04lX\n", status);
+    connect_core_debug_print("error: 0x%08" PRIX32 "\n", status);
   }
 }
 
@@ -85,7 +85,7 @@ void connect_ble_cli_start_adv_command(sl_cli_command_arg_t *arguments)
   if (status == SL_STATUS_OK) {
     connect_core_debug_print("success\n");
   } else {
-    connect_core_debug_print("error: 0x%04lX\n", status);
+    connect_core_debug_print("error: 0x%08" PRIX32 "\n", status);
   }
 
   status = sl_bt_legacy_advertiser_start(adv_handle,
@@ -94,7 +94,7 @@ void connect_ble_cli_start_adv_command(sl_cli_command_arg_t *arguments)
   if (status == SL_STATUS_OK) {
     connect_core_debug_print("success\n");
   } else {
-    connect_core_debug_print("error: 0x%04lX\n", status);
+    connect_core_debug_print("error: 0x%08" PRIX32 "\n", status);
   }
 }
 
@@ -122,9 +122,9 @@ void connect_ble_cli_open_connection_command(sl_cli_command_arg_t *arguments)
   status = sl_bt_connection_open(address, address_type, 1, &connection_handle);
 
   if (status == SL_STATUS_OK) {
-    connect_core_debug_print("success, handle=0x%02X\n", connection_handle);
+    connect_core_debug_print("success, handle=0x%02" PRIX8 "\n", connection_handle);
   } else {
-    connect_core_debug_print("error: 0x%04lX\n", status);
+    connect_core_debug_print("error: 0x%08" PRIX32 "\n", status);
   }
 }
 
@@ -137,7 +137,7 @@ void connect_ble_cli_close_connection_command(sl_cli_command_arg_t *arguments)
   if (status == SL_STATUS_OK) {
     connect_core_debug_print("success\n");
   } else {
-    connect_core_debug_print("error: 0x%04lX\n", status);
+    connect_core_debug_print("error: 0x%08" PRIX32 "\n", status);
   }
 }
 
@@ -157,6 +157,6 @@ void connect_ble_cli_set_connection_params_command(sl_cli_command_arg_t *argumen
   if (status == SL_STATUS_OK) {
     connect_core_debug_print("success\n");
   } else {
-    connect_core_debug_print("error: 0x%04lX\n", status);
+    connect_core_debug_print("error: 0x%08" PRIX32 "\n", status);
   }
 }

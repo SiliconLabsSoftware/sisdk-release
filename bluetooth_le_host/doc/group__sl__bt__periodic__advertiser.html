@@ -116,6 +116,8 @@ Functions</h2></td></tr>
 <tr class="separator:ga8ddb03280f2d65373a405ce20fdbcd18"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gad70b3fd35ebf8e87f78d5ecab0117d4c"><td class="memItemLeft" align="right" valign="top">sl_status_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__periodic__advertiser.html#gad70b3fd35ebf8e87f78d5ecab0117d4c">sl_bt_periodic_advertiser_set_long_data</a> (uint8_t advertising_set)</td></tr>
 <tr class="separator:gad70b3fd35ebf8e87f78d5ecab0117d4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad0487b1e80033fd1ba4ee393a1f1e9fa"><td class="memItemLeft" align="right" valign="top">sl_status_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__periodic__advertiser.html#gad0487b1e80033fd1ba4ee393a1f1e9fa">sl_bt_periodic_advertiser_refresh_data_id</a> (uint8_t advertising_set)</td></tr>
+<tr class="separator:gad0487b1e80033fd1ba4ee393a1f1e9fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaf2a2688f53f25df2d1ba12a5f5fafbd3"><td class="memItemLeft" align="right" valign="top">sl_status_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__periodic__advertiser.html#gaf2a2688f53f25df2d1ba12a5f5fafbd3">sl_bt_periodic_advertiser_start</a> (uint8_t advertising_set, uint16_t interval_min, uint16_t interval_max, uint32_t flags)</td></tr>
 <tr class="separator:gaf2a2688f53f25df2d1ba12a5f5fafbd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga862241c104b48e65829ae257fae08bb4"><td class="memItemLeft" align="right" valign="top">sl_status_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__periodic__advertiser.html#ga862241c104b48e65829ae257fae08bb4">sl_bt_periodic_advertiser_stop</a> (uint8_t advertising_set)</td></tr>
@@ -200,6 +202,33 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="gad0487b1e80033fd1ba4ee393a1f1e9fa" name="gad0487b1e80033fd1ba4ee393a1f1e9fa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gad0487b1e80033fd1ba4ee393a1f1e9fa">&#9670;&nbsp;</a></span>sl_bt_periodic_advertiser_refresh_data_id()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">sl_status_t sl_bt_periodic_advertiser_refresh_data_id </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>advertising_set</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Refresh the Advertising Data ID (DID) of periodic advertising data.</p>
+<p >The data that was previously set using <a class="el" href="group__sl__bt__periodic__advertiser.html#ga8ddb03280f2d65373a405ce20fdbcd18">sl_bt_periodic_advertiser_set_data</a> or <a class="el" href="group__sl__bt__periodic__advertiser.html#gad70b3fd35ebf8e87f78d5ecab0117d4c">sl_bt_periodic_advertiser_set_long_data</a> is unchanged and only the DID changes. The DID value is transmitted in the Advertising Data Information (ADI) field of the periodic advertising PDUs if the periodic advertiser is configured to include it. See <a class="el" href="group__sl__bt__periodic__advertiser__flags.html#ga05e344a399dec97e5438b0857e8fd97f">SL_BT_PERIODIC_ADVERTISER_INCLUDE_ADVERTISING_DATA_INFORMATION</a> and the <code>flags</code> parameter in command <a class="el" href="group__sl__bt__periodic__advertiser.html#gaf2a2688f53f25df2d1ba12a5f5fafbd3">sl_bt_periodic_advertiser_start</a>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">advertising_set</td><td>Advertising set handle</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>SL_STATUS_OK if successful. Error code otherwise. </dd></dl>
+
+</div>
+</div>
 <a id="gaf2a2688f53f25df2d1ba12a5f5fafbd3" name="gaf2a2688f53f25df2d1ba12a5f5fafbd3"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#gaf2a2688f53f25df2d1ba12a5f5fafbd3">&#9670;&nbsp;</a></span>sl_bt_periodic_advertiser_start()</h2>
 
@@ -238,6 +267,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p >Start periodic advertising on an advertising set.</p>
+<p >If privacy is enabled, see <a class="el" href="group__sl__bt__gap.html#gab8d65fb681a00f260f8b8c49a09ab1d5">sl_bt_gap_set_privacy_mode</a> for the advertising-set private address behavior.</p>
 <p >According to the Bluetooth Core specification, periodic advertising PDUs cannot be transmitted until at least one extended advertising event has been completed. If the application needs exact control over the extended advertising data and parameters, use the <a class="el" href="group__sl__bt__advertiser.html">Advertiser</a> class to configure the parameters of the advertising set and the <a class="el" href="group__sl__bt__extended__advertiser.html">Extended Advertiser</a> class to set or generate the desired extended advertising data payload. If the application does not configure the parameters or set the data, the default parameters and empty advertising data are used for the extended advertising.</p>
 <p >If the application has not already started extended advertising and the flag <a class="el" href="group__sl__bt__periodic__advertiser__flags.html#ga17c966e284c2b95a771aefe9de0843c8">SL_BT_PERIODIC_ADVERTISER_AUTO_START_EXTENDED_ADVERTISING</a> is set in <code>flags</code>, the stack will automatically start extended advertising with the parameters and extended advertising data currently configured to the advertising set. The application may stop the automatically started extended advertising using the <a class="el" href="group__sl__bt__advertiser.html#gaa21542d22182e08604799e795c90db7b">sl_bt_advertiser_stop</a> command.</p>
 <p >If the application has not already started extended advertising and the flag <a class="el" href="group__sl__bt__periodic__advertiser__flags.html#ga17c966e284c2b95a771aefe9de0843c8">SL_BT_PERIODIC_ADVERTISER_AUTO_START_EXTENDED_ADVERTISING</a> is not set in <code>flags</code>, the stack will momentarily start extended advertising with the parameters and extended advertising data currently configured to the advertising set. Unless the application starts extended advertising before the first extended advertising event has completed, the stack will automatically stop the momentary extended advertising after the first extended advertising event.</p>

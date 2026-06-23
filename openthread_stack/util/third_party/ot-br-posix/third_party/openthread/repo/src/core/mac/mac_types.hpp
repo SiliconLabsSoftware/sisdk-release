@@ -31,8 +31,8 @@
  *   This file includes definitions for MAC types.
  */
 
-#ifndef MAC_TYPES_HPP_
-#define MAC_TYPES_HPP_
+#ifndef OT_CORE_MAC_MAC_TYPES_HPP_
+#define OT_CORE_MAC_MAC_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -85,6 +85,11 @@ constexpr ShortAddress kShortAddrInvalid   = OT_RADIO_INVALID_SHORT_ADDR;   ///<
  * Represents the wake-up identifier.
  */
 typedef otWakeupId WakeupId;
+
+/**
+ * Represents the MAC layer counters.
+ */
+typedef otMacCounters Counters;
 
 /**
  * Generates a random IEEE 802.15.4 PAN ID.
@@ -221,21 +226,25 @@ public:
     }
 
     /**
-     * Overloads operator `==` to evaluate whether or not two `ExtAddress` instances are equal.
-     *
-     * @param[in]  aOther  The other `ExtAddress` instance to compare with.
-     *
-     * @retval TRUE   If the two `ExtAddress` instances are equal.
-     * @retval FALSE  If the two `ExtAddress` instances are not equal.
-     */
-    bool operator==(const ExtAddress &aOther) const;
-
-    /**
      * Converts an address to a string.
      *
      * @returns An `InfoString` containing the string representation of the Extended Address.
      */
     InfoString ToString(void) const;
+
+    /**
+     * Parses an Extended Address from a string.
+     *
+     * The string must be a hex representation of the address (e.g., "0123456789abcdef").
+     * The parsing is case-insensitive.
+     *
+     * @param[in]  aString  A pointer to the string to parse.
+     *
+     * @retval kErrorNone          Successfully parsed the Extended Address.
+     * @retval kErrorInvalidArgs   @p aString is `nullptr`.
+     * @retval kErrorParse         @p aString is not a valid hex string representation of an Extended Address.
+     */
+    Error FromString(const char *aString);
 
 private:
     static constexpr uint8_t kGroupFlag = (1 << 0);
@@ -1105,4 +1114,4 @@ DefineMapEnum(otWakeupType, Mac::WakeupRequest::Type);
 
 } // namespace ot
 
-#endif // MAC_TYPES_HPP_
+#endif // OT_CORE_MAC_MAC_TYPES_HPP_

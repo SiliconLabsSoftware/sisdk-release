@@ -36,11 +36,10 @@
 #endif
 
 #ifdef SL_CATALOG_ZW_CLI_COMMON_PRESENT
-
+#include "zw_cli_common.h"
 #include "zaf_event_distributor_soc.h"
 #include "CC_MultilevelSwitch_Support.h"
 #include "sl_cli.h"
-#include "app_log.h"
 #include "ev_man.h"
 #include "events.h"
 #ifdef SL_CATALOG_RGB_LED_PRESENT
@@ -76,15 +75,15 @@
  *****************************************************************************/
 void cli_get_rgb_values(__attribute__((unused)) sl_cli_command_arg_t *arguments)
 {
-  app_log_info("Get RGB LED values\r\n");
+  cli_printf("[I] Get RGB LED values\r\n");
 #ifdef SL_CATALOG_RGB_LED_PRESENT
   uint16_t color_switch_red_value, color_switch_green_value, color_switch_blue_value;
   sl_led_get_rgb_color(&sl_simple_rgb_pwm_led_rgb_led0, &color_switch_red_value, &color_switch_green_value, &color_switch_blue_value);
-  app_log_info("Red: %d, Green: %d, Blue: %d\r\n", color_switch_red_value, color_switch_green_value, color_switch_blue_value);
+  cli_printf("[I] Red: %d, Green: %d, Blue: %d\r\n", color_switch_red_value, color_switch_green_value, color_switch_blue_value);
 #endif
 #ifdef SL_CATALOG_PWM_PRESENT
   uint8_t color_switch_monochrome_value = sl_pwm_get_duty_cycle(&sl_pwm_led1);
-  app_log_info("Monochrome: %d%%\r\n", color_switch_monochrome_value);
+  cli_printf("[I] Monochrome: %d%%\r\n", color_switch_monochrome_value);
 #endif
 }
 

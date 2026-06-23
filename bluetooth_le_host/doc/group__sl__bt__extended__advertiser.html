@@ -367,6 +367,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p >Start undirected extended advertising on an advertising set with the specified connection mode. Use <a class="el" href="group__sl__bt__advertiser.html#gaa21542d22182e08604799e795c90db7b">sl_bt_advertiser_stop</a> to stop the advertising.</p>
+<p >If privacy is enabled, see <a class="el" href="group__sl__bt__gap.html#gab8d65fb681a00f260f8b8c49a09ab1d5">sl_bt_gap_set_privacy_mode</a> for the advertiser private address behavior.</p>
 <p >Use the <a class="el" href="group__sl__bt__extended__advertiser.html#gac039eff642bda360752cfe15a12a4801">sl_bt_extended_advertiser_set_data</a> or <a class="el" href="group__sl__bt__extended__advertiser.html#gab8d690a6e9b6266d69b560a3b11ebe39">sl_bt_extended_advertiser_generate_data</a> command to set the advertising data before calling this command. Advertising data is added into the scan response packet if the connection mode is scannable. Otherwise, data is in the advertising data packet.</p>
 <p >The number of concurrent connectable advertisings is limited by the connection number configuration. See <a class="el" href="group__sl__bt__legacy__advertiser.html#gafbe2b47ed2e88b2c96ef028e1df388d3">sl_bt_legacy_advertiser_start</a> for more details.</p>
 <p >This command fails with the invalid parameter error if the advertising uses a non-resolvable random address but the connection mode is <a class="el" href="group__sl__bt__extended__advertiser.html#gga33cacc2aca33282bd319e1042b1bfc67ac6bdb08c9a5960099d0fcf3ebf1a89ff">sl_bt_extended_advertiser_connectable</a>.</p>
@@ -438,6 +439,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p >Start directed extended advertising on an advertising set with the specified peer target device and connection mode. Use <a class="el" href="group__sl__bt__advertiser.html#gaa21542d22182e08604799e795c90db7b">sl_bt_advertiser_stop</a> to stop the advertising.</p>
+<p >If privacy is enabled, see <a class="el" href="group__sl__bt__gap.html#gab8d65fb681a00f260f8b8c49a09ab1d5">sl_bt_gap_set_privacy_mode</a> for the advertiser private address behavior.</p>
 <p >The number of concurrent connectable advertisings is limited by the connection number configuration. See <a class="el" href="group__sl__bt__legacy__advertiser.html#gafbe2b47ed2e88b2c96ef028e1df388d3">sl_bt_legacy_advertiser_start</a> for more details.</p>
 <p >This command fails with the invalid parameter error if the advertising uses a non-resolvable random address but the connection mode is <a class="el" href="group__sl__bt__extended__advertiser.html#gga33cacc2aca33282bd319e1042b1bfc67ac6bdb08c9a5960099d0fcf3ebf1a89ff">sl_bt_extended_advertiser_connectable</a>.</p>
 <p >Event <a class="el" href="group__sl__bt__evt__connection__opened.html">sl_bt_evt_connection_opened</a> will be received when the target device opens a connection to the advertiser on this advertising set. As a result, the advertising stops.</p>

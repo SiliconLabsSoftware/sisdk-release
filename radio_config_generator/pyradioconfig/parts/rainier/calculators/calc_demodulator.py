@@ -7,6 +7,32 @@ import numpy.matlib
 from scipy import signal as sp
 from pyradioconfig.parts.rainier.calculators.calc_shaping import CalcShapingRainier
 from pyradioconfig.calculator_model_framework.Utils.LogMgr import LogMgr
+from collections import OrderedDict
+from pyradioconfig.calculator_model_framework.Utils.cache_flags import is_advanced_cache_enabled
+
+_ADVANCED_CACHE_EN = is_advanced_cache_enabled()
+
+_KSI_CALC_CACHE_MAXSIZE = 1024
+_ksi_calc_cache = OrderedDict()
+
+
+def _ksi_cache_get(key):
+    if not _ADVANCED_CACHE_EN:
+        return None
+    cached = _ksi_calc_cache.get(key)
+    if cached is not None:
+        _ksi_calc_cache.move_to_end(key)
+    return cached
+
+
+def _ksi_cache_put(key, value):
+    if not _ADVANCED_CACHE_EN:
+        return
+    if key in _ksi_calc_cache:
+        _ksi_calc_cache.move_to_end(key)
+    _ksi_calc_cache[key] = value
+    if len(_ksi_calc_cache) > _KSI_CALC_CACHE_MAXSIZE:
+        _ksi_calc_cache.popitem(last=False)
 
 class CalcDemodulatorRainier(Calc_Demodulator_Bobcat):
 
@@ -60,6 +86,7 @@ class CalcDemodulatorRainier(Calc_Demodulator_Bobcat):
             ['CODED_500K', 3, 'Bluetooth LE Coded 500Kbps'],
             ['CONCURRENT', 4, 'Bluetooth Concurrent'],
             ['AOX_2M', 5, 'Bluetooth LE AoX 2Mbps'],
+            ['CUSTOM_1M', 6, 'Bluetooth LE Custom 1Mbps'],
             ['HADM_1M', 7, 'Bluetooth LE HADM (Channel Sounding) 1Mbps'],
             ['HADM_2M', 8, 'Bluetooth LE HADM (Channel Sounding) 2Mbps'],
             ['AOX_1M', 9, 'Bluetooth LE AoX 1Mbps'],
@@ -385,12 +412,23 @@ class CalcDemodulatorRainier(Calc_Demodulator_Bobcat):
 
         self._reg_write(model.vars.SEQ_FSWCOREINFO_CONFIG, reg)
 
+    def _get_ksi_cache_additional_inputs(self, model):
+        """Include Rainier-specific shaping selection in shared Ocelot cache-key builder.
+
+        Rainier may use either generated shaping filters or manual coefficient
+        overrides. Including shaping_filter mode prevents cross-mode key reuse.
+        """
+        return (
+            ("shaping_filter", str(model.vars.shaping_filter.value)),
+        )
+
     def return_ksi2_ksi3_calc(self, model, ksi1):
         # get parameters
         lock_bwsel = model.vars.lock_bwsel.value # use the lock bw
         bwsel = model.vars.bwsel.value  # use the lock bw
         osr = int(round(model.vars.oversampling_rate_actual.value))
         shaping_filter = model.vars.shaping_filter.value
+        _ksi_key = None
         # not using this model variable but keeping it here. Will remove it once, sure.
         # shaping_coeff_override = model.vars.shaping_coeff_ksi_calc_override.value
 
@@ -415,6 +453,17 @@ class CalcDemodulatorRainier(Calc_Demodulator_Bobcat):
                 # use generic filter to calculate ksi
                 sf, shaping = CalcShapingRainier().run_shaping_filter_calc(model)
             sfosr = 8 # shaping filter coeffs are sampled at 8x
+
+            # Check result cache before expensive DSP computation.
+            if _ADVANCED_CACHE_EN:
+                try:
+                    _ksi_key = self._build_ksi_cache_key(model, ksi1, lock_bwsel, bwsel, osr, sf)
+                    _cached = _ksi_cache_get(_ksi_key)
+                    if _cached is not None:
+                        return _cached
+                except Exception:
+                    # Keep behavior safe: if key construction fails, compute normally.
+                    _ksi_key = None
 
             # get channel filter and expend the symmetric part
             cfh = np.asarray(self.return_coeffs(lock_bwsel))
@@ -489,7 +538,10 @@ class CalcDemodulatorRainier(Calc_Demodulator_Bobcat):
         best_ksi3 = best_ksi2 if best_ksi3 > best_ksi2 else best_ksi3
         best_ksi3wb = best_ksi2 if best_ksi3wb > best_ksi2 else best_ksi3wb
 
-        return best_ksi2, best_ksi3, best_ksi3wb
+        _result = (best_ksi2, best_ksi3, best_ksi3wb)
+        if _ADVANCED_CACHE_EN and _ksi_key is not None:
+            _ksi_cache_put(_ksi_key, _result)
+        return _result
 
     def calc_rssi_rf_adjust_db(self, model):
         model.vars.rssi_rf_adjust_db.value = -15.8

@@ -39,7 +39,7 @@
  *
  * @param[in] str Input string.
  * @param[out] cte_mode CTE mode.
- * @return Status ot the conversion.
+ * @return Status of the conversion.
  * @retval SL_STATUS_OK The conversion was successful.
  * @retval SL_STATUS_NULL_POINTER Invalid null pointer received as argument.
  * @retval SL_STATUS_INVALID_PARAMETER The input was invalid.
@@ -51,7 +51,7 @@ sl_status_t aoa_parse_cte_mode_from_string(char *str, aoa_cte_type_t *cte_mode);
  *
  * @param[in] cte_mode CTE mode.
  * @param[out] str Output string.
- * @return Status ot the conversion.
+ * @return Status of the conversion.
  * @retval SL_STATUS_OK The conversion was successful.
  * @retval SL_STATUS_NULL_POINTER Invalid null pointer received as argument.
  * @retval SL_STATUS_INVALID_PARAMETER The input was invalid.

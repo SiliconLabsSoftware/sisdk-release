@@ -280,7 +280,12 @@ SL_ENUM(cs_ras_cp_response_code_value_t) {
 #define CS_RAS_CHAR_UUID_RANGING_DATA_OVERWRITTEN 0x2C19
 
 // Invalid characteristic handle
-#define CS_RAS_INVALID_CHARACTERISTIC_HANDLE       0xFFFF
+#define CS_RAS_INVALID_CHARACTERISTIC_HANDLE       (UINT16_MAX)
+// Invalid service handle
+#define CS_RAS_INVALID_SERVICE_HANDLE              (UINT32_MAX)
+
+// RAS service UUID
+#define CS_RAS_SERVICE_UUID                        0x185B
 
 // Invalid ranging counter value
 #define CS_RAS_INVALID_RANGING_COUNTER             0xFFFF
@@ -359,5 +364,13 @@ typedef enum {
 typedef struct {
   uint16_t array[CS_RAS_CHARACTERISTIC_INDEX_COUNT];
 } cs_ras_gattdb_handles_t;
+
+/// RAS Client configuration structure type
+typedef struct {
+  uint8_t real_time_ranging_data_indication : 1;
+  uint8_t on_demand_ranging_data_indication : 1;
+  uint8_t ranging_data_ready_notification : 1;
+  uint8_t ranging_data_overwritten_notification : 1;
+} cs_ras_client_config_t;
 
 #endif // CS_RAS_COMMON_H

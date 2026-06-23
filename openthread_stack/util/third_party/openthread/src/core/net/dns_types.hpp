@@ -31,8 +31,8 @@
  *   This file includes definitions for generating and processing DNS headers.
  */
 
-#ifndef DNS_HEADER_HPP_
-#define DNS_HEADER_HPP_
+#ifndef OT_CORE_NET_DNS_TYPES_HPP_
+#define OT_CORE_NET_DNS_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -1222,6 +1222,16 @@ public:
         mValue       = aValue;
         mValueLength = aValueLength;
     }
+
+    /**
+     * Indicates whether the entry's key (`mKey`) matches a given key string using a case-insensitive comparison.
+     *
+     * @param[in] aKey  A pointer to a key string to compare with.
+     *
+     * @retval TRUE   The entry's key matches the given @p aKey.
+     * @retval FALSE  The entry's key does not match or `mKey` is `nullptr`.
+     */
+    bool MatchesKey(const char *aKey) const;
 
     /**
      * Encodes and appends the `TxtEntry` to a message.
@@ -3009,4 +3019,4 @@ DefineCoreType(otDnsTxtEntryIterator, Dns::TxtEntry::Iterator);
 
 } // namespace ot
 
-#endif // DNS_HEADER_HPP_
+#endif // OT_CORE_NET_DNS_TYPES_HPP_

@@ -31,6 +31,9 @@ include:
   - path: sl_btctrl_packets.h
 requires:
 - name: bluetooth_controller_libraries
+- name: bluetooth_controller_libraries_250
+  condition:
+  - device_sdid_250
 - name: bluetooth_controller_rtos_adaptation
   condition:
   - kernel

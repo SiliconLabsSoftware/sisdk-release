@@ -43,9 +43,9 @@ void sli_zigbee_af_door_lock_server_init_events(uint8_t init_level)
                           sl_zigbee_af_door_lock_server_relock_event_handler);
 }
 
-bool sli_zigbee_af_door_lock_server_check_for_sufficient_space(uint8_t spaceReq, uint8_t spaceAvail)
+bool sli_zigbee_af_door_lock_server_check_for_sufficient_space(uint16_t spaceReq, uint16_t spaceAvail)
 {
-  if (spaceReq > spaceAvail) {
+  if (spaceReq >= spaceAvail) {
     sl_zigbee_af_send_immediate_default_response(SL_ZIGBEE_ZCL_STATUS_INSUFFICIENT_SPACE);
     return false;
   }

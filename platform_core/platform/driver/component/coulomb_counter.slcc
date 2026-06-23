@@ -21,9 +21,11 @@ include:
 - path: inc
   file_list:
   - path: sl_coulomb_counter.h
+- path: src
+  file_list:
+  - path: sli_coulomb_counter_hal.h
 source:
 - path: src/sl_coulomb_counter.c
-- path: src/sli_coulomb_counter_hal.h
 requires:
 - name: emlib_emu
 - name: coulomb_counter_driver_implementation

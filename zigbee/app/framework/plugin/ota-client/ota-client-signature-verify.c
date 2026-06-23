@@ -478,12 +478,12 @@ static bool checkSigner(const uint8_t* bigEndianSignerEui64)
 void sli_zigbee_af_ota_client_signature_verify_print_signers(void)
 {
   uint8_t i;
-  sl_zigbee_af_core_flush();
-  otaPrintln("Allowed Signers of images, big endian (NULL EUI64 is invalid)");
-  sl_zigbee_af_core_flush();
+  sl_zigbee_af_cli_flush();
+  sl_zigbee_af_cli_println("Allowed Signers of images, big endian (NULL EUI64 is invalid)");
+  sl_zigbee_af_cli_flush();
   for (i = 0; i < MAX_SIGNERS; i++) {
-    sl_zigbee_af_core_flush();
-    otaPrint("%d: ", i);
+    sl_zigbee_af_cli_flush();
+    sl_zigbee_af_cli_print("%d: ", i);
     sl_zigbee_af_print_big_endian_eui64(allowedSignerEuiBigEndian[i]);
   }
 }

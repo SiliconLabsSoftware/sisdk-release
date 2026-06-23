@@ -61,7 +61,13 @@ void halInternalDisableWatchDog(uint8_t magicKey);
  */
 bool halInternalWatchDogEnabled(void);
 
-void halResetWatchdog(void);                       ///< hal Reset Watchdog
+/** @brief Reset the watchdog timer.
+ *  When building for host/simulation, PLATFORM_HEADER (e.g. unix gcc.h) may
+ *  define halResetWatchdog as a macro; skip the declaration in that case.
+ */
+#ifndef halResetWatchdog
+void halResetWatchdog(void);
+#endif
 
 /**
  * @brief Change the CTUNE value. Involves switching to HFRCO and turning off

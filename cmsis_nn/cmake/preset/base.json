@@ -1,0 +1,57 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 25,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "hidden": true,
+            "name": "base",
+            "displayName": "Base profile",
+            "description": "",
+            "generator": "Ninja Multi-Config",
+            "binaryDir": "$env{SLED_BUILD_ROOT}build/$env{SLED_TOOLCHAIN}/$env{SLED_VARIANT}",
+            "installDir": "$env{SLED_BUILD_ROOT}lib/$env{SLED_TOOLCHAIN}/$env{SLED_VARIANT}",
+            "cacheVariables": {
+                "CMAKE_MODULE_PATH": "$env{SLED_ROOT}/cmake/module",
+                "CMAKE_SKIP_INSTALL_ALL_DEPENDENCY": "TRUE"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["base"],
+            "name": "base-platform",
+            "binaryDir": "$env{SLED_BUILD_ROOT}build/$env{SLED_TOOLCHAIN}/$env{SLED_PLATFORM}/$env{SLED_VARIANT}",
+            "installDir": "$env{SLED_BUILD_ROOT}lib/$env{SLED_TOOLCHAIN}/$env{SLED_PLATFORM}/$env{SLED_VARIANT}"
+        },
+        {
+            "hidden": true,
+            "inherits": ["base-platform"],
+            "name": "linux",
+            "displayName": "Linux platform",
+            "environment": {
+                "SLED_PLATFORM": "linux"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["base-platform"],
+            "name": "windows",
+            "displayName": "Windows platform",
+            "environment": {
+                "SLED_PLATFORM": "windows"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["base-platform"],
+            "name": "macos",
+            "displayName": "MacOS platform",
+            "environment": {
+                "SLED_PLATFORM": "macos"
+            }
+        }
+    ]
+}

@@ -9,7 +9,7 @@ class ZwaveCcConfiguratorRecipe(ConanFile):
     # Set the name and version of the package
     name = "zwave_cc_configurator"
     user = "silabs"
-    target_version = "1.0.0"
+    target_version = "1.1.0"
 
     # Optional metadata
     license = "www.silabs.com/about-us/legal/master-software-license-agreement"

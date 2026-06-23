@@ -3,6 +3,7 @@ var group__sl__bt__advertiser =
     [ "Generic Advertising Configuration Flags", "group__sl__bt__advertiser__flags.html", "group__sl__bt__advertiser__flags" ],
     [ "sl_bt_evt_advertiser_timeout", "group__sl__bt__evt__advertiser__timeout.html", "group__sl__bt__evt__advertiser__timeout" ],
     [ "sl_bt_evt_advertiser_scan_request", "group__sl__bt__evt__advertiser__scan__request.html", "group__sl__bt__evt__advertiser__scan__request" ],
+    [ "sl_bt_evt_advertiser_random_address_refresh", "group__sl__bt__evt__advertiser__random__address__refresh.html", "group__sl__bt__evt__advertiser__random__address__refresh" ],
     [ "sl_bt_advertiser_discovery_mode_t", "group__sl__bt__advertiser.html#ga5ba0781115b475f1f26eec61863b8d62", [
       [ "sl_bt_advertiser_non_discoverable", "group__sl__bt__advertiser.html#gga5ba0781115b475f1f26eec61863b8d62a97e0f2fdb3120d6ba13160f8a58ea653", null ],
       [ "sl_bt_advertiser_limited_discoverable", "group__sl__bt__advertiser.html#gga5ba0781115b475f1f26eec61863b8d62a4e7eef653bdd71d3bf20769c1541152b", null ],

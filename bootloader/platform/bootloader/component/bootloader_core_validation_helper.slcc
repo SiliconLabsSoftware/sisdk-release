@@ -1,0 +1,18 @@
+id: bootloader_core_validation_helper
+label: Bootloader Core Validation
+package: bootloader
+description: >
+  Single owner for bootloader core validation (bootloader_core_validation.lua). Required by
+  classic and TrustZone secure bootloader core entry components.
+category: Platform|Bootloader|Core
+quality: production
+ui_hints:
+  visibility: never
+provides:
+- name: bootloader_core_validation_helper
+validation_helper:
+- path: platform/bootloader/component/scripts/bootloader_core_validation.lua
+metadata:
+  sbom:
+    license: MSLA
+root_path: bootloader

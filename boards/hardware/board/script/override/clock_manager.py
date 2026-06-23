@@ -56,8 +56,12 @@ def configure(project: Project_Config, hw: Hardware, _):
         configure_lfxo(project, hw, board_id, lfxo, board_data)
 
     if hw.provides('device_series_3'):
-        project.config('SL_CLOCK_MANAGER_SOCPLL_REFCLK').value = 'SOCPLL_CTRL_REFCLKSEL_REF_HFXO'
-        project.config('SL_CLOCK_MANAGER_SOCPLL_FREQ').value = '150000000'
+        # SIXX301 exposes SL_CLOCK_MANAGER_SOCPLL_*; SIXX353 uses SOCPLL0/1/2-specific wizard IDs instead.
+        try:
+            project.config('SL_CLOCK_MANAGER_SOCPLL_REFCLK').value = 'SOCPLL_CTRL_REFCLKSEL_REF_HFXO'
+            project.config('SL_CLOCK_MANAGER_SOCPLL_FREQ').value = '150000000'
+        except KeyError:
+            pass
         project.config('SL_CLOCK_MANAGER_HFXO_FREQ').value = '38400000'
         project.config('SL_CLOCK_MANAGER_HFXO_EN').value = 'SL_CLOCK_MANAGER_HFXO_EN_ENABLE'
         # divn_value = int(project.config('SL_CLOCK_MANAGER_SOCPLL_DIVN').value)

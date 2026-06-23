@@ -73,7 +73,7 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
     // Do not call any stack command before receiving this boot event!
     case sl_bt_evt_system_boot_id:
       // Print boot message.
-      printf("[BLE stack booted: v%d.%d.%d+%08lx]\n",
+      printf("[BLE stack booted: v%d.%d.%d+%08"PRIx32"]\n",
              evt->data.evt_system_boot.major,
              evt->data.evt_system_boot.minor,
              evt->data.evt_system_boot.patch,

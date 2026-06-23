@@ -158,6 +158,21 @@
 
 {%- set app_flash_size = app_flash_size - flash_static_secure_tokens_storage_size%}
 
+{%- if not bootloader_enable %}
+{%- if tz_non_secure_execution_source is defined %}
+  {#- Secure flash alias: reserve one MSPU region. #}
+  {%- set flash_s_start = app_flash_start + 0x10000000 %}
+  {%- set app_flash_size = app_flash_size - (device_flash_mspu_region_size | first) %}
+  {%- set app_flash_start = app_flash_start + (device_flash_mspu_region_size | first) %}
+  {%- if tz_non_secure_execution_ram is defined %}
+    {#- Secure RAM alias: reserve one DMEM MSPU region. #}
+    {%- set ram_s_start = app_ram_start + 0x10000000 %}
+    {%- set app_ram_size = app_ram_size - (device_dmem_mspu_region_size | first) %}
+    {%- set app_ram_start = app_ram_start + (device_dmem_mspu_region_size | first) %}
+  {%- endif %}
+{%- endif %}
+{%- endif %}
+
 /*###ICF### Section handled by ICF editor, don't touch! ****/
 /*-Editor annotation file-*/
 /* IcfEditorFile="$TOOLKIT_DIR$\config\ide\IcfEditor\cortex_v1_0.xml" */
@@ -183,8 +198,12 @@ define symbol __flash_page_size__ = 0x{{ '%0x' % flash_page_size }};
 export symbol __flash_size__;
 export symbol __flash_page_size__;
 {%- if tz_non_secure_execution is defined %}
-define symbol __mspu_region_size__ = 0x{{ '%0x' % device_flash_smpu_region_size | first }};
+define symbol __mspu_region_size__ = 0x{{ '%0x' % device_flash_mspu_region_size | first }};
 export symbol __mspu_region_size__;
+{%- if device_dmem_mspu_region_size is defined %}
+define symbol __dmem_mspu_region_size__ = 0x{{ '%0x' % device_dmem_mspu_region_size | first }};
+export symbol __dmem_mspu_region_size__;
+{%- endif %}
 {%- endif %}
 
 {#- Required for static secure token storage. #}
@@ -202,6 +221,13 @@ export symbol __static_secure_token_end__;
 define memory mem with size = 4G;
 define region ROM_region   = mem:[from __ICFEDIT_region_ROM_start__   to __ICFEDIT_region_ROM_end__];
 define region RAM_region   = mem:[from __ICFEDIT_region_RAM_start__   to __ICFEDIT_region_RAM_end__];
+
+{%- if tz_non_secure_execution_source is defined %}
+define region FLASH_S_region = mem:[from 0x{{ '%0x' % flash_s_start }} to (0x{{ '%0x' % flash_s_start }}+0x{{ '%0x' % (device_flash_mspu_region_size | first) }}-1)];
+{%- if tz_non_secure_execution_ram is defined %}
+define region RAM_S_region  = mem:[from 0x{{ '%0x' % ram_s_start }} to (0x{{ '%0x' % ram_s_start }}+0x{{ '%0x' % (device_dmem_mspu_region_size | first) }}-1)];
+{%- endif %}
+{%- endif %}
 define region MAIN_FLASH_region   = mem:[from 0x{{ '%0x' % app_flash_start }}   to (0x{{ '%0x' % app_flash_start }}+0x{{ '%0x' % app_flash_size }}-1)];
 define region STATIC_SECURE_TOKENS_REGION = mem:[from __static_secure_token_start__ to __static_secure_token_end__ - 1];
 
@@ -268,12 +294,14 @@ define block nvm with alignment = {{ flash_page_size }}
 };
 keep { block nvm };
 
-{%- if logger_enable %}
+{%- if log_section_enable %}
+{%- if log_compact_output_enable %}
 define block logger with alignment = 4
 {
   section log_fmt,
 };
 keep { block logger };
+{%- endif %}
 {%- endif %}
 {%- endif %} {#- trustzone_secure #}
 {%- if trustzone_secure %}
@@ -301,7 +329,7 @@ define block ROM_CONTENT with fixed order { readonly, readonly section ROM_SIZE}
 {%- else %}
 
 {%- if tz_non_secure_execution is defined %}
-{%- if (app_flash_start % (device_flash_smpu_region_size | first)) != 0 %}
+{%- if (app_flash_start % (device_flash_mspu_region_size | first)) != 0 %}
 {%- set flash_start_mspu_region_misaligned = 1 %}
 define block secure_vectors_copy_block
 {
@@ -310,23 +338,77 @@ define block secure_vectors_copy_block
 keep { block secure_vectors_copy_block };
 {%- endif %}
 
+{%- if not (tz_non_secure_execution_source is defined) %}
+{#- Prebuilt Secure application (no source). #}
 define block secure_text with fixed order, alignment = __mspu_region_size__
 {
   readonly section secure_vectors,
   readonly section secure_config_data,
   readonly section secure_reset_handler,
+  readonly section secure_reset_handler_ram,
   readonly section secure_fault_handler
 };
 keep { block secure_text };
+{%- else %}
+  {%- if tz_non_secure_execution_ram is defined %}
+{#- Source with secure RAM. #}
+define block secure_text with fixed order, alignment = __mspu_region_size__
+{
+  readonly section secure_vectors,
+  readonly code section secure_reset_handler,
+  readonly code section secure_fault_handler
+};
+keep { block secure_text };
 
+initialize manually
+{
+  section secure_ram_vectors,
+  section secure_config_data,
+  section secure_reset_handler_ram
+};
+define block secure_ram with alignment = 4
+{
+  section secure_ram_vectors,
+  section secure_config_data,
+  zeroinit section secure_bss,
+  section secure_reset_handler_ram
+};
+define block secure_ram_init with alignment = 4
+{
+  section secure_ram_vectors_init,
+  section secure_config_data_init,
+  section secure_reset_handler_ram_init
+};
+keep { block secure_ram };
+keep { block secure_ram_init };
+  {%- else %}
+{#- Source. #}
+define block secure_text with fixed order, alignment = __mspu_region_size__
+{
+  readonly section secure_vectors,
+  readonly section secure_config_data,
+  readonly code section secure_reset_handler,
+  readonly code section secure_fault_handler
+};
+keep { block secure_text };
+  {%- endif %}
+{%- endif %}
+
+{%- if not (tz_non_secure_execution_ram is defined) %}
 define block mspu_region_alignment with alignment = __mspu_region_size__ {};
 keep { block mspu_region_alignment };
+{%- endif %}
 {%- endif %}
 
 define block .text with fixed order
 {
   readonly section .intvec,
   readonly
+{%- if log_section_enable %}
+{%- if not log_compact_output_enable %}
+  , readonly section log_fmt
+{%- endif %}
+{%- endif %}
 };
 
 {%- for component in code_classification_components %}
@@ -338,9 +420,9 @@ define block text_{{component}}_ram with alignment = {{ram_code_alignment}}
   readwrite code section text_{{selection['component']}}_*{{selection['class']}}*,
 {%- endif %}
 {%- endfor %}
-{%- if "timecritical" in code_classification_standard_selections %}
-  readwrite code section text_{{component}}_*timecritical*,
-{%- endif %}
+{%- for selection in code_classification_standard_selections %}
+  readwrite code section text_{{component}}_*{{selection}}*,
+{%- endfor %}
 };
 
 define block text_{{component}}_ram_init with alignment = {{ram_code_alignment}}
@@ -350,9 +432,9 @@ define block text_{{component}}_ram_init with alignment = {{ram_code_alignment}}
   readonly code section text_{{selection['component']}}_*{{selection['class']}}*_init,
 {%- endif %}
 {%- endfor %}
-{%- if "timecritical" in code_classification_standard_selections %}
-  readonly code section text_{{component}}_*timecritical*_init,
-{%- endif %}
+{%- for selection in code_classification_standard_selections %}
+  readonly code section text_{{component}}_*{{selection}}*_init,
+{%- endfor %}
 };
 
 initialize manually
@@ -362,9 +444,9 @@ initialize manually
   readonly section text_{{selection['component']}}_*{{selection['class']}}*,
 {%- endif %}
 {%- endfor %}
-{%- if "timecritical" in code_classification_standard_selections %}
-  readonly section text_{{component}}_*timecritical*,
-{%- endif %}
+{%- for selection in code_classification_standard_selections %}
+  readonly section text_{{component}}_*{{selection}}*,
+{%- endfor %}
 };
 
 {%- endfor %}
@@ -483,6 +565,14 @@ define block text_ram_init with alignment = {{ram_code_alignment}}
 
 {%- endif %}
 
+{%- if "interrupt_manager" in component_catalog %}
+define block vector_table_ram_block with alignment = 4
+{
+  section .vector_table_ram
+};
+keep { block vector_table_ram_block };
+{%- endif %}
+
 define block application_ram with fixed order
 {
 {%- if bootloader_enable %}
@@ -492,12 +582,24 @@ define block application_ram with fixed order
 {%- if trustzone_secure %}
   block STACKSEAL,
 {%- endif %}
+{%- if "interrupt_manager" in component_catalog %}
+  block vector_table_ram_block,
+{%- endif %}
   readwrite,
   /* Shareable block. Add each shareable blocks to this block. */
   block RAIL_SHAREABLE,
 };
 
+{%- if tz_non_secure_execution_source is defined and tz_non_secure_execution_ram is defined %}
+initialize by copy { readwrite } except
+{
+  section secure_ram_vectors,
+  section secure_config_data,
+  section secure_reset_handler_ram
+};
+{%- else %}
 initialize by copy { readwrite };
+{%- endif %}
 
 define block application_heap with fixed order
 {
@@ -514,6 +616,9 @@ do not initialize
   section .reset_reason,
 {%- endif %}
  section .noinit,
+{%- if crash_manager_enable and crash_manager_backend_ram %}
+ section .ram_crash_data.noinit,
+{%- endif %}
  section .stack,
 {%- if trustzone_secure %}
  section .stackseal,
@@ -526,8 +631,10 @@ do not initialize
   section .heap
 {%- endif %}
 {%- if trustzone_secure is not defined %}
-{%- if logger_enable %}
+{%- if log_section_enable %}
+{%- if log_compact_output_enable %}
   , section log_fmt
+{%- endif %}
 {%- endif %}
 {%- endif %}
 };
@@ -537,10 +644,26 @@ keep { section .intvec };
 {%- if bootloader_enable %}
 place in ROM_region   { block ROM_CONTENT };
 {%- else %}
+
+{%- if tz_non_secure_execution_source is defined %}
+"secure_flash":
+place at start of FLASH_S_region
+{
+  {%- if flash_start_mspu_region_misaligned is defined %}
+  block secure_vectors_copy_block,
+  {%- endif %}
+  block secure_text,
+  {%- if tz_non_secure_execution_ram is defined %}
+  block secure_ram_init,
+  {%- else %}
+  block mspu_region_alignment,
+  {%- endif %}
+};
+{%- endif %}
 "application":
 place at start of ROM_region
 {
-  {%- if tz_non_secure_execution is defined %}
+  {%- if tz_non_secure_execution is defined and not (tz_non_secure_execution_source is defined) %}
     {%- if flash_start_mspu_region_misaligned is defined %}
   block secure_vectors_copy_block,
     {%- endif %}
@@ -560,8 +683,10 @@ place at end of MAIN_FLASH_region {
   block zwavenvm,
 {%- endif %}
   block nvm,
-{%- if logger_enable %}
+{%- if log_section_enable %}
+{%- if log_compact_output_enable %}
   block logger,
+{%- endif %}
 {%- endif %}
 {%- endif %} {#- trustzone_secure #}
 {%- if trustzone_secure %}
@@ -570,6 +695,14 @@ place at end of MAIN_FLASH_region {
 };
 
 place in STATIC_SECURE_TOKENS_REGION { block static_secure_tokens };
+
+{%- if tz_non_secure_execution_source is defined and tz_non_secure_execution_ram is defined %}
+"secure_ram":
+place at start of RAM_S_region {
+  block secure_ram,
+};
+{#- LMA range: block secure_ram_init in "application" (ROM). VMA copy: sl_tz_non_secure_execution_with_ram_source.c uses __section_begin("secure_ram_init") / __section_size (IAR) vs GNU __lma_secure_ram_* from linkerfile.ld.jinja. #}
+{%- endif %}
 
 "application_ram":
 place at start of RAM_region {
@@ -587,4 +720,27 @@ place in RAM_region {
 place in RAM_region {
   block application_heap,
 };
+
+/* Linker file assertions. */
+{%- if memory_ram_size is defined %}
+{%- if memory_ram_start is defined %}
+define symbol memory_ram_end = 0x{{ '%0x' % (memory_ram_start | first) }} + 0x{{ '%0x' % (memory_ram_size | first) }};
+{%- else %}
+define symbol memory_ram_end = 0x{{ '%0x' % sram_addr }} + 0x{{ '%0x' % (memory_ram_size | first) }};
+{%- endif %}
+define symbol physical_ram_end = 0x{{ '%0x' % sram_addr }} + 0x{{ '%0x' % sram_size }};
+check that memory_ram_end <= physical_ram_end,
+  "The template contribution to memory_ram_size exceeds the real device RAM size. Check your SLCC or SLCP file to review the RAM size defined by memory_ram_size.";
+{%- endif %}
+
+{%- if memory_flash_size is defined %}
+{%- if memory_flash_start is defined %}
+define symbol memory_flash_end = 0x{{ '%0x' % (memory_flash_start | first) }} + 0x{{ '%0x' % (memory_flash_size | first) }};
+{%- else %}
+define symbol memory_flash_end = 0x{{ '%0x' % flash_addr }} + 0x{{ '%0x' % (memory_flash_size | first) }};
+{%- endif %}
+define symbol physical_flash_end = 0x{{ '%0x' % flash_addr }} + 0x{{ '%0x' % flash_size }};
+check that memory_flash_end <= physical_flash_end,
+  "The template contribution to memory_flash_size exceeds the available flash_size. Check your SLCC or SLCP file to review the flash size defined by memory_flash_size.";
+{%- endif %}
 

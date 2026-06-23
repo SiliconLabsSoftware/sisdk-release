@@ -40,14 +40,6 @@
 /// Ranging Service (RAS) UUID
 #define CS_RAS_SERVICE_UUID 0x185B
 
-/// RAS Client configuration structure type
-typedef struct {
-  uint8_t real_time_ranging_data_indication : 1;
-  uint8_t on_demand_ranging_data_indication : 1;
-  uint8_t ranging_data_ready_notification : 1;
-  uint8_t ranging_data_overwritten_notification : 1;
-} cs_ras_client_config_t;
-
 #ifdef __cplusplus
 extern "C" {
 #endif

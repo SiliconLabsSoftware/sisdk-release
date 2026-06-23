@@ -221,6 +221,18 @@ OT_TOOL_WEAK void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, co
     // do nothing
 }
 
+// Instance-aware logging hook
+#if OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+OT_TOOL_WEAK void otPlatLogOutput(otInstance *aInstance, otLogLevel aLogLevel, const char *aLogLine)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aLogLine);
+
+    // do nothing
+}
+#endif
+
 OT_TOOL_WEAK void efr32UartProcess(void)
 {
     // do nothing

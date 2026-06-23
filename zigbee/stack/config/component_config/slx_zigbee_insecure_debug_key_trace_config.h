@@ -32,7 +32,7 @@
 // <i> Enables insecure debug network report key tracing.  This format is understood by Wireshark decoders
 #define SLX_ZIGBEE_INSECURE_DEBUG_NWK_REPORT_KEY_PACKET_ENABLED   1
 
-// <q SLX_ZIGBEE_INSECURE_DEBUG_TRANSPORT_KEY_PACKET> Insecure Debug Transport key trace enable
+// <q SLX_ZIGBEE_INSECURE_DEBUG_TRANSPORT_KEY_PACKET_ENABLED> Insecure Debug Transport key trace enable
 // <i> Default: TRUE
 // <i> Enables insecure debug aps transport key tracing.  This format is understood by Network Analyzer decoders
 #define SLX_ZIGBEE_INSECURE_DEBUG_TRANSPORT_KEY_PACKET_ENABLED   1

@@ -1,8 +1,8 @@
 project_name: ot-cli-ftd-tz-ns
-label: OpenThread - SoC CLI (FTD) (TrustZone)
+label: OpenThread - SoC CLI FTD (TrustZone)
 package: openthread
 description: >
-    This is a variant of the openthread FTD CLI application with trustzone awareness enabled.
+  Demonstrates CLI application to test the OpenThread stack on a Full Thread Device (FTD) with TrustZone awareness enabled.
 category: OpenThread Examples
 quality: production
 
@@ -17,8 +17,11 @@ component:
   - id: tz_secure_key_library
   - id: clock_manager
   - id: ot_reset_utils
-  # Platform - Enable LTO for gcc by installing the following component
+  # Platform - Enable LTO for gcc and llvm by installing the following component
   - id: toolchain_gcc_lto
+    condition: [toolchain_gcc]
+  - id: toolchain_llvm_lto
+    condition: [toolchain_llvm]
 
 include:
   - path: ../
@@ -126,6 +129,7 @@ tag:
   - hwfilter:!device:device_family_efr32mr21
   - hwfilter:!device:device_series_3
   - toolchain:gcc
+  - toolchain:llvm
 
 readme:
   - path: ../README.md

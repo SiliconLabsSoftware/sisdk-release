@@ -28,6 +28,13 @@ source:
 - path: source/gnu/armv7m_os_cpu_c.c
   condition:
   - toolchain_gcc
+  # llvm
+- path: source/gnu/armv7m_os_cpu_a.S
+  condition:
+  - toolchain_llvm
+- path: source/gnu/armv7m_os_cpu_c.c
+  condition:
+  - toolchain_llvm
 include:
 - path: source
   file_list:
@@ -43,6 +50,10 @@ include:
   - path: gnu/armv7m_os_cpu.h
     condition:
     - toolchain_gcc
+    # llvm
+  - path: gnu/armv7m_os_cpu.h
+    condition:
+    - toolchain_llvm
 provides:
 - name: kernel_port_armv7m
 - name: kernel_port

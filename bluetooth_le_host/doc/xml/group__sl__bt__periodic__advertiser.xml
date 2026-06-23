@@ -60,7 +60,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3404" column="13" declfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" declline="3404" declcolumn="13"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3628" column="13" declfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" declline="3628" declcolumn="13"/>
       </memberdef>
       <memberdef kind="function" id="group__sl__bt__periodic__advertiser_1gad70b3fd35ebf8e87f78d5ecab0117d4c" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>sl_status_t</type>
@@ -93,7 +93,38 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3427" column="13" declfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" declline="3427" declcolumn="13"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3651" column="13" declfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" declline="3651" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__sl__bt__periodic__advertiser_1gad0487b1e80033fd1ba4ee393a1f1e9fa" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>sl_status_t</type>
+        <definition>sl_status_t sl_bt_periodic_advertiser_refresh_data_id</definition>
+        <argsstring>(uint8_t advertising_set)</argsstring>
+        <name>sl_bt_periodic_advertiser_refresh_data_id</name>
+        <param>
+          <type>uint8_t</type>
+          <declname>advertising_set</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Refresh the Advertising Data ID (DID) of periodic advertising data.</para>
+<para>The data that was previously set using <ref refid="group__sl__bt__periodic__advertiser_1ga8ddb03280f2d65373a405ce20fdbcd18" kindref="member">sl_bt_periodic_advertiser_set_data</ref> or <ref refid="group__sl__bt__periodic__advertiser_1gad70b3fd35ebf8e87f78d5ecab0117d4c" kindref="member">sl_bt_periodic_advertiser_set_long_data</ref> is unchanged and only the DID changes. The DID value is transmitted in the Advertising Data Information (ADI) field of the periodic advertising PDUs if the periodic advertiser is configured to include it. See <ref refid="group__sl__bt__periodic__advertiser__flags_1ga05e344a399dec97e5438b0857e8fd97f" kindref="member">SL_BT_PERIODIC_ADVERTISER_INCLUDE_ADVERTISING_DATA_INFORMATION</ref> and the <computeroutput>flags</computeroutput> parameter in command <ref refid="group__sl__bt__periodic__advertiser_1gaf2a2688f53f25df2d1ba12a5f5fafbd3" kindref="member">sl_bt_periodic_advertiser_start</ref>.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">advertising_set</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>Advertising set handle</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>SL_STATUS_OK if successful. Error code otherwise. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3671" column="13" declfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" declline="3671" declcolumn="13"/>
       </memberdef>
       <memberdef kind="function" id="group__sl__bt__periodic__advertiser_1gaf2a2688f53f25df2d1ba12a5f5fafbd3" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>sl_status_t</type>
@@ -120,6 +151,7 @@
         </briefdescription>
         <detaileddescription>
 <para>Start periodic advertising on an advertising set.</para>
+<para>If privacy is enabled, see <ref refid="group__sl__bt__gap_1gab8d65fb681a00f260f8b8c49a09ab1d5" kindref="member">sl_bt_gap_set_privacy_mode</ref> for the advertising-set private address behavior.</para>
 <para>According to the Bluetooth Core specification, periodic advertising PDUs cannot be transmitted until at least one extended advertising event has been completed. If the application needs exact control over the extended advertising data and parameters, use the <ref refid="group__sl__bt__advertiser" kindref="compound">Advertiser</ref> class to configure the parameters of the advertising set and the <ref refid="group__sl__bt__extended__advertiser" kindref="compound">Extended Advertiser</ref> class to set or generate the desired extended advertising data payload. If the application does not configure the parameters or set the data, the default parameters and empty advertising data are used for the extended advertising.</para>
 <para>If the application has not already started extended advertising and the flag <ref refid="group__sl__bt__periodic__advertiser__flags_1ga17c966e284c2b95a771aefe9de0843c8" kindref="member">SL_BT_PERIODIC_ADVERTISER_AUTO_START_EXTENDED_ADVERTISING</ref> is set in <computeroutput>flags</computeroutput>, the stack will automatically start extended advertising with the parameters and extended advertising data currently configured to the advertising set. The application may stop the automatically started extended advertising using the <ref refid="group__sl__bt__advertiser_1gaa21542d22182e08604799e795c90db7b" kindref="member">sl_bt_advertiser_stop</ref> command.</para>
 <para>If the application has not already started extended advertising and the flag <ref refid="group__sl__bt__periodic__advertiser__flags_1ga17c966e284c2b95a771aefe9de0843c8" kindref="member">SL_BT_PERIODIC_ADVERTISER_AUTO_START_EXTENDED_ADVERTISING</ref> is not set in <computeroutput>flags</computeroutput>, the stack will momentarily start extended advertising with the parameters and extended advertising data currently configured to the advertising set. Unless the application starts extended advertising before the first extended advertising event has completed, the stack will automatically stop the momentary extended advertising after the first extended advertising event.</para>
@@ -177,7 +209,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3489" column="13" declfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" declline="3489" declcolumn="13"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3736" column="13" declfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" declline="3736" declcolumn="13"/>
       </memberdef>
       <memberdef kind="function" id="group__sl__bt__periodic__advertiser_1ga862241c104b48e65829ae257fae08bb4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>sl_status_t</type>
@@ -208,7 +240,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3508" column="13" declfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" declline="3508" declcolumn="13"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3755" column="13" declfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" declline="3755" declcolumn="13"/>
       </memberdef>
       </sectiondef>
       <sectiondef kind="define">
@@ -221,7 +253,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3322" column="9" bodyfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="3322" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3540" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="3540" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bt__periodic__advertiser_1ga391338519048b5f9c518b221d8519bd3" prot="public" static="no">
         <name>sl_bt_cmd_periodic_advertiser_set_long_data_id</name>
@@ -232,7 +264,18 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3323" column="9" bodyfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="3323" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3541" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="3541" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="group__sl__bt__periodic__advertiser_1gab5e5031fcd61fc46a7ceae44df365bb1" prot="public" static="no">
+        <name>sl_bt_cmd_periodic_advertiser_refresh_data_id_id</name>
+        <initializer>0x04580020</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3542" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="3542" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bt__periodic__advertiser_1ga95764c1563098b9b3a8b8f2a8aefb980" prot="public" static="no">
         <name>sl_bt_cmd_periodic_advertiser_start_id</name>
@@ -243,7 +286,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3324" column="9" bodyfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="3324" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3543" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="3543" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bt__periodic__advertiser_1ga4271be3e739671bf69e7729ff7e5f23a" prot="public" static="no">
         <name>sl_bt_cmd_periodic_advertiser_stop_id</name>
@@ -254,7 +297,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3325" column="9" bodyfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="3325" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3544" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="3544" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bt__periodic__advertiser_1ga2b852ea62960afae630f5fe0604d7be8" prot="public" static="no">
         <name>sl_bt_rsp_periodic_advertiser_set_data_id</name>
@@ -265,7 +308,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3326" column="9" bodyfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="3326" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3545" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="3545" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bt__periodic__advertiser_1ga7e47991ececf5eef66c04682267a0e68" prot="public" static="no">
         <name>sl_bt_rsp_periodic_advertiser_set_long_data_id</name>
@@ -276,7 +319,18 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3327" column="9" bodyfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="3327" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3546" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="3546" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="group__sl__bt__periodic__advertiser_1ga1f6907377b19bd0fdb82639cea8338e9" prot="public" static="no">
+        <name>sl_bt_rsp_periodic_advertiser_refresh_data_id_id</name>
+        <initializer>0x04580020</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3547" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="3547" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bt__periodic__advertiser_1ga55f29fcaf354cc3ea4a9f1386e28648e" prot="public" static="no">
         <name>sl_bt_rsp_periodic_advertiser_start_id</name>
@@ -287,7 +341,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3328" column="9" bodyfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="3328" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3548" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="3548" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bt__periodic__advertiser_1ga4200a80d03022cd76ea97a12ad958db9" prot="public" static="no">
         <name>sl_bt_rsp_periodic_advertiser_stop_id</name>
@@ -298,7 +352,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3329" column="9" bodyfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="3329" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="3549" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="3549" bodyend="-1"/>
       </memberdef>
       </sectiondef>
     <briefdescription>

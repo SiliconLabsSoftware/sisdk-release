@@ -1,7 +1,7 @@
 project_name: usb_device_cdc_acm_micriumos
 package: platform
 quality: production
-label: Platform - USB Device CDC ACM with Micrium OS kernel
+label: Platform - USB Device CDC ACM with Micrium OS Kernel
 description: >
   This example uses the USB stack with the Micrium OS kernel to create a COM port on your PC.
   Once connected on the port using a terminal tool, a menu is displayed and lets you echo any character you typed in.
@@ -38,5 +38,8 @@ readme:
   - path: readme.md
 tag:
   - hardware:component:usb
+  - hwfilter:device:device_has_usb
+  - hwfilter:ram:64k
+  - hwfilter:device:device_series_2
 ui_hints:
   highlight: readme.md

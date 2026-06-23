@@ -28,6 +28,10 @@
   - name: hardware_board_supports_1_rf_band
   - name: hardware_board_default_rf_band
   - name: hardware_board_default_rf_band_2400
+  - name: hardware_board_has_led0
+  - name: hardware_board_has_btn0
+  - name: hardware_board_has_btn1
+  - name: hardware_board_has_exclusive_button_led
 - recommends:
   - id: SIMG301M114LIH
     vendor: silabs

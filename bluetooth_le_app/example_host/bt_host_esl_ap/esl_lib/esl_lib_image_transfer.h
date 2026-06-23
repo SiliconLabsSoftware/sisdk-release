@@ -64,10 +64,10 @@ typedef enum {
 /***************************************************************************//**
  * Callback for the transfer status.
  * @param[in] handle         Image transfer handle.
- * @param[in] connnection    Connection handle.
+ * @param[in] connection     Connection handle.
  * @param[in] state          New state of the transfer.
  * @param[in] result         Result of the state change.
- * @param[in] gattdb_handles GATT databse handles or NULL if not set.
+ * @param[in] gattdb_handles GATT database handles or NULL if not set.
  ******************************************************************************/
 typedef void (*esl_lib_image_transfer_status_callback_t)(esl_lib_image_transfer_handle_t handle,
                                                          uint8_t                         connection,
@@ -78,7 +78,7 @@ typedef void (*esl_lib_image_transfer_status_callback_t)(esl_lib_image_transfer_
 /***************************************************************************//**
  * Callback that indicates the end of the transfer.
  * @param[in] handle      Image transfer handle.
- * @param[in] connnection Connection handle.
+ * @param[in] connection  Connection handle.
  * @param[in] result      Result of the image transfer.
  * @param[in] image_index Image index.
  ******************************************************************************/
@@ -90,7 +90,7 @@ typedef void (*esl_lib_image_transfer_finished_callback_t)(esl_lib_image_transfe
 /***************************************************************************//**
  * Callback for the object type
  * @param[in] handle      Image transfer handle.
- * @param[in] connnection Connection handle.
+ * @param[in] connection  Connection handle.
  * @param[in] result      Result of the type read.
  * @param[in] image_index Image index.
  * @param[in] object_type Object type, valid if the result is SL_STATUS_OK.
@@ -131,7 +131,7 @@ sl_status_t esl_lib_image_transfer_init(uint8_t                                 
                                         esl_lib_image_transfer_handle_t            *handle_out);
 
 /***************************************************************************//**
- * Discard and clanup transfer by handle
+ * Discard and cleanup transfer by handle
  * @note Call only if `sl_bt_evt_connection_closed_id` event can't be expected!
  * @param[in] handle  Pointer to an ESL Image Transfer handle.
  * @return Status of the operation

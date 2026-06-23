@@ -214,6 +214,7 @@ static int32_t setUpProgrammingAddress(ParserContext_t *ctx);
 static sl_status_t construct_initial_region_lookup_table(ParserContext_t *ctx);
 static uint8_t get_region_id(uint32_t target_address, uint32_t *regionStartAddresses);
 static uint8_t countNumOfUpgrades(uint16_t contents);
+static void cleanup_parser_memory(ParserContext_t *ctx);
 #if defined(BTL_PARSER_SUPPORT_CUSTOM_TAGS)
 static int32_t parse_customTag(ParserContext_t *ctx, uint8_t *buffer, size_t length, const BootloaderParserCallbacks_t* callbacks);
 static int32_t handleCompressionInit(ParserContext_t *ctx);
@@ -237,6 +238,23 @@ void handleMemorySectionInfoSHA(ParserContext_t *ctx, const uint8_t* data, size_
 void handleMemorySectionSHA(ParserContext_t *ctx, const uint8_t* data, size_t length)
 {
   ctx->hashInterface.update(ctx->memorySectionForRegions.shaContext, &ctx->cmd_ctx, data, length);
+}
+
+static void cleanup_parser_memory(ParserContext_t *ctx)
+{
+  MemSectionInfo_t *currentInstance = &ctx->memorySectionInfo;
+
+  if (currentInstance->ListOfBlockOfHashes != NULL) {
+    free(currentInstance->ListOfBlockOfHashes);
+    currentInstance->ListOfBlockOfHashes = NULL;
+  }
+
+#ifndef BOOTLOADER_SUPPORT_STORAGE
+  if (ctx->segmentBuffer != NULL) {
+    free(ctx->segmentBuffer);
+    ctx->segmentBuffer = NULL;
+  }
+#endif
 }
 
 #if defined(BTL_PARSER_SUPPORT_CUSTOM_TAGS)
@@ -1415,10 +1433,15 @@ int32_t parser_parse(void                              *context,
         retVal = standardHandler(ctx, &input);
       }
       if (retVal != BOOTLOADER_ERROR_PARSER_PARSED) {
+        // Do NOT cleanup on BOOTLOADER_OK (means "need more data", not an error)
+        if (retVal != BOOTLOADER_OK) {
+          cleanup_parser_memory(ctx);
+        }
         return retVal;
       }
     } else {
       ctx->internalState = ParserStateError;
+      cleanup_parser_memory(ctx);
       return BOOTLOADER_ERROR_PARSER_UNKNOWN_TAG;
     }
   }
@@ -1572,18 +1595,13 @@ int32_t parser_stateDone(ParserContext_t *ctx, InputBuffer_t *input)
 int32_t parser_error(ParserContext_t *ctx, InputBuffer_t *input)
 {
   (void)input;
-#ifndef BOOTLOADER_SUPPORT_STORAGE
+  
+  /* Ensure parser-allocated memory is always cleaned up.
+   * ListOfBlockOfHashes is freed for both storage and streaming builds.
+   * segmentBuffer is freed only for streaming builds inside cleanup_parser_memory().
+   */
+  cleanup_parser_memory(ctx);
 
-  MemSectionInfo_t *currentInstance = &ctx->memorySectionInfo;
-  if (currentInstance->ListOfBlockOfHashes != NULL) {
-    free(currentInstance->ListOfBlockOfHashes);
-    currentInstance->ListOfBlockOfHashes = NULL;
-  }
-  if (ctx->segmentBuffer != NULL) {
-    free(ctx->segmentBuffer);
-    ctx->segmentBuffer = NULL;
-  }
-#endif
   ctx->imageProperties->imageVerified = false;
   return BOOTLOADER_ERROR_PARSER_EOF;
 }

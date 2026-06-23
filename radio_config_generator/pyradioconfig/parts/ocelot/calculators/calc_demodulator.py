@@ -10,8 +10,42 @@ from pyradioconfig.calculator_model_framework.Utils.LogMgr import LogMgr
 import numpy as np
 import numpy.matlib
 from scipy import signal as sp
+from collections import OrderedDict
+from pyradioconfig.parts.common.calculators.ksi_cache_utils import freeze_for_cache
+from pyradioconfig.parts.common.calculators.scipy_cache_utils import resample_poly_cached
+from pyradioconfig.calculator_model_framework.Utils.cache_flags import is_advanced_cache_enabled
+
+_ADVANCED_CACHE_EN = is_advanced_cache_enabled()
 
 #This file contains calculations related to the digital signal path, including ADC clocking, decimators, SRCs, channel filter, datafilter, digital mixer, and baud rate
+
+# Module-level result cache for return_ksi2_ksi3_calc — keyed on all DSP inputs.
+# Avoids re-running expensive scipy.signal operations (kaiser/firwin/resample_poly)
+# when multiple PHYs share the same channel-filter + shaping-filter configuration.
+_KSI_CALC_CACHE_MAXSIZE = 1024
+_ksi_calc_cache = OrderedDict()
+
+
+def _ksi_cache_get(key):
+    if not _ADVANCED_CACHE_EN:
+        return None
+    cached = _ksi_calc_cache.get(key)
+    if cached is not None:
+        # Mark as recently used.
+        _ksi_calc_cache.move_to_end(key)
+    return cached
+
+
+def _ksi_cache_put(key, value):
+    if not _ADVANCED_CACHE_EN:
+        return
+    if key in _ksi_calc_cache:
+        _ksi_calc_cache.move_to_end(key)
+    _ksi_calc_cache[key] = value
+
+    # Evict least-recently-used entry when at capacity.
+    if len(_ksi_calc_cache) > _KSI_CALC_CACHE_MAXSIZE:
+        _ksi_calc_cache.popitem(last=False)
 
 class CALC_Demodulator_ocelot(ICalculator):
 
@@ -2431,13 +2465,13 @@ class CALC_Demodulator_ocelot(ICalculator):
         else:
             osr = demodosr
 
-        u2 = sp.resample_poly(u,osr*src2, sfosr*16384)
+        u2 = resample_poly_cached(u,osr*src2, sfosr*16384)
 
         # channel filter OSR = chflt_osr * src2
         v = sp.lfilter(cf, 1, u2)
 
         # src2 - resample to target OSR rate OSR = target_osr * dec2
-        v2 = sp.resample_poly(v, 16384, src2)
+        v2 = resample_poly_cached(v, 16384, src2)
 
         # CORDIC OSR = target_osr * dec2
         a = np.unwrap(np.angle(v2))
@@ -2452,7 +2486,7 @@ class CALC_Demodulator_ocelot(ICalculator):
             # from here to the datafilter. Low value samples will bring the average soft decision to a lower value.
             best_min = 0
             for phase in range(dec2):
-                f2 = sp.resample_poly(f1[round(len(f1)/4)+phase:], 1, dec2)
+                f2 = resample_poly_cached(f1[round(len(f1)/4)+phase:], 1, dec2)
                 min_val = min(abs(f2[3:-3]))
                 if min_val >= best_min:
                     best_min = min_val
@@ -2478,11 +2512,83 @@ class CALC_Demodulator_ocelot(ICalculator):
         # return frequency signal
         return g
 
+    def _get_ksi_cache_gen_signal_inputs(self, model):
+        """Inputs that affect gen_frequency_signal() output.
+
+        The left-hand strings (e.g. "deviation", "remoden") are stable labels
+        for cache-key readability only. The right-hand values are the actual
+        model values used by the math path.
+
+        New-part guide:
+        - If you override gen_frequency_signal(), mirror every newly-read model
+          variable here so cache invalidates correctly.
+        - If only SRC2 source changes (e.g. another FEFILT path), override
+          _get_ksi_cache_src2_key() instead of rewriting this whole method.
+        - If return_ksi2_ksi3_calc() adds logic outside gen_frequency_signal(),
+          add those fields in _get_ksi_cache_additional_inputs().
+        """
+        demod_select = model.vars.demod_select.value
+        is_bcr = demod_select == model.vars.demod_select.var_enum.BCR
+
+        return (
+            # Direct gen_frequency_signal() numeric inputs.
+            ("deviation", model.vars.deviation.value),
+            ("baudrate", model.vars.baudrate.value),
+            ("src2_ratio", self._get_ksi_cache_src2_key(model)),
+            # Remod/data-filter control bits used in gen_frequency_signal().
+            ("datafilter", model.vars.MODEM_CTRL2_DATAFILTER.value),
+            ("remoden", model.vars.MODEM_PHDMODCTRL_REMODEN.value),
+            ("remodoutsel", model.vars.MODEM_PHDMODCTRL_REMODOUTSEL.value),
+            ("demod_select", str(demod_select)),
+            ("dec2_actual", model.vars.dec2_actual.value),
+            # BCR-only path controls (ignored for non-BCR demod modes).
+            ("bcr_rawndec", model.vars.MODEM_BCRDEMODOOK_RAWNDEC.value if is_bcr else None),
+            ("bcr_rawgain", model.vars.MODEM_BCRDEMODOOK_RAWGAIN.value if is_bcr else None),
+            ("bcr_rawfltsel", model.vars.MODEM_BCRDEMODCTRL_RAWFLTSEL.value if is_bcr else None),
+        )
+
+    def _get_ksi_cache_additional_inputs(self, model):
+        """Hook for inheritors (e.g. Sol/Rainier descendants) to add cache inputs."""
+        return ()
+
+    def _get_ksi_cache_impl_discriminator(self):
+        """Return implementation identity for shared Ocelot-family cache safety.
+
+        Ocelot/derived parts share one module-level cache. Include the active
+        gen_frequency_signal implementation + SRC2 denominator so parts with
+        different math paths (for example Sol) never alias cache entries.
+        """
+        gen_signal_fn = getattr(self.gen_frequency_signal, "__func__", self.gen_frequency_signal)
+        return (
+            getattr(gen_signal_fn, "__module__", type(self).__module__),
+            getattr(gen_signal_fn, "__qualname__", gen_signal_fn.__class__.__name__),
+            getattr(self, "SRC2DENUM", None),
+        )
+
+    def _build_ksi_cache_key(self, model, ksi1, lock_bwsel, bwsel, osr, sf):
+        cache_inputs = (
+            # Stable labels for readability + deterministic key structure.
+            ("ksi1", ksi1),
+            ("lock_bwsel", lock_bwsel),
+            ("bwsel", bwsel),
+            ("osr", osr),
+            ("sf", sf),
+            # Prevent cross-part collisions in shared Ocelot-family cache.
+            ("impl", self._get_ksi_cache_impl_discriminator()),
+            ("gen_signal", self._get_ksi_cache_gen_signal_inputs(model)),
+        )
+        cache_inputs += tuple(self._get_ksi_cache_additional_inputs(model))
+        # Version tag allows future key-shape changes without colliding old entries.
+        # freeze_for_cache converts nested/numpy-heavy inputs into a stable hashable key.
+        return ("ocelot_ksi2_ksi3_v2", freeze_for_cache(cache_inputs))
+
     def return_ksi2_ksi3_calc(self, model, ksi1):
         # get parameters
         lock_bwsel = model.vars.lock_bwsel.value # use the lock bw
         bwsel = model.vars.bwsel.value  # use the lock bw
         osr = int(round(model.vars.oversampling_rate_actual.value))
+
+        _ksi_key = None  # result cache key; set inside else block when inputs are available
 
         # calculate only if needed - ksi1 would be already calculated if that is the case
         if (ksi1 == 0):
@@ -2493,6 +2599,18 @@ class CALC_Demodulator_ocelot(ICalculator):
             # get shaping filter and it oversampling rate with respect to baudrate
             sf = CALC_Shaping_ocelot().get_shaping_filter(model)/1.0
             sfosr = 8 # shaping filter coeffs are sampled at 8x
+
+            # Check result cache before expensive DSP computation (kaiser/firwin/resample_poly)
+            if _ADVANCED_CACHE_EN:
+                try:
+                    _ksi_key = self._build_ksi_cache_key(model, ksi1, lock_bwsel, bwsel, osr, sf)
+                    _cached = _ksi_cache_get(_ksi_key)
+                    if _cached is not None:
+                        return _cached
+                except Exception:
+                    # Never block calculation on cache-key construction edge cases.
+                    # Fallback is compute-without-cache for this invocation.
+                    _ksi_key = None
 
             # get channel filter and expend the symmetric part
             cfh = np.asarray(self.return_coeffs(lock_bwsel))
@@ -2567,7 +2685,14 @@ class CALC_Demodulator_ocelot(ICalculator):
         best_ksi3 = best_ksi2 if best_ksi3 > best_ksi2 else best_ksi3
         best_ksi3wb = best_ksi2 if best_ksi3wb > best_ksi2 else best_ksi3wb
 
-        return best_ksi2, best_ksi3, best_ksi3wb
+        _result = (best_ksi2, best_ksi3, best_ksi3wb)
+        if _ADVANCED_CACHE_EN and _ksi_key is not None:
+            _ksi_cache_put(_ksi_key, _result)
+        return _result
+
+    def _get_ksi_cache_src2_key(self, model):
+        """Return the SRC2 value that gen_frequency_signal() uses for this part."""
+        return model.vars.MODEM_SRCCHF_SRCRATIO2.value
 
     def calc_ksi2_ksi3(self, model):
         # This function writes the ksi2,3 model variables that are used to program both

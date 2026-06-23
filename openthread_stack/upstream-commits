@@ -1,0 +1,6 @@
+# Upstream base commits for Silicon Labs OpenThread and ot-br-posix forks.
+#
+# These identify the upstream commits from which Silicon Labs' fork diverges.
+
+openthread=fb274efe6
+ot-br-posix=717abf0dc

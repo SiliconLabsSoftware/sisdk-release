@@ -28,6 +28,11 @@ define:
   value: 1
 - name: BOOTLOADER_APPLOADER
   value: 1
+toolchain_settings:
+- option: gcc_linker_option
+  value: -flto-partition=max
+  condition:
+  - toolchain_gcc_lto
 provides:
 - name: bootloader_apploader
 - name: bootloader_nonsecure_incompatible

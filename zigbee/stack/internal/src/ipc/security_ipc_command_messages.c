@@ -3,7 +3,7 @@
  * @brief internal wrappers for 'security' ipc commands
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -194,6 +194,7 @@ sl_status_t sl_zigbee_aps_crypt_message(bool encrypt,
 
   if (length > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector message length exceeds expected maximum
+    return msg.data.aps_crypt_message.response.result;
   }
 
   memmove(msg.data.aps_crypt_message.request.message, message, sizeof(uint8_t) * length);

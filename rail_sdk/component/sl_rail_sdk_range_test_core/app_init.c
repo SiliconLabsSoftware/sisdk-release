@@ -31,6 +31,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "sl_rail_sdk_service_phy_config.h"
 #include "sl_common.h"
@@ -127,7 +128,7 @@ void rail_app_init(void)
                                                  NULL, 0, 0);
 
   if (sleep_timer_status != 0) {
-    app_log_error("Sleeptimer start failed with code %lu",
+    app_log_error("Sleeptimer start failed with code 0x%08" PRIX32,
                   sleep_timer_status);
   }
 
@@ -166,12 +167,12 @@ void end_init_timer(void)
   sleep_timer_status = sl_sleeptimer_is_timer_running(&init_screen_timer,
                                                       &is_running);
   if (sleep_timer_status != 0) {
-    app_log_error("Sleeptimer state read failed with code %lu", sleep_timer_status);
+    app_log_error("Sleeptimer state read failed with code 0x%08" PRIX32, sleep_timer_status);
   }
   if (is_running) {
     sleep_timer_status = sl_sleeptimer_stop_timer(&init_screen_timer);
     if (sleep_timer_status != 0) {
-      app_log_error("Sleeptimer stop failed with code %lu", sleep_timer_status);
+      app_log_error("Sleeptimer stop failed with code 0x%08" PRIX32, sleep_timer_status);
     }
   }
 }

@@ -44,8 +44,16 @@ if(SL_OT_COEX_CLI)
 endif()
 
 if(SL_OT_TEST_CLI)
-    list (APPEND CLI_SOURCES ${CLI_SRC_DIR}/test_cli.c)
-    target_compile_definitions(ot-config INTERFACE "SL_OPENTHREAD_TEST_CLI_ENABLE=1")
+    set(_sl_ot_test_cli_src "${INTERNAL_CLI_SRC_DIR}/test_cli.c")
+    if(EXISTS "${_sl_ot_test_cli_src}")
+        list(APPEND CLI_SOURCES "${_sl_ot_test_cli_src}")
+        target_compile_definitions(ot-config INTERFACE "SL_OPENTHREAD_TEST_CLI_ENABLE=1")
+    else()
+        message(WARNING
+            "SL_OT_TEST_CLI is ON but test_cli.c was not found at:\n  ${_sl_ot_test_cli_src}\n"
+            "  Set OT_INTERNAL_DIR to the openthread_internal tree (directory containing src/cli), "
+            "or disable SL_OT_TEST_CLI.")
+    endif()
 endif()
 
 if(SL_OT_EFR32_CLI)
@@ -54,8 +62,16 @@ if(SL_OT_EFR32_CLI)
 endif()
 
 if(SL_OT_MEMORY_CLI)
-    list (APPEND CLI_SOURCES ${CLI_SRC_DIR}/memory_usage_cli.c)
-    target_compile_definitions(ot-config INTERFACE "SL_OPENTHREAD_MEMORY_USAGE_CLI_ENABLE=1")
+    set(_sl_ot_memory_cli_src "${INTERNAL_CLI_SRC_DIR}/memory_usage_cli.c")
+    if(EXISTS "${_sl_ot_memory_cli_src}")
+        list(APPEND CLI_SOURCES "${_sl_ot_memory_cli_src}")
+        target_compile_definitions(ot-config INTERFACE "SL_OPENTHREAD_MEMORY_USAGE_CLI_ENABLE=1")
+    else()
+        message(WARNING
+            "SL_OT_MEMORY_CLI is ON but memory_usage_cli.c was not found at:\n  ${_sl_ot_memory_cli_src}\n"
+            "  Set OT_INTERNAL_DIR to the openthread_internal tree (directory containing src/cli), "
+            "or disable SL_OT_MEMORY_CLI.")
+    endif()
 endif()
 
 if(NOT CLI_SOURCES STREQUAL "")

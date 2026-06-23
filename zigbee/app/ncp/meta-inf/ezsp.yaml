@@ -2420,6 +2420,7 @@
           name: "SL_ZIGBEE_EZSP_MFG_STRING",
           value: "0x01",
           description: "Manufacturing string (16 bytes).",
+          deprecated: true,
         },
         {
           name: "SL_ZIGBEE_EZSP_MFG_BOARD_NAME",
@@ -2440,6 +2441,7 @@
           name: "SL_ZIGBEE_EZSP_MFG_BOOTLOAD_AES_KEY",
           value: "0x05",
           description: "Bootload AES key (16 bytes).",
+          deprecated: true,
         },
         {
           name: "SL_ZIGBEE_EZSP_MFG_ASH_CONFIG",
@@ -2450,6 +2452,7 @@
           name: "SL_ZIGBEE_EZSP_MFG_SL_ZIGBEE_EZSP_STORAGE",
           value: "0x07",
           description: "EZSP storage (8 bytes).",
+          deprecated: true,
         },
         {
           name: "SL_ZIGBEE_EZSP_STACK_CAL_DATA",
@@ -8249,6 +8252,24 @@
           type: "sl_802154_short_addr_t",
           name: "nodeId",
           description: "The short ID of the destination node.",
+        },
+      ],
+      responseArguments: [
+      ],
+    },
+    ## CLEAR_BINDING_TABLE_ON_LEAVE
+    {
+      value: "0x006D",
+      needGeneratedHandler : "yes",
+      commandName: "clearBindingTableOnLeave",
+      description: "When enabled, the stack clears the binding table on
+                    definitive leave (not leave-with-rejoin), as required
+                    for Zigbee 4.0 security profile (e.g. CN-Reset-TC-01).",
+      commandArguments: [
+        {
+          type: "bool",
+          name: "clear",
+          description: "True to clear bindings on leave; false to disable.",
         },
       ],
       responseArguments: [

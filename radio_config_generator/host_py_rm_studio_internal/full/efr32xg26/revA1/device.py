@@ -113,7 +113,7 @@ class RM_Device_EFR32XG26XFULL_RevA1(Base_RM_Device):
         self.__dict__['zz_frozen'] = False
         super(RM_Device_EFR32XG26XFULL_RevA1, self).__init__(rmio, label,
             'EFR32XG26XFULL',
-            RM_SVD_Info('EFR32XG26XFULL_SEQ.svd', '1df929323ed37d39b1b1c56c7b889187'))
+            RM_SVD_Info('EFR32XG26XFULL_SEQ.svd', '4e5c650d640a1df2f93e10ae22562f4b'))
 
         self.AGC_NS = RM_Peripheral_AGC_NS(self.zz_rmio, self.zz_label)
         self.zz_pdict['AGC_NS'] = self.AGC_NS

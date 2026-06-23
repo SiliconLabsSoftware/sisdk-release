@@ -13,6 +13,8 @@ include:
 - path: .
   file_list:
   - path: cs_antenna.h
+config_file:
+- path: config/cs_antenna_config.h
 source:
 - path: cs_antenna.c
   condition:
@@ -27,6 +29,13 @@ requires:
   condition:
   - device_cortexm
 - name: bluetooth_api
+template_contribution:
+- name: component_catalog
+  value: cs_antenna
+- name: bluetooth_on_event
+  value:
+    include: cs_antenna.h
+    function: cs_antenna_on_bt_event
 documentation:
   docset: bluetooth
   document: bluetooth-service-api/cs-antenna

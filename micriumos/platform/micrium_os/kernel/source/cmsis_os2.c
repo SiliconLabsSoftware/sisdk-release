@@ -2190,21 +2190,22 @@ osStatus_t  osSemaphoreDelete(osSemaphoreId_t  semaphore_id)
  *
  *                               Thread attributes are:
  *
- *                               .name         name of the thread
- *                               .attr_bits    values:
- *                                             osThreadDetached     (default)    0x00000000
- *                                             osThreadJoinable                  0x00000001
- *                               .cb_mem       pointer to TCB
- *                                                (allocated dynamically if NULL or not specified)
- *                               .cb_size      size of the TCB (in bytes)
- *                               .stack_mem    pointer to the base address of the stack
- *                                                (allocated dynamically if NULL or not specified)
- *                               .stack_size   size of stack (in bytes)
- *                                                (defaults to CMSIS_DEFAULT_STACK_SIZE bytes
- *                                                 if 0 specified or not specified)
- *                               .priority     Thread priority (0 = lowest, 55 = highest)
- *                               .tz_module    TrustZone Module Identified
- *                               .reserved     Must be 0
+ *                               .name            name of the thread
+ *                               .attr_bits       values:
+ *                                                osThreadDetached     (default)    0x00000000
+ *                                                osThreadJoinable                  0x00000001
+ *                               .cb_mem          pointer to TCB
+ *                                                   (allocated dynamically if NULL or not specified)
+ *                               .cb_size         size of the TCB (in bytes)
+ *                               .stack_mem       pointer to the base address of the stack
+ *                                                   (allocated dynamically if NULL or not specified)
+ *                               .stack_size      size of stack (in bytes)
+ *                                                   (defaults to CMSIS_DEFAULT_STACK_SIZE bytes
+ *                                                    if 0 specified or not specified)
+ *                               .priority        Thread priority (0 = lowest, 55 = highest)
+ *                               .tz_module       TrustZone Module Identified
+ *                               .affinity_mask   processor affinity mask for binding the thread
+ *                                                   to a CPU in a SMP system (0 when not used)
  *
  * Returns    : The thread ID                           upon success
  *              NULL                                    upon error

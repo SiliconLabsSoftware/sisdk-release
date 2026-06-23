@@ -26,6 +26,7 @@ import:
 
 tag:
   - toolchain:gcc
+  - toolchain:llvm
   - companion:bootloader-apploader-secure
   - hwfilter:device:device_supports_bluetooth
   - hwfilter:device:device_series_2

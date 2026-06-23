@@ -1,0 +1,27 @@
+id: mbedtls_dtls
+package: platform_core
+label: DTLS
+description: >-
+  This component provides support for the DTLS protocol using Mbed TLS.
+  This component is DEPRECATED and will be removed in a future version of this product.
+  This component will be replaced by a new set of components including mbedtls_ssl_proto_dtls,
+  mbedtls_ssl_dtls_anti_replay, mbedtls_ssl_dtls_hello_verify and mbedtls_ssl_cookie.
+category: Platform|Security|Mbed TLS|Upper Layer
+quality: production
+provides:
+- name: mbedtls_dtls
+requires:
+- name: mbedtls_tls
+template_contribution:
+- name: mbedtls_config
+  value: MBEDTLS_SSL_PROTO_DTLS
+- name: mbedtls_config
+  value: MBEDTLS_SSL_DTLS_ANTI_REPLAY
+- name: mbedtls_config
+  value: MBEDTLS_SSL_DTLS_HELLO_VERIFY
+- name: mbedtls_config
+  value: MBEDTLS_SSL_COOKIE_C
+metadata:
+  sbom:
+    reference: mbedtls_sbom
+root_path: platform_core

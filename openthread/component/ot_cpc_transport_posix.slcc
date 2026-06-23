@@ -1,0 +1,27 @@
+id: ot_cpc_transport_posix
+label: CPC transport (POSIX host)
+package: openthread
+category: OpenThread|Host Support
+quality: production
+description: Support for spinel transport interface over Cpc on Posix Host.
+
+provides:
+- name: ot_cpc_transport_posix
+
+library:
+- system: cpc
+- system: stdc++
+
+include:
+- path: platform-abstraction/posix
+  file_list:
+  - path: cpc_transport.hpp
+  - path: cpc_transport_config.hpp
+
+source:
+- path: platform-abstraction/posix/cpc_transport.cpp
+
+metadata:
+  sbom:
+    license: Zlib
+root_path: openthread

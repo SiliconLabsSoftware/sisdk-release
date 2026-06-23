@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for the NCP.
  */
 
-#ifndef CONFIG_NCP_H_
-#define CONFIG_NCP_H_
+#ifndef OT_NCP_NCP_CONFIG_H_
+#define OT_NCP_NCP_CONFIG_H_
 
 #ifndef OPENTHREAD_RADIO
 #define OPENTHREAD_RADIO 0
@@ -45,6 +45,29 @@
  */
 #ifndef OPENTHREAD_CONFIG_NCP_SPI_ENABLE
 #define OPENTHREAD_CONFIG_NCP_SPI_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_NCP_TREL_UDP_PORT
+ *
+ * Specifies the default TREL UDP port for NCP.
+ *
+ * Set to 0 to let the stack choose a random port.
+ */
+#ifndef OPENTHREAD_CONFIG_NCP_TREL_UDP_PORT
+#define OPENTHREAD_CONFIG_NCP_TREL_UDP_PORT 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
+ *
+ * Define to 1 to enable UDP forward feature.
+ *
+ * This is required for NCP to forward UDP packets (e.g., mDNS, TREL) to the host infrastructure interface
+ * using SPINEL_PROP_THREAD_UDP_FORWARD_STREAM.
+ */
+#ifndef OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
+#define OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE 1
 #endif
 
 /**
@@ -186,6 +209,22 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_NCP_DNSSD_MAX_ADDRESS_RESULT_ENTRIES
+ *
+ * The maximum number of `otPlatDnssdAddressAndTtl` entries the NCP decodes from a single
+ * `SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT` or `SPINEL_PROP_DNSSD_IP4_ADDRESS_RESULT` property update.
+ *
+ * Each entry is stored on the stack while handling the property; increase this only if the host may
+ * send larger address lists and the platform can afford the extra stack usage.
+ *
+ * Must be at least 1. The Spinel payload may still advertise a larger count; in that case the NCP
+ * rejects the frame with `OT_ERROR_PARSE`.
+ */
+#ifndef OPENTHREAD_CONFIG_NCP_DNSSD_MAX_ADDRESS_RESULT_ENTRIES
+#define OPENTHREAD_CONFIG_NCP_DNSSD_MAX_ADDRESS_RESULT_ENTRIES 32
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_NCP_CLI_STREAM_ENABLE
  *
  * Define to 1 to enable the NCP CLI Stream feature.
@@ -216,4 +255,4 @@
 #define OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER 0
 #endif
 
-#endif // CONFIG_NCP_H_
+#endif // OT_NCP_NCP_CONFIG_H_

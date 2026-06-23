@@ -2,7 +2,7 @@
  * @brief RAIL Configuration
  * @details
  *   WARNING: Auto-Generated Radio Config  -  DO NOT EDIT
- *   Radio Configurator Version: 2504.4.6
+ *   Radio Configurator Version: 2602.5.0
  *   RAIL Adapter Version: 2.4.33
  *   RAIL Compatibility: 2.x
  *******************************************************************************
@@ -252,10 +252,10 @@ const uint32_t sl_rail_ble_phy_1Mbps_viterbi_38M4Hz_modemConfigBase[] = {
   0x00034114UL, 0x00004CFFUL,
   /*    4118 */ 0x00004DFFUL,
   /*    411C */ 0x00004DFFUL,
-  0x1001C020UL, 0x0007F800UL,
-  0x3001C020UL, 0x012802F5UL,
-  0x1001C024UL, 0x000000FFUL,
-  0x3001C024UL, 0x04001300UL,
+  0x0001E020UL, 0xFFF807FFUL,
+  0x0001D020UL, 0x012802F5UL,
+  0x0001E024UL, 0xFFFFFF00UL,
+  0x0001D024UL, 0x04001300UL,
   0x0008C028UL, 0x03B380ECUL,
   /*    C02C */ 0x51407543UL,
   /*    C030 */ 0xB8000FA0UL,
@@ -363,7 +363,7 @@ const uint32_t sl_rail_ble_phy_1Mbps_viterbi_38M4Hz_modemConfigBase[] = {
   0x0103806CUL, 0x0000803FUL,
   /*    8070 */ 0x18E95287UL,
   /*    8074 */ 0x190952C7UL,
-  0x11018078UL, 0x0007FFFCUL,
+  0x0101A078UL, 0xFFF80003UL,
   0x01028080UL, 0x6777BBBFUL,
   /*    8084 */ 0x008F0BFFUL,
   0x01028090UL, 0x00069018UL,
@@ -371,20 +371,20 @@ const uint32_t sl_rail_ble_phy_1Mbps_viterbi_38M4Hz_modemConfigBase[] = {
   0x0103809CUL, 0x00B22489UL,
   /*    80A0 */ 0x00823344UL,
   /*    80A4 */ 0x246D2240UL,
-  0x120100DCUL, 0x05AFF02FUL,
-  0x320100DCUL, 0x00400300UL,
-  0x120100E0UL, 0x00007FC0UL,
-  0x320100E0UL, 0x01600018UL,
-  0x120100E4UL, 0x000007E4UL,
-  0x320100E4UL, 0x00002008UL,
-  0x12010268UL, 0x3FC00380UL,
-  0x32010268UL, 0x000E2400UL,
+  0x020120DCUL, 0xFA500FD0UL,
+  0x020110DCUL, 0x00400300UL,
+  0x020120E0UL, 0xFFFF803FUL,
+  0x020110E0UL, 0x01600018UL,
+  0x020120E4UL, 0xFFFFF81BUL,
+  0x020110E4UL, 0x00002008UL,
+  0x02012268UL, 0xC03FFC7FUL,
+  0x02011268UL, 0x000E2400UL,
   0x02010270UL, 0x00000000UL,
   0x0201027CUL, 0x00000000UL,
   0x02010284UL, 0x00000052UL,
   0x020102A0UL, 0x1443004DUL,
-  0x120102BCUL, 0x0000F000UL,
-  0x320102BCUL, 0x006207DFUL,
+  0x020122BCUL, 0xFFFF0FFFUL,
+  0x020112BCUL, 0x006207DFUL,
   0x020202CCUL, 0x0440005DUL,
   /*    02D0 */ 0x00000080UL,
   0x020102D8UL, 0x00000080UL,
@@ -676,7 +676,7 @@ const uint32_t sl_rail_ble_phy_125kbps_38M4Hz_modemConfig[] = {
   0xFFFFFFFFUL,
 };
 
-const uint32_t sl_rail_ble_phy_500kbps_38M4Hz_modemConfig[] = {
+const uint32_t sl_rail_ble_lr_dsa_500kb_38M4Hz_modemConfig[] = {
   0x0301001CUL, (uint32_t) &phyInfo_3,
   0x03050008UL, 0x00025C19UL,
   /*    000C */ 0x00025D19UL,
@@ -1013,7 +1013,7 @@ const RAIL_ChannelConfigEntry_t sl_rail_ble_phy_125kbps_38M4Hz_channels[] = {
 
 const RAIL_ChannelConfigEntry_t sl_rail_ble_phy_500kbps_38M4Hz_channels[] = {
   {
-    .phyConfigDeltaAdd = sl_rail_ble_phy_500kbps_38M4Hz_modemConfig,
+    .phyConfigDeltaAdd = sl_rail_ble_lr_dsa_500kb_38M4Hz_modemConfig,
     .baseFrequency = 2402000000,
     .channelSpacing = 2000000,
     .physicalChannelOffset = 0,

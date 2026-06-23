@@ -7,6 +7,7 @@ from enum import Enum
 import numpy as np
 import numpy.matlib
 from scipy import signal as sp
+from pyradioconfig.parts.common.calculators.scipy_cache_utils import resample_poly_cached
 
 class Calc_Demodulator_Sol(CALC_Demodulator_ocelot):
 
@@ -53,6 +54,12 @@ class Calc_Demodulator_Sol(CALC_Demodulator_ocelot):
 
     def _add_demod_rate_variable(self, model):
         self._addModelActual(model, 'demod_rate', float, ModelVariableFormat.DECIMAL)
+
+    def _get_ksi_cache_src2_key(self, model):
+        # Sol frequency-signal generation uses SRC ratio from selected FEFILT path.
+        # New Sol-like parts should override this hook instead of editing the full
+        # Ocelot cache key builder.
+        return Calc_Utilities_Sol().get_fefilt_actual(model, 'SRC_SRCRATIO')
 
     def _get_interpolation_gain(self, model, txbrnum, modformat):
         if txbrnum < 256:
@@ -880,13 +887,13 @@ class Calc_Demodulator_Sol(CALC_Demodulator_ocelot):
 
         # scaling by 32 to avoid resampling by very large ratios which takes too much time
         # we don't need that precision here
-        u2 = sp.resample_poly(u,round(osr*src2/32), round(sfosr*self.SRC2DENUM/32))
+        u2 = resample_poly_cached(u,round(osr*src2/32), round(sfosr*self.SRC2DENUM/32))
 
         # channel filter OSR = chflt_osr * src2
         v = sp.lfilter(cf, 1, u2)
 
         # src2 - resample to target OSR rate OSR = target_osr * dec2
-        v2 = sp.resample_poly(v, round(self.SRC2DENUM/32), round(src2/32))
+        v2 = resample_poly_cached(v, round(self.SRC2DENUM/32), round(src2/32))
 
         # CORDIC OSR = target_osr * dec2
         a = np.unwrap(np.angle(v2))
@@ -901,7 +908,7 @@ class Calc_Demodulator_Sol(CALC_Demodulator_ocelot):
             # from here to the datafilter. Low value samples will bring the average soft decision to a lower value.
             best_min = 0
             for phase in range(dec2):
-                f2 = sp.resample_poly(f1[round(len(f1)/4)+phase:], 1, dec2)
+                f2 = resample_poly_cached(f1[round(len(f1)/4)+phase:], 1, dec2)
                 min_val = min(abs(f2[3:-3]))
                 if min_val >= best_min:
                     best_min = min_val

@@ -36,9 +36,8 @@
 #endif
 
 #ifdef SL_CATALOG_ZW_CLI_COMMON_PRESENT
-
+#include "zw_cli_common.h"
 #include "sl_cli.h"
-#include "app_log.h"
 #include "ev_man.h"
 #include "events.h"
 #include "zaf_event_distributor_soc.h"
@@ -69,7 +68,7 @@
 void cli_battery_report(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
-  app_log_info("Send out the battery report\r\n");
+  cli_printf("[I] Send out the battery report\r\n");
   zaf_event_distributor_enqueue_app_event(EVENT_APP_BATTERY_REPORT);
 }
 
@@ -80,13 +79,13 @@ void cli_motion_detected(sl_cli_command_arg_t *arguments)
 {
   char* state = sl_cli_get_argument_string(arguments, 0);
   if (strcmp(state, "activate") == 0) {
-    app_log_info("Activate PIR event\r\n");
+    cli_printf("[I] Activate PIR event\r\n");
     zaf_event_distributor_enqueue_app_event(EVENT_APP_TRANSITION_TO_ACTIVE);
   } else if (strcmp(state, "deactivate") == 0) {
-    app_log_info("Deactivate PIR event\r\n");
+    cli_printf("[I] Deactivate PIR event\r\n");
     zaf_event_distributor_enqueue_app_event(EVENT_APP_TRANSITION_TO_DEACTIVE);
   } else {
-    app_log_error("Invalid argument\r\n");
+    cli_printf("[E] Invalid argument\r\n");
   }
 }
 

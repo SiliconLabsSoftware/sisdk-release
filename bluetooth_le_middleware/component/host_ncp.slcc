@@ -65,11 +65,19 @@ source:
   - win32
 requires:
 - name: bluetooth_api_ncp_host
+- name: bgapi_service_ncp_host
+- name: bgapi_service_feature_system
 - name: app_timer
+- name: app_log
 - name: component_catalog
 provides:
 - name: host_ncp
-
+template_contribution:
+- name: bluetooth_on_event
+  value:
+    include: ncp_host.h
+    function: ncp_host_on_bt_event
+  priority: 0
 library:
 - system: pthread
 - system: ws2_32

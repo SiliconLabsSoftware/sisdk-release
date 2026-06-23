@@ -90,12 +90,48 @@ sl_status_t on_event_security(const sl_bt_msg_t *evt)
         return sc;
       }
       #endif
+      // If bonding is not enabled, delete the bonding DB
+      #if defined(ALLOW_BONDING) && (ALLOW_BONDING == 0)
+      sc = sl_bt_sm_delete_bondings();
+      if (sc != SL_STATUS_OK) {
+        log_error(APP_SEC_PREFIX "Failed to delete bonding DB, sc = %lu" NL_SEC, sc);
+      } else {
+        log_info(APP_SEC_PREFIX "Bonding DB deleted." NL_SEC);
+      }
+      #endif
       break;
     case sl_bt_evt_sm_bonded_id:
       log_info(APP_SEC_PREFIX "Device bonded" NL_SEC);
       break;
     case sl_bt_evt_sm_bonding_failed_id:
-      log_info(APP_SEC_PREFIX "Bonding failed, reason: %u" NL_SEC, evt->data.evt_sm_bonding_failed.reason);
+      log_info(APP_SEC_PREFIX "Bonding failed on initiator side, reason: 0x%lx" NL_SEC, (unsigned long)evt->data.evt_sm_bonding_failed.reason);
+      // If KEY_MISSING error received, always remove the bonding DB entry for that address
+      if (evt->data.evt_sm_bonding_failed.reason == SL_STATUS_BT_CTRL_PIN_OR_KEY_MISSING) {
+        log_error(APP_SEC_PREFIX "Missing key. Deleting corresponding bonding info." NL_SEC);
+        uint32_t bonding;
+        bd_addr address;
+        uint8_t address_type;
+        uint8_t security_mode;
+        uint8_t key_size;
+
+        sc = sl_bt_connection_get_remote_address(evt->data.evt_sm_bonding_failed.connection, &address, &address_type);
+        if (sc != SL_STATUS_OK) {
+          log_error(APP_SEC_PREFIX "Failed to get remote address, sc = %lx" NL_SEC, sc);
+          return sc;
+        }
+        sc = sl_bt_sm_find_bonding_by_address(address, &bonding, &security_mode, &key_size);
+        if (sc != SL_STATUS_OK) {
+          log_error(APP_SEC_PREFIX "Failed to find bonding by address, sc = 0x%lx" NL_SEC, sc);
+          return sc;
+        }
+        sc = sl_bt_sm_delete_bonding((uint8_t)bonding);
+        if (sc != SL_STATUS_OK) {
+          log_error(APP_SEC_PREFIX "Failed to delete bonding DB, sc = 0x%lx" NL_SEC, sc);
+          return sc;
+        } else {
+          log_info(APP_SEC_PREFIX "Bonding info deleted." NL_SEC);
+        }
+      }
       break;
 
     case sl_bt_evt_sm_passkey_display_id:

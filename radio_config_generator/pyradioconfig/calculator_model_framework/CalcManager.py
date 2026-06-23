@@ -3,11 +3,12 @@ Radio Configurator
 """
 import copy
 import os
-import re
-import sys
 import traceback
 import types
 from enum import Enum
+from collections import OrderedDict
+import inspect
+import re
 
 from pyradioconfig._version import __version__
 from pyradioconfig.calculator_model_framework.Utils.CalcStatus import CalcStatus
@@ -17,6 +18,7 @@ from pyradioconfig.calculator_model_framework.Utils.CustomExceptions import Unkn
 from pyradioconfig.calculator_model_framework.Utils.FileUtilities import FileUtilities
 from pyradioconfig.calculator_model_framework.Utils.LogMgr import LogMgr
 from pyradioconfig.calculator_model_framework.Utils.ModelChecking import ModelChecking, ModelCheckingError
+from pyradioconfig.calculator_model_framework.Utils.cache_flags import is_advanced_cache_enabled
 from pyradioconfig.calculator_model_framework.exceptions.exceptions import *
 from pyradioconfig.calculator_model_framework.interfaces.icalculator import ICalculator
 from pyradioconfig.calculator_model_framework.interfaces.idefault_phy import IDefaultPhy
@@ -38,6 +40,9 @@ from pycalcmodel.core.model import ModelRootInstanceXml
 from pycalcmodel.core.output import ModelOutputType
 
 from py_2_and_3_compatibility import *
+
+_ADVANCED_CACHE_EN = is_advanced_cache_enabled()
+_PHY_GROUPS_CACHE_MAXSIZE = 64
 
 
 class CalcManager(object):
@@ -146,6 +151,8 @@ class CalcManager(object):
         """
         if part_family is not None:
             part_family = part_family.strip()
+        if self.__part_family != part_family:
+            self._invalidate_context_caches()
         self.__part_family = part_family
 
     @property
@@ -168,6 +175,8 @@ class CalcManager(object):
         """
         if part_revision is not None:
             part_revision = part_revision.strip()
+        if self.__part_revision != part_revision:
+            self._invalidate_context_caches()
         self.__part_revision = part_revision
 
     @property
@@ -190,7 +199,30 @@ class CalcManager(object):
         """
         if target is not None:
             target = target.strip()
+        if self.__target != target:
+            self._invalidate_context_caches()
         self.__target = target
+
+    def _invalidate_context_caches(self):
+        """Clear all per-context caches.
+
+        These caches depend on the CalcManager context tuple:
+        (part_family, part_revision, target).
+        """
+        if not _ADVANCED_CACHE_EN:
+            return
+        cache_attr_names = (
+            '_profile_list_cache',
+            '_calculators_list_cache',
+            '_phy_list_cache',
+            '_filter_phy_groups_cache',
+            '_phy_groups_cache',
+            '_all_phy_groups_cache',
+            '_target_list_cache',
+        )
+        for cache_attr_name in cache_attr_names:
+            if hasattr(self, cache_attr_name):
+                delattr(self, cache_attr_name)
 
     @property
     def version(self):
@@ -254,18 +286,22 @@ class CalcManager(object):
         return uniqueProfiles
 
     def __getProfileList(self):
-        """Returns a list of all profile names for part family and part revision
+        """Returns a list of all profile names for part family and part revision (cached)
 
         Returns:
            list (list): List of uniquely named profile
 
         """
+        if _ADVANCED_CACHE_EN and hasattr(self, '_profile_list_cache'):
+            return list(self._profile_list_cache)
         self.__verifyPartFamilyPartRevisionIsSet()
         part_family = self.__part_family
         part_revision = self.__part_revision
         try:
             # Find all .py files for this family
             profilelist = self.__getProfileListPartFamily(part_family)
+            if _ADVANCED_CACHE_EN:
+                self._profile_list_cache = profilelist
             return profilelist
         except ImportError as ie:
             LogMgr.Error("Unable to import modules: {}".format(ie))
@@ -496,21 +532,78 @@ class CalcManager(object):
         model_instance.result_code = result
         model_instance.error_message = error_message
         model_instance.processed = True
-        model_instance.logs = copy.deepcopy(LogMgr.get_queue())
+        model_instance.logs = list(LogMgr.get_queue())
         LogMgr.reset()
         return result, error_message
 
     def _getCalculatorFunctionList(self):
-        """Returns a list of all calculator functions for part family and part revision
+        """
+        Returns a list of all calculator functions for part family and part revision
 
-        Returns:
-           list (list): List of calculation function references
+        With the new IP based architecture, the calclist is generated from calculations from two places
+        1. pyradioconfig/modules/...
+        2. pyradioconfig/parts/....
+
+        There can be a scenario where a part is inheriting IP based calculations from pyradioconfig/modules/ but need to
+        override some calculations as they are part specific. In that scenario, we neeed to make sure that any
+        calculation (or method calc_XXXX) defined in pyradioconfig/parts/.... takes precedence over a calc_XXXX defined
+        in pyradioconfig/modules/...
+
+        An example of how to do this can be found at this confluence page..
+        TODO: add confluence page link here
+
+        :return:
+            list (list): List of unique calculation function references
         """
         calculators = self._getCalculatorsList()
-        calc_list = []
+        calc_name_function_dict = dict()
         for calculator in calculators:
-            calc_list.extend(calculator().getCalculationList())
+            for calc in calculator().getCalculationList():
+                calc_name = calc.__name__
+                if calc_name not in list(calc_name_function_dict.keys()):
+                    # add to the dict
+                    calc_name_function_dict[calc_name] = calc
+                else:
+                    # if a calc name duplicate is found, definition in pyradioconfig/parts/.... takes precedence
+                    # check the file path name of calc in calc_name_function_dict
+                    old_calc_file_path = os.path.normpath(inspect.getfile(calc_name_function_dict[calc_name].__self__.__class__))
+                    new_calc_file_path = os.path.normpath(inspect.getfile(calc.__self__.__class__))
 
+                    if f"pyradioconfig{os.path.sep}modules" in old_calc_file_path:
+                        # replace or override the calc implementation defined in pyradioconfig/parts/
+                        if f"pyradioconfig{os.path.sep}parts" in new_calc_file_path:
+                            calc_name_function_dict[calc_name] = calc
+                        # flag duplicate calc methods defined in pyradioconfig/modules or elsewhere
+                        else:
+                            calc_error_message = (f"calculation with same name {calc_name} found at \n"
+                                                  f"{old_calc_file_path}\n"
+                                                  f"{new_calc_file_path}")
+                            LogMgr.Error(calc_error_message)
+                            raise LookupError(calc_error_message)
+
+                    elif f"pyradioconfig{os.path.sep}parts" in old_calc_file_path:
+                        if f"pyradioconfig{os.path.sep}modules" in new_calc_file_path:
+                            # do nothing as pyradioconfig\parts takes precedence
+                            pass
+                        elif f"pyradioconfig{os.path.sep}parts" in new_calc_file_path:
+                            # add the duplicate calculation. In older parts, calculations with same name are defined,
+                            # but do not edit same model variables. If they do, that is caught when the model builds.
+
+                            # Since calc_name_function_dict can't store duplicates, we will store the calc method with
+                            # different calc_name in the dict. calc_name here does not matter here because eventually
+                            # we will extract all the methods. calc_name is only to handle the duplicates generated
+                            # by pyradioconfig\module.
+                            calc_name = calc_name + "_" + new_calc_file_path.split("\\calculators\\")[-1]
+                            calc_name_function_dict[calc_name] = calc
+                        else:
+                            # found a calc_ method neither in pyradioconfig/parts/ nor in pyradioconfig/lpw.
+                            # shtewari: a remote possibility but wanted else to execute something in 'else'
+                            calc_error_message = (f"calculation with name {calc_name} found at \n"
+                                                  f"{new_calc_file_path}")
+                            LogMgr.Error(calc_error_message)
+                            raise LookupError(calc_error_message)
+
+        calc_list = list(calc_name_function_dict.values())
         return calc_list
 
     def _getCalculatorsList(self):
@@ -519,11 +612,32 @@ class CalcManager(object):
         Returns:
            list (list): List of calculation object references
         """
+        if _ADVANCED_CACHE_EN and hasattr(self, '_calculators_list_cache'):
+            return list(self._calculators_list_cache)
         self.__verifyPartFamilyPartRevisionIsSet()
         part_family = self.__part_family
         part_revision = self.__part_revision
 
-        # Find all part rev specific calculator .py files for this family
+        calclist = []
+
+        '''this needs to be handled in a different way for a part based on IP-based calculator vs legacy/part-based 
+        calculator. for ip-based calculator, we need to get calc methods in classes defined at both pyradioconfig/parts 
+        and pyradioconfig/modules. '''
+
+        if self._verify_ip_based_part():
+            calclist.extend(self.getCalculatorListIPBased())
+            calclist.extend(self.getCalculatorListLegacy())
+        else:
+            calclist.extend(self.getCalculatorListLegacy())
+
+        if _ADVANCED_CACHE_EN:
+            self._calculators_list_cache = calclist
+        return calclist
+
+    def getCalculatorListLegacy(self):
+        self.__verifyPartFamilyPartRevisionIsSet()
+        part_family = self.__part_family
+        part_revision = self.__part_revision
         try:
             calclist = []
             class_type = ICalculator
@@ -549,7 +663,24 @@ class CalcManager(object):
         except Exception:
             LogMgr.Error(traceback.print_exc())
 
-        return calclist
+    def getCalculatorListIPBased(self):
+        self.__verifyPartFamilyPartRevisionIsSet()
+        part_family = self.__part_family
+        part_revision = self.__part_revision
+
+        calcList = []
+
+        if self._verify_ip_based_part():
+            # call buildVariable in pyradioconfig/modules
+            part_family = self.__part_family
+            import_path = self.getPartFamilyImportPath(part_family, "ip_collector")
+            part_rev = self.__part_revision
+            peripheral_calcs_list = ClassManager.get_calc_ips(import_path, part_family, part_rev, return_ip_obj=True)
+            # when building model, we need to make sure that duplicate instances are not called
+            for (ip_obj, calculator) in peripheral_calcs_list:
+                calcList.append(calculator)
+
+        return calcList
 
     def calculateOverList(self, calc_routine_list, modem_model):
         """Loop through all function pointers and execute calculators on model
@@ -657,6 +788,8 @@ class CalcManager(object):
         Returns:
            list (list) : List of Phy reference objects
         """
+        if _ADVANCED_CACHE_EN and hasattr(self, '_phy_list_cache'):
+            return list(self._phy_list_cache)
         self.__verifyPartFamilyPartRevisionIsSet()
         part_family = self.__part_family
         part_revision = self.__part_revision
@@ -664,6 +797,8 @@ class CalcManager(object):
         # Find all .py files for this family and revision in part revision
         import_path = self.getPartFamilyImportPath(part_family, "phys")
         phy_list = ClassManager.getClassListFromImportPath(import_path, IPhy)
+        if _ADVANCED_CACHE_EN:
+            self._phy_list_cache = phy_list
         return phy_list
 
     def read_phy_into_profile(self, phy_name, modem_model):
@@ -808,12 +943,13 @@ class CalcManager(object):
         # if not profile.skip_target_calculation:
         self._call_target_calculate(modem_model)
 
-    def create_modem_model_instance(self, phy_name=None, profile_name=None):
+    def create_modem_model_instance(self, phy_name=None, profile_name=None, crystal_frequency=None):
         """Creates an empty model instance for a PHY or Profile
 
         Args:
             phy_name (str) : PHY name to create insance of (Optional, default = None)
             profile_name (str) : Profile name to create insance of (Optional, default = None)
+            crystal_frequency (int) : Crystal frequency in Hz to load into model instance (Optional, default = None)
             Note: You must specify either a PHY name or Profile name.
 
         Returns:
@@ -853,6 +989,9 @@ class CalcManager(object):
             else:
                 raise UnknownProfileException('Profile %s is not available in the Radio Configurator for this part. Please use an available Profile.' % profile_name)
 
+        if crystal_frequency is not None:
+            self.load_crystal_frequency_into_model_inputs(modem_model_instance, crystal_frequency)
+
         # Find and build phy
         if phy_name is not None:
             phy = self._findPhy(phy_name)
@@ -877,6 +1016,13 @@ class CalcManager(object):
         #self._buildDefaultPhys(modem_model_instance)
 
         return modem_model_instance
+
+    def _verify_ip_based_part(self):
+
+        part_family = self.__part_family
+        import_path = self.getPartFamilyImportPath(part_family, "ip_collector")
+        return ClassManager.verify_ip_based_part(import_path)
+
 
     def create_modem_model_type(self):
         """Creates a type model for current part family and revision
@@ -1007,16 +1153,17 @@ class CalcManager(object):
 
         return phy_names
 
-    def create_modem_model_instance_and_load_phy(self, phy_name=None):
+    def create_modem_model_instance_and_load_phy(self, phy_name=None, crystal_frequency=None):
         """Creates a modem model instance and loads PHY
 
         Args:
             phy_name (str) : PHY name to load
+            crystal_frequency (int) : Crystal frequency in Hz to load into model instance (Optional, default = None)
 
         Returns:
             model_instance (MOdelRoot) : New instance of data model with single PHY
         """
-        model_instance = self.create_modem_model_instance(phy_name)
+        model_instance = self.create_modem_model_instance(phy_name, crystal_frequency=crystal_frequency)
         self.read_phy_into_profile(model_instance.phy.name, model_instance)
         return model_instance
 
@@ -1066,7 +1213,10 @@ class CalcManager(object):
 
     def calculate_phy(self, phy_name=None, optional_inputs=None):
         if optional_inputs is None: optional_inputs = dict()
-        model_instance = self.create_modem_model_instance_and_load_phy(phy_name)
+
+        ## Get crystal frequency here for early calculation of concurrent PHYs
+        crystal_frequency = optional_inputs.get('xtal_frequency_hz', None)
+        model_instance = self.create_modem_model_instance_and_load_phy(phy_name, crystal_frequency=crystal_frequency)
 
         if not self.check_phy_supported_on_target(phy_name, model=model_instance):
             raise PHYNotSupportedOnTargetException("PHY: {} not supported on target: {}".format(phy_name, self.target))
@@ -1089,6 +1239,25 @@ class CalcManager(object):
 
         return model_instance
 
+    def load_crystal_frequency_into_model_inputs(self, model_instance, crystal_frequency_hz):
+        """Loads crystal frequency value into model instance inputs
+
+        Args:
+            model_instance (ModelRoot) : Data model to load inputds into
+            crystal_frequency_hz (int) : Crystal frequency value in Hz
+
+        Returns:
+            model_instance (ModelRoot) : Updated data model
+        """
+        if crystal_frequency_hz is not None:
+            if hasattr(model_instance.profile.inputs, 'xtal_frequency_hz'):
+                input = getattr(model_instance.profile.inputs, 'xtal_frequency_hz')
+                input.var_value = int(crystal_frequency_hz)
+            else:
+                raise InvalidOptionOverride('xtal_frequency_hz is not a valid option input for {} profile.'.format(model_instance.profile.name))
+
+        return model_instance
+    
     def load_input_dictionary_into_model(self, model_instance, inputs=None):
         """Loads input dictionary into model instance
 
@@ -1108,31 +1277,15 @@ class CalcManager(object):
                 if model_instance.phy and model_instance.phy.locked and value is not None and input.var_value != value:
                     raise StaticPHYInputException("This model has a static 'locked' PHY.  Cannot supply input overrides: {}!".format(key))
 
-                if input._var.var_type != Enum:
-                    if value is not None:
-                        input.var_value = (input._var.var_type)(value)
-                    else:
-                        input.var_value = value
-                else:
-                    if isinstance(value, basestring):
-                        if value.isdigit():
-                            value = int(value)
-                            enum_val = input._var.var_enum(value)
-                        else:
-                            enum_val = getattr(input._var.var_enum, value)
-                    elif isinstance(value, int):
-                        enum_val = input._var.var_enum(value)
-                    elif isinstance(value, float):
-                        value = int(value)
-                        enum_val = input._var.var_enum(value)
-                    input.var_value = enum_val
+                input.var_value = self.__variable_value_type_cast(input._var, value)
             elif hasattr(model_instance.profile.outputs, key):
                 self.__override_profile_output(model_instance, key, value)
             elif hasattr(model_instance.profile.outputs, key.upper()):
                 self.__override_profile_output(model_instance, key.upper(), value)
             elif hasattr(model_instance.vars, key):
                 var = getattr(model_instance.vars, key)
-                var.value_forced = value
+                print("Overriding variable {} with value {}".format(key, value))
+                var.value_forced = self.__variable_value_type_cast(var, value)
             else:
                 raise InvalidOptionOverride(key + ' is not a valid option input or output for {} profile.'.format(model_instance.profile.name))
 
@@ -1271,14 +1424,8 @@ class CalcManager(object):
         Returns:
             filtered_phys (list) : List of PHY's with filters excluded
         """
-        filtered_phys = list()
-        for phy in model.phys:
-            if phy.group_name not in phy_group_to_exclude:
-                filtered_phys.append(phy)
-            #else:
-            #    print("skipping {0}.{1}".format(phy.group_name, phy.name))
-
-        return filtered_phys
+        exclude_set = frozenset(phy_group_to_exclude)
+        return [phy for phy in model.phys if phy.group_name not in exclude_set]
 
     def find_all_phys_of_group_name(self, model, phy_group_to_include, phy_group_to_exclude=[]):
         """Get list of PHYs from model, including only phy_group_to_include
@@ -1291,12 +1438,9 @@ class CalcManager(object):
         Returns:
             filtered_phys (list) : List of PHY's with filters included
         """
-        filtered_phys = list()
-        for phy in model.phys:
-            if phy.group_name in phy_group_to_include and phy.group_name not in phy_group_to_exclude:
-                filtered_phys.append(phy)
-
-        return filtered_phys
+        include_set = frozenset(phy_group_to_include)
+        exclude_set = frozenset(phy_group_to_exclude)
+        return [phy for phy in model.phys if phy.group_name in include_set and phy.group_name not in exclude_set]
 
     def filter_out_phy_group_names_to_phy_group_name_list(self, model, phy_group_to_exclude):
         """Get list of PHYs from model, excluding phys with groups in phy_group_to_exclude
@@ -1308,12 +1452,8 @@ class CalcManager(object):
         Returns:
             filtered_phy_group_names (list) : List of PHY's with group filters excluded
         """
-        filtered_phy_group_names = list()
-        for phy in model.phys:
-            if phy.group_name not in phy_group_to_exclude:
-                filtered_phy_group_names.append(phy.group_name)
-
-        return filtered_phy_group_names
+        exclude_set = frozenset(phy_group_to_exclude)
+        return [phy.group_name for phy in model.phys if phy.group_name not in exclude_set]
 
     def find_all_phy_group_names_in_phy_group_name_list(self, model, phy_group_to_include):
         """Get list of PHYs from model, including phys with groups in phy_group_to_include
@@ -1325,10 +1465,8 @@ class CalcManager(object):
         Returns:
             filtered_phy_group_names (list) : List of PHY's with group filters included
         """
-        filtered_phy_group_names = list()
-        for phy in model.phys:
-            if phy.group_name in phy_group_to_include:
-                filtered_phy_group_names.append(phy.group_name)
+        include_set = frozenset(phy_group_to_include)
+        filtered_phy_group_names = [phy.group_name for phy in model.phys if phy.group_name in include_set]
 
         # Hack fix: If no PHY's are found, then return a warning entry
         if not filtered_phy_group_names:
@@ -1337,11 +1475,13 @@ class CalcManager(object):
         return filtered_phy_group_names
 
     def _get_filter_phy_groups(self):
-        """Gets list of PHY filter groups for part family and revision
+        """Gets list of PHY filter groups for part family and revision (cached)
 
         Returns:
             classlist (list) : List of PHY groups needed to be filtered
         """
+        if _ADVANCED_CACHE_EN and hasattr(self, '_filter_phy_groups_cache'):
+            return self._filter_phy_groups_cache
         self.__verifyPartFamilyPartRevisionIsSet()
         part_family = self.__part_family
         part_revision = self.__part_revision
@@ -1349,10 +1489,12 @@ class CalcManager(object):
         # Find all .py files for this family and revision in part revision
         import_path = self.getPartFamilyImportPath(part_family, "filters")
         classlist = ClassManager.getClassListFromImportPath(import_path, IPhyFilter)
+        if _ADVANCED_CACHE_EN:
+            self._filter_phy_groups_cache = classlist
         return classlist
 
     def _get_phy_groups(self, phy_filter_group_types):
-        """Gets list of PHY's base on group types
+        """Gets list of PHY's base on group types (cached per filter type)
 
         Args:
             phy_filter_group_types (Enum: PhyFilterGroupTypes) : PHY group type to get
@@ -1360,6 +1502,13 @@ class CalcManager(object):
         Returns:
             filterList (list) : List of PHYs in group
         """
+        if _ADVANCED_CACHE_EN:
+            if not hasattr(self, '_phy_groups_cache'):
+                self._phy_groups_cache = OrderedDict()
+            if phy_filter_group_types in self._phy_groups_cache:
+                self._phy_groups_cache.move_to_end(phy_filter_group_types)
+                return self._phy_groups_cache[phy_filter_group_types]
+
         classlist = self._get_filter_phy_groups()
 
         filterList = []
@@ -1367,14 +1516,21 @@ class CalcManager(object):
             tempList = filter().get_phy_filter_groups(phy_filter_group_types)
             filterList = list(set(filterList + tempList))
 
+        if _ADVANCED_CACHE_EN:
+            self._phy_groups_cache[phy_filter_group_types] = filterList
+            if len(self._phy_groups_cache) > _PHY_GROUPS_CACHE_MAXSIZE:
+                # Evict least-recently-used key.
+                self._phy_groups_cache.popitem(last=False)
         return filterList
 
     def _get_all_phy_groups(self):
-        """Gets list of all PHY groups
+        """Gets list of all PHY groups (cached)
 
         Returns:
             all_phys (list) : List of all PHY groups
         """
+        if _ADVANCED_CACHE_EN and hasattr(self, '_all_phy_groups_cache'):
+            return self._all_phy_groups_cache
         part_family = self.__part_family
 
         import_path = self.getPartFamilyImportPath(part_family, "phys")
@@ -1385,6 +1541,8 @@ class CalcManager(object):
             file_name = os.path.basename(module.__file__)
             all_groups.append(os.path.splitext(file_name)[0])
 
+        if _ADVANCED_CACHE_EN:
+            self._all_phy_groups_cache = all_groups
         return all_groups
 
     def get_customer_phy_groups(self):
@@ -1581,7 +1739,7 @@ class CalcManager(object):
     @staticmethod
     def get_list_of_parts_supported(incl_unit_test_part=False):
         parts_list = []
-        exclude_list = ['common','wifi74000']
+        exclude_list = ['common', 'wifi74000', 'lpw74010', 'lpwlo74010', 'lpwln74010']
         if not incl_unit_test_part:
             exclude_list.append('unit_test_part')
         parts_location = os.path.dirname(parts.__file__)
@@ -1608,31 +1766,160 @@ class CalcManager(object):
         return None
 
     def __getTargetList(self):
+        """
+        Get list of target classes for the current part family (cached).
+
+        Returns:
+            list: List of target class objects
+
+        Raises:
+            Various exceptions with detailed error messages for different failure scenarios
+        """
+        if _ADVANCED_CACHE_EN and hasattr(self, '_target_list_cache'):
+            return list(self._target_list_cache)
         self.__verifyPartFamilyPartRevisionIsSet()
+
         try:
             targetlist = self.__getTargetListFromImport()
+
+            # Validate that we actually got targets
+            if targetlist is None or len(targetlist) == 0:
+                import_path = self.getPartFamilyImportPath(self.part_family, "targets")
+                raise ValueError(
+                    f"No valid target classes found for part family '{self.part_family}' at '{import_path}'. "
+                    f"Check that the targets directory contains valid target definition files."
+                )
+
+            if _ADVANCED_CACHE_EN:
+                self._target_list_cache = targetlist
             return targetlist
+
+        except AttributeError as ae:
+            import_path = self.getPartFamilyImportPath(self.part_family, "targets")
+            LogMgr.Error(
+                f"Missing or invalid __init__.py in targets directory for '{self.part_family}' at '{import_path}'. "
+                f"Error: {ae}"
+            )
+            raise
+
+        except ValueError as ve:
+            # Empty targets directory or no valid modules
+            LogMgr.Error(str(ve))
+            raise
+
         except ImportError as ie:
-            LogMgr.Error("Unable to import modules at: {}".format(ie))
-        except Exception:
-            LogMgr.Error(traceback.print_exc())
+            import_path = self.getPartFamilyImportPath(self.part_family, "targets")
+            LogMgr.Error(
+                f"Cannot import targets for part family '{self.part_family}' from '{import_path}'. "
+                f"Check that the targets directory exists and contains an __init__.py file. "
+                f"Error: {ie}"
+            )
+            raise
+
+        except Exception as e:
+            import_path = self.getPartFamilyImportPath(self.part_family, "targets")
+            LogMgr.Error(
+                f"Unexpected error loading targets for '{self.part_family}' from '{import_path}': {e}"
+            )
+            LogMgr.Error(traceback.format_exc())
+            raise
 
     def getTargetNameList(self):
+        """
+        Get list of target names for the current part family.
+
+        Returns:
+            list: List of target name strings
+        """
         target_name_list = []
-        target_obj_list = self.__getTargetList()
-        for target in target_obj_list:
-            name = target().getName()
-            if len(name) > 0:
-                target_name_list.append(name)
+
+        try:
+            target_obj_list = self.__getTargetList()
+
+            if target_obj_list is not None:
+                for target in target_obj_list:
+                    name = target().getName()
+                    if len(name) > 0:
+                        target_name_list.append(name)
+        except Exception as e:
+            # Re-raise with context - __getTargetList already logged the error
+            raise RuntimeError(
+                f"Failed to get target list for part family '{self.part_family}'. Make sure the targets module "
+                f"is properly defined and contains valid target classes. Error: {e}"
+            ) from e
 
         return target_name_list
 
     def __getTargetListFromImport(self):
+        """
+        Import target classes from the part family's targets module.
+
+        Returns:
+            list: List of target class objects
+
+        Raises:
+            ImportError: If import fails
+            ValueError: If directory is empty or invalid
+        """
         # Import profile modules and classes
         import_path = self.getPartFamilyImportPath(self.part_family, "targets")
+
+        # Validate directory structure before attempting import
+        self.__validateTargetsDirectory(import_path)
+
         target_list = ClassManager.getClassListFromImportPath(import_path, ITarget)
 
         return target_list
+
+    def __validateTargetsDirectory(self, import_path):
+        """
+        Validate that the targets directory exists and has proper structure.
+
+        Args:
+            import_path: Import path to targets module
+
+        Raises:
+            ImportError: If directory or __init__.py is missing
+            ValueError: If directory is empty
+        """
+
+        # Convert import path to file system path
+        # e.g., 'pyradioconfig.parts.dumbo.targets' -> 'pyradioconfig/parts/dumbo/targets'
+        relative_path = import_path.replace('.', os.sep)
+
+        # Find the base path (where pyradioconfig package is)
+        # parts.__file__ is at pyradioconfig/parts/__init__.py, so go up one level
+        base_path = os.path.dirname(os.path.dirname(parts.__file__))
+
+        # Construct full path
+        targets_dir = os.path.join(os.path.dirname(base_path), relative_path)
+
+        # Check if directory exists
+        if not os.path.exists(targets_dir):
+            raise ImportError(
+                f"Targets directory does not exist for part family '{self.part_family}' at '{targets_dir}'. "
+                f"Expected path: {import_path}"
+            )
+
+        # Check if __init__.py exists
+        init_file = os.path.join(targets_dir, '__init__.py')
+        if not os.path.exists(init_file):
+            raise ImportError(
+                f"Missing __init__.py in targets directory for '{self.part_family}' at '{targets_dir}'. "
+                f"Create an __init__.py file with: "
+                f"'from pyradioconfig.calculator_model_framework.Utils.ClassManager import ClassManager; "
+                f"__all__ = ClassManager.getModuleNamesFromPath(__file__)'"
+            )
+
+        # Check if directory has any .py files besides __init__.py
+        py_files = [f for f in os.listdir(targets_dir)
+                   if f.endswith('.py') and f != '__init__.py' and not f.startswith('__pycache__')]
+
+        if len(py_files) == 0:
+            raise ValueError(
+                f"Targets directory for '{self.part_family}' at '{targets_dir}' exists but contains no target definition files. "
+                f"Add at least one Target_*.py file or remove the empty directory."
+            )
 
     def getTargetCFGInfo(self):
         #Return the CFG output path and whether or not we track config output for this target
@@ -1726,21 +2013,11 @@ class CalcManager(object):
     def __override_profile_output(self, model_instance, key, value):
         # process option inputs into profile output overrides
         output = getattr(model_instance.profile.outputs, key)
-        if output._var.is_array and isinstance(value, list):
-            output.override = value
-        elif output._var.var_type != Enum:
-            output.override = (output._var.var_type)(value)
-        else:
-            if isinstance(value, basestring):
-                if value.isdigit():
-                    value = int(value)
-                    enum_val = output._var.var_enum(value)
-                else:
-                    enum_val = getattr(output._var.var_enum, value)
-            output.override = enum_val
+        output.override = self.__variable_value_type_cast(output._var, value)
 
     def getPartFamilyImportPath(self, part_family, import_type):
         return "pyradioconfig.parts.{}.{}".format(part_family.lower(), import_type)
+
 
     def get_register_groups(self, part_family):
         reg_groups = {}
@@ -1761,3 +2038,32 @@ class CalcManager(object):
             # LogMgr.Warning("Unable to import modules: {}".format(ie))
             pass
         return reg_groups
+
+    @staticmethod
+    def __variable_value_type_cast(variable, value):
+        """
+        Type casts the value to the variable type and returns the casted value.  Handles enums as well.
+        Args:
+            variable (ModelVariable) : Variable object reference to cast value to
+            value : value to be casted to variable type
+        Returns:
+            value: value after type casting to variable type
+        """
+        if variable.is_array and isinstance(value, list):
+            return value
+        if variable.var_type != Enum:
+            return (variable.var_type)(value)
+        
+        #variable is an Enum
+        if isinstance(value, basestring):
+            if value.isdigit():
+                value = int(value)
+                enum_val = variable.var_enum(value)
+            else:
+                enum_val = getattr(variable.var_enum, value)
+        elif isinstance(value, int):
+            enum_val = variable.var_enum(value)
+        elif isinstance(value, float):
+            value = int(value)
+            enum_val = variable.var_enum(value)
+        return enum_val

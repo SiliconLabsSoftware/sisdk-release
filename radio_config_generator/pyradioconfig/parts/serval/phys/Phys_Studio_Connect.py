@@ -23,3 +23,7 @@ class PHYS_Studio_Connect_Serval(IPhy):
     def PHY_Studio_Connect_915mhz_oqpsk_2Mcps_250kbps(self, model):
         phy = PHYS_connect_Margay().PHY_Studio_Connect_915mhz_oqpsk_2Mcps_250kbps(model)
         return phy
+
+    def PHY_Studio_Connect_920MHz_2GFSK_100kbps(self, model):
+        phy = PHYS_connect_Margay().PHY_Studio_Connect_920MHz_2GFSK_100kbps(model)
+        return phy

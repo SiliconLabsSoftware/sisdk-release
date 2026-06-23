@@ -36,11 +36,10 @@
 #endif
 
 #ifdef SL_CATALOG_ZW_CLI_COMMON_PRESENT
-
 #include <string.h>
+#include "zw_cli_common.h"
 #include "zaf_event_distributor_soc.h"
 #include "sl_cli.h"
-#include "app_log.h"
 #include "ev_man.h"
 #include "events.h"
 
@@ -76,14 +75,14 @@ void cli_send_central_scene_key(sl_cli_command_arg_t *arguments)
   uint8_t key = sl_cli_get_argument_uint8(arguments, 0);
   char*   key_action = sl_cli_get_argument_string(arguments, 1);
 
-  app_log_info("Send Central Scene Command: Key %d %s\r\n", key, key_action);
+  cli_printf("[I] Send Central Scene Command: Key %d %s\r\n", key, key_action);
   enum EVENT_APP_WALL_CONTROLLER event = EVENT_EMPTY;
 
   if ((key > 3) || (key < 1)) {
-    app_log_error("Invalid key number\r\n");
+    cli_printf("[E] Invalid key number\r\n");
   }
   if (!isKeyPressed(key_action) && !isKeyReleased(key_action) && !isKeyHold(key_action)) {
-    app_log_error("Invalid key action\r\n");
+    cli_printf("[E] Invalid key action\r\n");
   }
 
   if (key == 1) {

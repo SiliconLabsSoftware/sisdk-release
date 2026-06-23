@@ -37,9 +37,6 @@
 #include "cs_ras_common.h"
 #include "sl_slist.h"
 #include "sl_component_catalog.h"
-#ifdef SL_CATALOG_POWER_MANAGER_PRESENT
-#include "sl_power_manager.h"
-#endif // SL_CATALOG_POWER_MANAGER_PRESENT
 
 /// RAS transfer configuration and storage type
 typedef struct {

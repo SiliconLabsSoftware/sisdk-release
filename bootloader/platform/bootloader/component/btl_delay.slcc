@@ -1,0 +1,22 @@
+id: btl_delay
+label: Bootloader Delay Extension Component
+package: bootloader
+description: >
+  Extension component providing delay driver functionality for
+  bootloader.
+category: Platform|Bootloader|Utils
+quality: production
+source:
+- path: "platform/bootloader/driver/btl_driver_util.c"
+include:
+- path: platform/bootloader/driver
+  file_list:
+  - path: btl_driver_util.h
+provides:
+- name: btl_delay
+metadata:
+  sbom:
+    license: MSLA
+ui_hints:
+  visibility: never
+root_path: bootloader

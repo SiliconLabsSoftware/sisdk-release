@@ -103,10 +103,7 @@ void request_refresh_screen(void)
 }
 
 /*******************************************************************************
- * The function is used for Application logic.
- * @brief Application state machine, called infinitely
- *
- * @param[in] pointer Null pointer to keep style with other sample apps
+ * Application state machine, called infinitely
  ******************************************************************************/
 void app_process_action(void)
 {

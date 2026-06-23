@@ -32,7 +32,7 @@
 #include "sl_rail.h"
 #include "sl_rail_ieee802154.h"
 
-#include "sl_rail_util_ieee802154/sl_rail_util_ieee802154_phy_select.h"
+#include "sl_rail_util_ieee802154_phy_select.h"
 #ifdef SL_RAIL_UTIL_PA_CONFIG_HEADER
 #include SL_RAIL_UTIL_PA_CONFIG_HEADER
 #endif
@@ -40,6 +40,7 @@
 #include "sl_rail_util_compatible_pa.h"
 
 #include "sl_rail_mux.h"
+
 #include "mac-flat-header.h"
 #include "buffer_manager/buffer-management.h"
 #include "buffer_manager/buffer-queue.h"
@@ -50,33 +51,79 @@
 #include "sl_component_catalog.h"
 #endif
 
+#if defined(SL_CATALOG_RAIL_MUX_AUX_PRESENT)
+#include "sli_rail_mux_aux.h"
+#endif
+
+// Unit-test/simulation builds may compile sl_rail_mux.c without sli_rail_mux_aux.c.
+// Provide weak no-op hooks so aux registration paths still link in those targets.
+SL_WEAK void sli_rail_mux_aux_on_register_success(sl_rail_handle_t rail_handle)
+{
+  (void)rail_handle;
+}
+
+SL_WEAK void sli_rail_mux_aux_on_unregister_success(void)
+{
+}
+
+#if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT)
+#include "sl_rail_util_ieee802154_rx_duty_cycling.h"
+#endif
+
 #if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
-#include "sl_rail_util_ieee802154_fast_channel_switching.h"
 #include "sl_rail_util_ieee802154_fast_channel_switching_config.h"
+#include "sl_rail_util_ieee802154_fast_channel_switching.h"
 
-// This file supports 2 instances of stacks (ZB, OT). Similar configuration is expected on RAIL side
-// when concurrent Rx feature is enabled
-#if SUPPORTED_PROTOCOL_COUNT != SL_RAIL_IEEE802154_RX_CHANNEL_SWITCHING_NUM_CHANNELS
-#error "SL RAIL MUX: SUPPORTED_PROTOCOL_COUNT is different from SL_RAIL_IEEE802154_RX_CHANNEL_SWITCHING_NUM_CHANNELS"
-#endif //SUPPORTED_PROTOCOL_COUNT != SL_RAIL_IEEE802154_RX_CHANNEL_SWITCHING_NUM_CHANNELS
+#if (SUPPORTED_PROTOCOL_COUNT > SL_RAIL_IEEE802154_RX_CHANNEL_SWITCHING_NUM_CHANNELS + 1)
+/* e.g. at most one logical context "outside" the FCS window when base is 1 and NUM_CHANNELS is 2 */
+#error "SL RAIL MUX: unsupported SUPPORTED_PROTOCOL_COUNT vs RX channel-switching slot count"
+#endif
 
+/* Logical context indices stay [0, SUPPORTED_PROTOCOL_COUNT). RAIL channel_switching_cfg.channels[0..NUM-1]
+ * maps a sliding window of logical contexts: slot s holds the channel for logical (base + s). */
+
+// Fast channel switching or concurrent listening requires FCS PHY (component init) and RX option setup (this file).
 static sl_rail_ieee802154_rx_channel_switching_cfg_t channel_switching_cfg;
 static SL_RAIL_IEEE802154_RX_CHANNEL_SWITCHING_BUF_ALIGNMENT_TYPE channel_switching_buf[SL_RAIL_IEEE802154_RX_CHANNEL_SWITCHING_BUF_BYTES / SL_RAIL_IEEE802154_RX_CHANNEL_SWITCHING_BUF_ALIGNMENT];
 
-// Fast channel switching or concurrent listening requires the following:
-// 1. Load fast channel switching PHY (similar to antenna diversity PHY) - done in the component init
-// 2. Setup config buffers and enable corresponding rx option - done in this file
-// This handy function checks the OT and ZB configurations to determine if we need to turn on the rx option
-// When this feature is enabled, the ZB and OT networks are allowed to be on different channels
-// Without this feature, the multiplexer will ONLY work if the two stacks use the same channel and this needs to be manually enforced
+static inline bool sli_rx_cs_logical_maps_to_rail(uint8_t context_index)
+{
+  uint8_t base = sl_rail_mux_get_ieee802154_rx_channel_switching_slot_base();
+
+  if (context_index < base) {
+    return false;
+  }
+  if ((uint16_t)context_index >= (uint16_t)base + (uint16_t)SL_RAIL_IEEE802154_RX_CHANNEL_SWITCHING_NUM_CHANNELS) {
+    return false;
+  }
+  if (context_index >= SUPPORTED_PROTOCOL_COUNT) {
+    return false;
+  }
+  return true;
+}
+
+static inline uint8_t sli_rx_cs_rail_slot_for_logical(uint8_t context_index)
+{
+  EFM_ASSERT(sli_rx_cs_logical_maps_to_rail(context_index));
+  return (uint8_t)((uint16_t)context_index - (uint16_t)sl_rail_mux_get_ieee802154_rx_channel_switching_slot_base());
+}
+
+static inline uint16_t sli_rx_cs_table_channel_for_logical(uint8_t context_index)
+{
+  if (!sli_rx_cs_logical_maps_to_rail(context_index)) {
+    return INVALID_CHANNEL;
+  }
+  return channel_switching_cfg.channels[sli_rx_cs_rail_slot_for_logical(context_index)];
+}
+
 static bool sli_is_multi_channel_enabled(void)
 {
   uint16_t firstChannel = INVALID_CHANNEL;
-  for (uint8_t i = 0U; i < SUPPORTED_PROTOCOL_COUNT; i++) {
-    if (channel_switching_cfg.channels[i] != INVALID_CHANNEL) {
+  for (uint8_t s = 0U; s < SL_RAIL_IEEE802154_RX_CHANNEL_SWITCHING_NUM_CHANNELS; s++) {
+    if (channel_switching_cfg.channels[s] != INVALID_CHANNEL) {
       if (firstChannel == INVALID_CHANNEL) {
-        firstChannel = channel_switching_cfg.channels[i];
-      } else if (firstChannel != channel_switching_cfg.channels[i]) {
+        firstChannel = channel_switching_cfg.channels[s];
+      } else if (firstChannel != channel_switching_cfg.channels[s]) {
         return true;
       }
     }
@@ -86,19 +133,20 @@ static bool sli_is_multi_channel_enabled(void)
 
 static inline void SET_CHANNEL_SWITCHING_CFG_CH(uint8_t context_index, uint16_t channel)
 {
-  channel_switching_cfg.channels[context_index] = channel;
+  if (!sli_rx_cs_logical_maps_to_rail(context_index)) {
+    return;
+  }
+  channel_switching_cfg.channels[sli_rx_cs_rail_slot_for_logical(context_index)] = channel;
 }
 
-// This macro is called prior to sl_rail_start_rx to enable or disable Rx option and setup ch switching configuration
-// Some of these settings only take effect when radio is idle
-static inline void CONFIGURE_RX_CHANNEL_SWITCHING(sl_rail_handle_t mux_rail_handle, sl_rail_ieee802154_rx_channel_switching_cfg_t channel_switching_cfg)
+static inline void CONFIGURE_RX_CHANNEL_SWITCHING(sl_rail_handle_t mux_rail_handle,
+                                                  sl_rail_ieee802154_rx_channel_switching_cfg_t cfg)
 {
   sl_rail_idle(mux_rail_handle, SL_RAIL_IDLE, true);
   sl_rail_status_t status = sl_rail_util_ieee802154_config_radio(mux_rail_handle);
   assert(status == SL_RAIL_STATUS_NO_ERROR);
-  //this checks if stacks are actually on 2 different channels regardless of fcs being enabled
   if (sli_is_multi_channel_enabled()) {
-    status = sl_rail_ieee802154_config_rx_channel_switching(mux_rail_handle, &channel_switching_cfg);
+    status = sl_rail_ieee802154_config_rx_channel_switching(mux_rail_handle, &cfg);
     assert(status == SL_RAIL_STATUS_NO_ERROR);
     status = sl_rail_config_rx_options(mux_rail_handle, SL_RAIL_RX_OPTION_CHANNEL_SWITCHING, SL_RAIL_RX_OPTION_CHANNEL_SWITCHING);
     assert(status == SL_RAIL_STATUS_NO_ERROR);
@@ -106,13 +154,21 @@ static inline void CONFIGURE_RX_CHANNEL_SWITCHING(sl_rail_handle_t mux_rail_hand
     sl_rail_config_rx_options(mux_rail_handle, SL_RAIL_RX_OPTION_CHANNEL_SWITCHING, SL_RAIL_RX_OPTIONS_NONE);
   }
 }
-#define CHANNEL_CHECK   channel_switching_cfg.channels[i]
+#define CHANNEL_CHECK   sli_rx_cs_table_channel_for_logical(i)
+
 #else // STUBS FOR OPERATING WITHOUT FAST CHANNEL SWITCHING FEATURE
 #define CHANNEL_CHECK   rx_channel
 #define CONFIGURE_RX_CHANNEL_SWITCHING(mux_rail_handle, channel_switching_cfg)
 #define SET_CHANNEL_SWITCHING_CFG_CH(context_index, channel)
 #define sli_is_multi_channel_enabled() false
 #endif //#if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
+
+SL_WEAK void sl_rail_mux_invalid_rx_channel_detected_cb(int new_rx_channel, int old_rx_channel)
+{
+  (void)new_rx_channel;
+  (void)old_rx_channel;
+  EFM_ASSERT(false);
+}
 
 //------------------------------------------------------------------------------
 // Forward declarations
@@ -157,8 +213,60 @@ static sl_rail_tx_power_t current_tx_power = SL_RAIL_TX_POWER_MIN;
 static uint8_t pending_power_context = INVALID_CONTEXT_INDEX;
 static uint16_t rx_channel = INVALID_CHANNEL;
 static sl_rail_ieee802154_addr_config_t rail_addresses_802154;
+// Persist aux registration config so mux never stores a pointer to transient caller storage.
+static sl_rail_config_t sli_rail_mux_aux_register_config;
+
+/** Runtime FCS logical-base: 0 until @ref sl_zigbee_rail_mux_aux_register_protocol succeeds, then 1; cleared by @ref sl_zigbee_rail_mux_aux_unregister_protocol. */
+static uint8_t sli_rail_mux_rx_cs_slot_base_runtime;
 
 HIDDEN sl_rail_mux_context_t protocol_context[SUPPORTED_PROTOCOL_COUNT];
+
+#if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
+static void sli_rail_mux_fcs_resync_table(void)
+{
+  uint8_t base = sli_rail_mux_rx_cs_slot_base_runtime;
+  uint8_t s;
+  uint8_t ctx;
+
+  RAIL_MUX_DECLARE_IRQ_STATE;
+  RAIL_MUX_ENTER_CRITICAL();
+  for (s = 0U; s < SL_RAIL_IEEE802154_RX_CHANNEL_SWITCHING_NUM_CHANNELS; s++) {
+    channel_switching_cfg.channels[s] = INVALID_CHANNEL;
+  }
+  for (ctx = base; ctx < base + SL_RAIL_IEEE802154_RX_CHANNEL_SWITCHING_NUM_CHANNELS; ctx++) {
+    if (ctx < SUPPORTED_PROTOCOL_COUNT
+        && protocol_context[ctx].rail_config != NULL
+        && protocol_context[ctx].channel != INVALID_CHANNEL) {
+      channel_switching_cfg.channels[ctx - base] = protocol_context[ctx].channel;
+    }
+  }
+  RAIL_MUX_EXIT_CRITICAL();
+}
+
+/** After aux unregister: reprogram FCS for slot_base 0 and restart RX on each peer (ZB then OT).
+ * CONFIGURE does not call sl_rail_start_rx(); a single start_rx on ZB only left OT not listening
+ * when Thread was already up on the mux (MULTIPROT-2308). */
+static void sli_rail_mux_fcs_refresh_listen(void)
+{
+  uint8_t base;
+  uint8_t ctx;
+
+  sli_rail_mux_fcs_resync_table();
+  if (!s_sl_rail_mux_base_rail_started || (mux_rail_handle == NULL)) {
+    return;
+  }
+  CONFIGURE_RX_CHANNEL_SWITCHING(mux_rail_handle, channel_switching_cfg);
+  base = sli_rail_mux_rx_cs_slot_base_runtime;
+  for (ctx = base; ctx < base + SL_RAIL_IEEE802154_RX_CHANNEL_SWITCHING_NUM_CHANNELS; ctx++) {
+    if (ctx < SUPPORTED_PROTOCOL_COUNT
+        && protocol_context[ctx].rail_config != NULL
+        && protocol_context[ctx].channel != INVALID_CHANNEL) {
+      (void)sl_rail_start_rx(mux_rail_handle, protocol_context[ctx].channel, NULL);
+      rx_channel = protocol_context[ctx].channel;
+    }
+  }
+}
+#endif
 
 HIDDEN sl_rail_config_t mux_rail_config = {
   .events_callback = fn_mux_rail_events_callback,
@@ -201,38 +309,43 @@ HIDDEN const sl_rail_ieee802154_config_t ieee_802154_config = {
   false,                                  // default_frame_pending_in_outgoing_acks
 };
 
-SL_WEAK void sl_rail_mux_invalid_rx_channel_detected_cb(int new_rx_channel, int old_rx_channel)
-{
-  (void)new_rx_channel;
-  (void)old_rx_channel;
-  //if(network up)
-  EFM_ASSERT(false);
-}
-
 //------------------------------------------------------------------------------
 // Internal APIs
+
+static void sli_rail_mux_reset_protocol_context_index(uint8_t i)
+{
+  protocol_context[i].rail_config = NULL;
+  protocol_context[i].init_callback = NULL;
+  protocol_context[i].config_channels_callback = NULL;
+  protocol_context[i].events = 0;
+  protocol_context[i].flags = 0;
+  protocol_context[i].fifo_tx_info.tx_init_length = 0;
+  protocol_context[i].fifo_tx_info.tx_size = 0;
+  protocol_context[i].fifo_tx_info.data_ptr = NULL;
+
+  protocol_context[i].channel = INVALID_CHANNEL;
+  protocol_context[i].tx_repeat_config.iterations = 0;
+  protocol_context[i].tx_power = SL_RAIL_TX_POWER_MIN;
+  protocol_context[i].timer_callback = NULL;
+  protocol_context[i].coex_counter_handler = NULL;
+  memset(&protocol_context[i].csma_tx_info, 0, sizeof(protocol_context[i].csma_tx_info));
+  // 802.15.4 specific fields
+  fn_init_802154_address_config(&protocol_context[i].addr_802154);
+  protocol_context[i].is_pan_coordinator_802154 = false;
+  // Initialize to address broadcast and PAN broadcast
+  protocol_context[i].addr_filter_mask_802154 = RAIL_MUX_FILTERING_MASK_BROADCAST_ENABLED;
+}
 
 void sli_rail_mux_local_init(void)
 {
   uint8_t i;
 
+  sli_rail_mux_rx_cs_slot_base_runtime = 0;
+
   // We use the RAIL config pointer to indicate whether an entry is already in
   // use or not.
   for (i = 0; i < SUPPORTED_PROTOCOL_COUNT; i++) {
-    protocol_context[i].rail_config = NULL;
-    protocol_context[i].events = 0;
-    protocol_context[i].flags = 0;
-    protocol_context[i].fifo_tx_info.tx_init_length = 0;
-    protocol_context[i].fifo_tx_info.tx_size = 0;
-
-    protocol_context[i].channel = INVALID_CHANNEL;
-    protocol_context[i].tx_repeat_config.iterations = 0;
-    protocol_context[i].tx_power = SL_RAIL_TX_POWER_MIN;
-    // 802.15.4 specific fields
-    fn_init_802154_address_config(&protocol_context[i].addr_802154);
-    protocol_context[i].is_pan_coordinator_802154 = false;
-    // Initialize to address broadcast and PAN broadcast
-    protocol_context[i].addr_filter_mask_802154 = RAIL_MUX_FILTERING_MASK_BROADCAST_ENABLED;
+    sli_rail_mux_reset_protocol_context_index(i);
   }
 
   internal_flags = 0;
@@ -246,7 +359,7 @@ void sli_rail_mux_local_init(void)
 
   channel_switching_cfg.buffer_bytes = SL_RAIL_IEEE802154_RX_CHANNEL_SWITCHING_BUF_BYTES;
   channel_switching_cfg.p_buffer      = channel_switching_buf;
-  for (uint8_t i = 0U; i < SUPPORTED_PROTOCOL_COUNT; i++) {
+  for (uint8_t i = 0U; i < SL_RAIL_IEEE802154_RX_CHANNEL_SWITCHING_NUM_CHANNELS; i++) {
     channel_switching_cfg.channels[i] = INVALID_CHANNEL;
   }
 #endif //#if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
@@ -259,28 +372,52 @@ void sli_rail_mux_local_init(void)
 //------------------------------------------------------------------------------
 // Public APIs
 
-sl_rail_status_t sl_rail_mux_init(sl_rail_handle_t *p_rail_handle,
-                                  sl_rail_config_t *p_rail_config,
-                                  sl_rail_init_complete_callback_t init_complete_callback)
+static sl_rail_status_t sli_rail_mux_init_common(sl_rail_handle_t *p_rail_handle,
+                                                 sl_rail_config_t *p_rail_config,
+                                                 sl_rail_init_complete_callback_t init_complete_callback,
+                                                 bool use_fixed_context_index,
+                                                 uint8_t context_index_fixed)
 {
   RAIL_MUX_DECLARE_IRQ_STATE;
   uint8_t i;
 
   RAIL_MUX_ENTER_CRITICAL();
 
-  // Find an unused protocol context entry. Return a NULL handler if an entry
-  // is not available. If we find an entry containing the same railCfg, it means
-  // that the protocol called sl_rail_init() multiple times, in this case we just
-  // return the RAIL handle.
-  for (i = 0; i < SUPPORTED_PROTOCOL_COUNT; i++) {
+  if (use_fixed_context_index) {
+    i = context_index_fixed;
+    if (i >= SUPPORTED_PROTOCOL_COUNT) {
+      RAIL_MUX_EXIT_CRITICAL();
+      return SL_RAIL_STATUS_INVALID_PARAMETER;
+    }
     if (protocol_context[i].rail_config == p_rail_config) {
-      *p_rail_handle = (sl_rail_handle_t )&(protocol_context[i]);
+      *p_rail_handle = (sl_rail_handle_t)&(protocol_context[i]);
       RAIL_MUX_EXIT_CRITICAL();
       return SL_RAIL_STATUS_NO_ERROR;
     }
+    if (protocol_context[i].rail_config != NULL) {
+      RAIL_MUX_EXIT_CRITICAL();
+      return SL_RAIL_STATUS_INVALID_CALL;
+    }
+  } else {
+    // Find an unused protocol context entry. Return a NULL handler if an entry
+    // is not available. If we find an entry containing the same railCfg, it means
+    // that the protocol called sl_rail_init() multiple times, in this case we just
+    // return the RAIL handle.
+    for (i = 0; i < SUPPORTED_PROTOCOL_COUNT; i++) {
+      if (protocol_context[i].rail_config == p_rail_config) {
+        *p_rail_handle = (sl_rail_handle_t )&(protocol_context[i]);
+        RAIL_MUX_EXIT_CRITICAL();
+        return SL_RAIL_STATUS_NO_ERROR;
+      }
 
-    if (protocol_context[i].rail_config == NULL) {
-      break;
+      if (protocol_context[i].rail_config == NULL) {
+        break;
+      }
+    }
+
+    if (i >= SUPPORTED_PROTOCOL_COUNT) {
+      RAIL_MUX_EXIT_CRITICAL();
+      return SL_RAIL_STATUS_INVALID_CALL;
     }
   }
 
@@ -314,12 +451,6 @@ sl_rail_status_t sl_rail_mux_init(sl_rail_handle_t *p_rail_handle,
     mux_rail_config.tx_fifo_init_bytes = p_rail_config->tx_fifo_init_bytes;
     mux_rail_config.p_tx_fifo_buffer = p_rail_config->p_tx_fifo_buffer;
     mux_rail_config.tx_fifo_bytes = p_rail_config->tx_fifo_bytes;
-    if ( (p_rail_config->p_tx_fifo_buffer != NULL) && (p_rail_config->tx_fifo_bytes > 0)) {
-      fn_set_context_flag_by_index(i, RAIL_MUX_PROTOCOL_FLAGS_SETUP_TX_FIFO, true);
-      protocol_context[i].fifo_tx_info.data_ptr = (uint8_t *)p_rail_config->p_tx_fifo_buffer;
-      protocol_context[i].fifo_tx_info.tx_init_length = p_rail_config->tx_fifo_init_bytes;;
-      protocol_context[i].fifo_tx_info.tx_size = p_rail_config->tx_fifo_bytes;
-    }
 
     mux_rail_handle = SL_RAIL_EFR32_HANDLE;
     sl_rail_status_t status = sl_rail_init(&mux_rail_handle, &mux_rail_config, NULL);
@@ -341,6 +472,19 @@ sl_rail_status_t sl_rail_mux_init(sl_rail_handle_t *p_rail_handle,
     }
   }
 
+  if ( (p_rail_config->p_tx_fifo_buffer != NULL) && (p_rail_config->tx_fifo_bytes > 0)) {
+    fn_set_context_flag_by_index(i, RAIL_MUX_PROTOCOL_FLAGS_SETUP_TX_FIFO, true);
+    protocol_context[i].fifo_tx_info.data_ptr = (uint8_t *)p_rail_config->p_tx_fifo_buffer;
+    protocol_context[i].fifo_tx_info.tx_init_length = p_rail_config->tx_fifo_init_bytes;;
+    protocol_context[i].fifo_tx_info.tx_size = p_rail_config->tx_fifo_bytes;
+  }
+  // If the RAIL initialization was started by another protocol, but not
+  // completed yet. We will call the protocol init_completed callback when
+  // RAIL calls it.
+
+  if (SUPPORTED_PROTOCOL_COUNT > 2U && i == (uint8_t)(SUPPORTED_PROTOCOL_COUNT - 1U)) {
+    sli_rail_mux_rx_cs_slot_base_runtime = 1U;
+  }
   RAIL_MUX_EXIT_CRITICAL();
 
   // Enable use of RAIL multi-timer.
@@ -349,6 +493,94 @@ sl_rail_status_t sl_rail_mux_init(sl_rail_handle_t *p_rail_handle,
   // The RAIL handler we return to the protocol layers is a pointer to our own
   // internal protocol context structure.
   *p_rail_handle = (sl_rail_handle_t )(&(protocol_context[i]));
+  return SL_RAIL_STATUS_NO_ERROR;
+}
+
+sl_rail_status_t sl_rail_mux_init(sl_rail_handle_t *p_rail_handle,
+                                  sl_rail_config_t *p_rail_config,
+                                  sl_rail_init_complete_callback_t init_complete_callback)
+{
+  return sli_rail_mux_init_common(p_rail_handle,
+                                p_rail_config,
+                                init_complete_callback,
+                                false,
+                                0);
+}
+
+sl_rail_status_t sl_rail_mux_init_at_context_index(sl_rail_handle_t *p_rail_handle,
+                                                   sl_rail_config_t *p_rail_config,
+                                                   sl_rail_init_complete_callback_t init_complete_callback,
+                                                   uint8_t context_index)
+{
+  return sli_rail_mux_init_common(p_rail_handle,
+                                  p_rail_config,
+                                  init_complete_callback,
+                                  true,
+                                  context_index);
+}
+
+sl_rail_status_t sli_zigbee_stack_rail_mux_aux_register_protocol(sl_rail_handle_t *out_rail_handle,
+                                                                 sl_rail_config_t *rail_config,
+                                                                 sl_rail_init_complete_callback_t init_complete_callback)
+{
+  sl_rail_status_t status;
+
+  if (SUPPORTED_PROTOCOL_COUNT < 3) {
+    return SL_RAIL_STATUS_INVALID_CALL;
+  }
+  if (rail_config == NULL) {
+    return SL_RAIL_STATUS_INVALID_PARAMETER;
+  }
+  sli_rail_mux_aux_register_config = *rail_config;
+  status = sl_rail_mux_init_at_context_index(out_rail_handle,
+                                             &sli_rail_mux_aux_register_config,
+                                             init_complete_callback,
+                                             (uint8_t)(SUPPORTED_PROTOCOL_COUNT - 1));
+  if ((status == SL_RAIL_STATUS_NO_ERROR) && (out_rail_handle != NULL)) {
+    sli_rail_mux_aux_on_register_success(*out_rail_handle);
+  }
+  return status;
+}
+
+sl_rail_status_t sli_zigbee_stack_rail_mux_aux_unregister_protocol(void)
+{
+  if (SUPPORTED_PROTOCOL_COUNT < 3) {
+    return SL_RAIL_STATUS_INVALID_CALL;
+  }
+  const uint8_t aux = (uint8_t)(SUPPORTED_PROTOCOL_COUNT - 1U);
+
+  RAIL_MUX_DECLARE_IRQ_STATE;
+  RAIL_MUX_ENTER_CRITICAL();
+  if (protocol_context[aux].rail_config == NULL) {
+    RAIL_MUX_EXIT_CRITICAL();
+    return SL_RAIL_STATUS_INVALID_CALL;
+  }
+  RAIL_MUX_EXIT_CRITICAL();
+
+  sl_rail_status_t idle_st = sl_rail_mux_idle((sl_rail_handle_t)&protocol_context[aux],
+                                              SL_RAIL_IDLE,
+                                              true);
+  if (idle_st != SL_RAIL_STATUS_NO_ERROR) {
+    return idle_st;
+  }
+
+  // Aux listen enables promiscuous mode for sniffing stimulus traffic.
+  // Restore default non-promiscuous behavior before releasing the aux context.
+  (void)sl_rail_mux_ieee802154_set_promiscuous_mode((sl_rail_handle_t)&protocol_context[aux], false);
+
+  (void)sl_rail_mux_cancel_multi_timer(mux_rail_handle, &protocol_context[aux].timer);
+
+  RAIL_MUX_ENTER_CRITICAL();
+  sli_rail_mux_reset_protocol_context_index(aux);
+  sli_rail_mux_rx_cs_slot_base_runtime = 0;
+  RAIL_MUX_EXIT_CRITICAL();
+  sli_rail_mux_aux_on_unregister_success();
+
+  fn_update_802154_address_filtering_table();
+#if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
+  /* slot_base is 0; resync peers ZB+OT and restart RX on both (OT needed for Thread ping). */
+  sli_rail_mux_fcs_refresh_listen();
+#endif
   return SL_RAIL_STATUS_NO_ERROR;
 }
 
@@ -676,9 +908,9 @@ sl_rail_status_t sl_rail_mux_idle(sl_rail_handle_t railHandle,
                                   bool wait)
 {
   uint8_t i;
- 
+  
   if (tx_in_progress()) {
-    return SL_RAIL_STATUS_INVALID_CALL;
+      return SL_RAIL_STATUS_INVALID_CALL;
   }
 
   uint8_t context_index = fn_get_context_index(railHandle);
@@ -1181,9 +1413,7 @@ sl_rail_status_t sl_rail_mux_yield_radio(sl_rail_handle_t railHandle)
     if (protocol_context[i].rail_config == NULL) {
       continue;
     }
-    if (protocol_context[i].channel != INVALID_CHANNEL) {
-      return SL_RAIL_STATUS_INVALID_CALL;
-    }
+
     if (fn_get_context_flag_by_index(i, RAIL_MUX_PROTOCOL_FLAGS_RX_SCHEDULED)) {
       return SL_RAIL_STATUS_INVALID_CALL;
     }
@@ -2565,4 +2795,9 @@ sl_rail_ieee802154_phy_features_t sl_rail_util_ieee802154_get_rx_duty_cycling_ph
   #else
   return duty_cycling_phy_features;
   #endif
+}
+
+SL_WEAK uint8_t sl_rail_mux_get_ieee802154_rx_channel_switching_slot_base(void)
+{
+  return sli_rail_mux_rx_cs_slot_base_runtime;
 }

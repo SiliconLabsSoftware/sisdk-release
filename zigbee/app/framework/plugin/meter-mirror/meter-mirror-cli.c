@@ -33,7 +33,7 @@ void sli_zigbee_af_meter_mirror_status_command(sl_cli_command_arg_t *arguments)
   uint16_t endpoint;
   uint8_t mirrorEui[EUI64_SIZE];
 
-  sl_zigbee_af_simple_metering_cluster_println("Known meters");
+  sl_zigbee_af_cli_println("Known meters");
   // Go over our endpoints and find an unallocated meter mirror
   for (endpoint = SL_ZIGBEE_AF_PLUGIN_METER_MIRROR_ENDPOINT_START;
        endpoint < SL_ZIGBEE_AF_PLUGIN_METER_MIRROR_ENDPOINT_START + SL_ZIGBEE_AF_PLUGIN_METER_MIRROR_MAX_MIRRORS;
@@ -59,17 +59,17 @@ void sli_zigbee_af_meter_mirror_status_command(sl_cli_command_arg_t *arguments)
                                          sizeof(meteringDeviceTypeAttribute));
     }
 
-    sl_zigbee_af_simple_metering_cluster_print("ep: %d  ieee:", endpoint);
+    sl_zigbee_af_cli_print("ep: %d  ieee:", endpoint);
     sl_zigbee_af_print_big_endian_eui64(mirrorEui);
-    sl_zigbee_af_simple_metering_cluster_println("  type: 0x%02X", meteringDeviceTypeAttribute);
+    sl_zigbee_af_cli_println("  type: 0x%02X", meteringDeviceTypeAttribute);
   }
   // Explicitly usea  function call to find the number of mirrors allocated instead
   // of just calculating it.  In case there is ever a discrepancy,
   // this will help track down any bugs.
 
-  sl_zigbee_af_simple_metering_cluster_println("%d of %d mirrors used.",
-                                               sli_zigbee_af_meter_mirror_get_mirrors_allocated(),
-                                               SL_ZIGBEE_AF_PLUGIN_METER_MIRROR_MAX_MIRRORS);
+  sl_zigbee_af_cli_println("%d of %d mirrors used.",
+                           sli_zigbee_af_meter_mirror_get_mirrors_allocated(),
+                           SL_ZIGBEE_AF_PLUGIN_METER_MIRROR_MAX_MIRRORS);
 }
 
 void sli_zigbee_af_meter_mirror_remove_command(sl_cli_command_arg_t *arguments)
@@ -78,7 +78,7 @@ void sli_zigbee_af_meter_mirror_remove_command(sl_cli_command_arg_t *arguments)
   sl_802154_long_addr_t mirrorEui64;
   bool success = sl_zigbee_af_meter_mirror_get_eui64_by_endpoint(endpoint, mirrorEui64);
   if (!success) {
-    sl_zigbee_af_simple_metering_cluster_println("Error: Failed to obtain EUI64 for endpoint %d", endpoint);
+    sl_zigbee_af_cli_println("Error: Failed to obtain EUI64 for endpoint %d", endpoint);
     return;
   }
   sl_zigbee_af_simple_metering_client_remove_mirror_cb(mirrorEui64);

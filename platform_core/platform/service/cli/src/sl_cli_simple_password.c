@@ -350,7 +350,7 @@ static sl_status_t read_until_line_feed(sl_cli_handle_t handle,
             EFM_ASSERT(false);
         }
         return SL_STATUS_WOULD_OVERFLOW;
-      } else if (isgraph(c)) {  // Only allow printable char and no space
+      } else if (isgraph((unsigned char)c)) {  // Only allow printable char and no space
         // Store char
         session->buffer[session->buffer_ix] = c;
         session->buffer_ix++;

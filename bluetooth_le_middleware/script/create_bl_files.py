@@ -382,9 +382,9 @@ def reformat_path(path):
 
 
 def check_util_exist(util_name, env):
-    """Check wether the selected utility exist
+    """Check whether the selected utility exist
 
-    Check if the selected utility exists in the system PATH. 
+    Check if the selected utility exists in the system PATH.
 
     :param util_name: name of the utility (without extension on windows)
     :type util_name: str
@@ -600,7 +600,7 @@ def convert_srec_uartdfu(srec_list, srec_out_name):
             except PermissionError:
                 print(lvl.ERR, "Permission denied!")
             except Exception as ex:
-                print(lvl.ERR, f"Exception occured during execution of shutil.copy()!")
+                print(lvl.ERR, f"Exception occurred during execution of shutil.copy()!")
                 print(lvl.ERR, f"{ex}\n")
             return None
         else:
@@ -659,7 +659,7 @@ def create_gbl_file(gbl_name, app_data, app_encrypt=None, app_sign=None, boot=No
     It is capable of the generation of: signed, encrypted, compressed and crc-protected GBL files.
 
 
-    :param gbl_name: Base name of the output gbl file (without extension), postfixes will be added automatically: 
+    :param gbl_name: Base name of the output gbl file (without extension), postfixes will be added automatically:
                      signed, encrypted versions will get -signed and/or -encrypted postfixes etc.
     :type gbl_name: str
     :param app_data: application data filepath (.srec or .gbl)
@@ -670,7 +670,7 @@ def create_gbl_file(gbl_name, app_data, app_encrypt=None, app_sign=None, boot=No
     :type app_sign: str, optional
     :param boot: bootloader image filepath, defaults to None
     :type boot: str, optional
-    :param cpress_a: compression algorythm {lz4, lzma}, defaults to ''
+    :param cpress_a: compression algorithm {lz4, lzma}, defaults to ''
     :type cpress_a: str, optional
     :param crc: generate protected GBL files with crc32 as well, defaults to False
     :type crc: bool, optional
@@ -704,7 +704,7 @@ def create_gbl_file(gbl_name, app_data, app_encrypt=None, app_sign=None, boot=No
     if is_file_exist(gbl_file):
         print(lvl.WARN, ansi.yl + f"{gbl_name}" + ansi.cl + " already exists!")
         backup_text = '_bkp' + dt.now().strftime("%Y-%m-%d-%H-%M-%S")
-        os.rename(reformat_path(os.path.join(OUTDIR, gbl_name)), 
+        os.rename(reformat_path(os.path.join(OUTDIR, gbl_name)),
                   reformat_path(os.path.join(OUTDIR, gbl_name + backup_text)))
         print(lvl.INFO, f"{gbl_name} renamed to {gbl_name + backup_text}.")
         gbl_name = "New " + ansi.gn + gbl_name + ansi.cl
@@ -1142,11 +1142,11 @@ def main():
                     time.sleep(delay_display)
                 else:
                     time.sleep(delay_display)
-                    # in this case the gbl generator function will check wether the key_gen really generated
+                    # in this case the gbl generator function will check whether the key_gen really generated
                     # a valid signature key or not
                     SIGN_KEY_EXIST = key_gen(SIGN_N, encrypt_type='ecc-p256')
             elif args.all or AUTO_KEYGEN:
-                # generate the signature keys automatically 
+                # generate the signature keys automatically
                 SIGN_KEY_EXIST = key_gen(SIGN_N, encrypt_type='ecc-p256')
             else:
                 print(lvl.WARN,f"Could not detect {SIGN_F}!")
@@ -1177,7 +1177,7 @@ def main():
                     time.sleep(delay_display)
                 else:
                     time.sleep(delay_display)
-                    # in this case the gbl generator function will check wether the key_gen really generated
+                    # in this case the gbl generator function will check whether the key_gen really generated
                     # a valid encryption key or not
                     ENCRYPT_KEY_EXIST = key_gen(ENCRYPT_N)
             elif args.all or AUTO_KEYGEN:
@@ -1222,7 +1222,7 @@ def main():
             generate_gbls(APPLI_N, app_srec, boot_img=BOOT_S1_F, encrypt_k=ENCRYPT_F, sign_k=SIGN_F,
                               cpress=CPRESS, cpress_m=CPRESS_METHOD)
         else:
-            generate_gbls(APPLI_N, app_srec, s1=False, boot_img=BOOT_S2_F, encrypt_k=ENCRYPT_F, 
+            generate_gbls(APPLI_N, app_srec, s1=False, boot_img=BOOT_S2_F, encrypt_k=ENCRYPT_F,
                              sign_k=SIGN_F, cpress=CPRESS, cpress_m=CPRESS_METHOD)
     else:
         print(lvl.ERR, f"Could not create {APPLI_N}.srec!")
@@ -1233,7 +1233,7 @@ def main():
         # for UART DFU compatible GBL extract every section except the .text_bootloader section into an srec
         uartdfu_srec = extract_to_srec(UARTDFU_N, ['.text_bootloader*'], PRJ_ARTIFACT)
         # generate UART DFU GBLs
-        generate_gbls(UARTDFU_N, uartdfu_srec, encrypt_k=ENCRYPT_F, sign_k=SIGN_F, cpress=CPRESS, 
+        generate_gbls(UARTDFU_N, uartdfu_srec, encrypt_k=ENCRYPT_F, sign_k=SIGN_F, cpress=CPRESS,
                       cpress_m=CPRESS_METHOD, uartdfu=True)
 
     if PURGE_SRECS:

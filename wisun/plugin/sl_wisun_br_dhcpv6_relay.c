@@ -102,7 +102,8 @@ int dhcpv6_message_malformed_check(uint8_t *ptr, uint16_t data_len)
 static int dhcpv6_message_option_discover(uint8_t *ptr, uint16_t data_len, uint16_t discovered_type, dhcp_options_msg_t *option_info)
 {
     uint8_t *dptr;
-    uint16_t type, length;
+    uint16_t type;
+    uint16_t length;
     dptr = ptr;
     if (data_len < 4) {
         sl_wisun_trace_warn("dhcp: data_len < 4");

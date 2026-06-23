@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread Radio Encapsulation Link (TREL) peer discovery.
  */
 
-#ifndef TREL_PEER_DISCOVERER_HPP_
-#define TREL_PEER_DISCOVERER_HPP_
+#ifndef OT_CORE_RADIO_TREL_PEER_DISCOVERER_HPP_
+#define OT_CORE_RADIO_TREL_PEER_DISCOVERER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -248,8 +248,21 @@ private:
     void UnregisterService(void);
     void HandleRegisterDone(Error aError);
     void HandleBrowseResult(const Dnssd::BrowseResult &aResult);
+#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
+    void        HandleBrowseRemoveDebounceTimer(void);
+    void        BumpResolveEpoch(Peer &aPeer);
+    void        ResetPeerResolveState(Peer &aPeer);
+    void        ConfirmBrowseRemove(Peer &aPeer);
+    void        BeginBrowseRefresh(Peer &aPeer);
+    void        BeginBrowseSoftRefresh(Peer &aPeer);
+    void        UpdateBrowseRemoveDebounceTimer(void);
+    static bool IsStaleResolveCallback(const Peer &aPeer, uint8_t aCallbackEpoch);
+#endif
     void StartServiceResolvers(Peer &aPeer);
     void StopServiceResolvers(Peer &aPeer);
+#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
+    void StopServiceResolvers(Peer &aPeer, bool aPreserveHostName);
+#endif
     void HandleSrvResult(const Dnssd::SrvResult &aResult);
     void HandleTxtResult(const Dnssd::TxtResult &aResult);
     void StartHostAddressResolver(Peer &aPeer);
@@ -272,6 +285,12 @@ private:
 
 #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
     static const char kTrelServiceType[];
+
+#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
+    static constexpr uint32_t kBrowseRemoveDebounceMsec = 300;
+
+    using BrowseRemoveDebounceTimer = TimerMilliIn<PeerDiscoverer, &PeerDiscoverer::HandleBrowseRemoveDebounceTimer>;
+#endif
 #endif
 
     State       mState;
@@ -279,6 +298,9 @@ private:
 #if OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE
     ServiceName mServiceName;
     bool        mBrowsing;
+#if OPENTHREAD_CONFIG_TREL_DNSSD_DISCOVERY_STABILIZATION_ENABLE
+    BrowseRemoveDebounceTimer mBrowseRemoveDebounceTimer;
+#endif
 #endif
 };
 
@@ -287,4 +309,4 @@ private:
 
 #endif // #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
-#endif // TREL_PEER_DISCOVERER_HPP_
+#endif // OT_CORE_RADIO_TREL_PEER_DISCOVERER_HPP_

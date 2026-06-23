@@ -39,6 +39,9 @@ extern "C" {
  *** PUBLIC FUNCTIONS
  ******************************************************************************/
 
+/** Write formatted output to vCOM (printf-style). */
+void cli_printf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+
 void cli_log_system_events(EVENT_SYSTEM event);
 
 #ifdef __cplusplus

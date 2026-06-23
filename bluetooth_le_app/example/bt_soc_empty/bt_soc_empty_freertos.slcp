@@ -6,7 +6,7 @@ description: >
   Bluetooth applications. The application starts advertising after boot and
   restarts advertising after a connection is closed.
 category: Bluetooth Examples
-quality: experimental
+quality: production
 
 filter:
   - name: "Wireless Technology"

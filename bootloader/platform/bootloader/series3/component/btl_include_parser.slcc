@@ -6,23 +6,23 @@ description: >
 category: Platform|Bootloader|Core
 quality: production
 include:
-- path: platform/bootloader/series3/
 - path: platform/bootloader/series3/parser
   file_list:
   - path: gbl/btl_gbl_parser.h
   - path: gbl/btl_gbl_format.h
   - path: gbl/btl_gbl_custom_tags.h
-- path: platform/bootloader/series3/api
+  # Bootloader-owned headers for series3 btl_bootload.c (not interface package).
+- path: platform/bootloader/series3
   file_list:
-  - path: btl_interface.h
-  - path: btl_interface_parser.h
-  - path: btl_interface_storage.h
+  - path: config/btl_config.h
+  - path: core/btl_bootload.h
 - path: platform/bootloader
-- path: platform/bootloader/api
   file_list:
-  - path: application_properties.h
-  - path: btl_errorcode.h
-  - path: btl_reset_info.h
+  - path: core/btl_reset.h
+requires:
+- name: bootloader_interface_headers
+- name: bootloader_application_properties_header
+- name: bootloader_interface_s3_bootload_headers
 provides:
 - name: btl_include_parser
 metadata:

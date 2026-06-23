@@ -1,0 +1,20 @@
+id: mbedtls_pk_write
+package: platform_core
+label: Public-Key Write API
+description: >-
+  This component provides support for the Public Key (PK) Write API in Mbed TLS.
+category: Platform|Security|Mbed TLS|Upper Layer
+quality: production
+provides:
+- name: mbedtls_pk_write
+requires:
+- name: mbedtls_asn1_write
+- name: mbedtls_pk
+- name: mbedtls_oid
+template_contribution:
+- name: mbedtls_config
+  value: MBEDTLS_PK_WRITE_C
+metadata:
+  sbom:
+    reference: mbedtls_sbom
+root_path: platform_core

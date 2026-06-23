@@ -42,13 +42,14 @@
 #include <stdint.h>
 #include <string.h>
 #include "sl_cli.h"
-#include "app_log.h"
+#include "zw_cli_common.h"
 #include "zw_cli_sleeping.h"
 #include "zw_cli_sleeping_config.h"
 #include "ev_man.h"
 #include "events.h"
 #include "sl_sleeptimer.h"
 #include "zw_shutdown_manager.h"
+#include "sl_power_manager.h"
 
 static sl_sleeptimer_timer_handle_t cli_sleeptimer_handle;
 
@@ -59,13 +60,13 @@ void cli_sleeping(sl_cli_command_arg_t *arguments)
 {
   char* state = sl_cli_get_argument_string(arguments, 0);
   if (strcmp(state, "enable") == 0) {
-    app_log_info("Enable sleeping\r\n");
+    cli_printf("[I] Enable sleeping\r\n");
     zw_cli_sleeping_util_prevent_sleeping(false);
   } else if (strcmp(state, "disable") == 0) {
-    app_log_info("Disable sleeping\r\n");
+    cli_printf("[I] Disable sleeping\r\n");
     zw_cli_sleeping_util_prevent_sleeping(true);
   } else {
-    app_log_error("Invalid argument\r\n");
+    cli_printf("[E] Invalid argument\r\n");
   }
 }
 

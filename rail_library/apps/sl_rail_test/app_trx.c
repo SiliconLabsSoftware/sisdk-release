@@ -41,6 +41,28 @@
 #ifdef SL_CATALOG_CS_CLI_PRESENT
 #include "railapp_cs.h"
 #endif
+
+// Payload format of a BER test packet with N PRBS bytes:
+// Byte 0	  Byte 1	  Byte 2	  Byte 3	  Byte 4	...	  Byte N+2
+// Seed#0	  Seed#1	  Seed CRC	PRBS#0	  PRBS#1	...   PRBS#N-1
+#define BER_PACKET_SEED_LENGTH        2U
+#define BER_PACKET_SEED_CRC_LENGTH    1U
+
+// CRC8 poly : x^8 + x^5 + x^4 + 1
+#define BER_PACKET_SEED_CRC_POLY      0xEAU
+
+// PN9 poly : x^9 + x^5 + 1
+// Generator with 16 bit seed can be represented as is:
+// [0]─►[1]─►[2]─►[3]─►[4]─►[5]─►[6]─►[7]─►[8]─►[9]─►[10]─►[11]─►[12]─►[13]─►[14]─►[15]─► Output
+//  ▲                        │                   │
+//  │                        ▼                   │
+//  │Feedback              [XOR]◄────────────────┘
+//  └────────────────────────┘
+#define BER_PACKET_PRBS_X5_TAP_SHIFT  5U
+#define BER_PACKET_PRBS_X9_TAP_SHIFT  9U
+#define BER_PACKET_PRBS_OUTPUT_MASK   0x0001U
+#define BER_PACKET_PRBS_FEEDBACK_MASK 0x8000U
+
 /******************************************************************************
  * Variables
  *****************************************************************************/
@@ -149,6 +171,39 @@ static void packetMode_RxPacketReceived(sl_rail_handle_t railHandle)
   }
 }
 
+// Regenerate and check CRC of the PRBS seed.
+static bool checkBerPacketSeedCrc(uint8_t *p_seed)
+{
+  uint8_t crc = 0x00U;
+  // Process each byte in the data buffer.
+  for (uint32_t byteIdx = 0U; byteIdx < BER_PACKET_SEED_LENGTH; byteIdx++) {
+    // XOR the current byte with the CRC accumulator.
+    crc ^= (p_seed[byteIdx] & 0xFFU);
+    // Process each bit in the byte
+    for (uint8_t bitIdx = 0U; bitIdx < 8U; bitIdx++) {
+      // If MSB is '1', perform XOR with polynomial and shift left.
+      // Otherwise, just shift left one position.
+      if (crc & 0x80U) {
+        crc = ((crc << 1U) ^ BER_PACKET_SEED_CRC_POLY) & 0xFFU;
+      } else {
+        crc = (crc << 1U) & 0xFFU;
+      }
+    }
+  }
+  // Return true if CRC match
+  return (crc == p_seed[BER_PACKET_SEED_LENGTH]);
+}
+
+// Count number of 1s in a byte without a loop
+static uint8_t countBits(uint8_t num)
+{
+  uint8_t count = 0;
+  static const uint8_t nibblebits[] = { 0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4 };
+  count += nibblebits[num & 0x0F];
+  count += nibblebits[num >> 4];
+  return count;
+}
+
 sl_rail_rx_packet_handle_t processRxPacket(sl_rail_handle_t railHandle,
                                            sl_rail_rx_packet_handle_t packetHandle,
                                            bool heldPacket)
@@ -189,6 +244,17 @@ sl_rail_rx_packet_handle_t processRxPacket(sl_rail_handle_t railHandle,
                                           &phySwitchToRx.params);
       phySwitchToRx.iterations--;
     }
+    if ((txWaitForAck == TX_WAIT_FOR_ACK_ENABLED_ON) && details.is_ack) {
+      txWaitForAck = TX_WAIT_FOR_ACK_ENABLED_OFF;
+#if SL_RAIL_IEEE802154_SUPPORTS_G_MODE_SWITCH && defined(WISUN_MODESWITCHPHRS_ARRAY_SIZE)
+      if (modeSwitchState == TX_ON_NEW_PHY) { // Packet has been sent in a MS context
+        scheduleNextModeSwitchTx(true);
+      } else
+#endif
+      {
+        scheduleNextTx();
+      }
+    }
   } else {
     memset(&details, 0, sizeof(details));
   }
@@ -224,7 +290,9 @@ sl_rail_rx_packet_handle_t processRxPacket(sl_rail_handle_t railHandle,
       sl_rail_cancel_auto_ack(railHandle);
     }
 
-    // Use Tx Buffer for Ack if user requested
+    // When SL_RAIL_EVENT_RX_FILTER_PASSED is not enabled, finish selecting the TX FIFO for
+    // auto-ACK here (later in the Rx-to-Tx turnaround). With FILTER_PASSED enabled,
+    // app_main does this earlier; the flag is already cleared before we run.
     if (afterRxUseTxBufferForAck) {
       afterRxUseTxBufferForAck = false;
       sl_rail_use_tx_fifo_for_auto_ack(railHandle);
@@ -248,12 +316,58 @@ sl_rail_rx_packet_handle_t processRxPacket(sl_rail_handle_t railHandle,
     }
 
     updateStats(rxPacket->rxPacket.appendedInfo.rssi_dbm, &counters.rssi);
-    if (logLevel & ASYNC_RESPONSE) {
-      updateGraphics();
-      // Copy this received packet into our circular queue
-      queueAdd(&railAppEventQueue, (void *)rxPacket);
+
+    // In BER_PACKET app mode, we do not print each received packet. rxPacket RailAppEvent_t is not
+    // added to railAppEventQueue. It is store in berPacketStats structure and only the last one
+    // is printed when berPacketStatus is called with print last packet parameter set to 1.
+    if (inAppMode(BER_PACKET, NULL)) {
+      berPacketStats.packetsReceived++;
+      if (!details.crc_passed) {
+        berPacketStats.packetsCrcError++;
+      }
+      // If packet length and PRBS seed CRC are valid, look for bit errors.
+      // Otherwise, increment prbsSeedCrcFailsTotal statistic.
+      uint32_t berPacketPrbsSequenceOffsetBytes = berPacketPrbsSeedOffsetBytes + BER_PACKET_SEED_LENGTH + BER_PACKET_SEED_CRC_LENGTH;
+      uint32_t berPacketPrbsSequenceEndBytes = berPacketPrbsSequenceOffsetBytes + berPacketPrbsLengthBytes;
+      if ((length >= berPacketPrbsSequenceEndBytes) && checkBerPacketSeedCrc(&rxPacketData[berPacketPrbsSeedOffsetBytes])) {
+        // Update LastRxPacket pointer
+        sl_free((void *)berPacketStats.LastRxPacket);
+        berPacketStats.LastRxPacket = rxPacket;
+        // Regenerate and compare PRBS sequence
+        // Initialize state from 2-byte seed (seed[0] is MSB, seed[1] is LSB)
+        uint16_t state = ((uint16_t)rxPacketData[berPacketPrbsSeedOffsetBytes] << 8U) | (uint16_t)rxPacketData[berPacketPrbsSeedOffsetBytes + 1];
+        state >>= 1U;
+        // Generate each PRBS byte, compare it to payload byte and update counters
+        for (uint32_t byteIdx = berPacketPrbsSequenceOffsetBytes; byteIdx < berPacketPrbsSequenceEndBytes; byteIdx++) {
+          uint8_t prbsByte = 0U;
+          // Generate 8 bits for this byte
+          for (uint8_t bitIdx = 0U; bitIdx < 8U; bitIdx++) {
+            // Extract LSB as output bit and add it into PRBS byte
+            uint8_t outputBit = (uint8_t)(state & BER_PACKET_PRBS_OUTPUT_MASK);
+            prbsByte = (prbsByte << 1U) | outputBit;
+            // Compute feedback and update state
+            uint16_t feedbackbit = ((state << BER_PACKET_PRBS_X5_TAP_SHIFT) ^ (state << BER_PACKET_PRBS_X9_TAP_SHIFT)) & BER_PACKET_PRBS_FEEDBACK_MASK;
+            state |= feedbackbit;
+            state >>= 1U;
+          }
+          if (prbsByte != rxPacketData[byteIdx]) {
+            // XOR and popcount to get number of errors
+            berPacketStats.prbsBitErrors += countBits(prbsByte ^ rxPacketData[byteIdx]);
+          }
+        }
+        berPacketStats.prbsBytesTested += berPacketPrbsLengthBytes;
+      } else {
+        berPacketStats.prbsSeedCrcFails++;
+        sl_free((void *)rxPacket);
+      }
     } else {
-      sl_free((void *)rxPacket);
+      if (logLevel & ASYNC_RESPONSE) {
+        updateGraphics();
+        // Copy this received packet into our circular queue
+        queueAdd(&railAppEventQueue, (void *)rxPacket);
+      } else {
+        sl_free((void *)rxPacket);
+      }
     }
   }
 
@@ -313,6 +427,11 @@ static void fifoMode_RxPacketReceived(void)
         } else {
           if (rxFifoPacketData->rxPacket.appendedInfo.sub_phy_id < SL_RAIL_BLE_RX_SUBPHY_COUNT) {
             counters.subPhyCount[rxFifoPacketData->rxPacket.appendedInfo.sub_phy_id]++;
+          }
+          if ((txWaitForAck == TX_WAIT_FOR_ACK_ENABLED_ON)
+              && rxFifoPacketData->rxPacket.appendedInfo.is_ack) {
+            txWaitForAck = TX_WAIT_FOR_ACK_ENABLED_OFF;
+            scheduleNextTx();
           }
         }
         // Note that this does not take into account CRC bytes unless
@@ -414,8 +533,16 @@ void railtest_TxPacketSent(sl_rail_handle_t railHandle, bool isAck)
   railappcb_TxPacketSentCs(railHandle);
 #endif
 #if SL_RAIL_IEEE802154_SUPPORTS_G_MODE_SWITCH && defined(WISUN_MODESWITCHPHRS_ARRAY_SIZE)
-  if ((modeSwitchState == TX_MS_PACKET) || (modeSwitchState == TX_ON_NEW_PHY)) { // Packet has been sent in a MS context
+  if (modeSwitchState == TX_MS_PACKET) {
     scheduleNextModeSwitchTx(true);
+  } else if (modeSwitchState == TX_ON_NEW_PHY) { // Packet has been sent in a MS context
+    if (railtest_CheckTxWaitForAck(railHandle)) {
+      // Defer scheduleNextModeSwitchTx() to ACK reception or timeout.
+      // This avoids potentially trying to transmit during the
+      // ACK timeout period thwarting both ACK reception and timeout.
+    } else {
+      scheduleNextModeSwitchTx(true);
+    }
   } else
 #endif
   {
@@ -531,16 +658,6 @@ void railtest_TxFifoAlmostEmpty(sl_rail_handle_t railHandle)
     dataLeft -= dataWritten;
     dataLeftPtr += dataWritten;
   }
-}
-
-// count number of 1s in a byte without a loop
-static uint8_t countBits(uint8_t num)
-{
-  uint8_t count = 0;
-  static const uint8_t nibblebits[] = { 0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4 };
-  count += nibblebits[num & 0x0F];
-  count += nibblebits[num >> 4];
-  return count;
 }
 
 static void berSource_RxFifoAlmostFull(uint16_t bytesAvailable)

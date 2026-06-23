@@ -1,0 +1,43 @@
+id: bootloader_core_secure_policy
+label: Bootloader Core Secure Policy
+package: bootloader
+description: >
+  Single owner for TrustZone secure-world core config (btl_core_s_cfg.h) variants used by
+  secure bootloader entry components. Classic bootloader_core pulls this only when
+  bootloader_tz_secure is enabled.
+category: Platform|Bootloader|TrustZone Secure|Core
+quality: production
+ui_hints:
+  visibility: never
+provides:
+- name: bootloader_core_secure_policy
+config_file:
+  # xG22
+- path: platform/bootloader/config/device_sdid_205/btl_core_s_cfg.h
+  file_id: btl_core_config
+  condition:
+  - device_sdid_205
+  unless:
+  - bootloader_apploader
+- path: platform/bootloader/config/device_sdid_205/apploader/btl_core_s_cfg.h
+  file_id: btl_core_config
+  condition:
+  - device_sdid_205
+  - bootloader_apploader
+
+  # Series-2
+- path: platform/bootloader/config/device_series_2/btl_core_s_cfg.h
+  file_id: btl_core_config
+  unless:
+  - device_sdid_205
+  - bootloader_apploader
+- path: platform/bootloader/config/device_series_2/apploader/btl_core_s_cfg.h
+  file_id: btl_core_config
+  condition:
+  - bootloader_apploader
+  unless:
+  - device_sdid_205
+metadata:
+  sbom:
+    license: MSLA
+root_path: bootloader

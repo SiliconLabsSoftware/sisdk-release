@@ -1,8 +1,8 @@
 project_name: ot-tz-secure-application
-label: Sample project for TrustZone Secure Key Library
+label: OpenThread - SoC TrustZone Secure App
 package: openthread
 description: >
-  This is a trustzone enabled application used to manage security operations from trustzone aware OpenThread applications.
+  Demonstrates a TrustZone-enabled application that manages security operations for TrustZone-aware OpenThread applications.
 
 category: OpenThread Examples
 quality: production
@@ -73,6 +73,7 @@ tag:
   - hwfilter:device:device_supports_thread
   - hwfilter:!device:device_series_3
   - toolchain:gcc
+  - toolchain:llvm
 
 import:
   # Import the config files from the TZ Non-Secure application

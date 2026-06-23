@@ -458,9 +458,6 @@ typedef union {
   sensor_setting_status_t setting_status;
   /** Sensor Cadence Status */
   sensor_cadence_status_t cadence_status;
-  //sensor_status_t status;
-  //sensor_column_status_t column_status;
-  //sensor_series_status_t series_status;
   /** Publishing period in milliseconds for publish event to indicate the next approximate event time */
   uint32_t publish_period;
 } sensor_client_msg_t;

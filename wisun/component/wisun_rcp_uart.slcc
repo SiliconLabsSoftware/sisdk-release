@@ -17,7 +17,8 @@ provides:
 - name: wisun_rcp_interface
 
 requires:
-- name: device_has_eusart
+- name: dma_manager
+- name: emlib_eusart
 
 source:
 - path: sl_wsrcp_crc.h

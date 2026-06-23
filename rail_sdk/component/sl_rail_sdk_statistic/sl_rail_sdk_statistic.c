@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "sl_rail_types.h"
 #include "sl_rail_sdk_statistic.h"
@@ -138,7 +139,7 @@ void print_statistic(void)
   app_log_info("RAIL Event Statistics\n");
   for (index = 0; index < NUMBER_OF_EVENTS; index++) {
     if (rail_event_statistic.events[index].value != 0) {
-      app_log_info("%s: %d\n", rail_event_statistic.events[index].name, rail_event_statistic.events[index].value);
+      app_log_info("%s: %" PRIu32 "\n", rail_event_statistic.events[index].name, rail_event_statistic.events[index].value);
     }
   }
 }

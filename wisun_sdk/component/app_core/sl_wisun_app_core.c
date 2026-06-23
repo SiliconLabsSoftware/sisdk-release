@@ -197,7 +197,7 @@ static const app_setting_wisun_t _app_default_settings = {
 #if defined(WISUN_CONFIG_NETWORK_SIZE)
   .network_size = WISUN_CONFIG_NETWORK_SIZE,
 #else
-  .network_size = SL_WISUN_NETWORK_SIZE_SMALL,
+  .network_size = SL_WISUN_NETWORK_SIZE_AUTOMATIC,
 #endif
 #if defined(WISUN_CONFIG_TX_POWER)
   .tx_power_ddbm = WISUN_CONFIG_TX_POWER,
@@ -213,7 +213,7 @@ static const app_setting_wisun_t _app_default_settings = {
 #if defined(WISUN_CONFIG_DEVICE_PROFILE)
   .lfn_profile = WISUN_CONFIG_DEVICE_PROFILE,
 #else
-  .lfn_profile = SL_WISUN_LFN_PROFILE_TEST,
+  .lfn_profile = SL_WISUN_LFN_PROFILE_AUTOMATIC,
 #endif
 #if defined(WISUN_CONFIG_DEFAULT_PHY_FAN10)
   .phy = {
@@ -324,7 +324,7 @@ void sl_wisun_network_update_event_hnd(sl_wisun_evt_t *evt)
 void sl_wisun_connected_event_hnd(sl_wisun_evt_t *evt)
 {
   if (evt->evt.connected.status != SL_STATUS_OK) {
-    printf("[Connection failed. Status: %lu]\n", evt->evt.connected.status);
+    printf("[Connection failed. Status: %"PRIu32"]\n", evt->evt.connected.status);
     _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_NETWORK_DISCONNECTED);
     _app_wisun_core_clear_state(SL_WISUN_APP_CORE_STATE_NETWORK_CONNECTED);
     return;
@@ -351,6 +351,7 @@ void sl_wisun_disconnected_event_hnd(sl_wisun_evt_t *evt)
 
   __CHECK_FOR_STATUS(evt->evt.error.status);
   _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_NETWORK_DISCONNECTED);
+  _app_wisun_core_clear_state(SL_WISUN_APP_CORE_STATE_NETWORK_CONNECTED);
   _join_state = SL_WISUN_JOIN_STATE_DISCONNECTED;
 }
 
@@ -368,7 +369,7 @@ void sl_wisun_connection_lost_event_hnd(sl_wisun_evt_t *evt)
 /* Error event handler */
 void sl_wisun_error_event_hnd(sl_wisun_evt_t *evt)
 {
-  printf("[Wi-SUN network error occurred. Status: %lu\n",
+  printf("[Wi-SUN network error occurred. Status: %"PRIu32"\n",
          evt->evt.error.status);
 }
 
@@ -388,7 +389,7 @@ void sl_wisun_join_state_event_hnd(sl_wisun_evt_t *evt)
   // if heartbeat is not enabled, print join state
   join_state_str = app_wisun_trace_util_conn_state_to_str(_join_state);
   if (join_state_str != NULL) {
-    printf("[Join state: %s (%lu)]\n", join_state_str, evt->evt.join_state.join_state);
+    printf("[Join state: %s (%"PRIu32")]\n", join_state_str, evt->evt.join_state.join_state);
   }
 #endif
   __CHECK_FOR_STATUS(evt->evt.error.status);
@@ -543,7 +544,7 @@ void sl_wisun_app_core_network_connect(void)
     printf("\n[Connecting to \"%s\"]\n", _setting.network_name);
   } else {
     _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_CONNECTION_ERROR);
-    printf("\n[Connection failed: %lu]\n", ret);
+    printf("\n[Connection failed: %"PRIu32"]\n", ret);
   }
   _app_wisun_mutex_release();
 }
@@ -690,61 +691,81 @@ const sl_wisun_lfn_params_t *sl_wisun_app_core_get_lfn_params(void)
 static sl_status_t _app_wisun_application_setting(const app_setting_wisun_t * const setting)
 {
   sl_status_t ret = SL_STATUS_FAIL;
-#if defined(WISUN_CONFIG_BROADCAST_RETRIES) || defined(SL_CATALOG_WISUN_FFN_DEVICE_SUPPORT_PRESENT)
+#if defined(SL_CATALOG_WISUN_FFN_DEVICE_SUPPORT_PRESENT)
   const sl_wisun_connection_params_t *conn_param = NULL;
-#endif
 #if defined(WISUN_CONFIG_BROADCAST_RETRIES)
   sl_wisun_connection_params_t update_param = { 0 };
 #endif
 
-#if defined(WISUN_CONFIG_BROADCAST_RETRIES) || defined(SL_CATALOG_WISUN_FFN_DEVICE_SUPPORT_PRESENT)
   conn_param = sl_wisun_get_conn_param_by_nw_size((sl_wisun_network_size_t) setting->network_size);
 #endif
 
   ret = sl_wisun_set_device_type((sl_wisun_device_type_t)setting->device_type);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set device type: %lu]\n", ret);
+    printf("[Failed: unable to set device type: %"PRIu32"]\n", ret);
+    return ret;
+  }
+
+  ret = sl_wisun_reset_parameters();
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unable to reset parameters: %"PRIu32"]\n", ret);
     return ret;
   }
 
 #if defined(SL_CATALOG_WISUN_LFN_DEVICE_SUPPORT_PRESENT)
-  if (setting->device_type == SL_WISUN_LFN) {
+  // NOTE: Automatic network size is the default in the stack.
+  if (setting->device_type == SL_WISUN_LFN && setting->lfn_profile != SL_WISUN_LFN_PROFILE_AUTOMATIC) {
     // Store LFN profile based on wisun config
     ret = sl_wisun_set_lfn_parameters(sl_wisun_app_core_get_lfn_params());
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to set device type: %lu]\n", ret);
+      printf("[Failed: unable to set device type: %"PRIu32"]\n", ret);
       return ret;
     }
   }
 #endif
 
-#if defined(WISUN_CONFIG_BROADCAST_RETRIES)
-  memcpy(&update_param, conn_param, sizeof(sl_wisun_connection_params_t));
-  update_param.mpl.trickle_expirations = WISUN_CONFIG_BROADCAST_RETRIES;
-  conn_param = &update_param;
-#endif
-
 #if defined(SL_CATALOG_WISUN_FFN_DEVICE_SUPPORT_PRESENT)
-  // set the connection parameters
-  ret = sl_wisun_set_connection_parameters(conn_param);
-  if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set connection parameters: %lu]\n", ret);
-    _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_SET_NETWORK_SIZE_ERROR);
-    return ret;
+  // NOTE: Automatic network size is the default in the stack.
+  if (setting->network_size != SL_WISUN_NETWORK_SIZE_AUTOMATIC) {
+#if defined(WISUN_CONFIG_BROADCAST_RETRIES)
+    memcpy(&update_param, conn_param, sizeof(sl_wisun_connection_params_t));
+    update_param.mpl.trickle_expirations = WISUN_CONFIG_BROADCAST_RETRIES;
+    conn_param = &update_param;
+#endif
+    ret = sl_wisun_set_connection_parameters(conn_param);
+    if (ret != SL_STATUS_OK) {
+      printf("[Failed: unable to set connection parameters: %"PRIu32"]\n", ret);
+      _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_SET_NETWORK_SIZE_ERROR);
+      return ret;
+    }
   }
+
+#if defined(WISUN_CONFIG_BROADCAST_RETRIES)
+  if (setting->network_size == SL_WISUN_NETWORK_SIZE_AUTOMATIC) {
+    uint8_t broadcast_retries = WISUN_CONFIG_BROADCAST_RETRIES;
+
+    ret = sl_wisun_set_option(SL_WISUN_OPTION_MPL_TRICKLE_E,
+                              &broadcast_retries,
+                              sizeof(broadcast_retries));
+    if (ret != SL_STATUS_OK) {
+      printf("[Failed: unable to set broadcast retries: %"PRIu32"]\n", ret);
+      return ret;
+    }
+  }
+#endif
 #endif
 
   // set the TX power
   ret = sl_wisun_set_tx_power_ddbm(setting->tx_power_ddbm);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set TX power: %lu]\n", ret);
+    printf("[Failed: unable to set TX power: %"PRIu32"]\n", ret);
     _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_SET_TX_POWER_ERROR);
     return ret;
   }
 #if defined(WISUN_CONFIG_ALLOWED_CHANNELS)
   ret = sl_wisun_set_channel_mask(&wisun_config_allowed_channels_mask);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set allowed channels: %lu]\n", ret);
+    printf("[Failed: unable to set allowed channels: %"PRIu32"]\n", ret);
     return ret;
   }
 #endif
@@ -753,7 +774,7 @@ static sl_status_t _app_wisun_application_setting(const app_setting_wisun_t * co
                             (uint8_t *)wisun_config_ms_phys,
                             APP_WISUN_MDR_COMMAND_CAPABILITY);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set mode switch phys: %lu]\n", ret);
+    printf("[Failed: unable to set mode switch phys: %"PRIu32"]\n", ret);
     return ret;
   }
 #endif
@@ -763,7 +784,7 @@ static sl_status_t _app_wisun_application_setting(const app_setting_wisun_t * co
   ret = sl_wisun_set_unicast_settings(WISUN_CONFIG_DWELL_INTERVAL);
 
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set dwell interval: %lu]\n", ret);
+    printf("[Failed: unable to set dwell interval: %"PRIu32"]\n", ret);
     _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_SET_DWELL_INTERVAL_ERROR);
     return ret;
   }
@@ -773,7 +794,7 @@ static sl_status_t _app_wisun_application_setting(const app_setting_wisun_t * co
   // set mac address
   ret = sl_wisun_set_mac_address(&wisun_config_mac_address);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set MAC address: %lu]\n", ret);
+    printf("[Failed: unable to set MAC address: %"PRIu32"]\n", ret);
     _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_SET_MAC_ADDR_ERROR);
     return ret;
   }
@@ -784,7 +805,7 @@ static sl_status_t _app_wisun_application_setting(const app_setting_wisun_t * co
   for (uint8_t index = 0U; index < wisun_config_mac_allow_list.mac_list_num; index++) {
     ret = sl_wisun_allow_mac_address(&wisun_config_mac_allow_list.mac_list[index]);
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to set allow address: %lu]\n", ret);
+      printf("[Failed: unable to set allow address: %"PRIu32"]\n", ret);
       _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_SET_ALLOW_MAC_ADDR_ERROR);
       return ret;
     }
@@ -795,7 +816,7 @@ static sl_status_t _app_wisun_application_setting(const app_setting_wisun_t * co
   for (uint8_t index = 0U; index < wisun_config_mac_deny_list.mac_list_num; index++) {
     ret = sl_wisun_deny_mac_address(&wisun_config_mac_deny_list.mac_list[index]);
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to set allow address: %lu]\n", ret);
+      printf("[Failed: unable to set allow address: %"PRIu32"]\n", ret);
       _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_SET_DENY_MAC_ADDR_ERROR);
       return ret;
     }
@@ -812,21 +833,21 @@ static sl_status_t _app_wisun_security_setting(void)
   const uint32_t max_cert_str_len = 2048U;
 
   // set the trusted certificate
-  ret = sl_wisun_set_trusted_certificate(SL_WISUN_CERTIFICATE_OPTION_IS_REF,
+  ret = sl_wisun_set_trusted_certificate(SL_WISUN_CERTIFICATE_OPTION_NONE,
                                          _get_cert_str_len(wisun_config_ca_certificate, max_cert_str_len) + 1,
                                          wisun_config_ca_certificate);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set the trusted certificate: %lu]\n", ret);
+    printf("[Failed: unable to set the trusted certificate: %"PRIu32"]\n", ret);
     _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_SET_TRUSTED_CERTIFICATE_ERROR);
     return ret;
   }
 
   // set the device certificate
-  ret = sl_wisun_set_device_certificate(SL_WISUN_CERTIFICATE_OPTION_IS_REF | SL_WISUN_CERTIFICATE_OPTION_HAS_KEY,
+  ret = sl_wisun_set_device_certificate(SL_WISUN_CERTIFICATE_OPTION_NONE,
                                         _get_cert_str_len(wisun_config_device_certificate, max_cert_str_len) + 1,
                                         wisun_config_device_certificate);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set the device certificate: %lu]\n", ret);
+    printf("[Failed: unable to set the device certificate: %"PRIu32"]\n", ret);
     _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_SET_DEVICE_CERTIFICATE_ERROR);
     return ret;
   }
@@ -834,11 +855,11 @@ static sl_status_t _app_wisun_security_setting(void)
   // set the device private key
   // NOTE: to use a wrapped PSA private key, the app needs to import the key
   // and use the API sl_wisun_set_device_private_key_id() instead of the one below
-  ret = sl_wisun_set_device_private_key(SL_WISUN_PRIVATE_KEY_OPTION_IS_REF,
+  ret = sl_wisun_set_device_private_key(SL_WISUN_PRIVATE_KEY_OPTION_NONE,
                                         _get_cert_str_len(wisun_config_device_private_key, max_cert_str_len) + 1,
                                         wisun_config_device_private_key);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set the device private key: %lu]\n", ret);
+    printf("[Failed: unable to set the device private key: %"PRIu32"]\n", ret);
     _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_SET_DEVICE_PRIVATE_KEY_ERROR);
     return ret;
   }
@@ -850,33 +871,41 @@ static sl_status_t _app_wisun_security_setting(void)
 {
   sl_status_t ret = SL_STATUS_FAIL;
   sl_wisun_keychain_credential_t *credential = NULL;
+  sl_wisun_keychain_entry_t *trustedca = NULL;
   uint8_t trustedca_count;
   uint8_t idx;
-  sl_wisun_keychain_entry_t *trustedca = NULL;
   uint16_t certificate_options;
+  credential = sl_wisun_keychain_get_credential((sl_wisun_keychain_t)_setting.keychain,
+                                                _setting.keychain_index);
+  if (credential == NULL) {
+    printf("[Failed: unable to load device credential]\r\n");
+    _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_SET_DEVICE_CERTIFICATE_ERROR);
+    goto cleanup;
+  }
 
-  credential = sl_wisun_keychain_get_credential((sl_wisun_keychain_t)_setting.keychain, _setting.keychain_index);
-
-  // set the trusted certificate
   trustedca_count = sl_wisun_keychain_get_trustedca_count();
   if (!trustedca_count) {
     printf("[Failed: unable to locate trusted CAs]\r\n");
+    _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_SET_TRUSTED_CERTIFICATE_ERROR);
+    goto cleanup;
   }
 
-  certificate_options = SL_WISUN_CERTIFICATE_OPTION_IS_REF;
+  certificate_options = SL_WISUN_CERTIFICATE_OPTION_NONE;
   for (idx = 0; idx < trustedca_count; ++idx) {
     trustedca = sl_wisun_keychain_get_trustedca(idx);
     if (!trustedca) {
       printf("[Failed to load trusted CA]\r\n");
-      return ret;
+      _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_SET_TRUSTED_CERTIFICATE_ERROR);
+      goto cleanup;
     }
 
     ret = sl_wisun_set_trusted_certificate(certificate_options,
                                            trustedca->data_length,
                                            trustedca->data);
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to set the trusted certificate: %lu]\r\n", ret);
-      return ret;
+      printf("[Failed: unable to set the trusted certificate: %"PRIu32"]\r\n", ret);
+      _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_SET_TRUSTED_CERTIFICATE_ERROR);
+      goto cleanup;
     }
 
     sl_free(trustedca);
@@ -884,32 +913,25 @@ static sl_status_t _app_wisun_security_setting(void)
     certificate_options |= SL_WISUN_CERTIFICATE_OPTION_APPEND;
   }
 
-  if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set the trusted certificate: %lu]\n", ret);
-    _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_SET_TRUSTED_CERTIFICATE_ERROR);
-    return ret;
-  }
-
-  // set the device certificate
-  ret = sl_wisun_set_device_certificate(SL_WISUN_CERTIFICATE_OPTION_IS_REF | SL_WISUN_CERTIFICATE_OPTION_HAS_KEY,
+  ret = sl_wisun_set_device_certificate(SL_WISUN_CERTIFICATE_OPTION_NONE,
                                         credential->certificate.data_length,
                                         credential->certificate.data);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set the device certificate: %lu]\n", ret);
+    printf("[Failed: unable to set the device certificate: %"PRIu32"]\n", ret);
     _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_SET_DEVICE_CERTIFICATE_ERROR);
-    return ret;
+    goto cleanup;
   }
 
-  // set the device private key
-  // NOTE: to use a wrapped PSA private key, the app needs to import the key
-  // and use the API sl_wisun_set_device_private_key_id() instead of the one below
   ret = sl_wisun_set_device_private_key_id(credential->pk.u.key_id);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set the device private key: %lu]\n", ret);
+    printf("[Failed: unable to set the device private key: %"PRIu32"]\n", ret);
     _app_wisun_core_set_state(SL_WISUN_APP_CORE_STATE_SET_DEVICE_PRIVATE_KEY_ERROR);
-    return ret;
+    goto cleanup;
   }
 
+cleanup:
+  sl_free(trustedca);
+  sl_free(credential);
   return ret;
 }
 #endif
@@ -945,7 +967,7 @@ static sl_status_t _app_wisun_regulation_setting(void)
 
     ret = sl_wisun_set_regulation_parameters(regulation_params);
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to set regulation: %lu]\n", ret);
+      printf("[Failed: unable to set regulation: %"PRIu32"]\n", ret);
     } else {
       switch (SL_WISUN_APP_CORE_REGULATION) {
         case SL_WISUN_APP_CORE_REGULATION_ARIB:

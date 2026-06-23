@@ -27,6 +27,8 @@
  *
  ******************************************************************************/
 
+#include <inttypes.h>
+
 #include "stack/include/ember.h"
 #include "sl_cli.h"
 #include "debug_print.h"
@@ -41,7 +43,7 @@ void start_tx_stream_command(sl_cli_command_arg_t *arguments)
   if (status == EMBER_SUCCESS) {
     connect_app_debug_print("OK\n");
   } else {
-    connect_app_debug_print("Failed to start Tx Stream %d\n", status);
+    connect_app_debug_print("Failed to start Tx Stream %" PRIu8 "\n", status);
   }
 }
 
@@ -52,6 +54,6 @@ void stop_tx_stream_command(void)
   if (status == EMBER_SUCCESS) {
     connect_app_debug_print("OK\n");
   } else {
-    connect_app_debug_print("Failed to stop Tx Stream %d\n", status);
+    connect_app_debug_print("Failed to stop Tx Stream %" PRIu8 "\n", status);
   }
 }

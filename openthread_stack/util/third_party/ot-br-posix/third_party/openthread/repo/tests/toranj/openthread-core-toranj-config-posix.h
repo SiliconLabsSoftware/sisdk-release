@@ -26,8 +26,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_
-#define OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_
+#ifndef OT_TORANJ_OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_
+#define OT_TORANJ_OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_
 
 /**
  * This header file defines the OpenThread core configuration options for toranj with POSIX platform.
@@ -38,6 +38,10 @@
 
 #define OPENTHREAD_CONFIG_PLATFORM_INFO "POSIX-toranj"
 
+#define OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE 1
+
+#define OPENTHREAD_CONFIG_CLI_IFCONFIG_INIT_ENABLE 1
+
 #define OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE 1
 
 #define OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE 1
@@ -47,6 +51,10 @@
 #define OPENTHREAD_CONFIG_MULTICAST_DEFAULT_DNS_VERBOSE_LOGGING_STATE 0
 
 #define OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE 0
+
+#define OPENTHREAD_CONFIG_JOINER_ENABLE 0
+
+#define OPENTHREAD_CONFIG_SEEKER_ENABLE 1
 
 #define OPENTHREAD_CONFIG_TREL_MANAGE_DNSSD_ENABLE 1
 
@@ -60,6 +68,8 @@
 
 #define OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE 1
 
+#define OPENTHREAD_CONFIG_JOINER_ADV_EXPERIMENTAL_ENABLE 1
+
 #define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
 
 #define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE 1
@@ -72,9 +82,10 @@
 
 #define OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE 1
 
-// The following features are set explicitly on posix `toranj`
-// to validate the build with these config. The `toranj` build
-// under simulation platform covers the opposite configs.
+// The following features (e.g., `USE_HEAP`) are enabled or disabled
+// explicitly on POSIX `toranj` to validate the build with or without
+// them. The `toranj` build under the simulation platform covers the
+// opposite/alternative configurations (e.g., allows `USE_HEAP`).
 
 #define OPENTHREAD_CONFIG_BORDER_ROUTING_USE_HEAP_ENABLE 0
 
@@ -82,4 +93,8 @@
 
 #define OPENTHREAD_CONFIG_DNS_CLIENT_BIND_UDP_TO_THREAD_NETIF 0
 
-#endif /* OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_ */
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_SERVER_ENABLE 1
+
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_CLIENT_ENABLE 0
+
+#endif // OT_TORANJ_OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_

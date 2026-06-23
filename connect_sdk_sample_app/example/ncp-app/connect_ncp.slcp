@@ -1,9 +1,10 @@
-project_name: "connect_ncp"
-label: "Connect - NCP"
-package: "connect_sdk_sample_app"
-description: "Connect: NCP Application for the SoC"
-category: "Connect Examples"
-quality: "production"
+project_name: connect_ncp
+label: Connect - NCP
+package: connect_sdk_sample_app
+description: >
+  Connect NCP Application for the SoC
+category: Connect Examples
+quality: production
 
 component:
   - id: sl_main
@@ -15,7 +16,6 @@ component:
   - id: connect_parent_support
   - id: connect_stack_counters
   - id: connect_poll
-  - id: radio_config_simple_connect_singlephy
   - id: psa_crypto
   - id: connect_ncp
   - id: connect_cpc
@@ -24,30 +24,33 @@ component:
   - id: iostream_retarget_stdio
   - id: bootloader_interface
 
+requires:
+  - name: a_radio_config
+  - name: radio_config_simple_connect_singlephy
+  - name: radio_config_simple_connect_singlephy_device_family_fgm23
+    condition: [device_family_fgm23]
+
 configuration:
   - name: SL_BOARD_ENABLE_VCOM
     value: 1
   - name: SL_HEAP_SIZE
     value: 8192
-    condition:
-      - device_family_efr32fg25
+    condition: [device_family_efr32fg25]
   - name: SL_CPC_RX_PAYLOAD_MAX_LENGTH
     value: 2048
-    condition:
-      - device_family_efr32fg25
+    condition: [device_family_efr32fg25]
 
 source:
   - path: app.c
 
 include:
-  - path: "./"
+  - path: ./
 
 other_file:
-  - path: "../../script/connect_create_gbl_image.bat"
-  - path: "../../script/connect_create_gbl_image.sh"
-  - path: "hw_filter_tags.yaml"
-    condition:
-      - "add_hw_filter_to_project"
+  - path: ../../script/connect_create_gbl_image.bat
+  - path: ../../script/connect_create_gbl_image.sh
+  - path: hw_filter_tags.yaml
+    condition: [add_hw_filter_to_project]
 
 define:
   - name: SL_CATALOG_CONNECT_NCP_PRESENT
@@ -65,9 +68,9 @@ tag:
   - hwfilter:!board:brd4421a
 
 filter:
-  - name: "Wireless Technology"
-    value: ["Connect"]
-  - name: "Device Type"
-    value: ["NCP"]
-  - name: "Project Difficulty"
-    value: ["Beginner"]
+  - name: Wireless Technology
+    value: [Connect]
+  - name: Device Type
+    value: [NCP]
+  - name: Project Difficulty
+    value: [Beginner]

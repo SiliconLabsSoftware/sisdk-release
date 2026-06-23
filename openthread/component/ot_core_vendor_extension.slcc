@@ -1,7 +1,7 @@
 id: ot_core_vendor_extension
 label: Silicon Labs OpenThread Core Vendor Extension
 package: openthread
-category: OpenThread
+category: OpenThread|Utility
 quality: production
 description: |-
   This component implements ot::Extension::ExtensionBase for EFR32.

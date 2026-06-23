@@ -895,6 +895,13 @@ typedef union {
     uint32_t                : 26; // B70-95
   } bits;
   uint32_t word[3];
+#elif defined (_SILICON_LABS_32B_SERIES_2_CONFIG_11)
+    // There are 70 used bits
+    uint32_t                : 32; // B0-31
+    uint32_t                : 32; // B32-63
+    uint32_t                : 32; // B64-95
+  } bits;
+  uint32_t word[3];
 #elif defined(_SILICON_LABS_32B_SERIES_3_CONFIG_301)
     // These come from sixg301m114lih.h
     uint32_t SETAMPERHOST_IRQn      : 1;  /*!<  0 Si SETAMPERHOST Interrupt */
@@ -990,6 +997,14 @@ typedef union {
     uint32_t : 6; // B90-95
   } bits;
   uint32_t word[3];
+#elif defined(_SILICON_LABS_32B_SERIES_3_CONFIG_302)
+    // There are 100 used bits
+    uint32_t                : 32; // B0-31
+    uint32_t                : 32; // B32-63
+    uint32_t                : 32; // B64-95
+    uint32_t                : 32; // B96-127
+  } bits;
+  uint32_t word[4];
 #elif CORTEXM3_EMBER_MICRO
     uint32_t TIM1_IRQn      : 1;  // B0
     uint32_t TIM2_IRQn      : 1;  // B1

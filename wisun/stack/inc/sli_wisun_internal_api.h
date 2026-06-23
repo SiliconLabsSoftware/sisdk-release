@@ -53,6 +53,24 @@ extern "C" {
 sl_status_t sli_wisun_get_rail_handle(sl_rail_handle_t *handle);
 
 /**************************************************************************//**
+ * @brief Register the RF test event callback.
+ *
+ * RAIL RF test events will be published as @ref SL_WISUN_LOGGER_EVENT_TYPE_RF_TEST
+ * indications until @ref sli_wisun_disable_rf_test_event_callback is called.
+ * @return SL_STATUS_OK if successful, an error code otherwise
+ *****************************************************************************/
+sl_status_t sli_wisun_enable_rf_test_event_callback(void);
+
+/**************************************************************************//**
+ * @brief Unregister the RF test event callback.
+ *
+ * Suppresses @ref SL_WISUN_LOGGER_EVENT_TYPE_RF_TEST indications.
+ * Pair with @ref sli_wisun_enable_rf_test_event_callback.
+ * @return SL_STATUS_OK if successful, an error code otherwise
+ *****************************************************************************/
+sl_status_t sli_wisun_disable_rf_test_event_callback(void);
+
+/**************************************************************************//**
  * @brief Set the MAC mode switch configuration
  * @param[in] mode Indicate if the device can use mode switch feature
  *                 with the neighbor indicated by \p neighbor_address

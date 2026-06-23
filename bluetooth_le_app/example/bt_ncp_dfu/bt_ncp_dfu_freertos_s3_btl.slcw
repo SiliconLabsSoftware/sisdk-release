@@ -7,7 +7,7 @@ description: >
   API (BGAPI) using UART connection. NCP mode makes it possible to run your
   application on a host controller or PC.
   Combined solution with application and bootloader projects.
-quality: experimental
+quality: production
 project:
   - path: bt_ncp_dfu_freertos.slcp
     id: application

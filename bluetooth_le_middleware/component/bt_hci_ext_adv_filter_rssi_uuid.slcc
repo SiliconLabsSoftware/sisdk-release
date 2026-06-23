@@ -1,5 +1,5 @@
 id: bt_hci_ext_adv_filter_rssi_uuid
-label: HCI Extended Advertisment Filtering
+label: HCI Extended Advertisement Filtering
 package: bluetooth_le_middleware
 description: >
   Provides API to filter HCI extended advertising reports using RSSI and UUID

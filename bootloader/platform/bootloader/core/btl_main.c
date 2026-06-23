@@ -17,7 +17,10 @@
 
 #include "config/btl_config.h"
 #include "api/btl_interface.h"
-#include "btl_core_cfg.h"  
+/* BOOTLOADER_SECURE: btl_core_s_cfg.h is included from btl_config.h; btl_core_cfg.h is not emitted. */
+#if !defined(BOOTLOADER_SECURE)
+#include "btl_core_cfg.h"
+#endif
 
 #include "core/btl_core.h"
 #include "core/btl_helper.h"
@@ -49,6 +52,10 @@
 #include "communication/btl_communication.h"
 #endif
 
+#if defined(BTL_SMP_SUPPORT)
+#include "core/smp_switch/btl_smp_switch_record.h"
+#endif
+
 #include "em_device.h"
 #include "em_cmu.h"
 #include "em_gpio.h"
@@ -59,6 +66,11 @@
 #if defined(_SILICON_LABS_32B_SERIES_2)
 #include "fih.h"
 #endif
+
+#if defined(BTL_ENFORCE_GLITCH_MITIGATION) && (BTL_ENFORCE_GLITCH_MITIGATION == 1)
+#include "core/btl_glitch_mitigation.h"
+#endif
+
 #if defined(__GNUC__)
 #define ROM_END_SIZE 0
 extern const size_t __rom_end__;
@@ -77,7 +89,7 @@ extern void ram_clean_up_test(void);
 // --------------------------------
 // Local function declarations
 
-__STATIC_INLINE bool enterBootloader(void);
+__STATIC_INLINE btl_ret_t enterBootloader(void);
 SL_NORETURN static void bootToApp(uint32_t);
 
 #if defined(BOOTLOADER_INTERFACE_TRUSTZONE_AWARE)
@@ -119,7 +131,8 @@ __STATIC_INLINE void lockBootloaderArea(void)
   || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_6) \
   || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_8) \
   || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_9) \
-  || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_13)
+  || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_13) \
+  || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_11) 
 __STATIC_INLINE void configureSMUToDefault(void)
 {
 #if defined(CMU_CLKEN1_SMU)
@@ -152,13 +165,14 @@ __STATIC_INLINE void configureSMUToDefault(void)
   CMU->CLKEN1_CLR = CMU_CLKEN1_SMU;
 #endif
 }
-#endif // BOOTLOADER_APPLOADER || _SILICON_LABS_32B_SERIES_2_CONFIG_[5,6,8,9,13]
+#endif // BOOTLOADER_APPLOADER || _SILICON_LABS_32B_SERIES_2_CONFIG_[5,6,8,9,13,11]
 
 #if defined(_SILICON_LABS_32B_SERIES_2_CONFIG_5)  \
   || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_6) \
   || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_8) \
   || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_9) \
-  || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_13)
+  || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_13) \
+  || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_11)
 __STATIC_INLINE void configureSMU(void)
 {
 #if defined(CMU_CLKEN1_SMU)
@@ -187,7 +201,7 @@ __STATIC_INLINE void configureSMU(void)
   CMU->CLKEN1_CLR = CMU_CLKEN1_SMU;
 #endif
 }
-#endif // _SILICON_LABS_32B_SERIES_2_CONFIG_[5,6,8,9,13]
+#endif // _SILICON_LABS_32B_SERIES_2_CONFIG_[5,6,8,9,13,11]
 
 void HardFault_Handler(void)
 {
@@ -434,6 +448,9 @@ const MainBootloaderTable_t mainStageTable = {
 #if defined(BTL_EM4_GPIO_RETENTION)
                    | BOOTLOADER_CAPABILITY_EM4_GPIO_RETENTION
 #endif
+#if defined(BTL_SMP_SUPPORT)
+                   | BOOTLOADER_CAPABILITY_SMP_SWITCH
+#endif
                    ),
   .init = &btl_init,
   .deinit = &btl_deinit,
@@ -504,18 +521,19 @@ void SystemInit2(void)
   || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_6) \
   || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_8) \
   || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_9) \
-  || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_13)
+  || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_13) \
+  || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_11) 
   configureSMU();
-#endif // _SILICON_LABS_32B_SERIES_2_CONFIG_[5,6,8,9,13]
+#endif // _SILICON_LABS_32B_SERIES_2_CONFIG_[5,6,8,9,13,11]
 
 #if defined(TEST_BOOTLOADER_RAM_CLEAN_UP)
   ram_clean_up_test();
 #endif
 
   // Assumption: We should enter the app
-  volatile bool enterApp = true;
+  volatile btl_ret_t enterApp = BTL_TRUE;
   // Assumption: The app should be verified
-  volatile bool verifyApp = true;
+  volatile btl_ret_t verifyApp = BTL_TRUE;
 
   // Check if we came from EM4. If any other bit than the EM4 bit it set, we
   // can't know whether this was really an EM4 reset, and we need to do further
@@ -524,11 +542,14 @@ void SystemInit2(void)
   && (APPLICATION_VERIFICATION_SKIP_EM4_RST == 1)
   if (RMU->RSTCAUSE == RMU_RSTCAUSE_EM4RST) {
     // We came from EM4, app doesn't need to be verified
-    verifyApp = false;
-  } else if (enterBootloader()) {
+    verifyApp = BTL_FALSE;
+  } else if (enterBootloader() == BTL_TRUE) {
     // We want to enter the bootloader, app doesn't need to be verified
-    enterApp = false;
-    verifyApp = false;
+#if defined(BTL_ENFORCE_GLITCH_MITIGATION) && (BTL_ENFORCE_GLITCH_MITIGATION == 1)
+    BTL_SEC_ASSERT_EQUAL(enterBootloader(), BTL_TRUE);
+#endif
+    enterApp = BTL_FALSE;
+    verifyApp = BTL_FALSE;
   }
 #elif defined(BTL_EM4_GPIO_RETENTION)
 // Enable BURAM clock for EM4 GPIO retention operations
@@ -546,18 +567,28 @@ void SystemInit2(void)
 
     // If reset reason indicates bootloader entry, proceed with OTA upgrade flow
     if (btl_em4GpioRetentionEnterBootloader()) {
-      enterApp = false;
-      verifyApp = false;
+      enterApp = BTL_FALSE;
+      verifyApp = BTL_FALSE;
     }
   }
 #else
-  if (enterBootloader()) {
+  if (enterBootloader() == BTL_TRUE) {
     // We want to enter the bootloader, app doesn't need to be verified
-    enterApp = false;
-    verifyApp = false;
+#if defined(BTL_ENFORCE_GLITCH_MITIGATION) && (BTL_ENFORCE_GLITCH_MITIGATION == 1)
+    BTL_SEC_ASSERT_EQUAL(enterBootloader(), BTL_TRUE);
+#endif
+    enterApp = BTL_FALSE;
+    verifyApp = BTL_FALSE;
   }
 #endif
   uint32_t startOfAppSpace = (uint32_t)mainStageTable.startOfAppSpace;
+
+#if defined(BTL_SMP_SUPPORT)
+  uint32_t smp_app_base = 0U;
+  if (btl_smp_switch_get_selected_app_base(&smp_app_base) == BTL_TRUE) {
+	  startOfAppSpace = smp_app_base;
+  }
+#endif
 
   // Sanity check application program counter
 #if defined(__GNUC__)
@@ -570,6 +601,9 @@ void SystemInit2(void)
 
   uint32_t pc = *(uint32_t *)(startOfAppSpace + 4);
   if (pc == 0xFFFFFFFF) {
+#if defined(BTL_ENFORCE_GLITCH_MITIGATION) && (BTL_ENFORCE_GLITCH_MITIGATION == 1)
+    BTL_SEC_ASSERT_EQUAL(pc, 0xFFFFFFFF);
+#endif
     // Sanity check failed; enter the bootloader
 #if defined(BTL_EM4_GPIO_RETENTION)
     // Set BURAM reset reason for bad app
@@ -577,8 +611,8 @@ void SystemInit2(void)
 #else
     reset_setResetReason(BOOTLOADER_RESET_REASON_BADAPP);
 #endif
-    enterApp = false;
-    verifyApp = false;
+    enterApp = BTL_FALSE;
+    verifyApp = BTL_FALSE;
   }
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
@@ -589,13 +623,31 @@ void SystemInit2(void)
 #endif
 
   // App should be verified
-  if (verifyApp) {
+  if (verifyApp == BTL_TRUE) {
 #if defined(_SILICON_LABS_32B_SERIES_2)
     fih_delay();
 #endif
+#if defined(BTL_ENFORCE_GLITCH_MITIGATION) && (BTL_ENFORCE_GLITCH_MITIGATION == 1)
+    BTL_SEC_ASSERT_EQUAL(verifyApp, BTL_TRUE);
+#endif
     // If app verification fails, enter bootloader instead
     enterApp = bootload_verifyApplication(startOfAppSpace);
-    if (!enterApp) {
+#if defined(BTL_SMP_SUPPORT)
+    /* If secure boot failed for the SMP-selected app, try the other app base. */
+    if (enterApp == BTL_FALSE) {
+      uint32_t alternate_base = 0U;
+      if (btl_smp_switch_get_alternate_app_base(startOfAppSpace, &alternate_base) == BTL_TRUE) {
+        enterApp = bootload_verifyApplication(alternate_base);
+        if (enterApp == BTL_TRUE) {
+          startOfAppSpace = alternate_base;
+        }
+      }
+    }
+#endif
+    if (enterApp == BTL_FALSE) {
+#if defined(BTL_ENFORCE_GLITCH_MITIGATION) && (BTL_ENFORCE_GLITCH_MITIGATION == 1)
+      BTL_SEC_ASSERT_EQUAL(enterApp, BTL_FALSE);
+#endif
       BTL_DEBUG_PRINTLN("App verify fail");
 #if defined(BTL_EM4_GPIO_RETENTION)
       // Set BURAM reset reason for bad app
@@ -611,12 +663,12 @@ void SystemInit2(void)
   // The magic is only written when a bootloader upgrade is triggered.
   bootload_removeStoredApplicationVersions();
 
-  if (enterApp) {
+  if (enterApp == BTL_TRUE) {
     enterApp = bootload_storeApplicationVersion(startOfAppSpace);
   }
 #endif
 
-  if (enterApp) {
+  if (enterApp == BTL_TRUE) {
     BTL_DEBUG_PRINTLN("Enter app");
     BTL_DEBUG_PRINT_LF();
 
@@ -643,7 +695,8 @@ void SystemInit2(void)
     || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_6) \
     || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_8) \
     || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_9) \
-    || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_13)
+    || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_13) \
+    || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_11)
     configureSMUToDefault();
 #endif
     // Set vector table to application's table
@@ -657,26 +710,23 @@ void SystemInit2(void)
 /**
  * Jump to app
  */
-#if defined(__clang__)
-// Clang does not support naked functions which aren't fully inline asm.
-// Todo: rewrite function in assembly.
-__attribute__ ((noreturn)) static void bootToApp(uint32_t startOfAppSpace)
-#else
 __attribute__ ((noreturn, naked)) static void bootToApp(uint32_t startOfAppSpace)
-#endif
 {
+#if defined(__clang__)
+  __ASM volatile("b jumpToApplicationRoutine");
+#else
   jumpToApplicationRoutine(startOfAppSpace);
   while (1) {
     // Do nothing
   }
+#endif
 }
-
 /**
  * Check whether we should enter the bootloader
  *
  * @return True if the bootloader should be entered
  */
-__STATIC_INLINE bool enterBootloader(void)
+__STATIC_INLINE btl_ret_t enterBootloader(void)
 {
 #if defined(EMU_RSTCAUSE_SYSREQ)
   if (EMU->RSTCAUSE & EMU_RSTCAUSE_SYSREQ) {
@@ -690,7 +740,7 @@ __STATIC_INLINE bool enterBootloader(void)
       case BOOTLOADER_RESET_REASON_UPGRADE:
       case BOOTLOADER_RESET_REASON_BADAPP:
         // Asked to go into bootload mode
-        return true;
+        return BTL_TRUE;
       default:
         break;
     }
@@ -699,18 +749,18 @@ __STATIC_INLINE bool enterBootloader(void)
 #ifdef BTL_GPIO_ACTIVATION
   if (gpio_enterBootloader()) {
     // GPIO pin state signals bootloader entry
-    return true;
+    return BTL_TRUE;
   }
 #endif
 
 #ifdef BTL_EZSP_GPIO_ACTIVATION
   if (ezsp_gpio_enterBootloader()) {
     // GPIO pin state signals bootloader entry
-    return true;
+    return BTL_TRUE;
   }
 #endif
 
-  return false;
+  return BTL_FALSE;
 }
 
 #if defined(BOOTLOADER_INTERFACE_TRUSTZONE_AWARE)

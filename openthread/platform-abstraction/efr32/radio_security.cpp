@@ -164,15 +164,25 @@ otError sli_ot_radio_security_process_transmit(otRadioFrame *aFrame, otInstance 
 
     if (!aFrame->mInfo.mTxInfo.mIsHeaderUpdated)
     {
+        uint32_t frameCounter;
+        CORE_DECLARE_IRQ_STATE;
+
+        CORE_ENTER_ATOMIC();
+
+        frameCounter                            = sMacKeys[instanceIndex].macFrameCounter;
+        sMacKeys[instanceIndex].macFrameCounter = frameCounter + 1;
+
         if (otMacFrameIsAck(aFrame))
         {
             // Store ack frame counter and ack key ID for receive frame
             sMacKeys[instanceIndex].ackKeyId        = keyId;
-            sMacKeys[instanceIndex].ackFrameCounter = sMacKeys[instanceIndex].macFrameCounter;
+            sMacKeys[instanceIndex].ackFrameCounter = frameCounter;
         }
 
+        CORE_EXIT_ATOMIC();
+
         otMacFrameSetKeyId(aFrame, keyId);
-        otMacFrameSetFrameCounter(aFrame, sMacKeys[instanceIndex].macFrameCounter++);
+        otMacFrameSetFrameCounter(aFrame, frameCounter);
     }
 
     efr32PlatProcessTransmitAesCcm(aFrame, &sExtAddress[instanceIndex]);

@@ -25,7 +25,7 @@ rail_stack_info:
     3: "sl_railcfg_ble_phy_coded_500_kbps"
     4: "sl_railcfg_ble_phy_simulscan"
     5: "sl_railcfg_ble_phy_aox_2_mbps"
-    6: "sl_railcfg_ble_phy_quuppa_1_mbps"
+    6: "sl_railcfg_ble_phy_custom_1_mbps"
     7: "sl_railcfg_ble_phy_cs_1_mbps"
     8: "sl_railcfg_ble_phy_cs_2_mbps"
     12: "sl_railcfg_ble_phy_fast_switch"

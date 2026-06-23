@@ -1,0 +1,25 @@
+id: tz_non_secure_execution_prebuilt
+label: TrustZone Non-Secure Execution
+description: >
+  Recommended TrustZone startup that hands off from Secure to Non-Secure world. The
+  implementation is prebuilt and embedded as a C byte array; it is produced from the same
+  sources as the source component, but linked so it can be flashed via the Non-Secure
+  flash alias while execution still uses the Secure alias. Prefer this prebuilt component
+  for normal integrations. The source component exists mainly as an auditable reference
+  and for debugging when you need to build the logic in-tree.
+package: platform_core
+category: Platform|TrustZone
+quality: production
+metadata:
+  sbom:
+    license: Zlib
+root_path: platform_core/platform/common
+source:
+- path: src/sl_tz_non_secure_execution.c
+provides:
+- name: tz_non_secure_execution_prebuilt
+- name: tz_non_secure_execution_impl
+  condition: [device_has_deepsleep_retention]
+- name: tz_non_secure_execution_flash_only
+requires:
+- name: device_has_deepsleep_retention

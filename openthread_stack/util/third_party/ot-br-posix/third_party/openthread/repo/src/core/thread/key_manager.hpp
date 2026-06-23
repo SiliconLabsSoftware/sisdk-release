@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread security material generation.
  */
 
-#ifndef KEY_MANAGER_HPP_
-#define KEY_MANAGER_HPP_
+#ifndef OT_CORE_THREAD_KEY_MANAGER_HPP_
+#define OT_CORE_THREAD_KEY_MANAGER_HPP_
 
 #include "openthread-core-config.h"
 
@@ -227,6 +227,15 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      */
     explicit KeyManager(Instance &aInstance);
+
+    /**
+     * Initializes the `KeyManager`.
+     *
+     * This method is called after OpenThread `Instance` is fully initialized (from `Instance::AfterInit()`). This
+     * ensures that all `Instance` components (including `KeyManager`) have been constructed and are safe to interact
+     * with (e.g., to save a default key in `Crypto::Storage::KeyRefManager`).
+     */
+    void Init(void);
 
     /**
      * Starts KeyManager rotation timer and sets guard timer to initial value.
@@ -649,4 +658,4 @@ DefineCoreType(otPskc, Pskc);
 
 } // namespace ot
 
-#endif // KEY_MANAGER_HPP_
+#endif // OT_CORE_THREAD_KEY_MANAGER_HPP_

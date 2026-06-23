@@ -20,6 +20,9 @@ include:
   file_list:
   - path: "socket/select.h"
   - path: "socket/sl_select_util.h"
+- path: "inc/posix"
+  file_list:
+  - path: "sys/select.h"
 
 source:
 - path: "src/socket/select.c"

@@ -47,6 +47,11 @@
   - name: hardware_board_supports_1_rf_band
   - name: hardware_board_default_rf_band
   - name: hardware_board_default_rf_band_2400
+  - name: hardware_board_has_led0
+  - name: hardware_board_has_led1
+  - name: hardware_board_has_btn0
+  - name: hardware_board_has_btn1
+  - name: hardware_board_has_exclusive_button_led
 - recommends:
   - id: brd4002b
     vendor: silabs
@@ -83,7 +88,7 @@
   - name: SL_BOARD_NAME
     value: '"BRD4407A"'
   - name: SL_BOARD_REV
-    value: '"A07"'
+    value: '"A06"'
   - name: HFXO_FREQ
     value: 38400000
   - name: HARDWARE_BOARD_SUPPORTS_RF_BAND_2400
@@ -92,7 +97,7 @@
 - tag:
   - board:pn:BRD4407
   - board:variant:A
-  - board:revision:A07
+  - board:revision:A06
   - board:device:simg301m104lil
   - hardware:has:vcom
   - hardware:has:vcom:vcom_hardware_flowcontrol

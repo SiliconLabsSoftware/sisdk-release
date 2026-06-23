@@ -1,0 +1,21 @@
+id: "wisun_disable_event_task"
+label: "Disable Wi-SUN event task"
+description: "Disables the automatic launch of the Wi-SUN event subscription task by providing event_queue_task without implementation"
+package: "wisun"
+category: "Wi-SUN|Configuration"
+quality: "production"
+
+ui_hints:
+  visibility: never
+
+provides:
+- name: "event_queue_task"
+
+conflicts:
+- name: "wisun_event_task"
+
+metadata:
+  sbom:
+    license: MSLA
+
+root_path: wisun

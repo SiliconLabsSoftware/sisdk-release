@@ -144,6 +144,7 @@ GetCommandClassList(
 #endif
   }
 
+  /* Reachable when !included and endpoint != 0 with SERIAL_API_APP defined */
   return &empty_list;
 }
 

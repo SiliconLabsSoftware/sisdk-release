@@ -1,0 +1,36 @@
+id: zw_s2_nls_support
+label: Z-Wave S2 NLS Support
+category: Z-Wave|Security
+description: >
+  This component enables the Network Level Security (NLS) support advertisement during
+  S2 inclusion. When installed, the device will report NLS as available in the KEX Report
+  frame during S2 bootstrapping.
+
+  If this component is not installed, the device will report NLS as not available and won't process NLS-related commands
+
+package: zwave
+quality: evaluation
+metadata:
+  sbom:
+    reference: zw_sbom_license
+
+include:
+- path: "platform/SiliconLabs/components/zw_s2_nls_support/"
+  file_list:
+  - path: "zw_s2_nls_support.h"
+
+source:
+- path: "platform/SiliconLabs/components/zw_s2_nls_support/zw_s2_nls_support.c"
+
+provides:
+- name: zw_s2_nls_support
+
+template_contribution:
+- name: component_catalog
+  value: zw_s2_nls_support
+- name: event_handler
+  value:
+    event: internal_app_init
+    include: zw_s2_nls_support.h
+    handler: zw_s2_nls_support_init
+root_path: zwave

@@ -508,7 +508,7 @@ void sl_bt_app_ota_dfu_on_status_event(sl_bt_app_ota_dfu_status_evt_t* evt)
       // Get application OTA DFU state machine status.
       app_ota_dfu_status = evt->evt_info.sts.status;
       app_ota_dfu_prev_status = evt->evt_info.sts.prev_status;
-      // Process state transtions, display information to the user or
+      // Process state transitions, display information to the user or
       // start/stop timers for download, etc.
       app_ota_dfu_on_status_change(app_ota_dfu_status,
                                    app_ota_dfu_prev_status,

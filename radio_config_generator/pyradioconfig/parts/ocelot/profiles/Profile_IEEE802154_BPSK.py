@@ -50,6 +50,9 @@ class ProfileIEEE802154BPSKOcelot(IProfile):
         self.make_required_input(profile, model.vars.xtal_frequency_hz, "crystal",
                                  readable_name="Crystal Frequency", value_limit_min=38000000,
                                  value_limit_max=40000000, units_multiplier=UnitsMultiplier.MEGA)
+        self.make_required_input(profile, model.vars.channel_spacing_hz, "operational_frequency",
+                                     readable_name="Channel Spacing", value_limit_min=0, value_limit_max=10000000,
+                                     units_multiplier=UnitsMultiplier.KILO)
 
     def build_optional_profile_inputs(self, model: ModelRoot, profile: ModelProfile):
         pass

@@ -235,6 +235,7 @@ uint8_t ZAF_Actuator_GetDurationRemaining(s_Actuator *pActuator)
       // singleStepValue unknown at the moment. Shouldn't ever happen if change is in progress
       ZPAL_LOG_WARNING(ZPAL_LOG_ZAF_ACTUATOR, "%s WARNING: step size unknown\n", __func__);
       assert(pActuator->singleStepValue);
+      return 0; /* Avoid division by zero if assert is disabled */
     }
     // duration in milliseconds = (numberOfSteps * refreshRate)
     duration = ((difference * pActuator->refreshRate) / pActuator->singleStepValue);

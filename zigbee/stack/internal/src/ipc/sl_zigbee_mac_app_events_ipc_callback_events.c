@@ -3,7 +3,7 @@
  * @brief callback event handlers for sl_zigbee_mac_app_events
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -28,9 +28,18 @@ void sli_802154_stackmac_communication_status_indication_handler(uint8_t mac_ind
                                                                  uint8_t *packet_data)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.sl_802154mac_communication_status_indication_handler.mac_index = mac_index;
   cb_event->data.sl_802154mac_communication_status_indication_handler.status = status;
   cb_event->data.sl_802154mac_communication_status_indication_handler.packet_length = packet_length;
+
+  if (packet_length > MAX_IPC_VEC_ARG_CAPACITY) {
+    assert(false); // "vector packet_data length exceeds expected maximum
+    packet_length = MAX_IPC_VEC_ARG_CAPACITY;
+  }
 
   if (packet_data != NULL) {
     memmove(cb_event->data.sl_802154mac_communication_status_indication_handler.packet_data, packet_data, sizeof(uint8_t) * packet_length);

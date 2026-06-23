@@ -33,8 +33,29 @@
 # shellcheck source=script/_initrc
 . "$(dirname "$0")"/_initrc
 
+NAT64_SERVICE="${NAT64_SERVICE:-openthread}"
+
 FIREWALL="${FIREWALL:-1}"
 
+# Handle deprecated DHCPV6_PD_REF flag
+if [[ -n ${DHCPV6_PD_REF+x} ]]; then
+    echo >&2 "WARNING: DHCPV6_PD_REF is now deprecated, please use OTBR_DHCP6_PD_CLIENT instead:"
+    echo >&2 "         DHCPV6_PD_REF=1  -> OTBR_DHCP6_PD_CLIENT=dhcpcd"
+    echo >&2 "         DHCPV6_PD_REF=0  -> OTBR_DHCP6_PD_CLIENT=none"
+    echo >&2 "         It is also possible to use native implementation by setting OTBR_DHCP6_PD_CLIENT=openthread"
+
+    if [[ -z ${OTBR_DHCP6_PD_CLIENT+x} ]]; then
+        if [[ ${DHCPV6_PD_REF} == "1" ]]; then
+            OTBR_DHCP6_PD_CLIENT="dhcpcd"
+            echo >&2 " Setting OTBR_DHCP6_PD_CLIENT=dhcpcd"
+        else
+            OTBR_DHCP6_PD_CLIENT="none"
+            echo >&2 " Setting OTBR_DHCP6_PD_CLIENT=none"
+        fi
+    fi
+fi
+
+OTBR_DHCP6_PD_CLIENT="${OTBR_DHCP6_PD_CLIENT:-none}"
 OTBR_MDNS="${OTBR_MDNS:-openthread}"
 BACKBONE_ROUTER="${BACKBONE_ROUTER:-1}"
 OT_BACKBONE_CI="${OT_BACKBONE_CI:-0}"
@@ -71,7 +92,7 @@ install_packages_apt()
     # Thread Certification tests require mDNSResponder ('dns-sd') to publish records for testing. Since the
     # same image is used for reference OTBRs and for reference Linux hosts, this needs to be installed here.
     if [[ ${OTBR_MDNS} == "mDNSResponder" || ${OT_BACKBONE_CI} == 1 || ${REFERENCE_DEVICE} == 1 ]]; then
-        (MDNS_RESPONDER_SOURCE_NAME=mDNSResponder-2600.100.147 \
+        (MDNS_RESPONDER_SOURCE_NAME=mDNSResponder-2881.40.18 \
             && cd /tmp \
             && wget -c --tries=3 --no-check-certificate -O "$MDNS_RESPONDER_SOURCE_NAME.tar.gz" \
                 "https://github.com/apple-oss-distributions/mDNSResponder/archive/refs/tags/$MDNS_RESPONDER_SOURCE_NAME.tar.gz" \
@@ -86,10 +107,14 @@ install_packages_apt()
     # nat64
     sudo apt-get install --no-install-recommends -y iptables
 
+    if with NAT64 && [[ ${NAT64_SERVICE} == "tayga" ]]; then
+        sudo apt-get install --no-install-recommends -y tayga
+    fi
+
     sudo apt-get install --no-install-recommends -y bind9
 
-    # dhcpv6-pd
-    without DHCPV6_PD_REF || {
+    # DHCPv6 PD client implementation using dhcpcd
+    if [[ ${OTBR_DHCP6_PD_CLIENT} == "dhcpcd" ]]; then
         sudo apt-get install --no-install-recommends -y dhcpcd
         sudo mkdir -p /etc/systemd/system/dhcpcd.service.d
         # allow edit system config file eg. /etc/radvd.conf
@@ -100,7 +125,7 @@ EOF
         # reload dhcpcd daemon to activate the custom.conf
         sudo systemctl daemon-reload
         sudo apt-get install --no-install-recommends -y radvd
-    }
+    fi
 
     # libjsoncpp
     sudo apt-get install --no-install-recommends -y libjsoncpp-dev
@@ -141,6 +166,9 @@ install_packages_rpm()
     sudo $PM install -y dbus-devel
     sudo $PM install -y avahi avahi-devel
     sudo $PM install -y iptables
+    if with NAT64 && [[ ${NAT64_SERVICE} == "tayga" ]]; then
+        sudo $PM install -y tayga
+    fi
     sudo $PM install -y jsoncpp-devel
     sudo $PM install -y wget
     sudo $PM install -y protobuf protobuf-devel

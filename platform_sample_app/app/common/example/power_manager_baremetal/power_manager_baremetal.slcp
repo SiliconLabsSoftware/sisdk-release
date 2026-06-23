@@ -42,3 +42,6 @@ ui_hints:
   highlight: readme.md
 tag:
   - hardware:component:button:2+
+  - hwfilter:board:simple_button:btn0
+  - hwfilter:board:simple_button:btn1
+  - hwfilter:device:device_series_2

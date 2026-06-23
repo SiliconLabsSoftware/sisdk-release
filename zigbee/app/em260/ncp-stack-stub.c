@@ -67,8 +67,7 @@ WEAK(bool sli_zigbee_af_process_ezsp_command_certificate_based_key_exchange_cbke
 WEAK(bool sli_zigbee_af_process_ezsp_command_dynamic_hardware_configuration(uint16_t commandId))
 {
   (void)commandId;
-  appendInt32u(SL_STATUS_NOT_AVAILABLE);
-  return true;
+  return false;
 }
 #endif  // SL_CATALOG_ZIGBEE_DHC_PRESENT
 

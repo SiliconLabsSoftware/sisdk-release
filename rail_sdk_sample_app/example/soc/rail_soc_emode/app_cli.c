@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "app_process.h"
 #include "app_log.h"
@@ -48,7 +49,7 @@
 #define get_name(var)  #var
 
 /// CLI warning for not proper value settings
-#define PARAM_WARNING "%s value was out of limit, value will be set to %d\n"
+#define PARAM_WARNING "%s value was out of limit, value will be set to %" PRIu8 "\n"
 
 /// CLI warning for setting energy mode under EM1 level
 #define SLEEP_WARNING "CLI won't work under EM1 level, restart will be needed\n"

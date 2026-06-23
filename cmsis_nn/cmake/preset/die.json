@@ -1,0 +1,346 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 25,
+        "patch": 0
+    },
+    "include": [
+        "base.json",
+        "variant.json"
+    ],
+    "configurePresets": [
+        {
+            "hidden": true,
+            "inherits": ["base"],
+            "name": "die-variant",
+            "binaryDir": "$env{SLED_BUILD_ROOT}build/$env{SLED_TOOLCHAIN}/$env{SLED_DIE_VARIANT}",
+            "installDir": "$env{SLED_BUILD_ROOT}lib/$env{SLED_TOOLCHAIN}/$env{SLED_DIE_VARIANT}"
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cortex-m33"],
+            "name": "variant-xg21",
+            "displayName": "EFR32xG21 variant",
+            "description": "",
+            "cacheVariables": {
+                "SLC_DEVICE_COMPONENT": "EFR32XG21XFULL_internal",
+                "SLC_VARIANT_CONDITION": "device_generic_family_efr32xg21",
+                "SLED_DIE_VARIANT": "xg21"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "xg21"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cortex-m33"],
+            "name": "variant-xg22",
+            "displayName": "EFR32xG22 variant",
+            "description": "",
+            "cacheVariables": {
+                "SLC_DEVICE_COMPONENT": "EFR32XG22XFULL_internal",
+                "SLC_VARIANT_CONDITION": "device_generic_family_efr32xg22",
+                "SLED_DIE_VARIANT": "xg22"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "xg22"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cortex-m33"],
+            "name": "variant-xg23",
+            "displayName": "EFR32xG23 variant",
+            "description": "",
+            "cacheVariables": {
+                "SLC_DEVICE_COMPONENT": "EFR32XG23XFULL_internal",
+                "SLC_VARIANT_CONDITION": "device_generic_family_efr32xg23",
+                "SLED_DIE_VARIANT": "xg23"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "xg23"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cortex-m33"],
+            "name": "variant-xg24",
+            "displayName": "EFR32xG24 variant",
+            "description": "",
+            "cacheVariables": {
+                "SLC_DEVICE_COMPONENT": "EFR32XG24XFULL_internal",
+                "SLC_VARIANT_CONDITION": "device_generic_family_efr32xg24",
+                "SLED_DIE_VARIANT": "xg24"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "xg24"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cortex-m33"],
+            "name": "variant-xg25",
+            "displayName": "EFR32xG25 variant",
+            "description": "",
+            "cacheVariables": {
+                "SLC_DEVICE_COMPONENT": "EFR32XG25XFULL_internal",
+                "SLC_VARIANT_CONDITION": "device_generic_family_efr32xg25",
+                "SLED_DIE_VARIANT": "xg25"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "xg25"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cortex-m33"],
+            "name": "variant-xg26",
+            "displayName": "EFR32xG26 variant",
+            "description": "",
+            "cacheVariables": {
+                "SLC_DEVICE_COMPONENT": "EFR32XG26XFULL_internal",
+                "SLC_VARIANT_CONDITION": "device_generic_family_efr32xg26",
+                "SLED_DIE_VARIANT": "xg26"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "xg26"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cortex-m33"],
+            "name": "variant-xg27",
+            "displayName": "EFR32xG27 variant",
+            "description": "",
+            "cacheVariables": {
+                "SLC_DEVICE_COMPONENT": "EFR32XG27XFULL_internal",
+                "SLC_VARIANT_CONDITION": "device_generic_family_efr32xg27",
+                "SLED_DIE_VARIANT": "xg27"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "xg27"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cortex-m33"],
+            "name": "variant-xg28",
+            "displayName": "EFR32xG28 variant",
+            "description": "",
+            "cacheVariables": {
+                "SLC_DEVICE_COMPONENT": "EFR32XG28XFULL_internal",
+                "SLC_VARIANT_CONDITION": "device_generic_family_efr32xg28",
+                "SLED_DIE_VARIANT": "xg28"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "xg28"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cortex-m33"],
+            "name": "variant-xg29",
+            "displayName": "EFR32xG29 variant",
+            "description": "",
+            "cacheVariables": {
+                "SLC_DEVICE_COMPONENT": "EFR32XG29XFULL_internal",
+                "SLC_VARIANT_CONDITION": "device_generic_family_efr32xg29",
+                "SLED_DIE_VARIANT": "xg29"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "xg29"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cortex-m33"],
+            "name": "variant-x301",
+            "displayName": "Six301 variant",
+            "description": "",
+            "cacheVariables": {
+                "SLC_DEVICE_COMPONENT": "SIXG301XFULL_internal",
+                "SLC_VARIANT_CONDITION": "device_generic_family_sixx301",
+                "SLED_DIE_VARIANT": "x301"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "x301"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cortex-m33"],
+            "name": "variant-x300",
+            "displayName": "Six300 variant",
+            "description": "",
+            "cacheVariables": {
+                "SLC_DEVICE_COMPONENT": "SIXG300XILPWH72000XFULL_internal",
+                "SLC_VARIANT_CONDITION": "device_generic_family_sixx300",
+                "SLED_DIE_VARIANT": "x300"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "x300"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cortex-m0plus"],
+            "name": "variant-xg22-seq",
+            "displayName": "EFR32xG22 sequencer variant",
+            "description": "",
+            "cacheVariables": {
+                "SLED_DIE_VARIANT": "xg22-seq"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "xg22-seq"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cortex-m0plus"],
+            "name": "variant-xg23-seq",
+            "displayName": "EFR32xG23 sequencer variant",
+            "description": "",
+            "cacheVariables": {
+                "SLED_DIE_VARIANT": "xg23-seq"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "xg23-seq"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cortex-m0plus"],
+            "name": "variant-xg24-seq",
+            "displayName": "EFR32xG24 sequencer variant",
+            "description": "",
+            "cacheVariables": {
+                "SLED_DIE_VARIANT": "xg24-seq"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "xg24-seq"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cortex-m0plus"],
+            "name": "variant-xg25-seq",
+            "displayName": "EFR32xG25 sequencer variant",
+            "description": "",
+            "cacheVariables": {
+                "SLED_DIE_VARIANT": "xg25-seq"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "xg25-seq"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cortex-m0plus"],
+            "name": "variant-xg26-seq",
+            "displayName": "EFR32xG26 sequencer variant",
+            "description": "",
+            "cacheVariables": {
+                "SLED_DIE_VARIANT": "xg26-seq"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "xg26-seq"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cortex-m0plus"],
+            "name": "variant-xg27-seq",
+            "displayName": "EFR32xG27 sequencer variant",
+            "description": "",
+            "cacheVariables": {
+                "SLED_DIE_VARIANT": "xg27-seq"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "xg27-seq"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cortex-m0plus"],
+            "name": "variant-xg28-seq",
+            "displayName": "EFR32xG28 sequencer variant",
+            "description": "",
+            "cacheVariables": {
+                "SLED_DIE_VARIANT": "xg28-seq"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "xg28-seq"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cortex-m0plus"],
+            "name": "variant-xg29-seq",
+            "displayName": "EFR32xG29 sequencer variant",
+            "description": "",
+            "cacheVariables": {
+                "SLED_DIE_VARIANT": "xg29-seq"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "xg29-seq"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cv32e40x-lpw0"],
+            "name": "variant-x301-lpw",
+            "displayName": "Six301 LPW sequencer variant",
+            "description": "",
+            "cacheVariables": {
+                "SLC_DEVICE_COMPONENT": "SIXG301XFULL_SEQUENCER_internal",
+                "SLED_DIE_VARIANT": "x301-lpw0"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "x301-lpw0"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cv32e40x-lpw0"],
+            "name": "variant-x300-lpw",
+            "displayName": "Six300 LPWH 72000 sequencer variant",
+            "description": "",
+            "cacheVariables": {
+                "SLC_DEVICE_COMPONENT": "SIXG300XILPWH72000XFULL_SEQUENCER_internal",
+                "SLED_DIE_VARIANT": "x300-lpw0"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "x300-lpw0"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cv32e40x-lpw0"],
+            "name": "variant-x300-lpw-74000",
+            "displayName": "Six300 LPWH 74000 sequencer variant",
+            "description": "",
+            "cacheVariables": {
+                "SLC_DEVICE_COMPONENT": "SIXG300XILPWH74000XFULL_SEQUENCER_internal",
+                "SLED_DIE_VARIANT": "x300-lpw0"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "x300-lpw0"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-cv32e40x-lpw0"],
+            "name": "variant-x353-lpw",
+            "displayName": "SiWx353 sequencer variant",
+            "description": "",
+            "cacheVariables": {
+                "SLC_DEVICE_COMPONENT": "SIWX353XFULL_SEQUENCER_internal",
+                "SLED_DIE_VARIANT": "x353-lpw0"
+            },
+            "environment": {
+                "SLED_DIE_VARIANT": "x353-lpw0"
+            }
+        }
+    ]
+}

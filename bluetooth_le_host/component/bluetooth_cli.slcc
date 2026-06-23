@@ -252,6 +252,24 @@ template_contribution:
   - bluetooth_feature_linklayer_interface
 - name: cli_command
   value:
+    group: bt_linklayer
+    name: get_hci_connection_handle
+    handler: sli_bt_cli_linklayer_get_hci_connection_handle
+    argument:
+    - type: uint8
+  condition:
+  - bluetooth_feature_linklayer_interface
+- name: cli_command
+  value:
+    group: bt_linklayer
+    name: get_bgapi_connection_handle
+    handler: sli_bt_cli_linklayer_get_bgapi_connection_handle
+    argument:
+    - type: uint16
+  condition:
+  - bluetooth_feature_linklayer_interface
+- name: cli_command
+  value:
     group: bt_resource
     name: get_status
     handler: sli_bt_cli_resource_get_status
@@ -288,6 +306,15 @@ template_contribution:
     name: set_privacy_mode
     handler: sli_bt_cli_gap_set_privacy_mode
     argument:
+    - type: uint8
+    - type: uint8
+- name: cli_command
+  value:
+    group: bt_gap
+    name: set_privacy_mode_with_rpa_randomization
+    handler: sli_bt_cli_gap_set_privacy_mode_with_rpa_randomization
+    argument:
+    - type: uint8
     - type: uint8
     - type: uint8
 - name: cli_command
@@ -488,6 +515,8 @@ template_contribution:
     argument:
     - type: uint8
     - type: hex
+  condition:
+  - bluetooth_feature_periodic_advertiser
 - name: cli_command
   value:
     group: bt_periodic_advertiser
@@ -495,6 +524,17 @@ template_contribution:
     handler: sli_bt_cli_periodic_advertiser_set_long_data
     argument:
     - type: uint8
+  condition:
+  - bluetooth_feature_periodic_advertiser
+- name: cli_command
+  value:
+    group: bt_periodic_advertiser
+    name: refresh_data_id
+    handler: sli_bt_cli_periodic_advertiser_refresh_data_id
+    argument:
+    - type: uint8
+  condition:
+  - bluetooth_feature_periodic_advertiser
 - name: cli_command
   value:
     group: bt_periodic_advertiser
@@ -505,6 +545,8 @@ template_contribution:
     - type: uint16
     - type: uint16
     - type: uint32
+  condition:
+  - bluetooth_feature_periodic_advertiser
 - name: cli_command
   value:
     group: bt_periodic_advertiser
@@ -512,6 +554,8 @@ template_contribution:
     handler: sli_bt_cli_periodic_advertiser_stop
     argument:
     - type: uint8
+  condition:
+  - bluetooth_feature_periodic_advertiser
 - name: cli_command
   value:
     group: bt_scanner
@@ -693,6 +737,8 @@ template_contribution:
     - type: uint8
     - type: uint8
     - type: uint8
+  condition:
+  - bluetooth_feature_pawr_advertiser
 - name: cli_command
   value:
     group: bt_pawr_advertiser
@@ -710,6 +756,8 @@ template_contribution:
     - type: uint8
     - type: uint8
     - type: uint8
+  condition:
+  - bluetooth_feature_pawr_advertiser
 - name: cli_command
   value:
     group: bt_pawr_advertiser
@@ -721,6 +769,8 @@ template_contribution:
     - type: uint8
     - type: uint8
     - type: hex
+  condition:
+  - bluetooth_feature_pawr_advertiser
 - name: cli_command
   value:
     group: bt_pawr_advertiser
@@ -731,6 +781,8 @@ template_contribution:
     - type: uint8
     - type: hex
     - type: uint8
+  condition:
+  - bluetooth_feature_pawr_advertiser
 - name: cli_command
   value:
     group: bt_pawr_advertiser
@@ -738,6 +790,8 @@ template_contribution:
     handler: sli_bt_cli_pawr_advertiser_stop
     argument:
     - type: uint8
+  condition:
+  - bluetooth_feature_pawr_advertiser
 - name: cli_command
   value:
     group: bt_connection
@@ -1761,6 +1815,8 @@ template_contribution:
     argument:
     - type: uint32
     - type: uint8
+  condition:
+  - bluetooth_feature_resolving_list
 - name: cli_command
   value:
     group: bt_resolving_list
@@ -1771,6 +1827,8 @@ template_contribution:
     - type: uint8
     - type: hex
     - type: uint8
+  condition:
+  - bluetooth_feature_resolving_list
 - name: cli_command
   value:
     group: bt_resolving_list
@@ -1778,6 +1836,8 @@ template_contribution:
     handler: sli_bt_cli_resolving_list_remove_device_by_bonding
     argument:
     - type: uint32
+  condition:
+  - bluetooth_feature_resolving_list
 - name: cli_command
   value:
     group: bt_resolving_list
@@ -1786,11 +1846,25 @@ template_contribution:
     argument:
     - type: hex
     - type: uint8
+  condition:
+  - bluetooth_feature_resolving_list
 - name: cli_command
   value:
     group: bt_resolving_list
     name: remove_all_devices
     handler: sli_bt_cli_resolving_list_remove_all_devices
+  condition:
+  - bluetooth_feature_resolving_list
+- name: cli_command
+  value:
+    group: bt_resolving_list
+    name: read_peer_resolvable_address
+    handler: sli_bt_cli_resolving_list_read_peer_resolvable_address
+    argument:
+    - type: hex
+    - type: uint8
+  condition:
+  - bluetooth_feature_resolving_list
 - name: cli_command
   value:
     group: bt_accept_list
@@ -1881,7 +1955,7 @@ template_contribution:
     argument:
     - type: uint8
   condition:
-  - device_supports_bluetooth_cs
+  - bluetooth_feature_cs
 - name: cli_command
   value:
     group: bt_cs
@@ -1894,7 +1968,7 @@ template_contribution:
     - type: uint8
     - type: int8
   condition:
-  - device_supports_bluetooth_cs
+  - bluetooth_feature_cs
 - name: cli_command
   value:
     group: bt_cs
@@ -1920,7 +1994,7 @@ template_contribution:
     - type: uint8
     - type: uint8
   condition:
-  - device_supports_bluetooth_cs
+  - bluetooth_feature_cs
 - name: cli_command
   value:
     group: bt_cs
@@ -1930,7 +2004,7 @@ template_contribution:
     - type: uint8
     - type: uint8
   condition:
-  - device_supports_bluetooth_cs
+  - bluetooth_feature_cs
 - name: cli_command
   value:
     group: bt_cs
@@ -1939,7 +2013,7 @@ template_contribution:
     argument:
     - type: hex
   condition:
-  - device_supports_bluetooth_cs
+  - bluetooth_feature_cs
 - name: cli_command
   value:
     group: bt_cs
@@ -1961,7 +2035,7 @@ template_contribution:
     - type: uint8
     - type: uint8
   condition:
-  - device_supports_bluetooth_cs
+  - bluetooth_feature_cs
 - name: cli_command
   value:
     group: bt_cs
@@ -1972,7 +2046,7 @@ template_contribution:
     - type: uint8
     - type: uint8
   condition:
-  - device_supports_bluetooth_cs
+  - bluetooth_feature_cs
 - name: cli_command
   value:
     group: bt_cs
@@ -1981,14 +2055,14 @@ template_contribution:
     argument:
     - type: hex
   condition:
-  - device_supports_bluetooth_cs
+  - bluetooth_feature_cs
 - name: cli_command
   value:
     group: bt_cs
     name: read_local_supported_capabilities
     handler: sli_bt_cli_cs_read_local_supported_capabilities
   condition:
-  - device_supports_bluetooth_cs
+  - bluetooth_feature_cs
 - name: cli_command
   value:
     group: bt_cs
@@ -1997,7 +2071,61 @@ template_contribution:
     argument:
     - type: uint8
   condition:
-  - device_supports_bluetooth_cs
+  - bluetooth_feature_cs
+- name: cli_command
+  value:
+    group: bt_cs
+    name: handover_get_procedure_parameters
+    handler: sli_bt_cli_cs_handover_get_procedure_parameters
+    argument:
+    - type: uint8
+    - type: uint8
+  condition:
+  - bluetooth_feature_cs
+- name: cli_command
+  value:
+    group: bt_cs
+    name: handover_set_procedure_parameters
+    handler: sli_bt_cli_cs_handover_set_procedure_parameters
+    argument:
+    - type: hex
+  condition:
+  - bluetooth_feature_cs
+- name: cli_command
+  value:
+    group: bt_cs
+    name: handover_create_sync
+    handler: sli_bt_cli_cs_handover_create_sync
+    argument:
+    - type: uint8
+    - type: uint8
+    - type: uint16
+  condition:
+  - bluetooth_feature_cs
+- name: cli_command
+  value:
+    group: bt_cs
+    name: handover_enable_procedure
+    handler: sli_bt_cli_cs_handover_enable_procedure
+    argument:
+    - type: uint8
+    - type: uint16
+    - type: uint16
+    - type: uint8
+    - type: uint8
+    - type: uint8
+  condition:
+  - bluetooth_feature_cs
+- name: cli_command
+  value:
+    group: bt_cs
+    name: handover_remove_procedure
+    handler: sli_bt_cli_cs_handover_remove_procedure
+    argument:
+    - type: uint8
+    - type: uint8
+  condition:
+  - bluetooth_feature_cs
 - name: cli_command
   value:
     group: bt_cs_test
@@ -2030,14 +2158,14 @@ template_contribution:
     - type: uint16
     - type: hex
   condition:
-  - device_supports_bluetooth_cs
+  - bluetooth_feature_cs_test
 - name: cli_command
   value:
     group: bt_cs_test
     name: end
     handler: sli_bt_cli_cs_test_end
   condition:
-  - device_supports_bluetooth_cs
+  - bluetooth_feature_cs_test
 - name: cli_command
   value:
     group: bt_l2cap
@@ -2315,6 +2443,18 @@ template_contribution:
     - type: uint16
     - type: int32
     - type: uint32
+  condition:
+  - bluetooth_feature_connection_analyzer
+- name: cli_command
+  value:
+    group: bt_connection_analyzer
+    name: process_llcp_event
+    handler: sli_bt_cli_connection_analyzer_process_llcp_event
+    argument:
+    - type: uint8
+    - type: hex
+  condition:
+  - bluetooth_feature_connection_analyzer
 - name: cli_command
   value:
     group: bt_connection_analyzer
@@ -2322,4 +2462,6 @@ template_contribution:
     handler: sli_bt_cli_connection_analyzer_stop
     argument:
     - type: uint8
+  condition:
+  - bluetooth_feature_connection_analyzer
 root_path: bluetooth_le_host

@@ -30,10 +30,10 @@ void sl_zigbee_af_bdb_3dot1_rejoin_algorithm_enable_command(sl_cli_command_arg_t
 void sl_zigbee_af_bdb_3dot1_rejoin_algorithm_status_command(sl_cli_command_arg_t *arguments)
 {
   (void)arguments;
-  sl_zigbee_af_core_println("BDB Rejoin Algorithm Status");
-  sl_zigbee_af_core_println("Enabled:                      %s", bdb_rejoin_state.enabled ? "y" : "n");
-  sl_zigbee_af_core_println("State:                        %d", bdb_rejoin_state.state);
-  sl_zigbee_af_core_println("TC Keepalive failure:         %s", bdb_rejoin_state.tc_keepalive_failure ? "y" : "n");
-  sl_zigbee_af_core_println("Poll Control checkin failure: %s", bdb_rejoin_state.poll_control_failure ? "y" : "n");
-  sl_zigbee_af_core_println("Rejoins attempted:            %d", bdb_rejoin_state.rejoin_attempts);
+  sl_zigbee_af_cli_println("BDB Rejoin Algorithm Status");
+  sl_zigbee_af_cli_println("Enabled:                      %s", bdb_rejoin_state.enabled ? "y" : "n");
+  sl_zigbee_af_cli_println("State:                        %d", bdb_rejoin_state.state);
+  sl_zigbee_af_cli_println("TC Keepalive failure:         %s", bdb_rejoin_state.tc_keepalive_failure ? "y" : "n");
+  sl_zigbee_af_cli_println("Poll Control checkin failure: %s", bdb_rejoin_state.poll_control_failure ? "y" : "n");
+  sl_zigbee_af_cli_println("Rejoins attempted:            %d", bdb_rejoin_state.rejoin_attempts);
 }

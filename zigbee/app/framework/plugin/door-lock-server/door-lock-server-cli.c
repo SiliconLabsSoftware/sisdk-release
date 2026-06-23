@@ -57,9 +57,9 @@ void sli_zigbee_af_door_lock_server_status_command(sl_cli_command_arg_t *argumen
                                                                     (uint8_t *)&state,
                                                                     sizeof(state));
   if (status == SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
-    sl_zigbee_af_app_println("State: %s", getLockStateName(state));
+    sl_zigbee_af_cli_println("State: %s", getLockStateName(state));
   } else {
-    sl_zigbee_af_app_println("Error: cannot read attribute: 0x%02X", status);
+    sl_zigbee_af_cli_println("Error: cannot read attribute: 0x%02X", status);
   }
 
 #ifdef ZCL_USING_DOOR_LOCK_CLUSTER_LANGUAGE_ATTRIBUTE
@@ -71,9 +71,9 @@ void sli_zigbee_af_door_lock_server_status_command(sl_cli_command_arg_t *argumen
                                               sizeof(string));
   string[sizeof(string) - 1] = '\0';
   if (status == SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
-    sl_zigbee_af_app_println("Language: %s", &string[1]); // skip the length byte
+    sl_zigbee_af_cli_println("Language: %s", &string[1]); // skip the length byte
   } else {
-    sl_zigbee_af_app_println("Error: cannot read attribute: 0x%02X", status);
+    sl_zigbee_af_cli_println("Error: cannot read attribute: 0x%02X", status);
   }
 #endif
 
@@ -85,9 +85,9 @@ void sli_zigbee_af_door_lock_server_status_command(sl_cli_command_arg_t *argumen
                                               &volume,
                                               sizeof(volume));
   if (status == SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
-    sl_zigbee_af_app_println("Volume: %s", getSoundVolumeName(volume));
+    sl_zigbee_af_cli_println("Volume: %s", getSoundVolumeName(volume));
   } else {
-    sl_zigbee_af_app_println("Error: cannot read attribute: 0x%02X", status);
+    sl_zigbee_af_cli_println("Error: cannot read attribute: 0x%02X", status);
   }
 #endif
 }
@@ -109,9 +109,9 @@ void sli_zigbee_af_door_lock_server_lock_or_unlock_command(sl_cli_command_arg_t 
 
   const char *action = (doLock ? "lock" : "unlock");
   if (status != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
-    sl_zigbee_af_app_println("Failed to %s door: 0x%02X", action, status);
+    sl_zigbee_af_cli_println("Failed to %s door: 0x%02X", action, status);
   } else {
-    sl_zigbee_af_app_println("Door is now %sed", action);
+    sl_zigbee_af_cli_println("Door is now %sed", action);
 
     if (!sl_zigbee_af_door_lock_server_add_log_entry(SL_ZIGBEE_ZCL_DOOR_LOCK_EVENT_TYPE_OPERATION,
                                                      SL_ZIGBEE_ZCL_DOOR_LOCK_EVENT_SOURCE_MANUAL,
@@ -121,7 +121,7 @@ void sli_zigbee_af_door_lock_server_lock_or_unlock_command(sl_cli_command_arg_t 
                                                      userId,
                                                      0,
                                                      NULL)) { // pin...nah
-      sl_zigbee_af_app_println("Could not add log entry");
+      sl_zigbee_af_cli_println("Could not add log entry");
     }
   }
 }
@@ -138,11 +138,11 @@ void sli_zigbee_af_door_lock_server_open_or_close_command(sl_cli_command_arg_t *
                                      : SL_ZIGBEE_ZCL_DOOR_STATE_CLOSED);
   sl_zigbee_af_status_t status = sli_zigbee_af_door_lock_server_note_door_state_changed(state);
   if (status != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
-    sl_zigbee_af_app_println("Failed to %s door: 0x%02X",
+    sl_zigbee_af_cli_println("Failed to %s door: 0x%02X",
                              (doOpen ? "open" : "close"),
                              status);
   } else {
-    sl_zigbee_af_app_println("Door is now %s", (doOpen ? "open" : "closed"));
+    sl_zigbee_af_cli_println("Door is now %s", (doOpen ? "open" : "closed"));
     sl_zigbee_af_fill_command_door_lock_cluster_operation_event_notification(SL_ZIGBEE_ZCL_DOOR_LOCK_EVENT_SOURCE_MANUAL,
                                                                              (doOpen
                                                                               ? SL_ZIGBEE_ZCL_DOOR_LOCK_OPERATION_EVENT_CODE_MANUAL_UNLOCK
@@ -169,5 +169,5 @@ void sli_zigbee_af_door_lock_server_apply_code_command(sl_cli_command_arg_t *arg
     = (isPin
        ? sl_zigbee_af_door_lock_server_apply_pin(code, length)
        : sl_zigbee_af_door_lock_server_apply_rfid(code, length));
-  sl_zigbee_af_app_println("Apply %s: 0x%02X", (isPin ? "PIN" : "RFID"), status);
+  sl_zigbee_af_cli_println("Apply %s: 0x%02X", (isPin ? "PIN" : "RFID"), status);
 }

@@ -1,26 +1,48 @@
-# Sleeptimer Wall Clock Bare Metal
+# Sleeptimer Wallclock Bare-metal
 
-This example application demonstrates the use of the sleeptimer's wall clock interface in a bare metal environment. The application uses low frequency RTC (Real Time Clock) peripheral to set and get the date and time. And this operations can be controlled over a virtual COM serial port.
+This example demonstrates the sleeptimer wall clock interface in a bare-metal application. Set and get date/time via RTC over VCOM.
 
-Three types of time can be set and get in this application:
+## Table of Contents
 
-* Unix time (Shown as integer)
-* Network Protocol Time (Shown as integer)
-* Date and time (Shown in YYYY:MM:DD HH:MM:SS format)
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-## CLI Commands
+## Purpose / Scope
 
-Help		- Prints list of supported commands
-Get_unix_time 	- Prints unix time
-Set_unix_time 	- Can be used to set unix time (Ex: set_unix_time 17)
-get_ntp_time	- Prints ntp time
-set_ntp_time	- Can be used to set ntp time (Ex: set_ntp_time 2208988825)
-get_datetime	- Prints date and time
-set_datetime	- Can be used to set date and time (Ex: set_datetime YYYY-MM-DD HH:MM:SS)
+This bare-metal example uses the sleeptimer wall clock with the low-frequency RTC to set and get date and time. Operations are controlled over the virtual COM serial port. You can get/set: Unix time (integer), Network Protocol (NTP) time (integer), and date/time (YYYY-MM-DD HH:MM:SS). CLI commands: Help, get_unix_time, set_unix_time, get_ntp_time, set_ntp_time, get_datetime, set_datetime. Use it to learn RTC and wall clock integration.
 
-## Requirements
+## Prerequisites / Setup Requirements
 
-Silicon Labs board with RTC peripheral.
+**Hardware**
+- Silicon Labs board with RTC (low-frequency) peripheral.
+
+**Software**
+- Simplicity Studio 5 (or later). A serial terminal for VCOM.
+
+## Steps to Run Demo
+
+1. Open the project in Simplicity Studio and build it.
+2. Connect the kit via USB, flash and run.
+3. Open a serial terminal on the kit's VCOM port. Use the CLI commands to get and set time (e.g. set_unix_time 17, set_datetime YYYY-MM-DD HH:MM:SS).
+
+## Troubleshooting
+
+- **No VCOM or no response:** Ensure the kit is connected and VCOM drivers are installed; confirm correct port and baud rate.
+- **Time not persisting:** RTC may need battery backup or correct clock source configuration for your part.
+- **Build errors:** Verify target part has RTC and that the sleeptimer wall clock component is configured.
 
 ## Resources
-* [AN0014: EFM32 Timers](https://www.silabs.com/documents/public/application-notes/AN0014.pdf)
+
+- [AN0014: EFM32 Timers](https://www.silabs.com/documents/public/application-notes/AN0014.pdf)
+- [Simplicity Studio 5 User's Guide](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/)
+- [Silicon Labs Community](https://www.silabs.com/community)
+
+## Report Bugs & Get Support
+
+You are encouraged to report issues and get help from the community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

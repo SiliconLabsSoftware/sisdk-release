@@ -1,0 +1,26 @@
+id: udelay_cortexm
+label: Microsecond Delay Cortex-M
+package: platform_core
+description: >
+  This component provides the architecture-specific microsecond delay
+  implementation for Cortex-M processors.
+category: Platform|Utilities
+quality: production
+metadata:
+  sbom:
+    license: Zlib
+ui_hints:
+  visibility: never
+source:
+- path: src/sl_udelay_armv6m_gcc.S
+  condition: [toolchain_gcc]
+- path: src/sl_udelay_armv6m_gcc.S
+  condition: [toolchain_llvm]
+- path: src/sl_udelay_armv6m_iar.s
+  condition: [toolchain_iar]
+provides:
+- name: udelay_arch
+  condition: [device_cortexm]
+requires:
+- name: device_cortexm
+root_path: platform_core/platform/service/udelay

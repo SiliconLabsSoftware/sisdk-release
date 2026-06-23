@@ -38,6 +38,13 @@ component:
 requires:
   - name: bootloader_compression_lzma
 
+# Disable -Wincompatible-pointer-types (SDK bootloader: verifyApplication int32_t vs bool)
+toolchain_settings:
+  - option: gcc_compiler_option
+    value: "-Wno-incompatible-pointer-types"
+  - option: llvm_compiler_option
+    value: "-Wno-incompatible-pointer-types"
+
 configuration:
   - name: SL_VCOM_ENABLE
     value: 1
@@ -71,3 +78,9 @@ tag:
   - hwfilter:device:device_supports_zwave
   - hwfilter:!board:brd4205a
   - toolchain:gcc
+  - toolchain:llvm
+
+readme:
+   - path: README.md
+ui_hints:
+   highlight: README.md

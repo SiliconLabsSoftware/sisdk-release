@@ -36,3 +36,5 @@ ui_hints:
   highlight: readme.md
 tag:
   - hardware:component:led:1+
+  - hwfilter:board:simple_led:led0
+  - hwfilter:device:device_series_2

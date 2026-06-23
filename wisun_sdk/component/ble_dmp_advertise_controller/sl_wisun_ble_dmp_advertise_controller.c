@@ -33,6 +33,7 @@
 // -----------------------------------------------------------------------------
 #include <stdint.h>
 #include <stdio.h>
+#include <inttypes.h>
 
 #include "sl_assert.h"
 #include "cmsis_os2.h"
@@ -98,13 +99,8 @@ static osThreadId_t _adv_controller_task = NULL;
 static const osThreadAttr_t _adv_controller_task_attr = {
   .name       = "AdvControllerTask",
   .attr_bits  = osThreadDetached,
-  .cb_mem     = NULL,
-  .cb_size    = 0UL,
-  .stack_mem  = NULL,
   .stack_size = (SL_WISUN_BLE_DMP_ADVERTISE_CONTROLLER_STACK_SIZE_WORD * sizeof(void *)) & 0xFFFFFFF8U,
-  .priority   = osPriorityNormal1,
-  .tz_module  = 0UL,
-  .reserved   = 0UL
+  .priority   = osPriorityNormal1
 };
 
 // BLE advertising event flags
@@ -166,7 +162,7 @@ void sl_button_on_change(const sl_button_t *handle)
     flags = osEventFlagsGet(_ble_adv_evt);
     // Event flag error
     if (flags & SL_WISUN_BLE_DMP_ADVERTISE_CONTROLLER_EVT_ERROR_MSK) {
-      printf("[Failed: BLE adv evt flags (0x%08lX)]\n", flags);
+      printf("[Failed: BLE adv evt flags (0x%08"PRIx32")]\n", flags);
       return;
     }
 
@@ -227,7 +223,7 @@ static void _start_ble_advertising(void)
     sl_wisun_led_set(&_led0);
     printf("[BLE advertising is started]\n");
   } else {
-    printf("[Failed: unable to start BLE advertising: 0x%04lX]\n", sc);
+    printf("[Failed: unable to start BLE advertising: 0x%04"PRIx32"]\n", sc);
   }
 }
 
@@ -241,7 +237,7 @@ static void _stop_ble_advertising(void)
     sl_wisun_led_clear((sl_wisun_led_id_t)_led0.id);
     printf("[BLE advertising is stopped]\n");
   } else {
-    printf("[Failed: unable to stop BLE advertising: 0x%04lX]\n", sc);
+    printf("[Failed: unable to stop BLE advertising: 0x%04"PRIx32"]\n", sc);
   }
 }
 
@@ -262,7 +258,7 @@ static void _adv_controller_task_fnc(void *args)
   SL_WISUN_BLE_DMP_ADVERTISE_CONTROLLER_THREAD_LOOP {
     prev_flags = osEventFlagsGet(_ble_adv_evt);
     if (prev_flags & SL_WISUN_BLE_DMP_ADVERTISE_CONTROLLER_EVT_ERROR_MSK) {
-      printf("[Failed: BLE adv evt flags (0x%08lX)]\n", flags);
+      printf("[Failed: BLE adv evt flags (0x%08"PRIx32")]\n", flags);
       continue;
     }
 
@@ -273,7 +269,7 @@ static void _adv_controller_task_fnc(void *args)
                              osWaitForever);
 
     if (flags & SL_WISUN_BLE_DMP_ADVERTISE_CONTROLLER_EVT_ERROR_MSK) {
-      printf("[Failed: BLE adv evt flags (0x%08lX)]\n", flags);
+      printf("[Failed: BLE adv evt flags (0x%08"PRIx32")]\n", flags);
       continue;
     }
 

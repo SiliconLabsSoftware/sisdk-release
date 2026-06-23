@@ -3,14 +3,7 @@ package: platform
 quality: production
 label: Platform - Joystick on FreeRTOS kernel
 description: >
-  This example project uses the Joystick driver running in a FreeRTOS kernel
-  task to demonstrate the use of Joystick driver by printing joystick position
-  after every finite interval over the virtual COM port (VCOM). The VCOM serial
-  port can be used either over USB or by connecting to port 4902 if the kit is
-  connected via Internet.
-
-  Important Note: This application only works when Wireless Pro Kit (BRD4002A) is used as
-  mainboard to mount and connect the compatible Radio Board.
+  Prints joystick position at intervals over VCOM using FreeRTOS. View output in a terminal. Requires Wireless Pro Kit (BRD4002A) as mainboard.
 category: Example|Platform
 filter:
   - name: "Device Type"
@@ -49,3 +42,5 @@ ui_hints:
   highlight: readme.md
 tag:
   - hardware:component:joystick:skrhaae010
+  - hwfilter:board:joystick
+  - hwfilter:device:device_series_2

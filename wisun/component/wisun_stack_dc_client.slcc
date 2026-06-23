@@ -1,0 +1,52 @@
+id: "wisun_stack_dc_client"
+label: "Wi-SUN Direct Connect Client Support"
+description: >
+  Adds Wi-SUN Direct Connect (DC) client capability.
+package: "wisun"
+category: "Wi-SUN|Stack"
+quality: "production"
+root_path: "wisun/./stack"
+
+# We would like to have:
+#   requires:
+#     - name: wisun_dc_client_implementation
+#   recommends:
+#     - name: wisun_dc_client_plugin
+#       condition: [wisun_stack_ffn]
+#     - name: wisun_dc_client_library
+#       unless: [wisun_stack_ffn]
+# But this does not work because of some slc limitations, so the following must
+# be done as a workaround. Note that "unless" is not officially supported by
+# "recommends", but it seems to work in practice.
+
+requires:
+- name: "device_supports_wisun"
+- name: "wisun_dc_client_implementation"
+- name: "wisun_dc_client_plugin"
+  condition: [wisun_stack_ffn]
+
+recommends:
+- id: "wisun_dc_client_library"
+  unless: [wisun_stack_ffn]
+  vendor: silabs
+
+conflicts:
+- name: "wisun_br_stack"
+
+source:
+- path: "src/sl_wisun_regdb.c"
+  condition: [wisun_dc_client_library]
+  project:
+    transfer_ownership: true
+
+define:
+- name: "HAVE_DIRECT_CONNECT"
+
+provides:
+- name: "wisun_stack_dc_client"
+- name: "wisun_stack_device_type"
+  condition: [wisun_dc_client_library]
+
+metadata:
+  sbom:
+    license: MSLA

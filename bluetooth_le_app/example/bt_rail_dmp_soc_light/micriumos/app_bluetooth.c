@@ -271,7 +271,7 @@ void init_demo_app(void)
 }
 
 /**************************************************************************//**
- * Aquire Light mutex
+ * Acquire Light mutex
  *
  * @param[out] err error output
  *****************************************************************************/
@@ -518,7 +518,7 @@ static bool ble_add_conn(uint8_t handle,
   uint8_t i;
   // Check empty slots
   if ( ble_has_empty(&i) ) {
-    // Aquire mutex
+    // Acquire mutex
     light_pend();
     ble_conn[i].handle = handle;
     Mem_Copy((void*)&ble_conn[i].address,
@@ -543,7 +543,7 @@ static bool ble_remove_conn(uint8_t handle)
   uint8_t i;
   // Find connection handle
   if ( ble_find_conn(handle, &i) ) {
-    // Aquire mutex
+    // Acquire mutex
     light_pend();
     ble_conn[i].handle = 0;
     Mem_Set((void*)&ble_conn[i].address.addr,
@@ -1077,7 +1077,7 @@ static void bt_event_handler_task(void *p_arg)
 }
 
 /**************************************************************************//**
- * Enabling Bluetooth advertistments
+ * Enabling Bluetooth advertisements
  *
  *****************************************************************************/
 static void enable_ble_advertisements(void)
@@ -1107,7 +1107,7 @@ static void enable_ble_advertisements(void)
     // the default device name which is set at compile time
     Mem_Copy(((uint8_t *)&response_data) + 5, dev_name, 8);
 
-    // Delete previous advertistment
+    // Delete previous advertisement
     sl_bt_advertiser_delete_set(advertising_set_handle);
     advertising_set_handle = 0xFF;
 

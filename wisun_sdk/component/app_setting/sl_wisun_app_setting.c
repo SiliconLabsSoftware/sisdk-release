@@ -102,7 +102,7 @@ static const app_setting_wisun_t _wisun_app_settings_default = {
 #if defined(WISUN_CONFIG_NETWORK_SIZE)
   .network_size = WISUN_CONFIG_NETWORK_SIZE,
 #else
-  .network_size = SL_WISUN_NETWORK_SIZE_SMALL,
+  .network_size = SL_WISUN_NETWORK_SIZE_AUTOMATIC,
 #endif
 #if defined(WISUN_CONFIG_TX_POWER)
   .tx_power_ddbm = WISUN_CONFIG_TX_POWER,
@@ -118,7 +118,7 @@ static const app_setting_wisun_t _wisun_app_settings_default = {
 #if defined(WISUN_CONFIG_DEVICE_PROFILE)
   .lfn_profile = WISUN_CONFIG_DEVICE_PROFILE,
 #else
-  .lfn_profile = SL_WISUN_LFN_PROFILE_TEST,
+  .lfn_profile = SL_WISUN_LFN_PROFILE_AUTOMATIC,
 #endif
 #if defined(WISUN_CONFIG_DEFAULT_PHY_FAN10)
   .phy = {

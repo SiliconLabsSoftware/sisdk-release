@@ -12,11 +12,19 @@ source:
 - path: platform/bootloader/parser/gbl/btl_gbl_parser.c
 - path: platform/bootloader/parser/gbl/btl_gbl_parser_veneers.c
   condition: [bootloader_core_secure]
+include:
+- path: platform/bootloader/core
+- path: platform/bootloader
 provides:
 - name: bootloader_image_parser
 - name: bootloader_nonsecure_incompatible
   condition: [bootloader_core_nonsecure]
 requires:
+- name: bootloader_interface_common
+  condition: [trustzone_unaware]
+- name: bootloader_interface_common
+  condition: [trustzone_nonsecure]
+- name: btl_util_header
 - name: bootloader_crc
 - name: bootloader_aes_sha_ecdsa
 - name: bootloader_token_management

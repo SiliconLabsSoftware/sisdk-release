@@ -198,7 +198,7 @@ class ModelDiff(object):
 
                     new_phy_delta_dict = dict()
                     for chcfg_num, chcfg_entry in enumerate(base_channel_configuration.channel_config_entries.channel_config_entry):
-                        new_phy_delta_dict[chcfg_num] = copy.deepcopy(chcfg_entry.phy_config_delta_add)                    ## Since we cannot remove registers during the comparison, we have to rebuild them
+                        new_phy_delta_dict[chcfg_num] = chcfg_entry.phy_config_delta_add.copy()                    ## Since we cannot remove registers during the comparison, we have to rebuild them
                         for reg_with_dont_cares, bitmask in chcfg_entry.phy_config_dont_care_bitmasks.items():
                             all_regvals_masked = set()
                             for tmp_chcfg_num, tmp_chcfg_entry in enumerate(base_channel_configuration.channel_config_entries.channel_config_entry):
@@ -217,7 +217,7 @@ class ModelDiff(object):
 
                     for chcfg_num, chcfg_entry in enumerate(
                             base_channel_configuration.channel_config_entries.channel_config_entry):
-                        phy_config_delta_add_copy = copy.deepcopy(chcfg_entry.phy_config_delta_add)
+                        phy_config_delta_add_copy = chcfg_entry.phy_config_delta_add.copy()
                         for regname, register in chcfg_entry.phy_config_delta_add.items():
                             if register.address not in chcfg_entry.phy_config_chosen_aliases or regname != chcfg_entry.phy_config_chosen_aliases[register.address]:
                                 del phy_config_delta_add_copy[regname]
@@ -263,7 +263,7 @@ class ModelDiff(object):
                         for channel_config_entry in base_channel_configuration.channel_config_entries.channel_config_entry:
                             for _, regname in channel_config_entry.phy_config_chosen_aliases.items():
                                 chosen_aliases.add(regname)
-                        phy_config_base_copy = copy.deepcopy(base_channel_configuration.phy_config_base)
+                        phy_config_base_copy = base_channel_configuration.phy_config_base.copy()
                         for regname in base_channel_configuration.phy_config_base:
                             if regname not in chosen_aliases:
                                 del phy_config_base_copy[regname]

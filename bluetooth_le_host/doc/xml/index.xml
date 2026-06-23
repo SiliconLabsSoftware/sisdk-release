@@ -28,6 +28,11 @@
   <compound refid="structsl__bt__drbg__key__t" kind="struct"><name>sl_bt_drbg_key_t</name>
     <member refid="structsl__bt__drbg__key__t_1a1519b4865a5059312ef11db8817c5cd7" kind="variable"><name>data</name></member>
   </compound>
+  <compound refid="structsl__bt__evt__advertiser__random__address__refresh__s" kind="struct"><name>sl_bt_evt_advertiser_random_address_refresh_s</name>
+    <member refid="structsl__bt__evt__advertiser__random__address__refresh__s_1acdd418e1b2abf73e14a0132cde907dc8" kind="variable"><name>advertising_set</name></member>
+    <member refid="structsl__bt__evt__advertiser__random__address__refresh__s_1aaf9a7aeca64d7c0e77a733c2f89ad25a" kind="variable"><name>address</name></member>
+    <member refid="structsl__bt__evt__advertiser__random__address__refresh__s_1aab42d0adac5ddc416a09772fb474437e" kind="variable"><name>address_type</name></member>
+  </compound>
   <compound refid="structsl__bt__evt__advertiser__scan__request__s" kind="struct"><name>sl_bt_evt_advertiser_scan_request_s</name>
     <member refid="structsl__bt__evt__advertiser__scan__request__s_1ae72e79bcc9a843dee50edff7287f8d0d" kind="variable"><name>handle</name></member>
     <member refid="structsl__bt__evt__advertiser__scan__request__s_1a8758a891cf5ec5c684304ea275f75311" kind="variable"><name>address</name></member>
@@ -154,6 +159,41 @@
     <member refid="structsl__bt__evt__cs__config__complete__s_1a112ebb35bf97364875faeedf17a377d3" kind="variable"><name>t_ip2_time</name></member>
     <member refid="structsl__bt__evt__cs__config__complete__s_1acd04c7e8fdcecf00dfe627a18e387a74" kind="variable"><name>t_fcs_time</name></member>
     <member refid="structsl__bt__evt__cs__config__complete__s_1a1cde8bfed0a188421d06741b7223d4db" kind="variable"><name>t_pm_time</name></member>
+  </compound>
+  <compound refid="structsl__bt__evt__cs__handover__complete__s" kind="struct"><name>sl_bt_evt_cs_handover_complete_s</name>
+    <member refid="structsl__bt__evt__cs__handover__complete__s_1ab66ba8fd0a99a9c169ad4c5ee26e25b0" kind="variable"><name>reason</name></member>
+    <member refid="structsl__bt__evt__cs__handover__complete__s_1ab9ea4a347be056c12dad7e65709d6692" kind="variable"><name>analyzer</name></member>
+    <member refid="structsl__bt__evt__cs__handover__complete__s_1a1e06b1897aa10659bf1d887243599903" kind="variable"><name>config_id</name></member>
+  </compound>
+  <compound refid="structsl__bt__evt__cs__handover__result__continue__s" kind="struct"><name>sl_bt_evt_cs_handover_result_continue_s</name>
+    <member refid="structsl__bt__evt__cs__handover__result__continue__s_1a7415284bd5e6d2470fa0a50983548570" kind="variable"><name>analyzer</name></member>
+    <member refid="structsl__bt__evt__cs__handover__result__continue__s_1a188a85b2dc9f59cb935281cd5c349ff1" kind="variable"><name>config_id</name></member>
+    <member refid="structsl__bt__evt__cs__handover__result__continue__s_1abdca1e69cee8aecb13c149e1a219bad4" kind="variable"><name>procedure_done_status</name></member>
+    <member refid="structsl__bt__evt__cs__handover__result__continue__s_1ac008d84dfe7f83515495ff6ef93851e9" kind="variable"><name>subevent_done_status</name></member>
+    <member refid="structsl__bt__evt__cs__handover__result__continue__s_1a6fb3a3e310b8bd94307e4bb7c691751a" kind="variable"><name>abort_reason</name></member>
+    <member refid="structsl__bt__evt__cs__handover__result__continue__s_1a0bc018145cf910c8023c1ef4346bc501" kind="variable"><name>num_antenna_paths</name></member>
+    <member refid="structsl__bt__evt__cs__handover__result__continue__s_1ab64008c51f6bb51c3776257b5437d114" kind="variable"><name>num_steps</name></member>
+    <member refid="structsl__bt__evt__cs__handover__result__continue__s_1ad7337135fd2b87b75b20ab2bb5f08244" kind="variable"><name>data</name></member>
+  </compound>
+  <compound refid="structsl__bt__evt__cs__handover__result__s" kind="struct"><name>sl_bt_evt_cs_handover_result_s</name>
+    <member refid="structsl__bt__evt__cs__handover__result__s_1a25683cf474abea5317dd45f7a916dbcb" kind="variable"><name>analyzer</name></member>
+    <member refid="structsl__bt__evt__cs__handover__result__s_1a190c986ad13b5b6fb6914f7148c1b7d8" kind="variable"><name>config_id</name></member>
+    <member refid="structsl__bt__evt__cs__handover__result__s_1a9d2320c544e61851cfd0a9e00eed2526" kind="variable"><name>start_acl_conn_event</name></member>
+    <member refid="structsl__bt__evt__cs__handover__result__s_1a8e3388c9ba0787a902ee87cb7b2857ab" kind="variable"><name>procedure_counter</name></member>
+    <member refid="structsl__bt__evt__cs__handover__result__s_1a412ef274c741b117b7fbf59ad59131e4" kind="variable"><name>frequency_compensation</name></member>
+    <member refid="structsl__bt__evt__cs__handover__result__s_1a43956be9eff99131e3271c582fc61d9d" kind="variable"><name>reference_power_level</name></member>
+    <member refid="structsl__bt__evt__cs__handover__result__s_1a5da4519088f385b5954f96e048435a81" kind="variable"><name>procedure_done_status</name></member>
+    <member refid="structsl__bt__evt__cs__handover__result__s_1ad44f130188c7643b5c9259405df9fb48" kind="variable"><name>subevent_done_status</name></member>
+    <member refid="structsl__bt__evt__cs__handover__result__s_1afd56d7f613cbe582e3e3286cb92380f8" kind="variable"><name>abort_reason</name></member>
+    <member refid="structsl__bt__evt__cs__handover__result__s_1aa98e77836e0156198ecf7a5e3740cd9c" kind="variable"><name>num_antenna_paths</name></member>
+    <member refid="structsl__bt__evt__cs__handover__result__s_1aac201a62a25cac83921d04acb60d9881" kind="variable"><name>num_steps</name></member>
+    <member refid="structsl__bt__evt__cs__handover__result__s_1aa972414fa5afcf986486014b2f5e0ccf" kind="variable"><name>data</name></member>
+  </compound>
+  <compound refid="structsl__bt__evt__cs__handover__sync__established__s" kind="struct"><name>sl_bt_evt_cs_handover_sync_established_s</name>
+    <member refid="structsl__bt__evt__cs__handover__sync__established__s_1abd274d67ed14f4d31584a2c9ac910372" kind="variable"><name>status</name></member>
+    <member refid="structsl__bt__evt__cs__handover__sync__established__s_1ab11e970429f2716c1d78e14c204be9d4" kind="variable"><name>analyzer</name></member>
+    <member refid="structsl__bt__evt__cs__handover__sync__established__s_1a8368fbeb94295ac9750446e55c9224e8" kind="variable"><name>config_id</name></member>
+    <member refid="structsl__bt__evt__cs__handover__sync__established__s_1aeea54a548c6c4a262c26c3bff4dc9daa" kind="variable"><name>procedure_counter</name></member>
   </compound>
   <compound refid="structsl__bt__evt__cs__procedure__enable__complete__s" kind="struct"><name>sl_bt_evt_cs_procedure_enable_complete_s</name>
     <member refid="structsl__bt__evt__cs__procedure__enable__complete__s_1a1680696352203a9257bca15c4c4f5553" kind="variable"><name>connection</name></member>
@@ -290,6 +330,10 @@
   </compound>
   <compound refid="structsl__bt__evt__external__bondingdb__local__irk__s" kind="struct"><name>sl_bt_evt_external_bondingdb_local_irk_s</name>
     <member refid="structsl__bt__evt__external__bondingdb__local__irk__s_1adacc3f4f79cb80052e7606394d770b19" kind="variable"><name>data</name></member>
+  </compound>
+  <compound refid="structsl__bt__evt__gap__random__address__refresh__s" kind="struct"><name>sl_bt_evt_gap_random_address_refresh_s</name>
+    <member refid="structsl__bt__evt__gap__random__address__refresh__s_1a782542294593743acffa1e9f2179c352" kind="variable"><name>address</name></member>
+    <member refid="structsl__bt__evt__gap__random__address__refresh__s_1ab7613525e5b4aa528ef08bd026996d31" kind="variable"><name>address_type</name></member>
   </compound>
   <compound refid="structsl__bt__evt__gatt__characteristic__s" kind="struct"><name>sl_bt_evt_gatt_characteristic_s</name>
     <member refid="structsl__bt__evt__gatt__characteristic__s_1ade653d67c88b7300c7c97185f8e2eaa2" kind="variable"><name>connection</name></member>
@@ -620,8 +664,10 @@
     <member refid="unionsl__bt__msg_8data_1aa1129745097659fbc54c9c0d6682cf59" kind="variable"><name>evt_system_soft_timer</name></member>
     <member refid="unionsl__bt__msg_8data_1a6dfca974e0f8e82f3f90c46b2ece233b" kind="variable"><name>evt_linklayer_event_info_report</name></member>
     <member refid="unionsl__bt__msg_8data_1affef37a5a28996df4b4619c015773eb6" kind="variable"><name>evt_resource_status</name></member>
+    <member refid="unionsl__bt__msg_8data_1a3c3e6514c1030749837d506a296da4e9" kind="variable"><name>evt_gap_random_address_refresh</name></member>
     <member refid="unionsl__bt__msg_8data_1a7cbb758c23cd09c4cfe59d347840995d" kind="variable"><name>evt_advertiser_timeout</name></member>
     <member refid="unionsl__bt__msg_8data_1a38d5af7435ce13540e12136ed70e3e6a" kind="variable"><name>evt_advertiser_scan_request</name></member>
+    <member refid="unionsl__bt__msg_8data_1ad64c670bc0adca7898eb24aa2f4b3480" kind="variable"><name>evt_advertiser_random_address_refresh</name></member>
     <member refid="unionsl__bt__msg_8data_1a383aec7fe065f4d5630e1f1a7f43aed0" kind="variable"><name>evt_periodic_advertiser_status</name></member>
     <member refid="unionsl__bt__msg_8data_1a855eb4dac7e6f410a64614fd7bf53d16" kind="variable"><name>evt_scanner_legacy_advertisement_report</name></member>
     <member refid="unionsl__bt__msg_8data_1a71b5da1d81fb58f2fcbff5fbaed9f29b" kind="variable"><name>evt_scanner_extended_advertisement_report</name></member>
@@ -680,6 +726,10 @@
     <member refid="unionsl__bt__msg_8data_1ae0e5d6235ea803394d6e6a0774617c12" kind="variable"><name>evt_cs_result</name></member>
     <member refid="unionsl__bt__msg_8data_1a9fd8024a1e0f8057c3c3b0e273dc9dc3" kind="variable"><name>evt_cs_result_continue</name></member>
     <member refid="unionsl__bt__msg_8data_1a3f7222be86b184462d39c9c0694cbcf8" kind="variable"><name>evt_cs_read_remote_supported_capabilities_complete</name></member>
+    <member refid="unionsl__bt__msg_8data_1aed3d915614ab4488e51e3cd607393275" kind="variable"><name>evt_cs_handover_sync_established</name></member>
+    <member refid="unionsl__bt__msg_8data_1aa95a437ef64d758393b69d5bdbdfddbf" kind="variable"><name>evt_cs_handover_complete</name></member>
+    <member refid="unionsl__bt__msg_8data_1ac3b24734d845e7f0b5d89a4991a5a66f" kind="variable"><name>evt_cs_handover_result</name></member>
+    <member refid="unionsl__bt__msg_8data_1af1de35a40c89befe23dc46d6ee86c4e1" kind="variable"><name>evt_cs_handover_result_continue</name></member>
     <member refid="unionsl__bt__msg_8data_1a8b0993b257160674eb908c7582c93d88" kind="variable"><name>evt_cs_test_end_completed</name></member>
     <member refid="unionsl__bt__msg_8data_1a81144447f6b2876df6f00bd076c8f40c" kind="variable"><name>evt_l2cap_le_channel_open_request</name></member>
     <member refid="unionsl__bt__msg_8data_1aa3d013c07252fe8c04fa37086b936334" kind="variable"><name>evt_l2cap_le_channel_open_response</name></member>
@@ -818,7 +868,11 @@
     <member refid="group__sl__bt__evt__system__awake_1gac671086d87b33e79d055df0098b40d7b" kind="define"><name>sl_bt_evt_system_awake_id</name></member>
     <member refid="group__sl__bt__evt__system__soft__timer_1gabae9bb31e70cb251e1a7d539416bc127" kind="define"><name>sl_bt_evt_system_soft_timer_id</name></member>
     <member refid="group__sl__bt__linklayer_1gad0b08b8edc5e44c264565d086828f9dc" kind="define"><name>sl_bt_cmd_linklayer_event_info_reporting_enable_id</name></member>
+    <member refid="group__sl__bt__linklayer_1gae3d8ef7983991458904d5c39eb44e126" kind="define"><name>sl_bt_cmd_linklayer_get_hci_connection_handle_id</name></member>
+    <member refid="group__sl__bt__linklayer_1ga5a4dc649a2c75d5e0a21c074b9d35208" kind="define"><name>sl_bt_cmd_linklayer_get_bgapi_connection_handle_id</name></member>
     <member refid="group__sl__bt__linklayer_1ga732050aea39b247cd6b54d16d86363e3" kind="define"><name>sl_bt_rsp_linklayer_event_info_reporting_enable_id</name></member>
+    <member refid="group__sl__bt__linklayer_1ga684d55f5d05adddf47eedbefa284fb69" kind="define"><name>sl_bt_rsp_linklayer_get_hci_connection_handle_id</name></member>
+    <member refid="group__sl__bt__linklayer_1ga67756b3e1b07e4307f7077b29208971e" kind="define"><name>sl_bt_rsp_linklayer_get_bgapi_connection_handle_id</name></member>
     <member refid="group__sl__bt__evt__linklayer__event__info__report_1gaa207a70e32c88d5c5fd239232d13d683" kind="define"><name>sl_bt_evt_linklayer_event_info_report_id</name></member>
     <member refid="group__sl__bt__resource_1ga3e388e1c9065574f6fb3c7139507228f" kind="define"><name>sl_bt_cmd_resource_get_status_id</name></member>
     <member refid="group__sl__bt__resource_1gad3409792229ff38835d0eb0e001a9f8b" kind="define"><name>sl_bt_cmd_resource_set_report_threshold_id</name></member>
@@ -834,15 +888,18 @@
     <member refid="group__sl__bt__resource__connection__tx__flags_1gafd37e277849a57e07f8f5c2388d67e8b" kind="define"><name>SL_BT_RESOURCE_CONNECTION_TX_FLAGS_ERROR_CORRUPT</name></member>
     <member refid="group__sl__bt__evt__resource__status_1gaa27a8b50b03066e313ef65c96236864f" kind="define"><name>sl_bt_evt_resource_status_id</name></member>
     <member refid="group__sl__bt__gap_1gafe44c545af0f70ba8733013cd3d8e832" kind="define"><name>sl_bt_cmd_gap_set_privacy_mode_id</name></member>
+    <member refid="group__sl__bt__gap_1gabce99903c7c82efbfd6b14ea3676af4d" kind="define"><name>sl_bt_cmd_gap_set_privacy_mode_with_rpa_randomization_id</name></member>
     <member refid="group__sl__bt__gap_1gaaf8e401ac4e5ba0b8b3469d10fc17de0" kind="define"><name>sl_bt_cmd_gap_set_data_channel_classification_id</name></member>
     <member refid="group__sl__bt__gap_1ga266dd784ad902fa2faf499e0084aefb5" kind="define"><name>sl_bt_cmd_gap_set_identity_address_id</name></member>
     <member refid="group__sl__bt__gap_1gaa1fa023adee48b1dc9244343bcaa5a9b" kind="define"><name>sl_bt_cmd_gap_get_identity_address_id</name></member>
     <member refid="group__sl__bt__gap_1ga889b2e4c2f3f01588ab1b9e78aedea1b" kind="define"><name>sl_bt_cmd_gap_get_max_connections_id</name></member>
     <member refid="group__sl__bt__gap_1gad5ef0c0b5b41e18d5be735adaff92645" kind="define"><name>sl_bt_rsp_gap_set_privacy_mode_id</name></member>
+    <member refid="group__sl__bt__gap_1ga605d3f15798954bbcfebefe7bb72e882" kind="define"><name>sl_bt_rsp_gap_set_privacy_mode_with_rpa_randomization_id</name></member>
     <member refid="group__sl__bt__gap_1ga632932216159bdf43f1b0f1f7be7d85f" kind="define"><name>sl_bt_rsp_gap_set_data_channel_classification_id</name></member>
     <member refid="group__sl__bt__gap_1gafa28b857ba33de526244d62e848aaa05" kind="define"><name>sl_bt_rsp_gap_set_identity_address_id</name></member>
     <member refid="group__sl__bt__gap_1ga3083559198beefa63e85619237408067" kind="define"><name>sl_bt_rsp_gap_get_identity_address_id</name></member>
     <member refid="group__sl__bt__gap_1ga8c628928e08687d5f66725a5852774b2" kind="define"><name>sl_bt_rsp_gap_get_max_connections_id</name></member>
+    <member refid="group__sl__bt__evt__gap__random__address__refresh_1ga765ade59521df4030059cfea3d941854" kind="define"><name>sl_bt_evt_gap_random_address_refresh_id</name></member>
     <member refid="group__sl__bt__advertiser_1ga2d671f485b45f359ca183e091df4eeb8" kind="define"><name>sl_bt_cmd_advertiser_create_set_id</name></member>
     <member refid="group__sl__bt__advertiser_1ga7274780ebcc41b70bbc786fa4d2bfc66" kind="define"><name>sl_bt_cmd_advertiser_configure_id</name></member>
     <member refid="group__sl__bt__advertiser_1ga979c8da38d967ade823dfe97b95c0a87" kind="define"><name>sl_bt_cmd_advertiser_set_timing_id</name></member>
@@ -869,6 +926,7 @@
     <member refid="group__sl__bt__advertiser__flags_1ga7ae97166020640291284569f566a45fd" kind="define"><name>SL_BT_ADVERTISER_USE_FILTER_FOR_CONNECTION_REQUESTS</name></member>
     <member refid="group__sl__bt__evt__advertiser__timeout_1ga790f609c286c245fc6fba12b3d6345c5" kind="define"><name>sl_bt_evt_advertiser_timeout_id</name></member>
     <member refid="group__sl__bt__evt__advertiser__scan__request_1ga305631e7dc877a0dca3820263d605a3d" kind="define"><name>sl_bt_evt_advertiser_scan_request_id</name></member>
+    <member refid="group__sl__bt__evt__advertiser__random__address__refresh_1ga2fb82bfb2aefcb46396a66810a135d52" kind="define"><name>sl_bt_evt_advertiser_random_address_refresh_id</name></member>
     <member refid="group__sl__bt__legacy__advertiser_1gab634bc878218f5fbd9fa61f315cf3b9f" kind="define"><name>sl_bt_cmd_legacy_advertiser_set_data_id</name></member>
     <member refid="group__sl__bt__legacy__advertiser_1gae7bab89d69a3772f4956622b128fd928" kind="define"><name>sl_bt_cmd_legacy_advertiser_generate_data_id</name></member>
     <member refid="group__sl__bt__legacy__advertiser_1gaca33964af81fb762a966aeae15a894e6" kind="define"><name>sl_bt_cmd_legacy_advertiser_start_id</name></member>
@@ -893,14 +951,17 @@
     <member refid="group__sl__bt__extended__advertiser__flags_1ga51327cff1ba61f5fbb89a34e411133b9" kind="define"><name>SL_BT_EXTENDED_ADVERTISER_INCLUDE_TX_POWER</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1ga6acad6df17ed1afdf5931da38d65ef66" kind="define"><name>sl_bt_cmd_periodic_advertiser_set_data_id</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1ga391338519048b5f9c518b221d8519bd3" kind="define"><name>sl_bt_cmd_periodic_advertiser_set_long_data_id</name></member>
+    <member refid="group__sl__bt__periodic__advertiser_1gab5e5031fcd61fc46a7ceae44df365bb1" kind="define"><name>sl_bt_cmd_periodic_advertiser_refresh_data_id_id</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1ga95764c1563098b9b3a8b8f2a8aefb980" kind="define"><name>sl_bt_cmd_periodic_advertiser_start_id</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1ga4271be3e739671bf69e7729ff7e5f23a" kind="define"><name>sl_bt_cmd_periodic_advertiser_stop_id</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1ga2b852ea62960afae630f5fe0604d7be8" kind="define"><name>sl_bt_rsp_periodic_advertiser_set_data_id</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1ga7e47991ececf5eef66c04682267a0e68" kind="define"><name>sl_bt_rsp_periodic_advertiser_set_long_data_id</name></member>
+    <member refid="group__sl__bt__periodic__advertiser_1ga1f6907377b19bd0fdb82639cea8338e9" kind="define"><name>sl_bt_rsp_periodic_advertiser_refresh_data_id_id</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1ga55f29fcaf354cc3ea4a9f1386e28648e" kind="define"><name>sl_bt_rsp_periodic_advertiser_start_id</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1ga4200a80d03022cd76ea97a12ad958db9" kind="define"><name>sl_bt_rsp_periodic_advertiser_stop_id</name></member>
     <member refid="group__sl__bt__periodic__advertiser__flags_1gac93dcb4293040763a574d312b0f81029" kind="define"><name>SL_BT_PERIODIC_ADVERTISER_INCLUDE_TX_POWER</name></member>
     <member refid="group__sl__bt__periodic__advertiser__flags_1ga17c966e284c2b95a771aefe9de0843c8" kind="define"><name>SL_BT_PERIODIC_ADVERTISER_AUTO_START_EXTENDED_ADVERTISING</name></member>
+    <member refid="group__sl__bt__periodic__advertiser__flags_1ga05e344a399dec97e5438b0857e8fd97f" kind="define"><name>SL_BT_PERIODIC_ADVERTISER_INCLUDE_ADVERTISING_DATA_INFORMATION</name></member>
     <member refid="group__sl__bt__evt__periodic__advertiser__status_1ga3138e092e01f7ec8498ce7820639adea" kind="define"><name>sl_bt_evt_periodic_advertiser_status_id</name></member>
     <member refid="group__sl__bt__scanner_1gafd391b621daa037d7e0f77e06d88dd25" kind="define"><name>sl_bt_cmd_scanner_set_parameters_id</name></member>
     <member refid="group__sl__bt__scanner_1gadd714c8cbdc55f27004146b24e4bf39a" kind="define"><name>sl_bt_cmd_scanner_set_parameters_and_filter_id</name></member>
@@ -1289,11 +1350,13 @@
     <member refid="group__sl__bt__resolving__list_1ga035f4d0c6789e25bc0e69b056ee0eb6a" kind="define"><name>sl_bt_cmd_resolving_list_remove_device_by_bonding_id</name></member>
     <member refid="group__sl__bt__resolving__list_1gadd565aac290db327b52ce0b196031710" kind="define"><name>sl_bt_cmd_resolving_list_remove_device_by_address_id</name></member>
     <member refid="group__sl__bt__resolving__list_1ga4867163820bd0558419fe5cf499191a8" kind="define"><name>sl_bt_cmd_resolving_list_remove_all_devices_id</name></member>
+    <member refid="group__sl__bt__resolving__list_1ga2b748f2b6a208b9d0a2778b5aa97c1bc" kind="define"><name>sl_bt_cmd_resolving_list_read_peer_resolvable_address_id</name></member>
     <member refid="group__sl__bt__resolving__list_1gabcc95231d06b9a3e3afed47aaf06a5e6" kind="define"><name>sl_bt_rsp_resolving_list_add_device_by_bonding_id</name></member>
     <member refid="group__sl__bt__resolving__list_1gac67e276c23a4f1c7ab49d6c9c794a904" kind="define"><name>sl_bt_rsp_resolving_list_add_device_by_address_id</name></member>
     <member refid="group__sl__bt__resolving__list_1gadee96492e0b3d2ef70b2c67c556bb469" kind="define"><name>sl_bt_rsp_resolving_list_remove_device_by_bonding_id</name></member>
     <member refid="group__sl__bt__resolving__list_1ga4731e1b96805ab913ef9481e27cdf758" kind="define"><name>sl_bt_rsp_resolving_list_remove_device_by_address_id</name></member>
     <member refid="group__sl__bt__resolving__list_1gabd247975c4d9844a61c009e6be0942e8" kind="define"><name>sl_bt_rsp_resolving_list_remove_all_devices_id</name></member>
+    <member refid="group__sl__bt__resolving__list_1ga0004ec108a9cd3009ec6655880775978" kind="define"><name>sl_bt_rsp_resolving_list_read_peer_resolvable_address_id</name></member>
     <member refid="group__sl__bt__accept__list_1ga7a9ed25b84c60c1f9d031081142b2433" kind="define"><name>sl_bt_cmd_accept_list_add_device_by_bonding_id</name></member>
     <member refid="group__sl__bt__accept__list_1gacc5852692d4d14c6c82685fc97214307" kind="define"><name>sl_bt_cmd_accept_list_add_device_by_address_id</name></member>
     <member refid="group__sl__bt__accept__list_1gaecc7953d234a12b2044d9c9aa6162d99" kind="define"><name>sl_bt_cmd_accept_list_remove_device_by_bonding_id</name></member>
@@ -1324,6 +1387,11 @@
     <member refid="group__sl__bt__cs_1gacf1980b93dce896a255ab468616c137c" kind="define"><name>sl_bt_cmd_cs_set_antenna_configuration_id</name></member>
     <member refid="group__sl__bt__cs_1gacdd8312d52928132293091395b69705b" kind="define"><name>sl_bt_cmd_cs_read_local_supported_capabilities_id</name></member>
     <member refid="group__sl__bt__cs_1ga446e679888cd49105b861a051898857b" kind="define"><name>sl_bt_cmd_cs_read_remote_supported_capabilities_id</name></member>
+    <member refid="group__sl__bt__cs_1gaf00fd7333ce2465671d4954c34a2fa48" kind="define"><name>sl_bt_cmd_cs_handover_get_procedure_parameters_id</name></member>
+    <member refid="group__sl__bt__cs_1ga4995264b95a1ef3362f2c3083d1cd353" kind="define"><name>sl_bt_cmd_cs_handover_set_procedure_parameters_id</name></member>
+    <member refid="group__sl__bt__cs_1ga069958b4d7b2a37701ed345eab5d41fe" kind="define"><name>sl_bt_cmd_cs_handover_create_sync_id</name></member>
+    <member refid="group__sl__bt__cs_1ga112f3745387b9501707dea89c9f72067" kind="define"><name>sl_bt_cmd_cs_handover_enable_procedure_id</name></member>
+    <member refid="group__sl__bt__cs_1ga390896ee3a970209b7ddb957303ed5e7" kind="define"><name>sl_bt_cmd_cs_handover_remove_procedure_id</name></member>
     <member refid="group__sl__bt__cs_1ga0987597a30a5747b72c6119f95e873b0" kind="define"><name>sl_bt_rsp_cs_security_enable_id</name></member>
     <member refid="group__sl__bt__cs_1gafcf9bfb8f785d74aac09f22f4a429eec" kind="define"><name>sl_bt_rsp_cs_set_default_settings_id</name></member>
     <member refid="group__sl__bt__cs_1ga3669a9419563eb3801e2a7068f8c45f4" kind="define"><name>sl_bt_rsp_cs_create_config_id</name></member>
@@ -1334,12 +1402,21 @@
     <member refid="group__sl__bt__cs_1gaf773b4f5018263cc19658a037a66c22f" kind="define"><name>sl_bt_rsp_cs_set_antenna_configuration_id</name></member>
     <member refid="group__sl__bt__cs_1ga50afbc935d11ea6e3c1e84f4063c2bd1" kind="define"><name>sl_bt_rsp_cs_read_local_supported_capabilities_id</name></member>
     <member refid="group__sl__bt__cs_1gabb8b8697dbbeb030b3dd28955a6a8b90" kind="define"><name>sl_bt_rsp_cs_read_remote_supported_capabilities_id</name></member>
+    <member refid="group__sl__bt__cs_1ga17e41ce1a16e2a257c460eb3c541102f" kind="define"><name>sl_bt_rsp_cs_handover_get_procedure_parameters_id</name></member>
+    <member refid="group__sl__bt__cs_1ga7246ee241af558bac9470d36de35d311" kind="define"><name>sl_bt_rsp_cs_handover_set_procedure_parameters_id</name></member>
+    <member refid="group__sl__bt__cs_1ga8b4cac87c485a7b97a1b9e9b9df6b248" kind="define"><name>sl_bt_rsp_cs_handover_create_sync_id</name></member>
+    <member refid="group__sl__bt__cs_1ga6b4312090d359afae6c2099d9837bc63" kind="define"><name>sl_bt_rsp_cs_handover_enable_procedure_id</name></member>
+    <member refid="group__sl__bt__cs_1gae936db50e1f288132a314f0793628c51" kind="define"><name>sl_bt_rsp_cs_handover_remove_procedure_id</name></member>
     <member refid="group__sl__bt__evt__cs__security__enable__complete_1ga66c8aad6e8d5412d2b1409bb07f06b2a" kind="define"><name>sl_bt_evt_cs_security_enable_complete_id</name></member>
     <member refid="group__sl__bt__evt__cs__config__complete_1ga42ca6e6a6626797b2dca4cd215f8db98" kind="define"><name>sl_bt_evt_cs_config_complete_id</name></member>
     <member refid="group__sl__bt__evt__cs__procedure__enable__complete_1ga955de6a370fff367846b4153bc9dc7f8" kind="define"><name>sl_bt_evt_cs_procedure_enable_complete_id</name></member>
     <member refid="group__sl__bt__evt__cs__result_1gaec74d72417020c32df8976c262f64658" kind="define"><name>sl_bt_evt_cs_result_id</name></member>
     <member refid="group__sl__bt__evt__cs__result__continue_1gafdea19946084b55e68e54053fc4d0232" kind="define"><name>sl_bt_evt_cs_result_continue_id</name></member>
     <member refid="group__sl__bt__evt__cs__read__remote__supported__capabilities__complete_1ga5ee11874bc43b1619c634e6afb9d71b1" kind="define"><name>sl_bt_evt_cs_read_remote_supported_capabilities_complete_id</name></member>
+    <member refid="group__sl__bt__evt__cs__handover__sync__established_1ga0d5570d585574bf19d453ddbc6ccb6f6" kind="define"><name>sl_bt_evt_cs_handover_sync_established_id</name></member>
+    <member refid="group__sl__bt__evt__cs__handover__complete_1ga20cd24ece832db270f23f9088e64c89a" kind="define"><name>sl_bt_evt_cs_handover_complete_id</name></member>
+    <member refid="group__sl__bt__evt__cs__handover__result_1gae53d3f63b834a343fa6df630cb0d1567" kind="define"><name>sl_bt_evt_cs_handover_result_id</name></member>
+    <member refid="group__sl__bt__evt__cs__handover__result__continue_1ga7822846f17c2b9e9c82b53437db543f0" kind="define"><name>sl_bt_evt_cs_handover_result_continue_id</name></member>
     <member refid="group__sl__bt__cs__test_1ga9402e24cbe4b765d9b6ac4e759dbcb2d" kind="define"><name>sl_bt_cmd_cs_test_start_id</name></member>
     <member refid="group__sl__bt__cs__test_1ga1fe4b9d53825f41be92ee9036c435850" kind="define"><name>sl_bt_cmd_cs_test_end_id</name></member>
     <member refid="group__sl__bt__cs__test_1ga8a7dacabe7d4db9530a293c377048ac5" kind="define"><name>sl_bt_rsp_cs_test_start_id</name></member>
@@ -1410,8 +1487,10 @@
     <member refid="group__sl__bt__evt__cte__receiver__connectionless__iq__report_1gab4d5669efcfb608e60075dac17be5888" kind="define"><name>sl_bt_evt_cte_receiver_connectionless_iq_report_id</name></member>
     <member refid="group__sl__bt__evt__cte__receiver__silabs__iq__report_1gaa87b7a96f292a3140aa54ae1dbbd33ce" kind="define"><name>sl_bt_evt_cte_receiver_silabs_iq_report_id</name></member>
     <member refid="group__sl__bt__connection__analyzer_1gad613de875f5a9f34ebe326ef5bf19fbb" kind="define"><name>sl_bt_cmd_connection_analyzer_start_id</name></member>
+    <member refid="group__sl__bt__connection__analyzer_1gab3b33aec86045de39715f0ffc5f7b2e5" kind="define"><name>sl_bt_cmd_connection_analyzer_process_llcp_event_id</name></member>
     <member refid="group__sl__bt__connection__analyzer_1ga618695dcbca10e818491e5d265947fb1" kind="define"><name>sl_bt_cmd_connection_analyzer_stop_id</name></member>
     <member refid="group__sl__bt__connection__analyzer_1ga18155dd5db6b1a10fd59fa78b2aed4c7" kind="define"><name>sl_bt_rsp_connection_analyzer_start_id</name></member>
+    <member refid="group__sl__bt__connection__analyzer_1ga4ee797da04853f351503b718cb3a8dda" kind="define"><name>sl_bt_rsp_connection_analyzer_process_llcp_event_id</name></member>
     <member refid="group__sl__bt__connection__analyzer_1ga0cc18aa2e3b4a210abc6ae45e2e89816" kind="define"><name>sl_bt_rsp_connection_analyzer_stop_id</name></member>
     <member refid="group__sl__bt__connection__analyzer__flags_1ga5fb3032b0d7ed309696cd813846715b9" kind="define"><name>SL_BT_CONNECTION_ANALYZER_RELATIVE_TIME</name></member>
     <member refid="group__sl__bt__evt__connection__analyzer__report_1ga5ae313bd7e1d7c60abdbdcdcc05bedd5" kind="define"><name>sl_bt_evt_connection_analyzer_report_id</name></member>
@@ -1509,6 +1588,7 @@
     <member refid="group__sl__bt__sync_1ga4d6dbc6ce7a4dfc5ba8e473253161d30" kind="enum"><name>sl_bt_sync_reporting_mode_t</name></member>
     <member refid="group__sl__bt__sync_1gga4d6dbc6ce7a4dfc5ba8e473253161d30adb0e697ad0134cd6ccaa1afbbaf27260" kind="enumvalue"><name>sl_bt_sync_report_none</name></member>
     <member refid="group__sl__bt__sync_1gga4d6dbc6ce7a4dfc5ba8e473253161d30aac59b61bf5411ed41d7079f22c122f8b" kind="enumvalue"><name>sl_bt_sync_report_all</name></member>
+    <member refid="group__sl__bt__sync_1gga4d6dbc6ce7a4dfc5ba8e473253161d30aef07a9c632badbc00fd6bde07fc770cb" kind="enumvalue"><name>sl_bt_sync_report_non_duplicate</name></member>
     <member refid="group__sl__bt__sync_1gacf10b05b3679bf358e10775bee5bcd60" kind="enum"><name>sl_bt_sync_advertiser_clock_accuracy_t</name></member>
     <member refid="group__sl__bt__sync_1ggacf10b05b3679bf358e10775bee5bcd60ad1fd26a5d7cce17adcfb968e80a73f31" kind="enumvalue"><name>sl_bt_sync_clock_accuracy_500</name></member>
     <member refid="group__sl__bt__sync_1ggacf10b05b3679bf358e10775bee5bcd60ac16d4c34f34fcada454bc3d9e72788a0" kind="enumvalue"><name>sl_bt_sync_clock_accuracy_250</name></member>
@@ -1524,6 +1604,20 @@
     <member refid="group__sl__bt__past__receiver_1ga19c4f0a4c5f89393d599a5240409ff66" kind="enum"><name>sl_bt_past_receiver_over_sync_mode_t</name></member>
     <member refid="group__sl__bt__past__receiver_1gga19c4f0a4c5f89393d599a5240409ff66acdcda47bd85c3a3ae7ab10bcd042c8ad" kind="enumvalue"><name>sl_bt_past_receiver_over_sync_mode_ignore</name></member>
     <member refid="group__sl__bt__past__receiver_1gga19c4f0a4c5f89393d599a5240409ff66a871c5ffa838326303f9bac935881a240" kind="enumvalue"><name>sl_bt_past_receiver_over_sync_mode_replace</name></member>
+    <member refid="group__sl__bt__periodic__sync_1gaa1f741a2a7b46593e4f3f5b5fa40fc8e" kind="enum"><name>sl_bt_periodic_sync_data_status_t</name></member>
+    <member refid="group__sl__bt__periodic__sync_1ggaa1f741a2a7b46593e4f3f5b5fa40fc8ea7ed1b0a919198530ded6bec6f3357b94" kind="enumvalue"><name>sl_bt_periodic_sync_data_status_complete</name></member>
+    <member refid="group__sl__bt__periodic__sync_1ggaa1f741a2a7b46593e4f3f5b5fa40fc8eac7b8f000ada4e7cf5ffc85fdd4952cf9" kind="enumvalue"><name>sl_bt_periodic_sync_data_status_incomplete_more</name></member>
+    <member refid="group__sl__bt__periodic__sync_1ggaa1f741a2a7b46593e4f3f5b5fa40fc8ea42d110945bf35b364a6d6c2918893163" kind="enumvalue"><name>sl_bt_periodic_sync_data_status_incomplete_nomore</name></member>
+    <member refid="group__sl__bt__pawr__sync_1ga177073dd4204ac9d634309db80a7460f" kind="enum"><name>sl_bt_pawr_sync_subevent_data_status_t</name></member>
+    <member refid="group__sl__bt__pawr__sync_1gga177073dd4204ac9d634309db80a7460fac293c1974a1d03fb12be133f85597ff5" kind="enumvalue"><name>sl_bt_pawr_sync_subevent_data_status_complete</name></member>
+    <member refid="group__sl__bt__pawr__sync_1gga177073dd4204ac9d634309db80a7460fa561617299ee57795ac8e7c4e7ebd2eb9" kind="enumvalue"><name>sl_bt_pawr_sync_subevent_data_status_incomplete_more</name></member>
+    <member refid="group__sl__bt__pawr__sync_1gga177073dd4204ac9d634309db80a7460fa2446f37f9d20aafee78592e282b96566" kind="enumvalue"><name>sl_bt_pawr_sync_subevent_data_status_incomplete_nomore</name></member>
+    <member refid="group__sl__bt__pawr__sync_1gga177073dd4204ac9d634309db80a7460fa961e290fd830df993b09333dcfc0ad9f" kind="enumvalue"><name>sl_bt_pawr_sync_subevent_data_status_not_received</name></member>
+    <member refid="group__sl__bt__pawr__advertiser_1ga329ce801272328bfa943f6f781002a8b" kind="enum"><name>sl_bt_pawr_advertiser_response_data_status_t</name></member>
+    <member refid="group__sl__bt__pawr__advertiser_1gga329ce801272328bfa943f6f781002a8bad2bd11f9d498c98436e097fb8ab222ff" kind="enumvalue"><name>sl_bt_pawr_advertiser_response_data_status_complete</name></member>
+    <member refid="group__sl__bt__pawr__advertiser_1gga329ce801272328bfa943f6f781002a8ba56b525da1c00bb261c1a37b3dcb90ffd" kind="enumvalue"><name>sl_bt_pawr_advertiser_response_data_status_incomplete_more</name></member>
+    <member refid="group__sl__bt__pawr__advertiser_1gga329ce801272328bfa943f6f781002a8ba7a241d133c7ebda7ffd4bc5aa642ceee" kind="enumvalue"><name>sl_bt_pawr_advertiser_response_data_status_incomplete_nomore</name></member>
+    <member refid="group__sl__bt__pawr__advertiser_1gga329ce801272328bfa943f6f781002a8bafa5b7b34c8a6a2e73d36a6661ea95403" kind="enumvalue"><name>sl_bt_pawr_advertiser_response_data_status_not_received</name></member>
     <member refid="group__sl__bt__connection_1gab7587d83e86c8d88ecd98f7d20af9ab6" kind="enum"><name>sl_bt_connection_role_t</name></member>
     <member refid="group__sl__bt__connection_1ggab7587d83e86c8d88ecd98f7d20af9ab6a4ef4abde4e72cb4a362bb7092c8b79f4" kind="enumvalue"><name>sl_bt_connection_role_peripheral</name></member>
     <member refid="group__sl__bt__connection_1ggab7587d83e86c8d88ecd98f7d20af9ab6a744e83e3bb7190bdea0cf752b528cfd9" kind="enumvalue"><name>sl_bt_connection_role_central</name></member>
@@ -1639,6 +1733,12 @@
     <member refid="group__sl__bt__cs_1ga8fd875965cf4e392514a5f4f7769bb3d" kind="enum"><name>sl_bt_cs_procedure_state_t</name></member>
     <member refid="group__sl__bt__cs_1gga8fd875965cf4e392514a5f4f7769bb3da4eeadc432c438018a20be6b27a29ba44" kind="enumvalue"><name>sl_bt_cs_procedure_state_disabled</name></member>
     <member refid="group__sl__bt__cs_1gga8fd875965cf4e392514a5f4f7769bb3da61c67251f887bd52c618ef6106176cd7" kind="enumvalue"><name>sl_bt_cs_procedure_state_enabled</name></member>
+    <member refid="group__sl__bt__cs_1ga1dc74f64ec915490815e1628b118d2b5" kind="enum"><name>sl_bt_cs_handover_handle_type_t</name></member>
+    <member refid="group__sl__bt__cs_1gga1dc74f64ec915490815e1628b118d2b5afb3359772b7ae46cd288c31cbb0d2255" kind="enumvalue"><name>sl_bt_cs_handover_handle_type_connection</name></member>
+    <member refid="group__sl__bt__cs_1gga1dc74f64ec915490815e1628b118d2b5a1d5945e7d48e4cfef53216ba555f7344" kind="enumvalue"><name>sl_bt_cs_handover_handle_type_analyzer</name></member>
+    <member refid="group__sl__bt__cs_1ga8850c7bbb087a73a571cfd280a2a1a93" kind="enum"><name>sl_bt_cs_handover_complete_reason_t</name></member>
+    <member refid="group__sl__bt__cs_1gga8850c7bbb087a73a571cfd280a2a1a93a0d72aa29c1c395c8393692a651bc32a6" kind="enumvalue"><name>sl_bt_cs_handover_complete_reason_max_procedure_count_reached</name></member>
+    <member refid="group__sl__bt__cs_1gga8850c7bbb087a73a571cfd280a2a1a93a9a6b5e860561286bea8a6474b756de18" kind="enumvalue"><name>sl_bt_cs_handover_complete_reason_sync_lost</name></member>
     <member refid="group__sl__bt__cs_1ga631ba2f05b0fb5daf637468c2f0d7dc3" kind="enum"><name>sl_bt_cs_mode_t</name></member>
     <member refid="group__sl__bt__cs_1gga631ba2f05b0fb5daf637468c2f0d7dc3a32778ba18934123ad7132ca191192edb" kind="enumvalue"><name>sl_bt_cs_mode_rtt</name></member>
     <member refid="group__sl__bt__cs_1gga631ba2f05b0fb5daf637468c2f0d7dc3aa489a1f39d38004f996b3b830b3f36ba" kind="enumvalue"><name>sl_bt_cs_mode_pbr</name></member>
@@ -1705,8 +1805,10 @@
     <member refid="group__sl__bt__evt__system__soft__timer_1ga9b11a5daf47cc9ec8bb3af2daacb5d32" kind="typedef"><name>sl_bt_evt_system_soft_timer_t</name></member>
     <member refid="group__sl__bt__evt__linklayer__event__info__report_1gaacb3ddce3a15f0296d7820a6cf3a2f9a" kind="typedef"><name>sl_bt_evt_linklayer_event_info_report_t</name></member>
     <member refid="group__sl__bt__evt__resource__status_1gabd8d42898ee6cccc71666aa7ca625e87" kind="typedef"><name>sl_bt_evt_resource_status_t</name></member>
+    <member refid="group__sl__bt__evt__gap__random__address__refresh_1gafc7ad25033201122f730c0df8b364fee" kind="typedef"><name>sl_bt_evt_gap_random_address_refresh_t</name></member>
     <member refid="group__sl__bt__evt__advertiser__timeout_1ga95dbf1e9bca7f7ad62bd5e4013dbb720" kind="typedef"><name>sl_bt_evt_advertiser_timeout_t</name></member>
     <member refid="group__sl__bt__evt__advertiser__scan__request_1ga4cda6e28813b3cef105fc6c9ac10cff4" kind="typedef"><name>sl_bt_evt_advertiser_scan_request_t</name></member>
+    <member refid="group__sl__bt__evt__advertiser__random__address__refresh_1gaccd43f0ba7c4e1263b6f33a784590931" kind="typedef"><name>sl_bt_evt_advertiser_random_address_refresh_t</name></member>
     <member refid="group__sl__bt__evt__periodic__advertiser__status_1ga294bbe5708cd56a07857edaee5652dd1" kind="typedef"><name>sl_bt_evt_periodic_advertiser_status_t</name></member>
     <member refid="group__sl__bt__evt__scanner__legacy__advertisement__report_1gad5478cbbe76880a24f28bdab0ea1f9d7" kind="typedef"><name>sl_bt_evt_scanner_legacy_advertisement_report_t</name></member>
     <member refid="group__sl__bt__evt__scanner__extended__advertisement__report_1gaecb7fc62d852f575c823f8cddec3ac40" kind="typedef"><name>sl_bt_evt_scanner_extended_advertisement_report_t</name></member>
@@ -1765,6 +1867,10 @@
     <member refid="group__sl__bt__evt__cs__result_1ga8bd7a9022978d45deb5d853db3979679" kind="typedef"><name>sl_bt_evt_cs_result_t</name></member>
     <member refid="group__sl__bt__evt__cs__result__continue_1ga14d035d0c177f18770ca4b27a4f64205" kind="typedef"><name>sl_bt_evt_cs_result_continue_t</name></member>
     <member refid="group__sl__bt__evt__cs__read__remote__supported__capabilities__complete_1gad1a9f7a186ea41d9d1d8ca5659f4eacd" kind="typedef"><name>sl_bt_evt_cs_read_remote_supported_capabilities_complete_t</name></member>
+    <member refid="group__sl__bt__evt__cs__handover__sync__established_1ga26d89514974ed978b3bb6385591f516c" kind="typedef"><name>sl_bt_evt_cs_handover_sync_established_t</name></member>
+    <member refid="group__sl__bt__evt__cs__handover__complete_1ga4c8825f961c0373f8708e9518c46c0ed" kind="typedef"><name>sl_bt_evt_cs_handover_complete_t</name></member>
+    <member refid="group__sl__bt__evt__cs__handover__result_1ga69ede1131dcfdd9fca92fcb0b471143d" kind="typedef"><name>sl_bt_evt_cs_handover_result_t</name></member>
+    <member refid="group__sl__bt__evt__cs__handover__result__continue_1gac40e08516d8ac542673543b5f7d80784" kind="typedef"><name>sl_bt_evt_cs_handover_result_continue_t</name></member>
     <member refid="group__sl__bt__evt__cs__test__end__completed_1gabbba0cc06e5931b2b92a17af10ad5534" kind="typedef"><name>sl_bt_evt_cs_test_end_completed_t</name></member>
     <member refid="group__sl__bt__evt__l2cap__le__channel__open__request_1gaa2e213207ee422ed942f26bb23020ee1" kind="typedef"><name>sl_bt_evt_l2cap_le_channel_open_request_t</name></member>
     <member refid="group__sl__bt__evt__l2cap__le__channel__open__response_1ga438c12d2480975c2bdeb9c9ac630d924" kind="typedef"><name>sl_bt_evt_l2cap_le_channel_open_response_t</name></member>
@@ -1802,12 +1908,15 @@
     <member refid="group__sl__bt__system_1ga6a5b4be087b9cfe14368a848a4414cef" kind="function"><name>sl_bt_system_get_counters</name></member>
     <member refid="group__sl__bt__system_1gaf9557a321d9adb6e96d9feca004a00c3" kind="function"><name>sl_bt_system_set_lazy_soft_timer</name></member>
     <member refid="group__sl__bt__linklayer_1ga7626df3c11d39b180f58b2bf688eff8c" kind="function"><name>sl_bt_linklayer_event_info_reporting_enable</name></member>
+    <member refid="group__sl__bt__linklayer_1ga9a51a04253b62f6b706570b1ef930b8b" kind="function"><name>sl_bt_linklayer_get_hci_connection_handle</name></member>
+    <member refid="group__sl__bt__linklayer_1ga394c7a511b8095400378e895af4d0238" kind="function"><name>sl_bt_linklayer_get_bgapi_connection_handle</name></member>
     <member refid="group__sl__bt__resource_1ga364e6338e65b335e0ebfcbbb600c1757" kind="function"><name>sl_bt_resource_get_status</name></member>
     <member refid="group__sl__bt__resource_1gac43c1de372fd21b3cdacd15fca685caa" kind="function"><name>sl_bt_resource_set_report_threshold</name></member>
     <member refid="group__sl__bt__resource_1gad776c2696303de220282839c6dcbf5f8" kind="function"><name>sl_bt_resource_enable_connection_tx_report</name></member>
     <member refid="group__sl__bt__resource_1gac20e81967290607f606bac886edfd959" kind="function"><name>sl_bt_resource_get_connection_tx_status</name></member>
     <member refid="group__sl__bt__resource_1ga6a309c7afd2edf511f16d7529183faba" kind="function"><name>sl_bt_resource_disable_connection_tx_report</name></member>
     <member refid="group__sl__bt__gap_1gab8d65fb681a00f260f8b8c49a09ab1d5" kind="function"><name>sl_bt_gap_set_privacy_mode</name></member>
+    <member refid="group__sl__bt__gap_1ga3c379e284417946314ba65eeae5c9bd3" kind="function"><name>sl_bt_gap_set_privacy_mode_with_rpa_randomization</name></member>
     <member refid="group__sl__bt__gap_1gae1ee4d45283563a12394f5261e45f952" kind="function"><name>sl_bt_gap_set_data_channel_classification</name></member>
     <member refid="group__sl__bt__gap_1ga654072e39147679ac71c8f32935eeaf9" kind="function"><name>sl_bt_gap_set_identity_address</name></member>
     <member refid="group__sl__bt__gap_1gaead984805fa3c7145da2c63354f98697" kind="function"><name>sl_bt_gap_get_identity_address</name></member>
@@ -1834,6 +1943,7 @@
     <member refid="group__sl__bt__extended__advertiser_1ga41a32f4a248cf50bed75f10f15e362a6" kind="function"><name>sl_bt_extended_advertiser_start_directed</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1ga8ddb03280f2d65373a405ce20fdbcd18" kind="function"><name>sl_bt_periodic_advertiser_set_data</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1gad70b3fd35ebf8e87f78d5ecab0117d4c" kind="function"><name>sl_bt_periodic_advertiser_set_long_data</name></member>
+    <member refid="group__sl__bt__periodic__advertiser_1gad0487b1e80033fd1ba4ee393a1f1e9fa" kind="function"><name>sl_bt_periodic_advertiser_refresh_data_id</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1gaf2a2688f53f25df2d1ba12a5f5fafbd3" kind="function"><name>sl_bt_periodic_advertiser_start</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1ga862241c104b48e65829ae257fae08bb4" kind="function"><name>sl_bt_periodic_advertiser_stop</name></member>
     <member refid="group__sl__bt__scanner_1ga99c05204881bd06221cebf3ef7b60532" kind="function"><name>sl_bt_scanner_set_parameters</name></member>
@@ -1982,6 +2092,7 @@
     <member refid="group__sl__bt__resolving__list_1ga9aaeb17573b914a8b60376145be60a06" kind="function"><name>sl_bt_resolving_list_remove_device_by_bonding</name></member>
     <member refid="group__sl__bt__resolving__list_1gaa53f57df176787845b4d8681aab654d1" kind="function"><name>sl_bt_resolving_list_remove_device_by_address</name></member>
     <member refid="group__sl__bt__resolving__list_1ga5170d52a5a449272d3747b63d5854e98" kind="function"><name>sl_bt_resolving_list_remove_all_devices</name></member>
+    <member refid="group__sl__bt__resolving__list_1ga7f27695892c85b0bc53204d0622cc2ed" kind="function"><name>sl_bt_resolving_list_read_peer_resolvable_address</name></member>
     <member refid="group__sl__bt__accept__list_1ga71dbdfee71110fe8384285ffb39eb858" kind="function"><name>sl_bt_accept_list_add_device_by_bonding</name></member>
     <member refid="group__sl__bt__accept__list_1gae5ad6b125fdcc612003247bbb0ae019c" kind="function"><name>sl_bt_accept_list_add_device_by_address</name></member>
     <member refid="group__sl__bt__accept__list_1gaffbf0857a213a91fd3c881cefd6f51a0" kind="function"><name>sl_bt_accept_list_remove_device_by_bonding</name></member>
@@ -2002,6 +2113,11 @@
     <member refid="group__sl__bt__cs_1ga76ba2c01277740fd6844392fedc571aa" kind="function"><name>sl_bt_cs_set_antenna_configuration</name></member>
     <member refid="group__sl__bt__cs_1ga179e5b1dd30a811c3d3f53c64acf9e47" kind="function"><name>sl_bt_cs_read_local_supported_capabilities</name></member>
     <member refid="group__sl__bt__cs_1ga8c0052901c17a4c427f2b25d3c484bc7" kind="function"><name>sl_bt_cs_read_remote_supported_capabilities</name></member>
+    <member refid="group__sl__bt__cs_1ga2ba75f26352698b6c8cb752c16b342f7" kind="function"><name>sl_bt_cs_handover_get_procedure_parameters</name></member>
+    <member refid="group__sl__bt__cs_1ga7be074a19c9a267769c4325feeb4b720" kind="function"><name>sl_bt_cs_handover_set_procedure_parameters</name></member>
+    <member refid="group__sl__bt__cs_1ga980aaeacdecec62c35335dd2ceb39727" kind="function"><name>sl_bt_cs_handover_create_sync</name></member>
+    <member refid="group__sl__bt__cs_1ga3757cf65977fcfec697aa5229ec953ed" kind="function"><name>sl_bt_cs_handover_enable_procedure</name></member>
+    <member refid="group__sl__bt__cs_1ga8166fe81e523a4fa446c954a87a548bc" kind="function"><name>sl_bt_cs_handover_remove_procedure</name></member>
     <member refid="group__sl__bt__cs__test_1gaa66d7b45664c0c2e0b99db3946802ab2" kind="function"><name>sl_bt_cs_test_start</name></member>
     <member refid="group__sl__bt__cs__test_1gab5af1068c11f2652091144188451c3b1" kind="function"><name>sl_bt_cs_test_end</name></member>
     <member refid="group__sl__bt__l2cap_1gab8c1a8f13e15e1511d6db2dca0bc6e5c" kind="function"><name>sl_bt_l2cap_open_le_channel</name></member>
@@ -2030,6 +2146,7 @@
     <member refid="group__sl__bt__cte__receiver_1ga25e401e84b119977021a8071f75c532e" kind="function"><name>sl_bt_cte_receiver_enable_silabs_cte</name></member>
     <member refid="group__sl__bt__cte__receiver_1gaa3a17f6e060e7c46fef5ed4abea8690f" kind="function"><name>sl_bt_cte_receiver_disable_silabs_cte</name></member>
     <member refid="group__sl__bt__connection__analyzer_1gaa3898b966e74863f4e2fe159f5f7d183" kind="function"><name>sl_bt_connection_analyzer_start</name></member>
+    <member refid="group__sl__bt__connection__analyzer_1ga5d5990b00a62ef42f034e58c89e0c451" kind="function"><name>sl_bt_connection_analyzer_process_llcp_event</name></member>
     <member refid="group__sl__bt__connection__analyzer_1gadf538d051a2f17718bbe1ca1d6941f20" kind="function"><name>sl_bt_connection_analyzer_stop</name></member>
     <member refid="group__sl__bt__user_1ga9e644f3d526e10e3f6485e675e4e2fd8" kind="function"><name>sl_bt_user_message_to_target</name></member>
     <member refid="group__sl__bt__user_1gaabb7641d170c394f47f12a5d6f7594f3" kind="function"><name>sl_bt_user_manage_event_filter</name></member>
@@ -2038,12 +2155,10 @@
     <member refid="group__sl__bt__utility__functions_1gaff57fe1cdd8863d2d271224c2d7e2bb6" kind="function"><name>sl_bt_pop_event</name></member>
     <member refid="group__sl__bt__utility__functions_1ga29654e6399b4bf427978e604dee505c4" kind="function"><name>sl_bt_event_pending</name></member>
     <member refid="group__sl__bt__utility__functions_1ga9d60c2be2d9ba65176820c7430017e12" kind="function"><name>sl_bt_event_pending_len</name></member>
-    <member refid="group__sl__bt__utility__functions_1ga16c8034e39e43154301ec3a5b66175f4" kind="function"><name>sl_bt_run</name></member>
-    <member refid="group__sl__bt__utility__functions_1ga840b2449b01c063776d48203138f2115" kind="function"><name>sl_bt_handle_command</name></member>
-    <member refid="group__sl__bt__utility__functions_1ga10ba5cfefeaf1559b811cf41f55c47b3" kind="function"><name>sl_bt_get_command_response</name></member>
+    <member refid="group__sl__bt__utility__functions_1ga5cba6b8c0aa007a52646204ec1ea8180" kind="function"><name>sl_bt_run</name></member>
     <member refid="group__sl__bt__utility__functions_1gaca4c91c504be0d4ad392c5fdbb111ee6" kind="function"><name>sl_bt_priority_handle</name></member>
     <member refid="group__sl__bt__utility__functions_1gaf34d7a4f48d238971575e45e9103b03f" kind="function"><name>sl_bt_external_signal</name></member>
-    <member refid="group__sl__bt__utility__functions_1ga3ae83713640241b5fe646774faa6b8f4" kind="function"><name>sl_bt_send_system_awake</name></member>
+    <member refid="group__sl__bt__utility__functions_1gac6f32b6803eb0102a133a1f8f9cc5024" kind="function"><name>sl_bt_send_system_awake</name></member>
     <member refid="group__sl__bt__utility__functions_1ga932da482b285833a9df22c36f389d8bb" kind="function"><name>sl_bt_send_system_error</name></member>
     <member refid="group__sl__bt__utility__functions_1ga2efa124d72e59697be4527c7d966f3c2" kind="function"><name>sl_bt_is_sensitive_message</name></member>
     <member refid="group__sl__bt__utility__functions_1ga629882087e9e95d82c773def3eb95173" kind="function"><name>sl_bt_set_user_response_buffer</name></member>
@@ -2052,6 +2167,8 @@
     <member refid="group__sl__bt__utility__functions_1ga90eef151525addf229cf984e779814db" kind="function"><name>sl_bt_send_rsp_user_manage_event_filter</name></member>
     <member refid="group__sl__bt__utility__functions_1ga05bd13a2260a174af64102db871b61fa" kind="function"><name>sl_bt_send_rsp_user_cs_service_message_to_target</name></member>
     <member refid="group__sl__bt__utility__functions_1ga6662f56ac1b8ba5051b1cbb5f0031aa0" kind="function"><name>sl_bt_send_evt_user_cs_service_message_to_host</name></member>
+    <member refid="group__sl__bt__utility__functions_1ga840b2449b01c063776d48203138f2115" kind="function"><name>sl_bt_handle_command</name></member>
+    <member refid="group__sl__bt__utility__functions_1ga10ba5cfefeaf1559b811cf41f55c47b3" kind="function"><name>sl_bt_get_command_response</name></member>
   </compound>
   <compound refid="sl__bt__api__compatibility_8h" kind="file"><name>sl_bt_api_compatibility.h</name>
     <member refid="sl__bt__api__compatibility_8h_1a6b0b8e1c9cc747539022a4b387b93d21" kind="enum"><name>sl_bt_gap_phy_type_t</name></member>
@@ -2250,8 +2367,14 @@
   </compound>
   <compound refid="group__sl__bt__linklayer" kind="group"><name>sl_bt_linklayer</name>
     <member refid="group__sl__bt__linklayer_1ga7626df3c11d39b180f58b2bf688eff8c" kind="function"><name>sl_bt_linklayer_event_info_reporting_enable</name></member>
+    <member refid="group__sl__bt__linklayer_1ga9a51a04253b62f6b706570b1ef930b8b" kind="function"><name>sl_bt_linklayer_get_hci_connection_handle</name></member>
+    <member refid="group__sl__bt__linklayer_1ga394c7a511b8095400378e895af4d0238" kind="function"><name>sl_bt_linklayer_get_bgapi_connection_handle</name></member>
     <member refid="group__sl__bt__linklayer_1gad0b08b8edc5e44c264565d086828f9dc" kind="define"><name>sl_bt_cmd_linklayer_event_info_reporting_enable_id</name></member>
+    <member refid="group__sl__bt__linklayer_1gae3d8ef7983991458904d5c39eb44e126" kind="define"><name>sl_bt_cmd_linklayer_get_hci_connection_handle_id</name></member>
+    <member refid="group__sl__bt__linklayer_1ga5a4dc649a2c75d5e0a21c074b9d35208" kind="define"><name>sl_bt_cmd_linklayer_get_bgapi_connection_handle_id</name></member>
     <member refid="group__sl__bt__linklayer_1ga732050aea39b247cd6b54d16d86363e3" kind="define"><name>sl_bt_rsp_linklayer_event_info_reporting_enable_id</name></member>
+    <member refid="group__sl__bt__linklayer_1ga684d55f5d05adddf47eedbefa284fb69" kind="define"><name>sl_bt_rsp_linklayer_get_hci_connection_handle_id</name></member>
+    <member refid="group__sl__bt__linklayer_1ga67756b3e1b07e4307f7077b29208971e" kind="define"><name>sl_bt_rsp_linklayer_get_bgapi_connection_handle_id</name></member>
   </compound>
   <compound refid="group__sl__bt__evt__linklayer__event__info__report" kind="group"><name>sl_bt_evt_linklayer_event_info_report</name>
     <member refid="group__sl__bt__evt__linklayer__event__info__report_1gaacb3ddce3a15f0296d7820a6cf3a2f9a" kind="typedef"><name>sl_bt_evt_linklayer_event_info_report_t</name></member>
@@ -2305,20 +2428,27 @@
     <member refid="group__sl__bt__gap_1ggac8f8f7951d8100e1e969cdf90127a086a207c4b705ad3016dc17edb2d38fa9863" kind="enumvalue"><name>sl_bt_gap_channel_selection_algorithm_1</name></member>
     <member refid="group__sl__bt__gap_1ggac8f8f7951d8100e1e969cdf90127a086aa37ef47df0d5c53d0c73ed0f50ec95ec" kind="enumvalue"><name>sl_bt_gap_channel_selection_algorithm_2</name></member>
     <member refid="group__sl__bt__gap_1gab8d65fb681a00f260f8b8c49a09ab1d5" kind="function"><name>sl_bt_gap_set_privacy_mode</name></member>
+    <member refid="group__sl__bt__gap_1ga3c379e284417946314ba65eeae5c9bd3" kind="function"><name>sl_bt_gap_set_privacy_mode_with_rpa_randomization</name></member>
     <member refid="group__sl__bt__gap_1gae1ee4d45283563a12394f5261e45f952" kind="function"><name>sl_bt_gap_set_data_channel_classification</name></member>
     <member refid="group__sl__bt__gap_1ga654072e39147679ac71c8f32935eeaf9" kind="function"><name>sl_bt_gap_set_identity_address</name></member>
     <member refid="group__sl__bt__gap_1gaead984805fa3c7145da2c63354f98697" kind="function"><name>sl_bt_gap_get_identity_address</name></member>
     <member refid="group__sl__bt__gap_1gac87c0807d9ae80830b80409930d71a78" kind="function"><name>sl_bt_gap_get_max_connections</name></member>
     <member refid="group__sl__bt__gap_1gafe44c545af0f70ba8733013cd3d8e832" kind="define"><name>sl_bt_cmd_gap_set_privacy_mode_id</name></member>
+    <member refid="group__sl__bt__gap_1gabce99903c7c82efbfd6b14ea3676af4d" kind="define"><name>sl_bt_cmd_gap_set_privacy_mode_with_rpa_randomization_id</name></member>
     <member refid="group__sl__bt__gap_1gaaf8e401ac4e5ba0b8b3469d10fc17de0" kind="define"><name>sl_bt_cmd_gap_set_data_channel_classification_id</name></member>
     <member refid="group__sl__bt__gap_1ga266dd784ad902fa2faf499e0084aefb5" kind="define"><name>sl_bt_cmd_gap_set_identity_address_id</name></member>
     <member refid="group__sl__bt__gap_1gaa1fa023adee48b1dc9244343bcaa5a9b" kind="define"><name>sl_bt_cmd_gap_get_identity_address_id</name></member>
     <member refid="group__sl__bt__gap_1ga889b2e4c2f3f01588ab1b9e78aedea1b" kind="define"><name>sl_bt_cmd_gap_get_max_connections_id</name></member>
     <member refid="group__sl__bt__gap_1gad5ef0c0b5b41e18d5be735adaff92645" kind="define"><name>sl_bt_rsp_gap_set_privacy_mode_id</name></member>
+    <member refid="group__sl__bt__gap_1ga605d3f15798954bbcfebefe7bb72e882" kind="define"><name>sl_bt_rsp_gap_set_privacy_mode_with_rpa_randomization_id</name></member>
     <member refid="group__sl__bt__gap_1ga632932216159bdf43f1b0f1f7be7d85f" kind="define"><name>sl_bt_rsp_gap_set_data_channel_classification_id</name></member>
     <member refid="group__sl__bt__gap_1gafa28b857ba33de526244d62e848aaa05" kind="define"><name>sl_bt_rsp_gap_set_identity_address_id</name></member>
     <member refid="group__sl__bt__gap_1ga3083559198beefa63e85619237408067" kind="define"><name>sl_bt_rsp_gap_get_identity_address_id</name></member>
     <member refid="group__sl__bt__gap_1ga8c628928e08687d5f66725a5852774b2" kind="define"><name>sl_bt_rsp_gap_get_max_connections_id</name></member>
+  </compound>
+  <compound refid="group__sl__bt__evt__gap__random__address__refresh" kind="group"><name>sl_bt_evt_gap_random_address_refresh</name>
+    <member refid="group__sl__bt__evt__gap__random__address__refresh_1gafc7ad25033201122f730c0df8b364fee" kind="typedef"><name>sl_bt_evt_gap_random_address_refresh_t</name></member>
+    <member refid="group__sl__bt__evt__gap__random__address__refresh_1ga765ade59521df4030059cfea3d941854" kind="define"><name>sl_bt_evt_gap_random_address_refresh_id</name></member>
   </compound>
   <compound refid="group__sl__bt__advertiser" kind="group"><name>sl_bt_advertiser</name>
     <member refid="group__sl__bt__advertiser_1ga5ba0781115b475f1f26eec61863b8d62" kind="enum"><name>sl_bt_advertiser_discovery_mode_t</name></member>
@@ -2376,6 +2506,10 @@
     <member refid="group__sl__bt__evt__advertiser__scan__request_1ga4cda6e28813b3cef105fc6c9ac10cff4" kind="typedef"><name>sl_bt_evt_advertiser_scan_request_t</name></member>
     <member refid="group__sl__bt__evt__advertiser__scan__request_1ga305631e7dc877a0dca3820263d605a3d" kind="define"><name>sl_bt_evt_advertiser_scan_request_id</name></member>
   </compound>
+  <compound refid="group__sl__bt__evt__advertiser__random__address__refresh" kind="group"><name>sl_bt_evt_advertiser_random_address_refresh</name>
+    <member refid="group__sl__bt__evt__advertiser__random__address__refresh_1gaccd43f0ba7c4e1263b6f33a784590931" kind="typedef"><name>sl_bt_evt_advertiser_random_address_refresh_t</name></member>
+    <member refid="group__sl__bt__evt__advertiser__random__address__refresh_1ga2fb82bfb2aefcb46396a66810a135d52" kind="define"><name>sl_bt_evt_advertiser_random_address_refresh_id</name></member>
+  </compound>
   <compound refid="group__sl__bt__legacy__advertiser" kind="group"><name>sl_bt_legacy_advertiser</name>
     <member refid="group__sl__bt__legacy__advertiser_1gaf55ab87e2eda26ad9f13b131b274d6b7" kind="enum"><name>sl_bt_legacy_advertiser_connection_mode_t</name></member>
     <member refid="group__sl__bt__legacy__advertiser_1ggaf55ab87e2eda26ad9f13b131b274d6b7a65d5c2f2453c07811a41a868d7056a42" kind="enumvalue"><name>sl_bt_legacy_advertiser_non_connectable</name></member>
@@ -2428,20 +2562,24 @@
   <compound refid="group__sl__bt__periodic__advertiser" kind="group"><name>sl_bt_periodic_advertiser</name>
     <member refid="group__sl__bt__periodic__advertiser_1ga8ddb03280f2d65373a405ce20fdbcd18" kind="function"><name>sl_bt_periodic_advertiser_set_data</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1gad70b3fd35ebf8e87f78d5ecab0117d4c" kind="function"><name>sl_bt_periodic_advertiser_set_long_data</name></member>
+    <member refid="group__sl__bt__periodic__advertiser_1gad0487b1e80033fd1ba4ee393a1f1e9fa" kind="function"><name>sl_bt_periodic_advertiser_refresh_data_id</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1gaf2a2688f53f25df2d1ba12a5f5fafbd3" kind="function"><name>sl_bt_periodic_advertiser_start</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1ga862241c104b48e65829ae257fae08bb4" kind="function"><name>sl_bt_periodic_advertiser_stop</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1ga6acad6df17ed1afdf5931da38d65ef66" kind="define"><name>sl_bt_cmd_periodic_advertiser_set_data_id</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1ga391338519048b5f9c518b221d8519bd3" kind="define"><name>sl_bt_cmd_periodic_advertiser_set_long_data_id</name></member>
+    <member refid="group__sl__bt__periodic__advertiser_1gab5e5031fcd61fc46a7ceae44df365bb1" kind="define"><name>sl_bt_cmd_periodic_advertiser_refresh_data_id_id</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1ga95764c1563098b9b3a8b8f2a8aefb980" kind="define"><name>sl_bt_cmd_periodic_advertiser_start_id</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1ga4271be3e739671bf69e7729ff7e5f23a" kind="define"><name>sl_bt_cmd_periodic_advertiser_stop_id</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1ga2b852ea62960afae630f5fe0604d7be8" kind="define"><name>sl_bt_rsp_periodic_advertiser_set_data_id</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1ga7e47991ececf5eef66c04682267a0e68" kind="define"><name>sl_bt_rsp_periodic_advertiser_set_long_data_id</name></member>
+    <member refid="group__sl__bt__periodic__advertiser_1ga1f6907377b19bd0fdb82639cea8338e9" kind="define"><name>sl_bt_rsp_periodic_advertiser_refresh_data_id_id</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1ga55f29fcaf354cc3ea4a9f1386e28648e" kind="define"><name>sl_bt_rsp_periodic_advertiser_start_id</name></member>
     <member refid="group__sl__bt__periodic__advertiser_1ga4200a80d03022cd76ea97a12ad958db9" kind="define"><name>sl_bt_rsp_periodic_advertiser_stop_id</name></member>
   </compound>
   <compound refid="group__sl__bt__periodic__advertiser__flags" kind="group"><name>sl_bt_periodic_advertiser_flags</name>
     <member refid="group__sl__bt__periodic__advertiser__flags_1gac93dcb4293040763a574d312b0f81029" kind="define"><name>SL_BT_PERIODIC_ADVERTISER_INCLUDE_TX_POWER</name></member>
     <member refid="group__sl__bt__periodic__advertiser__flags_1ga17c966e284c2b95a771aefe9de0843c8" kind="define"><name>SL_BT_PERIODIC_ADVERTISER_AUTO_START_EXTENDED_ADVERTISING</name></member>
+    <member refid="group__sl__bt__periodic__advertiser__flags_1ga05e344a399dec97e5438b0857e8fd97f" kind="define"><name>SL_BT_PERIODIC_ADVERTISER_INCLUDE_ADVERTISING_DATA_INFORMATION</name></member>
   </compound>
   <compound refid="group__sl__bt__evt__periodic__advertiser__status" kind="group"><name>sl_bt_evt_periodic_advertiser_status</name>
     <member refid="group__sl__bt__evt__periodic__advertiser__status_1ga294bbe5708cd56a07857edaee5652dd1" kind="typedef"><name>sl_bt_evt_periodic_advertiser_status_t</name></member>
@@ -2502,6 +2640,7 @@
     <member refid="group__sl__bt__sync_1ga4d6dbc6ce7a4dfc5ba8e473253161d30" kind="enum"><name>sl_bt_sync_reporting_mode_t</name></member>
     <member refid="group__sl__bt__sync_1gga4d6dbc6ce7a4dfc5ba8e473253161d30adb0e697ad0134cd6ccaa1afbbaf27260" kind="enumvalue"><name>sl_bt_sync_report_none</name></member>
     <member refid="group__sl__bt__sync_1gga4d6dbc6ce7a4dfc5ba8e473253161d30aac59b61bf5411ed41d7079f22c122f8b" kind="enumvalue"><name>sl_bt_sync_report_all</name></member>
+    <member refid="group__sl__bt__sync_1gga4d6dbc6ce7a4dfc5ba8e473253161d30aef07a9c632badbc00fd6bde07fc770cb" kind="enumvalue"><name>sl_bt_sync_report_non_duplicate</name></member>
     <member refid="group__sl__bt__sync_1gacf10b05b3679bf358e10775bee5bcd60" kind="enum"><name>sl_bt_sync_advertiser_clock_accuracy_t</name></member>
     <member refid="group__sl__bt__sync_1ggacf10b05b3679bf358e10775bee5bcd60ad1fd26a5d7cce17adcfb968e80a73f31" kind="enumvalue"><name>sl_bt_sync_clock_accuracy_500</name></member>
     <member refid="group__sl__bt__sync_1ggacf10b05b3679bf358e10775bee5bcd60ac16d4c34f34fcada454bc3d9e72788a0" kind="enumvalue"><name>sl_bt_sync_clock_accuracy_250</name></member>
@@ -2567,6 +2706,10 @@
     <member refid="group__sl__bt__sync__past_1ga46a84bcf4c0227b5aa425b52e2c04c9f" kind="define"><name>sl_bt_rsp_sync_past_transfer_id</name></member>
   </compound>
   <compound refid="group__sl__bt__periodic__sync" kind="group"><name>sl_bt_periodic_sync</name>
+    <member refid="group__sl__bt__periodic__sync_1gaa1f741a2a7b46593e4f3f5b5fa40fc8e" kind="enum"><name>sl_bt_periodic_sync_data_status_t</name></member>
+    <member refid="group__sl__bt__periodic__sync_1ggaa1f741a2a7b46593e4f3f5b5fa40fc8ea7ed1b0a919198530ded6bec6f3357b94" kind="enumvalue"><name>sl_bt_periodic_sync_data_status_complete</name></member>
+    <member refid="group__sl__bt__periodic__sync_1ggaa1f741a2a7b46593e4f3f5b5fa40fc8eac7b8f000ada4e7cf5ffc85fdd4952cf9" kind="enumvalue"><name>sl_bt_periodic_sync_data_status_incomplete_more</name></member>
+    <member refid="group__sl__bt__periodic__sync_1ggaa1f741a2a7b46593e4f3f5b5fa40fc8ea42d110945bf35b364a6d6c2918893163" kind="enumvalue"><name>sl_bt_periodic_sync_data_status_incomplete_nomore</name></member>
   </compound>
   <compound refid="group__sl__bt__evt__periodic__sync__opened" kind="group"><name>sl_bt_evt_periodic_sync_opened</name>
     <member refid="group__sl__bt__evt__periodic__sync__opened_1ga79329e4ff5290be94671335408e03a50" kind="typedef"><name>sl_bt_evt_periodic_sync_opened_t</name></member>
@@ -2581,6 +2724,11 @@
     <member refid="group__sl__bt__evt__periodic__sync__report_1ga8a4d0ceb7483899fd79f7cd4bae9e491" kind="define"><name>sl_bt_evt_periodic_sync_report_id</name></member>
   </compound>
   <compound refid="group__sl__bt__pawr__sync" kind="group"><name>sl_bt_pawr_sync</name>
+    <member refid="group__sl__bt__pawr__sync_1ga177073dd4204ac9d634309db80a7460f" kind="enum"><name>sl_bt_pawr_sync_subevent_data_status_t</name></member>
+    <member refid="group__sl__bt__pawr__sync_1gga177073dd4204ac9d634309db80a7460fac293c1974a1d03fb12be133f85597ff5" kind="enumvalue"><name>sl_bt_pawr_sync_subevent_data_status_complete</name></member>
+    <member refid="group__sl__bt__pawr__sync_1gga177073dd4204ac9d634309db80a7460fa561617299ee57795ac8e7c4e7ebd2eb9" kind="enumvalue"><name>sl_bt_pawr_sync_subevent_data_status_incomplete_more</name></member>
+    <member refid="group__sl__bt__pawr__sync_1gga177073dd4204ac9d634309db80a7460fa2446f37f9d20aafee78592e282b96566" kind="enumvalue"><name>sl_bt_pawr_sync_subevent_data_status_incomplete_nomore</name></member>
+    <member refid="group__sl__bt__pawr__sync_1gga177073dd4204ac9d634309db80a7460fa961e290fd830df993b09333dcfc0ad9f" kind="enumvalue"><name>sl_bt_pawr_sync_subevent_data_status_not_received</name></member>
     <member refid="group__sl__bt__pawr__sync_1ga29e4752f20ecb30867463c7dfb3a382d" kind="function"><name>sl_bt_pawr_sync_set_sync_subevents</name></member>
     <member refid="group__sl__bt__pawr__sync_1ga5d5ff16e38a7fe4df466636781fc7469" kind="function"><name>sl_bt_pawr_sync_set_response_data</name></member>
     <member refid="group__sl__bt__pawr__sync_1gaba905f522eed8307defba9ce5b594414" kind="define"><name>sl_bt_cmd_pawr_sync_set_sync_subevents_id</name></member>
@@ -2601,6 +2749,11 @@
     <member refid="group__sl__bt__evt__pawr__sync__subevent__report_1ga6ee06fdb1be6495e21962c31f6beeceb" kind="define"><name>sl_bt_evt_pawr_sync_subevent_report_id</name></member>
   </compound>
   <compound refid="group__sl__bt__pawr__advertiser" kind="group"><name>sl_bt_pawr_advertiser</name>
+    <member refid="group__sl__bt__pawr__advertiser_1ga329ce801272328bfa943f6f781002a8b" kind="enum"><name>sl_bt_pawr_advertiser_response_data_status_t</name></member>
+    <member refid="group__sl__bt__pawr__advertiser_1gga329ce801272328bfa943f6f781002a8bad2bd11f9d498c98436e097fb8ab222ff" kind="enumvalue"><name>sl_bt_pawr_advertiser_response_data_status_complete</name></member>
+    <member refid="group__sl__bt__pawr__advertiser_1gga329ce801272328bfa943f6f781002a8ba56b525da1c00bb261c1a37b3dcb90ffd" kind="enumvalue"><name>sl_bt_pawr_advertiser_response_data_status_incomplete_more</name></member>
+    <member refid="group__sl__bt__pawr__advertiser_1gga329ce801272328bfa943f6f781002a8ba7a241d133c7ebda7ffd4bc5aa642ceee" kind="enumvalue"><name>sl_bt_pawr_advertiser_response_data_status_incomplete_nomore</name></member>
+    <member refid="group__sl__bt__pawr__advertiser_1gga329ce801272328bfa943f6f781002a8bafa5b7b34c8a6a2e73d36a6661ea95403" kind="enumvalue"><name>sl_bt_pawr_advertiser_response_data_status_not_received</name></member>
     <member refid="group__sl__bt__pawr__advertiser_1ga3f5568699f9174b94bcac64aa9d39273" kind="function"><name>sl_bt_pawr_advertiser_start</name></member>
     <member refid="group__sl__bt__pawr__advertiser_1gad0d9c8cb421d6cc275d45cd42e581528" kind="function"><name>sl_bt_pawr_advertiser_change_parameters</name></member>
     <member refid="group__sl__bt__pawr__advertiser_1ga2d3e76e947a9678ebe4601c8b90be914" kind="function"><name>sl_bt_pawr_advertiser_set_subevent_data</name></member>
@@ -3331,16 +3484,19 @@
     <member refid="group__sl__bt__resolving__list_1ga9aaeb17573b914a8b60376145be60a06" kind="function"><name>sl_bt_resolving_list_remove_device_by_bonding</name></member>
     <member refid="group__sl__bt__resolving__list_1gaa53f57df176787845b4d8681aab654d1" kind="function"><name>sl_bt_resolving_list_remove_device_by_address</name></member>
     <member refid="group__sl__bt__resolving__list_1ga5170d52a5a449272d3747b63d5854e98" kind="function"><name>sl_bt_resolving_list_remove_all_devices</name></member>
+    <member refid="group__sl__bt__resolving__list_1ga7f27695892c85b0bc53204d0622cc2ed" kind="function"><name>sl_bt_resolving_list_read_peer_resolvable_address</name></member>
     <member refid="group__sl__bt__resolving__list_1ga7d5b77e2c203e226452def6af5115b3f" kind="define"><name>sl_bt_cmd_resolving_list_add_device_by_bonding_id</name></member>
     <member refid="group__sl__bt__resolving__list_1ga66d4d6899fcb25a2ae6160deab48b434" kind="define"><name>sl_bt_cmd_resolving_list_add_device_by_address_id</name></member>
     <member refid="group__sl__bt__resolving__list_1ga035f4d0c6789e25bc0e69b056ee0eb6a" kind="define"><name>sl_bt_cmd_resolving_list_remove_device_by_bonding_id</name></member>
     <member refid="group__sl__bt__resolving__list_1gadd565aac290db327b52ce0b196031710" kind="define"><name>sl_bt_cmd_resolving_list_remove_device_by_address_id</name></member>
     <member refid="group__sl__bt__resolving__list_1ga4867163820bd0558419fe5cf499191a8" kind="define"><name>sl_bt_cmd_resolving_list_remove_all_devices_id</name></member>
+    <member refid="group__sl__bt__resolving__list_1ga2b748f2b6a208b9d0a2778b5aa97c1bc" kind="define"><name>sl_bt_cmd_resolving_list_read_peer_resolvable_address_id</name></member>
     <member refid="group__sl__bt__resolving__list_1gabcc95231d06b9a3e3afed47aaf06a5e6" kind="define"><name>sl_bt_rsp_resolving_list_add_device_by_bonding_id</name></member>
     <member refid="group__sl__bt__resolving__list_1gac67e276c23a4f1c7ab49d6c9c794a904" kind="define"><name>sl_bt_rsp_resolving_list_add_device_by_address_id</name></member>
     <member refid="group__sl__bt__resolving__list_1gadee96492e0b3d2ef70b2c67c556bb469" kind="define"><name>sl_bt_rsp_resolving_list_remove_device_by_bonding_id</name></member>
     <member refid="group__sl__bt__resolving__list_1ga4731e1b96805ab913ef9481e27cdf758" kind="define"><name>sl_bt_rsp_resolving_list_remove_device_by_address_id</name></member>
     <member refid="group__sl__bt__resolving__list_1gabd247975c4d9844a61c009e6be0942e8" kind="define"><name>sl_bt_rsp_resolving_list_remove_all_devices_id</name></member>
+    <member refid="group__sl__bt__resolving__list_1ga0004ec108a9cd3009ec6655880775978" kind="define"><name>sl_bt_rsp_resolving_list_read_peer_resolvable_address_id</name></member>
   </compound>
   <compound refid="group__sl__bt__accept__list" kind="group"><name>sl_bt_accept_list</name>
     <member refid="group__sl__bt__accept__list_1ga71dbdfee71110fe8384285ffb39eb858" kind="function"><name>sl_bt_accept_list_add_device_by_bonding</name></member>
@@ -3390,6 +3546,12 @@
     <member refid="group__sl__bt__cs_1ga8fd875965cf4e392514a5f4f7769bb3d" kind="enum"><name>sl_bt_cs_procedure_state_t</name></member>
     <member refid="group__sl__bt__cs_1gga8fd875965cf4e392514a5f4f7769bb3da4eeadc432c438018a20be6b27a29ba44" kind="enumvalue"><name>sl_bt_cs_procedure_state_disabled</name></member>
     <member refid="group__sl__bt__cs_1gga8fd875965cf4e392514a5f4f7769bb3da61c67251f887bd52c618ef6106176cd7" kind="enumvalue"><name>sl_bt_cs_procedure_state_enabled</name></member>
+    <member refid="group__sl__bt__cs_1ga1dc74f64ec915490815e1628b118d2b5" kind="enum"><name>sl_bt_cs_handover_handle_type_t</name></member>
+    <member refid="group__sl__bt__cs_1gga1dc74f64ec915490815e1628b118d2b5afb3359772b7ae46cd288c31cbb0d2255" kind="enumvalue"><name>sl_bt_cs_handover_handle_type_connection</name></member>
+    <member refid="group__sl__bt__cs_1gga1dc74f64ec915490815e1628b118d2b5a1d5945e7d48e4cfef53216ba555f7344" kind="enumvalue"><name>sl_bt_cs_handover_handle_type_analyzer</name></member>
+    <member refid="group__sl__bt__cs_1ga8850c7bbb087a73a571cfd280a2a1a93" kind="enum"><name>sl_bt_cs_handover_complete_reason_t</name></member>
+    <member refid="group__sl__bt__cs_1gga8850c7bbb087a73a571cfd280a2a1a93a0d72aa29c1c395c8393692a651bc32a6" kind="enumvalue"><name>sl_bt_cs_handover_complete_reason_max_procedure_count_reached</name></member>
+    <member refid="group__sl__bt__cs_1gga8850c7bbb087a73a571cfd280a2a1a93a9a6b5e860561286bea8a6474b756de18" kind="enumvalue"><name>sl_bt_cs_handover_complete_reason_sync_lost</name></member>
     <member refid="group__sl__bt__cs_1ga631ba2f05b0fb5daf637468c2f0d7dc3" kind="enum"><name>sl_bt_cs_mode_t</name></member>
     <member refid="group__sl__bt__cs_1gga631ba2f05b0fb5daf637468c2f0d7dc3a32778ba18934123ad7132ca191192edb" kind="enumvalue"><name>sl_bt_cs_mode_rtt</name></member>
     <member refid="group__sl__bt__cs_1gga631ba2f05b0fb5daf637468c2f0d7dc3aa489a1f39d38004f996b3b830b3f36ba" kind="enumvalue"><name>sl_bt_cs_mode_pbr</name></member>
@@ -3428,6 +3590,11 @@
     <member refid="group__sl__bt__cs_1ga76ba2c01277740fd6844392fedc571aa" kind="function"><name>sl_bt_cs_set_antenna_configuration</name></member>
     <member refid="group__sl__bt__cs_1ga179e5b1dd30a811c3d3f53c64acf9e47" kind="function"><name>sl_bt_cs_read_local_supported_capabilities</name></member>
     <member refid="group__sl__bt__cs_1ga8c0052901c17a4c427f2b25d3c484bc7" kind="function"><name>sl_bt_cs_read_remote_supported_capabilities</name></member>
+    <member refid="group__sl__bt__cs_1ga2ba75f26352698b6c8cb752c16b342f7" kind="function"><name>sl_bt_cs_handover_get_procedure_parameters</name></member>
+    <member refid="group__sl__bt__cs_1ga7be074a19c9a267769c4325feeb4b720" kind="function"><name>sl_bt_cs_handover_set_procedure_parameters</name></member>
+    <member refid="group__sl__bt__cs_1ga980aaeacdecec62c35335dd2ceb39727" kind="function"><name>sl_bt_cs_handover_create_sync</name></member>
+    <member refid="group__sl__bt__cs_1ga3757cf65977fcfec697aa5229ec953ed" kind="function"><name>sl_bt_cs_handover_enable_procedure</name></member>
+    <member refid="group__sl__bt__cs_1ga8166fe81e523a4fa446c954a87a548bc" kind="function"><name>sl_bt_cs_handover_remove_procedure</name></member>
     <member refid="group__sl__bt__cs_1ga1b7d9eff7825aa34d06e6fb6e6a5e57d" kind="define"><name>sl_bt_cmd_cs_security_enable_id</name></member>
     <member refid="group__sl__bt__cs_1gaaf8d1863cbdd1861b8851420890d0b10" kind="define"><name>sl_bt_cmd_cs_set_default_settings_id</name></member>
     <member refid="group__sl__bt__cs_1gadfbd1b442e7b3ad371a3d83d38fddacc" kind="define"><name>sl_bt_cmd_cs_create_config_id</name></member>
@@ -3438,6 +3605,11 @@
     <member refid="group__sl__bt__cs_1gacf1980b93dce896a255ab468616c137c" kind="define"><name>sl_bt_cmd_cs_set_antenna_configuration_id</name></member>
     <member refid="group__sl__bt__cs_1gacdd8312d52928132293091395b69705b" kind="define"><name>sl_bt_cmd_cs_read_local_supported_capabilities_id</name></member>
     <member refid="group__sl__bt__cs_1ga446e679888cd49105b861a051898857b" kind="define"><name>sl_bt_cmd_cs_read_remote_supported_capabilities_id</name></member>
+    <member refid="group__sl__bt__cs_1gaf00fd7333ce2465671d4954c34a2fa48" kind="define"><name>sl_bt_cmd_cs_handover_get_procedure_parameters_id</name></member>
+    <member refid="group__sl__bt__cs_1ga4995264b95a1ef3362f2c3083d1cd353" kind="define"><name>sl_bt_cmd_cs_handover_set_procedure_parameters_id</name></member>
+    <member refid="group__sl__bt__cs_1ga069958b4d7b2a37701ed345eab5d41fe" kind="define"><name>sl_bt_cmd_cs_handover_create_sync_id</name></member>
+    <member refid="group__sl__bt__cs_1ga112f3745387b9501707dea89c9f72067" kind="define"><name>sl_bt_cmd_cs_handover_enable_procedure_id</name></member>
+    <member refid="group__sl__bt__cs_1ga390896ee3a970209b7ddb957303ed5e7" kind="define"><name>sl_bt_cmd_cs_handover_remove_procedure_id</name></member>
     <member refid="group__sl__bt__cs_1ga0987597a30a5747b72c6119f95e873b0" kind="define"><name>sl_bt_rsp_cs_security_enable_id</name></member>
     <member refid="group__sl__bt__cs_1gafcf9bfb8f785d74aac09f22f4a429eec" kind="define"><name>sl_bt_rsp_cs_set_default_settings_id</name></member>
     <member refid="group__sl__bt__cs_1ga3669a9419563eb3801e2a7068f8c45f4" kind="define"><name>sl_bt_rsp_cs_create_config_id</name></member>
@@ -3448,6 +3620,11 @@
     <member refid="group__sl__bt__cs_1gaf773b4f5018263cc19658a037a66c22f" kind="define"><name>sl_bt_rsp_cs_set_antenna_configuration_id</name></member>
     <member refid="group__sl__bt__cs_1ga50afbc935d11ea6e3c1e84f4063c2bd1" kind="define"><name>sl_bt_rsp_cs_read_local_supported_capabilities_id</name></member>
     <member refid="group__sl__bt__cs_1gabb8b8697dbbeb030b3dd28955a6a8b90" kind="define"><name>sl_bt_rsp_cs_read_remote_supported_capabilities_id</name></member>
+    <member refid="group__sl__bt__cs_1ga17e41ce1a16e2a257c460eb3c541102f" kind="define"><name>sl_bt_rsp_cs_handover_get_procedure_parameters_id</name></member>
+    <member refid="group__sl__bt__cs_1ga7246ee241af558bac9470d36de35d311" kind="define"><name>sl_bt_rsp_cs_handover_set_procedure_parameters_id</name></member>
+    <member refid="group__sl__bt__cs_1ga8b4cac87c485a7b97a1b9e9b9df6b248" kind="define"><name>sl_bt_rsp_cs_handover_create_sync_id</name></member>
+    <member refid="group__sl__bt__cs_1ga6b4312090d359afae6c2099d9837bc63" kind="define"><name>sl_bt_rsp_cs_handover_enable_procedure_id</name></member>
+    <member refid="group__sl__bt__cs_1gae936db50e1f288132a314f0793628c51" kind="define"><name>sl_bt_rsp_cs_handover_remove_procedure_id</name></member>
   </compound>
   <compound refid="group__sl__bt__evt__cs__security__enable__complete" kind="group"><name>sl_bt_evt_cs_security_enable_complete</name>
     <member refid="group__sl__bt__evt__cs__security__enable__complete_1ga2299d5eca50e08f933b61df674705b15" kind="typedef"><name>sl_bt_evt_cs_security_enable_complete_t</name></member>
@@ -3472,6 +3649,22 @@
   <compound refid="group__sl__bt__evt__cs__read__remote__supported__capabilities__complete" kind="group"><name>sl_bt_evt_cs_read_remote_supported_capabilities_complete</name>
     <member refid="group__sl__bt__evt__cs__read__remote__supported__capabilities__complete_1gad1a9f7a186ea41d9d1d8ca5659f4eacd" kind="typedef"><name>sl_bt_evt_cs_read_remote_supported_capabilities_complete_t</name></member>
     <member refid="group__sl__bt__evt__cs__read__remote__supported__capabilities__complete_1ga5ee11874bc43b1619c634e6afb9d71b1" kind="define"><name>sl_bt_evt_cs_read_remote_supported_capabilities_complete_id</name></member>
+  </compound>
+  <compound refid="group__sl__bt__evt__cs__handover__sync__established" kind="group"><name>sl_bt_evt_cs_handover_sync_established</name>
+    <member refid="group__sl__bt__evt__cs__handover__sync__established_1ga26d89514974ed978b3bb6385591f516c" kind="typedef"><name>sl_bt_evt_cs_handover_sync_established_t</name></member>
+    <member refid="group__sl__bt__evt__cs__handover__sync__established_1ga0d5570d585574bf19d453ddbc6ccb6f6" kind="define"><name>sl_bt_evt_cs_handover_sync_established_id</name></member>
+  </compound>
+  <compound refid="group__sl__bt__evt__cs__handover__complete" kind="group"><name>sl_bt_evt_cs_handover_complete</name>
+    <member refid="group__sl__bt__evt__cs__handover__complete_1ga4c8825f961c0373f8708e9518c46c0ed" kind="typedef"><name>sl_bt_evt_cs_handover_complete_t</name></member>
+    <member refid="group__sl__bt__evt__cs__handover__complete_1ga20cd24ece832db270f23f9088e64c89a" kind="define"><name>sl_bt_evt_cs_handover_complete_id</name></member>
+  </compound>
+  <compound refid="group__sl__bt__evt__cs__handover__result" kind="group"><name>sl_bt_evt_cs_handover_result</name>
+    <member refid="group__sl__bt__evt__cs__handover__result_1ga69ede1131dcfdd9fca92fcb0b471143d" kind="typedef"><name>sl_bt_evt_cs_handover_result_t</name></member>
+    <member refid="group__sl__bt__evt__cs__handover__result_1gae53d3f63b834a343fa6df630cb0d1567" kind="define"><name>sl_bt_evt_cs_handover_result_id</name></member>
+  </compound>
+  <compound refid="group__sl__bt__evt__cs__handover__result__continue" kind="group"><name>sl_bt_evt_cs_handover_result_continue</name>
+    <member refid="group__sl__bt__evt__cs__handover__result__continue_1gac40e08516d8ac542673543b5f7d80784" kind="typedef"><name>sl_bt_evt_cs_handover_result_continue_t</name></member>
+    <member refid="group__sl__bt__evt__cs__handover__result__continue_1ga7822846f17c2b9e9c82b53437db543f0" kind="define"><name>sl_bt_evt_cs_handover_result_continue_id</name></member>
   </compound>
   <compound refid="group__sl__bt__cs__test" kind="group"><name>sl_bt_cs_test</name>
     <member refid="group__sl__bt__cs__test_1ga63927ecc8c3951878256e65b568b3f08" kind="enum"><name>sl_bt_cs_test_tone_extension_t</name></member>
@@ -3643,10 +3836,13 @@
   </compound>
   <compound refid="group__sl__bt__connection__analyzer" kind="group"><name>sl_bt_connection_analyzer</name>
     <member refid="group__sl__bt__connection__analyzer_1gaa3898b966e74863f4e2fe159f5f7d183" kind="function"><name>sl_bt_connection_analyzer_start</name></member>
+    <member refid="group__sl__bt__connection__analyzer_1ga5d5990b00a62ef42f034e58c89e0c451" kind="function"><name>sl_bt_connection_analyzer_process_llcp_event</name></member>
     <member refid="group__sl__bt__connection__analyzer_1gadf538d051a2f17718bbe1ca1d6941f20" kind="function"><name>sl_bt_connection_analyzer_stop</name></member>
     <member refid="group__sl__bt__connection__analyzer_1gad613de875f5a9f34ebe326ef5bf19fbb" kind="define"><name>sl_bt_cmd_connection_analyzer_start_id</name></member>
+    <member refid="group__sl__bt__connection__analyzer_1gab3b33aec86045de39715f0ffc5f7b2e5" kind="define"><name>sl_bt_cmd_connection_analyzer_process_llcp_event_id</name></member>
     <member refid="group__sl__bt__connection__analyzer_1ga618695dcbca10e818491e5d265947fb1" kind="define"><name>sl_bt_cmd_connection_analyzer_stop_id</name></member>
     <member refid="group__sl__bt__connection__analyzer_1ga18155dd5db6b1a10fd59fa78b2aed4c7" kind="define"><name>sl_bt_rsp_connection_analyzer_start_id</name></member>
+    <member refid="group__sl__bt__connection__analyzer_1ga4ee797da04853f351503b718cb3a8dda" kind="define"><name>sl_bt_rsp_connection_analyzer_process_llcp_event_id</name></member>
     <member refid="group__sl__bt__connection__analyzer_1ga0cc18aa2e3b4a210abc6ae45e2e89816" kind="define"><name>sl_bt_rsp_connection_analyzer_stop_id</name></member>
   </compound>
   <compound refid="group__sl__bt__connection__analyzer__flags" kind="group"><name>sl_bt_connection_analyzer_flags</name>
@@ -3686,12 +3882,10 @@
     <member refid="group__sl__bt__utility__functions_1gaff57fe1cdd8863d2d271224c2d7e2bb6" kind="function"><name>sl_bt_pop_event</name></member>
     <member refid="group__sl__bt__utility__functions_1ga29654e6399b4bf427978e604dee505c4" kind="function"><name>sl_bt_event_pending</name></member>
     <member refid="group__sl__bt__utility__functions_1ga9d60c2be2d9ba65176820c7430017e12" kind="function"><name>sl_bt_event_pending_len</name></member>
-    <member refid="group__sl__bt__utility__functions_1ga16c8034e39e43154301ec3a5b66175f4" kind="function"><name>sl_bt_run</name></member>
-    <member refid="group__sl__bt__utility__functions_1ga840b2449b01c063776d48203138f2115" kind="function"><name>sl_bt_handle_command</name></member>
-    <member refid="group__sl__bt__utility__functions_1ga10ba5cfefeaf1559b811cf41f55c47b3" kind="function"><name>sl_bt_get_command_response</name></member>
+    <member refid="group__sl__bt__utility__functions_1ga5cba6b8c0aa007a52646204ec1ea8180" kind="function"><name>sl_bt_run</name></member>
     <member refid="group__sl__bt__utility__functions_1gaca4c91c504be0d4ad392c5fdbb111ee6" kind="function"><name>sl_bt_priority_handle</name></member>
     <member refid="group__sl__bt__utility__functions_1gaf34d7a4f48d238971575e45e9103b03f" kind="function"><name>sl_bt_external_signal</name></member>
-    <member refid="group__sl__bt__utility__functions_1ga3ae83713640241b5fe646774faa6b8f4" kind="function"><name>sl_bt_send_system_awake</name></member>
+    <member refid="group__sl__bt__utility__functions_1gac6f32b6803eb0102a133a1f8f9cc5024" kind="function"><name>sl_bt_send_system_awake</name></member>
     <member refid="group__sl__bt__utility__functions_1ga932da482b285833a9df22c36f389d8bb" kind="function"><name>sl_bt_send_system_error</name></member>
     <member refid="group__sl__bt__utility__functions_1ga2efa124d72e59697be4527c7d966f3c2" kind="function"><name>sl_bt_is_sensitive_message</name></member>
     <member refid="group__sl__bt__utility__functions_1ga629882087e9e95d82c773def3eb95173" kind="function"><name>sl_bt_set_user_response_buffer</name></member>
@@ -3700,6 +3894,8 @@
     <member refid="group__sl__bt__utility__functions_1ga90eef151525addf229cf984e779814db" kind="function"><name>sl_bt_send_rsp_user_manage_event_filter</name></member>
     <member refid="group__sl__bt__utility__functions_1ga05bd13a2260a174af64102db871b61fa" kind="function"><name>sl_bt_send_rsp_user_cs_service_message_to_target</name></member>
     <member refid="group__sl__bt__utility__functions_1ga6662f56ac1b8ba5051b1cbb5f0031aa0" kind="function"><name>sl_bt_send_evt_user_cs_service_message_to_host</name></member>
+    <member refid="group__sl__bt__utility__functions_1ga840b2449b01c063776d48203138f2115" kind="function"><name>sl_bt_handle_command</name></member>
+    <member refid="group__sl__bt__utility__functions_1ga10ba5cfefeaf1559b811cf41f55c47b3" kind="function"><name>sl_bt_get_command_response</name></member>
   </compound>
   <compound refid="group__sl__bt__version" kind="group"><name>sl_bt_version</name>
     <member refid="group__sl__bt__version_1ga5d2a7dcd8cadd547bf5339828102c833" kind="define"><name>SL_BT_VERSION_MAJOR</name></member>
@@ -3719,27 +3915,27 @@
   </compound>
   <compound refid="md_doc_bgapi" kind="page"><name>md_doc_bgapi</name>
   </compound>
-  <compound refid="dir_2391b89f2879365d74a63a728bba7d01" kind="dir"><name>/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi</name>
+  <compound refid="dir_2391b89f2879365d74a63a728bba7d01" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi</name>
   </compound>
-  <compound refid="dir_e2f731d1cb9f97679faa790ae39b91e5" kind="dir"><name>/var/lib/jenkins/github@2/bluetooth_le_host</name>
+  <compound refid="dir_e2f731d1cb9f97679faa790ae39b91e5" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host</name>
   </compound>
-  <compound refid="dir_b1a1817b9387e5b054018a5428eb2a3f" kind="dir"><name>/var/lib/jenkins/github@2/bluetooth_le_host/build</name>
+  <compound refid="dir_b1a1817b9387e5b054018a5428eb2a3f" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/build</name>
   </compound>
   <compound refid="dir_5a46a304ca1f10f7c478657ff1bdae3a" kind="dir"><name>doc</name>
   </compound>
-  <compound refid="dir_d9a0b0c47291d7e9365bb8ce2e415e2a" kind="dir"><name>/var/lib/jenkins/github@2/bluetooth_le_host/event_system</name>
+  <compound refid="dir_d9a0b0c47291d7e9365bb8ce2e415e2a" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/event_system</name>
   </compound>
-  <compound refid="dir_ae20ecc429096018a2fe615dace667aa" kind="dir"><name>/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc</name>
+  <compound refid="dir_ae20ecc429096018a2fe615dace667aa" kind="dir"><name>/var/lib/jenkins/github/bgapi_protocol/protocol/inc</name>
   </compound>
-  <compound refid="dir_d0da292a01e2631d4fa972006f72b194" kind="dir"><name>/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc</name>
+  <compound refid="dir_d0da292a01e2631d4fa972006f72b194" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc</name>
   </compound>
-  <compound refid="dir_2e99f0e5add2c6d752cf2b568e810fad" kind="dir"><name>/var/lib/jenkins/github@2/bluetooth_le_host/event_system/inc</name>
+  <compound refid="dir_2e99f0e5add2c6d752cf2b568e810fad" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/event_system/inc</name>
   </compound>
-  <compound refid="dir_848835a5aecb994e59a4c4b7340e87b9" kind="dir"><name>/var/lib/jenkins/github@2/bluetooth_le_host/inc</name>
+  <compound refid="dir_848835a5aecb994e59a4c4b7340e87b9" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/inc</name>
   </compound>
-  <compound refid="dir_9ef8797857fbe1d47af7accb030e7afd" kind="dir"><name>/var/lib/jenkins/github@2/bluetooth_le_host/build/native</name>
+  <compound refid="dir_9ef8797857fbe1d47af7accb030e7afd" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/build/native</name>
   </compound>
-  <compound refid="dir_6d235e19420f7bb65a9187ffe80ccb69" kind="dir"><name>/var/lib/jenkins/github@2/bgapi_protocol/protocol</name>
+  <compound refid="dir_6d235e19420f7bb65a9187ffe80ccb69" kind="dir"><name>/var/lib/jenkins/github/bgapi_protocol/protocol</name>
   </compound>
   <compound refid="indexpage" kind="page"><name>index</name>
   </compound>

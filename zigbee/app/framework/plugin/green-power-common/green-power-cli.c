@@ -59,32 +59,32 @@ WEAK(void sl_zigbee_af_green_power_client_print_proxy_table(SL_CLI_COMMAND_ARG))
   sl_zigbee_ezsp_get_configuration_value(SL_ZIGBEE_EZSP_CONFIG_GP_PROXY_TABLE_SIZE, &proxyTableSize);
   uint8_t i, j;
 
-  sl_zigbee_af_green_power_cluster_print("Proxy Table:\n");
+  sl_zigbee_af_cli_print("Proxy Table:\n");
   for (i = 0; i < proxyTableSize; i++) {
     sl_zigbee_gp_proxy_table_entry_t entry = { 0 };
     if (sl_zigbee_ezsp_gp_proxy_table_get_entry(i, &entry) != SL_STATUS_OK) {
       return;
     }
     if (entry.status == SL_ZIGBEE_GP_PROXY_TABLE_ENTRY_STATUS_ACTIVE) {
-      sl_zigbee_af_core_print("%d opt:%08X seco:%02X srcID:%08X ", i, entry.options, entry.securityOptions, entry.gpd.id.sourceId);
+      sl_zigbee_af_cli_print("%d opt:%08X seco:%02X srcID:%08X ", i, entry.options, entry.securityOptions, entry.gpd.id.sourceId);
       for (j = 0; j < 2; j++) {
         if (entry.sinkList[j].type == SL_ZIGBEE_GP_SINK_TYPE_UNUSED) {
-          sl_zigbee_af_core_print("unused");
+          sl_zigbee_af_cli_print("unused");
         } else if (entry.sinkList[j].type == SL_ZIGBEE_GP_SINK_TYPE_GROUPCAST) {
-          sl_zigbee_af_core_print("GC %04X", entry.sinkList[j].target.groupcast.groupID);
+          sl_zigbee_af_cli_print("GC %04X", entry.sinkList[j].target.groupcast.groupID);
         } else if (entry.sinkList[j].type == SL_ZIGBEE_GP_SINK_TYPE_LW_UNICAST) {
-          sl_zigbee_af_core_print("LU:");
+          sl_zigbee_af_cli_print("LU:");
           sl_zigbee_af_print_big_endian_eui64(entry.sinkList[j].target.unicast.sinkEUI);
         }
-        sl_zigbee_af_core_print(" ");
+        sl_zigbee_af_cli_print(" ");
       }
-      sl_zigbee_af_core_print(" ");
+      sl_zigbee_af_cli_print(" ");
       for (j = 0; j < SL_ZIGBEE_ENCRYPTION_KEY_SIZE; j++) {
-        sl_zigbee_af_core_print("%02X", entry.gpdKey.contents[j]);
+        sl_zigbee_af_cli_print("%02X", entry.gpdKey.contents[j]);
       }
-      sl_zigbee_af_core_print(" ");
-      sl_zigbee_af_core_print("%02X", entry.gpdSecurityFrameCounter);
-      sl_zigbee_af_core_print("\n");
+      sl_zigbee_af_cli_print(" ");
+      sl_zigbee_af_cli_print("%02X", entry.gpdSecurityFrameCounter);
+      sl_zigbee_af_cli_print("\n");
     }
   }
 #endif // SL_CATALOG_ZIGBEE_AF_SUPPORT_PRESENT
@@ -149,8 +149,8 @@ WEAK(void sl_zigbee_af_green_power_server_commissioning_mode(SL_CLI_COMMAND_ARG)
                                                          gpmAddressSecurity,
                                                          gpmAddressPairing,
                                                          endpoint);
-  sl_zigbee_af_core_println("\n\rSink Commissioning Enter %s",
-                            (status == SL_STATUS_OK) ? "success" : "error");
+  sl_zigbee_af_cli_println("\n\rSink Commissioning Enter %s",
+                           (status == SL_STATUS_OK) ? "success" : "error");
 #endif // SL_CATALOG_ZIGBEE_AF_SUPPORT_PRESENT
 }
 
@@ -162,28 +162,28 @@ WEAK(void sl_zigbee_af_green_power_server_cli_sink_table_print(SL_CLI_COMMAND_AR
   uint16_t sinkTableSize = 0;
   sl_zigbee_ezsp_get_configuration_value(SL_ZIGBEE_EZSP_CONFIG_GP_SINK_TABLE_SIZE, &sinkTableSize);
   bool tableEmpty = true;
-  sl_zigbee_af_core_println("\n\rSink Table Size: %d", sinkTableSize);
+  sl_zigbee_af_cli_println("\n\rSink Table Size: %d", sinkTableSize);
   for (uint8_t index = 0; index < sinkTableSize; index++) {
     sl_zigbee_gp_sink_table_entry_t entry = { 0 };
     sl_status_t status = sl_zigbee_ezsp_gp_sink_table_get_entry(index, &entry);
     if (status == SL_STATUS_OK
         && entry.status == SL_ZIGBEE_GP_SINK_TABLE_ENTRY_STATUS_ACTIVE) {
       tableEmpty = false;
-      sl_zigbee_af_core_println("%02X %04X %02X %08X %02X %02X %04X %02X %02X %08X",
-                                entry.status,
-                                entry.options,
-                                entry.gpd.applicationId,
-                                entry.gpd.id.sourceId,
-                                entry.gpd.endpoint,
-                                entry.deviceId,
-                                entry.assignedAlias,
-                                entry.groupcastRadius,
-                                entry.securityOptions,
-                                entry.gpdSecurityFrameCounter);
+      sl_zigbee_af_cli_println("%02X %04X %02X %08X %02X %02X %04X %02X %02X %08X",
+                               entry.status,
+                               entry.options,
+                               entry.gpd.applicationId,
+                               entry.gpd.id.sourceId,
+                               entry.gpd.endpoint,
+                               entry.deviceId,
+                               entry.assignedAlias,
+                               entry.groupcastRadius,
+                               entry.securityOptions,
+                               entry.gpdSecurityFrameCounter);
     }
   }
   if (tableEmpty) {
-    sl_zigbee_af_core_println("\n\rSink Table Empty");
+    sl_zigbee_af_cli_println("\n\rSink Table Empty");
   }
 #endif // SL_CATALOG_ZIGBEE_AF_SUPPORT_PRESENT
 }
@@ -202,11 +202,11 @@ WEAK(void sl_zigbee_af_green_power_server_cli_run_test_vectors(SL_CLI_COMMAND_AR
   // A test to run the security test vectors upon reset
   sl_status_t status = sl_zigbee_ezsp_gp_security_test_vectors();
   if (status == SL_STATUS_OK) {
-    sl_zigbee_af_green_power_cluster_println("~~ gp-test-vectors PASS ~~");
+    sl_zigbee_af_cli_println("~~ gp-test-vectors PASS ~~");
   } else if (status == SL_STATUS_NOT_AVAILABLE) {
-    sl_zigbee_af_green_power_cluster_println("Command is not supported");
+    sl_zigbee_af_cli_println("Command is not supported");
   } else {
-    sl_zigbee_af_green_power_cluster_println("~~ gp-test-vectors FAIL ~~");
+    sl_zigbee_af_cli_println("~~ gp-test-vectors FAIL ~~");
   }
 }
 #endif //SL_CATALOG_ZIGBEE_GREEN_POWER_SERVER_CLI_PRESENT

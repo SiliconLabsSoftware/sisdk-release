@@ -37,22 +37,11 @@ MISRAC_ENABLE
 #endif
 
 #ifndef BOOTLOADER_VERSION_MAIN_CUSTOMER
-#define BOOTLOADER_VERSION_MAIN_CUSTOMER          1
+#define BOOTLOADER_VERSION_MAIN_CUSTOMER          0
 #endif
 
 #define BOOTLOADER_VERSION_MAIN (BOOTLOADER_VERSION_MAIN_MAJOR   << 24 \
                                  | BOOTLOADER_VERSION_MAIN_MINOR << 16 \
                                  | BOOTLOADER_VERSION_MAIN_CUSTOMER)
-
-//
-// Option validation
-//
-
-#if (defined(BOOTLOADER_USE_SYMMETRIC_KEY_FROM_SE_STORAGE)      \
-  && (BOOTLOADER_USE_SYMMETRIC_KEY_FROM_SE_STORAGE == 1))       \
-  && (defined(BOOTLOADER_USE_SYMMETRIC_KEY_FROM_APP_PROPERTIES) \
-  && (BOOTLOADER_USE_SYMMETRIC_KEY_FROM_APP_PROPERTIES == 1))
-  #error "Choose either to store the GBL decryption key in Secure Element or Application Properties struct"
-#endif // BOOTLOADER_USE_SYMMETRIC_KEY_FROM_APP_PROPERTIES && BOOTLOADER_USE_SYMMETRIC_KEY_FROM_APP_PROPERTIES
 
 #endif // BTL_CONFIG_H

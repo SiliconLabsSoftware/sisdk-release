@@ -265,8 +265,6 @@ enum {
   EMEBER_GPD_AF_CALLBACK_STORE_GPD_TO_NVM,
 };
 
-#define SL_ZIGBEE_AP_PLUGIN_APPS_APP_NEXT_RX_CHANNEL 11
-#define SL_ZIGBEE_AP_PLUGIN_APPS_APP_SECOND_NEXT_RX_CHANNEL 11
 #define SL_ZIGBEE_AF_PLUGIN_APPS_CMD_RESEND_NUMBER 1
 
 // GPD address structure
@@ -323,6 +321,7 @@ void sl_zigbee_gpd_rail_write_tx_fifo_wrapper(const uint8_t *dataPtr,
 void sl_zigbee_gpd_rail_start_rx_wrapper(uint8_t channel);
 void sl_zigbee_gpd_rail_idle_wrapper(void);
 uint16_t sl_zigbee_gpd_rail_get_radio_entropy_wrapper(uint8_t *dataPtr, uint16_t dataLength);
+void sl_zigbee_gpd_rail_set_long_address_wrapper(uint8_t *ieee);
 void sl_zigbee_gpd_rail_provide_rail_handle(sl_rail_handle_t handle);
 
 // Security Function Prototypes
@@ -414,4 +413,5 @@ void sl_zigbee_gpd_incoming_message_handler(uint8_t * buffer,
 
 void sl_zigbee_gpd_af_plugin_commission(sl_zigbee_gpd_t_t * gpd);
 void sl_zigbee_gpd_af_plugin_de_commission(sl_zigbee_gpd_t_t * gpd);
+void sl_zigbee_gpd_af_plugin_set_next_channel(uint8_t nextChannel, uint8_t secondNextChannel);
 #endif

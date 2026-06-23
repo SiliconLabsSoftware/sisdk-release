@@ -8,7 +8,9 @@
       - Make sure both device types are selected for coordinator role.
     d) To use multi-network the primary and secondary security should be one of the SE/HA ones or Z3
     e) Zigbee Light Link component shall not be included for multi-network or multi-PAN scenarios
-    f) Zigbee End Device Support component must be included for a sleepy end device or an end device --]]
+    f) Zigbee End Device Support component must be included for a sleepy end device or an end device
+    g) Coordinator or router device types on SoC require at least 64 KB RAM (blocks EFR32xG22 / 32 KB SRAM targets).
+]]
 
 local device_type_primary_val = slc.config("SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE").value
 local device_type_secondary_val = slc.config("SLI_ZIGBEE_SECONDARY_NETWORK_DEVICE_TYPE").value
@@ -98,4 +100,24 @@ if end_device_support == false and pro_compliance_support == false then
       "Select Zigbee End Device Support component when using end device or sleepy end device types.",
       nil)
   end
+end
+
+-- Coordinator and router (FFD) roles require sufficient RAM for routing tables and buffers.
+-- EFR32xG22-class wireless parts expose device_generic_family_efr32xg22 and have 32 KB SRAM.
+local ffd_device_types_for_ram_check = Set(
+    "SLI_ZIGBEE_NETWORK_DEVICE_TYPE_COORDINATOR_OR_ROUTER",
+    "SLI_ZIGBEE_NETWORK_DEVICE_TYPE_ROUTER")
+local primary_needs_min_ram = ffd_device_types_for_ram_check[device_type_primary_val] ~= nil
+local secondary_needs_min_ram = secondary_network_enabled
+    and ffd_device_types_for_ram_check[device_type_secondary_val] ~= nil
+
+if slc.is_provided("device_cortexm")
+    and not slc.is_provided("zigbee_ezsp")
+    and slc.is_provided("device_generic_family_efr32xg22")
+    and (primary_needs_min_ram or secondary_needs_min_ram) then
+  validation.error(
+      "Coordinator or router network device types require a target with at least 64 KB of primary RAM.",
+      validation.target_for_defines({"SLI_ZIGBEE_PRIMARY_NETWORK_DEVICE_TYPE"}, {"SLI_ZIGBEE_SECONDARY_NETWORK_DEVICE_TYPE"}),
+      "Choose an end device or sleepy end device type on this part, or migrate to a device with at least 64 KB RAM (for example EFR32MG24).",
+      nil)
 end

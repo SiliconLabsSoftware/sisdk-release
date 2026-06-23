@@ -72,8 +72,29 @@ const size_t __rom_end__ @ "ROM_SIZE";
 // External Symbols
 // -----------------------------------------------------------------------------
 
-// External linker symbol for bootloader reset region
+// Bootloader reset region base address.
+//
+// The reset region lives at a fixed RAM location that survives a software
+// reset. The way to obtain its base address depends on the toolchain:
+//   - GCC: a linker-script symbol (__ResetReasonStart__) marks the start of
+//     the region.
+//   - IAR (ILINK): the region is placed by the ICF as a named block
+//     ("BOOTLOADER_RESET_REASON") and its start is queried at compile-time
+//     via the __section_begin() intrinsic. ILINK does not provide
+//     __ResetReasonStart__, so referencing it on IAR causes Li005 link
+//     errors.
+//
+// BTL_RESET_REASON_BASE() is the toolchain-agnostic accessor used below.
+#if defined(__GNUC__)
 extern uint32_t __ResetReasonStart__[];
+#define BTL_RESET_REASON_BASE() ((volatile uint16_t *)&__ResetReasonStart__)
+#elif defined(__ICCARM__)
+#pragma section = "BOOTLOADER_RESET_REASON"
+#define BTL_RESET_REASON_BASE() \
+  ((volatile uint16_t *)__section_begin("BOOTLOADER_RESET_REASON"))
+#else
+#error "Unsupported toolchain: cannot locate bootloader reset reason region"
+#endif
 
 // -----------------------------------------------------------------------------
 // Global Variables
@@ -202,7 +223,7 @@ __attribute__((section("text_bootloader_critical_ram")))
 __attribute__((used))
 void hardfault_ram_handler(void)
 {
-  volatile uint16_t *resetReasonBase = (volatile uint16_t *)&__ResetReasonStart__;
+  volatile uint16_t *resetReasonBase = BTL_RESET_REASON_BASE();
   resetReasonBase[0] = BOOTLOADER_RESET_REASON_FATAL;     // reason
   resetReasonBase[1] = BOOTLOADER_RESET_SIGNATURE_VALID;  // signature
 
@@ -235,7 +256,7 @@ __attribute__((used))
 void busfault_ram_handler(void)
 {
 
-  volatile uint16_t *extendedResetRegion = (volatile uint16_t *)&__ResetReasonStart__;
+  volatile uint16_t *extendedResetRegion = BTL_RESET_REASON_BASE();
 
   // If PC read flag is set, this bus fault occurred during application read
   if (extendedResetRegion[BTL_RESET_REGION_PC_READ_FLAG_OFFSET] == BTL_RESET_REGION_PC_READ_MAGIC) {
@@ -536,7 +557,7 @@ void SystemInit2(void)
   // Only perform vector table validation if we're planning to enter the app
   // If enter_bootloader() returned true, skip this to go into firmware upgrade mode
   if (enterApp && ((region_config.locked == true) || skipLockBitCheck)) {
-    volatile uint16_t *extendedResetRegion = (volatile uint16_t *)&__ResetReasonStart__;
+    volatile uint16_t *extendedResetRegion = BTL_RESET_REASON_BASE();
     extendedResetRegion[BTL_RESET_REGION_PC_READ_FLAG_OFFSET] = BTL_RESET_REGION_PC_READ_MAGIC;
     
     // Check application vector table header (may trigger QSPI auth error in AXiP region)
@@ -588,18 +609,16 @@ void SystemInit2(void)
  * 
  * @param startOfAppSpace Start address of application space
  */
-#if defined(__clang__)
-// Clang does not support naked functions which aren't fully inline asm.
-// Todo: rewrite function in assembly.
-__attribute__ ((noreturn)) static void bootToApp(uint32_t startOfAppSpace)
-#else
 __attribute__ ((noreturn, naked)) static void boot_to_app(uint32_t startOfAppSpace)
-#endif
 {
+#if defined(__clang__)
+  __ASM volatile("b jump_to_application_routine");
+#else
   jump_to_application_routine(startOfAppSpace);
   while (1) {
     // Do nothing
   }
+#endif
 }
 
 // -----------------------------------------------------------------------------
@@ -649,7 +668,7 @@ bool enter_bootloader(void)
  */
 bool check_qspi_authentication_error(void)
 {
-  volatile uint16_t *extendedResetRegion = (volatile uint16_t *)&__ResetReasonStart__;
+  volatile uint16_t *extendedResetRegion = BTL_RESET_REASON_BASE();
 
   // Check if QSPI error flag indicates bus fault occurred during application read
   if (extendedResetRegion[BTL_RESET_REGION_QSPI_ERROR_FLAG_OFFSET] == BTL_RESET_REGION_QSPI_ERROR_MAGIC) {

@@ -1,101 +1,81 @@
-# TrustZone PSA Crypto ECDH (Non-secure application)
+# TrustZone PSA Crypto ECDH (Non-secure Application)
 
-This example uses the PSA Crypto API to perform ECDH key agreement on the supported device.
+Demonstrates how to perform ECDH key agreement from the Non-secure side of a TrustZone-split application via the Secure world.
 
-The Elliptic Curve Diffie-Hellman (ECDH) is an anonymous key agreement protocol that allows two parties, each having an elliptic-curve private-public key pair, to establish a shared secret over an insecure channel.
+## Table of Contents
 
-In this example, two peers (client and server) each generate their Elliptic Curve Cryptography (ECC) key pair. They exchange public keys and compute a shared secret using their private ECC keys. These secrets are compared with each other to make sure they are equal.
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-The example redirects standard I/O to the virtual serial port (VCOM) of the kit. By default, the serial port setting is 115200 bps and 8-N-1 configuration.
+## Purpose / Scope
 
-The example has been instrumented with code to count the number of clock cycles spent in different operations. The results are printed on the VCOM serial port console. This feature can be disabled by defining `PSA_CRYPTO_PRINT=0` (default is 1) in the IDE setting (`Preprocessor->Defined symbols`).
+This is the **Non-secure** half of the TrustZone PSA Crypto ECDH example. It must be built as part of the `tz_psa_crypto_ecdh_ws` workspace alongside `tz_psa_crypto_ecdh_s` (the Secure half) — see [`../readme.md`](../readme.md) for the workspace overview, Secure-side architecture, and the curves exercised.
 
-## Getting Started
+On startup the Non-secure application:
 
-The Non-secure application needs to work with the Secure application on a workspace (see readme in `tz_psa_crypto_ecdh_ws`).
+1. Initializes the kit's clocks, IOStream/VCOM, and the Non-secure side of PSA Crypto.
+2. Stands up two simulated peers — **client** and **server** — on the same device.
+3. For each supported curve, calls the Secure-side PSA Crypto veneer to:
+   - Generate a fresh ECC key pair for each peer.
+   - Export each peer's public key.
+   - Run `psa_raw_key_agreement` with each peer's own private key (held in the Secure world) and the other peer's public key to compute a shared secret.
+4. Compares the two computed shared secrets, confirms they are equal, and prints the public keys and the agreed secret to VCOM.
 
-## Additional Information
+The private keys for both peers live entirely in the Secure world; the Non-secure side only references them by PSA key ID and sees their public counterparts. The key-agreement primitive itself runs in the Secure world through the NSC veneer.
 
-1. The example uses the CTR-DRBG, a pseudo-random number generator (PRNG) included in [Mbed TLS](https://docs.silabs.com/mbed-tls/latest/) to generate the random number. If the example is running on a device that includes a TRNG (True Random Number Generator) hardware module, the TRNG will be used as an entropy source to seed the CTR-DRBG. If the device does not incorporate a TRNG, the example will use [RAIL](https://docs.silabs.com/rail/latest/) or NV (non-volatile) seed (requires NVM3) as the entropy source.
-2. If an algorithm is not supported in the hardware accelerator of the selected device, the PSA Crypto will use the software fallback feature in Mbed TLS.
-3. The PSA Crypto does not yet support software fallback on the `CURVE448` curve.
-4. The HSE Secure Vault Mid devices require SE firmware v1.2.11 or higher (EFR32xG21) and v2.1.7 or higher (other HSE devices) to support hardware acceleration on `CURVE25519`.
-5. Change the `CLIENT_KEY_ID` and `SERVER_KEY_ID` values in `app_process.h` if these key IDs had already existed in NVM3.
-6. The default optimization level is `Optimize for debugging (-Og)` on Simplicity IDE and `None` on IAR Embedded Workbench.
+### Non-secure-side Configuration
 
-### Key Storage
+The Non-secure project (`tz_psa_crypto_ecdh_ns.slcp`) brings in:
 
-The following key storages are supported in this example:
+- `trustzone_nonsecure` — the TrustZone wrapper that wires NSC calls and starts the Non-secure runtime after the Secure side hands off.
+- `tz_secure_key_library` — pulls in the Secure-side veneer headers so the Non-secure code can call `PSA Crypto`, `PSA ITS`, etc., as plain function calls.
+- `nvm3_default`, `psa_its`, and `psa_crypto_*` components for the curves exercised — `psa_crypto_ecdh`, `psa_crypto_ecc_secp192r1`, `psa_crypto_ecc_secp256r1`, `psa_crypto_ecc_secp384r1`, `psa_crypto_ecc_secp521r1`, `psa_crypto_ecc_curve25519`, and `psa_crypto_ecc_curve448` (added conditionally on `device_security_vault`).
+- `printf`, `iostream_retarget_stdio`, `iostream_recommended_stream` — for the public-key and shared-secret dump on VCOM.
+- A flash layout that places the Non-secure application at `0x2C000` (immediately after the Secure half), with `memory_flash_size = 0x54000` (336 KB) and `memory_ram_size = 0x5000` (20 KB) starting at `0x20003000` (just after the Secure-side RAM region).
+- `SL_BOARD_ENABLE_VCOM = 1` to bring up the board-controller UART bridge for console output.
 
-* Volatile plain key in RAM
-* Persistent plain key in [NVM3](https://docs.silabs.com/gecko-platform/3.1/driver/api/group-nvm3)
-* Volatile wrapped key in RAM (Secure Vault High only)
-* Persistent wrapped key in NVM3 (Secure Vault High only)
+### Post-build Profile
 
-### Elliptic Curve Key
+- `tz_nonsecure_application` — produces the Non-secure half of the image and consumes the Secure-side veneer object (`artifact/trustzone_secure_library.o`). The workspace then runs `tz_application` to combine the two halves into the final (unsigned) image.
 
-The following elliptic curve keys are supported in this example:
+## Prerequisites / Setup Requirements
 
-##### `PSA_ECC_FAMILY_SECP_R1` :
+### Hardware
 
-* SECP192R1 - 192-bit
-* SECP256R1 - 256-bit
-* SECP384R1 - 384-bit
-* SECP521R1 - 521-bit
+- The same Series 2 kit used by the workspace — see [`../readme.md#hardware`](../readme.md#hardware) for the full hardware list, the `Curve448` / Secure Vault caveat, and the AEM-switch reminder.
 
-##### `PSA_ECC_FAMILY_MONTGOMERY` :
+### Software
 
-* CURVE25519 (X25519) - 255-bit
-* CURVE448 (X448) - 448-bit (Secure Vault High only)
+- The same software requirements as the workspace — see [`../readme.md#software`](../readme.md#software).
+- This Non-secure project must be **created and built from the workspace**, not standalone. Studio's project picker exposes the workspace; selecting just this `.slcp` will fail to link because the Secure-side veneer object will not be available.
 
-### Key Agreement Algorithm
+## Steps to Run Demo
 
-The following key agreement algorithm is supported in this example:
+Build and run this project as part of the workspace; see [`../readme.md#steps-to-run-demo`](../readme.md#steps-to-run-demo) for the full Update Firmware → Create projects → Build Secure → Build Non-secure → Flash combined image → Open VCOM → Run sequence.
 
-* `PSA_ALG_ECDH`
-
-The `PSA_ALG_KEY_AGREEMENT(PSA_ALG_ECDH, PSA_ALG_HKDF(hash_alg))` algorithm is used in the **PSA Crypto KDF** example.
-
-### PSA Crypto API
-
-The following PSA Crypto APIs are used in this example:
-
-* `psa_crypto_init`
-* `psa_key_attributes_init`
-* `psa_set_key_type`
-* `psa_set_key_bits`
-* `psa_set_key_usage_flags`
-* `psa_set_key_algorithm`
-* `psa_set_key_id`
-* `psa_set_key_lifetime`
-* `psa_generate_key`
-* `psa_reset_key_attributes`
-* `psa_export_public_key`
-* `psa_raw_key_agreement`
-* `psa_destroy_key`
-* `mbedtls_psa_crypto_free`
+The Non-secure project specifically is the one you press **Build** / **Debug** / **Flash** on; the workspace orchestration ensures the Secure half is already built and that the two halves are combined by `tz_application`.
 
 ## Troubleshooting
 
-### Serial Port Settings
-
-Be sure to select the following settings to see the serial output of this example:
-
-* 115200 Baud Rate 
-* 8-N-1 configuration
-* Line terminator should be set to "None" if using Device Console in Simplicity Studio
-
-### Programming the Radio Board
-
-Before programming the radio board mounted on the mainboard, make sure the power supply switch is in the AEM position (right side) as shown below.
-
-![Radio board power supply switch](image/readme_img0.png)
+- **Linker errors about `trustzone_secure_library.o` or missing veneers** — the Secure project (`tz_psa_crypto_ecdh_s`) was not built before this Non-secure project, or its build failed. Build the Secure project first.
+- **`Curve448` path returns `PSA_ERROR_NOT_SUPPORTED`** — `Curve448` is only available on **Secure Vault** parts; the example skips that curve on non-Vault Series 2 parts. This is expected.
+- **`Curve25519` fails on HSE Vault Mid** — update SE firmware via the Launcher; older SE firmware on Vault Mid parts lacks hardware acceleration for Curve25519 (the example will still run if PSA Crypto can fall back, but check the SE firmware version first).
+- **Client and server shared secrets do not match** — heap exhaustion (silent truncation) or a modification to the key-agreement flow. Make sure `SL_HEAP_SIZE` and the Secure-side stack haven't been lowered, and re-run.
+- **`PSA_ERROR_INSUFFICIENT_MEMORY` on `psa_generate_key` or `psa_raw_key_agreement`** — large curves (`secp521r1`, `Curve448`) push heap usage close to the limit. Raise `SL_HEAP_SIZE` on the **Secure** project (where the key-agreement work happens) in the project configurator.
+- **Token / output prints in the wrong order or interleaved** — confirm 115200 baud, 8-N-1, line terminator `None`. Some terminals buffer aggressively; switch to Studio's `Device Console` to confirm the device output ordering.
+- **Non-secure project not visible in the Studio picker** — Studio exposes this `.slcp` through the workspace; pick **TrustZone PSA Crypto ECDH** from the workspace list and Studio will create both projects together.
+- For any issue that isn't Non-secure-specific (SE firmware version, programming the radio board, AEM switch, etc.), see [`../readme.md#troubleshooting`](../readme.md#troubleshooting).
 
 ## Resources
 
-[AN1311: Integrating Crypto Functionality Using PSA Crypto Compared to Mbed TLS](https://www.silabs.com/documents/public/application-notes/an1311-mbedtls-psa-crypto-porting-guide.pdf)
-
-[AN1374: Series 2 TrustZone](https://www.silabs.com/documents/public/application-notes/an1374-trustzone.pdf)
+- [`../readme.md`](../readme.md) — workspace and Secure-side architecture, curves exercised, post-build flow.
+- [AN1374: Series 2 TrustZone](https://www.silabs.com/documents/public/application-notes/an1374-trustzone.pdf)
+- [PSA Crypto API specification (Arm)](https://arm-software.github.io/psa-api/crypto/)
+- [AN1311: Integrating Crypto Functionality Using PSA Crypto Compared to Mbed TLS](https://www.silabs.com/documents/public/application-notes/an1311-mbedtls-psa-crypto-porting-guide.pdf)
 
 ## Report Bugs & Get Support
 

@@ -600,10 +600,8 @@ test_restapi()
 {
     exit_message="Error in REST API server test"
     cd tests/restjsonapi
-    exists_or_die install_bruno_cli
     exists_or_die test-restjsonapi-server
     executable_or_die test-restjsonapi-server
-    ./install_bruno_cli || die "Failed to install bruno cli"
 
     test_setup
     ba_start
@@ -615,12 +613,7 @@ test_restapi()
 
     # Run the test-restjsonapi-server.sh script repeatedly.
     for i in {1..3}; do
-        test_result=$(./test-restjsonapi-server 2>&1)
-        if grep -qi "error" <<<"${test_result}"; then
-            echo "Error found in test-restjsonapi-server on iteration $i"
-            echo "${test_result}"
-            exit 1
-        fi
+        ./test-restjsonapi-server || die "test-restjsonapi-server failed on iteration $i"
     done
 
     cd ../..

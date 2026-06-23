@@ -31,11 +31,16 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
-#include "sl_rail_util_init.h"
 #include "app_process.h"
+#include "sl_component_catalog.h"
+#include "sl_rail_util_init.h"
 #include "sl_rail_sdk_simple_assistance.h"
 #include "sl_rail_sdk_wmbus_support.h"
 #include "sl_rail_sdk_channel_selector.h"
+
+#if defined(SL_CATALOG_KERNEL_PRESENT)
+#include "app_task_init.h"
+#endif
 
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs

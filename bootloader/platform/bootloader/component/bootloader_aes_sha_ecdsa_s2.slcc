@@ -19,9 +19,6 @@ source:
 include:
 - path: platform/bootloader
   file_list:
-  - path: api/btl_interface.h
-  - path: api/btl_errorcode.h
-  - path: core/btl_util.h
   - path: config/btl_config.h
   - path: security/btl_security_aes.h
   - path: security/btl_security_ecdsa.h
@@ -32,13 +29,8 @@ include:
   - path: security/ecc/ecc.h
   - path: security/sha/btl_sha256.h
   - path: config/test/btl_config_library.h
-- path: platform/bootloader/api
-  file_list:
-  - path: btl_reset_info.h
-  - path: application_properties.h
-  - path: btl_interface_parser.h
-  - path: btl_interface_storage.h
 requires:
+- name: bootloader_interface_common
 - name: mbedtls_cipher_ctr
 provides:
 - name: bootloader_aes_sha_ecdsa_common

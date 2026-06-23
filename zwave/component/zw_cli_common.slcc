@@ -25,7 +25,6 @@ requires:
 - name: printf
 - name: iostream_recommended_stream
 - name: iostream_retarget_stdio
-- name: app_log
 
 template_contribution:
 #------------------ CLI commands ---------------------

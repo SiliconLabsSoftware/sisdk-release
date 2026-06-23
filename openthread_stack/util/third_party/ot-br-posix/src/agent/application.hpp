@@ -233,6 +233,22 @@ public:
     DBus::DBusAgent &GetDBusAgent(void) { return mDBusAgent; }
 #endif
 
+    /**
+     * Requests the application to perform a pseudo reset.
+     */
+    static void PseudoReset(void)
+    {
+        sShouldTerminate = true;
+        sIsPseudoReset   = true;
+    }
+
+    /**
+     * Returns whether the application should perform a pseudo reset.
+     *
+     * @returns  Whether the application should perform a pseudo reset.
+     */
+    static bool IsPseudoReset(void) { return sIsPseudoReset; }
+
 private:
     // Default poll timeout.
     static const struct timeval kPollTimeout;
@@ -246,6 +262,7 @@ private:
     void CreateNcpMode(void);
     void InitNcpMode(void);
     void DeinitNcpMode(void);
+    void ConfigureUdpProxiesInfraInterface(void);
 
 #if OTBR_ENABLE_BORDER_AGENT
     void SetBorderAgentOnInitState(void);
@@ -275,9 +292,13 @@ private:
 #endif
 
 #endif
+#if OTBR_ENABLE_TREL
+    UdpProxy mTrelUdpProxy;
+#endif
 #if OTBR_ENABLE_BACKBONE_ROUTER
     std::unique_ptr<BackboneRouter::BackboneAgent> mBackboneAgent;
     std::unique_ptr<MulticastRoutingManager>       mMulticastRoutingManager;
+    UdpProxy                                       mBackboneTmfUdpProxy;
 #endif
 #if OTBR_ENABLE_SRP_ADVERTISING_PROXY
     std::unique_ptr<AdvertisingProxy> mAdvertisingProxy;
@@ -302,6 +323,7 @@ private:
 #endif
 
     static std::atomic_bool sShouldTerminate;
+    static std::atomic_bool sIsPseudoReset;
     ErrorCondition          mErrorCondition;
 };
 

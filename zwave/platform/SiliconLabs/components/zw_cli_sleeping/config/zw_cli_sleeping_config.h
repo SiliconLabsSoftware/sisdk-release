@@ -29,6 +29,8 @@
 // <d> 0
 #define ZW_CLI_SLEEPING_WAKEUP_EM1 0
 
+// </e>
+
 // </h>
 
 // <<< end of configuration section >>>

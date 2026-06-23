@@ -77,6 +77,8 @@ typedef enum {
 // debug prints
 #define sl_zigbee_af_gbz_message_controller_print(...)    sl_zigbee_af_app_print(__VA_ARGS__)
 #define sl_zigbee_af_gbz_message_controller_println(...)  sl_zigbee_af_app_println(__VA_ARGS__)
+#define sl_zigbee_af_gbz_message_controller_error(...)    sl_zigbee_af_app_error(__VA_ARGS__)
+#define sl_zigbee_af_gbz_message_controller_errorln(...)  sl_zigbee_af_app_errorln(__VA_ARGS__)
 #define sl_zigbee_af_gbz_message_controller_debug_exec(x)  sl_zigbee_af_app_debug_exec(x)
 #define sl_zigbee_af_gbz_message_controller_print_buffer(buffer, len, withSpace) sl_zigbee_af_app_print_buffer(buffer, len, withSpace)
 

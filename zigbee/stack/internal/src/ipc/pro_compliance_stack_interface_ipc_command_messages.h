@@ -375,7 +375,7 @@ typedef struct {
 
 typedef struct {
   sl_802154_short_addr_t destination;
-  uint8_t commandFrame;
+  uint8_t commandFrame[MAX_IPC_VEC_ARG_CAPACITY];
   uint8_t length;
   bool tryToInsertLongDest;
   sl_802154_long_addr_t destinationEui;
@@ -511,7 +511,7 @@ typedef struct {
   sl_802154_short_addr_t destination;
   sl_802154_short_addr_t target;
   uint8_t errorCode;
-  uint8_t payload;
+  uint8_t payload[MAX_IPC_VEC_ARG_CAPACITY];
   uint8_t payload_len;
 } sli_zigbee_stack_test_send_route_error_payload_ipc_req_t;
 
@@ -523,7 +523,7 @@ typedef struct {
   sl_802154_short_addr_t destination;
   sl_802154_short_addr_t target;
   uint8_t errorCode;
-  uint8_t payload;
+  uint8_t payload[MAX_IPC_VEC_ARG_CAPACITY];
   uint8_t payload_len;
 } sli_zigbee_stack_test_send_route_error_payload_no_network_encryption_ipc_req_t;
 
@@ -560,7 +560,7 @@ typedef struct {
 
 typedef struct {
   uint16_t shortId;
-  uint8_t sourceEUI64;
+  uint8_t sourceEUI64[EUI64_SIZE];
   sl_802154_long_addr_t deviceAnnounceEui;
   uint8_t capabilities;
 } sli_zigbee_stack_test_spoof_device_announcement_ipc_req_t;

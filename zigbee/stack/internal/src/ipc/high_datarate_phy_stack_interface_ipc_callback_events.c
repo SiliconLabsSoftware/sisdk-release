@@ -3,7 +3,7 @@
  * @brief callback event handlers for high_datarate_phy_stack_interface
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -28,6 +28,14 @@ void sli_mac_stack_high_datarate_phy_rx_callback(uint8_t *packet,
                                                  uint32_t pkt_rx_timestamp)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
+
+  if (((packet[1] << 8) + packet[0] + 2) > MAX_HIGH_DATARATE_PHY_PACKET_LENGTH) {
+    assert(false); // "vector packet length exceeds expected maximum
+  }
 
   if (packet != NULL) {
     memmove(cb_event->data.high_datarate_phy_rx_callback.packet, packet, sizeof(uint8_t) * ((packet[1] << 8) + packet[0] + 2));
@@ -51,9 +59,18 @@ void sli_mac_stack_high_datarate_phy_tx_callback(uint8_t mac_index,
                                                  uint8_t tag)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.high_datarate_phy_tx_callback.mac_index = mac_index;
   cb_event->data.high_datarate_phy_tx_callback.status = status;
   cb_event->data.high_datarate_phy_tx_callback.packet_length = packet_length;
+
+  if (packet_length > MAX_HIGH_DATARATE_PHY_PACKET_LENGTH) {
+    assert(false); // "vector packet_contents length exceeds expected maximum
+    packet_length = MAX_HIGH_DATARATE_PHY_PACKET_LENGTH;
+  }
 
   if (packet_contents != NULL) {
     memmove(cb_event->data.high_datarate_phy_tx_callback.packet_contents, packet_contents, sizeof(uint8_t) * packet_length);

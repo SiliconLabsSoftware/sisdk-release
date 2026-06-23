@@ -45,6 +45,12 @@
 #define ZW_LOG_APP_ENABLED 0
 #endif
 
+#if defined(ZW_LOG_ENABLE_APP_JAMMING) && (ZW_LOG_ENABLE_APP_JAMMING != 0)
+#define ZW_LOG_APP_JAMMING_ENABLED 1
+#else
+#define ZW_LOG_APP_JAMMING_ENABLED 0
+#endif
+
 // Helper macro to determine if logging of component hw is enabled
 #if defined(ZW_LOG_ENABLE_HW) && (ZW_LOG_ENABLE_HW != 0)
 #define ZW_LOG_HW_ENABLED 1
@@ -239,6 +245,7 @@
     if (ZPAL_LOG_FILTER_LEVEL(LEVEL)                                                                   \
         && (                                                                                           \
           ((COMPONENT == ZPAL_LOG_APP) && (ZW_LOG_APP_ENABLED))                                        \
+          || ((COMPONENT == ZPAL_LOG_APP_JAMMING) && (ZW_LOG_APP_JAMMING_ENABLED))                     \
           || ((COMPONENT == ZPAL_LOG_HW) && (ZW_LOG_HW_ENABLED))                                       \
           || ((COMPONENT == ZPAL_LOG_CC_ASSOCIATION) && (ZW_LOG_CC_ASSOCIATION_ENABLED))               \
           || ((COMPONENT == ZPAL_LOG_CC_BATTERY) && (ZW_LOG_CC_BATTERY_ENABLED))                       \

@@ -35,7 +35,9 @@
 #include <stdio.h>
 
 #include "sl_string.h"
-#include "socket/socket.h"
+#include "sys/socket.h"
+#include "arpa/inet.h"
+#include "netinet/in.h"
 #include "sl_wisun_trace_util.h"
 #include "sl_wisun_udp_client.h"
 #include "sl_memory_manager.h"
@@ -69,11 +71,11 @@ int32_t sl_wisun_udp_client_create(void)
   // create client socket
   sockid = socket(AF_INET6, SOCK_DGRAM | SOCK_NONBLOCK, IPPROTO_UDP);
   if (sockid == SOCKET_INVALID_ID) {
-    printf("[Failed to create socket: %ld]\n", sockid);
+    printf("[Failed to create socket: %"PRIi32"]\n", sockid);
     return SOCKET_INVALID_ID;
   }
 
-  printf("[Socket created: %ld]\n", sockid);
+  printf("[Socket created: %"PRIi32"]\n", sockid);
 
   return sockid;
 }
@@ -82,9 +84,9 @@ int32_t sl_wisun_udp_client_create(void)
 void sl_wisun_udp_client_close(const int32_t sockid)
 {
   if (close(sockid) == SOCKET_RETVAL_ERROR) {
-    printf("[Failed to close socket: %ld]\n", sockid);
+    printf("[Failed to close socket: %"PRIi32"]\n", sockid);
   } else {
-    printf("[Socket closed: %ld]\n", sockid);
+    printf("[Socket closed: %"PRIi32"]\n", sockid);
   }
 }
 
@@ -119,7 +121,7 @@ void sl_wisun_udp_client_write(const int32_t sockid,
   // send data
   res = sendto(sockid, str, sl_strlen(str), 0, (const struct sockaddr *) &server_addr, sizeof(server_addr));
   if (res == SOCKET_RETVAL_ERROR) {
-    printf("[Failed to send on socket: %ld]\n", sockid);
+    printf("[Failed to send on socket: %"PRIi32"]\n", sockid);
   }
 }
 

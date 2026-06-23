@@ -138,7 +138,7 @@ bool sl_wisun_is_running_rf_test();
  * To receive the packets, another application can use sl_wisun_rf_test_start_rx() on the same channel.
  *
  * @param[in] channel Index of the physical channel to transmit on
- * @param[in] count Number of packets to transmit (must greater than 0)
+ * @param[in] count Number of packets to transmit (must be greater than 0)
  * @param[in] data_length Length of data in each packet (must be between 1 and 2047 - CRC length, typically 2045 for FSK, 2043 for OFDM or OQPSK)
  * @param[in] data Pointer to data to transmit; if NULL a default ramp pattern is used
  * @param[in] interval Interval between transmissions in milliseconds (must be greater than 0)

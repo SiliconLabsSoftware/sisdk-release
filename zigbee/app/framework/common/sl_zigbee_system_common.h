@@ -50,6 +50,7 @@ bool sli_zigbee_stack_is_ok_to_sleep(void);
 
 extern void sli_zigbee_stack_rtos_task_init_cb(void);
 extern void sli_zigbee_app_framework_rtos_task_init_cb(void);
+extern void sli_zigbee_app_rtos_task_init_cb(void);
 
 extern void sli_zigbee_stack_rtos_perm_allocation(void);
 extern void sli_zigbee_app_framework_rtos_perm_allocation(void);

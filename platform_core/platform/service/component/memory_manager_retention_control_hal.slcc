@@ -11,11 +11,10 @@ ui_hints:
 metadata:
   sbom:
     license: Zlib
-root_path: platform_core/platform/service/memory_manager
-source:
-- path: hal/sli_memory_manager_retention_control_hal_none.c
+requires:
+- name: memory_manager_retention_control_hal_none
   condition: [device_generic_family_sixx301, device_cortexm, memory_manager_pool_power_aware]
-- path: hal/sli_memory_manager_retention_control_hal_none.c
+- name: memory_manager_retention_control_hal_none
   condition: [device_series_2, device_cortexm, memory_manager_pool_power_aware]
 provides:
 - name: memory_manager_retention_control_hal
@@ -29,3 +28,4 @@ template_contribution:
 - name: component_catalog
   value: bank_retention_control_stubbed
   condition: [device_generic_family_sixx301, device_cortexm, memory_manager_pool_power_aware]
+root_path: platform_core

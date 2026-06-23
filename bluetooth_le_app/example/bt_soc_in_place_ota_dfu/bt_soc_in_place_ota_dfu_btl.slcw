@@ -6,7 +6,7 @@ description: >
   Bluetooth applications that provides Over-The-Air device firmware update
   using an apploader.
   Combined solution with application and bootloader projects.
-quality: evaluation
+quality: production
 project:
   - path: bt_soc_in_place_ota_dfu.slcp
     id: application

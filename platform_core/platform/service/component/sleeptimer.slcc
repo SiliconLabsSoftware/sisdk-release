@@ -22,18 +22,6 @@ config_file:
   file_id: sleeptimer_config
 source:
 - path: platform/service/sleeptimer/src/sl_sleeptimer.c
-- path: platform/service/sleeptimer/src/sl_sleeptimer_hal_rtcc.c
-  condition: [device_has_rtcc]
-- path: platform/service/sleeptimer/src/sl_sleeptimer_hal_prortc.c
-  condition: [device_has_prortc]
-- path: platform/service/sleeptimer/src/sl_sleeptimer_hal_sysrtc.c
-  condition: [device_has_sysrtc]
-- path: platform/service/sleeptimer/src/sl_sleeptimer_hal_burtc.c
-  condition: [device_has_burtc]
-- path: platform/service/sleeptimer/src/sl_sleeptimer_hal_timer.c
-  condition: [device_has_timer, device_series_3]
-- path: platform/service/sleeptimer/src/sl_sleeptimer_hal_timer.c
-  condition: [device_has_timer, device_series_2]
 include:
 - path: platform/service/sleeptimer/inc
   file_list:
@@ -45,35 +33,12 @@ include:
 provides:
 - name: sleeptimer
 requires:
+- name: sleeptimer_arch
 - name: atomic
 - name: status
 - name: sl_assert
 - name: sl_common
-- name: interrupt_manager
-  condition: [device_efx]
-- name: clock_manager_runtime
-  condition: [device_efx]
-- name: device_manager
-  condition: [device_efx]
-- name: hal_generic_common
-  condition: [device_efx]
 - name: sl_core
-- name: hal_generic_prs
-  condition: [device_has_sysrtc]
-- name: emlib_rtcc
-  condition: [device_has_rtcc]
-- name: hal_sysrtc
-  condition: [device_has_sysrtc]
-- name: emlib_burtc
-  condition: [device_has_burtc, device_series_2]
-- name: hal_generic_burtc
-  condition: [device_has_burtc, device_series_3]
-- name: hal_generic_timer
-  condition: [device_has_timer]
-- name: sleeptimer_si91x
-  condition: [device_si91x]
-- name: hostbased_sleeptimer
-  condition: [win32]
 - name: code_classification
 template_contribution:
 - name: event_handler

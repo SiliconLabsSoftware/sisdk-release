@@ -381,7 +381,7 @@ int32_t gbl_lzmaParseProgTag(ParserContext_t *ctx,
   return BOOTLOADER_OK;
 }
 
-size_t gbl_lzmaNumBytesRequired(ParserContext_t *ctx)
+size_t gbl_lzmaNumBytesRequired(const ParserContext_t *ctx)
 {
   // If this is the first data in the tag, we need:
   //  - a full word to set the programming address correctly

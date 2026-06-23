@@ -1,5 +1,5 @@
 project_name: zigbee_z4_switch
-label: Zigbee - Z4Switch
+label: Zigbee - SoC Z4 Switch
 package: zigbee
 category: Zigbee Application
 quality: production
@@ -58,8 +58,13 @@ component:
     instance:
       - btn1
   - id: zigbee_application_bootloader
-  # Platform - enable LTO for gcc
+  # Platform - enable LTO for gcc and llvm
   - id: toolchain_gcc_lto
+    condition:
+      - toolchain_gcc
+  - id: toolchain_llvm_lto
+    condition:
+      - toolchain_llvm
 
 configuration:
   - name: SL_BOARD_ENABLE_VCOM
@@ -165,6 +170,9 @@ tag:
   - hwfilter:board:simple_button:btn1
   - hwfilter:device:device_supports_zigbee
   - hwfilter:board:simple_led:led0
+  - toolchain:gcc
+  - toolchain:iar
+  - toolchain:llvm
 
 readme:
   - path: ./readme.md

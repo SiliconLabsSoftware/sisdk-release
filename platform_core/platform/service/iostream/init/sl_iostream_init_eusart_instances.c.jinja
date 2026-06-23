@@ -2,7 +2,6 @@
 #include "sl_iostream_uart.h"
 #include "sl_iostream_eusart.h"
 #include "sl_common.h"
-#include "dmadrv.h"
 #include "sl_device_peripheral.h"
 #include "sl_clock_manager.h"
 #include "sl_hal_eusart.h"
@@ -26,8 +25,8 @@
 #define SL_IOSTREAM_EUSART_RX_IRQ_NUMBER(periph_nbr)     SL_CONCAT_PASTER_3(EUART, periph_nbr, _RX_IRQn)   {# Create IRQ number #}
 #define SL_IOSTREAM_EUSART_TX_IRQ_HANDLER(periph_nbr)    SL_CONCAT_PASTER_3(EUART, periph_nbr, _TX_IRQHandler)   {# Create IRQ Handler function name#}
 #define SL_IOSTREAM_EUSART_RX_IRQ_HANDLER(periph_nbr)    SL_CONCAT_PASTER_3(EUART, periph_nbr, _RX_IRQHandler)   {# Create IRQ Handler function name#}
-#define SL_IOSTREAM_EUSART_RX_DMA_SIGNAL(periph_nbr)     SL_CONCAT_PASTER_3(dmadrvPeripheralSignal_EUART, periph_nbr, _RXDATAV)
-#define SL_IOSTREAM_EUSART_TX_DMA_SIGNAL(periph_nbr)     SL_CONCAT_PASTER_3(dmadrvPeripheralSignal_EUART, periph_nbr, _TXBL)
+#define SL_IOSTREAM_EUSART_RX_DMA_SIGNAL(periph_nbr)     SL_CONCAT_PASTER_3(SL_DMA_SIGNAL_EUART, periph_nbr, _RXFL)
+#define SL_IOSTREAM_EUSART_TX_DMA_SIGNAL(periph_nbr)     SL_CONCAT_PASTER_3(SL_DMA_SIGNAL_EUART, periph_nbr, _TXFL)
 #define SL_IOSTREAM_EUSART_CLOCK_REF(periph_nbr)         SL_CONCAT_PASTER_2(SL_BUS_CLOCK_EUART, periph_nbr)  {# Create clock reference #}
 #define SL_IOSTREAM_EUSART_PERIPHERAL(periph_nbr)        SL_CONCAT_PASTER_2(SL_PERIPHERAL_EUART, periph_nbr) {# Create peripheral reference #}
 #else
@@ -35,8 +34,8 @@
 #define SL_IOSTREAM_EUSART_RX_IRQ_NUMBER(periph_nbr)     SL_CONCAT_PASTER_3(EUSART, periph_nbr, _RX_IRQn)   {# Create IRQ number #}
 #define SL_IOSTREAM_EUSART_TX_IRQ_HANDLER(periph_nbr)    SL_CONCAT_PASTER_3(EUSART, periph_nbr, _TX_IRQHandler)   {# Create IRQ Handler function name#}
 #define SL_IOSTREAM_EUSART_RX_IRQ_HANDLER(periph_nbr)    SL_CONCAT_PASTER_3(EUSART, periph_nbr, _RX_IRQHandler)   {# Create IRQ Handler function name#}
-#define SL_IOSTREAM_EUSART_RX_DMA_SIGNAL(periph_nbr)     SL_CONCAT_PASTER_3(dmadrvPeripheralSignal_EUSART, periph_nbr, _RXDATAV)  {# Create RX dma signal #}
-#define SL_IOSTREAM_EUSART_TX_DMA_SIGNAL(periph_nbr)     SL_CONCAT_PASTER_3(dmadrvPeripheralSignal_EUSART, periph_nbr, _TXBL)
+#define SL_IOSTREAM_EUSART_RX_DMA_SIGNAL(periph_nbr)     SL_CONCAT_PASTER_3(SL_DMA_SIGNAL_EUSART, periph_nbr, _RXFL)
+#define SL_IOSTREAM_EUSART_TX_DMA_SIGNAL(periph_nbr)     SL_CONCAT_PASTER_3(SL_DMA_SIGNAL_EUSART, periph_nbr, _TXFL)
 #define SL_IOSTREAM_EUSART_CLOCK_REF(periph_nbr)         SL_CONCAT_PASTER_2(SL_BUS_CLOCK_EUSART, periph_nbr)  {# Create clock reference #}
 #define SL_IOSTREAM_EUSART_PERIPHERAL(periph_nbr)        SL_CONCAT_PASTER_2(SL_PERIPHERAL_EUSART, periph_nbr) {# Create peripheral reference #}
 #endif
@@ -168,10 +167,10 @@ sl_status_t sl_iostream_eusart_init_{{ instance }}(void)
   };
 
   sl_iostream_dma_config_t rx_dma_config_{{ instance }} = {.src = (uint8_t *)&SL_IOSTREAM_EUSART_{{ instance | upper }}_PERIPHERAL->RXDATA,
-                                                        .xfer_cfg = IOSTREAM_LDMA_TFER_CFG_PERIPH(SL_IOSTREAM_EUSART_RX_DMA_SIGNAL(SL_IOSTREAM_EUSART_{{ instance | upper }}_PERIPHERAL_NO))};
+                                                        .xfer_cfg = SL_HAL_LDMA_TRANSFER_CFG_PERIPHERAL(*(SL_IOSTREAM_EUSART_RX_DMA_SIGNAL(SL_IOSTREAM_EUSART_{{ instance | upper }}_PERIPHERAL_NO)))};
 
   sl_iostream_dma_config_t tx_dma_config_{{ instance }} = {.dst = (uint8_t *)&SL_IOSTREAM_EUSART_{{ instance | upper }}_PERIPHERAL->TXDATA,
-                                                        .xfer_cfg = IOSTREAM_LDMA_TFER_CFG_PERIPH(SL_IOSTREAM_EUSART_TX_DMA_SIGNAL(SL_IOSTREAM_EUSART_{{ instance | upper }}_PERIPHERAL_NO))};
+                                                        .xfer_cfg = SL_HAL_LDMA_TRANSFER_CFG_PERIPHERAL(*(SL_IOSTREAM_EUSART_TX_DMA_SIGNAL(SL_IOSTREAM_EUSART_{{ instance | upper }}_PERIPHERAL_NO)))};
 
   sl_iostream_uart_config_t uart_config_{{ instance }} = {
     .rx_dma_cfg = rx_dma_config_{{ instance }},

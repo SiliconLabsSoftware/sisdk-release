@@ -505,15 +505,6 @@ void sli_bt_rtos_set_event_handled()
                                         SLI_BT_RTOS_BLUETOOTH_THREAD_FLAG_EVENT_HANDLED);
 }
 
-/**
- * Internal stack function to get how long the Bluetooth stack can sleep.
- *
- * @return 0 if the stack cannot sleep;
- * Maximum value of uint32_t if the stack has no task scheduled to process;
- * The ticks (in sleeptimer frequency) the stack needs to wake up to process a task
- */
-extern uint32_t sli_bt_can_sleep_ticks();
-
 #if defined(SL_CATALOG_BTMESH_PRESENT)
 // This is to avoid casting a function pointer to a different type in the
 // event_types table.

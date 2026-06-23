@@ -3,7 +3,7 @@
  * @brief callback event handlers for binding-table
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -26,6 +26,10 @@ void sli_zigbee_stack_remote_delete_binding_handler(uint8_t index,
                                                     sl_zigbee_zdo_status_t status)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.remote_delete_binding_handler.index = index;
   cb_event->data.remote_delete_binding_handler.status = status;
   cb_event->tag = SLI_ZIGBEE_STACK_REMOTE_DELETE_BINDING_HANDLER_IPC_EVENT_TYPE;
@@ -40,6 +44,10 @@ void sli_zigbee_stack_remote_set_binding_handler(sl_zigbee_binding_table_entry_t
                                                  sl_zigbee_zdo_status_t status)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
 
   if (entry != NULL) {
     cb_event->data.remote_set_binding_handler.entry = *entry;

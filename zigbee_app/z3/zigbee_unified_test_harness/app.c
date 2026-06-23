@@ -127,9 +127,9 @@ void customLookupNeighbourTable(sl_cli_command_arg_t *arguments)
   }
 #endif
   if (SL_STATUS_OK != status) {
-    sl_zigbee_af_core_println("shortaddress:EUI64 unknown");
+    sl_zigbee_af_cli_println("shortaddress:EUI64 unknown");
   } else {
-    sl_zigbee_af_core_println("shortaddress:0x%04X", nodeId);
+    sl_zigbee_af_cli_println("shortaddress:0x%04X", nodeId);
   }
 }
 

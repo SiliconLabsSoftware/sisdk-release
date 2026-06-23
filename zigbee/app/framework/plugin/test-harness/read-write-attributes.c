@@ -226,9 +226,9 @@ void setOptionsCommand(SL_CLI_COMMAND_ARG)
   uint8_t temp = sl_cli_get_argument_uint8(arguments, 0);
   if (temp > TEST_TYPE_MAX) {
     uint8_t i;
-    sl_zigbee_af_core_println("Error: Invalid test type number.  Valid numbers are:");
+    sl_zigbee_af_cli_println("Error: Invalid test type number.  Valid numbers are:");
     for (i = 0; i <= TEST_TYPE_MAX; i++) {
-      sl_zigbee_af_core_println("%d: %s", i, testTypeStrings[i]);
+      sl_zigbee_af_cli_println("%d: %s", i, testTypeStrings[i]);
     }
     return;
   }
@@ -270,7 +270,7 @@ void startTestCommand(SL_CLI_COMMAND_ARG)
   attributeIdEnd = sl_cli_get_argument_uint16(arguments, 2);
   clientToServer = (bool)sl_cli_get_argument_uint32(arguments, 3);
   if (attributeIdStart > attributeIdEnd) {
-    sl_zigbee_af_core_println("Error:  Start ID must be less than or equal to end ID.");
+    sl_zigbee_af_cli_println("Error:  Start ID must be less than or equal to end ID.");
     return;
   }
 
@@ -279,7 +279,7 @@ void startTestCommand(SL_CLI_COMMAND_ARG)
   } else if (testType == TEST_TYPE_BIG_ATTRIBUTE_READ) {
     bigReadCommand();
   } else {
-    sl_zigbee_af_core_println("Error: Invalid test type %d", testType);
+    sl_zigbee_af_cli_println("Error: Invalid test type %d", testType);
   }
 }
 

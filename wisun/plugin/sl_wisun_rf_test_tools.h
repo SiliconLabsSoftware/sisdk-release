@@ -36,6 +36,8 @@
 #include "sl_rail.h"
 #include "sl_wisun_types.h"
 #include "sli_wisun_internal_api.h"
+#include "sl_rail_util_pa_conversions.h"
+#include "sl_rail_util_pa_config.h"
 
 #define PHY_TYPE_FSK        0x0
 #define PHY_TYPE_FSK_FEC    0x1
@@ -83,7 +85,6 @@
     | SL_RAIL_EVENT_TX_CHANNEL_CLEAR           \
     | SL_RAIL_EVENT_TX_CHANNEL_BUSY            \
     | SL_RAIL_EVENT_TX_UNDERFLOW               \
-    | SL_RAIL_EVENT_TXACK_UNDERFLOW            \
     | SL_RAIL_EVENT_IEEE802154_MODE_SWITCH_END \
     | SL_RAIL_EVENT_RX_SYNC_0_DETECT           \
     | SL_RAIL_EVENT_RX_SYNC_1_DETECT)
@@ -137,6 +138,10 @@ sl_status_t rf_test_phy_config_to_chan_config(sl_wisun_phy_config_t *phy_config,
                                               uint8_t *reg_domain,
                                               uint16_t *physical_channel_offset,
                                               uint16_t *channel_start,
-                                              uint16_t *channel_end);
+                                              uint16_t *channel_end,
+                                              uint8_t *crc_length);
 
+sl_status_t rf_test_config_pa(sl_rail_handle_t rail_handle,
+                              uint32_t ch0_frequency_hz,
+                              uint8_t phy_mode_id);
 #endif // SL_WISUN_RF_TEST_TOOLS_H

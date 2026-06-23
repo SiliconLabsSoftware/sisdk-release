@@ -16,6 +16,7 @@
  ******************************************************************************/
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "ctm_app.h"
 #include "sl_token_manager_api.h"
@@ -73,13 +74,41 @@
 
 // Buffer for reading from CTM
 static char read_buffer[SL_CTM_READ_BUFFER_SIZE];
-
-uint32_t uint32_test_data = 0x87654321;
-uint8_t array_test_data[8] = { 0xab, 0xac, 0xba, 0xbe, 0xec, 0xfc, 0xda, 0xae };
-
+static uint8_t array_test_data[CTM_SAMPLE_APP_BYTE_ARRAY_SIZE] = { 0xab, 0xac, 0xba, 0xbe, 0xec, 0xfc, 0xda, 0xae };
 /*******************************************************************************
  **************************   LOCAL FUNCTIONS   ********************************
  ******************************************************************************/
+
+// Erased flash reads as 0xFF; a uint16 token therefore reads as 0xFFFF when never written.
+#define CTM_ERASED_UINT16_VALUE  0xFFFF
+
+/***************************************************************************//**
+ * Check if static secure token region is already written (flash not erased).
+ * Reads the first static secure token we write; if it is not 0xFFFF, the
+ * region has been written and must not be written again without erase.
+ ******************************************************************************/
+static bool static_secure_tokens_already_written(void)
+{
+  uint16_t value = 0;
+  sl_status_t status = sl_token_manager_get_data(
+    SL_TOKEN_GET_STATIC_SECURE_TOKEN(CTM_SAMPLE_APP_TOK_UINT16_STATIC_SECURE),
+    &value, CTM_SAMPLE_APP_UINT16_SIZE);
+  return (status == SL_STATUS_OK && value != CTM_ERASED_UINT16_VALUE);
+}
+
+/***************************************************************************//**
+ * Check if static device token region is already written (flash not erased).
+ * Reads the first static device token we write; if it is not 0xFFFF, the
+ * region has been written and must not be written again without erase.
+ ******************************************************************************/
+static bool static_device_tokens_already_written(void)
+{
+  uint16_t value = 0;
+  sl_status_t status = sl_token_manager_get_data(
+    SL_TOKEN_GET_STATIC_DEVICE_TOKEN(CTM_SAMPLE_APP_TOK_UINT16_STATIC_DEVICE),
+    &value, CTM_SAMPLE_APP_UINT16_SIZE);
+  return (status == SL_STATUS_OK && value != CTM_ERASED_UINT16_VALUE);
+}
 
 /*******************************************************************************
  **************************   GLOBAL FUNCTIONS   *******************************
@@ -91,8 +120,15 @@ uint8_t array_test_data[8] = { 0xab, 0xac, 0xba, 0xbe, 0xec, 0xfc, 0xda, 0xae };
 void write_custom_static_secure_data_token()
 {
   uint16_t uint16_test_data = 0x2468;
+  uint32_t uint32_test_data = 0x87654321;
   char string_test_data[32] = "Secure Token Example";
   sl_status_t status = SL_STATUS_OK;
+
+  if (static_secure_tokens_already_written()) {
+    printf("Static secure tokens are already written. Flash allows only one write per location until erased.\r\n");
+    printf("Use commander utility to erase the secure token region.\r\n");
+    return;
+  }
 
   status = sl_token_manager_set_data(SL_TOKEN_GET_STATIC_SECURE_TOKEN(CTM_SAMPLE_APP_TOK_UINT16_STATIC_SECURE),
                                      &uint16_test_data, CTM_SAMPLE_APP_TOK_UINT16_STATIC_SECURE_SIZE);
@@ -104,14 +140,15 @@ void write_custom_static_secure_data_token()
   printf("Static secure STRING token: \r\n key:0x%x \r\n data: %s \r\n status: %lx \r\n",
          CTM_SAMPLE_APP_TOK_STRING_STATIC_SECURE, string_test_data, status);
 
-  //Set using the Legacy API as for common token manager, legacy API is also supported.
-  halCommonSetMfgToken(CTM_SAMPLE_APP_TOK_UINT32_STATIC_SECURE, &uint32_test_data);
+  status = sl_token_manager_set_data(SL_TOKEN_GET_STATIC_SECURE_TOKEN(CTM_SAMPLE_APP_TOK_UINT32_STATIC_SECURE), &uint32_test_data, CTM_SAMPLE_APP_TOK_UINT32_STATIC_SECURE_SIZE);
   printf("Static secure UINT32 token:\r\n key:0x%x \r\n data: 0x%08lx \r\n status: %lx \r\n",
          CTM_SAMPLE_APP_TOK_UINT32_STATIC_SECURE, uint32_test_data, status);
-  halCommonSetMfgToken(CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_SECURE, array_test_data);
+
+  status = sl_token_manager_set_data(SL_TOKEN_GET_STATIC_SECURE_TOKEN(CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_SECURE),
+                                     array_test_data, CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_SECURE_SIZE);
   printf("Static secure BYTE ARRAY token: \r\n key:0x%x \r\n data:",
          CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_SECURE);
-  for (size_t i = 0; i < CTM_SAMPLE_APP_BYTE_ARRAY_SIZE; i++) {
+  for (size_t i = 0; i < CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_SECURE_SIZE; i++) {
     printf("%02x", array_test_data[i]);
   }
   printf("\r\n status: %lx \r\n", status);
@@ -124,22 +161,24 @@ void read_custom_static_secure_data_token()
 {
   uint16_t uint16_data;
   uint32_t uint32_data;
-  uint8_t array_data[8];
+  uint8_t array_data[CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_SECURE_SIZE];
   char string_data[32];
   sl_status_t status = SL_STATUS_OK;
+
   status = sl_token_manager_get_data(SL_TOKEN_GET_STATIC_SECURE_TOKEN(CTM_SAMPLE_APP_TOK_UINT16_STATIC_SECURE), &uint16_data, CTM_SAMPLE_APP_UINT16_SIZE);
   printf("Reading Static secure UINT16 token: \r\n key:0x%x \r\n data: 0x%04x \r\n status: %lx \r\n",
          CTM_SAMPLE_APP_TOK_UINT16_STATIC_SECURE, uint16_data, status);
+
   status = sl_token_manager_get_data(SL_TOKEN_GET_STATIC_SECURE_TOKEN(CTM_SAMPLE_APP_TOK_STRING_STATIC_SECURE), &string_data, CTM_SAMPLE_APP_STRING_SIZE);
   printf("Reading Static secure STRING token: \r\n key:0x%x \r\n data: %s \r\n status: %lx \r\n", CTM_SAMPLE_APP_TOK_STRING_STATIC_SECURE, string_data, status);
 
-  //Get using the Legacy API as for common token manager, legacy API is also supported.
-  halCommonGetMfgToken(&uint32_data, CTM_SAMPLE_APP_TOK_UINT32_STATIC_SECURE);
+  status = sl_token_manager_get_data(SL_TOKEN_GET_STATIC_SECURE_TOKEN(CTM_SAMPLE_APP_TOK_UINT32_STATIC_SECURE), &uint32_data, CTM_SAMPLE_APP_TOK_UINT32_STATIC_SECURE_SIZE);
   printf("Reading Static secure UINT32 token: \r\n key:0x%x \r\n data: 0x%08lx \r\n status: %lx \r\n",
          CTM_SAMPLE_APP_TOK_UINT32_STATIC_SECURE, uint32_data, status);
-  halCommonGetMfgToken(&array_data, CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_SECURE);
+  
+  status = sl_token_manager_get_data(SL_TOKEN_GET_STATIC_SECURE_TOKEN(CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_SECURE), array_data, CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_SECURE_SIZE);
   printf("Reading Static secure BYTE ARRAY token:\r\n key:0x%x \r\n data:", CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_SECURE);
-  for (size_t i = 0; i < CTM_SAMPLE_APP_BYTE_ARRAY_SIZE; i++) {
+  for (size_t i = 0; i < CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_SECURE_SIZE; i++) {
     printf("%02x", array_data[i]);
   }
   printf("\r\n status: %lx \r\n", status);
@@ -151,8 +190,15 @@ void read_custom_static_secure_data_token()
 void write_custom_static_device_data_token()
 {
   uint16_t uint16_test_data = 0x8765;
+  uint32_t uint32_test_data = 0x12345678;
   char string_test_data[32] = "Device Token Test";
   sl_status_t status = SL_STATUS_OK;
+
+  if (static_device_tokens_already_written()) {
+    printf("Static device tokens are already written. Flash allows only one write per location until erased.\r\n");
+    printf("Use commander utility to erase the device token region.\r\n");
+    return;
+  }
 
   status = sl_token_manager_set_data(SL_TOKEN_GET_STATIC_DEVICE_TOKEN(CTM_SAMPLE_APP_TOK_UINT16_STATIC_DEVICE),
                                      &uint16_test_data, CTM_SAMPLE_APP_TOK_UINT16_STATIC_DEVICE_SIZE);
@@ -167,7 +213,7 @@ void write_custom_static_device_data_token()
   status = sl_token_manager_set_data(SL_TOKEN_GET_STATIC_DEVICE_TOKEN(CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_DEVICE),
                                      array_test_data, CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_DEVICE_SIZE);
   printf("Static device BYTE ARRAY token: \r\n key:0x%x \r\n data:", CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_DEVICE);
-  for (size_t i = 0; i < CTM_SAMPLE_APP_BYTE_ARRAY_SIZE; i++) {
+  for (size_t i = 0; i < CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_DEVICE_SIZE; i++) {
     printf("%02x", array_test_data[i]);
   }
   printf("\r\n status: %lx \r\n", status);
@@ -185,7 +231,7 @@ void read_custom_static_device_data_token()
 {
   uint16_t uint16_data;
   uint32_t uint32_data;
-  uint8_t array_data[8];
+  uint8_t array_data[CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_DEVICE_SIZE];
   char string_data[32];
   sl_status_t status = SL_STATUS_OK;
 
@@ -200,10 +246,9 @@ void read_custom_static_device_data_token()
          CTM_SAMPLE_APP_TOK_UINT32_STATIC_DEVICE, uint32_data, status);
 
   status = sl_token_manager_get_data(SL_TOKEN_GET_STATIC_DEVICE_TOKEN(CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_DEVICE),
-                                     array_data, CTM_SAMPLE_APP_BYTE_ARRAY_SIZE);
-  printf("Reading Static device BYTE ARRAY token: \r\n key:0x%x \r\n data:",
-         CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_DEVICE);
-  for (size_t i = 0; i < CTM_SAMPLE_APP_BYTE_ARRAY_SIZE; i++) {
+                                     array_data, CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_DEVICE_SIZE);
+  printf("Reading Static device BYTE ARRAY token: \r\n key:0x%x \r\n data:", CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_DEVICE);
+  for (size_t i = 0; i < CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_DEVICE_SIZE; i++) {
     printf("%02x", array_data[i]);
   }
   printf("\r\n status: %lx \r\n", status);
@@ -301,7 +346,36 @@ void ctm_write_dynamic_token(sl_cli_command_arg_t *arguments)
       }
       token_key = key | SL_TOKEN_STATIC_DEVICE_TOKENS; // Set the key to static device token range
       printf("Writing static device override token...\r\n");
-      status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVERRIDE_TOKEN(token_key), data, strlen(data));
+      switch (token_key)
+      {
+      case CTM_SAMPLE_APP_TOK_UINT16_STATIC_DEVICE:
+        uint16_t data_u16 = (uint16_t)strtoul(data, NULL, 0);
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVERRIDE_TOKEN(token_key), &data_u16, CTM_SAMPLE_APP_TOK_UINT16_STATIC_SECURE_SIZE);
+        break;
+
+      case CTM_SAMPLE_APP_TOK_UINT32_STATIC_DEVICE:
+        uint32_t data_u32 = (uint32_t)strtoul(data, NULL, 0);
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVERRIDE_TOKEN(token_key), &data_u32, CTM_SAMPLE_APP_TOK_UINT32_STATIC_SECURE_SIZE);        
+        break;
+        
+      case CTM_SAMPLE_APP_TOK_STRING_STATIC_DEVICE:
+        char string_data[CTM_SAMPLE_APP_STRING_SIZE];
+        strncpy(string_data, data, CTM_SAMPLE_APP_STRING_SIZE);
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVERRIDE_TOKEN(token_key), string_data, CTM_SAMPLE_APP_TOK_STRING_STATIC_SECURE_SIZE);
+        break;
+
+      case CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_DEVICE:
+        if(strlen(data) != CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_DEVICE_SIZE) {
+          printf("Invalid data length for static device byte array token. Data length should be %u.\r\n", CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_DEVICE_SIZE);
+          return;
+        }
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVERRIDE_TOKEN(token_key), data, CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_DEVICE_SIZE);
+        break;
+      
+      default:
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVERRIDE_TOKEN(token_key), data, strlen(data));
+        break;
+      }
       if (SL_STATUS_OK == status) {
         printf("Override static device token written: \r\n key:0x%lx \r\n data: %s \r\n", key, data);
       } else {
@@ -316,7 +390,35 @@ void ctm_write_dynamic_token(sl_cli_command_arg_t *arguments)
       }
       token_key = key | SL_TOKEN_STATIC_SECURE_DATA_TOKENS; // Set the key to static secure token range
       printf("Writing override token for static secure token...\r\n");
-      status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVERRIDE_TOKEN(token_key), data, strlen(data));
+      switch (token_key)
+      {
+      case CTM_SAMPLE_APP_TOK_UINT16_STATIC_SECURE:
+        uint16_t data_u16 = (uint16_t)strtoul(data, NULL, 0);
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVERRIDE_TOKEN(token_key), &data_u16, CTM_SAMPLE_APP_TOK_UINT16_STATIC_SECURE_SIZE);
+        break;
+
+      case CTM_SAMPLE_APP_TOK_UINT32_STATIC_SECURE:
+        uint32_t data_u32 = (uint32_t)strtoul(data, NULL, 0);
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVERRIDE_TOKEN(token_key), &data_u32, CTM_SAMPLE_APP_TOK_UINT32_STATIC_SECURE_SIZE);        
+        break;
+        
+      case CTM_SAMPLE_APP_TOK_STRING_STATIC_SECURE:
+        char string_data[CTM_SAMPLE_APP_STRING_SIZE];
+        strncpy(string_data, data, CTM_SAMPLE_APP_STRING_SIZE);
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVERRIDE_TOKEN(token_key), string_data, CTM_SAMPLE_APP_TOK_STRING_STATIC_SECURE_SIZE);
+        break;
+
+      case CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_SECURE:
+        if(strlen(data) != CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_SECURE_SIZE) {
+          printf("Invalid data length for static secure byte array token. Data length should be %u.\r\n", CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_SECURE_SIZE);
+          return;
+        }
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVERRIDE_TOKEN(token_key), data, CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_SECURE_SIZE);
+        break;
+      default:
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVERRIDE_TOKEN(token_key), data, strlen(data));
+        break;
+      }
       if (SL_STATUS_OK == status) {
         printf("Override static secure token written: \r\n key:0x%lx \r\n data: %s \r\n", key, data);
       } else {

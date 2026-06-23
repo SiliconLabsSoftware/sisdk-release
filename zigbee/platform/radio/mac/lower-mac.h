@@ -61,11 +61,14 @@ enum
 
 extern uint16_t sli_mac_max_rx_flat_pkt_size;
 extern uint16_t sli_mac_max_tx_flat_pkt_size;
+extern uint16_t sli_mac_tx_fifo_staging_buffer_size;
+extern uint8_t *sli_mac_tx_fifo_staging_buffer_ptr;
 
 extern LowerMacState sli_802154mac_lower_mac_state;
 #ifdef HIGH_DATARATE_PHY
 #define PHY_HEADER_SIZE_ADJUST_2MBPS    4u
-#define HIGH_DATARATE_PHY_PACKET_START_INDEX  1u
+// HDR source buffers start with a 2-byte length/offset field.
+#define HIGH_DATARATE_PHY_LENGTH_FIELD_BYTES 2u
 // 802.15.4 2-byte PHR
 // Spec: [       0     |    1-2   |     3    |     4     |     5-15     ]
 //       [ Mode Switch | Reserved | FCS Type | Whitening | Frame Length ]

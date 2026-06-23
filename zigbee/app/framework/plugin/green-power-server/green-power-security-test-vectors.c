@@ -199,15 +199,15 @@ static bool checkGpSecurityTestResults(struct GpSecurityTestVector *testExpect,
 {
   // TODO check for gpsecuritytestvector being the wrong address???
   if (testExpect == NULL) {
-    sl_zigbee_af_green_power_cluster_println("[[!! ERROR !!]] null test vector expects");
+    sl_zigbee_af_cli_println("[[!! ERROR !!]] null test vector expects");
     return false;
   }
   if (testExpect->flags & HAS_MIC_EXPECT && micResult == NULL) {
-    sl_zigbee_af_green_power_cluster_println("[[!! ERROR !!]] gp test vector config (%s) expects mic result, received none", testExpect->title);
+    sl_zigbee_af_cli_println("[[!! ERROR !!]] gp test vector config (%s) expects mic result, received none", testExpect->title);
     return false;
   }
   if (testExpect->flags & HAS_KEY_EXPECT && keyResult == NULL) {
-    sl_zigbee_af_green_power_cluster_println("[[!! ERROR !!]] gp test vector config (%s) expects 'key' result, received none", testExpect->title);
+    sl_zigbee_af_cli_println("[[!! ERROR !!]] gp test vector config (%s) expects 'key' result, received none", testExpect->title);
     return false;
   }
   bool micMatch = true;
@@ -216,17 +216,17 @@ static bool checkGpSecurityTestResults(struct GpSecurityTestVector *testExpect,
     // print things out...
     micMatch = memcmp(testExpect->mic_expect, micResult, 4) == 0;
     if (!micMatch) {
-      sl_zigbee_af_green_power_cluster_println("[[!! FAIL !!]] gp test vector (%s) 'MIC' mismatch", testExpect->title);
+      sl_zigbee_af_cli_println("[[!! FAIL !!]] gp test vector (%s) 'MIC' mismatch", testExpect->title);
     }
   }
   if (testExpect->flags & HAS_KEY_EXPECT) {
     keyMatch = memcmp(testExpect->key_expect, keyResult, 16) == 0;
     if (!keyMatch) {
-      sl_zigbee_af_green_power_cluster_println("[[!! FAIL !!]] gp test vector (%s) 'KEY' mismatch", testExpect->title);
+      sl_zigbee_af_cli_println("[[!! FAIL !!]] gp test vector (%s) 'KEY' mismatch", testExpect->title);
     }
   }
   if (micMatch && keyMatch) {
-    sl_zigbee_af_green_power_cluster_println("[[!! PASS !!]] gp test vector (%s)", testExpect->title);
+    sl_zigbee_af_cli_println("[[!! PASS !!]] gp test vector (%s)", testExpect->title);
     return true;
   } else {
     return false;
@@ -249,7 +249,7 @@ sl_status_t sli_zigbee_af_gp_test_security(void)
   //A.1.5.6.2 Security test vectors for a shared key
   //A.1.5.6.2.1 SecurityLevel = 0b10
   //Outgoing
-  sl_zigbee_af_green_power_cluster_println("\nTest Vector (A.1.5.6.2.1) Secured outGoing GPDF command id = 0xF3 Payload={0} SharedKey, seclevel = 0b10 Application Id 0");
+  sl_zigbee_af_cli_println("\nTest Vector (A.1.5.6.2.1) Secured outGoing GPDF command id = 0xF3 Payload={0} SharedKey, seclevel = 0b10 Application Id 0");
   sl_zigbee_key_data_t testKey5 = { { 0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF } };
   gpdAddr.id.sourceId = 0x87654321;
   gpdAddr.applicationId = 0;
@@ -274,25 +274,25 @@ sl_status_t sli_zigbee_af_gp_test_security(void)
                                                                              securedOutgoingGpdf, // Collector for the secured frame
                                                                              100);
 
-  sl_zigbee_af_green_power_cluster_print("Secured Frame  :");
+  sl_zigbee_af_cli_print("Secured Frame  :");
   for (int i = 0; i < securedGpdfFrameLength; i++) {
-    sl_zigbee_af_green_power_cluster_print("%02X ", securedOutgoingGpdf[i]);
+    sl_zigbee_af_cli_print("%02X ", securedOutgoingGpdf[i]);
   }
-  sl_zigbee_af_green_power_cluster_print("");
-  sl_zigbee_af_green_power_cluster_println("\nExpected Frame :8C 90 21 43 65 87 11 22 33 44 F3 00 CC A0 BB 2E ");
-  sl_zigbee_af_green_power_cluster_println("");
+  sl_zigbee_af_cli_print("");
+  sl_zigbee_af_cli_println("\nExpected Frame :8C 90 21 43 65 87 11 22 33 44 F3 00 CC A0 BB 2E ");
+  sl_zigbee_af_cli_println("");
   // gp test vector check - 0
   single_test_vector_passed = checkGpSecurityTestResults(&gp_test_vector_expects[0],
                                                          NULL,
                                                          securedOutgoingGpdf);
   if (all_test_vectors_passed && !single_test_vector_passed) {
-    sl_zigbee_af_green_power_cluster_println("[[FAIL 0]]");
+    sl_zigbee_af_cli_println("[[FAIL 0]]");
     all_test_vectors_passed = false;
   }
 
   //A.1.5.6.2.2 SecurityLevel = 0b11
   //Outgoing
-  sl_zigbee_af_green_power_cluster_println("\nTest Vector (A.1.5.6.2.2) Secured outGoing GPDF command id = 0xF3 Payload={0} SharedKey, seclevel = 0b11 Application Id 0");
+  sl_zigbee_af_cli_println("\nTest Vector (A.1.5.6.2.2) Secured outGoing GPDF command id = 0xF3 Payload={0} SharedKey, seclevel = 0b11 Application Id 0");
   securedGpdfFrameLength = sli_zigbee_af_gp_outgoing_command_encrypt(&gpdAddr,
                                                                      fc,
                                                                      0, // Key type : Shared Key = 0, Individual Key = 1
@@ -302,26 +302,26 @@ sl_status_t sli_zigbee_af_gp_test_security(void)
                                                                      securedOutgoingGpdf, // Collector for the secured frame
                                                                      100);
 
-  sl_zigbee_af_green_power_cluster_print("Secured Frame  :");
+  sl_zigbee_af_cli_print("Secured Frame  :");
   for (int i = 0; i < securedGpdfFrameLength; i++) {
-    sl_zigbee_af_green_power_cluster_print("%02X ", securedOutgoingGpdf[i]);
+    sl_zigbee_af_cli_print("%02X ", securedOutgoingGpdf[i]);
   }
-  sl_zigbee_af_green_power_cluster_print("");
-  sl_zigbee_af_green_power_cluster_println("\nExpected Frame :8C 98 21 43 65 87 11 22 33 44 9E 7E 14 0F B5 DA ");
-  sl_zigbee_af_green_power_cluster_println("");
+  sl_zigbee_af_cli_print("");
+  sl_zigbee_af_cli_println("\nExpected Frame :8C 98 21 43 65 87 11 22 33 44 9E 7E 14 0F B5 DA ");
+  sl_zigbee_af_cli_println("");
   // gp test vector check - 1
   single_test_vector_passed = checkGpSecurityTestResults(&gp_test_vector_expects[1],
                                                          NULL,
                                                          securedOutgoingGpdf);
   if (!single_test_vector_passed) {
-    sl_zigbee_af_green_power_cluster_println("[[FAIL 1]]");
+    sl_zigbee_af_cli_println("[[FAIL 1]]");
     all_test_vectors_passed = false;
   }
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   gpdAddr.id.sourceId = 0x12345678;
   gpdAddr.applicationId = 0;
-  sl_zigbee_af_green_power_cluster_println("\nTest Vector (A.1.5.8.1) for TCLK Decryption of Incoming Key");
-  sl_zigbee_af_green_power_cluster_println("Incoming decrypted key for App Id = %d GpdId= 0x%08X", gpdAddr.applicationId, gpdAddr.id.sourceId);
+  sl_zigbee_af_cli_println("\nTest Vector (A.1.5.8.1) for TCLK Decryption of Incoming Key");
+  sl_zigbee_af_cli_println("Incoming decrypted key for App Id = %d GpdId= 0x%08X", gpdAddr.applicationId, gpdAddr.id.sourceId);
   sl_zigbee_key_data_t incomingEncryptedKey1 = { { 0x7D, 0x17, 0x7B, 0xD2, 0x9E, 0xA0, 0xFD, 0xA6, 0xB0, 0x17, 0x03, 0x65, 0x87, 0xDC, 0x26, 0x00 } };
 
   sl_zigbee_sec_man_import_key(&context, (sl_zigbee_sec_man_key_t *)&tcLk);
@@ -333,27 +333,27 @@ sl_status_t sli_zigbee_af_gp_test_security(void)
                                         mic,
                                         &incomingEncryptedKey1,
                                         true);
-  sl_zigbee_af_green_power_cluster_print("Decrypted Key :");
+  sl_zigbee_af_cli_print("Decrypted Key :");
   for (int i = 0; i < SL_ZIGBEE_ENCRYPTION_KEY_SIZE; i++) {
-    sl_zigbee_af_core_print("%02X ", incomingEncryptedKey1.contents[i]);
+    sl_zigbee_af_cli_print("%02X ", incomingEncryptedKey1.contents[i]);
   }
-  sl_zigbee_af_green_power_cluster_print("\nExpected Key  :C0 C1 C2 C3 C4 C5 C6 C7 C8 C9 CA CB CC CD CE CF");
-  sl_zigbee_af_green_power_cluster_print("\nGenerated MIC :");
+  sl_zigbee_af_cli_print("\nExpected Key  :C0 C1 C2 C3 C4 C5 C6 C7 C8 C9 CA CB CC CD CE CF");
+  sl_zigbee_af_cli_print("\nGenerated MIC :");
   for (int i = 0; i < 4; i++) {
-    sl_zigbee_af_green_power_cluster_print("%02X ", mic[i]);
+    sl_zigbee_af_cli_print("%02X ", mic[i]);
   }
-  sl_zigbee_af_green_power_cluster_println("\nExpected MIC  :61 F1 63 A9");
+  sl_zigbee_af_cli_println("\nExpected MIC  :61 F1 63 A9");
   // gp test vector check - 2
   single_test_vector_passed = checkGpSecurityTestResults(&gp_test_vector_expects[2],
                                                          mic,
                                                          incomingEncryptedKey1.contents);
   if (!single_test_vector_passed) {
-    sl_zigbee_af_green_power_cluster_println("[[FAIL 2]]");
+    sl_zigbee_af_cli_println("[[FAIL 2]]");
     all_test_vectors_passed = false;
   }
 
-  sl_zigbee_af_green_power_cluster_println("\nTest Vector (A.1.5.13.1) for TCLK Decryption of Incoming Key IEEE Address");
-  sl_zigbee_af_green_power_cluster_println("Incoming decrypted key for App Id = 2 Ieee= 0x8877665544332211");
+  sl_zigbee_af_cli_println("\nTest Vector (A.1.5.13.1) for TCLK Decryption of Incoming Key IEEE Address");
+  sl_zigbee_af_cli_println("Incoming decrypted key for App Id = 2 Ieee= 0x8877665544332211");
   memcpy(gpdAddr.id.gpdIeeeAddress, testIeee, 8);
   gpdAddr.endpoint = 0x0A;
   gpdAddr.applicationId = 2;
@@ -364,27 +364,27 @@ sl_status_t sli_zigbee_af_gp_test_security(void)
                                         mic,
                                         &incomingEncryptedKey11,
                                         true);
-  sl_zigbee_af_green_power_cluster_print("Decrypted Key :");
+  sl_zigbee_af_cli_print("Decrypted Key :");
   for (int i = 0; i < SL_ZIGBEE_ENCRYPTION_KEY_SIZE; i++) {
-    sl_zigbee_af_core_print("%02X ", incomingEncryptedKey11.contents[i]);
+    sl_zigbee_af_cli_print("%02X ", incomingEncryptedKey11.contents[i]);
   }
-  sl_zigbee_af_green_power_cluster_print("\nExpected Key  :C0 C1 C2 C3 C4 C5 C6 C7 C8 C9 CA CB CC CD CE CF");
-  sl_zigbee_af_green_power_cluster_print("\nGenerated MIC :");
+  sl_zigbee_af_cli_print("\nExpected Key  :C0 C1 C2 C3 C4 C5 C6 C7 C8 C9 CA CB CC CD CE CF");
+  sl_zigbee_af_cli_print("\nGenerated MIC :");
   for (int i = 0; i < 4; i++) {
-    sl_zigbee_af_green_power_cluster_print("%02X ", mic[i]);
+    sl_zigbee_af_cli_print("%02X ", mic[i]);
   }
-  sl_zigbee_af_green_power_cluster_print("\nExpected MIC  :3F 9A E0 B5");
+  sl_zigbee_af_cli_print("\nExpected MIC  :3F 9A E0 B5");
   // gp test vector check - 3
   single_test_vector_passed = checkGpSecurityTestResults(&gp_test_vector_expects[3],
                                                          mic,
                                                          incomingEncryptedKey1.contents);
   if (!single_test_vector_passed) {
-    sl_zigbee_af_green_power_cluster_println("[[FAIL 3]]");
+    sl_zigbee_af_cli_println("[[FAIL 3]]");
     all_test_vectors_passed = false;
   }
 
-  sl_zigbee_af_green_power_cluster_println("\nTest Vector (A.1.5.8.3) for TCLK Protected Key for Commissioning Reply");
-  sl_zigbee_af_green_power_cluster_println("OutGoing Protected Key for App Id = 0 GpdId= 0x12345678, fc =4 ");
+  sl_zigbee_af_cli_println("\nTest Vector (A.1.5.8.3) for TCLK Protected Key for Commissioning Reply");
+  sl_zigbee_af_cli_println("OutGoing Protected Key for App Id = 0 GpdId= 0x12345678, fc =4 ");
   // Security Level 3 Key derivation Application Id 0 - Out going
   sl_zigbee_key_data_t testKey = { { 0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF } };
   gpdAddr.id.sourceId = 0x12345678;
@@ -395,27 +395,27 @@ sl_status_t sli_zigbee_af_gp_test_security(void)
                                         mic,
                                         &testKey,
                                         false);
-  sl_zigbee_af_green_power_cluster_print("Encrypted Key :");
+  sl_zigbee_af_cli_print("Encrypted Key :");
   for (int i = 0; i < SL_ZIGBEE_ENCRYPTION_KEY_SIZE; i++) {
-    sl_zigbee_af_core_print("%02X ", testKey.contents[i]);
+    sl_zigbee_af_cli_print("%02X ", testKey.contents[i]);
   }
-  sl_zigbee_af_green_power_cluster_print("\nExpected Key  :E9 00 06 63 1D 0D FD C6 38 06 8E 5E 69 67 D3 25");
-  sl_zigbee_af_green_power_cluster_print("\nGenerated MIC :");
+  sl_zigbee_af_cli_print("\nExpected Key  :E9 00 06 63 1D 0D FD C6 38 06 8E 5E 69 67 D3 25");
+  sl_zigbee_af_cli_print("\nGenerated MIC :");
   for (int i = 0; i < 4; i++) {
-    sl_zigbee_af_green_power_cluster_print("%02X ", mic[i]);
+    sl_zigbee_af_cli_print("%02X ", mic[i]);
   }
-  sl_zigbee_af_green_power_cluster_print("\nExpected MIC  :27 55 9F 75");
+  sl_zigbee_af_cli_print("\nExpected MIC  :27 55 9F 75");
   // gp test vector check - 4
   single_test_vector_passed = checkGpSecurityTestResults(&gp_test_vector_expects[4],
                                                          mic,
                                                          testKey.contents);
   if (!single_test_vector_passed) {
-    sl_zigbee_af_green_power_cluster_println("[[FAIL 4]]");
+    sl_zigbee_af_cli_println("[[FAIL 4]]");
     all_test_vectors_passed = false;
   }
 
-  sl_zigbee_af_green_power_cluster_println("\nTest Vector (A.1.5.13.2) for TCLK Protected Key for Commissioning Reply");
-  sl_zigbee_af_green_power_cluster_println("OutGoing Protected Key for App Id = 2 Ieee= 0x8877665544332211, fc =3 ");
+  sl_zigbee_af_cli_println("\nTest Vector (A.1.5.13.2) for TCLK Protected Key for Commissioning Reply");
+  sl_zigbee_af_cli_println("OutGoing Protected Key for App Id = 2 Ieee= 0x8877665544332211, fc =3 ");
   // Commissioning Reply TC-LK Protected key App Id = 2
   sl_zigbee_key_data_t testKey11 = { { 0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF } };
   memcpy(gpdAddr.id.gpdIeeeAddress, testIeee, 8);
@@ -428,27 +428,27 @@ sl_status_t sli_zigbee_af_gp_test_security(void)
                                         mic,
                                         &testKey11,
                                         false);
-  sl_zigbee_af_green_power_cluster_print("Encrypted Key :");
+  sl_zigbee_af_cli_print("Encrypted Key :");
   for (int i = 0; i < SL_ZIGBEE_ENCRYPTION_KEY_SIZE; i++) {
-    sl_zigbee_af_core_print("%02X ", testKey11.contents[i]);
+    sl_zigbee_af_cli_print("%02X ", testKey11.contents[i]);
   }
-  sl_zigbee_af_green_power_cluster_print("\nExpected Key  :2D 23 8F 58 07 1C 07 8A B0 5C 23 5E 4D ED DF 3B ");
-  sl_zigbee_af_green_power_cluster_print("\nGenerated MIC :");
+  sl_zigbee_af_cli_print("\nExpected Key  :2D 23 8F 58 07 1C 07 8A B0 5C 23 5E 4D ED DF 3B ");
+  sl_zigbee_af_cli_print("\nGenerated MIC :");
   for (int i = 0; i < 4; i++) {
-    sl_zigbee_af_green_power_cluster_print("%02X ", mic[i]);
+    sl_zigbee_af_cli_print("%02X ", mic[i]);
   }
-  sl_zigbee_af_green_power_cluster_println("\nExpected MIC  :DE F5 18 7D");
+  sl_zigbee_af_cli_println("\nExpected MIC  :DE F5 18 7D");
   // gp test vector check - 5
   single_test_vector_passed = checkGpSecurityTestResults(&gp_test_vector_expects[5],
                                                          mic,
                                                          testKey11.contents);
   if (!single_test_vector_passed) {
-    sl_zigbee_af_green_power_cluster_println("[[FAIL 5]]");
+    sl_zigbee_af_cli_println("[[FAIL 5]]");
     all_test_vectors_passed = false;
   }
 
   // Shared Key Security Level 2 Application Id 0 - Incoming
-  sl_zigbee_af_green_power_cluster_println("\nTest Vector (A.1.5.4.2) MIC of command id = 0x02 (No Payload) SharedKey seclevel = 0b10 Application Id 0");
+  sl_zigbee_af_cli_println("\nTest Vector (A.1.5.4.2) MIC of command id = 0x02 (No Payload) SharedKey seclevel = 0b10 Application Id 0");
   sl_zigbee_key_data_t testKey1 = { { 0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF } };
   gpdAddr.id.sourceId = 0x87654321;
   gpdAddr.applicationId = 0;
@@ -468,22 +468,39 @@ sl_status_t sli_zigbee_af_gp_test_security(void)
                                                   false,
                                                   mic);
 
-  sl_zigbee_af_green_power_cluster_print("Generated MIC:");
+  sl_zigbee_af_cli_print("Generated MIC:");
   for (int i = 0; i < 4; i++) {
-    sl_zigbee_af_green_power_cluster_print("%02X ", mic[i]);
+    sl_zigbee_af_cli_print("%02X ", mic[i]);
   }
-  sl_zigbee_af_green_power_cluster_println("\nExpected MIC :CF 78 7E 72");
+  sl_zigbee_af_cli_println("\nExpected MIC :CF 78 7E 72");
   // gp test vector check - 6
   single_test_vector_passed = checkGpSecurityTestResults(&gp_test_vector_expects[6],
                                                          mic,
                                                          NULL);
   if (!single_test_vector_passed) {
-    sl_zigbee_af_green_power_cluster_println("[[FAIL 6]]");
+    sl_zigbee_af_cli_println("[[FAIL 6]]");
     all_test_vectors_passed = false;
   }
 
+  gpdCommandId = 0x20; // Level 2 - gpd command ID is not encrypted.
+  bool ret = sli_zigbee_af_gp_incoming_command_decrypt_and_validate_mic(&gpdAddr,
+                                                                        false, // Rx after TX - this is to build the header
+                                                                        0, // Key type : Shared Key = 0, Individual Key = 1
+                                                                        2, // Security Level : Encrypted = 3, MIC only = 2,
+                                                                        fc, // secured frame counter,
+                                                                        &gpdCommandId,
+                                                                        NULL,
+                                                                        0x727E78CF
+                                                                        );
+  if (ret != true) {
+    sl_zigbee_af_cli_println("[[FAIL - A.1.5.4.2 Decryption Test]]");
+    all_test_vectors_passed = false;
+  } else {
+    sl_zigbee_af_cli_println("[[PASS - A.1.5.4.2 Decryption Test]]");
+  }
+
   // Shared Key Security Level 3 Application Id 0 - Incoming
-  sl_zigbee_af_green_power_cluster_println("\nTest Vector (A.1.5.4.3) MIC of command id = 0x02 (No Payload) SharedKey seclevel = 0b11 Application Id 0");
+  sl_zigbee_af_cli_println("\nTest Vector (A.1.5.4.3) MIC of command id = 0x02 (No Payload) SharedKey seclevel = 0b11 Application Id 0");
   sl_zigbee_key_data_t testKey3 = { { 0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF } };
 
   gpdAddr.id.sourceId = 0x87654321;
@@ -502,22 +519,39 @@ sl_status_t sli_zigbee_af_gp_test_security(void)
                                                   NULL,
                                                   false,
                                                   mic);
-  sl_zigbee_af_green_power_cluster_print("Generated MIC:");
+  sl_zigbee_af_cli_print("Generated MIC:");
   for (int i = 0; i < 4; i++) {
-    sl_zigbee_af_green_power_cluster_print("%02X ", mic[i]);
+    sl_zigbee_af_cli_print("%02X ", mic[i]);
   }
-  sl_zigbee_af_green_power_cluster_println("\nExpected MIC :CA 43 24 DD");
+  sl_zigbee_af_cli_println("\nExpected MIC :CA 43 24 DD");
   // gp test vector check - 7
   single_test_vector_passed = checkGpSecurityTestResults(&gp_test_vector_expects[7],
                                                          mic,
                                                          NULL);
   if (!single_test_vector_passed) {
-    sl_zigbee_af_green_power_cluster_println("[[FAIL 7]]");
+    sl_zigbee_af_cli_println("[[FAIL 7]]");
     all_test_vectors_passed = false;
   }
 
+  gpdCommandId = 0x83; // Level 3 - gpd command ID (0x20) is encrypted.
+  ret = sli_zigbee_af_gp_incoming_command_decrypt_and_validate_mic(&gpdAddr,
+                                                                   false, // Rx after TX - this is to build the header
+                                                                   0, // Key type : Shared Key = 0, Individual Key = 1
+                                                                   3, // Security Level : Encrypted = 3, MIC only = 2,
+                                                                   fc, // secured frame counter,
+                                                                   &gpdCommandId,
+                                                                   NULL,
+                                                                   0xDD2443CA
+                                                                   );
+  if (ret != true || gpdCommandId != 0x20) {
+    sl_zigbee_af_cli_println("[[FAIL - A.1.5.4.3 Decryption Test]]");
+    all_test_vectors_passed = false;
+  } else {
+    sl_zigbee_af_cli_println("[[PASS - A.1.5.4.3 Decryption Test]]");
+  }
+
   // Shared Key Security Level 2 Application Id 0 - Incoming
-  sl_zigbee_af_green_power_cluster_println("\nTest Vector (A.1.5.5.2) MIC of command id = 0x02 (No Payload) IndividulaKey seclevel = 0b10 Application Id 0");
+  sl_zigbee_af_cli_println("\nTest Vector (A.1.5.5.2) MIC of command id = 0x02 (No Payload) IndividulaKey seclevel = 0b10 Application Id 0");
   sl_zigbee_key_data_t testKey1552 = { { 0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF } };
   gpdAddr.id.sourceId = 0x87654321;
   gpdAddr.applicationId = 0;
@@ -536,22 +570,22 @@ sl_status_t sli_zigbee_af_gp_test_security(void)
                                                   false,
                                                   mic);
 
-  sl_zigbee_af_green_power_cluster_print("Generated MIC:");
+  sl_zigbee_af_cli_print("Generated MIC:");
   for (int i = 0; i < 4; i++) {
-    sl_zigbee_af_green_power_cluster_print("%02X ", mic[i]);
+    sl_zigbee_af_cli_print("%02X ", mic[i]);
   }
-  sl_zigbee_af_green_power_cluster_println("\nExpected MIC :AD 69 A9 78");
+  sl_zigbee_af_cli_println("\nExpected MIC :AD 69 A9 78");
   // gp test vector check - 8
   single_test_vector_passed = checkGpSecurityTestResults(&gp_test_vector_expects[8],
                                                          mic,
                                                          NULL);
   if (!single_test_vector_passed) {
-    sl_zigbee_af_green_power_cluster_println("[[FAIL 8]]");
+    sl_zigbee_af_cli_println("[[FAIL 8]]");
     all_test_vectors_passed = false;
   }
 
   // Shared Key Security Level 3 Application Id 0 - Incoming
-  sl_zigbee_af_green_power_cluster_println("\nTest Vector (A.1.5.5.3) MIC of command id = 0x02 (No Payload) IndividualKey seclevel = 0b11 Application Id 0");
+  sl_zigbee_af_cli_println("\nTest Vector (A.1.5.5.3) MIC of command id = 0x02 (No Payload) IndividualKey seclevel = 0b11 Application Id 0");
   sl_zigbee_key_data_t testKey1553 = { { 0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF } };
 
   gpdAddr.id.sourceId = 0x87654321;
@@ -570,22 +604,22 @@ sl_status_t sli_zigbee_af_gp_test_security(void)
                                                   NULL,
                                                   false,
                                                   mic);
-  sl_zigbee_af_green_power_cluster_print("Generated MIC:");
+  sl_zigbee_af_cli_print("Generated MIC:");
   for (int i = 0; i < 4; i++) {
-    sl_zigbee_af_green_power_cluster_print("%02X ", mic[i]);
+    sl_zigbee_af_cli_print("%02X ", mic[i]);
   }
-  sl_zigbee_af_green_power_cluster_println("\nExpected MIC :5F 1A 30 34");
+  sl_zigbee_af_cli_println("\nExpected MIC :5F 1A 30 34");
   // gp test vector check - 9
   single_test_vector_passed = checkGpSecurityTestResults(&gp_test_vector_expects[9],
                                                          mic,
                                                          NULL);
   if (!single_test_vector_passed) {
-    sl_zigbee_af_green_power_cluster_println("[[FAIL 9]]");
+    sl_zigbee_af_cli_println("[[FAIL 9]]");
     all_test_vectors_passed = false;
   }
 
   // Shared Key Security Level 2 Application Id 2 - Incoming
-  sl_zigbee_af_green_power_cluster_println("\nTest Vector (A.1.5.9.2) MIC of command id = 0x02 (No Payload) SharedKey seclevel = 0b10 Application Id 2");
+  sl_zigbee_af_cli_println("\nTest Vector (A.1.5.9.2) MIC of command id = 0x02 (No Payload) SharedKey seclevel = 0b10 Application Id 2");
   sl_zigbee_key_data_t testKey2 = { { 0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF } };
   memcpy(gpdAddr.id.gpdIeeeAddress, testIeee, 8);
   gpdAddr.endpoint = 0x0A;
@@ -604,22 +638,22 @@ sl_status_t sli_zigbee_af_gp_test_security(void)
                                                   NULL,
                                                   false,
                                                   mic);
-  sl_zigbee_af_green_power_cluster_print("Generated MIC:");
+  sl_zigbee_af_cli_print("Generated MIC:");
   for (int i = 0; i < 4; i++) {
-    sl_zigbee_af_green_power_cluster_print("%02X ", mic[i]);
+    sl_zigbee_af_cli_print("%02X ", mic[i]);
   }
-  sl_zigbee_af_green_power_cluster_println("\nExpected MIC :C5 A8 3C 5E ");
+  sl_zigbee_af_cli_println("\nExpected MIC :C5 A8 3C 5E ");
   // gp test vector check - 10
   single_test_vector_passed = checkGpSecurityTestResults(&gp_test_vector_expects[10],
                                                          mic,
                                                          NULL);
   if (!single_test_vector_passed) {
-    sl_zigbee_af_green_power_cluster_println("[[FAIL 10]]");
+    sl_zigbee_af_cli_println("[[FAIL 10]]");
     all_test_vectors_passed = false;
   }
 
   // Shared Key Security Level 3 Application Id 2 - Incoming
-  sl_zigbee_af_green_power_cluster_println("\nTest Vector (A.1.5.9.3) MIC of command id = 0x02 (No Payload) SharedKey seclevel = 0b11 Application Id 2");
+  sl_zigbee_af_cli_println("\nTest Vector (A.1.5.9.3) MIC of command id = 0x02 (No Payload) SharedKey seclevel = 0b11 Application Id 2");
   sl_zigbee_key_data_t testKey4 = { { 0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF } };
   memcpy(gpdAddr.id.gpdIeeeAddress, testIeee, 8);
   gpdAddr.applicationId = 2;
@@ -638,18 +672,18 @@ sl_status_t sli_zigbee_af_gp_test_security(void)
                                                   NULL,
                                                   false,
                                                   mic);
-  sl_zigbee_af_green_power_cluster_print("Generated MIC:");
+  sl_zigbee_af_cli_print("Generated MIC:");
   for (int i = 0; i < 4; i++) {
-    sl_zigbee_af_green_power_cluster_print("%02X ", mic[i]);
+    sl_zigbee_af_cli_print("%02X ", mic[i]);
   }
-  sl_zigbee_af_green_power_cluster_println("\nExpected MIC :D2 A2 36 1B");
-  sl_zigbee_af_green_power_cluster_println(" ");
+  sl_zigbee_af_cli_println("\nExpected MIC :D2 A2 36 1B");
+  sl_zigbee_af_cli_println(" ");
   // gp test vector check - 11
   single_test_vector_passed = checkGpSecurityTestResults(&gp_test_vector_expects[11],
                                                          mic,
                                                          NULL);
   if (!single_test_vector_passed) {
-    sl_zigbee_af_green_power_cluster_println("[[FAIL 11]]");
+    sl_zigbee_af_cli_println("[[FAIL 11]]");
     all_test_vectors_passed = false;
   }
 
@@ -669,18 +703,18 @@ sl_status_t sli_zigbee_af_gp_test_security(void)
                                  3,
                                  result);
 
-  sl_zigbee_af_green_power_cluster_print("Network Derived Group Key:");
+  sl_zigbee_af_cli_print("Network Derived Group Key:");
   for (int i = 0; i < 16; i++) {
-    sl_zigbee_af_green_power_cluster_print("%02X ", result[i]);
+    sl_zigbee_af_cli_print("%02X ", result[i]);
   }
-  sl_zigbee_af_green_power_cluster_println("\nExpected Key : BA 88 86 7f c0 09 39 87 eb 88 64 ce be 5f c6 13");
-  sl_zigbee_af_green_power_cluster_println(" ");
+  sl_zigbee_af_cli_println("\nExpected Key : BA 88 86 7f c0 09 39 87 eb 88 64 ce be 5f c6 13");
+  sl_zigbee_af_cli_println(" ");
   // gp test vector check - 12
   single_test_vector_passed = checkGpSecurityTestResults(&gp_test_vector_expects[12],
                                                          NULL,
                                                          result);
   if (!single_test_vector_passed) {
-    sl_zigbee_af_green_power_cluster_println("[[FAIL 12]]");
+    sl_zigbee_af_cli_println("[[FAIL 12]]");
     all_test_vectors_passed = false;
   }
 
@@ -706,11 +740,11 @@ sl_status_t sli_zigbee_af_gp_test_security(void)
   sl_zigbee_af_green_power_server_derive_shared_key_from_sink_attribute(&gpsSecurityKeyTypeAtrribute,
                                                                         &gpSharedKeyAttribute,
                                                                         &gpdAddr);
-  sl_zigbee_af_green_power_cluster_print("Shared Key Type = Network Key(%d):\nRetrived Key : ", gpsSecurityKeyTypeAtrribute);
+  sl_zigbee_af_cli_print("Shared Key Type = Network Key(%d):\nRetrived Key : ", gpsSecurityKeyTypeAtrribute);
   for (int i = 0; i < 16; i++) {
-    sl_zigbee_af_green_power_cluster_print("%02X ", gpSharedKeyAttribute.contents[i]);
+    sl_zigbee_af_cli_print("%02X ", gpSharedKeyAttribute.contents[i]);
   }
-  sl_zigbee_af_green_power_cluster_println(" ");
+  sl_zigbee_af_cli_println(" ");
 
   keyType = 2;
   (void) sl_zigbee_af_write_attribute(SL_ZIGBEE_GP_ENDPOINT,
@@ -724,11 +758,11 @@ sl_status_t sli_zigbee_af_gp_test_security(void)
   sl_zigbee_af_green_power_server_derive_shared_key_from_sink_attribute(&gpsSecurityKeyTypeAtrribute,
                                                                         &gpSharedKeyAttribute,
                                                                         &gpdAddr);
-  sl_zigbee_af_green_power_cluster_print("Shared Key Type = Network Derived Group Key (%d):\nRetrived Key : ", gpsSecurityKeyTypeAtrribute);
+  sl_zigbee_af_cli_print("Shared Key Type = Network Derived Group Key (%d):\nRetrived Key : ", gpsSecurityKeyTypeAtrribute);
   for (int i = 0; i < 16; i++) {
-    sl_zigbee_af_green_power_cluster_print("%02X ", gpSharedKeyAttribute.contents[i]);
+    sl_zigbee_af_cli_print("%02X ", gpSharedKeyAttribute.contents[i]);
   }
-  sl_zigbee_af_green_power_cluster_println(" ");
+  sl_zigbee_af_cli_println(" ");
 
   keyType = 3;
   (void) sl_zigbee_af_write_attribute(SL_ZIGBEE_GP_ENDPOINT,
@@ -741,11 +775,11 @@ sl_status_t sli_zigbee_af_gp_test_security(void)
   sl_zigbee_af_green_power_server_derive_shared_key_from_sink_attribute(&gpsSecurityKeyTypeAtrribute,
                                                                         &gpSharedKeyAttribute,
                                                                         &gpdAddr);
-  sl_zigbee_af_green_power_cluster_print("Shared Key Type = Group Key(%d):\nRetrived Key : ", gpsSecurityKeyTypeAtrribute);
+  sl_zigbee_af_cli_print("Shared Key Type = Group Key(%d):\nRetrived Key : ", gpsSecurityKeyTypeAtrribute);
   for (int i = 0; i < 16; i++) {
-    sl_zigbee_af_green_power_cluster_print("%02X ", gpSharedKeyAttribute.contents[i]);
+    sl_zigbee_af_cli_print("%02X ", gpSharedKeyAttribute.contents[i]);
   }
-  sl_zigbee_af_green_power_cluster_println(" ");
+  sl_zigbee_af_cli_println(" ");
 
   keyType = 7;
   (void) sl_zigbee_af_write_attribute(SL_ZIGBEE_GP_ENDPOINT,
@@ -761,18 +795,18 @@ sl_status_t sli_zigbee_af_gp_test_security(void)
   sl_zigbee_af_green_power_server_derive_shared_key_from_sink_attribute(&gpsSecurityKeyTypeAtrribute,
                                                                         &gpSharedKeyAttribute,
                                                                         &gpdAddr);
-  sl_zigbee_af_green_power_cluster_print("A.1.5.7.2 Derived individual GPD key =%d, AppId = %d:\nGenerated Key : ", gpsSecurityKeyTypeAtrribute, gpdAddr.applicationId);
+  sl_zigbee_af_cli_print("A.1.5.7.2 Derived individual GPD key =%d, AppId = %d:\nGenerated Key : ", gpsSecurityKeyTypeAtrribute, gpdAddr.applicationId);
   for (int i = 0; i < 16; i++) {
-    sl_zigbee_af_green_power_cluster_print("%02X ", gpSharedKeyAttribute.contents[i]);
+    sl_zigbee_af_cli_print("%02X ", gpSharedKeyAttribute.contents[i]);
   }
-  sl_zigbee_af_green_power_cluster_println("\nExpected Key : 7a 3a 73 43 8d 6e 47 55 28 81 a0 28 ad 59 23 2e");
-  sl_zigbee_af_green_power_cluster_println(" ");
+  sl_zigbee_af_cli_println("\nExpected Key : 7a 3a 73 43 8d 6e 47 55 28 81 a0 28 ad 59 23 2e");
+  sl_zigbee_af_cli_println(" ");
   // gp test vector check - 13
   single_test_vector_passed = checkGpSecurityTestResults(&gp_test_vector_expects[13],
                                                          NULL,
                                                          gpSharedKeyAttribute.contents);
   if (!single_test_vector_passed) {
-    sl_zigbee_af_green_power_cluster_println("[[FAIL 13]]");
+    sl_zigbee_af_cli_println("[[FAIL 13]]");
     all_test_vectors_passed = false;
   }
 
@@ -782,18 +816,18 @@ sl_status_t sli_zigbee_af_gp_test_security(void)
   sl_zigbee_af_green_power_server_derive_shared_key_from_sink_attribute(&gpsSecurityKeyTypeAtrribute,
                                                                         &gpSharedKeyAttribute,
                                                                         &gpdAddr);
-  sl_zigbee_af_green_power_cluster_print("A.1.5.12.1 Derived individual GPD key=%d, AppId = %d:\nGenerated Key : ", gpsSecurityKeyTypeAtrribute, gpdAddr.applicationId);
+  sl_zigbee_af_cli_print("A.1.5.12.1 Derived individual GPD key=%d, AppId = %d:\nGenerated Key : ", gpsSecurityKeyTypeAtrribute, gpdAddr.applicationId);
   for (int i = 0; i < 16; i++) {
-    sl_zigbee_af_green_power_cluster_print("%02X ", gpSharedKeyAttribute.contents[i]);
+    sl_zigbee_af_cli_print("%02X ", gpSharedKeyAttribute.contents[i]);
   }
-  sl_zigbee_af_green_power_cluster_println("\nExpected Key : 8a e7 5b 07 5f 7a 13 23 06 08 ff 7e 93 07 97 6d");
-  sl_zigbee_af_green_power_cluster_println(" ");
+  sl_zigbee_af_cli_println("\nExpected Key : 8a e7 5b 07 5f 7a 13 23 06 08 ff 7e 93 07 97 6d");
+  sl_zigbee_af_cli_println(" ");
   // gp test vector check - 14
   single_test_vector_passed = checkGpSecurityTestResults(&gp_test_vector_expects[14],
                                                          NULL,
                                                          gpSharedKeyAttribute.contents);
   if (!single_test_vector_passed) {
-    sl_zigbee_af_green_power_cluster_println("[[FAIL 14]]");
+    sl_zigbee_af_cli_println("[[FAIL 14]]");
     all_test_vectors_passed = false;
   }
 

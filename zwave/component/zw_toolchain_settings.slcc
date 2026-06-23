@@ -13,13 +13,11 @@ metadata:
 provides:
 - name: zw_toolchain_settings
 requires:
-- name: toolchain_gcc
-- name: toolchain_gcc_standard
-- name: toolchain_lto
-  condition: [zw_release]
+- name: toolchain_gcc_lto
+  condition: [zw_release, toolchain_gcc]
+- name: toolchain_llvm_lto
+  condition: [zw_release, toolchain_llvm]
 toolchain_settings:
-- option: gcc_compiler_option
-  value: "-s"
 - option: gcc_compiler_option
   value: "-fmerge-all-constants"
 - option: gcc_compiler_option
@@ -41,7 +39,10 @@ toolchain_settings:
 - option: gcc_compiler_option
   value: "-Wno-implicit-function-declaration"
   condition: [zw_release]
-  # Linker flags
-- option: gcc_linker_option
-  value: "-Wl,--start-group -lgcc -lc -Wl,--end-group"
+  # LLVM/Clang: same intent as COMMON_FLAGS in toolchain_llvm.cmake (ABI: all-LLVM image only)
+- option: llvm_compiler_option
+  value: "-fshort-enums"
+- option: llvm_compiler_option
+  value: "-fmerge-all-constants"
+
 root_path: zwave

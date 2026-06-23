@@ -190,11 +190,11 @@ subevent</td>
 <td class="fieldname">
 data_status</td>
 <td class="fielddoc">
-<p >Data completeness:</p><ul>
-<li><b>0:</b> Complete</li>
-<li><b>1:</b> Incomplete, more data to come in new events</li>
-<li><b>2:</b> Incomplete, data truncated, no more to come</li>
-<li><b>255:</b> Failed to receive subevent data in this subevent </li>
+<p >Enum <a class="el" href="group__sl__bt__pawr__sync.html#ga177073dd4204ac9d634309db80a7460f">sl_bt_pawr_sync_subevent_data_status_t</a>. The subevent data completeness status. Values:</p><ul>
+<li><b>sl_bt_pawr_sync_subevent_data_status_complete (0x0):</b> All data of the PAwR subevent has been reported.</li>
+<li><b>sl_bt_pawr_sync_subevent_data_status_incomplete_more (0x1):</b> Data of the PAwR subevent is incomplete in this event, and more data will come in new events.</li>
+<li><b>sl_bt_pawr_sync_subevent_data_status_incomplete_nomore (0x2):</b> Data of the PAwR subevent is incomplete in this event, but no more data will come, i.e., the data of the PAwR subevent is truncated.</li>
+<li><b>sl_bt_pawr_sync_subevent_data_status_not_received (0xff):</b> Failed to receive subevent data in this subevent. </li>
 </ul>
 </td></tr>
 <tr><td class="fieldtype">

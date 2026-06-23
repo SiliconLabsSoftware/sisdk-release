@@ -17,14 +17,10 @@ requires:
 - name: sl_main
 - name: wisun_mac
 - name: a_radio_config
-- name: dmadrv
+- name: emlib_ldma   # em_ldma.h required
 - name: memory_manager
 - name: cpc_secondary
   condition: [cpc_secondary_driver]
-- name: emlib_usart
-  condition: [device_has_usart]
-- name: emlib_eusart
-  condition: [device_has_eusart]
 - name: wisun_rcp
 - name: wisun_rcp_interface
 - name: wisun_rcp_cpc

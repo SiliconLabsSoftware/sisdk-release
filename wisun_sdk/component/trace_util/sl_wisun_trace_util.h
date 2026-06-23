@@ -73,7 +73,7 @@ extern "C" {
 #define __CHECK_FOR_STATUS(__status)                                       \
   do {                                                                     \
     if (__status != SL_STATUS_OK) {                                        \
-      printf("%s() returned = 0x%08lx \n", __PRETTY_FUNCTION__, __status); \
+      printf("%s() returned = 0x%"PRIu32" \n", __PRETTY_FUNCTION__, __status); \
     }                                                                      \
   } while (0)
 #endif

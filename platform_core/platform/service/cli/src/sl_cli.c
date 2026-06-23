@@ -253,6 +253,7 @@ __WEAK bool sli_cli_tick(sl_cli_handle_t handle)
 
   if (newline) {
     sli_cli_handle_input_and_history(handle);
+    handle->buffer_full_shown = false;
 #if defined(SL_CLI_ACTIVE_FLAG_EN)
     handle->req_prompt = true;
     handle->active = true;
@@ -263,8 +264,9 @@ __WEAK bool sli_cli_tick(sl_cli_handle_t handle)
     }
 #endif
   } else {
-    if (handle->input_len >= handle->input_size - 1) {
+    if (handle->input_len >= handle->input_size - 1 && !handle->buffer_full_shown) {
       sli_cli_io_printf("%s%s", status_to_string(SL_STATUS_FULL), SL_CLI_EOL_STRING);
+      handle->buffer_full_shown = true;
     }
   }
   handle->tick_in_progress = false;
@@ -351,6 +353,7 @@ void sl_cli_clear(sl_cli_handle_t handle)
   handle->last_input_type = SL_CLI_INPUT_ORDINARY;
   handle->prompt_string = SL_CLI_PROMPT_STRING;
   handle->req_prompt = true;
+  handle->buffer_full_shown = false;
 #if SL_CLI_NUM_HISTORY_BYTES
   handle->history_pos = 0;
 #endif
@@ -404,14 +407,11 @@ sl_status_t sl_cli_instance_init(sl_cli_handle_t handle,
 #endif
 
   status = sli_cli_session_init(handle);
-  if (status != SL_STATUS_OK) {
-    return status;
-  }
-
+  if (status == SL_STATUS_OK) {
 #if defined(SL_CLI_ACTIVE_FLAG_EN)
-  handle->active = true;
+    handle->active = true;
 #endif
-
+  }
   return status;
 }
 

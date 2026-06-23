@@ -6,7 +6,7 @@ category: Third Party|Segger|RTT
 quality: production
 metadata:
   sbom:
-    license: Segger
+    license: zlib
 config_file:
 - path: systemview/Config/SEGGER_RTT_Conf.h
 source:

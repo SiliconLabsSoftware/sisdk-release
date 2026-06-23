@@ -31,8 +31,8 @@
  *   This file includes definitions for Multicast Listener Registration states of multicast addresses.
  */
 
-#ifndef MLR_TYPES_HPP_
-#define MLR_TYPES_HPP_
+#ifndef OT_CORE_THREAD_MLR_TYPES_HPP_
+#define OT_CORE_THREAD_MLR_TYPES_HPP_
 
 #include "openthread-core-config.h"
 
@@ -43,6 +43,9 @@ namespace ot {
  *
  * @{
  */
+
+constexpr uint8_t kMlrMinIp6Addresses = 1;                        ///< Min number of addresses in IPv6 Addresses TLV.
+constexpr uint8_t kMlrMaxIp6Addresses = OT_IP6_MAX_MLR_ADDRESSES; ///< Max number of addresses in IPv6 Addresses TLV.
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
 
@@ -74,4 +77,4 @@ enum MlrStatus
 
 } // namespace ot
 
-#endif // MLR_TYPES_HPP_
+#endif // OT_CORE_THREAD_MLR_TYPES_HPP_

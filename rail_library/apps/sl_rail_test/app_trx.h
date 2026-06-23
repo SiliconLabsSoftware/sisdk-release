@@ -39,6 +39,16 @@ typedef struct BerStatus{
   int8_t   rssi; /**< Current RSSI value during pattern acquisition */
 } BerStatus_t;
 
+typedef struct BerPacketStatus{
+  uint32_t packetsReceived; /**< Number of received packets */
+  uint32_t packetsCrcError; /**< Number of received packets with CRC error */
+  uint32_t syncWordsReceived; /**< Number of received SYNC words */
+  uint32_t prbsSeedCrcFails; /**< Number of PRBS seed CRC fails */
+  uint32_t prbsBytesTested; /**< Number of bytes currently tested */
+  uint32_t prbsBitErrors; /**< Number of bits errors detected */
+  RailAppEvent_t *LastRxPacket; /**< Pointer to the last received packet with valid PRBS seed CRC */
+} BerPacketStatus_t;
+
 // Variables for TX
 extern volatile sl_rail_events_t lastTxStatus;
 extern volatile sl_rail_events_t lastTxAckStatus;
@@ -53,6 +63,11 @@ extern sl_rail_scheduled_tx_config_t nextPacketTxTime;
 // Variables for BER testing
 extern BerStatus_t berStats;
 extern bool berTestModeEnabled;
+
+// Variables for BER testing in packet mode
+extern BerPacketStatus_t berPacketStats;
+extern uint32_t berPacketPrbsSeedOffsetBytes;
+extern uint32_t berPacketPrbsLengthBytes;
 
 void configRxLengthSetting(uint16_t rxLength);
 

@@ -8,25 +8,23 @@ metadata:
   sbom:
     license: Apache 2.0
     upstream:
-      name: CMSIS_5
-      version: 5.8.0
+      name: CMSIS_6
+      version: 6.2.0
       supplier: ARM-software
-      url: https://github.com/ARM-software/CMSIS_5
-      package_url: pkg:github/ARM-software/CMSIS_5@5.8.0
+      url: https://github.com/ARM-software/CMSIS_6
+      package_url: pkg:github/ARM-software/CMSIS_6@6.2.0
       comment: The CMSIS is a set of tools, APIs, frameworks, and work flows
 include:
 - path: Core/Include
   file_list:
+  - path: sli_cmsis_deprecated_aliases.h
   - path: cmsis_compiler.h
   - path: cmsis_version.h
   - path: tz_context.h
-  - path: cmsis_armcc.h
-    condition:
-    - toolchain_armcc
   - path: cmsis_armclang.h
     condition:
     - toolchain_armclang
-  - path: cmsis_gcc.h
+  - path: cmsis_clang.h
     condition:
     - toolchain_llvm
   - path: cmsis_gcc.h
@@ -62,6 +60,9 @@ include:
   - path: core_cm35p.h
     condition:
     - cortexm35p
+  - path: core_cm52.h
+    condition:
+    - cortexm52
   - path: core_cm55.h
     condition:
     - cortexm55
@@ -71,50 +72,94 @@ include:
   - path: core_sc300.h
     condition:
     - securcore300
-  - path: mpu_armv7.h
+- path: Core/Include/m-profile
+  file_list:
+  - path: cmsis_armclang_m.h
+    condition:
+    - toolchain_armclang
+  - path: cmsis_clang_m.h
+    condition:
+    - toolchain_llvm
+  - path: cmsis_gcc_m.h
+    condition:
+    - toolchain_gcc
+  - path: cmsis_iccarm_m.h
+    condition:
+    - toolchain_iar
+  - path: armv7m_mpu.h
     condition:
     - device_has_mpu
     - cortexm0
-  - path: mpu_armv7.h
+  - path: armv7m_mpu.h
     condition:
     - device_has_mpu
     - cortexm0plus
-  - path: mpu_armv7.h
+  - path: armv7m_mpu.h
     condition:
     - device_has_mpu
     - cortexm3
-  - path: mpu_armv7.h
+  - path: armv7m_mpu.h
     condition:
     - device_has_mpu
     - cortexm4
-  - path: mpu_armv7.h
+  - path: armv7m_mpu.h
     condition:
     - device_has_mpu
     - cortexm7
-  - path: mpu_armv8.h
+  - path: armv8m_mpu.h
     condition:
     - device_has_mpu
     - cortexm23
-  - path: mpu_armv8.h
+  - path: armv8m_mpu.h
     condition:
     - device_has_mpu
     - cortexm33
-  - path: mpu_armv8.h
+  - path: armv8m_mpu.h
     condition:
     - device_has_mpu
     - cortexm55
-  - path: pmu_armv8.h
+  - path: armv8m_pmu.h
     condition:
     - device_has_pmu
     - cortexm23
-  - path: pmu_armv8.h
+  - path: armv8m_pmu.h
     condition:
     - device_has_pmu
     - cortexm33
-  - path: pmu_armv8.h
+  - path: armv8m_pmu.h
     condition:
     - device_has_pmu
     - cortexm55
+- path: Core/Include/a-profile
+  file_list:
+  - path: cmsis_armclang_a.h
+    condition:
+    - toolchain_armclang
+    - simulation
+    - macos
+  - path: cmsis_clang_a.h
+    condition:
+    - toolchain_llvm
+    - simulation
+    - macos
+  - path: cmsis_gcc_a.h
+    condition:
+    - toolchain_gcc
+    - simulation
+    - macos
+  - path: cmsis_iccarm_a.h
+    condition:
+    - toolchain_iar
+    - simulation
+    - macos
+  - path: cmsis_cp15.h
+    condition:
+    - simulation
+    - macos
+  - path: irq_ctrl.h
+    condition:
+    - simulation
+    - macos
 provides:
 - name: cmsis_core
 template_file:

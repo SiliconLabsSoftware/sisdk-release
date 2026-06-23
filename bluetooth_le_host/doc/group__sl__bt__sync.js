@@ -3,7 +3,8 @@ var group__sl__bt__sync =
     [ "sl_bt_evt_sync_closed", "group__sl__bt__evt__sync__closed.html", "group__sl__bt__evt__sync__closed" ],
     [ "sl_bt_sync_reporting_mode_t", "group__sl__bt__sync.html#ga4d6dbc6ce7a4dfc5ba8e473253161d30", [
       [ "sl_bt_sync_report_none", "group__sl__bt__sync.html#gga4d6dbc6ce7a4dfc5ba8e473253161d30adb0e697ad0134cd6ccaa1afbbaf27260", null ],
-      [ "sl_bt_sync_report_all", "group__sl__bt__sync.html#gga4d6dbc6ce7a4dfc5ba8e473253161d30aac59b61bf5411ed41d7079f22c122f8b", null ]
+      [ "sl_bt_sync_report_all", "group__sl__bt__sync.html#gga4d6dbc6ce7a4dfc5ba8e473253161d30aac59b61bf5411ed41d7079f22c122f8b", null ],
+      [ "sl_bt_sync_report_non_duplicate", "group__sl__bt__sync.html#gga4d6dbc6ce7a4dfc5ba8e473253161d30aef07a9c632badbc00fd6bde07fc770cb", null ]
     ] ],
     [ "sl_bt_sync_advertiser_clock_accuracy_t", "group__sl__bt__sync.html#gacf10b05b3679bf358e10775bee5bcd60", [
       [ "sl_bt_sync_clock_accuracy_500", "group__sl__bt__sync.html#ggacf10b05b3679bf358e10775bee5bcd60ad1fd26a5d7cce17adcfb968e80a73f31", null ],

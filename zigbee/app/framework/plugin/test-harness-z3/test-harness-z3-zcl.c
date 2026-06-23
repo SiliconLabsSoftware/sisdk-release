@@ -65,8 +65,8 @@ void sli_zigbee_af_test_harness_z3_zcl_read_command(SL_CLI_COMMAND_ARG)
                                   NULL);
 #endif /* EZSP_HOST */
 
-  sl_zigbee_af_core_println("%s: %s: 0x%02X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Read",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%02X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Read",
+                           status);
 }

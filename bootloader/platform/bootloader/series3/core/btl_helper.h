@@ -33,7 +33,11 @@ extern uint32_t CSTACK$$Base, CSTACK$$Limit;
 extern uint32_t STACKSEAL$$Limit, HEAP$$Base;
 #endif
 
+#if defined(__clang__)
+static __attribute__((noinline, used)) void jump_to_application_routine(uint32_t startOfAppSpace)
+#else
 static inline void jump_to_application_routine(uint32_t startOfAppSpace)
+#endif
 {
   // Load SP and PC of application
   __ASM volatile(

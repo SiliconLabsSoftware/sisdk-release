@@ -7,6 +7,7 @@ If the configuration is changed to create more than 1 initiator instances, SL_BT
 
 
 ## Usage
+
 - Build and flash the sample application.
 
 - The default object tracking mode is Moving Object tracking - fast. Pressing BTN1 while resetting the device selects Stationary Object tracking algorithm mode.
@@ -21,6 +22,7 @@ If the configuration is changed to create more than 1 initiator instances, SL_BT
 ![](./image/cs_lcd.png)
 
 ## Multiconnection
+
 - Default setup is optimized for 1-1 connection, multiconnection setup requires modification of the timing parameters to operate as expected. Timing can be adjusted by the procedure_interval and connection_interval parameters.
 - Use the following calculation for 1-N connection: procedure_time_1_N[ms] = connection_interval[ms] * procedure_interval * N
 - Note that setting CS_INITIATOR_DEFAULT_MIN/MAX_CONNECTION_INTERVAL and CS_INITIATOR_DEFAULT_MIN/MAX_PROCEDURE_INTERVAL will only take effect if CS_INITIATOR_DEFAULT_PROCEDURE_SCHEDULING is set to CS_PROCEDURE_SCHEDULING_CUSTOM. Otherwise these parameters are managed by the application.
@@ -28,6 +30,7 @@ If the configuration is changed to create more than 1 initiator instances, SL_BT
 - If more than 1 initiator instances are created increase SL_BT_CONFIG_BUFFER_SIZE. With maximum number of instances (4) it's safe to use 22000.
 
 ## Resource optimization
+
 - Flash usage can be reduced by
   - removing "Bluetooth controller anchor selection" component if no multiple reflector connection is required,
   - turning off "Logging"-"Initiator component" feature in "CS Initiator" component, CS_INITIATOR_UART_LOG in application config (app_config.h) or application logging in "Application"- "Utility" -"Log" component configuration.
@@ -37,12 +40,15 @@ If the configuration is changed to create more than 1 initiator instances, SL_BT
   - reducing "Buffer memory size for Bluetooth stack" in "Bluetooth Core" component configuration if the "Maximum initiator connections" is changed to create less than 4 initiator instances.
 
 ### Calculating the size of "Maximum ranging data size"
+
 The optimal value of "Maximum ranging data size" is dependent on several configuration values, and can be calculated by the following equation:
 
-ranging_max_size = 4 + (subevents * 8) + (mode0_steps * mode0_size) + channels * ( ( 1 + ( antenna_paths + 1 ) * 4) + 1 )
+ranging_max_size = 4 + (subevents * 8) + (subevents * mode0_steps * mode0_size) + channels * ( ( 1 + ( antenna_paths + 1 ) * 4) + 1 )
 
 where
-- subevents value is constant 1 since one subevent per procedure is supported,
+- subevents is the number of CS subevents per procedure (range: 1..32), determined by the
+controller based on CS_INITIATOR_DEFAULT_MIN_SUBEVENT_LEN and CS_INITIATOR_DEFAULT_MAX_SUBEVENT_LEN.
+Shorter subevent lengths allow more subevents per procedure.
 - mode0_size is
   - 4 for Reflector and
   - 6 for Initiator,
@@ -50,11 +56,10 @@ where
 - channels value means the number of channels from the channel mask that can be derived from the "Channel map preset" settings:
   - "High"   - 72 (default),
   - "Medium" - 37,
-  - "Low"    - 20,
   - "Custom" - Number of 1s in channel mask,
 - antenna_paths value is controlled by the "Antenna configuration", and limited by number of antennas presented on each board (capabilities). Maximum can be calculated using the product of used Initiator and Reflector antennae. The default maximum value for antenna_paths is 4.
 
-These settings were selected by assuming that the controller creates only one subevent per procedure, and the measuring mode is PBR. In RTT mode there are far less data is created.
+These settings were selected by assuming that the controller creates the maximum number of subevents (32), and the measuring mode is PBR. In RTT mode, far less data is created.
 
 If you use submode, you should add the following to the sum:
 
@@ -64,8 +69,27 @@ where
 - mode1_size is 6
 - main_mode_steps is the value of min_main_mode_steps ranging from to 2. This can be changed in cs_initiator_client.h.
 
-The default is calculated by using the constants and settings above using the worst case scenario, which gives 1866 bytes.
+The default is calculated by using the constants and settings above using the worst case scenario, which gives 2672 bytes.
 RAM consumption can be reduced by changing the affected settings and reducing "Procedure maximum length" accordingly.
+
+### Subevents
+
+A CS procedure consists of one or more subevents (range: 1..32), each containing a set of CS steps. Subevent count is based on CS_INITIATOR_DEFAULT_MIN_SUBEVENT_LEN (default: 1250 us) and CS_INITIATOR_DEFAULT_MAX_SUBEVENT_LEN (default: 3999999 us), but the controller determines the actual subevent count and scheduling at runtime and it may differ from these configured values based on resource constraints and scheduling feasibility. With the default maximum of ~4 s, all steps fit in a single subevent. Reducing the maximum causes the controller to split steps across multiple shorter subevents. More subevents require a larger RAS buffer and therefore more RAM.
+
+When using multiple subevents:
+- Ensure that the effective procedure interval is at least the number of created subevents, plus additional connection events for RAS data transfer.
+  The effective procedure interval is determined by CS_INITIATOR_DEFAULT_PROCEDURE_SCHEDULING, or by CS_INITIATOR_DEFAULT_MAX_PROCEDURE_INTERVAL when custom scheduling is used.
+- The minimum subevent length must fit within the procedure time window: max_procedure_interval * max_connection_interval * 1250 us.
+- As each subevent contains Mode 0 steps followed by main mode steps, the subevent length must be large enough to accommodate their combined duration.
+
+The following table shows example scenarios with other configuration parameters left at their defaults.
+
+| Scenario | MIN subevent length | MAX subevent length | Subevents (approx.)| Effective procedure interval |
+|---|---|---|---|---|
+| Single subevent (default) | 1250 us | 3999999 us | 1 | All steps fit in one subevent |
+| Few subevents | 1250 us | 15000 us | 3 | 3 + RAS overhead |
+| Many subevents | 1250 us | 4000 us | 18 | 18 + RAS overhead |
+| Maximum subevents | 1250 us | 2000 us | 32 | 32 + RAS overhead |
 
 ## Known issues and limitations
 

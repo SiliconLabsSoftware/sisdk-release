@@ -3,7 +3,7 @@
 *                        The Embedded Experts                        *
 **********************************************************************
 *                                                                    *
-*            (c) 1995 - 2019 SEGGER Microcontroller GmbH             *
+*            (c) 1995 - 2024 SEGGER Microcontroller GmbH             *
 *                                                                    *
 *       www.segger.com     Support: support@segger.com               *
 *                                                                    *
@@ -42,14 +42,26 @@
 *                                                                    *
 **********************************************************************
 *                                                                    *
-*       SystemView version: 3.10                                    *
+*       SystemView version: 4.10                                     *
 *                                                                    *
 **********************************************************************
 -------------------------- END-OF-HEADER -----------------------------
 
 File    : SEGGER_SYSVIEW_Conf.h
-Purpose : SEGGER SystemView configuration.
-Revision: $Rev: 17066 $
+Purpose : SEGGER SystemView configuration file.
+          Set defines which deviate from the defaults (see SEGGER_SYSVIEW_ConfDefaults.h) here.
+Revision: $Rev: 21292 $
+
+Additional information:
+  Required defines which must be set are:
+    SEGGER_SYSVIEW_GET_TIMESTAMP
+    SEGGER_SYSVIEW_GET_INTERRUPT_ID
+  For known compilers and cores, these might be set to good defaults
+  in SEGGER_SYSVIEW_ConfDefaults.h.
+
+  SystemView needs a (nestable) locking mechanism.
+  If not defined, the RTT locking mechanism is used,
+  which then needs to be properly configured.
 */
 
 #ifndef SEGGER_SYSVIEW_CONF_H
@@ -69,9 +81,20 @@ Revision: $Rev: 17066 $
 #include "sli_uart_recorder.h"
 #endif
 
+#if defined(SL_CATALOG_LOG_BACKEND_SYSTEMVIEW_PRESENT)
+#include "sl_log_common_config.h"
+#include "sl_log.h"
+#if defined (__clang__)
+#include "cmsis_clang.h"
+#elif defined (__GNUC__)
+#include "cmsis_gcc.h"
+#elif defined(__ICCARM__)
+#include "cmsis_iccarm.h"
+#endif
+#endif
 /*********************************************************************
 *
-*       Defines, fixed
+*       Defines, configurable
 *
 **********************************************************************
 */
@@ -84,13 +107,15 @@ Revision: $Rev: 17066 $
 
 /*********************************************************************
 *
-*       Defines, configurable
+*       Define: SEGGER_SYSVIEW_SECTION
 *
-**********************************************************************
-*/
-/*********************************************************************
-*
-*       SystemView buffer configuration
+*  Description
+*    Section to place the SystemView RTT Buffer into.
+*  Default
+*    undefined: Do not place into a specific section.
+*  Notes
+*    If SEGGER_RTT_SECTION is defined, the default changes to use
+*    this section for the SystemView RTT Buffer, too.
 */
 #ifndef   SEGGER_SYSVIEW_RTT_BUFFER_SIZE
   #define SEGGER_SYSVIEW_RTT_BUFFER_SIZE        1024                            // Number of bytes that SystemView uses for the buffer.
@@ -134,6 +159,10 @@ Revision: $Rev: 17066 $
 *
 *       SystemView timestamp configuration
 */
+#if defined(SL_CATALOG_LOG_BACKEND_SYSTEMVIEW_PRESENT)
+#define SEGGER_SYSVIEW_GET_TIMESTAMP()    sl_log_get_timestamp_count(0)
+#define SYSVIEW_TIMESTAMP_FREQ            sl_log_get_timestamp_timer_frequency(0)
+#else
 #if (SEGGER_SYSVIEW_TIMESTAMP_SOURCE == SEGGER_SYSVIEW_TIMESTAMP_SOURCE_DWT)
 #define SEGGER_SYSVIEW_GET_TIMESTAMP()      DWT->CYCCNT
 #define SYSVIEW_TIMESTAMP_FREQ              (SystemCoreClock)
@@ -143,8 +172,8 @@ Revision: $Rev: 17066 $
 #else
 #error "SEGGER_SYSVIEW_TIMESTAMP_SOURCE must be set to SEGGER_SYSVIEW_TIMESTAMP_SOURCE_DWT or SEGGER_SYSVIEW_TIMESTAMP_SOURCE_SLEEPTIMER"
 #endif
-#define SEGGER_SYSVIEW_TIMESTAMP_BITS       32        // Define number of valid bits low-order delivered by clock source
-
+#endif
+#define SEGGER_SYSVIEW_TIMESTAMP_BITS       32       // Define number of valid bits low-order delivered by clock source
 #endif  // SEGGER_SYSVIEW_CONF_H
 
 /*************************** End of file ****************************/

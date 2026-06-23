@@ -24,6 +24,8 @@ extern "C" {
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include "zpal_status.h"
+
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
@@ -37,13 +39,17 @@ extern "C" {
 // -----------------------------------------------------------------------------
 
 /**
- * @brief Initializes the Z-Wave shutdown manager.
+ * @brief Initialize function for the shutdown manager
+ * Initializes the BURTC peripheral for EM4 wakeup operation.
  *
- * This function sets up any necessary resources or state required for the
- * shutdown manager to operate. It should be called during system startup
- * before using any shutdown-related functionality.
+ * @return ZPAL_STATUS_OK if initialization was successful, otherwise ZPAL_STATUS_FAIL
+ * @note sl_sleeptimer uses SYSRTC while EM4 wakeup uses BURTC. If their counter frequencies differ,
+ * remaining sleeptimer ticks are converted to BURTC ticks using sl_sleeptimer_get_timer_frequency()
+ * and zpal_get_burtc_counter_frequency_hz() before programming the BURTC compare.
+ * @note this function can be called more than once safely if it returns
+ * ZPAL_STATUS_FAIL on the first try.
  */
-void zw_shutdown_manager_init(void);
+zpal_status_t zw_shutdown_manager_init(void);
 
 /**
  * @brief Adds a lock to the Z-Wave shutdown manager.

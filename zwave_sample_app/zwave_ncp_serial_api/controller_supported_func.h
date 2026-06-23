@@ -47,7 +47,6 @@
 #define SUPPORT_ENABLE_NODE_NLS                         1
 #define SUPPORT_GET_NODE_NLS_STATE                      1
 #define SUPPORT_SERIAL_GET_NLS_NODES                    1
-
 /* */
 
 /**************************************************************************/

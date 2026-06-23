@@ -40,7 +40,7 @@
 #include "sl_rail_ieee802154.h"
 #include "sl_rail_mfm.h"
 #include "sl_rail_zwave.h"
-#if RAIL_SUPPORTS_PROTOCOL_BTC
+#if SL_RAIL_SUPPORTS_PROTOCOL_BTC
 #include "sl_rail_btc.h"
 #endif
 #if SL_RAIL_SUPPORTS_PROTOCOL_ANT
@@ -255,7 +255,7 @@ sl_rail_status_t disableIncompatibleProtocols(sl_rail_pti_protocol_t newProtocol
       return status;
     }
   }
-#if RAIL_SUPPORTS_PROTOCOL_BTC
+#if SL_RAIL_SUPPORTS_PROTOCOL_BTC
   if ((newProtocol != SL_RAIL_PTI_PROTOCOL_BTC)
       && sl_rail_btc_is_enabled(railHandle)) {
     status = sl_rail_btc_deinit(railHandle);

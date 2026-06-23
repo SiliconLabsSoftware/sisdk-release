@@ -1,11 +1,14 @@
 #ifndef SL_CPC_DRV_UART_SECONDARY_CONFIG_H
 #define SL_CPC_DRV_UART_SECONDARY_CONFIG_H
+
+#include "em_device.h"
+
 {% for instance in cpc_uart_instance_name %}
 {% for periph in cpc_uart_periph_type %}
 #include "sl_cpc_drv_uart_{{ periph }}_{{ instance }}_config.h"
 
 #define SL_CPC_DRV_PERIPH_IS_{{ periph | upper }}
-#if defined(SL_CPC_DRV_PERIPH_IS_EUSART) && defined(EUART_COUNT) && (EUART_COUNT > 0) 
+#if defined(SL_CPC_DRV_PERIPH_IS_EUSART) && defined(EUART_COUNT) && (EUART_COUNT > 0)
 // EUART peripheral variant
 #define SL_CPC_DRV_PERIPH_NAME  EUART
 #else

@@ -17,7 +17,29 @@ include:
 provides:
 - name: emlib_prs
 - name: hal_generic_prs
-  condition: [device_series_2]
+  condition: [device_sdid_200]
+- name: hal_generic_prs
+  condition: [device_sdid_205]
+- name: hal_generic_prs
+  condition: [device_sdid_210]
+- name: hal_generic_prs
+  condition: [device_sdid_215]
+- name: hal_generic_prs
+  condition: [device_sdid_220]
+- name: hal_generic_prs
+  condition: [device_sdid_225]
+- name: hal_generic_prs
+  condition: [device_sdid_230]
+- name: hal_generic_prs
+  condition: [device_sdid_235]
+- name: hal_generic_prs
+  condition: [device_sdid_240]
+- name: hal_generic_prs
+  condition: [device_generic_family_efr32xg2b]
+- name: hal_generic_prs
+  condition: [device_generic_family_efr32xg2e]
+- name: hal_generic_prs
+  condition: [device_sdid_260]
 requires:
 - name: device
 - name: device_has_prs

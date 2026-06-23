@@ -1,0 +1,156 @@
+/***************************************************************************//**
+ * @file
+ * @brief Button Press Static (build-time) Energy Management Check
+ *
+ * In EM2 and EM3, only signals on Port A and Port B are available as standard
+ * interrupts. Standard interrutps are available to all pins in EM0 and EM1.
+ *
+ * To make sure that the button wake-up works correctly, we need to check that
+ * the button is
+ * - either wired to a pin from Port A or Port B
+ * - or the pin supports EM4 wake-up.
+ *
+ * This check is implemented as static assertions in this auto-generated file
+ * and can be supressed by setting APP_BUTTON_PRESS_EM_CHECK_STATIC to 0. 
+ *******************************************************************************
+ * # License
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
+ *******************************************************************************
+ *
+ * SPDX-License-Identifier: Zlib
+ *
+ * The licensor of this software is Silicon Laboratories Inc.
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ * 1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation would be
+ *    appreciated but is not required.
+ * 2. Altered source versions must be plainly marked as such, and must not be
+ *    misrepresented as being the original software.
+ * 3. This notice may not be removed or altered from any source distribution.
+ *
+ ******************************************************************************/
+
+#include "app_button_press_config.h"
+
+#if APP_BUTTON_PRESS_EM_CHECK_STATIC
+#include <assert.h>
+#include "em_device.h"
+#include "sl_simple_button.h"
+{% for inst in simple_button_instance | sort -%}
+#include "sl_simple_button_{{ inst }}_config.h"
+{% endfor -%}
+
+// -----------------------------------------------------------------------------
+// Per-EM4WU-slot match helpers.
+//
+// Each macro expands to a non-zero integer constant expression if the given
+// (port, pin) pair matches the chip's hardwired EM4WU<n> pin. Slots that are
+// not implemented on this chip degrade safely to 0.
+
+#if defined(GPIO_EM4WU0_PORT) && defined(GPIO_EM4WU0_PIN)
+#  define EM4WU0_MATCH(port, pin)  ((port) == GPIO_EM4WU0_PORT && (pin) == GPIO_EM4WU0_PIN)
+#else
+#  define EM4WU0_MATCH(port, pin)  0
+#endif
+
+#if defined(GPIO_EM4WU1_PORT) && defined(GPIO_EM4WU1_PIN)
+#  define EM4WU1_MATCH(port, pin)  ((port) == GPIO_EM4WU1_PORT && (pin) == GPIO_EM4WU1_PIN)
+#else
+#  define EM4WU1_MATCH(port, pin)  0
+#endif
+
+#if defined(GPIO_EM4WU2_PORT) && defined(GPIO_EM4WU2_PIN)
+#  define EM4WU2_MATCH(port, pin)  ((port) == GPIO_EM4WU2_PORT && (pin) == GPIO_EM4WU2_PIN)
+#else
+#  define EM4WU2_MATCH(port, pin)  0
+#endif
+
+#if defined(GPIO_EM4WU3_PORT) && defined(GPIO_EM4WU3_PIN)
+#  define EM4WU3_MATCH(port, pin)  ((port) == GPIO_EM4WU3_PORT && (pin) == GPIO_EM4WU3_PIN)
+#else
+#  define EM4WU3_MATCH(port, pin)  0
+#endif
+
+#if defined(GPIO_EM4WU4_PORT) && defined(GPIO_EM4WU4_PIN)
+#  define EM4WU4_MATCH(port, pin)  ((port) == GPIO_EM4WU4_PORT && (pin) == GPIO_EM4WU4_PIN)
+#else
+#  define EM4WU4_MATCH(port, pin)  0
+#endif
+
+#if defined(GPIO_EM4WU5_PORT) && defined(GPIO_EM4WU5_PIN)
+#  define EM4WU5_MATCH(port, pin)  ((port) == GPIO_EM4WU5_PORT && (pin) == GPIO_EM4WU5_PIN)
+#else
+#  define EM4WU5_MATCH(port, pin)  0
+#endif
+
+#if defined(GPIO_EM4WU6_PORT) && defined(GPIO_EM4WU6_PIN)
+#  define EM4WU6_MATCH(port, pin)  ((port) == GPIO_EM4WU6_PORT && (pin) == GPIO_EM4WU6_PIN)
+#else
+#  define EM4WU6_MATCH(port, pin)  0
+#endif
+
+#if defined(GPIO_EM4WU7_PORT) && defined(GPIO_EM4WU7_PIN)
+#  define EM4WU7_MATCH(port, pin)  ((port) == GPIO_EM4WU7_PORT && (pin) == GPIO_EM4WU7_PIN)
+#else
+#  define EM4WU7_MATCH(port, pin)  0
+#endif
+
+#if defined(GPIO_EM4WU8_PORT) && defined(GPIO_EM4WU8_PIN)
+#  define EM4WU8_MATCH(port, pin)  ((port) == GPIO_EM4WU8_PORT && (pin) == GPIO_EM4WU8_PIN)
+#else
+#  define EM4WU8_MATCH(port, pin)  0
+#endif
+
+#if defined(GPIO_EM4WU9_PORT) && defined(GPIO_EM4WU9_PIN)
+#  define EM4WU9_MATCH(port, pin)  ((port) == GPIO_EM4WU9_PORT && (pin) == GPIO_EM4WU9_PIN)
+#else
+#  define EM4WU9_MATCH(port, pin)  0
+#endif
+
+#if defined(GPIO_EM4WU10_PORT) && defined(GPIO_EM4WU10_PIN)
+#  define EM4WU10_MATCH(port, pin) ((port) == GPIO_EM4WU10_PORT && (pin) == GPIO_EM4WU10_PIN)
+#else
+#  define EM4WU10_MATCH(port, pin) 0
+#endif
+
+/// Evaluate to non-zero if the given (port, pin) is an EM4WU-capable pin.
+#define BUTTON_PIN_IS_EM4WU(port, pin) \
+  (   EM4WU0_MATCH(port, pin)          \
+   || EM4WU1_MATCH(port, pin)          \
+   || EM4WU2_MATCH(port, pin)          \
+   || EM4WU3_MATCH(port, pin)          \
+   || EM4WU4_MATCH(port, pin)          \
+   || EM4WU5_MATCH(port, pin)          \
+   || EM4WU6_MATCH(port, pin)          \
+   || EM4WU7_MATCH(port, pin)          \
+   || EM4WU8_MATCH(port, pin)          \
+   || EM4WU9_MATCH(port, pin)          \
+   || EM4WU10_MATCH(port, pin))
+
+// -----------------------------------------------------------------------------
+// Per-button assertion.
+
+{% for inst in simple_button_instance | sort %}
+static_assert(SL_SIMPLE_BUTTON_{{ inst | upper }}_PORT == SL_GPIO_PORT_A
+              || SL_SIMPLE_BUTTON_{{ inst | upper }}_PORT == SL_GPIO_PORT_B
+              || BUTTON_PIN_IS_EM4WU(SL_SIMPLE_BUTTON_{{ inst | upper }}_PORT,
+                                     SL_SIMPLE_BUTTON_{{ inst | upper }}_PIN),
+              "{{ inst }} is wired to a pin that cannot wake the device from EM2. "
+              "Only pins on Port A or Port B (standard GPIO interrupts) or "
+              "EM4WU-capable pins can wake the device from EM2. "
+              "This could lead to unexpected push button behavior. "
+              "If you think this is not relevant in your project, you can "
+              "suppress this check by setting APP_BUTTON_PRESS_EM_CHECK_STATIC to 0. "
+              "Otherwise, make sure to wire the button to a Port A/B pin or an "
+              "EM4WU-capable pin.");
+{% endfor %}
+#endif // APP_BUTTON_PRESS_EM_CHECK_STATIC

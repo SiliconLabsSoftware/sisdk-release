@@ -18,6 +18,7 @@
  ******************************************************************************/
 
 #include PLATFORM_HEADER
+#include "em2xx-reset-defs.h"
 #include <string.h>
 #define __USE_POSIX 1
 #include <time.h>

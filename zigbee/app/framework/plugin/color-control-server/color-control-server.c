@@ -162,15 +162,19 @@ static uint8_t readColorMode(uint8_t endpoint)
 static uint16_t readColorTemperature(uint8_t endpoint)
 {
   uint16_t colorTemperature;
-
-  assert(SL_ZIGBEE_ZCL_STATUS_SUCCESS
-         == sl_zigbee_af_read_server_attribute(endpoint,
-                                               ZCL_COLOR_CONTROL_CLUSTER_ID,
-                                               ZCL_COLOR_CONTROL_COLOR_TEMPERATURE_ATTRIBUTE_ID,
-                                               (uint8_t *)&colorTemperature,
-                                               sizeof(uint16_t)));
-
-  return colorTemperature;
+  sl_zigbee_af_status_t status = sl_zigbee_af_read_server_attribute(endpoint,
+                                                                     ZCL_COLOR_CONTROL_CLUSTER_ID,
+                                                                     ZCL_COLOR_CONTROL_COLOR_TEMPERATURE_ATTRIBUTE_ID,
+                                                                     (uint8_t *)&colorTemperature,
+                                                                     sizeof(uint16_t));
+  #ifdef SL_ZIGBEE_TEST
+    assert(status == SL_ZIGBEE_ZCL_STATUS_SUCCESS);
+  #else
+    if(status != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
+      sl_zigbee_af_color_control_cluster_println("ERR: reading color temperature %02X", status);
+    }
+  #endif
+  return status == SL_ZIGBEE_ZCL_STATUS_SUCCESS ? colorTemperature : MIN_TEMPERATURE_VALUE;
 }
 
 static uint16_t readColorTemperatureMin(uint8_t endpoint)
@@ -898,29 +902,37 @@ static void initHueSat(uint8_t endpoint)
 static uint8_t readHue(uint8_t endpoint)
 {
   uint8_t hue;
-
-  assert(SL_ZIGBEE_ZCL_STATUS_SUCCESS
-         == sl_zigbee_af_read_server_attribute(endpoint,
-                                               ZCL_COLOR_CONTROL_CLUSTER_ID,
-                                               ZCL_COLOR_CONTROL_CURRENT_HUE_ATTRIBUTE_ID,
-                                               (uint8_t *)&hue,
-                                               sizeof(uint8_t)));
-
-  return hue;
+  sl_zigbee_af_status_t status = sl_zigbee_af_read_server_attribute(endpoint,
+                                                                     ZCL_COLOR_CONTROL_CLUSTER_ID,
+                                                                     ZCL_COLOR_CONTROL_CURRENT_HUE_ATTRIBUTE_ID,
+                                                                     (uint8_t *)&hue,
+                                                                     sizeof(uint8_t));
+  #ifdef SL_ZIGBEE_TEST
+    assert(status == SL_ZIGBEE_ZCL_STATUS_SUCCESS);
+  #else
+    if (status != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
+      sl_zigbee_af_color_control_cluster_println("ERR: reading current hue %02X", status);
+    }
+  #endif
+  return status == SL_ZIGBEE_ZCL_STATUS_SUCCESS ? hue : MIN_HUE_VALUE;
 }
 
 static uint8_t readSaturation(uint8_t endpoint)
 {
   uint8_t saturation;
-
-  assert(SL_ZIGBEE_ZCL_STATUS_SUCCESS
-         == sl_zigbee_af_read_server_attribute(endpoint,
-                                               ZCL_COLOR_CONTROL_CLUSTER_ID,
-                                               ZCL_COLOR_CONTROL_CURRENT_SATURATION_ATTRIBUTE_ID,
-                                               (uint8_t *)&saturation,
-                                               sizeof(uint8_t)));
-
-  return saturation;
+  sl_zigbee_af_status_t status = sl_zigbee_af_read_server_attribute(endpoint,
+                                                                     ZCL_COLOR_CONTROL_CLUSTER_ID,
+                                                                     ZCL_COLOR_CONTROL_CURRENT_SATURATION_ATTRIBUTE_ID,
+                                                                     (uint8_t *)&saturation,
+                                                                     sizeof(uint8_t));
+  #ifdef SL_ZIGBEE_TEST
+    assert(status == SL_ZIGBEE_ZCL_STATUS_SUCCESS);
+  #else
+    if (status != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
+      sl_zigbee_af_color_control_cluster_println("ERR: reading current saturation %02X", status);
+    }
+  #endif
+  return status == SL_ZIGBEE_ZCL_STATUS_SUCCESS ? saturation : MIN_SATURATION_VALUE;
 }
 
 #endif  // SUPPORT_HUE_SATURATION

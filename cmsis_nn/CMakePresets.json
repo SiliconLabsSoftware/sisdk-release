@@ -1,0 +1,83 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "include": [
+    "cmake/preset/compiler.json",
+    "cmake/preset/variant.json"
+  ],
+  "vendor": {
+    "silabs.com/sled": {
+      "components": {
+        "cmsis_nn": {
+          "presets": [
+            "gcc/cortex-m4",
+            "gcc/cortex-m33",
+            "iar/cortex-m33",
+            "llvm/cortex-m4",
+            "llvm/cortex-m33"
+          ],
+          "targets": ["cmsis-nn"]
+        }
+      }
+    }
+  },
+  "configurePresets": [
+    {"hidden": true, "name": "root", "environment": {"SLED_ROOT": "${fileDir}"}},
+    {"name": "gcc/cortex-m4", "inherits": ["root", "gcc", "variant-cortex-m4"]},
+    {"name": "gcc/cortex-m33", "inherits": ["root", "gcc", "variant-cortex-m33"]},
+    {"name": "iar/cortex-m4", "inherits": ["root", "iar", "variant-cortex-m4"]},
+    {"name": "iar/cortex-m33", "inherits": ["root", "iar", "variant-cortex-m33"]},
+    {"name": "llvm/cortex-m4", "inherits": ["root", "llvm", "variant-cortex-m4"]},
+    {"name": "llvm/cortex-m33", "inherits": ["root", "llvm", "variant-cortex-m33"]}
+  ],
+  "buildPresets": [
+    {"name": "gcc/cortex-m4", "configurePreset": "gcc/cortex-m4"},
+    {"name": "gcc/cortex-m33", "configurePreset": "gcc/cortex-m33"},
+    {"name": "iar/cortex-m4", "configurePreset": "iar/cortex-m4"},
+    {"name": "iar/cortex-m33", "configurePreset": "iar/cortex-m33"},
+    {"name": "llvm/cortex-m4", "configurePreset": "llvm/cortex-m4"},
+    {"name": "llvm/cortex-m33", "configurePreset": "llvm/cortex-m33"},
+    {"name": "install/gcc/cortex-m4", "configurePreset": "gcc/cortex-m4", "targets": ["install"]},
+    {"name": "install/gcc/cortex-m33", "configurePreset": "gcc/cortex-m33", "targets": ["install"]},
+    {"name": "install/iar/cortex-m4", "configurePreset": "iar/cortex-m4", "targets": ["install"]},
+    {"name": "install/iar/cortex-m33", "configurePreset": "iar/cortex-m33", "targets": ["install"]},
+    {"name": "install/llvm/cortex-m4", "configurePreset": "llvm/cortex-m4", "targets": ["install"]},
+    {"name": "install/llvm/cortex-m33", "configurePreset": "llvm/cortex-m33", "targets": ["install"]}
+  ],
+  "workflowPresets": [
+    {"name": "release/gcc/cortex-m4", "steps": [
+        {"type": "configure", "name": "gcc/cortex-m4"},
+        {"type": "build", "name": "gcc/cortex-m4"},
+        {"type": "build", "name": "install/gcc/cortex-m4"}
+    ]},
+    {"name": "release/gcc/cortex-m33", "steps": [
+        {"type": "configure", "name": "gcc/cortex-m33"},
+        {"type": "build", "name": "gcc/cortex-m33"},
+        {"type": "build", "name": "install/gcc/cortex-m33"}
+    ]},
+    {"name": "release/iar/cortex-m4", "steps": [
+        {"type": "configure", "name": "iar/cortex-m4"},
+        {"type": "build", "name": "iar/cortex-m4"},
+        {"type": "build", "name": "install/iar/cortex-m4"}
+    ]},
+    {"name": "release/iar/cortex-m33", "steps": [
+        {"type": "configure", "name": "iar/cortex-m33"},
+        {"type": "build", "name": "iar/cortex-m33"},
+        {"type": "build", "name": "install/iar/cortex-m33"}
+    ]},
+    {"name": "release/llvm/cortex-m4", "steps": [
+        {"type": "configure", "name": "llvm/cortex-m4"},
+        {"type": "build", "name": "llvm/cortex-m4"},
+        {"type": "build", "name": "install/llvm/cortex-m4"}
+    ]},
+    {"name": "release/llvm/cortex-m33", "steps": [
+        {"type": "configure", "name": "llvm/cortex-m33"},
+        {"type": "build", "name": "llvm/cortex-m33"},
+        {"type": "build", "name": "install/llvm/cortex-m33"}
+    ]}
+  ]
+}

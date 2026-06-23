@@ -1,0 +1,40 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 25,
+        "patch": 0
+    },
+    "include": [
+        "base.json"
+    ],
+    "configurePresets": [
+        {
+            "hidden": true,
+            "inherits": ["base"],
+            "name": "gcc",
+            "toolchainFile": "$env{SLED_ROOT}/cmake/toolchain/gcc-$env{SLED_TOOLCHAIN_ARCH}.cmake",
+            "environment": {
+                "SLED_TOOLCHAIN": "gcc"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["base"],
+            "name": "iar",
+            "toolchainFile": "$env{SLED_ROOT}/cmake/toolchain/iar-$env{SLED_TOOLCHAIN_ARCH}.cmake",
+            "environment": {
+                "SLED_TOOLCHAIN": "iar"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["base"],
+            "name": "llvm",
+            "toolchainFile": "$env{SLED_ROOT}/cmake/toolchain/llvm-$env{SLED_TOOLCHAIN_ARCH}.cmake",
+            "environment": {
+                "SLED_TOOLCHAIN": "llvm"
+            }
+        }
+    ]
+}

@@ -75,26 +75,26 @@ extern uint8_t sl_zigbee_af_scenes_server_entries_in_use;
 #if (SL_ZIGBEE_AF_PLUGIN_SCENES_USE_TOKENS == 1) && !defined(EZSP_HOST)
 // In this case, we use token storage
 #define sl_zigbee_af_scenes_server_retrieve_scene_entry(entry, i) \
-  (void)sl_token_manager_get_data(COMMON_TOKEN_SCENES_TABLE + (i), (void *)&entry, sizeof(sl_zigbee_af_scene_table_entry_t))
+  (void)slx_zigbee_token_manager_get_data(COMMON_TOKEN_SCENES_TABLE + (i), (void *)&entry, sizeof(sl_zigbee_af_scene_table_entry_t))
 #define sl_zigbee_af_scenes_server_save_scene_entry(entry, i) \
-  (void)sl_token_manager_set_data(COMMON_TOKEN_SCENES_TABLE + (i), (void *)&entry, sizeof(sl_zigbee_af_scene_table_entry_t))
+  (void)slx_zigbee_token_manager_set_data(COMMON_TOKEN_SCENES_TABLE + (i), (void *)&entry, sizeof(sl_zigbee_af_scene_table_entry_t))
 
 #define sl_zigbee_af_scenes_server_num_scene_entries_in_use()                                                                             \
-  ((void)sl_token_manager_get_data(COMMON_TOKEN_SCENES_NUM_ENTRIES, (void *)&sl_zigbee_af_scenes_server_entries_in_use, sizeof(uint8_t)), \
+  ((void)slx_zigbee_token_manager_get_data(COMMON_TOKEN_SCENES_NUM_ENTRIES, (void *)&sl_zigbee_af_scenes_server_entries_in_use, sizeof(uint8_t)), \
    sl_zigbee_af_scenes_server_entries_in_use)
 #define sl_zigbee_af_scenes_server_set_num_scene_entries_in_use(x) \
   (sl_zigbee_af_scenes_server_entries_in_use = (x),                \
-   (void)sl_token_manager_set_data(COMMON_TOKEN_SCENES_NUM_ENTRIES, (void *)&sl_zigbee_af_scenes_server_entries_in_use, sizeof(uint8_t)))
+   (void)slx_zigbee_token_manager_set_data(COMMON_TOKEN_SCENES_NUM_ENTRIES, (void *)&sl_zigbee_af_scenes_server_entries_in_use, sizeof(uint8_t)))
 
 #define sl_zigbee_af_scenes_server_incr_num_scene_entries_in_use()                                                                        \
-  ((void)sl_token_manager_get_data(COMMON_TOKEN_SCENES_NUM_ENTRIES, (void *)&sl_zigbee_af_scenes_server_entries_in_use, sizeof(uint8_t)), \
+  ((void)slx_zigbee_token_manager_get_data(COMMON_TOKEN_SCENES_NUM_ENTRIES, (void *)&sl_zigbee_af_scenes_server_entries_in_use, sizeof(uint8_t)), \
    ++sl_zigbee_af_scenes_server_entries_in_use),                                                                                          \
-  (void)sl_token_manager_set_data(COMMON_TOKEN_SCENES_NUM_ENTRIES, (void *)&sl_zigbee_af_scenes_server_entries_in_use, sizeof(uint8_t))
+  (void)slx_zigbee_token_manager_set_data(COMMON_TOKEN_SCENES_NUM_ENTRIES, (void *)&sl_zigbee_af_scenes_server_entries_in_use, sizeof(uint8_t))
 
 #define sl_zigbee_af_scenes_server_decr_num_scene_entries_in_use()                                                                        \
-  ((void)sl_token_manager_get_data(COMMON_TOKEN_SCENES_NUM_ENTRIES, (void *)&sl_zigbee_af_scenes_server_entries_in_use, sizeof(uint8_t)), \
+  ((void)slx_zigbee_token_manager_get_data(COMMON_TOKEN_SCENES_NUM_ENTRIES, (void *)&sl_zigbee_af_scenes_server_entries_in_use, sizeof(uint8_t)), \
    --sl_zigbee_af_scenes_server_entries_in_use),                                                                                          \
-  (void)sl_token_manager_set_data(COMMON_TOKEN_SCENES_NUM_ENTRIES, (void *)&sl_zigbee_af_scenes_server_entries_in_use, sizeof(uint8_t))
+  (void)slx_zigbee_token_manager_set_data(COMMON_TOKEN_SCENES_NUM_ENTRIES, (void *)&sl_zigbee_af_scenes_server_entries_in_use, sizeof(uint8_t))
 
 #else
 // Use normal RAM storage

@@ -22,6 +22,8 @@ SPIDRV_Handle_t sl_spidrv_usart_{{instance}}_handle = &sl_spidrv_usart_{{instanc
 SPIDRV_HandleData_t sl_spidrv_eusart_{{instance}}_handle_data;
 SPIDRV_Handle_t sl_spidrv_eusart_{{instance}}_handle = &sl_spidrv_eusart_{{instance}}_handle_data;{% endfor %}
 
+static SPIDRV_Handle_t sli_spidrv_default_handle = NULL;
+
 {%- for instance in spidrv_instances %}
 SPIDRV_Init_t sl_spidrv_init_{{instance}} = {
   .port = SL_SPIDRV_{{instance | upper}}_PERIPHERAL,
@@ -130,9 +132,34 @@ void sl_spidrv_init_instances(void) {
 #endif {% endfor %}
 
 {%- for instance in spidrv_instances %}
-  SPIDRV_Init(sl_spidrv_{{instance}}_handle, &sl_spidrv_init_{{instance}});{% endfor %}
+  SPIDRV_Init(sl_spidrv_{{instance}}_handle, &sl_spidrv_init_{{instance}}); 
+  sl_spidrv_set_default(sl_spidrv_{{instance}}_handle);
+{% endfor %}
 {%- for instance in spidrv_usart_instances %}
-  SPIDRV_Init(sl_spidrv_usart_{{instance}}_handle, &sl_spidrv_usart_init_{{instance}});{% endfor %}
+  SPIDRV_Init(sl_spidrv_usart_{{instance}}_handle, &sl_spidrv_usart_init_{{instance}});
+  sl_spidrv_set_default(sl_spidrv_usart_{{instance}}_handle);
+{% endfor %}
 {%- for instance in spidrv_eusart_instances %}
-  SPIDRV_Init(sl_spidrv_eusart_{{instance}}_handle, &sl_spidrv_eusart_init_{{instance}});{% endfor %}
+  SPIDRV_Init(sl_spidrv_eusart_{{instance}}_handle, &sl_spidrv_eusart_init_{{instance}});
+  sl_spidrv_set_default(sl_spidrv_eusart_{{instance}}_handle);
+{% endfor %}
 }
+
+
+sl_status_t sl_spidrv_set_default(SPIDRV_Handle_t handle)
+{
+  sl_status_t status = SL_STATUS_INVALID_HANDLE;
+
+  if (handle != NULL) {
+    sli_spidrv_default_handle = handle;
+    status = SL_STATUS_OK;
+  }
+
+  return status;
+}
+
+SPIDRV_Handle_t sl_spidrv_get_default(void)
+{
+  return sli_spidrv_default_handle;
+}
+

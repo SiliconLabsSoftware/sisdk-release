@@ -77,49 +77,35 @@ void sl_zigbee_af_green_power_server_cli_sink_table_print(SL_CLI_COMMAND_ARG)
 #ifdef EZSP_HOST
   sl_status_t status = sl_zigbee_ezsp_get_configuration_value(SL_ZIGBEE_EZSP_CONFIG_GP_SINK_TABLE_SIZE, (uint16_t*)&sinkTableSize);
   if (status != SL_ZIGBEE_EZSP_SUCCESS) {
-    sl_zigbee_af_green_power_cluster_println("ERR: Cannot get the sink table size from GP stack, error code: %02X", status);
+    sl_zigbee_af_cli_println("ERR: Cannot get the sink table size from GP stack, error code: %02X", status);
     return;
   }
 #else
   sinkTableSize = SL_ZIGBEE_GP_SINK_TABLE_SIZE;
 #endif // EZSP_HOST
 
-  sl_zigbee_af_core_println("\n\rSt Optn Ap SourceId Ep Dv Alis Gr So FrameCtr");
+  sl_zigbee_af_cli_println("\n\rSt Optn Ap SourceId Ep Dv Alis Gr So FrameCtr");
   for (uint8_t index = 0; index < (uint8_t)sinkTableSize; index++) {
     sl_zigbee_gp_sink_table_entry_t entry = { 0 };
     sl_status_t status = sl_zigbee_gp_sink_table_get_entry(index, &entry);
     if (status == SL_STATUS_OK
         && entry.status == SL_ZIGBEE_GP_SINK_TABLE_ENTRY_STATUS_ACTIVE) {
       tableEmpty = false;
-      if (entry.gpd.applicationId == 0) {
-        sl_zigbee_af_core_println("%02X %04X %02X %08X %s %02X %04X %02X %02X %08X",
-                                  entry.status,
-                                  entry.options,
-                                  entry.gpd.applicationId,
-                                  entry.gpd.id.sourceId,
-                                  "--",
-                                  entry.deviceId,
-                                  entry.assignedAlias,
-                                  entry.groupcastRadius,
-                                  entry.securityOptions,
-                                  entry.gpdSecurityFrameCounter);
-      } else {
-        sl_zigbee_af_core_println("%02X %04X %02X %08X %02X %02X %04X %02X %02X %08X",
-                                  entry.status,
-                                  entry.options,
-                                  entry.gpd.applicationId,
-                                  entry.gpd.id.sourceId,
-                                  entry.gpd.endpoint,
-                                  entry.deviceId,
-                                  entry.assignedAlias,
-                                  entry.groupcastRadius,
-                                  entry.securityOptions,
-                                  entry.gpdSecurityFrameCounter);
-      }
+      sl_zigbee_af_cli_println("%02X %04X %02X %08X %02X %02X %04X %02X %02X %08X",
+                               entry.status,
+                               entry.options,
+                               entry.gpd.applicationId,
+                               entry.gpd.id.sourceId,
+                               entry.gpd.endpoint,
+                               entry.deviceId,
+                               entry.assignedAlias,
+                               entry.groupcastRadius,
+                               entry.securityOptions,
+                               entry.gpdSecurityFrameCounter);
     }
   }
   if (tableEmpty) {
-    sl_zigbee_af_core_println("\n\rSink Table Empty");
+    sl_zigbee_af_cli_println("\n\rSink Table Empty");
   }
 }
 
@@ -130,11 +116,11 @@ void sl_zigbee_af_green_power_server_cli_run_test_vectors(SL_CLI_COMMAND_ARG)
   // A test to run the security test vectors upon reset
   sl_status_t status = sli_zigbee_af_gp_test_security();
   if (status == SL_STATUS_OK) {
-    sl_zigbee_af_green_power_cluster_println("~~ gp-test-vectors PASS ~~");
+    sl_zigbee_af_cli_println("~~ gp-test-vectors PASS ~~");
   } else {
-    sl_zigbee_af_green_power_cluster_println("~~ gp-test-vectors FAIL ~~");
+    sl_zigbee_af_cli_println("~~ gp-test-vectors FAIL ~~");
   }
 #else // (SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_SERVER_SECURITY_TEST_VECTORS == 0)
-  sl_zigbee_af_core_println("Command is not supported");
+  sl_zigbee_af_cli_println("Command is not supported");
 #endif // (SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_SERVER_SECURITY_TEST_VECTORS == 1)
 }

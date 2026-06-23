@@ -1,0 +1,85 @@
+#// clang-format off
+{% extends "base.j2" %}
+{% block filename %}{{filename}}.h{% endblock %}
+{% block title %}{{title}} Header{% endblock %}
+{% block content %}
+
+{%- if sequenceCfg %}
+#ifndef __{{filename|upper}}_H__
+#define __{{filename|upper}}_H__
+
+#include "seqacc_shared.h"
+{%- else %}
+#ifndef SEQACC_ENABLE
+
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+{% endif %}
+
+{%- if sequenceCfg %}
+    {% if rail_internal -%}
+        {%- if multiPhyConfig.commonStructures.modemConfigEntriesBase|length > 0 %}
+            {%- for modemConfigName, modemConfig in multiPhyConfig.commonStructures.modemConfigEntriesBase.items() %}
+extern const uint32_t {{modemConfigName}}[];
+            {%- endfor %}
+        {% endif %}
+
+    {%- if multiPhyConfig.commonStructures.modemConfigEntries|length > 0 %}
+        {%- for modemConfigName, modemConfig in multiPhyConfig.commonStructures.modemConfigEntries.items() %}
+extern const uint32_t {{modemConfigName}}[];
+        {%- endfor %}
+    {% endif %}
+{%- endif %}
+
+{%- for modemConfigName, modemConfig in multiPhyConfig.commonStructures.modemConfigEntriesBase.items() %}
+extern SeqAccEntry_t {{modemConfigName}}Entry;
+{%- endfor %}
+
+{%- else %}
+    {%- for modemConfigName, modemConfig in multiPhyConfig.commonStructures.modemConfigEntriesBase.items() %}
+const uint32_t {{modemConfigName}}[] = {
+        {%- for entryName, entry in modemConfig.items() %}
+            {%- set firstValue = entry.encodedValues|first %}
+            {%- set remainingValues = entry.encodedValues[1:] %}
+  {{"0x{:08X}UL, ".format(entry.encodedAction)}}
+  {{- "0x{:08X}UL,".format(firstValue) if firstValue is number else "(uint32_t) &{},".format(firstValue.value|default(firstValue._uniqueName|default(firstValue.name|default(firstValue))))}}
+  {{- " /* {} */".format(entry.encodedRegNames[0])}}
+                {%- for value in remainingValues %}
+  /*    {{"{:04X}".format(entry.encodedAction|formatActionAddress(loop.index))}} */ {{"0x{:08X}UL,".format(value) if value is number else "(uint32_t) &{},".format(value.value|default(value._uniqueName|default(value.name|default(value))))}}
+                    {%- if rail_internal and not rail_secondary_config -%}
+  {{-" /* {} */".format(entry.encodedRegNames[loop.index])}}
+                    {%- endif -%}
+                {%- endfor -%}
+        {% endfor %}
+{{ modemConfigName|endOfSequence -}}
+};
+    {% endfor %}
+
+    {%- for lookupTableEntryName, lookupTableEntry in multiPhyConfig.commonStructures.lookupTableEntries.items() %}
+        {%- if rail_internal %}
+/* Inputs for {{lookupTableEntry['tableName']}}:
+            {%- for items in lookupTableEntry['tableInputs']|batch(1) %}
+  {{ items|join(", ") -}}
+            {%- endfor %}
+*/
+        {%- endif %}
+const uint32_t {{lookupTableEntry['tableName']}}[] = {
+        {%- for items in lookupTableEntry['values']|batch(4) %}
+  {{ items|join(", ") -}},
+        {%- endfor %}
+};
+    {% endfor -%}
+{% endif %}
+
+{%- if sequenceCfg %}
+#endif // __{{filename|upper}}_H__
+{%- else %}
+#ifdef __cplusplus
+}
+#endif
+#endif // SEQACC_ENABLE
+{%- endif %}
+{%- endblock %}

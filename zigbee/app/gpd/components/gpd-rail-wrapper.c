@@ -15,6 +15,7 @@
  *
  ******************************************************************************/
 #include "gpd-components-common.h"
+#include "gpd-cb.h"
 
 static sl_rail_handle_t railHandle = NULL;
 static bool     rfReady = false;
@@ -100,6 +101,11 @@ void sl_zigbee_gpd_rail_write_tx_fifo_wrapper(const uint8_t *dataPtr,
 uint16_t sl_zigbee_gpd_rail_get_radio_entropy_wrapper(uint8_t *dataPtr, uint16_t dataLength)
 {
   return sl_rail_get_radio_entropy(railHandle, dataPtr, dataLength);
+}
+
+void sl_zigbee_gpd_rail_set_long_address_wrapper(uint8_t *ieee)
+{
+  (void) sl_rail_ieee802154_set_long_address(railHandle, ieee, 0x00);
 }
 
 void sl_zigbee_gpd_radio_init(void)

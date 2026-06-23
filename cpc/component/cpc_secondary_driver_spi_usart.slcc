@@ -26,14 +26,13 @@ provides:
 - name: cpc_secondary_driver_spi
   allow_multiple: false
 requires:
-- name: device_has_usart
 - name: status
-- name: dmadrv
+- name: hal_gpio
+- name: hal_ldma
+- name: hal_prs
+- name: hal_usart
+- name: dma_manager
 - name: device_manager
-- name: emlib_gpio
-  condition: [device_series_2]
-- name: emlib_prs
-  condition: [device_series_2]
 - name: clock_manager_runtime
 - name: slist
 - name: cpc_core

@@ -64,13 +64,8 @@ void app_init(void)
   const osThreadAttr_t app_task_attr = {
     .name       = "AppMain",
     .attr_bits  = osThreadDetached,
-    .cb_mem     = NULL,
-    .cb_size    = 0,
-    .stack_mem  = NULL,
     .stack_size = (APP_TASK_STACK_SIZE * sizeof(void *)) & 0xFFFFFFF8u,
-    .priority   = osPriorityNormal,
-    .tz_module  = 0,
-    .reserved   = 0
+    .priority   = osPriorityNormal
   };
 
   osThreadId_t app_thr_id = osThreadNew(app_task,
@@ -85,13 +80,8 @@ void app_service_task_init(void)
   const osThreadAttr_t service_task_attr = {
     .name       = "AppService",
     .attr_bits  = osThreadDetached,
-    .cb_mem     = NULL,
-    .cb_size    = 0,
-    .stack_mem  = NULL,
     .stack_size = (APP_SERVICE_TASK_STACK_SIZE * sizeof(void *)) & 0xFFFFFFF8u,
-    .priority   = osPriorityBelowNormal1,
-    .tz_module  = 0,
-    .reserved   = 0
+    .priority   = osPriorityBelowNormal1
   };
 
   osThreadId_t service_thr_id = osThreadNew(app_service_task,

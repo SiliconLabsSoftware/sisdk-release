@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 #include "sl_memory_manager.h"
 #include "sl_assert.h"
 #include <cmsis_os2.h>
@@ -41,7 +42,8 @@
 #include "sl_se_manager_util.h"
 #endif
 #include "sl_rail_features.h"
-#include "socket/socket.h"
+#include "sys/socket.h"
+#include "netinet/in.h"
 #include "arpa/inet.h"
 #include "common/endian.h"
 #include "app_event_log.h"
@@ -128,6 +130,7 @@ static const app_enum_t app_frame_type_enum[] = {
   { "pc", SL_WISUN_FRAME_TYPE_PC },
   { "dis", SL_WISUN_FRAME_TYPE_DIS },
   { "dio", SL_WISUN_FRAME_TYPE_DIO },
+  { "lpas", SL_WISUN_FRAME_TYPE_LPAS },
   { NULL, 0 }
 };
 
@@ -150,6 +153,8 @@ typedef union {
   int32_t unicast_hop_limit;
   /// Socket multicast hop limit
   int32_t multicast_hop_limit;
+  /// Socket traffic class
+  int32_t traffic_class;
 } SL_ATTRIBUTE_PACKED app_socket_option_data_t;
 SL_PACK_END()
 
@@ -176,7 +181,8 @@ static sl_status_t app_socket_multicast_hop_limit_handler(app_socket_option_data
 
 static sl_status_t app_socket_multicast_group_handler(app_socket_option_data_t *option_data,
                                                       const char *option_data_str);
-
+static sl_status_t app_socket_traffic_class_handler(app_socket_option_data_t *option_data,
+                                                    const char *option_data_str);
 static sl_status_t app_get_ip_address(in6_addr_t *value,
                                       const char *value_str);
 
@@ -201,6 +207,7 @@ static const app_socket_option_t app_set_socket_options[] =
   { "IPV6_MULTICAST_HOPS", IPV6_MULTICAST_HOPS, IPPROTO_IPV6, MEMBER_SIZE(app_socket_option_data_t, multicast_hop_limit), app_socket_multicast_hop_limit_handler },
   { "IPV6_JOIN_GROUP", IPV6_JOIN_GROUP, IPPROTO_IPV6, MEMBER_SIZE(app_socket_option_data_t, multicast_group), app_socket_multicast_group_handler },
   { "IPV6_LEAVE_GROUP", IPV6_LEAVE_GROUP, IPPROTO_IPV6, MEMBER_SIZE(app_socket_option_data_t, multicast_group), app_socket_multicast_group_handler },
+  { "IPV6_TRAFFIC_CLASS", IPV6_TCLASS, IPPROTO_IPV6, MEMBER_SIZE(app_socket_option_data_t, traffic_class), app_socket_traffic_class_handler },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -210,6 +217,7 @@ static const app_socket_option_t app_get_socket_options[] =
   { "SO_SNDBUF", SO_SNDBUF, SOL_SOCKET, MEMBER_SIZE(app_socket_option_data_t, send_buffer_limit), NULL },
   { "IPV6_UNICAST_HOPS", IPV6_UNICAST_HOPS, IPPROTO_IPV6, MEMBER_SIZE(app_socket_option_data_t, unicast_hop_limit), NULL },
   { "IPV6_MULTICAST_HOPS", IPV6_MULTICAST_HOPS, IPPROTO_IPV6, MEMBER_SIZE(app_socket_option_data_t, multicast_hop_limit), NULL },
+  { "IPV6_TRAFFIC_CLASS", IPV6_TCLASS, IPPROTO_IPV6, MEMBER_SIZE(app_socket_option_data_t, traffic_class), NULL },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -281,7 +289,10 @@ static app_connection_state_t app_connection_state;
 static uint32_t app_connection_tick_count;
 
 static bool app_direct_connect_state = false;
-static uint32_t app_direct_connect_pmk_key_id = MBEDTLS_SVC_KEY_ID_INIT;
+static bool app_direct_connect_auto_mode = false;  // When true, auto-advertise DC ID and auto-accept link
+#define APP_DIRECT_CONNECT_AUTO_DC_ID_DEFAULT  "DC_ID_DEFAULT"  // Default DC ID when not specified
+static sl_wisun_dc_id_t app_direct_connect_auto_dc_id = { .id = APP_DIRECT_CONNECT_AUTO_DC_ID_DEFAULT };
+uint32_t app_direct_connect_pmk_key_id = MBEDTLS_SVC_KEY_ID_INIT;
 static char crash_buff[300] = { 0 };
 
 #if defined (SL_CATALOG_WISUN_CLI_DMP_PRESENT)
@@ -290,6 +301,16 @@ static bool app_ble_is_advertising;
 static bool app_ble_is_advertiser_enabled;
 static bool app_ble_is_scanning;
 #endif
+
+static bool leaf_explicit_enable = false;
+
+typedef struct
+{
+  sl_slist_node_t node;
+  void *ptr;
+} app_heap_entry_t;
+
+static sl_slist_node_t *app_heap_entry_list;
 
 static void app_check_crash(void)
 {
@@ -301,24 +322,24 @@ static void app_check_crash(void)
         sprintf(crash_buff, "ASSERT in %s on line %u", crash->u.assert.file, crash->u.assert.line);
         break;
       case SL_WISUN_CRASH_TYPE_RAIL_ASSERT:
-        sprintf(crash_buff, "RAIL ASSERT %lu", crash->u.rail_assert.error_code);
+        sprintf(crash_buff, "RAIL ASSERT %"PRIu32, crash->u.rail_assert.error_code);
         break;
       case SL_WISUN_CRASH_TYPE_STACK_OVERFLOW:
         sprintf(crash_buff, "STACK OVERFLOW failure in task \"%s\"", crash->u.stack_overflow.task);
         break;
       case SL_WISUN_CRASH_TYPE_STACK_PROTECTOR:
-        sprintf(crash_buff, "STACK PROTECTOR failure in 0x%08lx", crash->u.stack_protector.lr);
+        sprintf(crash_buff, "STACK PROTECTOR failure in 0x%08"PRIx32, crash->u.stack_protector.lr);
         break;
       case SL_WISUN_CRASH_TYPE_FAULT:
-        sprintf(crash_buff, "FAULT CFSR: 0x%08lx, R0: 0x%08lx, R1: 0x%08lx, R2: 0x%08lx, R3: 0x%08lx "
-                            "R12: 0x%08lx, LR: 0x%08lx, RET: 0x%08lx, XPSR: 0x%08lx "
-                            "HFSR: 0x%08lx, MMFAR: 0x%08lx, BFAR: 0x%08lx, AFSR: 0x%08lx",
+        sprintf(crash_buff, "FAULT CFSR: 0x%08"PRIx32", R0: 0x%08"PRIx32", R1: 0x%08"PRIx32", R2: 0x%08"PRIx32", R3: 0x%08"PRIx32" "
+                            "R12: 0x%08"PRIx32", LR: 0x%08"PRIx32", RET: 0x%08"PRIx32", XPSR: 0x%08"PRIx32" "
+                            "HFSR: 0x%08"PRIx32", MMFAR: 0x%08"PRIx32", BFAR: 0x%08"PRIx32", AFSR: 0x%08"PRIx32,
                             crash->u.fault.cfsr, crash->u.fault.r0, crash->u.fault.r1, crash->u.fault.r2, crash->u.fault.r3,
                             crash->u.fault.r12, crash->u.fault.lr, crash->u.fault.return_address, crash->u.fault.xpsr,
                             crash->u.fault.hfsr, crash->u.fault.mmfar, crash->u.fault.bfar, crash->u.fault.afsr);
         break;
       case SL_WISUN_CRASH_TYPE_CRUN_ERROR:
-        sprintf(crash_buff, "C-RUN error 0x%08lx", crash->u.crun_error.error_code);
+        sprintf(crash_buff, "C-RUN error 0x%08"PRIx32, crash->u.crun_error.error_code);
         break;
       case SL_WISUN_CRASH_TYPE_EXIT:
         sprintf(crash_buff, "EXIT status %d", crash->u.exit.status);
@@ -432,6 +453,9 @@ void app_cli_init(void)
   sl_slist_init(&app_socket_entry_list_free);
   sl_slist_init(&app_socket_entry_list);
 
+  // Initialize heap entry list
+  sl_slist_init(&app_heap_entry_list);
+
   for (i = 0; i < APP_MAX_SOCKET_ENTRIES; ++i) {
     sl_slist_push(&app_socket_entry_list_free, &app_socket_entries[i].node);
   }
@@ -441,15 +465,10 @@ void app_cli_init(void)
 #endif
 
   const osThreadAttr_t app_task_attribute = {
-    "App Task",
-    osThreadDetached,
-    NULL,
-    0,
-    NULL,
-    (APP_TASK_STACK_SIZE * sizeof(void *)) & 0xFFFFFFF8u,
-    APP_TASK_PRIORITY,
-    0,
-    0
+    .name = "App Task",
+    .attr_bits = osThreadDetached,
+    .stack_size = (APP_TASK_STACK_SIZE * sizeof(void *)) & 0xFFFFFFF8u,
+    .priority = APP_TASK_PRIORITY
   };
 
   app_task_id = osThreadNew(app_cli_task, NULL, &app_task_attribute);
@@ -470,7 +489,9 @@ void app_about(void)
   printf("Wi-SUN CLI Application\r\n");
 #endif
   printf("Versions:\r\n");
-#if defined(__GNUC__) && defined(__GNUC_MINOR__) && defined(__GNUC_PATCHLEVEL__)
+#if defined(__clang__) && defined(__clang_major__) && defined(__clang_minor__) && defined(__clang_patchlevel__)
+  printf("  * Compiler (LLVM): %u.%u.%u\r\n", __clang_major__, __clang_minor__, __clang_patchlevel__);
+#elif defined(__GNUC__) && defined(__GNUC_MINOR__) && defined(__GNUC_PATCHLEVEL__)
   printf("  * Compiler (GCC): %u.%u.%u\r\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 #endif
 #if defined(__ICCARM__) && defined(__VER__)
@@ -530,7 +551,9 @@ static void app_handle_network_update_ind(sl_wisun_evt_t *evt)
       ret = sl_wisun_get_network_info(&network_info);
       if (ret == SL_STATUS_OK) {
         printf("[Node hop count: %u]\r\n", network_info.hop_count);
-        sl_wisun_set_leaf(network_info.hop_count >= app_settings_wisun.max_hop_count);
+        if (!leaf_explicit_enable) {
+          sl_wisun_set_leaf(network_info.hop_count >= app_settings_wisun.max_hop_count);
+        }
       }
     }
   }
@@ -547,7 +570,7 @@ static void app_handle_connected_ind(sl_wisun_evt_t *evt)
 
   if (evt->evt.connected.status == SL_STATUS_OK) {
     app_connection_state = APP_CONNECTION_STATE_CONNECTED;
-    printf("[Connected: %lu s]\r\n", time_ms / 1000);
+    printf("[Connected: %"PRIu32" s]\r\n", time_ms / 1000);
     ret = sl_wisun_get_ip_address(SL_WISUN_IP_ADDRESS_TYPE_GLOBAL, &address);
     if (ret == SL_STATUS_OK) {
       printf("[IPv6 address: %s]\r\n", app_get_ip_address_str(&address));
@@ -556,7 +579,7 @@ static void app_handle_connected_ind(sl_wisun_evt_t *evt)
     }
   } else {
     app_connection_state = APP_CONNECTION_STATE_NOT_CONNECTED;
-    printf("[Connection failed: %lu]\r\n", evt->evt.connected.status);
+    printf("[Connection failed: %"PRIu32"]\r\n", evt->evt.connected.status);
   }
 }
 
@@ -575,7 +598,7 @@ static void app_handle_ping_socket_data(sl_wisun_evt_t *evt)
   tick_count = sl_sleeptimer_get_tick_count();
   time_ms = sl_sleeptimer_tick_to_ms(tick_count - app_ping_tick_count);
 
-  printf("%u bytes from %s: icmp_seq=%u time=%lu ms\r\n",
+  printf("%u bytes from %s: icmp_seq=%u time=%"PRIu32" ms\r\n",
          evt->evt.socket_data.data_length,
          app_get_ip_address_str(&evt->evt.socket_data.remote_address),
          htons(packet->sequence_number),
@@ -587,7 +610,7 @@ static void app_handle_socket_data(sl_wisun_evt_t *evt)
   app_printable_data_ctx_t printable_data_ctx;
   char *printable_data;
 
-  printf("[Data from %s (%u): %lu,%u",
+  printf("[Data from %s (%u): %"PRId32",%u",
          app_get_ip_address_str(&evt->evt.socket_data.remote_address),
          ntohs(evt->evt.socket_data.remote_port),
          evt->evt.socket_data.socket_id, evt->evt.socket_data.data_length);
@@ -616,7 +639,7 @@ static void app_handle_socket_data_ind(sl_wisun_evt_t *evt)
 
 static void app_handle_socket_data_available_ind(sl_wisun_evt_t *evt)
 {
-  printf("[Data available: %lu,%u]\r\n",
+  printf("[Data available: %"PRId32",%u]\r\n",
          evt->evt.socket_data_available.socket_id,
          evt->evt.socket_data_available.data_length);
 }
@@ -627,18 +650,18 @@ static void app_handle_socket_connected_ind(sl_wisun_evt_t *evt)
 
   entry = app_socket_entry(evt->evt.socket_connected.socket_id);
   if (!entry) {
-    printf("[Failed: unable to find the specified socket: %lu]\r\n",
+    printf("[Failed: unable to find the specified socket: %"PRId32"]\r\n",
            evt->evt.socket_connected.socket_id);
     return;
   }
 
   if (evt->evt.socket_connected.status == SL_STATUS_OK) {
     entry->socket_state = APP_SOCKET_STATE_ACTIVE;
-    printf("[Opened: %lu]\r\n", evt->evt.socket_connected.socket_id);
+    printf("[Opened: %"PRId32"]\r\n", evt->evt.socket_connected.socket_id);
   } else {
     close(entry->socket_id);
     app_socket_free_entry(entry);
-    printf("[Open failed: %lu]\r\n", evt->evt.socket_connected.status);
+    printf("[Open failed: %"PRIu32"]\r\n", evt->evt.socket_connected.status);
   }
 }
 
@@ -649,7 +672,7 @@ static void app_handle_socket_connection_available_ind(sl_wisun_evt_t *evt)
 
   uint32_t addr_length = sizeof(sockaddr_in6_t);
 
-  printf("[Socket connection available: %lu]\r\n",
+  printf("[Socket connection available: %"PRId32"]\r\n",
          evt->evt.socket_connection_available.socket_id);
 
   entry = app_socket_alloc_entry();
@@ -686,14 +709,14 @@ static void app_handle_socket_closing_ind(sl_wisun_evt_t *evt)
 
   entry = app_socket_entry(evt->evt.socket_closing.socket_id);
   if (!entry) {
-    printf("[Failed: unable to find the specified socket: %lu]\r\n",
+    printf("[Failed: unable to find the specified socket: %"PRId32"]\r\n",
            evt->evt.socket_closing.socket_id);
     return;
   }
 
   entry->socket_state = APP_SOCKET_STATE_CLOSING;
 
-  printf("[Closing: %lu]\r\n", evt->evt.socket_closing.socket_id);
+  printf("[Closing: %"PRId32"]\r\n", evt->evt.socket_closing.socket_id);
 }
 
 static void app_handle_disconnected_ind(sl_wisun_evt_t *evt)
@@ -720,15 +743,15 @@ static void app_handle_socket_data_sent(sl_wisun_evt_t *evt)
 
   entry = app_socket_entry(evt->evt.socket_data_sent.socket_id);
   if (!entry) {
-    printf("[Failed: unable to find the specified socket: %lu]\r\n",
+    printf("[Failed: unable to find the specified socket: %"PRId32"]\r\n",
            evt->evt.socket_data_sent.socket_id);
     return;
   }
 
   if (evt->evt.socket_data_sent.status == SL_STATUS_OK) {
-    printf("[Data sent: %lu,%lu]\r\n", evt->evt.socket_data_sent.socket_id, evt->evt.socket_data_sent.socket_space_left);
+    printf("[Data sent: %"PRId32",%"PRIu32"]\r\n", evt->evt.socket_data_sent.socket_id, evt->evt.socket_data_sent.socket_space_left);
   } else {
-    printf("[Failed: data sent, error %lu (socket %lu)]\r\n", evt->evt.socket_data_sent.status, evt->evt.socket_data_sent.socket_id);
+    printf("[Failed: data sent, error %"PRIu32" (socket %"PRId32")]\r\n", evt->evt.socket_data_sent.status, evt->evt.socket_data_sent.socket_id);
   }
 }
 
@@ -766,7 +789,7 @@ static void app_handle_regulation_tx_level_ind(sl_wisun_evt_t *evt)
   ptr = app_util_get_enum_by_integer(app_regulation_tx_level_enum,
                                      evt->evt.regulation_tx_level.tx_level);
   if (ptr) {
-    printf("[Regulation TX level: %s (%lu) (%lu ms)]\r\n", ptr->value_str, ptr->value, evt->evt.regulation_tx_level.tx_duration_ms);
+    printf("[Regulation TX level: %s (%"PRIu32") (%"PRIu32" ms)]\r\n", ptr->value_str, ptr->value, evt->evt.regulation_tx_level.tx_duration_ms);
   }
 }
 
@@ -808,10 +831,20 @@ static void app_handle_pan_defect_ind(sl_wisun_evt_t *evt)
 static void app_handle_direct_connect_link_available_ind(sl_wisun_evt_t *evt)
 {
   char ipv6_string[40];
+  sl_status_t status;
 
   ip6tos(&evt->evt.direct_connect_link_available.link_local_ipv6, ipv6_string);
 
   printf("[Direct Connection request from %s]\r\n", ipv6_string);
+
+  if (app_direct_connect_auto_mode) {
+    status = sl_wisun_accept_direct_connect_link(&evt->evt.direct_connect_link_available.link_local_ipv6);
+    if (status == SL_STATUS_OK) {
+      printf("[Accepted connection request from %s]\r\n", ipv6_string);
+    } else {
+      printf("[Failed to accept connection from %s: %"PRIu32"]\r\n", ipv6_string, status);
+    }
+  }
 }
 
 static void app_handle_direct_connect_link_status_ind(sl_wisun_evt_t *evt)
@@ -834,6 +867,75 @@ static void app_handle_direct_connect_link_status_ind(sl_wisun_evt_t *evt)
   default:
     break;
   }
+}
+
+static void app_handle_direct_connect_id_received_ind(sl_wisun_evt_t *evt)
+{
+  char mac_str[24];
+
+  app_util_get_mac_address_string(mac_str, &evt->evt.direct_connect_id_received.mac_address);
+  printf("[Direct Connect identity received from server %s with ID %s]\r\n", mac_str, (char *) evt->evt.direct_connect_id_received.dc_id.id);
+}
+
+static void app_handle_direct_connect_id_solicit_ind(sl_wisun_evt_t *evt)
+{
+  char ipv6_string[40];
+  sl_status_t status;
+
+  ip6tos(&evt->evt.direct_connect_id_solicit.link_local_ipv6, ipv6_string);
+
+  printf("[Direct Connect identity request from client %s with DC_ID:%s]\r\n", ipv6_string, (char *) evt->evt.direct_connect_id_solicit.dc_id.id);
+
+  if (app_direct_connect_auto_mode) {
+    /* Respond if client looks for our DC ID */
+    if (strncmp((const char *) evt->evt.direct_connect_id_solicit.dc_id.id, (const char *) app_direct_connect_auto_dc_id.id, SL_WISUN_DC_ID_LEN) == 0) {
+      status = sl_wisun_advert_direct_connect_server_id(&evt->evt.direct_connect_id_solicit.link_local_ipv6, &app_direct_connect_auto_dc_id);
+      if (status == SL_STATUS_OK) {
+        printf("[Advertised DC_ID:%s to client %s]\r\n", (char *) app_direct_connect_auto_dc_id.id, ipv6_string);
+      } else {
+        printf("[Failed to advertise DC_ID:%s to client %s: %"PRIu32"]\r\n", (char *) app_direct_connect_auto_dc_id.id, ipv6_string, status);
+      }
+    }
+  }
+}
+
+static void app_handle_direct_connect_client_state_changed_ind(sl_wisun_evt_t *evt)
+{
+  char ipv6_string[40];
+
+  ip6tos(&evt->evt.direct_connect_client_state_changed.link_local_ipv6, ipv6_string);
+
+  switch (evt->evt.direct_connect_client_state_changed.state) {
+    case SL_WISUN_DC_CLIENT_STATE_CONNECTED:
+      printf("[DC client is connected to server %s]\r\n", ipv6_string);
+      break;
+    case SL_WISUN_DC_CLIENT_STATE_CONNECTION_LOST:
+      printf("[DC client lost connection to server %s]\r\n", ipv6_string);
+      break;
+    case SL_WISUN_DC_CLIENT_STATE_CONNECTION_FAILED:
+      printf("[DC client connection establishment failed with server %s]\r\n", ipv6_string);
+      break;
+    case SL_WISUN_DC_CLIENT_STATE_SCAN_COMPLETE:
+      printf("[DC client scan complete]\r\n");
+      break;
+    case SL_WISUN_DC_CLIENT_STATE_STOPPED:
+      printf("[DC client stopped]\r\n");
+      break;
+    default:
+      printf("[DC client state changed: unknown state %"PRIu32"]\r\n", evt->evt.direct_connect_client_state_changed.state);
+      break;
+  }
+}
+
+static void app_handle_error_ind(sl_wisun_evt_t *evt)
+{
+  printf("[Error: %"PRIu32"]\r\n", evt->evt.error.status);
+}
+
+static void app_handle_fb_ready_ind(sl_wisun_evt_t *evt)
+{
+  (void)evt;
+  printf("[First Breath ready]\r\n");
 }
 
 void sl_wisun_on_event(sl_wisun_evt_t *evt)
@@ -904,6 +1006,21 @@ void sl_wisun_on_event(sl_wisun_evt_t *evt)
       break;
     case SL_WISUN_MSG_LOGGER_EVENT_IND_ID:
       app_handle_event_logger_ind(evt);
+      break;
+    case SL_WISUN_MSG_DIRECT_CONNECT_ID_RECEIVED_IND_ID:
+      app_handle_direct_connect_id_received_ind(evt);
+      break;
+    case SL_WISUN_MSG_DIRECT_CONNECT_ID_SOLICIT_IND_ID:
+      app_handle_direct_connect_id_solicit_ind(evt);
+      break;
+    case SL_WISUN_MSG_DIRECT_CONNECT_CLIENT_STATE_CHANGED_IND_ID:
+      app_handle_direct_connect_client_state_changed_ind(evt);
+      break;
+    case SL_WISUN_MSG_ERROR_IND_ID:
+      app_handle_error_ind(evt);
+      break;
+    case SL_WISUN_MSG_FB_READY_IND_ID:
+      app_handle_fb_ready_ind(evt);
       break;
     default:
       printf("[Unknown event: %d]\r\n", evt->header.id);
@@ -1009,6 +1126,35 @@ static sl_status_t app_build_phy_config(sl_wisun_phy_config_type_t phy_config_ty
   return SL_STATUS_OK;
 }
 
+static sl_status_t app_set_options(void)
+{
+  struct {
+    sl_wisun_option_id_t id;
+    const void *val;
+    uint32_t val_len;
+  } opts[] = {
+    { SL_WISUN_OPTION_TRAFFIC_LOWPAN_MTU_BYTES,        &app_settings_wisun.lowpan_mtu,              sizeof(app_settings_wisun.lowpan_mtu) },
+    { SL_WISUN_OPTION_TRAFFIC_IPV6_MRU_BYTES,          &app_settings_wisun.ipv6_mru,                sizeof(app_settings_wisun.ipv6_mru) },
+    { SL_WISUN_OPTION_TRAFFIC_MAX_EDFE_FRAGMENT_COUNT, &app_settings_wisun.max_edfe_fragment_count, sizeof(app_settings_wisun.max_edfe_fragment_count) },
+    { SL_WISUN_OPTION_MAC_MIN_BE,                      &app_settings_mac.min_be,                    sizeof(app_settings_mac.min_be) },
+    { SL_WISUN_OPTION_MAC_MAX_BE,                      &app_settings_mac.max_be,                    sizeof(app_settings_mac.max_be) },
+    { SL_WISUN_OPTION_MAC_BACKOFF_PERIOD_US,           &app_settings_mac.backoff_period_us,         sizeof(app_settings_mac.backoff_period_us) },
+    { SL_WISUN_OPTION_MAC_MAX_CCA_RETRIES,             &app_settings_mac.max_cca_retries,           sizeof(app_settings_mac.max_cca_retries) },
+    { SL_WISUN_OPTION_MAC_MAX_FRAME_RETRIES,           &app_settings_mac.max_frame_retries,         sizeof(app_settings_mac.max_frame_retries) },
+  };
+  sl_status_t ret;
+
+  for (uint32_t i = 0; i < sizeof(opts) / sizeof(opts[0]); i++) {
+    ret = sl_wisun_set_option(opts[i].id, opts[i].val, opts[i].val_len);
+    if (ret != SL_STATUS_OK) {
+      printf("[Failed: unable to set option %d, status: %"PRIu32"]\r\n", opts[i].id, ret);
+      return ret;
+    }
+  }
+
+  return SL_STATUS_OK;
+}
+
 static void app_join(sl_wisun_phy_config_type_t phy_config_type)
 {
   sl_status_t ret;
@@ -1038,13 +1184,13 @@ static void app_join(sl_wisun_phy_config_type_t phy_config_type)
 
   ret = app_settings_get_channel_mask(app_settings_wisun.allowed_channels, &channel_mask);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to get channel mask: %lu]\r\n", ret);
+    printf("[Failed: unable to get channel mask: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
   ret = app_build_phy_config(phy_config_type, channel_mask.mask, &phy_config);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unsupported PHY configuration: %lu]\r\n", ret);
+    printf("[Failed: unsupported PHY configuration: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
@@ -1052,97 +1198,116 @@ static void app_join(sl_wisun_phy_config_type_t phy_config_type)
 
   ret = sl_wisun_set_device_type((sl_wisun_device_type_t)app_settings_wisun.device_type);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set device type: %lu]\r\n", ret);
+    printf("[Failed: unable to set device type: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
+  /*
+   * NOTE: Automatic network size is the default in the stack.
+   * Setting traffic and mac parameters is only supported for non-automatic
+   * network sizes.
+   */
   if (app_settings_wisun.device_type == SL_WISUN_ROUTER) {
-    switch (app_settings_wisun.network_size) {
-      case SL_WISUN_NETWORK_SIZE_SMALL:
-        params = SL_WISUN_PARAMS_PROFILE_SMALL;
-        break;
-      case SL_WISUN_NETWORK_SIZE_MEDIUM:
-        params = SL_WISUN_PARAMS_PROFILE_MEDIUM;
-        break;
-      case SL_WISUN_NETWORK_SIZE_LARGE:
-        params = SL_WISUN_PARAMS_PROFILE_LARGE;
-        break;
-      case SL_WISUN_NETWORK_SIZE_TEST:
-        params = SL_WISUN_PARAMS_PROFILE_TEST;
-        break;
-      case SL_WISUN_NETWORK_SIZE_CERTIFICATION:
-        params = SL_WISUN_PARAMS_PROFILE_CERTIF;
-        break;
-      default:
-        printf("[Failed: unsupported network size]\r\n");
+    if (app_settings_wisun.network_size != SL_WISUN_NETWORK_SIZE_AUTOMATIC) {
+      switch (app_settings_wisun.network_size) {
+        case SL_WISUN_NETWORK_SIZE_SMALL:
+          params = SL_WISUN_PARAMS_PROFILE_SMALL;
+          break;
+        case SL_WISUN_NETWORK_SIZE_MEDIUM:
+          params = SL_WISUN_PARAMS_PROFILE_MEDIUM;
+          break;
+        case SL_WISUN_NETWORK_SIZE_LARGE:
+          params = SL_WISUN_PARAMS_PROFILE_LARGE;
+          break;
+        case SL_WISUN_NETWORK_SIZE_TEST:
+          params = SL_WISUN_PARAMS_PROFILE_TEST;
+          break;
+        case SL_WISUN_NETWORK_SIZE_CERTIFICATION:
+          params = SL_WISUN_PARAMS_PROFILE_CERTIF;
+          break;
+        default:
+          printf("[Failed: unsupported network size]\r\n");
+          goto cleanup;
+      }
+      params.traffic.lowpan_mtu = app_settings_wisun.lowpan_mtu;
+      params.traffic.ipv6_mru = app_settings_wisun.ipv6_mru;
+      params.traffic.max_edfe_fragment_count = app_settings_wisun.max_edfe_fragment_count;
+      params.mac.min_be = app_settings_mac.min_be;
+      params.mac.max_be = app_settings_mac.max_be;
+      params.mac.backoff_period_us = app_settings_mac.backoff_period_us;
+      params.mac.max_cca_retries = app_settings_mac.max_cca_retries;
+      params.mac.max_frame_retries = app_settings_mac.max_frame_retries;
+      ret = sl_wisun_set_connection_parameters(&params);
+      if (ret != SL_STATUS_OK) {
+        printf("[Failed: unable to set network size: %"PRIu32"]\r\n", ret);
         goto cleanup;
+      }
+    } else {
+      ret = app_set_options();
+      if (ret != SL_STATUS_OK) {
+        goto cleanup;
+      }
     }
-    params.traffic.lowpan_mtu = app_settings_wisun.lowpan_mtu;
-    params.traffic.ipv6_mru = app_settings_wisun.ipv6_mru;
-    params.traffic.max_edfe_fragment_count = app_settings_wisun.max_edfe_fragment_count;
-    params.mac.min_be = app_settings_mac.min_be;
-    params.mac.max_be = app_settings_mac.max_be;
-    params.mac.backoff_period_us = app_settings_mac.backoff_period_us;
-    params.mac.max_cca_retries = app_settings_mac.max_cca_retries;
-    params.mac.max_frame_retries = app_settings_mac.max_frame_retries;
-    ret = sl_wisun_set_connection_parameters(&params);
-  }
-
-  if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set network size: %lu]\r\n", ret);
-    goto cleanup;
   }
 
   ret = sl_wisun_config_neighbor_table(app_settings_wisun.max_child_count, app_settings_wisun.max_neighbor_count, app_settings_wisun.max_security_neighbor_count);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set neighbor table size: %lu]\r\n", ret);
+    printf("[Failed: unable to set neighbor table size: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
   if (app_settings_wisun.device_type == SL_WISUN_ROUTER) {
     ret = sl_wisun_set_preferred_pan(app_settings_wisun.preferred_pan_id);
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to set preferred PAN: %lu]\r\n", ret);
+      printf("[Failed: unable to set preferred PAN: %"PRIu32"]\r\n", ret);
       goto cleanup;
     }
   }
 
+  // NOTE: Automatic LFN profile is the default in the stack.
   if (app_settings_wisun.device_type == SL_WISUN_LFN) {
-    switch (app_settings_wisun.lfn_profile) {
-      case SL_WISUN_LFN_PROFILE_TEST:
-        lfn_params = SL_WISUN_PARAMS_LFN_TEST;
-        break;
-      case SL_WISUN_LFN_PROFILE_BALANCED:
-        lfn_params = SL_WISUN_PARAMS_LFN_BALANCED;
-        break;
-      case SL_WISUN_LFN_PROFILE_ECO:
-        lfn_params = SL_WISUN_PARAMS_LFN_ECO;
-        break;
-      default:
-        printf("[Failed: unsupported LFN profile]\r\n");
+    if (app_settings_wisun.lfn_profile != SL_WISUN_LFN_PROFILE_AUTOMATIC) {
+      switch (app_settings_wisun.lfn_profile) {
+        case SL_WISUN_LFN_PROFILE_TEST:
+          lfn_params = SL_WISUN_PARAMS_LFN_TEST;
+          break;
+        case SL_WISUN_LFN_PROFILE_BALANCED:
+          lfn_params = SL_WISUN_PARAMS_LFN_BALANCED;
+          break;
+        case SL_WISUN_LFN_PROFILE_ECO:
+          lfn_params = SL_WISUN_PARAMS_LFN_ECO;
+          break;
+        default:
+          printf("[Failed: unsupported LFN profile]\r\n");
+          goto cleanup;
+      }
+      ret = sl_wisun_set_lfn_parameters(&lfn_params);
+      if (ret != SL_STATUS_OK) {
+        printf("[Failed: unable to set LFN parameters: %"PRIu32"]\r\n", ret);
         goto cleanup;
-    }
-    ret = sl_wisun_set_lfn_parameters(&lfn_params);
-    if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to set LFN parameters: %lu]\r\n", ret);
-      goto cleanup;
+      }
+    } else {
+      ret = app_set_options();
+      if (ret != SL_STATUS_OK) {
+        goto cleanup;
+      }
     }
   }
 
   ret = sl_wisun_set_rx_fifo_size(app_settings_wisun.rx_fifo_size);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set RX FIFO size: %lu]\r\n", ret);
+    printf("[Failed: unable to set RX FIFO size: %"PRIu32"]\r\n", ret);
   }
 
   ret = sl_wisun_set_tx_power_ddbm(app_settings_wisun.tx_power_ddbm);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set TX power: %lu]\r\n", ret);
+    printf("[Failed: unable to set TX power: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
   ret = sl_wisun_set_fan_tps_version(app_settings_wisun.fan_tps_version);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set FAN TPS version: %lu]\r\n", ret);
+    printf("[Failed: unable to set FAN TPS version: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
@@ -1152,7 +1317,7 @@ static void app_join(sl_wisun_phy_config_type_t phy_config_type)
     goto cleanup;
   }
 
-  certificate_options = SL_WISUN_CERTIFICATE_OPTION_IS_REF;
+  certificate_options = SL_WISUN_CERTIFICATE_OPTION_NONE;
   for (idx = 0; idx < trustedca_count; ++idx) {
     trustedca = sl_wisun_keychain_get_trustedca(idx);
     if (!trustedca) {
@@ -1169,7 +1334,7 @@ static void app_join(sl_wisun_phy_config_type_t phy_config_type)
                                            trustedca->data_length,
                                            trustedca->data);
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to set the trusted certificate: %lu]\r\n", ret);
+      printf("[Failed: unable to set the trusted certificate: %"PRIu32"]\r\n", ret);
       goto cleanup;
     }
 
@@ -1189,36 +1354,36 @@ static void app_join(sl_wisun_phy_config_type_t phy_config_type)
     printf("[Using built-in device credentials]\r\n");
   }
 
-  ret = sl_wisun_set_device_certificate(SL_WISUN_CERTIFICATE_OPTION_IS_REF | SL_WISUN_CERTIFICATE_OPTION_HAS_KEY,
+  ret = sl_wisun_set_device_certificate(SL_WISUN_CERTIFICATE_OPTION_NONE,
                                         credential->certificate.data_length,
                                         credential->certificate.data);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set the device certificate: %lu]\r\n", ret);
+    printf("[Failed: unable to set the device certificate: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
   if (credential->pk.type == SL_WISUN_KEYCHAIN_KEY_TYPE_PLAINTEXT) {
-    ret = sl_wisun_set_device_private_key(SL_WISUN_PRIVATE_KEY_OPTION_IS_REF,
+    ret = sl_wisun_set_device_private_key(SL_WISUN_PRIVATE_KEY_OPTION_NONE,
                                           credential->pk.u.plaintext.data_length,
                                           credential->pk.u.plaintext.data);
   } else {
     ret = sl_wisun_set_device_private_key_id(credential->pk.u.key_id);
   }
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set the device private key: %lu]\r\n", ret);
+    printf("[Failed: unable to set the device private key: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
   ret = sl_wisun_set_channel_mask(&channel_mask);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set channel mask: %lu]\r\n", ret);
+    printf("[Failed: unable to set channel mask: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
   if (app_settings_wisun.device_type == SL_WISUN_ROUTER) {
     ret = sl_wisun_set_unicast_settings(app_settings_wisun.uc_dwell_interval_ms);
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to set unicast settings: %lu]\r\n", ret);
+      printf("[Failed: unable to set unicast settings: %"PRIu32"]\r\n", ret);
       goto cleanup;
     }
   }
@@ -1243,14 +1408,14 @@ static void app_join(sl_wisun_phy_config_type_t phy_config_type)
 
   ret = sl_wisun_set_regulation_parameters(regulation_params);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set regional regulation: %lu]\r\n", ret);
+    printf("[Failed: unable to set regional regulation: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
   ret = sl_wisun_set_regulation_tx_thresholds(app_settings_wisun.regulation_warning_threshold,
                                               app_settings_wisun.regulation_alert_threshold);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set regulation TX thresholds: %lu]\r\n", ret);
+    printf("[Failed: unable to set regulation TX thresholds: %"PRIu32"]\r\n", ret);
   }
 
 
@@ -1282,7 +1447,7 @@ static void app_join(sl_wisun_phy_config_type_t phy_config_type)
     app_connection_tick_count = sl_sleeptimer_get_tick_count();
     printf("[Connecting to \"%s\"]\r\n", app_settings_wisun.network_name);
   } else {
-    printf("[Connection failed: %lu]\r\n", ret);
+    printf("[Connection failed: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
@@ -1315,7 +1480,7 @@ static void app_join(sl_wisun_phy_config_type_t phy_config_type)
                               phy_mode_id_p,
                               app_settings_wisun.rx_mdr_capable);
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to set RX PhyModeId list: %lu]\r\n", ret);
+      printf("[Failed: unable to set RX PhyModeId list: %"PRIu32"]\r\n", ret);
       goto cleanup;
     }
   }
@@ -1409,7 +1574,7 @@ void app_disconnect(sl_cli_command_arg_t *arguments)
   if (ret == SL_STATUS_OK) {
     app_connection_state = APP_CONNECTION_STATE_DISCONNECTING;
   } else {
-    printf("[Disconnection failed: %lu]\r\n", ret);
+    printf("[Disconnection failed: %"PRIu32"]\r\n", ret);
   }
 
 cleanup:
@@ -1537,7 +1702,7 @@ void app_ping(sl_cli_command_arg_t *arguments)
                          sizeof(sockaddr_in6_t));
 
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to send an ICMP packet: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to send an ICMP packet: %"PRId32"]\r\n", socket_retval);
     goto error_handler;
   }
   else {
@@ -1621,7 +1786,7 @@ void app_tcp_client(sl_cli_command_arg_t *arguments)
 
   socket_retval = connect(entry->socket_id, (const struct sockaddr *) &ipv6_remote_addr, sizeof(sockaddr_in6_t));
   if (socket_retval == SOCKET_RETVAL_ERROR && errno != EINPROGRESS) {
-    printf("[Failed: unable to connect a socket: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to connect a socket: %"PRId32"]\r\n", socket_retval);
     goto error_handler;
   }
 
@@ -1698,13 +1863,13 @@ void app_tcp_server(sl_cli_command_arg_t *arguments)
 
   socket_retval = bind(entry->socket_id, (const struct sockaddr *) &app_sockaddr, sizeof(sockaddr_in6_t));
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to bind a socket: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to bind a socket: %"PRId32"]\r\n", socket_retval);
     goto error_handler;
   }
 
   socket_retval = listen(entry->socket_id, 0);
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to listen on a socket: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to listen on a socket: %"PRId32"]\r\n", socket_retval);
     goto error_handler;
   }
 
@@ -1786,7 +1951,7 @@ void app_udp_client(sl_cli_command_arg_t *arguments)
 
   socket_retval = connect(entry->socket_id, (const struct sockaddr *) &ipv6_remote_addr, sizeof(sockaddr_in6_t));
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to connect a socket: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to connect a socket: %"PRId32"]\r\n", socket_retval);
     goto error_handler;
   }
 
@@ -1858,7 +2023,7 @@ void app_udp_server(sl_cli_command_arg_t *arguments)
 
   socket_retval = bind(entry->socket_id, (const struct sockaddr *) &app_sockaddr, sizeof(sockaddr_in6_t));
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to bind a socket: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to bind a socket: %"PRId32"]\r\n", socket_retval);
     goto error_handler;
   }
 
@@ -1900,7 +2065,7 @@ void app_socket_close(sl_cli_command_arg_t *arguments)
 
   socket_retval = close(socket_id);
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to close a socket: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to close a socket: %"PRId32"]\r\n", socket_retval);
     goto cleanup;
   }
 
@@ -1962,11 +2127,11 @@ void app_socket_read(sl_cli_command_arg_t *arguments)
 
   socket_retval = recvfrom(socket_id, data, data_length, 0, (struct sockaddr *) &remote_address, &address_length);
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to read from a socket: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to read from a socket: %"PRId32"]\r\n", socket_retval);
     goto cleanup;
   }
 
-  printf("[Data from %s (%u): %d,%ld",
+  printf("[Data from %s (%u): %d,%"PRId32,
          app_get_ip_address_str(&remote_address.sin6_addr),
          ntohs(remote_address.sin6_port),
          socket_id,
@@ -2029,11 +2194,11 @@ void app_socket_write(sl_cli_command_arg_t *arguments)
 
   socket_retval = send(socket_id, (const void *) data, strlen(data), 0);
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to write to a socket: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to write to a socket: %"PRId32"]\r\n", socket_retval);
     goto cleanup;
   }
 
-  printf("[Wrote %ld bytes]\r\n", socket_retval);
+  printf("[Wrote %"PRId32" bytes]\r\n", socket_retval);
 
 cleanup:
 
@@ -2099,11 +2264,11 @@ void app_socket_writeto(sl_cli_command_arg_t *arguments)
                          (const struct sockaddr *) &ipv6_dest_addr,
                          sizeof(sockaddr_in6_t));
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to write to a socket: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to write to a socket: %"PRId32"]\r\n", socket_retval);
     goto cleanup;
   }
 
-  printf("[Wrote %ld bytes]\r\n", socket_retval);
+  printf("[Wrote %"PRId32" bytes]\r\n", socket_retval);
 
 cleanup:
 
@@ -2193,7 +2358,7 @@ void app_socket_set_option(sl_cli_command_arg_t *arguments)
                             (void *)&option_data,
                             iter->option_length);
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to set socket option: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to set socket option: %"PRId32"]\r\n", socket_retval);
     goto cleanup;
   }
 
@@ -2370,6 +2535,29 @@ static sl_status_t app_socket_multicast_group_handler(app_socket_option_data_t *
   #endif
 }
 
+static sl_status_t app_socket_traffic_class_handler(app_socket_option_data_t *option_data,
+                                                    const char *option_data_str)
+{
+  // The caller guarantees the aligment of the option data,
+  // thus the warning can be ignored.
+  #ifdef __GNUC__
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wpragmas"
+  #pragma GCC diagnostic ignored "-Waddress-of-packed-member"
+  #elif defined __ICCARM__
+  #pragma diag_suppress=Pa039
+  #endif
+
+  return app_util_get_integer((uint32_t *)&option_data->traffic_class, option_data_str, NULL, true);
+
+  // Restore the defaults
+  #ifdef __GNUC__
+  #pragma GCC diagnostic pop
+  #elif defined __ICCARM__
+  #pragma diag_default=Pa039
+  #endif
+}
+
 static sl_status_t app_get_ip_address(in6_addr_t *value,
                                       const char *value_str)
 {
@@ -2421,14 +2609,14 @@ void app_mac_allow(sl_cli_command_arg_t *arguments)
     // Attempt to convert the MAC address string
     ret = app_util_get_mac_address(&address, address_str);
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to parse the MAC address: %lu]\r\n", ret);
+      printf("[Failed: unable to parse the MAC address: %"PRIu32"]\r\n", ret);
       goto cleanup;
     }
   }
 
   ret = sl_wisun_allow_mac_address(&address);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to add the MAC address to the access list: %lu]\r\n", ret);
+    printf("[Failed: unable to add the MAC address to the access list: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
@@ -2462,14 +2650,14 @@ void app_mac_deny(sl_cli_command_arg_t *arguments)
     // Attempt to convert the MAC address string
     ret = app_util_get_mac_address(&address, address_str);
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to parse the MAC address: %lu]\r\n", ret);
+      printf("[Failed: unable to parse the MAC address: %"PRIu32"]\r\n", ret);
       goto cleanup;
     }
   }
 
   ret = sl_wisun_deny_mac_address(&address);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to add the MAC address to the deny list: %lu]\r\n", ret);
+    printf("[Failed: unable to add the MAC address to the deny list: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
@@ -2550,7 +2738,7 @@ void app_socket_get_option(sl_cli_command_arg_t *arguments)
                               (void *)&option_data,
                               &option_length);
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to get socket option: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to get socket option: %"PRId32"]\r\n", socket_retval);
     goto cleanup;
   }
 
@@ -2573,7 +2761,7 @@ void app_clear_credential_cache(sl_cli_command_arg_t *arguments)
   if (ret == SL_STATUS_OK) {
     printf("[Credential cache cleared]\r\n");
   } else {
-    printf("[Credential cache clear failed: %lu]\r\n", ret);
+    printf("[Credential cache clear failed: %"PRIu32"]\r\n", ret);
   }
 
   app_wisun_cli_mutex_unlock();
@@ -2616,7 +2804,7 @@ cleanup:
   if (ret == SL_STATUS_OK) {
     printf("[Statistics reset]\r\n");
   } else {
-    printf("[Statistics reset failed: %lu]\r\n", ret);
+    printf("[Statistics reset failed: %"PRIu32"]\r\n", ret);
   }
 
   app_wisun_cli_mutex_unlock();
@@ -2635,7 +2823,7 @@ void app_set_lfn_support(sl_cli_command_arg_t *arguments)
   if (ret == SL_STATUS_OK) {
     printf("[LFN support set]\r\n");
   } else {
-    printf("[Failed: unable to set LFN support: %lu]\r\n", ret);
+    printf("[Failed: unable to set LFN support: %"PRIu32"]\r\n", ret);
   }
 
   app_wisun_cli_mutex_unlock();
@@ -2652,9 +2840,10 @@ void app_set_leaf(sl_cli_command_arg_t *arguments)
 
   ret = sl_wisun_set_leaf(is_leaf);
   if (ret == SL_STATUS_OK) {
+    leaf_explicit_enable = is_leaf;
     printf("[Leaf behavior set]\r\n");
   } else {
-    printf("[Failed: unable to set leaf behavior: %lu]\r\n", ret);
+    printf("[Failed: unable to set leaf behavior: %"PRIu32"]\r\n", ret);
   }
 
   app_wisun_cli_mutex_unlock();
@@ -2686,7 +2875,7 @@ void app_rftest_start_tx(sl_cli_command_arg_t *arguments)
   interval_ms = sl_cli_get_argument_uint32(arguments, 3);
   cca_enabled = sl_cli_get_argument_uint32(arguments, 4) != 0;
   if (sl_cli_get_argument_count(arguments) > 5) {
-    phy_config_type = sl_cli_get_argument_uint8(arguments, 5);
+    phy_config_type = (sl_wisun_phy_config_type_t)sl_cli_get_argument_uint8(arguments, 5);
   }
 
   // Set all channels to be allowed
@@ -2694,18 +2883,18 @@ void app_rftest_start_tx(sl_cli_command_arg_t *arguments)
 
   ret = app_build_phy_config(phy_config_type, channel_mask, &phy_config);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unsupported PHY configuration: %lu]\r\n", ret);
+    printf("[Failed: unsupported PHY configuration: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
   ret = sl_wisun_rf_test_set_phy_config(&phy_config);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set PHY config: %lu]\r\n", ret);
+    printf("[Failed: unable to set PHY config: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
   ret = sl_wisun_rf_test_start_tx(channel, count, data_length, data, interval_ms, cca_enabled);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to start TX: %lu]\r\n", ret);
+    printf("[Failed: unable to start TX: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
@@ -2734,7 +2923,7 @@ void app_rftest_start_rx(sl_cli_command_arg_t *arguments)
   channel = sl_cli_get_argument_uint32(arguments, 0);
   duration_ms = sl_cli_get_argument_uint32(arguments, 1);
   if (sl_cli_get_argument_count(arguments) > 2) {
-    phy_config_type = sl_cli_get_argument_uint8(arguments, 2);
+    phy_config_type = (sl_wisun_phy_config_type_t)sl_cli_get_argument_uint8(arguments, 2);
   }
 
   // Set all channels to be allowed
@@ -2742,17 +2931,17 @@ void app_rftest_start_rx(sl_cli_command_arg_t *arguments)
 
   ret = app_build_phy_config(phy_config_type, channel_mask, &phy_config);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unsupported PHY configuration: %lu]\r\n", ret);
+    printf("[Failed: unsupported PHY configuration: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
   ret = sl_wisun_rf_test_set_phy_config(&phy_config);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set PHY config: %lu]\r\n", ret);
+    printf("[Failed: unable to set PHY config: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
   ret = sl_wisun_rf_test_start_rx(channel, duration_ms);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to start RX: %lu]\r\n", ret);
+    printf("[Failed: unable to start RX: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
   printf("[RF Test RX started]\r\n");
@@ -2771,7 +2960,7 @@ void app_rftest_stop_rx(sl_cli_command_arg_t *arguments)
 
   ret = sl_wisun_rf_test_rx_stop();
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to stop RX: %lu]\r\n", ret);
+    printf("[Failed: unable to stop RX: %"PRIu32"]\r\n", ret);
   }
   else {
     printf("[RF Test RX stopped]\r\n");
@@ -2797,7 +2986,7 @@ void app_rftest_start_stream(sl_cli_command_arg_t *arguments)
 
   channel = sl_cli_get_argument_uint32(arguments, 0);
   if (sl_cli_get_argument_count(arguments) > 1) {
-    phy_config_type = sl_cli_get_argument_uint8(arguments, 1);
+    phy_config_type = (sl_wisun_phy_config_type_t)sl_cli_get_argument_uint8(arguments, 1);
   }
 
   // Set all channels to be allowed
@@ -2805,18 +2994,18 @@ void app_rftest_start_stream(sl_cli_command_arg_t *arguments)
 
   ret = app_build_phy_config(phy_config_type, channel_mask, &phy_config);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unsupported PHY configuration: %lu]\r\n", ret);
+    printf("[Failed: unsupported PHY configuration: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
   ret = sl_wisun_rf_test_set_phy_config(&phy_config);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set PHY config: %lu]\r\n", ret);
+    printf("[Failed: unable to set PHY config: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
   ret = sl_wisun_start_stream(channel);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to start stream: %lu]\r\n", ret);
+    printf("[Failed: unable to start stream: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
@@ -2836,7 +3025,7 @@ void app_rftest_stop_stream(sl_cli_command_arg_t *arguments)
 
   ret = sl_wisun_stop_stream();
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to stop stream: %lu]\r\n", ret);
+    printf("[Failed: unable to stop stream: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
@@ -2863,7 +3052,7 @@ void app_rftest_start_tone(sl_cli_command_arg_t *arguments)
 
   channel = sl_cli_get_argument_uint32(arguments, 0);
   if (sl_cli_get_argument_count(arguments) > 1) {
-    phy_config_type = sl_cli_get_argument_uint8(arguments, 1);
+    phy_config_type = (sl_wisun_phy_config_type_t)sl_cli_get_argument_uint8(arguments, 1);
   }
 
   // Set all channels to be allowed
@@ -2871,19 +3060,19 @@ void app_rftest_start_tone(sl_cli_command_arg_t *arguments)
 
   ret = app_build_phy_config(phy_config_type, channel_mask, &phy_config);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unsupported PHY configuration: %lu]\r\n", ret);
+    printf("[Failed: unsupported PHY configuration: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
   ret = sl_wisun_rf_test_set_phy_config(&phy_config);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set PHY config: %lu]\r\n", ret);
+    printf("[Failed: unable to set PHY config: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
   ret = sl_wisun_start_tone(channel);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to start tone: %lu]\r\n", ret);
+    printf("[Failed: unable to start tone: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
@@ -2903,7 +3092,7 @@ void app_rftest_stop_tone(sl_cli_command_arg_t *arguments)
 
   ret = sl_wisun_stop_tone();
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to stop tone: %lu]\r\n", ret);
+    printf("[Failed: unable to stop tone: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
@@ -2924,13 +3113,73 @@ void app_rftest_set_tx_power(sl_cli_command_arg_t *arguments)
 
   ret = sl_wisun_set_test_tx_power(tx_power);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set TX power: %lu]\r\n", ret);
+    printf("[Failed: unable to set TX power: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
   printf("[RF Test TX power set to %d dBm]\r\n", tx_power);
 
 cleanup:
+  app_wisun_cli_mutex_unlock();
+}
+
+void app_util_fill_heap(sl_cli_command_arg_t *arguments)
+{
+  uint16_t block_size;
+  uint16_t alloc_length = 0;
+  uint16_t count = 0;
+  app_heap_entry_t *entry = NULL;
+
+  app_wisun_cli_mutex_lock();
+
+  block_size = sl_cli_get_argument_uint16(arguments, 0);
+
+  if (block_size > sizeof(app_heap_entry_t)) {
+    alloc_length = block_size - sizeof(app_heap_entry_t);
+  }
+
+  while (1) {
+    entry = sl_malloc(sizeof(app_heap_entry_t));
+    if (entry == NULL) {
+      goto cleanup;
+    }
+    memset(entry, 0, sizeof(app_heap_entry_t));
+
+    if (alloc_length > 0) {
+      entry->ptr = sl_malloc(alloc_length);
+      if (entry->ptr == NULL) {
+        sl_free(entry);
+        goto cleanup;
+      }
+    }
+
+    sl_slist_push(&app_heap_entry_list, &entry->node);
+    count++;
+  }
+
+cleanup:
+  // Does not account for block metadata and alignment overhead
+  printf("[Heap filled with %d blocks of %d bytes each]\r\n", count, block_size);
+  app_wisun_cli_mutex_unlock();
+}
+
+void app_util_release_heap(sl_cli_command_arg_t *arguments)
+{
+  (void)arguments;
+  sl_slist_node_t *node = NULL;
+  app_heap_entry_t *entry = NULL;
+
+  app_wisun_cli_mutex_lock();
+
+  while (!sl_slist_is_empty(app_heap_entry_list)) {
+    node = sl_slist_pop(&app_heap_entry_list);
+    entry = SL_SLIST_ENTRY(node, app_heap_entry_t, node);
+    sl_free(entry->ptr);
+    sl_free(entry);
+  }
+
+  printf("[Heap released]\r\n");
+
   app_wisun_cli_mutex_unlock();
 }
 
@@ -3058,7 +3307,7 @@ cleanup:
   if (ret == SL_STATUS_OK) {
     printf("[Set %d trace groups]\r\n", group_count);
   } else {
-    printf("[Error when setting trace level: %lu]\r\n", ret);
+    printf("[Error when setting trace level: %"PRIu32"]\r\n", ret);
   }
 
   app_wisun_cli_mutex_unlock();
@@ -3090,7 +3339,7 @@ void app_mode_switch(sl_cli_command_arg_t *arguments)
   // Attempt to convert the MAC address string
   res = app_util_get_mac_address(&address, address_str);
   if (res != SL_STATUS_OK) {
-    printf("[Failed: unable to parse the MAC address: %lu]\r\n", res);
+    printf("[Failed: unable to parse the MAC address: %"PRIu32"]\r\n", res);
     goto cleanup;
   }
 
@@ -3161,7 +3410,7 @@ void app_trigger_frame(sl_cli_command_arg_t *arguments)
 
   ret = sl_wisun_trigger_frame((sl_wisun_frame_type_t)frame_type);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to trigger frame %s: %lu]\r\n", value_str, ret);
+    printf("[Failed: unable to trigger frame %s: %"PRIu32"]\r\n", value_str, ret);
     goto cleanup;
   }
 
@@ -3218,7 +3467,7 @@ void app_getpeername(sl_cli_command_arg_t *arguments)
   app_wisun_cli_mutex_unlock();
 }
 
-static sl_status_t app_import_direct_connect_pmk(void)
+sl_status_t app_import_direct_connect_pmk(void)
 {
   psa_key_attributes_t pmk_key_attributes = psa_key_attributes_init();
   psa_key_location_t pmk_location = PSA_KEY_LOCATION_LOCAL_STORAGE;
@@ -3265,11 +3514,28 @@ error_handler:
 void app_set_direct_connect_state(sl_cli_command_arg_t *arguments)
 {
   sl_status_t status;
-  bool is_enabled;
+  bool is_enabled = false;
+  bool auto_mode = false;
+  const char *dc_id = NULL;
 
   app_wisun_cli_mutex_lock();
 
   is_enabled = (bool)sl_cli_get_argument_uint8(arguments, 0);
+  if (sl_cli_get_argument_count(arguments) >= 2) {
+    auto_mode = (bool)sl_cli_get_argument_uint8(arguments, 1);
+  }
+  if (sl_cli_get_argument_count(arguments) >= 3) {
+    dc_id = sl_cli_get_argument_string(arguments, 2);
+  }
+
+  if (is_enabled && auto_mode) {
+    memset(&app_direct_connect_auto_dc_id, 0, sizeof(app_direct_connect_auto_dc_id));
+    if (dc_id) {
+      strncpy((char *)app_direct_connect_auto_dc_id.id, dc_id, SL_WISUN_DC_ID_LEN - 1);
+    } else {
+      strncpy((char *)app_direct_connect_auto_dc_id.id, APP_DIRECT_CONNECT_AUTO_DC_ID_DEFAULT, SL_WISUN_DC_ID_LEN - 1);
+    }
+  }
 
   if (is_enabled && !app_direct_connect_state) {
     status = app_import_direct_connect_pmk();
@@ -3282,9 +3548,13 @@ void app_set_direct_connect_state(sl_cli_command_arg_t *arguments)
   if (status != SL_STATUS_OK) {
     printf("[Failed: sl_wisun_set_direct_connect_state: %"PRIu32"]\r\n", status);
   } else {
-    printf("[Direct Connect %s]\r\n", is_enabled ? "enabled" : "disabled");
+    printf("[Direct Connect %s, mode %s, DC ID %s]\r\n",
+           is_enabled ? "enabled" : "disabled",
+           auto_mode && is_enabled ? "auto (advertise/accept)" : "manual",
+           auto_mode && is_enabled ? (const char *)app_direct_connect_auto_dc_id.id : "not used");
+    app_direct_connect_state = is_enabled;
+    app_direct_connect_auto_mode = is_enabled && auto_mode;
   }
-  app_direct_connect_state = is_enabled;
 
 cleanup:
   app_wisun_cli_mutex_unlock();
@@ -3316,6 +3586,40 @@ cleanup:
   app_wisun_cli_mutex_unlock();
 }
 
+void app_advert_direct_connect_server_id(sl_cli_command_arg_t *arguments)
+{
+  uint32_t ret;
+  sl_status_t status;
+  in6_addr_t client_address;
+
+  sl_wisun_dc_id_t dc_id = {0};
+
+  app_wisun_cli_mutex_lock();
+
+  if (sl_cli_get_argument_count(arguments) == 2) {
+    ret = app_get_ip_address(&client_address, sl_cli_get_argument_string(arguments, 0));
+    if (ret != SL_STATUS_OK) {
+      printf("[Failed: invalid client address: %s]\r\n", sl_cli_get_argument_string(arguments, 0));
+      goto cleanup;
+    }
+    strncpy((char *)dc_id.id, sl_cli_get_argument_string(arguments, 1), SL_WISUN_DC_ID_LEN - 1);
+  } else {
+    printf("[Failed: missing parameters]\r\n");
+    goto cleanup;
+  }
+
+  status = sl_wisun_advert_direct_connect_server_id(&client_address, &dc_id);
+  if (status != SL_STATUS_OK) {
+    printf("[Failed: unable to advertise Direct Connect server ID: %"PRIu32"]\r\n", status);
+    goto cleanup;
+  }
+
+  printf("[Direct Connect server has sent its DC_ID: %s to client %s]\r\n", (char *) dc_id.id, app_get_ip_address_str(&client_address));
+
+cleanup:
+  app_wisun_cli_mutex_unlock();
+}
+
 void app_set_phy_sensitivity(sl_cli_command_arg_t *arguments)
 {
   sl_status_t ret;
@@ -3331,7 +3635,7 @@ void app_set_phy_sensitivity(sl_cli_command_arg_t *arguments)
   if (ret == SL_STATUS_OK) {
     printf("[PHY sensitivity set]\r\n");
   } else {
-    printf("[Failed: unable to set PHY sensitivity: %lu]\r\n", ret);
+    printf("[Failed: unable to set PHY sensitivity: %"PRIu32"]\r\n", ret);
   }
 
   app_wisun_cli_mutex_unlock();
@@ -3346,7 +3650,7 @@ void app_reset_duty_cycle(sl_cli_command_arg_t *arguments)
 
   status = sl_wisun_reset_regulation_duty_cycle();
   if (status != SL_STATUS_OK) {
-    printf("[Failed: unable to reset the duty cycle counters: %lu]\r\n", status);
+    printf("[Failed: unable to reset the duty cycle counters: %"PRIu32"]\r\n", status);
     goto cleanup;
   }
   printf("[Duty cycle counters reset]\r\n");
@@ -3385,14 +3689,14 @@ void app_set_event_log_filter(sl_cli_command_arg_t *arguments)
     // Attempt to convert the MAC address string
     ret = app_util_get_mac_address(&address, address_str);
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to parse the MAC address: %lu]\r\n", ret);
+      printf("[Failed: unable to parse the MAC address: %"PRIu32"]\r\n", ret);
       goto cleanup;
     }
   }
 
   ret = sl_wisun_set_event_filter(&address, event_mask);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set event log filter: %lu]\r\n", ret);
+    printf("[Failed: unable to set event log filter: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
@@ -3415,7 +3719,7 @@ void app_event_log(sl_cli_command_arg_t *arguments)
   // Attempt to convert the MAC address string
   ret = app_util_get_mac_address(&address, address_str);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to parse the MAC address: %lu]\r\n", ret);
+    printf("[Failed: unable to parse the MAC address: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
@@ -3435,7 +3739,7 @@ void app_clear_event_log_filter(sl_cli_command_arg_t *arguments)
 
   ret = sl_wisun_clear_event_filters();
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to clear event log filters: %lu]\r\n", ret);
+    printf("[Failed: unable to clear event log filters: %"PRIu32"]\r\n", ret);
   }
 
   app_wisun_cli_mutex_unlock();
@@ -3465,7 +3769,7 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
 
   switch (SL_BT_MSG_ID(evt->header)) {
     case sl_bt_evt_system_boot_id:
-      printf("[BLE: sl_bt_evt_system_boot_id: v%d.%d.%d+%08lx]\r\n",
+      printf("[BLE: sl_bt_evt_system_boot_id: v%d.%d.%d+%08"PRIx32"]\r\n",
         evt->data.evt_system_boot.major,
         evt->data.evt_system_boot.minor,
         evt->data.evt_system_boot.patch,
@@ -3494,7 +3798,7 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
         if (status == SL_STATUS_OK) {
           printf("[BLE: advertising resumed]\r\n");
         } else {
-          printf("[BLE: unable to resume advertising: %lu]\r\n", status);
+          printf("[BLE: unable to resume advertising: %"PRIu32"]\r\n", status);
         }
       }
       break;
@@ -3547,7 +3851,7 @@ void app_ble_start_adv(sl_cli_command_arg_t *arguments)
   // Create an advertising set
   status = sl_bt_advertiser_create_set(&app_ble_advertising_set_handle);
   if (status != SL_STATUS_OK) {
-    printf("[BLE: unable to create a advertising set: %lu]\r\n", status);
+    printf("[BLE: unable to create a advertising set: %"PRIu32"]\r\n", status);
     goto cleanup;
   }
 
@@ -3555,7 +3859,7 @@ void app_ble_start_adv(sl_cli_command_arg_t *arguments)
   status = sl_bt_legacy_advertiser_generate_data(app_ble_advertising_set_handle,
                                                  sl_bt_advertiser_general_discoverable);
   if (status != SL_STATUS_OK) {
-    printf("[BLE: unable to generate advertising data: %lu]\r\n", status);
+    printf("[BLE: unable to generate advertising data: %"PRIu32"]\r\n", status);
     goto cleanup;
   }
 
@@ -3567,18 +3871,18 @@ void app_ble_start_adv(sl_cli_command_arg_t *arguments)
     0,   // adv. duration
     0);  // max. num. adv. events
   if (status != SL_STATUS_OK) {
-    printf("[BLE: unable to set advertising timing: %lu]\r\n", status);
+    printf("[BLE: unable to set advertising timing: %"PRIu32"]\r\n", status);
     goto cleanup;
   }
 
   status = app_ble_start_advertising();
   if (status != SL_STATUS_OK) {
-    printf("[BLE: unable to start advertising: %lu]\r\n", status);
+    printf("[BLE: unable to start advertising: %"PRIu32"]\r\n", status);
     goto cleanup;
   }
 
   app_ble_is_advertiser_enabled = true;
-  printf("[BLE advertising started (min: %lu, max: %lu)]\r\n",
+  printf("[BLE advertising started (min: %"PRIu32", max: %"PRIu32")]\r\n",
     min_adv_interval, max_adv_interval);
 
 cleanup:
@@ -3602,7 +3906,7 @@ void app_ble_stop_adv(sl_cli_command_arg_t *arguments)
     // Stop advertising
     status = sl_bt_advertiser_stop(app_ble_advertising_set_handle);
     if (status != SL_STATUS_OK) {
-      printf("[BLE: unable to stop BLE advertising: %lu]\r\n", status);
+      printf("[BLE: unable to stop BLE advertising: %"PRIu32"]\r\n", status);
       goto cleanup;
     }
     app_ble_is_advertising = false;
@@ -3611,7 +3915,7 @@ void app_ble_stop_adv(sl_cli_command_arg_t *arguments)
   // Delete the advertising set
   status = sl_bt_advertiser_delete_set(app_ble_advertising_set_handle);
   if (status != SL_STATUS_OK) {
-    printf("[BLE: unable to delete the BLE advertising set: %lu]\r\n", status);
+    printf("[BLE: unable to delete the BLE advertising set: %"PRIu32"]\r\n", status);
     goto cleanup;
   }
 
@@ -3650,13 +3954,13 @@ void app_ble_start_scan(sl_cli_command_arg_t *arguments)
                                                    0,
                                                    sl_bt_scanner_filter_policy_basic_unfiltered);
   if (status != SL_STATUS_OK) {
-    printf("[BLE: unable to set scanning parameters: %lu]\r\n", status);
+    printf("[BLE: unable to set scanning parameters: %"PRIu32"]\r\n", status);
     goto cleanup;
   }
 
   status = sl_bt_scanner_start(sl_bt_scanner_scan_phy_1m, sl_bt_scanner_discover_observation);
   if (status != SL_STATUS_OK) {
-    printf("[Failed: unable to start BLE scanning: %lu]\r\n", status);
+    printf("[Failed: unable to start BLE scanning: %"PRIu32"]\r\n", status);
     goto cleanup;
   }
 
@@ -3683,7 +3987,7 @@ void app_ble_stop_scan(sl_cli_command_arg_t *arguments)
 
   status = sl_bt_scanner_stop();
   if (status != SL_STATUS_OK) {
-    printf("[Failed: unable to stop BLE scanning: %lu]\r\n", status);
+    printf("[Failed: unable to stop BLE scanning: %"PRIu32"]\r\n", status);
     goto cleanup;
   }
 
@@ -3696,3 +4000,140 @@ cleanup:
 }
 
 #endif
+
+void app_set_dhcpv6_vendor_data(sl_cli_command_arg_t *arguments)
+{
+  sl_status_t ret;
+  uint32_t enterprise_number;
+  uint8_t *vendor_data_ptr;
+  size_t vendor_data_len;
+
+  app_wisun_cli_mutex_lock();
+
+  enterprise_number = sl_cli_get_argument_uint32(arguments, 0);
+  vendor_data_ptr = sl_cli_get_argument_hex(arguments, 1, &vendor_data_len);
+
+  ret = sl_wisun_set_dhcpv6_vendor_data(enterprise_number, vendor_data_ptr, vendor_data_len);
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unable to set DHCPv6 client vendor data: %"PRIu32"]\r\n", ret);
+  } else {
+    printf("[DHCPv6 client vendor data set]\r\n");
+  }
+
+  app_wisun_cli_mutex_unlock();
+}
+
+void app_set_last_gasp(sl_cli_command_arg_t *arguments)
+{
+  sl_status_t ret;
+  bool enable;
+
+  app_wisun_cli_mutex_lock();
+
+  enable = (bool)sl_cli_get_argument_uint8(arguments, 0);
+  ret = sl_wisun_set_last_gasp(enable);
+  if (ret != SL_STATUS_OK) {
+    printf("[Failed: unable to set Last Gasp: %"PRIu32"]\r\n", ret);
+  } else {
+    printf("[%s Last Gasp]\r\n", enable ? "Entered" : "Left");
+  }
+
+  app_wisun_cli_mutex_unlock();
+}
+
+void app_set_first_breath(sl_cli_command_arg_t *arguments)
+{
+  sl_status_t status;
+  bool enable;
+
+  app_wisun_cli_mutex_lock();
+
+  enable = (bool)sl_cli_get_argument_uint8(arguments, 0);
+  status = sl_wisun_set_first_breath(enable);
+  if (status != SL_STATUS_OK) {
+    printf("[Failed: unable to set First Breath: %"PRIu32"]\r\n", status);
+  } else {
+    printf("[First Breath %s]\r\n", enable ? "enabled" : "disabled");
+  }
+
+  app_wisun_cli_mutex_unlock();
+}
+
+static void update_app_settings(sl_wisun_option_id_t option_id, uint32_t option_value)
+{
+  // Awkward bit of glue for options that are also app settings
+  switch (option_id) {
+    case SL_WISUN_OPTION_TRAFFIC_LOWPAN_MTU_BYTES:
+      app_settings_wisun.lowpan_mtu = (uint16_t)option_value;
+      break;
+    case SL_WISUN_OPTION_TRAFFIC_IPV6_MRU_BYTES:
+      app_settings_wisun.ipv6_mru = (uint16_t)option_value;
+      break;
+    case SL_WISUN_OPTION_TRAFFIC_MAX_EDFE_FRAGMENT_COUNT:
+      app_settings_wisun.max_edfe_fragment_count = (uint8_t)option_value;
+      break;
+    case SL_WISUN_OPTION_MAC_MIN_BE:
+      app_settings_mac.min_be = (uint8_t)option_value;
+      break;
+    case SL_WISUN_OPTION_MAC_MAX_BE:
+      app_settings_mac.max_be = (uint8_t)option_value;
+      break;
+    case SL_WISUN_OPTION_MAC_BACKOFF_PERIOD_US:
+      app_settings_mac.backoff_period_us = (uint16_t)option_value;
+      break;
+    case SL_WISUN_OPTION_MAC_MAX_CCA_RETRIES:
+      app_settings_mac.max_cca_retries = (uint8_t)option_value;
+      break;
+    case SL_WISUN_OPTION_MAC_MAX_FRAME_RETRIES:
+      app_settings_mac.max_frame_retries = (uint8_t)option_value;
+      break;
+    default:
+      break;
+  }
+}
+
+void app_set_option(sl_cli_command_arg_t *arguments)
+{
+  sl_status_t status;
+  sl_wisun_option_id_t option_id;
+  uint32_t option_value;
+  uint16_t option_value_len;
+
+  app_wisun_cli_mutex_lock();
+
+  option_id = (sl_wisun_option_id_t)sl_cli_get_argument_uint32(arguments, 0);
+  option_value = sl_cli_get_argument_uint32(arguments, 1);
+  option_value_len = sl_cli_get_argument_uint16(arguments, 2);
+
+  if (option_value_len > sizeof(option_value)) {
+    printf("[Failed: option_value_len > %u]\r\n", sizeof(option_value));
+    app_wisun_cli_mutex_unlock();
+    return;
+  }
+
+  status = sl_wisun_set_option(option_id, &option_value, option_value_len);
+  if (status != SL_STATUS_OK) {
+    printf("[Failed: unable to set option: %"PRIu32"]\r\n", status);
+  } else {
+    printf("[Option set]\r\n");
+    update_app_settings(option_id, option_value);
+  }
+
+  app_wisun_cli_mutex_unlock();
+}
+
+void app_reset_parameters(void)
+{
+  sl_status_t status;
+
+  app_wisun_cli_mutex_lock();
+
+  status = sl_wisun_reset_parameters();
+  if (status != SL_STATUS_OK) {
+    printf("[Failed: unable to reset parameters: %"PRIu32"]\r\n", status);
+  } else {
+    printf("[Parameters reset]\r\n");
+  }
+
+  app_wisun_cli_mutex_unlock();
+}

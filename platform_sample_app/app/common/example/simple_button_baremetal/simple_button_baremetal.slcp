@@ -39,5 +39,9 @@ tag:
   - hardware:component:led:1+
   - hardware:component:button:1+
   - hardware:!shared:button:led
+  - hwfilter:board:simple_led:led0
+  - hwfilter:board:simple_button:btn0
+  - hwfilter:!board:hardware:shares:button:led
+  - hwfilter:device:device_series_2
 define:
   - name: DEBUG_EFM

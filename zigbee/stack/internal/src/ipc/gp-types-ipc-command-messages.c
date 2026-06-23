@@ -3,7 +3,7 @@
  * @brief internal wrappers for 'gp-types' ipc commands
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -112,6 +112,7 @@ sl_status_t sl_zigbee_d_gp_send(bool action,
 
   if (gpdAsduLength > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector gpdAsdu length exceeds expected maximum
+    return msg.data.d_gp_send.response.result;
   }
 
   memmove(msg.data.d_gp_send.request.gpdAsdu, gpdAsdu, sizeof(uint8_t) * gpdAsduLength);
@@ -156,6 +157,7 @@ sli_buffer_manager_buffer_t sl_zigbee_gp_add_gp_tx_queue_entry_with_payload(sl_z
 
   if (dataLength > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector data length exceeds expected maximum
+    return msg.data.gp_add_gp_tx_queue_entry_with_payload.response.result;
   }
 
   memmove(msg.data.gp_add_gp_tx_queue_entry_with_payload.request.data, data, sizeof(uint8_t) * dataLength);
@@ -168,6 +170,7 @@ sli_buffer_manager_buffer_t sl_zigbee_gp_add_gp_tx_queue_entry_with_payload(sl_z
 
   if (dataLength > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector data length exceeds expected maximum
+    return msg.data.gp_add_gp_tx_queue_entry_with_payload.response.result;
   }
 
   memmove(data, msg.data.gp_add_gp_tx_queue_entry_with_payload.request.data, sizeof(uint8_t) * dataLength);
@@ -194,6 +197,7 @@ sli_buffer_manager_buffer_t sl_zigbee_gp_get_tx_queue_entry_from_queue(sl_zigbee
 
   if (allocatedDataLength > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector data length exceeds expected maximum
+    return msg.data.gp_get_tx_queue_entry_from_queue.response.result;
   }
 
   memmove(msg.data.gp_get_tx_queue_entry_from_queue.request.data, data, sizeof(uint8_t) * allocatedDataLength);
@@ -211,6 +215,7 @@ sli_buffer_manager_buffer_t sl_zigbee_gp_get_tx_queue_entry_from_queue(sl_zigbee
 
   if (allocatedDataLength > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector data length exceeds expected maximum
+    return msg.data.gp_get_tx_queue_entry_from_queue.response.result;
   }
 
   memmove(data, msg.data.gp_get_tx_queue_entry_from_queue.request.data, sizeof(uint8_t) * allocatedDataLength);
@@ -236,6 +241,7 @@ sl_status_t sl_zigbee_gp_get_tx_queue_entry_from_queue_index(uint8_t index,
 
   if ((*payload_len) > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector payload length exceeds expected maximum
+    return msg.data.gp_get_tx_queue_entry_from_queue_index.response.result;
   }
 
   memmove(msg.data.gp_get_tx_queue_entry_from_queue_index.request.payload, payload, sizeof(uint8_t) * (*payload_len));
@@ -252,6 +258,7 @@ sl_status_t sl_zigbee_gp_get_tx_queue_entry_from_queue_index(uint8_t index,
 
   if ((*payload_len) > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector payload length exceeds expected maximum
+    return msg.data.gp_get_tx_queue_entry_from_queue_index.response.result;
   }
 
   memmove(payload, msg.data.gp_get_tx_queue_entry_from_queue_index.request.payload, sizeof(uint8_t) * (*payload_len));

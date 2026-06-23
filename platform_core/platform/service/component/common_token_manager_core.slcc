@@ -41,6 +41,9 @@ define:
 - name: SL_TOKEN_MANAGER_BACKEND_EXT_FLASH
   value: 1
   condition: [device_series_3]
+- name: SL_TOKEN_MANAGER_FORMAT_LEGACY
+  value: 1
+  condition: [device_series_2]
 source:
 - path: platform/service/token_manager/src/sl_token_manager_api.c
 - path: platform/service/token_manager/src/sli_token_manager_internal.c

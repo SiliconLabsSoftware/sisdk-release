@@ -35,11 +35,12 @@
 #include "sl_wisun_version.h"
 #include "sl_wisun_keychain.h"
 #include "sl_rail_features.h"
-#include "socket/socket.h"
+#include "sys/socket.h"
+#include "netinet/in.h"
+#include "sys/select.h"
 #include "arpa/inet.h"
 #include "sl_wisun_ip6string.h"
 #include "sl_select_util.h"
-#include "select.h"
 #include "sl_main_init.h"
 #include "sl_wisun_crash_handler.h"
 
@@ -160,6 +161,8 @@ typedef union {
   int32_t unicast_hop_limit;
   /// Socket multicast hop limit
   int32_t multicast_hop_limit;
+  /// Socket traffic class
+  int32_t traffic_class;
 } SL_ATTRIBUTE_PACKED app_socket_option_data_t;
 SL_PACK_END()
 
@@ -186,6 +189,8 @@ static sl_status_t app_socket_multicast_hop_limit_handler(app_socket_option_data
 
 static sl_status_t app_socket_multicast_group_handler(app_socket_option_data_t *option_data,
                                                       const char *option_data_str);
+static sl_status_t app_socket_traffic_class_handler(app_socket_option_data_t *option_data,
+                                                    const char *option_data_str);
 
 typedef struct {
   char *option;
@@ -205,6 +210,7 @@ static const app_socket_option_t app_set_socket_options[] =
   { "IPV6_MULTICAST_HOPS", IPV6_MULTICAST_HOPS, IPPROTO_IPV6, MEMBER_SIZE(app_socket_option_data_t, multicast_hop_limit), app_socket_multicast_hop_limit_handler },
   { "IPV6_JOIN_GROUP", IPV6_JOIN_GROUP, IPPROTO_IPV6, MEMBER_SIZE(app_socket_option_data_t, multicast_group), app_socket_multicast_group_handler },
   { "IPV6_LEAVE_GROUP", IPV6_LEAVE_GROUP, IPPROTO_IPV6, MEMBER_SIZE(app_socket_option_data_t, multicast_group), app_socket_multicast_group_handler },
+  { "IPV6_TRAFFIC_CLASS", IPV6_TCLASS, IPPROTO_IPV6, MEMBER_SIZE(app_socket_option_data_t, traffic_class), app_socket_traffic_class_handler },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -214,6 +220,7 @@ static const app_socket_option_t app_get_socket_options[] =
   { "SO_SNDBUF", SO_SNDBUF, SOL_SOCKET, MEMBER_SIZE(app_socket_option_data_t, send_buffer_limit), NULL },
   { "IPV6_UNICAST_HOPS", IPV6_UNICAST_HOPS, IPPROTO_IPV6, MEMBER_SIZE(app_socket_option_data_t, unicast_hop_limit), NULL },
   { "IPV6_MULTICAST_HOPS", IPV6_MULTICAST_HOPS, IPPROTO_IPV6, MEMBER_SIZE(app_socket_option_data_t, multicast_hop_limit), NULL },
+  { "IPV6_TRAFFIC_CLASS", IPV6_TCLASS, IPPROTO_IPV6, MEMBER_SIZE(app_socket_option_data_t, traffic_class), NULL },
   { NULL, 0, 0, 0, NULL }
 };
 
@@ -285,6 +292,14 @@ static bool app_started;
 static int app_dhcpv6_socket = SOCKET_INVALID_ID;
 static char crash_buff[300] = { 0 };
 
+typedef struct
+{
+  sl_slist_node_t node;
+  void *ptr;
+} app_heap_entry_t;
+
+static sl_slist_node_t *app_heap_entry_list;
+
 static void app_check_crash(void)
 {
   const sl_wisun_crash_t *crash = sl_wisun_crash_handler_read();
@@ -295,24 +310,24 @@ static void app_check_crash(void)
         sprintf(crash_buff, "ASSERT in %s on line %u", crash->u.assert.file, crash->u.assert.line);
         break;
       case SL_WISUN_CRASH_TYPE_RAIL_ASSERT:
-        sprintf(crash_buff, "RAIL ASSERT %lu", crash->u.rail_assert.error_code);
+        sprintf(crash_buff, "RAIL ASSERT %"PRIu32"", crash->u.rail_assert.error_code);
         break;
       case SL_WISUN_CRASH_TYPE_STACK_OVERFLOW:
         sprintf(crash_buff, "STACK OVERFLOW failure in task \"%s\"", crash->u.stack_overflow.task);
         break;
       case SL_WISUN_CRASH_TYPE_STACK_PROTECTOR:
-        sprintf(crash_buff, "STACK PROTECTOR failure in 0x%08lx", crash->u.stack_protector.lr);
+        sprintf(crash_buff, "STACK PROTECTOR failure in 0x%08"PRIx32, crash->u.stack_protector.lr);
         break;
       case SL_WISUN_CRASH_TYPE_FAULT:
-        sprintf(crash_buff, "FAULT CFSR: 0x%08lx, R0: 0x%08lx, R1: 0x%08lx, R2: 0x%08lx, R3: 0x%08lx "
-                            "R12: 0x%08lx, LR: 0x%08lx, RET: 0x%08lx, XPSR: 0x%08lx "
-                            "HFSR: 0x%08lx, MMFAR: 0x%08lx, BFAR: 0x%08lx, AFSR: 0x%08lx",
+        sprintf(crash_buff, "FAULT CFSR: 0x%08"PRIx32", R0: 0x%08"PRIx32", R1: 0x%08"PRIx32", R2: 0x%08"PRIx32", R3: 0x%08"PRIx32" "
+                            "R12: 0x%08"PRIx32", LR: 0x%08"PRIx32", RET: 0x%08"PRIx32", XPSR: 0x%08"PRIx32" "
+                            "HFSR: 0x%08"PRIx32", MMFAR: 0x%08"PRIx32", BFAR: 0x%08"PRIx32", AFSR: 0x%08"PRIx32,
                             crash->u.fault.cfsr, crash->u.fault.r0, crash->u.fault.r1, crash->u.fault.r2, crash->u.fault.r3,
                             crash->u.fault.r12, crash->u.fault.lr, crash->u.fault.return_address, crash->u.fault.xpsr,
                             crash->u.fault.hfsr, crash->u.fault.mmfar, crash->u.fault.bfar, crash->u.fault.afsr);
         break;
       case SL_WISUN_CRASH_TYPE_CRUN_ERROR:
-        sprintf(crash_buff, "C-RUN error 0x%08lx", crash->u.crun_error.error_code);
+        sprintf(crash_buff, "C-RUN error 0x%08"PRIx32, crash->u.crun_error.error_code);
         break;
       case SL_WISUN_CRASH_TYPE_EXIT:
         sprintf(crash_buff, "EXIT status %d", crash->u.exit.status);
@@ -441,7 +456,7 @@ static void app_handle_ping_socket_data(sl_wisun_evt_t *evt)
   tick_count = sl_sleeptimer_get_tick_count();
   time_ms = sl_sleeptimer_tick_to_ms(tick_count - app_ping_tick_count);
 
-  printf("%u bytes from %s: icmp_seq=%u time=%lu ms\r\n",
+  printf("%u bytes from %s: icmp_seq=%u time=%"PRIu32" ms\r\n",
          evt->evt.socket_data.data_length,
          app_get_ip_address_str(&evt->evt.socket_data.remote_address),
          htons(packet->sequence_number),
@@ -453,7 +468,7 @@ static void app_handle_socket_data(sl_wisun_evt_t *evt)
   app_printable_data_ctx_t printable_data_ctx;
   char *printable_data;
 
-  printf("[Data from %s (%u): %lu,%u",
+  printf("[Data from %s (%u): %"PRIi32",%u",
          app_get_ip_address_str(&evt->evt.socket_data.remote_address),
          ntohs(evt->evt.socket_data.remote_port),
          evt->evt.socket_data.socket_id, evt->evt.socket_data.data_length);
@@ -488,7 +503,7 @@ static void app_handle_socket_data_available_ind(sl_wisun_evt_t *evt)
   if (!entry) {
     return;
   }
-  printf("[Data available: %lu,%u]\r\n",
+  printf("[Data available: %"PRIi32",%u]\r\n",
          evt->evt.socket_data_available.socket_id,
          evt->evt.socket_data_available.data_length);
 }
@@ -504,11 +519,11 @@ static void app_handle_socket_connected_ind(sl_wisun_evt_t *evt)
 
   if (evt->evt.socket_connected.status == SL_STATUS_OK) {
     entry->socket_state = APP_SOCKET_STATE_ACTIVE;
-    printf("[Opened: %lu]\r\n", evt->evt.socket_connected.socket_id);
+    printf("[Opened: %"PRIi32"]\r\n", evt->evt.socket_connected.socket_id);
   } else {
     close(entry->socket_id);
     app_socket_free_entry(entry);
-    printf("[Open failed: %lu]\r\n", evt->evt.socket_connected.status);
+    printf("[Open failed: %"PRIu32"]\r\n", evt->evt.socket_connected.status);
   }
 }
 
@@ -519,7 +534,7 @@ static void app_handle_socket_connection_available_ind(sl_wisun_evt_t *evt)
 
   uint32_t addr_length = sizeof(sockaddr_in6_t);
 
-  printf("[Socket connection available: %lu]\r\n",
+  printf("[Socket connection available: %"PRIi32"]\r\n",
          evt->evt.socket_connection_available.socket_id);
 
   entry = app_socket_alloc_entry();
@@ -563,7 +578,7 @@ static void app_handle_socket_closing_ind(sl_wisun_evt_t *evt)
 
   entry->socket_state = APP_SOCKET_STATE_CLOSING;
 
-  printf("[Closing: %lu]\r\n", evt->evt.socket_closing.socket_id);
+  printf("[Closing: %"PRIi32"]\r\n", evt->evt.socket_closing.socket_id);
 }
 
 
@@ -577,9 +592,11 @@ static void app_handle_socket_data_sent(sl_wisun_evt_t *evt)
   }
 
   if (evt->evt.socket_data_sent.status == SL_STATUS_OK) {
-    printf("[Data sent: %lu,%lu]\r\n", evt->evt.socket_data_sent.socket_id, evt->evt.socket_data_sent.socket_space_left);
+    printf("[Data sent: %"PRIi32",%"PRIu32"]\r\n",
+           evt->evt.socket_data_sent.socket_id, evt->evt.socket_data_sent.socket_space_left);
   } else {
-    printf("[Failed: data sent, error %lu (socket %lu)]\r\n", evt->evt.socket_data_sent.status, evt->evt.socket_data_sent.socket_id);
+    printf("[Failed: data sent, error %"PRIu32" (socket %"PRIi32")]\r\n",
+           evt->evt.socket_data_sent.status, evt->evt.socket_data_sent.socket_id);
   }
 }
 
@@ -598,7 +615,8 @@ static void app_handle_regulation_tx_level_ind(sl_wisun_evt_t *evt)
   ptr = app_util_get_enum_by_integer(app_regulation_tx_level_enum,
                                      evt->evt.regulation_tx_level.tx_level);
   if (ptr) {
-    printf("[Regulation TX level: %s (%lu) (%lu ms)]\r\n", ptr->value_str, ptr->value, evt->evt.regulation_tx_level.tx_duration_ms);
+    printf("[Regulation TX level: %s (%"PRIu32") (%"PRIu32" ms)]\r\n",
+           ptr->value_str, ptr->value, evt->evt.regulation_tx_level.tx_duration_ms);
   }
 }
 
@@ -627,8 +645,14 @@ static void app_handle_br_routing_table_update_ind(sl_wisun_evt_t *evt)
       printf("[Routing table update: route changed]\r\n");
       break;
     default:
-      printf("[Routing table update: unknown flag %lu]\r\n", evt->evt.br_routing_table_update.event);
+      printf("[Routing table update: unknown flag %"PRIu32"]\r\n",
+             evt->evt.br_routing_table_update.event);
   }
+}
+
+static void app_handle_error_ind(sl_wisun_evt_t *evt)
+{
+  printf("[Error: %"PRIu32"]\r\n", evt->evt.error.status);
 }
 
 static sl_status_t channel_spacing_khz_to_id(uint32_t channel_spacing_khz, uint8_t *channel_spacing_id)
@@ -712,16 +736,11 @@ cleanup:
 static sl_status_t app_service_task_start(void)
 {
   osThreadId_t service_task_id;
-  osThreadAttr_t task_attribute = {
-      APP_SERVICE_TASK_NAME,
-      osThreadDetached,
-      NULL,
-      0,
-      NULL,
-      (APP_SERVICE_TASK_STACK_SIZE * sizeof(void *)) & 0xFFFFFFF8u,
-      APP_SERVICE_TASK_PRIORITY,
-      0,
-      0
+  const osThreadAttr_t task_attribute = {
+    .name = APP_SERVICE_TASK_NAME,
+    .attr_bits = osThreadDetached,
+    .stack_size = (APP_SERVICE_TASK_STACK_SIZE * sizeof(void *)) & 0xFFFFFFF8u,
+    .priority = APP_SERVICE_TASK_PRIORITY
   };
   service_task_id = osThreadNew(app_service_task, NULL, &task_attribute);
   if (!service_task_id) {
@@ -760,6 +779,35 @@ cleanup:
   return SL_STATUS_FAIL;
 }
 #endif
+
+static sl_status_t app_set_options(void)
+{
+  struct {
+    sl_wisun_option_id_t id;
+    const void *val;
+    uint32_t val_len;
+  } opts[] = {
+    { SL_WISUN_OPTION_TRAFFIC_LOWPAN_MTU_BYTES,        &app_settings_wisun.lowpan_mtu,              sizeof(app_settings_wisun.lowpan_mtu) },
+    { SL_WISUN_OPTION_TRAFFIC_IPV6_MRU_BYTES,          &app_settings_wisun.ipv6_mru,                sizeof(app_settings_wisun.ipv6_mru) },
+    { SL_WISUN_OPTION_TRAFFIC_MAX_EDFE_FRAGMENT_COUNT, &app_settings_wisun.max_edfe_fragment_count, sizeof(app_settings_wisun.max_edfe_fragment_count) },
+    { SL_WISUN_OPTION_MAC_MIN_BE,                      &app_settings_mac.min_be,                    sizeof(app_settings_mac.min_be) },
+    { SL_WISUN_OPTION_MAC_MAX_BE,                      &app_settings_mac.max_be,                    sizeof(app_settings_mac.max_be) },
+    { SL_WISUN_OPTION_MAC_BACKOFF_PERIOD_US,           &app_settings_mac.backoff_period_us,         sizeof(app_settings_mac.backoff_period_us) },
+    { SL_WISUN_OPTION_MAC_MAX_CCA_RETRIES,             &app_settings_mac.max_cca_retries,           sizeof(app_settings_mac.max_cca_retries) },
+    { SL_WISUN_OPTION_MAC_MAX_FRAME_RETRIES,           &app_settings_mac.max_frame_retries,         sizeof(app_settings_mac.max_frame_retries) },
+  };
+  sl_status_t ret;
+
+  for (uint32_t i = 0; i < sizeof(opts) / sizeof(opts[0]); i++) {
+    ret = sl_wisun_set_option(opts[i].id, opts[i].val, opts[i].val_len);
+    if (ret != SL_STATUS_OK) {
+      printf("[Failed: unable to set option %d, status: %"PRIu32"]\r\n", opts[i].id, ret);
+      return ret;
+    }
+  }
+
+  return SL_STATUS_OK;
+}
 
 static void app_start(sl_wisun_phy_config_type_t phy_config_type)
 {
@@ -823,7 +871,7 @@ static void app_start(sl_wisun_phy_config_type_t phy_config_type)
 
   status = sl_wisun_set_rx_fifo_size(app_settings_wisun.rx_fifo_size);
   if (status != SL_STATUS_OK) {
-    printf("[Failed: unable to set RX FIFO size: %lu]\r\n", status);
+    printf("[Failed: unable to set RX FIFO size: %"PRIu32"]\r\n", status);
   }
 
   status = sl_wisun_set_tx_power_ddbm(app_settings_wisun.tx_power_ddbm);
@@ -834,40 +882,48 @@ static void app_start(sl_wisun_phy_config_type_t phy_config_type)
 
   status = sl_wisun_set_fan_tps_version(app_settings_wisun.fan_tps_version);
   if (status != SL_STATUS_OK) {
-    printf("[Failed: unable to set FAN TPS version: %lu]\r\n", status);
+    printf("[Failed: unable to set FAN TPS version: %"PRIu32"]\r\n", status);
     goto cleanup;
   }
 
-  switch (app_settings_wisun.network_size) {
-    case SL_WISUN_NETWORK_SIZE_SMALL:
-      params = SL_WISUN_BR_PARAMS_PROFILE_SMALL;
-      break;
-    case SL_WISUN_NETWORK_SIZE_MEDIUM:
-      params = SL_WISUN_BR_PARAMS_PROFILE_MEDIUM;
-      break;
-    case SL_WISUN_NETWORK_SIZE_LARGE:
-      params = SL_WISUN_BR_PARAMS_PROFILE_LARGE;
-      break;
-    case SL_WISUN_NETWORK_SIZE_TEST:
-      params = SL_WISUN_BR_PARAMS_PROFILE_TEST;
-      break;
-    default:
-      printf("[Failed: unsupported network size %"PRIu8"]\r\n", app_settings_wisun.network_size);
-      status = SL_STATUS_INVALID_CONFIGURATION;
+  // NOTE: Automatic network size is the default in the stack.
+  if (app_settings_wisun.network_size != SL_WISUN_NETWORK_SIZE_AUTOMATIC) {
+    switch (app_settings_wisun.network_size) {
+      case SL_WISUN_NETWORK_SIZE_SMALL:
+        params = SL_WISUN_BR_PARAMS_PROFILE_SMALL;
+        break;
+      case SL_WISUN_NETWORK_SIZE_MEDIUM:
+        params = SL_WISUN_BR_PARAMS_PROFILE_MEDIUM;
+        break;
+      case SL_WISUN_NETWORK_SIZE_LARGE:
+        params = SL_WISUN_BR_PARAMS_PROFILE_LARGE;
+        break;
+      case SL_WISUN_NETWORK_SIZE_TEST:
+        params = SL_WISUN_BR_PARAMS_PROFILE_TEST;
+        break;
+      default:
+        printf("[Failed: unsupported network size %"PRIu8"]\r\n", app_settings_wisun.network_size);
+        status = SL_STATUS_INVALID_CONFIGURATION;
+        goto cleanup;
+    }
+    params.traffic.lowpan_mtu = app_settings_wisun.lowpan_mtu;
+    params.traffic.ipv6_mru = app_settings_wisun.ipv6_mru;
+    params.traffic.max_edfe_fragment_count = app_settings_wisun.max_edfe_fragment_count;
+    params.mac.min_be = app_settings_mac.min_be;
+    params.mac.max_be = app_settings_mac.max_be;
+    params.mac.backoff_period_us = app_settings_mac.backoff_period_us;
+    params.mac.max_cca_retries = app_settings_mac.max_cca_retries;
+    params.mac.max_frame_retries = app_settings_mac.max_frame_retries;
+    status = sl_wisun_br_set_connection_parameters(&params);
+    if (status != SL_STATUS_OK) {
+      printf("[Failed: unable to set parameters (%"PRIu32")]\r\n", status);
       goto cleanup;
-  }
-  params.traffic.lowpan_mtu = app_settings_wisun.lowpan_mtu;
-  params.traffic.ipv6_mru = app_settings_wisun.ipv6_mru;
-  params.traffic.max_edfe_fragment_count = app_settings_wisun.max_edfe_fragment_count;
-  params.mac.min_be = app_settings_mac.min_be;
-  params.mac.max_be = app_settings_mac.max_be;
-  params.mac.backoff_period_us = app_settings_mac.backoff_period_us;
-  params.mac.max_cca_retries = app_settings_mac.max_cca_retries;
-  params.mac.max_frame_retries = app_settings_mac.max_frame_retries;
-  status = sl_wisun_br_set_connection_parameters(&params);
-  if (status != SL_STATUS_OK) {
-    printf("[Failed: unable to set parameters (%"PRIu32")]\r\n", status);
-    goto cleanup;
+    }
+  } else {
+    status = app_set_options();
+    if (status != SL_STATUS_OK) {
+      goto cleanup;
+    }
   }
 
   status = sl_wisun_config_neighbor_table(app_settings_wisun.max_child_count, app_settings_wisun.max_neighbor_count, app_settings_wisun.max_security_neighbor_count);
@@ -941,7 +997,7 @@ static void app_start(sl_wisun_phy_config_type_t phy_config_type)
     goto cleanup;
   }
 
-  certificate_options = SL_WISUN_CERTIFICATE_OPTION_IS_REF;
+  certificate_options = SL_WISUN_CERTIFICATE_OPTION_NONE;
   for (idx = 0; idx < trustedca_count; ++idx) {
     trustedca = sl_wisun_keychain_get_trustedca(idx);
     if (!trustedca) {
@@ -980,7 +1036,7 @@ static void app_start(sl_wisun_phy_config_type_t phy_config_type)
     printf("[Using built-in device credentials]\r\n");
   }
 
-  status = sl_wisun_set_br_device_certificate(SL_WISUN_CERTIFICATE_OPTION_IS_REF | SL_WISUN_CERTIFICATE_OPTION_HAS_KEY,
+  status = sl_wisun_set_br_device_certificate(SL_WISUN_CERTIFICATE_OPTION_NONE,
                                               credential->certificate.data_length,
                                               credential->certificate.data);
   if (status != SL_STATUS_OK) {
@@ -989,7 +1045,7 @@ static void app_start(sl_wisun_phy_config_type_t phy_config_type)
   }
 
   if (credential->pk.type == SL_WISUN_KEYCHAIN_KEY_TYPE_PLAINTEXT) {
-    status = sl_wisun_set_device_private_key(SL_WISUN_PRIVATE_KEY_OPTION_IS_REF,
+    status = sl_wisun_set_device_private_key(SL_WISUN_PRIVATE_KEY_OPTION_NONE,
                                              credential->pk.u.plaintext.data_length,
                                              credential->pk.u.plaintext.data);
   } else {
@@ -1265,7 +1321,7 @@ void app_stop(sl_cli_command_arg_t *arguments)
 
   ret = sl_wisun_br_stop();
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to stop Border Router: %lu]\r\n", ret);
+    printf("[Failed: unable to stop Border Router: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
@@ -1291,7 +1347,9 @@ void app_about(void)
 
   printf("%s\r\n", app_name);
   printf("Versions:\r\n");
-#if defined(__GNUC__) && defined(__GNUC_MINOR__) && defined(__GNUC_PATCHLEVEL__)
+#if defined(__clang__) && defined(__clang_major__) && defined(__clang_minor__) && defined(__clang_patchlevel__)
+  printf("  * Compiler (LLVM): %u.%u.%u\r\n", __clang_major__, __clang_minor__, __clang_patchlevel__);
+#elif defined(__GNUC__) && defined(__GNUC_MINOR__) && defined(__GNUC_PATCHLEVEL__)
   printf("  * Compiler (GCC): %u.%u.%u\r\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
 #endif
 #if defined(__ICCARM__) && defined(__VER__)
@@ -1446,7 +1504,7 @@ cleanup:
   if (ret == SL_STATUS_OK) {
     printf("[Set %d trace groups]\r\n", group_count);
   } else {
-    printf("[Error when setting trace level: %lu]\r\n", ret);
+    printf("[Error when setting trace level: %"PRIu32"]\r\n", ret);
   }
 
   app_wisun_cli_mutex_unlock();
@@ -1463,7 +1521,7 @@ void app_clear_credential_cache(sl_cli_command_arg_t *arguments)
   if (ret == SL_STATUS_OK) {
     printf("[Credential cache cleared]\r\n");
   } else {
-    printf("[Credential cache clear failed: %lu]\r\n", ret);
+    printf("[Credential cache clear failed: %"PRIu32"]\r\n", ret);
   }
 
   app_wisun_cli_mutex_unlock();
@@ -1506,7 +1564,7 @@ cleanup:
   if (ret == SL_STATUS_OK) {
     printf("[Statistics reset]\r\n");
   } else {
-    printf("[Statistics reset failed: %lu]\r\n", ret);
+    printf("[Statistics reset failed: %"PRIu32"]\r\n", ret);
   }
 
   app_wisun_cli_mutex_unlock();
@@ -1525,7 +1583,7 @@ void app_set_lfn_support(sl_cli_command_arg_t *arguments)
 
   ret = sl_wisun_br_set_lfn_support(lfn_limit, lfn_support_pan);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set LFN support: %lu]\r\n", ret);
+    printf("[Failed: unable to set LFN support: %"PRIu32"]\r\n", ret);
   } else {
     printf("[LFN support set]\r\n");
   }
@@ -1549,7 +1607,7 @@ void app_set_dhcp_vendor_data(sl_cli_command_arg_t *arguments)
 
   ret = sl_wisun_br_dhcpv6_set_vendor_data(enterprise_number, (uint16_t)data_length, data);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set DHCP Vendor data: %lu]\r\n", ret);
+    printf("[Failed: unable to set DHCP Vendor data: %"PRIu32"]\r\n", ret);
   } else {
     printf("[DHCP Vendor data set]\r\n");
   }
@@ -1580,7 +1638,7 @@ void app_pan_defect_advertise(sl_cli_command_arg_t *arguments)
                                          min_scan_duration_s,
                                          max_scan_duration_s);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to set PAN Defect: %lu]\r\n", ret);
+    printf("[Failed: unable to set PAN Defect: %"PRIu32"]\r\n", ret);
   } else {
     printf("[PAN Defect advertisement %s]\r\n", defect_advertise ? "started" : "cancelled");
   }
@@ -1614,7 +1672,7 @@ void app_mode_switch(sl_cli_command_arg_t *arguments)
   // Attempt to convert the MAC address string
   res = app_util_get_mac_address(&address, address_str);
   if (res != SL_STATUS_OK) {
-    printf("[Failed: unable to parse the MAC address: %lu]\r\n", res);
+    printf("[Failed: unable to parse the MAC address: %"PRIu32"]\r\n", res);
     goto cleanup;
   }
 
@@ -1761,16 +1819,11 @@ static void app_task(void *argument)
 void app_init(void)
 {
   osThreadId_t task_id;
-  osThreadAttr_t task_attribute = {
-    "App Task",
-    osThreadDetached,
-    NULL,
-    0,
-    NULL,
-    (APP_TASK_STACK_SIZE * sizeof(void *)) & 0xFFFFFFF8u,
-    APP_TASK_PRIORITY,
-    0,
-    0
+  const osThreadAttr_t task_attribute = {
+    .name = "App Task",
+    .attr_bits = osThreadDetached,
+    .stack_size = (APP_TASK_STACK_SIZE * sizeof(void *)) & 0xFFFFFFF8u,
+    .priority = APP_TASK_PRIORITY
   };
   int i;
 
@@ -1779,6 +1832,9 @@ void app_init(void)
   // Initialize socket entry lists
   sl_slist_init(&app_socket_entry_list_free);
   sl_slist_init(&app_socket_entry_list);
+
+  // Initialize heap entry list
+  sl_slist_init(&app_heap_entry_list);
 
   for (i = 0; i < APP_MAX_SOCKET_ENTRIES; ++i) {
     sl_slist_push(&app_socket_entry_list_free, &app_socket_entries[i].node);
@@ -1835,6 +1891,9 @@ void sl_wisun_on_event(sl_wisun_evt_t *evt)
       break;
     case SL_WISUN_BR_MSG_ROUTING_TABLE_UPDATE_IND_ID:
       app_handle_br_routing_table_update_ind(evt);
+      break;
+    case SL_WISUN_MSG_ERROR_IND_ID:
+      app_handle_error_ind(evt);
       break;
     default:
       printf("[Unknown event: %d]\r\n", evt->header.id);
@@ -1968,7 +2027,7 @@ void app_ping(sl_cli_command_arg_t *arguments)
     printf("PING %s: %u data bytes\r\n", app_get_ip_address_str(&dest_addr.sin6_addr), packet_data_length);
     goto cleanup;
   } else {
-    printf("[Failed: unable to send an ICMP packet: %lu]\r\n", ret);
+    printf("[Failed: unable to send an ICMP packet: %"PRIu32"]\r\n", ret);
     goto error_handler;
   }
 
@@ -2047,7 +2106,7 @@ void app_tcp_client(sl_cli_command_arg_t *arguments)
 
   socket_retval = connect(entry->socket_id, (const struct sockaddr *) &ipv6_remote_addr, sizeof(sockaddr_in6_t));
   if (socket_retval == SOCKET_RETVAL_ERROR && errno != EINPROGRESS) {
-    printf("[Failed: unable to connect a socket: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to connect a socket: %"PRIi32"]\r\n", socket_retval);
     goto error_handler;
   }
 
@@ -2123,13 +2182,13 @@ void app_tcp_server(sl_cli_command_arg_t *arguments)
 
   socket_retval = bind(entry->socket_id, (const struct sockaddr *) &app_sockaddr, sizeof(sockaddr_in6_t));
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to bind a socket: %lu]\r\n", socket_retval);
+    printf("[Failed: unable to bind a socket: %"PRIi32"]\r\n", socket_retval);
     goto error_handler;
   }
 
   socket_retval = listen(entry->socket_id, 0);
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to listen on a socket: %lu]\r\n", socket_retval);
+    printf("[Failed: unable to listen on a socket: %"PRIi32"]\r\n", socket_retval);
     goto error_handler;
   }
 
@@ -2211,7 +2270,7 @@ void app_udp_client(sl_cli_command_arg_t *arguments)
 
   socket_retval = connect(entry->socket_id, (const struct sockaddr *) &ipv6_remote_addr, sizeof(sockaddr_in6_t));
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to connect a socket: %lu]\r\n", socket_retval);
+    printf("[Failed: unable to connect a socket: %"PRIi32"]\r\n", socket_retval);
     goto error_handler;
   }
 
@@ -2283,7 +2342,7 @@ void app_udp_server(sl_cli_command_arg_t *arguments)
 
   socket_retval = bind(entry->socket_id, (const struct sockaddr *) &app_sockaddr, sizeof(sockaddr_in6_t));
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to bind a socket: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to bind a socket: %"PRIi32"]\r\n", socket_retval);
     goto error_handler;
   }
 
@@ -2325,7 +2384,7 @@ void app_socket_close(sl_cli_command_arg_t *arguments)
 
   socket_retval = close(socket_id);
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to close a socket: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to close a socket: %"PRIi32"]\r\n", socket_retval);
     goto cleanup;
   }
 
@@ -2387,11 +2446,11 @@ void app_socket_read(sl_cli_command_arg_t *arguments)
 
   socket_retval = recvfrom(socket_id, data, data_length, 0, (struct sockaddr *) &remote_address, &addr_length);
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to read from a socket: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to read from a socket: %"PRIi32"]\r\n", socket_retval);
     goto cleanup;
   }
 
-  printf("[Data from %s (%u): %d,%ld",
+  printf("[Data from %s (%u): %d,%"PRIi32"",
          app_get_ip_address_str(&remote_address.sin6_addr),
          ntohs(remote_address.sin6_port),
          socket_id,
@@ -2454,11 +2513,11 @@ void app_socket_write(sl_cli_command_arg_t *arguments)
 
   socket_retval = send(socket_id, (const void *) data, strlen(data), 0);
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to write to a socket: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to write to a socket: %"PRIi32"]\r\n", socket_retval);
     goto cleanup;
   }
 
-  printf("[Wrote %ld bytes]\r\n", socket_retval);
+  printf("[Wrote %"PRIi32" bytes]\r\n", socket_retval);
 
 cleanup:
 
@@ -2524,11 +2583,11 @@ void app_socket_writeto(sl_cli_command_arg_t *arguments)
                          (const struct sockaddr *) &ipv6_dest_addr,
                          sizeof(sockaddr_in6_t));
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to write to a socket: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to write to a socket: %"PRIi32"]\r\n", socket_retval);
     goto cleanup;
   }
 
-  printf("[Wrote %ld bytes]\r\n", socket_retval);
+  printf("[Wrote %"PRIi32" bytes]\r\n", socket_retval);
 
 cleanup:
 
@@ -2619,7 +2678,7 @@ void app_socket_set_option(sl_cli_command_arg_t *arguments)
                              iter->option_length);
 
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to set socket option: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to set socket option: %"PRIi32"]\r\n", socket_retval);
     goto cleanup;
   }
 
@@ -2768,6 +2827,29 @@ static sl_status_t app_socket_multicast_hop_limit_handler(app_socket_option_data
   #endif
 }
 
+static sl_status_t app_socket_traffic_class_handler(app_socket_option_data_t *option_data,
+                                                    const char *option_data_str)
+{
+  // The caller guarantees the aligment of the option data,
+  // thus the warning can be ignored.
+  #ifdef __GNUC__
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wpragmas"
+  #pragma GCC diagnostic ignored "-Waddress-of-packed-member"
+  #elif defined __ICCARM__
+  #pragma diag_suppress=Pa039
+  #endif
+
+  return app_util_get_integer((uint32_t *)&option_data->traffic_class, option_data_str, NULL, true);
+
+  // Restore the defaults
+  #ifdef __GNUC__
+  #pragma GCC diagnostic pop
+  #elif defined __ICCARM__
+  #pragma diag_default=Pa039
+  #endif
+}
+
 static sl_status_t app_socket_multicast_group_handler(app_socket_option_data_t *option_data,
                                                       const char *option_data_str)
 {
@@ -2815,14 +2897,14 @@ void app_mac_allow(sl_cli_command_arg_t *arguments)
     // Attempt to convert the MAC address string
     ret = app_util_get_mac_address(&address, address_str);
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to parse the MAC address: %lu]\r\n", ret);
+      printf("[Failed: unable to parse the MAC address: %"PRIu32"]\r\n", ret);
       goto cleanup;
     }
   }
 
   ret = sl_wisun_allow_mac_address(&address);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to add the MAC address to the access list: %lu]\r\n", ret);
+    printf("[Failed: unable to add the MAC address to the access list: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
@@ -2856,14 +2938,14 @@ void app_mac_deny(sl_cli_command_arg_t *arguments)
     // Attempt to convert the MAC address string
     ret = app_util_get_mac_address(&address, address_str);
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to parse the MAC address: %lu]\r\n", ret);
+      printf("[Failed: unable to parse the MAC address: %"PRIu32"]\r\n", ret);
       goto cleanup;
     }
   }
 
   ret = sl_wisun_deny_mac_address(&address);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to add the MAC address to the deny list: %lu]\r\n", ret);
+    printf("[Failed: unable to add the MAC address to the deny list: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
@@ -2945,7 +3027,7 @@ void app_socket_get_option(sl_cli_command_arg_t *arguments)
                               &option_length);
 
   if (socket_retval == SOCKET_RETVAL_ERROR) {
-    printf("[Failed: unable to get socket option: %ld]\r\n", socket_retval);
+    printf("[Failed: unable to get socket option: %"PRIi32"]\r\n", socket_retval);
     goto cleanup;
   }
 
@@ -2982,7 +3064,7 @@ void app_trigger_frame(sl_cli_command_arg_t *arguments)
 
   ret = sl_wisun_trigger_frame((sl_wisun_frame_type_t)frame_type);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to trigger frame %s: %lu]\r\n", value_str, ret);
+    printf("[Failed: unable to trigger frame %s: %"PRIu32"]\r\n", value_str, ret);
     goto cleanup;
   }
 
@@ -3054,7 +3136,7 @@ void app_set_phy_sensitivity(sl_cli_command_arg_t *arguments)
   if (ret == SL_STATUS_OK) {
     printf("[PHY sensitivity set]\r\n");
   } else {
-    printf("[Failed: unable to set PHY sensitivity: %lu]\r\n", ret);
+    printf("[Failed: unable to set PHY sensitivity: %"PRIu32"]\r\n", ret);
   }
 
   app_wisun_cli_mutex_unlock();
@@ -3069,7 +3151,7 @@ void app_trigger_global_repair(sl_cli_command_arg_t *arguments)
   if (ret == SL_STATUS_OK) {
     printf("[Global repair triggered]\r\n");
   } else {
-    printf("[Failed: unable to trigger global repair: %lu]\r\n", ret);
+    printf("[Failed: unable to trigger global repair: %"PRIu32"]\r\n", ret);
   }
   app_wisun_cli_mutex_unlock();
 }
@@ -3085,7 +3167,7 @@ void app_get_routing_table(sl_cli_command_arg_t *arguments)
 
   ret = sl_wisun_br_get_routing_table_entry_count(&routing_table_size);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to get routing table entries count: %lu]\r\n", ret);
+    printf("[Failed: unable to get routing table entries count: %"PRIu32"]\r\n", ret);
     goto cleanup;
   }
 
@@ -3100,7 +3182,7 @@ void app_get_routing_table(sl_cli_command_arg_t *arguments)
 
     ret = sl_wisun_br_get_routing_table(&routing_table_size, routing_table);
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to get routing table: %lu]\r\n", ret);
+      printf("[Failed: unable to get routing table: %"PRIu32"]\r\n", ret);
       goto cleanup;
     }
   }
@@ -3151,7 +3233,7 @@ void app_get_routing_table_from_index(sl_cli_command_arg_t *arguments)
 
     ret = sl_wisun_br_get_routing_table_from_index(index, &entry_count, routing_table);
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to get routing table: %lu]\r\n", ret);
+      printf("[Failed: unable to get routing table: %"PRIu32"]\r\n", ret);
       goto cleanup;
     }
   }
@@ -3200,7 +3282,7 @@ void app_revoke_pairwise_keys(sl_cli_command_arg_t *arguments)
     // Attempt to convert the MAC address string
     ret = app_util_get_mac_address(&address, address_str);
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to parse the MAC address: %lu]\r\n", ret);
+      printf("[Failed: unable to parse the MAC address: %"PRIu32"]\r\n", ret);
       goto cleanup;
     }
   }
@@ -3209,7 +3291,7 @@ void app_revoke_pairwise_keys(sl_cli_command_arg_t *arguments)
   if (ret == SL_STATUS_OK) {
     printf("[Pairwise keys revoked]\r\n");
   } else {
-    printf("[Failed: unable to revoke pairwise keys: %lu]\r\n", ret);
+    printf("[Failed: unable to revoke pairwise keys: %"PRIu32"]\r\n", ret);
   }
 
 cleanup:
@@ -3237,7 +3319,7 @@ void app_revoke_gtks(sl_cli_command_arg_t *arguments)
     }
     ret = app_util_get_byte_array(gtk_str, gtk_array, 16);
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to parse the %sGTK string: %lu]\r\n", revoke_lgtks ? "L" : "", ret);
+      printf("[Failed: unable to parse the %sGTK string: %"PRIu32"]\r\n", revoke_lgtks ? "L" : "", ret);
       goto cleanup;
     }
     has_gtk = true;
@@ -3247,7 +3329,7 @@ void app_revoke_gtks(sl_cli_command_arg_t *arguments)
   if (ret == SL_STATUS_OK) {
     printf("[%sGTKs revoked]\r\n", revoke_lgtks ? "L" : "");
   } else {
-    printf("[Failed: unable to revoke %sGTKs: %lu]\r\n", revoke_lgtks ? "L" : "", ret);
+    printf("[Failed: unable to revoke %sGTKs: %"PRIu32"]\r\n", revoke_lgtks ? "L" : "", ret);
   }
 
 cleanup:
@@ -3263,12 +3345,151 @@ void app_reset_duty_cycle(sl_cli_command_arg_t *arguments)
 
   status = sl_wisun_reset_regulation_duty_cycle();
   if (status != SL_STATUS_OK) {
-    printf("[Failed: unable to reset the duty cycle counters: %lu]\r\n", status);
+    printf("[Failed: unable to reset the duty cycle counters: %"PRIu32"]\r\n", status);
     goto cleanup;
   }
   printf("[Duty cycle counters reset]\r\n");
 
 cleanup:
+
+  app_wisun_cli_mutex_unlock();
+}
+
+void app_util_fill_heap(sl_cli_command_arg_t *arguments)
+{
+  uint16_t block_size;
+  uint16_t alloc_length = 0;
+  uint16_t count = 0;
+  app_heap_entry_t *entry = NULL;
+
+  app_wisun_cli_mutex_lock();
+
+  block_size = sl_cli_get_argument_uint16(arguments, 0);
+
+  if (block_size > sizeof(app_heap_entry_t)) {
+    alloc_length = block_size - sizeof(app_heap_entry_t);
+  }
+
+  while (1) {
+    entry = sl_malloc(sizeof(app_heap_entry_t));
+    if (entry == NULL) {
+      goto cleanup;
+    }
+    memset(entry, 0, sizeof(app_heap_entry_t));
+
+    if (alloc_length > 0) {
+      entry->ptr = sl_malloc(alloc_length);
+      if (entry->ptr == NULL) {
+        sl_free(entry);
+        goto cleanup;
+      }
+    }
+
+    sl_slist_push(&app_heap_entry_list, &entry->node);
+    count++;
+  }
+
+cleanup:
+  // Does not account for block metadata and alignment overhead
+  printf("[Heap filled with %d blocks of %d bytes each]\r\n", count, block_size);
+  app_wisun_cli_mutex_unlock();
+}
+
+void app_util_release_heap(sl_cli_command_arg_t *arguments)
+{
+  (void)arguments;
+  sl_slist_node_t *node = NULL;
+  app_heap_entry_t *entry = NULL;
+
+  app_wisun_cli_mutex_lock();
+
+  while (!sl_slist_is_empty(app_heap_entry_list)) {
+    node = sl_slist_pop(&app_heap_entry_list);
+    entry = SL_SLIST_ENTRY(node, app_heap_entry_t, node);
+    sl_free(entry->ptr);
+    sl_free(entry);
+  }
+
+  printf("[Heap released]\r\n");
+
+  app_wisun_cli_mutex_unlock();
+}
+
+static void update_app_settings(sl_wisun_option_id_t option_id, uint32_t option_value)
+{
+  // Awkward bit of glue for options that are also app settings
+  switch (option_id) {
+    case SL_WISUN_OPTION_TRAFFIC_LOWPAN_MTU_BYTES:
+      app_settings_wisun.lowpan_mtu = (uint16_t)option_value;
+      break;
+    case SL_WISUN_OPTION_TRAFFIC_IPV6_MRU_BYTES:
+      app_settings_wisun.ipv6_mru = (uint16_t)option_value;
+      break;
+    case SL_WISUN_OPTION_TRAFFIC_MAX_EDFE_FRAGMENT_COUNT:
+      app_settings_wisun.max_edfe_fragment_count = (uint8_t)option_value;
+      break;
+    case SL_WISUN_OPTION_MAC_MIN_BE:
+      app_settings_mac.min_be = (uint8_t)option_value;
+      break;
+    case SL_WISUN_OPTION_MAC_MAX_BE:
+      app_settings_mac.max_be = (uint8_t)option_value;
+      break;
+    case SL_WISUN_OPTION_MAC_BACKOFF_PERIOD_US:
+      app_settings_mac.backoff_period_us = (uint16_t)option_value;
+      break;
+    case SL_WISUN_OPTION_MAC_MAX_CCA_RETRIES:
+      app_settings_mac.max_cca_retries = (uint8_t)option_value;
+      break;
+    case SL_WISUN_OPTION_MAC_MAX_FRAME_RETRIES:
+      app_settings_mac.max_frame_retries = (uint8_t)option_value;
+      break;
+    default:
+      break;
+  }
+}
+
+void app_set_option(sl_cli_command_arg_t *arguments)
+{
+  sl_status_t status;
+  sl_wisun_option_id_t option_id;
+  uint32_t option_value;
+  uint16_t option_value_len;
+
+  app_wisun_cli_mutex_lock();
+
+  option_id = (sl_wisun_option_id_t)sl_cli_get_argument_uint32(arguments, 0);
+  option_value = sl_cli_get_argument_uint32(arguments, 1);
+  option_value_len = sl_cli_get_argument_uint16(arguments, 2);
+
+  if (option_value_len > sizeof(option_value)) {
+    printf("[Failed: option_value_len > %u]\r\n", sizeof(option_value));
+    app_wisun_cli_mutex_unlock();
+    return;
+  }
+
+  status = sl_wisun_set_option(option_id, &option_value, option_value_len);
+  if (status != SL_STATUS_OK) {
+    printf("[Failed: unable to set option: %"PRIu32"]\r\n", status);
+  } else {
+    printf("[Option set]\r\n");
+    update_app_settings(option_id, option_value);
+  }
+
+  app_wisun_cli_mutex_unlock();
+}
+
+void app_reset_parameters(void)
+{
+  sl_status_t status;
+
+  app_wisun_cli_mutex_lock();
+
+  status = sl_wisun_reset_parameters();
+  if (status != SL_STATUS_OK) {
+    printf("[Failed: unable to reset parameters: %"PRIu32"]\r\n", status);
+  } else {
+    printf("[Parameters reset]\r\n");
+  }
 
   app_wisun_cli_mutex_unlock();
 }

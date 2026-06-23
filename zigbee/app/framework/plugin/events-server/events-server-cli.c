@@ -42,10 +42,10 @@ void sli_zigbee_af_events_server_cli_print_event(sl_cli_command_arg_t *arguments
   uint8_t index = sl_cli_get_argument_uint8(arguments, 2);
   sl_zigbee_af_zcl_event_t event;
   if (sl_zigbee_af_events_server_get_event(endpoint, logId, index, &event)) {
-    sl_zigbee_af_events_cluster_println("Event at index 0x%02X in log 0x%02X", index, logId);
+    sl_zigbee_af_cli_println("Event at index 0x%02X in log 0x%02X", index, logId);
     sl_zigbee_af_events_server_print_event(&event);
   } else {
-    sl_zigbee_af_events_cluster_println("Event at index 0x%02X in log 0x%02X is not present", index, logId);
+    sl_zigbee_af_cli_println("Event at index 0x%02X in log 0x%02X is not present", index, logId);
   }
 }
 
@@ -64,9 +64,9 @@ void sli_zigbee_af_events_server_cli_set(sl_cli_command_arg_t *arguments)
                                      SL_ZIGBEE_AF_PLUGIN_EVENTS_SERVER_EVENT_DATA_LENGTH, false);
   event.eventData[0] = length;
   if (!sl_zigbee_af_events_server_set_event(endpoint, logId, index, &event)) {
-    sl_zigbee_af_events_cluster_println("Event at index 0x%02X in log 0x%02X is not present", index, logId);
+    sl_zigbee_af_cli_println("Event at index 0x%02X in log 0x%02X is not present", index, logId);
   } else {
-    sl_zigbee_af_events_cluster_println("Event added to log 0x%02X at index 0x%02X", logId, index);
+    sl_zigbee_af_cli_println("Event added to log 0x%02X at index 0x%02X", logId, index);
   }
 }
 

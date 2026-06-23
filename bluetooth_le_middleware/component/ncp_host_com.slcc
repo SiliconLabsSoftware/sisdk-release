@@ -31,13 +31,7 @@ requires:
 - name: sl_core
 - name: app_assert
 recommends:
-- id: bluetooth_ncp_transport_usart
-  condition:
-  - device_series_2
-  vendor: silabs
 - id: bluetooth_ncp_transport_iostream
-  condition:
-  - device_series_3
   vendor: silabs
 template_contribution:
 - name: event_handler

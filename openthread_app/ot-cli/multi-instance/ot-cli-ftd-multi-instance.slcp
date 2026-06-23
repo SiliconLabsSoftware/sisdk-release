@@ -1,8 +1,8 @@
 project_name: ot-cli-ftd-multi-instance
-label: OpenThread - SoC CLI (FTD multi-instance)
+label: OpenThread - SoC CLI FTD (multi-instance)
 package: openthread
 description: >
-  This is a very simple CLI application to test the OpenThread stack on a Full Thread Device using openthread's multi-instance support.
+  Demonstrates CLI application to test the OpenThread stack on a Full Thread Device (FTD) using multi-instance support.
 category: OpenThread Examples
 quality: production
 
@@ -17,6 +17,9 @@ component:
   - id: clock_manager
   - id: ot_reset_utils
   - id: toolchain_gcc_lto
+    condition: [toolchain_gcc]
+  - id: toolchain_llvm_lto
+    condition: [toolchain_llvm]
   - id: ot_multi_instance_cli
 
 include:
@@ -97,6 +100,8 @@ configuration:
     value: 1
   - name: OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_NUM
     value: 2
+  - name: OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+    value: 1
 
 readme:
   - path: ../README.md
@@ -106,6 +111,7 @@ tag:
   - hwfilter:device:device_supports_thread
   - hwfilter:!device:device_family_efr32mr21
   - toolchain:gcc
+  - toolchain:llvm
 
 filter:
   - name: "Wireless Technology"

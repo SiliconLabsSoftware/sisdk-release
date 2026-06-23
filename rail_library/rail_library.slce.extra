@@ -3,7 +3,7 @@ examples:
 sample_apps:
 description:
 dependencies:
-  - platform/6.0.2@silabs
+  - platform/6.1.0@silabs
 components:
   - rail_lib
   - rail_util_power_manager_init
@@ -26,7 +26,6 @@ components:
   - rail_lib_singleprotocol_alpha_chips_dummy
   - rail_util_recommended
   - rail_lib_singleprotocol
-  - sl_rail_util_standard_phys
   - sl_rail_util_dma
   - sl_rail_test_core
   - sl_rail_util_coex

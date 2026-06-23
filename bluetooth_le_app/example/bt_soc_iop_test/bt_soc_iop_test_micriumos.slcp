@@ -8,7 +8,7 @@ description: >
   Connect mobile app, through the "Interoperability Test" tile on the Develop
   view of the app.
 category: Bluetooth Examples
-quality: experimental
+quality: production
 
 filter:
   - name: "Wireless Technology"

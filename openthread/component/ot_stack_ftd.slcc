@@ -1,7 +1,7 @@
 id: ot_stack_ftd
 label: Stack (FTD)
 package: openthread
-category: OpenThread
+category: OpenThread|Stack
 quality: production
 description: This component provides the OpenThread stack for a Full Thread Device (FTD)
 provides:
@@ -22,6 +22,9 @@ recommends:
 - id: ot_platform_abstraction
   vendor: silabs
 config_file:
+- path: config/sl_openthread_log_config.h
+  file_id: openthread_log
+  unless: [ot_sl_log]
 - path: config/sl_openthread_features_config.h
   file_id: openthread_features
   unless: [ot_cert_libs, ot_reference_device, ot_ncp]

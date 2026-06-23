@@ -26,4 +26,6 @@ requires:
 - name: component_catalog
 - name: status
 - name: emlib_common
-- name: dmadrv
+- name: emlib_ldma
+- name: dma_manager
+- name: dma_channel

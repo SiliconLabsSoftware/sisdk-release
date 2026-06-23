@@ -80,7 +80,6 @@ typedef struct average_current {
   /** Duration */
   time_exponential_8_t duration;
 } average_current_t;
-//typedef average_current_t average_current_t;
 
 /**
  * Average Voltage
@@ -92,7 +91,6 @@ typedef struct average_voltage {
   /** Duration */
   time_exponential_8_t duration;
 } average_voltage_t;
-//typedef average_voltage_t average_voltage_t;
 
 /**
  * Chromatic Distance From Planckian
@@ -904,10 +902,6 @@ typedef struct mesh_device_property {
     chromatic_distance_from_planckian_t chromatic_distance_from_planckian;
     /** Chromaticitiy coordinates */
     chromaticity_coordinates_t chromaticity_coordinates;
-    /** Chromaticity tolerance */
-    //chromaticity_tolerance_t chromaticity_tolerance_t;
-    // ** Color rendering index */
-    //cie_color_rendering_index_t color_rendering_index;
     /** CO2 Concentration */
     co2_concentration_t co2_concentration;
     /** Coefficient */
@@ -960,13 +954,6 @@ typedef struct mesh_device_property {
     light_distribution_t light_distribution;
     /** Light output */
     light_output_t light_output;
-    //luminous_efficacy_t luminous_efficacy;
-    //luminous_energy_t luminous_energy;
-    //luminous_exposure_t lumimous_exposure;
-    //luminous_flux_t luminous_flux;
-    //luminous_flux_range_t luminous_flux_range;
-    //luminois_intensity_t luminous_intensity;
-    //perceived_lightness_t perceived_lightness;
     /** Magnetic Declination */
     magnetic_declination_t magnetic_declination;
     /** Magnetic Flux Density - 2D */
@@ -987,12 +974,6 @@ typedef struct mesh_device_property {
     pressure_t pressure;
     /** Rainfall */
     rainfall_t rainfall;
-    //relative_runtime_in_a_current_range_t relative_runtime_in_a_current_range;
-    //relative_runtime_in_a_relative_level_range_t relative_runtime_in_a_relative_level_range;
-    //relative_runtime_in_a_temperature_range_t relative_runtime_in_a_temperature_range;
-    //relative_value_in_a_temperature_range_t relative_value_in_a_temperature_range;
-    //relative_value_in_a_voltage_range_t relative_value_in_a_voltage_range;
-    //relative_value_in_a_an_illuminance_rang;
     /** Temperature */
     temperature_t temperature;
     /** Temperature 8 */

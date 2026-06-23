@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 #include <cmsis_os2.h>
 #include "sl_slist.h"
 #include "sl_assert.h"
@@ -68,7 +69,7 @@ static void app_event_log_print_event(const app_event_log_event_t *evt)
   switch (evt->logger_event.type) {
     case SL_WISUN_LOGGER_EVENT_TYPE_NEIGHBOR_LIFETIME_CHANGED:
       if (evt->logger_event.u.neighbor_lifetime_changed.lifetime) {
-        printf("Neighbor %s lifetime changed to %lu", address, evt->logger_event.u.neighbor_lifetime_changed.lifetime);
+        printf("Neighbor %s lifetime changed to %"PRIu32, address, evt->logger_event.u.neighbor_lifetime_changed.lifetime);
       } else {
         printf("Neighbor %s expired", address);
       }
@@ -125,7 +126,7 @@ void app_event_log_print(const sl_wisun_mac_address_t *address)
   SL_SLIST_FOR_EACH_ENTRY(app_event_log_list, evt, app_event_log_event_t, node) {
     // List is oldest-first
     if (!memcmp(&evt->logger_event.address, address, SL_WISUN_MAC_ADDRESS_SIZE)) {
-      printf("!  %lus ago\t", sl_sleeptimer_get_time() - evt->timestamp);
+      printf("!  %"PRIu32"s ago\t", sl_sleeptimer_get_time() - evt->timestamp);
       app_event_log_print_event(evt);
       printf("\r\n");
     }

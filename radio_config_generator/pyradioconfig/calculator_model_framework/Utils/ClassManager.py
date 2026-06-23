@@ -3,7 +3,8 @@ import inspect
 import os.path
 import os
 import glob
-
+from pyradioconfig.calculator_model_framework.interfaces.ipcollector import IPCollector_Base
+from pyradioconfig.calculator_model_framework.interfaces.icalculator import ICalculator
 from pyradioconfig.calculator_model_framework.Utils.LogMgr import LogMgr
 
 __all__ = ['ClassManager']
@@ -29,6 +30,47 @@ class ClassManager(object):
                     class_list.append(classvalue)
 
         return class_list
+
+    @staticmethod
+    def verify_ip_based_part(import_path):
+        try:
+            mod = importlib.import_module(import_path)
+            return True
+        except ImportError as e:
+            return False
+
+    @staticmethod
+    def get_calc_ips(import_path, part_family, part_rev, return_ip_obj=True):
+        """
+        Searches for IPCalcFactory class type in import_path.
+        Instantiates the first one found and collect calculations
+        return_perip_name is used to select the return type.
+        If True, it returns a list of tuples(peripheral name, calc class), else returns a list of clac class.
+        True is used when building model variables
+        """
+
+        calc_class_type = ICalculator
+        peripheral_calcs_list = []
+
+        mod = importlib.import_module(import_path)
+        for att_name in mod.__all__:
+            fooModule = importlib.import_module(import_path + ".{}".format(att_name))
+            classes = inspect.getmembers(fooModule, inspect.isclass)
+            for (classname, classvalue) in classes:
+                if issubclass(classvalue, IPCollector_Base) and classname != 'IPCollector_Base':
+                    ip_collector = classvalue(part_family, part_rev)
+                    for ip_obj in ip_collector.perip_dict.values():
+                        peripheral_name = ip_obj.peripheral_name
+                        calc_path = ip_obj.get_calc_module_path(part_family)
+                        calc_mod = importlib.import_module(calc_path)
+                        calcclasses = inspect.getmembers(calc_mod, inspect.isclass)
+                        for (calcclassname, calcclassvalue) in calcclasses:
+                            if issubclass(calcclassvalue, calc_class_type) and inspect.getmodule(calcclassvalue) == calc_mod:
+                                if return_ip_obj:
+                                    peripheral_calcs_list.append((ip_obj, calcclassvalue))
+                                else:
+                                    peripheral_calcs_list.append(calcclassvalue)
+        return peripheral_calcs_list
 
     @staticmethod
     def load_module_from_import_path(import_path):
@@ -72,5 +114,5 @@ class ClassManager(object):
             modules = glob.glob(os.path.dirname(file_Path)+"/*.pyc")
         if len(modules) == 0:
             modules = glob.glob(os.path.dirname(file_Path)+"/*$py.class")
-        module_names = [os.path.basename(f)[:-3] for f in modules]
+        module_names = sorted([os.path.basename(f)[:-3] for f in modules])
         return module_names

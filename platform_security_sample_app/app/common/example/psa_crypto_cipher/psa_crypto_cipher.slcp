@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform Security - SoC PSA Crypto Cipher
 description: >
-  This example project demonstrates the unauthenticated cipher API for generic and built-in AES-128 keys.
+  Demonstrates how to encrypt and decrypt with unauthenticated ciphers (AES-ECB/CBC/CFB/CTR, ChaCha20) using the PSA Crypto API, with generic and built-in AES-128 keys.
 category: Example|Platform
 filter:
   - name: "Device Type"

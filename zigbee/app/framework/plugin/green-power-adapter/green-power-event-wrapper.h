@@ -47,34 +47,22 @@ void sl_zigbee_af_event_set_inactive_wrapper(sl_zigbee_event_wrapper_t *event);
 bool sl_zigbee_event_is_active_wrapper(sl_zigbee_event_wrapper_t *event);
 bool sl_zigbee_af_event_is_scheduled_wrapper(sl_zigbee_event_wrapper_t *event);
 
-#ifdef sl_zigbee_af_event_t
 #undef sl_zigbee_af_event_t
-#endif
 #define sl_zigbee_af_event_t sl_zigbee_event_wrapper_t
 
-#ifdef sl_zigbee_af_event_init
 #undef sl_zigbee_af_event_init
-#endif
 #define sl_zigbee_af_event_init(...) sl_zigbee_af_event_init_wrapper(__VA_ARGS__)
 
-#ifdef sl_zigbee_af_event_set_delay_ms
 #undef sl_zigbee_af_event_set_delay_ms
-#endif
 #define sl_zigbee_af_event_set_delay_ms(...) sl_zigbee_af_event_set_delay_ms_wrapper(__VA_ARGS__)
 
-#ifdef sl_zigbee_af_event_set_inactive
 #undef sl_zigbee_af_event_set_inactive
-#endif
 #define sl_zigbee_af_event_set_inactive(...) sl_zigbee_af_event_set_inactive_wrapper(__VA_ARGS__)
 
-#ifdef sl_zigbee_event_is_active
 #undef sl_zigbee_event_is_active
-#endif
 #define sl_zigbee_event_is_active(...) sl_zigbee_event_is_active_wrapper(__VA_ARGS__)
 
-#ifdef sl_zigbee_af_event_is_scheduled
 #undef sl_zigbee_af_event_is_scheduled
-#endif
 #define sl_zigbee_af_event_is_scheduled(...) sl_zigbee_af_event_is_scheduled_wrapper(__VA_ARGS__)
 
 #endif // (SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_EVENT_SYSTEM == 1)

@@ -133,7 +133,7 @@ typedef struct {
 struct sli_bgapi_class;
 
 /** @brief Forward declaration of the BGAPI device structure */
-typedef struct bgapi_device sli_bgapi_device_t;
+typedef struct sli_bgapi_device sli_bgapi_device_t;
 
 /**
  * @brief Structure to collect the read-only information of one BGAPI device.

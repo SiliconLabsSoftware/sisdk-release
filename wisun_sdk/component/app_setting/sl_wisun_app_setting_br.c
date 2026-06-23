@@ -173,7 +173,7 @@ static const app_setting_br_t _wisun_br_settings_default = {
 #if defined(WISUN_CONFIG_NETWORK_SIZE)
   .network_size = WISUN_CONFIG_NETWORK_SIZE,
 #else
-  .network_size = SL_WISUN_NETWORK_SIZE_SMALL,
+  .network_size = SL_WISUN_NETWORK_SIZE_AUTOMATIC,
 #endif
 #if defined(WISUN_CONFIG_TX_POWER)
   .tx_power_ddbm = WISUN_CONFIG_TX_POWER,
@@ -237,7 +237,7 @@ app_setting_wisun_t dummy_wisun_app_settings = {
 #if defined(WISUN_CONFIG_NETWORK_SIZE)
   .network_size = WISUN_CONFIG_NETWORK_SIZE,
 #else
-  .network_size = SL_WISUN_NETWORK_SIZE_SMALL,
+  .network_size = SL_WISUN_NETWORK_SIZE_AUTOMATIC,
 #endif
 #if defined(WISUN_CONFIG_TX_POWER)
   .tx_power_ddbm = WISUN_CONFIG_TX_POWER,

@@ -2695,6 +2695,23 @@ SL_WEAK void sl_zigbee_post_incoming_packet_filter_cb(sl_zigbee_zigbee_packet_ty
   UNUSED_VAR(action);
 }
 
+SL_WEAK void sl_zigbee_post_incoming_packet_filter_with_lqi_and_rssi_cb(sl_zigbee_zigbee_packet_type_t packetType,
+                                                                        sl_zigbee_packet_link_quality_t *linkQuality,
+                                                                        uint8_t* packetData,
+                                                                        uint8_t size_p,
+                                                                        uint8_t *data,
+                                                                        uint8_t size_d,
+                                                                        sl_zigbee_packet_action_t action)
+{
+  UNUSED_VAR(packetType);
+  UNUSED_VAR(linkQuality);
+  UNUSED_VAR(packetData);
+  UNUSED_VAR(size_p);
+  UNUSED_VAR(data);
+  UNUSED_VAR(size_d);
+  UNUSED_VAR(action);
+}
+
 SL_WEAK void sl_zigbee_post_outgoing_packet_filter_cb(sl_zigbee_zigbee_packet_type_t packetType,
                                                       uint8_t* packetData,
                                                       uint8_t size_p,

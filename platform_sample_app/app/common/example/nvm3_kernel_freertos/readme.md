@@ -1,40 +1,51 @@
+# NVM3 Kernel FreeRTOS
 
-# NVM3 Kernel FreeRTOS Example
+Demonstrates the NVM3 non-volatile storage API with FreeRTOS. Use the serial CLI to write, read, delete, and repack objects; counts are tracked.
 
-This example application demonstrates the use of Third Generation Non-Volatile Memory (NVM3) data storage with a command line interface (CLI) for interactive operations.
+## Table of Contents
 
-## Features
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-- Store, read, and delete up to 200 data objects in NVM3 using CLI commands
-- Track the number of write and delete operations using dedicated counter objects
-- Display valid and deleted objects, including key, type, size, and data preview
-- Show and reset operation counters on each display
-- Display current NVM3 memory information (available memory, low memory, cache status)
-- Repack NVM3 with custom headroom and repack count for testing
-- Repack timings and available memory are displayed after the repack operation
-- Erase all NVM3 data and reinitialize counters
+## Purpose / Scope
 
-## CLI Commands
+This example demonstrates the NVM3 interface in a FreeRTOS application. You use a CLI over the serial connection to write, read, delete, and repack NVM3 data objects. Write and delete counts are tracked. The repack operation allows you to reclaim space and optimize NVM3 storage.
 
-- `write <key> <data>`: Store string data at the specified key (0x00 to 0xC7)
-- `read <key>`: Read and print data stored at the specified key
-- `delete <key>`: Delete the data object at the specified key
-- `display`: Show deleted objects, valid objects (with key, type, size, data), and operation counters since last display
-- `meminfo`: Display available memory, low memory status, and cache status
-- `repack <headroom> <count>`: Fill NVM3 until memory is low and perform repack with custom headroom and repack count
-- `reset`: Erase all NVM3 data and reinitialize counters
+## Prerequisites / Setup Requirements
 
-## Counters
+**Hardware**
+- Silicon Labs kit with NVM3/Flash support.
+- USB cable for serial/VCOM.
 
-The application maintains two counter objects:
-- Write counter: Tracks the number of write operations since the last `display` command
-- Delete counter: Tracks the number of delete operations since the last `display` command
-Counters are reset to zero after each `display`.
+**Software**
+- Simplicity Studio 5 (or later).
+- A terminal application to connect to the kit's VCOM/serial port.
 
-## Requirements
+## Steps to Run Demo
 
-- Silicon Labs board with MPU module
+1. Open the project in Simplicity Studio and build it.
+2. Connect the kit via USB and flash the application.
+3. Open the Studio Console or a serial terminal and connect to the kit's VCOM port.
+4. Use the CLI commands (write, read, delete, repack) to interact with NVM3.
+5. Observe the counter values and try repack to see how it affects storage.
+
+## Troubleshooting
+
+- **No serial output:** Ensure the kit is connected and VCOM is selected.
+- **NVM3/repack errors:** Ensure the project is built for a part that supports NVM3 and that you have followed the CLI usage documented in the app.
 
 ## Resources
 
 - [AN1135: Using Third Generation Non-Volatile Memory (NVM3) Data Storage](https://www.silabs.com/documents/public/application-notes/an1135-using-third-generation-nonvolatile-memory.pdf)
+- [NVM3 Documentation](https://docs.silabs.com/gecko-platform/latest/service-api/group-nvm3)
+- [Silicon Labs Community](https://www.silabs.com/community)
+
+## Report Bugs & Get Support
+
+You are encouraged to report issues and get help from the community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

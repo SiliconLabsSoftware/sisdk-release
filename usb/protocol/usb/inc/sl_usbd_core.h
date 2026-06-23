@@ -477,6 +477,18 @@ SL_ENUM(sl_usbd_config_event_t) {
 };
 
 /****************************************************************************************************//**
+ *                                      DEVICE EVENT DATA TYPE
+ *******************************************************************************************************/
+
+SL_ENUM(sl_usbd_device_event_t) {
+  SL_USBD_EVENT_DEVICE_INIT = 0,
+  SL_USBD_EVENT_DEVICE_START,
+  SL_USBD_EVENT_DEVICE_STOP
+};
+
+#define  SL_USBD_DEVICE_EVENT_T_DEFINED
+
+/****************************************************************************************************//**
  *                                   USB DEVICE CONFIGURATION DATA TYPE
  *******************************************************************************************************/
 
@@ -1743,7 +1755,9 @@ sl_status_t sl_usbd_core_get_max_open_endpoint_number(uint8_t *p_nbr_open);
 __WEAK void sl_usbd_on_bus_event(sl_usbd_bus_event_t event);
 
 __WEAK void sl_usbd_on_config_event(sl_usbd_config_event_t event,
-                                    uint8_t                config_nbr);
+                                    uint8_t config_nbr);
+
+__WEAK void sl_usbd_on_device_event(sl_usbd_device_event_t event);
 
 #ifdef __cplusplus
 }

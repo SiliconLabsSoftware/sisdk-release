@@ -14,6 +14,7 @@ include:
   - path: sli_bgapi_service_api.h
   - path: sl_bgapi_service_version.h
 source:
+- path: src/sl_bgapi_service_ncp_host.c
 - path: src/sl_bgapi_service_ncp_host_api.c
 requires:
 - name: bgapi_protocol

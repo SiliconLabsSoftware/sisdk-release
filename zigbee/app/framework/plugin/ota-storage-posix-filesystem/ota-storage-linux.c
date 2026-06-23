@@ -1021,6 +1021,7 @@ static sl_zigbee_af_ota_storage_status_t initImageDirectory(void)
   struct dirent* dirEntry = readdir(dir);
   while (dirEntry != NULL) {
     FILE* fileHandle = NULL;
+    char* filePath = NULL;
     debug(config.fileDebug, "Considering file '%s'\n", dirEntry->d_name);
 
     // +2 for trailing '/' and '\0'
@@ -1031,7 +1032,7 @@ static sl_zigbee_af_ota_storage_status_t initImageDirectory(void)
             dirEntry->d_name);
       goto continueReadingDir;
     }
-    char* filePath = myMalloc(pathLength, "initImageDirectory(): filepath");
+    filePath = myMalloc(pathLength, "initImageDirectory(): filepath");
     if (filePath == NULL) {
       error("Failed to allocate memory for filepath.\n");
       goto continueReadingDir;

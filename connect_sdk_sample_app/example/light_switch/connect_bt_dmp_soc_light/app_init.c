@@ -31,6 +31,8 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
+
 #include "app_log.h"
 #include "stack/include/ember.h"
 #include "app_process.h"
@@ -89,7 +91,7 @@ void emberAfInitCallback(void)
   // set the default PAN ID, it can be changed with CLI
   sl_set_pan_id(DEFAULT_LIGHT_SWITCH_PAN_ID);
   // set the default communication channel, it can be changed with CLI
-  app_log_info("Default channel> %d\n", emberGetDefaultChannel());
+  app_log_info("Default channel> %" PRIu16 "\n", emberGetDefaultChannel());
   sl_set_channel(emberGetDefaultChannel());
 
   emberNetworkInit();

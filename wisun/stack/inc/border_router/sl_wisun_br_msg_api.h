@@ -73,6 +73,7 @@ typedef enum {
   SL_WISUN_BR_MSG_REVOKE_PAIRWISE_KEYS_REQ_ID           = 0x6D,
   SL_WISUN_BR_MSG_REVOKE_GTKS_REQ_ID                    = 0x6C,
   SL_WISUN_BR_MSG_GET_ROUTING_TABLE_FROM_INDEX_REQ_ID   = 0x6B,
+  SL_WISUN_BR_MSG_SET_ADVANCED_PARAMS_REQ_ID            = 0x6A,
 } sl_wisun_br_msg_req_id_t;
 
 /// Wi-SUN BR Message API confirmation IDs
@@ -98,6 +99,7 @@ typedef enum {
   SL_WISUN_BR_MSG_REVOKE_PAIRWISE_KEYS_CNF_ID           = 0x6D,
   SL_WISUN_BR_MSG_REVOKE_GTKS_CNF_ID                    = 0x6C,
   SL_WISUN_BR_MSG_GET_ROUTING_TABLE_FROM_INDEX_CNF_ID   = 0x6B,
+  SL_WISUN_BR_MSG_SET_ADVANCED_PARAMS_CNF_ID            = 0x6A,
 } sl_wisun_br_msg_cnf_id_t;
 
 /// Wi-SUN BR Message API common header
@@ -574,6 +576,49 @@ typedef struct {
 SL_PACK_END()
 
 /** @} (end SL_WISUN_BR_MSG_SET_CONNECTION_PARAMS) */
+
+/**************************************************************************//**
+ * @defgroup SL_WISUN_BR_MSG_SET_ADVANCED_PARAMS sl_wisun_br_msg_set_advanced_params
+ * @{
+ *****************************************************************************/
+
+/// Request message body
+SL_PACK_START(1)
+typedef struct {
+  /// Advanced connection parameters
+  sl_wisun_br_advanced_parameters_t parameters;
+} SL_ATTRIBUTE_PACKED sl_wisun_br_msg_set_advanced_params_req_body_t;
+SL_PACK_END()
+
+/// Request message
+SL_PACK_START(1)
+typedef struct {
+  /// Common message header
+  sl_wisun_br_msg_header_t header;
+  /// Request message body
+  sl_wisun_br_msg_set_advanced_params_req_body_t body;
+} SL_ATTRIBUTE_PACKED sl_wisun_br_msg_set_advanced_params_req_t;
+SL_PACK_END()
+
+/// Confirmation message body
+SL_PACK_START(1)
+typedef struct {
+  /// Status of the request
+  uint32_t status;
+} SL_ATTRIBUTE_PACKED sl_wisun_br_msg_set_advanced_params_cnf_body_t;
+SL_PACK_END()
+
+/// Confirmation message
+SL_PACK_START(1)
+typedef struct {
+  /// Common message header
+  sl_wisun_br_msg_header_t header;
+  /// Confirmation message body
+  sl_wisun_br_msg_set_advanced_params_cnf_body_t body;
+} SL_ATTRIBUTE_PACKED sl_wisun_br_msg_set_advanced_params_cnf_t;
+SL_PACK_END()
+
+/** @} (end SL_WISUN_BR_MSG_SET_ADVANCED_PARAMS) */
 
 /**************************************************************************//**
  * @defgroup SL_WISUN_BR_MSG_SET_LFN_PARAMS sl_wisun_br_msg_set_lfn_params

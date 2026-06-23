@@ -1,0 +1,121 @@
+project_name: bt_soc_spp
+package: bluetooth_le_app
+label: Bluetooth - SoC Serial Port Profile
+description: >
+  Serial Port Profile (SPP) example for Bluetooth wire replacement.  
+  This project demonstrates both peripheral and central roles, enabling wireless
+  serial communication between devices.
+category: Bluetooth Examples
+quality: experimental
+
+filter:
+  - name: "Wireless Technology"
+    value: ["Bluetooth"]
+  - name: "Device Type"
+    value: ["SoC"]
+  - name: "Project Difficulty"
+    value: ["Beginner"]
+
+component:
+  - id: app_assert
+  - id: app_log
+  - id: bluetooth_stack
+  - id: bluetooth_feature_legacy_advertiser
+  - id: bluetooth_feature_connection_role_central
+  - id: bluetooth_feature_connection_role_peripheral
+  - id: bluetooth_feature_gatt
+  - id: bluetooth_feature_gatt_server
+  - id: bluetooth_feature_legacy_scanner
+  - id: bluetooth_feature_sm
+  - id: bluetooth_feature_system
+  - id: clock_manager
+  - id: component_catalog
+  - id: device_init
+  - id: dmd_memlcd
+    condition:
+      - hardware_board_supports_wstk_lcd
+  - id: ble_peer_manager_filter
+  - id: ble_peer_manager_central
+  - id: ble_peer_manager_peripheral
+  - id: gatt_configuration
+  - id: gatt_service_device_information_override
+  - id: glib
+    condition:
+      - hardware_board_supports_wstk_lcd
+  - id: mpu
+  - id: rail_util_pti
+  - id: simple_button
+    instance:
+      - btn0
+  - id: sl_main
+  - id: spp
+
+source:
+  - path: app.c
+  - path: app_display.c
+    condition:
+      - hardware_board_supports_wstk_lcd
+  - path: app_display_stub.c
+    unless:
+      - hardware_board_supports_wstk_lcd
+
+include:
+  - path: .
+    file_list:
+      - path: app.h
+      - path: app_display.h
+
+config_file:
+  - override:
+      component: gatt_configuration
+      file_id: gatt_configuration_file_id
+    path: gatt_configuration.btconf
+    directory: btconf
+  - path: config/app_config.h
+
+template_contribution:
+  - name: ble_peer_manager_event_handler
+    value:
+      include: app.h
+      handler: app_on_ble_peer_manager_event
+
+readme:
+  - path: readme.md
+
+other_file:
+  - path: image/readme_img0.png
+  - path: image/readme_img1.png
+
+configuration:
+  - name: APP_LOG_LEVEL_FILTER_THRESHOLD
+    value: "APP_LOG_LEVEL_INFO"
+  - name: CIRCULAR_QUEUE_LEN_MAX
+    value: "2049"
+  - name: SL_STACK_SIZE
+    value: "2752"
+  - name: SL_PSA_KEY_USER_SLOT_COUNT
+    value: "0"
+    condition:
+      - psa_crypto
+  - name: SL_BOARD_ENABLE_VCOM
+    value: "1"
+  - name: SL_BOARD_ENABLE_DISPLAY
+    value: "1"
+
+post_build:
+  - path: ../../postbuild_profile/bt_common_s2.slpb
+    condition:
+      - device_series_2
+      - bootloader_app_properties
+
+tag:
+  - hwfilter:device:device_supports_bluetooth
+  - hwfilter:device:device_series_2
+  - hwfilter:board:simple_button:btn0
+  - hwfilter:ram:32k
+
+ui_hints:
+  highlight:
+    - path: config/btconf/gatt_configuration.btconf
+    - path: readme.md
+      focus: true

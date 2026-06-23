@@ -29,7 +29,11 @@ template_contribution:
       name: psa_its_files_ddp
       count: 9
 readme:
-  - path: doc/readme.md
+  - path: readme.md
+ui_hints:
+  highlight:
+    - path: readme.md
+      focus: true
 tag:
   - prebuilt_demo
   - hwfilter:device:device_supports_wisun

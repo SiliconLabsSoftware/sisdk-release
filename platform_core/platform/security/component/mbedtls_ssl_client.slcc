@@ -1,0 +1,20 @@
+id: mbedtls_ssl_client
+package: platform_core
+label: SSL Client
+description: >-
+  This component provides SSL client support in Mbed TLS.
+category: Platform|Security|Mbed TLS|Upper Layer
+quality: production
+provides:
+- name: mbedtls_ssl_client
+requires:
+- name: mbedtls_ssl_tls
+template_contribution:
+- name: mbedtls_config
+  value: MBEDTLS_SSL_CLI_C
+documentation:
+  url: https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/mbedtls__config_8h/#c.MBEDTLS_SSL_CLI_C
+metadata:
+  sbom:
+    reference: mbedtls_sbom
+root_path: platform_core

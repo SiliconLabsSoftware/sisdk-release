@@ -39,6 +39,8 @@ extern "C" {
 #include "sl_log_common_config.h"
 #include "sl_status.h"
 #include "sl_compiler.h"
+#include <stdarg.h>
+#include <stdbool.h>
 /** @addtogroup sl_log Silicon Labs Debug Logger
  * @brief Comprehensive logging system with multiple backends and efficient
  * event handling
@@ -68,16 +70,32 @@ extern "C" {
 /** @brief Maximum number of events that can be configured in the system */
 #define SL_LOG_MAX_NO_OF_EVENTS 255
 
-/** @brief Threshold for automatic buffer flushing (80% of buffer capacity) */
-#define SL_LOG_THRESHOLD_PERCENTAGE 80
-
-/** @brief Threshold event count */
-#define SL_LOG_THRESHOLD (SL_LOG_NUMBER_OF_EVENTS*SL_LOG_THRESHOLD_PERCENTAGE)/100
-
 /** @brief Core ID of Host*/
 #define SL_LOG_HOST_CORE_ID 0
 
-#define SL_LOG_OVERFLOW_EVENT_ID 0xFFFFFFFF
+/**
+ * @defgroup sl_log_print_options Backend-Agnostic Print Options
+ * @brief Message-type / option flags accepted by @ref SL_LOG_PRINT_TARGET_EX.
+ *
+ * These values are forwarded to the active backend:
+ *   - SystemView backend: forwarded directly to SEGGER_SYSVIEW_VPrintfTargetEx()
+ *     (numerically identical to SEGGER_SYSVIEW_LOG / WARNING / ERROR).
+ *   - I/O Stream (proprietary) backend: used to pick the level prefix in the
+ *     emitted text line.
+ * @{
+ */
+
+/** @brief Informational / generic log message. */
+#define SL_LOG_PRINT_OPT_LOG     (0u)
+/** @brief Warning message. */
+#define SL_LOG_PRINT_OPT_WARN    (1u)
+/** @brief Error message. */
+#define SL_LOG_PRINT_OPT_ERROR   (2u)
+/** @brief Append to previous line instead of starting a new one
+ *         (honoured by SystemView; ignored by other backends). */
+#define SL_LOG_PRINT_OPT_APPEND  (1u << 6)
+
+/** @} (end addtogroup sl_log_print_options) */
 
 /** @} (end addtogroup sl_log_constants) */
 
@@ -129,6 +147,20 @@ typedef enum {
   SL_LOG_ENUM_CONFIG_ARG2,
   /** @brief Up to 3 arguments supported */
   SL_LOG_ENUM_CONFIG_ARG3,
+  /** @brief Up to 4 arguments supported */
+  SL_LOG_ENUM_CONFIG_ARG4,
+  /** @brief Up to 5 arguments supported */
+  SL_LOG_ENUM_CONFIG_ARG5,
+  /** @brief Up to 6 arguments supported */
+  SL_LOG_ENUM_CONFIG_ARG6,
+  /** @brief Up to 7 arguments supported */
+  SL_LOG_ENUM_CONFIG_ARG7,
+  /** @brief Up to 8 arguments supported */
+  SL_LOG_ENUM_CONFIG_ARG8,
+  /** @brief Up to 9 arguments supported */
+  SL_LOG_ENUM_CONFIG_ARG9,
+  /** @brief Up to 10 arguments supported */
+  SL_LOG_ENUM_CONFIG_ARG10,
   /** @brief Invalid argument count - used for validation */
   SL_LOG_ENUM_CONFIG_ARG_INVALID,
 } sl_log_args_t;
@@ -170,7 +202,7 @@ typedef __PACKED_STRUCT {
   uint32_t args[SL_LOG_CONFIG_ARG];
   /** @brief Number of valid arguments in the args array (0 to
    * SL_LOG_CONFIG_ARG) */
-  uint16_t arg_count;
+  uint8_t arg_count;
   /** @brief Core identifier that generated the event (0 = host core) */
   uint8_t core_id;
   /** @brief Event flags - bits 1-7: log level, bit 0: event type (0=format
@@ -200,21 +232,10 @@ typedef struct {
   /** @brief Number of available event slots left in the buffer */
   int32_t available_event_slots;
   /** @brief Pointer to the actual ring buffer storage array */
-  sl_log_event_t *sl_log_buffer;
+  sl_log_event_t *buffer;
 } sl_log_ring_buffer_t;
 
 /** @} (end addtogroup sl_log_types) */
-
-/**
- * @defgroup sl_log_globals Global Variables
- * @brief Global variables used by the logging system
- * @{
- */
-
-/** @brief Global logging system configuration */
-extern sl_log_config_t sl_log_config;
-
-/** @} (end addtogroup sl_log_globals) */
 
 /**
  * @defgroup sl_log_api_common Common API Functions
@@ -228,14 +249,31 @@ extern sl_log_config_t sl_log_config;
  */
 
 /**
- * @brief Initialize the debug logger.
+ * @brief Pre-initializes the log component.
+ * Called before the backend and timestamp timer are ready.
+ * Initializes the ring buffer configuration.
+ */
+void sl_log_init_stage1(void);
+
+/**
+ * @brief Starts the timestamp timer, initializes the backend
+ * Appends timestamp to early logs and flushes them to the backend
  *
  * @return sl_status_t Status code indicating the result of the operation.
  *         - SL_STATUS_OK: Initialization successful.
- *         - SL_STATUS_NULL_POINTER: Null pointer passed as parameter.
+ *         - SL_STATUS_NOT_INITIALIZED: Logger not properly initialized.
  *         - SL_STATUS_FAIL: Initialization failed.
  */
-sl_status_t sl_log_init(void);
+sl_status_t sl_log_init_stage2(void);
+
+/**
+ * @brief Set true when @ref sl_log_init_stage2() completes (backend ready).
+ *
+ * Used by logging helpers to defer output that has no early buffer (for example
+ * @ref SL_LOG_PRINT_TARGET_EX / @c SL_PRINT_FMT_*). Do not write from
+ * application code.
+ */
+extern bool sli_log_init_stage2_done;
 
 /**
  * @brief Set the log level for the logger.
@@ -314,21 +352,165 @@ void sl_log_send_arg2(uint32_t event_id, uint8_t log_level, uint32_t arg1,
 /**
  * @brief Send a log event with three arguments
  *
- * Logs an event with three 32-bit arguments. This is the maximum number
- * of arguments supported by the system for optimal memory efficiency.
+ * Logs an event with three 32-bit arguments. Use sl_log_send_arg4 through
+ * sl_log_send_arg10 for more arguments (when SL_LOG_CONFIG_ARG is configured
+ * accordingly).
  *
  * @param[in] event_id Event identifier (format string pointer or numeric ID)
  * @param[in] log_level Log level combined with event type flags
  * @param[in] arg1 First argument for the log event
  * @param[in] arg2 Second argument for the log event
  * @param[in] arg3 Third argument for the log event
- *
- * @note This function provides the maximum argument capacity. For more
- *       than 3 arguments, consider using multiple log events or structured
- * logging.
  */
 void sl_log_send_arg3(uint32_t event_id, uint8_t log_level, uint32_t arg1,
                       uint32_t arg2, uint32_t arg3);
+
+#if (SL_LOG_CONFIG_ARG >= 4)
+/**
+ * @brief Send a log event with four arguments
+ *
+ * @param[in] event_id Event identifier (format string pointer or numeric ID)
+ * @param[in] log_level Log level combined with event type flags
+ * @param[in] arg1...arg4 Event arguments (in order).
+ */
+void sl_log_send_arg4(uint32_t event_id, uint8_t log_level, uint32_t arg1,
+                      uint32_t arg2, uint32_t arg3, uint32_t arg4);
+#endif
+
+#if (SL_LOG_CONFIG_ARG >= 5)
+/**
+ * @brief Send a log event with four arguments
+ *
+ * @param[in] event_id Event identifier (format string pointer or numeric ID)
+ * @param[in] log_level Log level combined with event type flags
+ * @param[in] arg1...arg5 Event arguments (in order).
+ */
+void sl_log_send_arg5(uint32_t event_id, uint8_t log_level, uint32_t arg1,
+                      uint32_t arg2, uint32_t arg3, uint32_t arg4,
+                      uint32_t arg5);
+#endif
+
+#if (SL_LOG_CONFIG_ARG >= 6)
+/**
+ * @brief Send a log event with four arguments
+ *
+ * @param[in] event_id Event identifier (format string pointer or numeric ID)
+ * @param[in] log_level Log level combined with event type flags
+ * @param[in] arg1...arg6 Event arguments (in order).
+ */
+void sl_log_send_arg6(uint32_t event_id, uint8_t log_level, uint32_t arg1,
+                      uint32_t arg2, uint32_t arg3, uint32_t arg4,
+                      uint32_t arg5, uint32_t arg6);
+#endif
+
+#if (SL_LOG_CONFIG_ARG >= 7)
+/**
+ * @brief Send a log event with four arguments
+ *
+ * @param[in] event_id Event identifier (format string pointer or numeric ID)
+ * @param[in] log_level Log level combined with event type flags
+ * @param[in] arg1...arg7 Event arguments (in order).
+ */
+void sl_log_send_arg7(uint32_t event_id, uint8_t log_level, uint32_t arg1,
+                      uint32_t arg2, uint32_t arg3, uint32_t arg4,
+                      uint32_t arg5, uint32_t arg6, uint32_t arg7);
+#endif
+
+#if (SL_LOG_CONFIG_ARG >= 8)
+/**
+ * @brief Send a log event with four arguments
+ *
+ * @param[in] event_id Event identifier (format string pointer or numeric ID)
+ * @param[in] log_level Log level combined with event type flags
+ * @param[in] arg1...arg8 Event arguments (in order).
+ */
+void sl_log_send_arg8(uint32_t event_id, uint8_t log_level, uint32_t arg1,
+                      uint32_t arg2, uint32_t arg3, uint32_t arg4,
+                      uint32_t arg5, uint32_t arg6, uint32_t arg7,
+                      uint32_t arg8);
+#endif
+
+#if (SL_LOG_CONFIG_ARG >= 9)
+/**
+ * @brief Send a log event with four arguments
+ *
+ * @param[in] event_id Event identifier (format string pointer or numeric ID)
+ * @param[in] log_level Log level combined with event type flags
+ * @param[in] arg1...arg9 Event arguments (in order).
+ */
+void sl_log_send_arg9(uint32_t event_id, uint8_t log_level, uint32_t arg1,
+                      uint32_t arg2, uint32_t arg3, uint32_t arg4,
+                      uint32_t arg5, uint32_t arg6, uint32_t arg7,
+                      uint32_t arg8, uint32_t arg9);
+#endif
+
+#if (SL_LOG_CONFIG_ARG >= 10)
+/**
+ * @brief Send a log event with four arguments
+ *
+ * @param[in] event_id Event identifier (format string pointer or numeric ID)
+ * @param[in] log_level Log level combined with event type flags
+ * @param[in] arg1...arg10 Event arguments (in order).
+ */
+void sl_log_send_arg10(uint32_t event_id, uint8_t log_level, uint32_t arg1,
+                       uint32_t arg2, uint32_t arg3, uint32_t arg4,
+                       uint32_t arg5, uint32_t arg6, uint32_t arg7,
+                       uint32_t arg8, uint32_t arg9, uint32_t arg10);
+#endif
+
+/**
+ * @brief Print a formatted string directly to the active log backend.
+ *
+ * Backend implementation for the SL_PRINT_FMT_* macros. Formats @p fmt with
+ * the supplied variadic arguments on target and forwards the result to the
+ * currently selected log backend:
+ *   - SystemView backend: emits a SystemView text packet via
+ *     SEGGER_SYSVIEW_VPrintfTargetEx().
+ *   - I/O Stream (proprietary) backend: writes a `[L|F] formatted-text\\r\\n`
+ *     line to the recommended console iostream.
+ *   - log_none / no backend: linked against a weak no-op (message discarded).
+ *
+ * Unlike the event-based SL_PRINT_STRING_* path, the text is fully formatted
+ * on target before transmission - no host-side description / lookup file is
+ * required, and the format string may be runtime-built. The trade-off is
+ * higher CPU and bandwidth than the event-based path.
+ *
+ * @param[in] options Message-type flag (see @ref sl_log_print_options):
+ *                    SL_LOG_PRINT_OPT_LOG / WARN / ERROR, optionally OR'ed
+ *                    with SL_LOG_PRINT_OPT_APPEND.
+ * @param[in] fmt     printf-style format string. NULL is treated as a no-op.
+ * @param[in] ...     Variadic arguments matching @p fmt.
+ *
+ * @note Output may be suppressed until the backend has been initialised
+ *       (sl_log_init_stage2()).
+ *
+ * @note Forwards to @ref sli_log_print_target_ex, which captures variadic
+ *       arguments into a @c va_list and calls @ref sl_log_vprint_target_ex.
+ *       Backend implementations override the @c va_list form.
+ */
+void sli_log_print_target_ex(uint32_t options, const char *fmt, ...);
+
+#define SL_LOG_PRINT_TARGET_EX(options, fmt, ...)                              \
+  sli_log_print_target_ex((options), (fmt), ##__VA_ARGS__)
+
+/**
+ * @brief @c va_list variant of @ref SL_LOG_PRINT_TARGET_EX.
+ *
+ * Backend implementations override this function; @ref sli_log_print_target_ex
+ * forwards to it after @c va_start. Callers that already hold a @c va_list
+ * (e.g. when implementing their own printf-style helpers) should call this
+ * directly.
+ *
+ * @param[in] options Message-type flag (see @ref sl_log_print_options).
+ * @param[in] fmt     printf-style format string. NULL is treated as a no-op.
+ * @param[in] ap      Variadic argument list previously initialised by the
+ *                    caller via @c va_start. The callee consumes @p ap;
+ *                    use @c va_copy if the caller needs to reuse it.
+ *
+ * @note Output may be suppressed until the backend has been initialised
+ *       (sl_log_init_stage2()).
+ */
+void sl_log_vprint_target_ex(uint32_t options, const char *fmt, va_list ap);
 
 /**
  * @brief Flush the logger buffer
@@ -420,6 +602,21 @@ static inline uint8_t
 sl_log_is_ring_buffer_full(sl_log_ring_buffer_t *ring_buffer) {
   return ((ring_buffer->event_count == SL_LOG_NUMBER_OF_EVENTS));
 }
+
+
+/***************************************************************************//**
+* @brief
+*    Assert implementation function
+* @param[in] string_value - Formatted error string containing file:line - condition
+* @details
+*    This function should:
+*    1. Log the error string using SL_PRINT_ERR or similar logging API
+*    2. Check if debugger is attached (CoreDebug->DHCSR)
+*    3. If debugger attached: trigger breakpoint (__BKPT(1))
+*    4. If no debugger: enter infinite loop for watchdog reset
+*
+******************************************************************************/
+void sli_log_assert_implementation(const char* string_value);
 
 /** @} (end addtogroup sl_log_api_internal) */
 
@@ -627,7 +824,7 @@ sl_status_t sl_log_get_configurations(void *args, uint8_t core_id);
  *   external synchronization to avoid data races.
  *
  */
-sl_log_ring_buffer_t *sl_log_get_ring_buffer_config();
+sl_log_ring_buffer_t *sl_log_get_ring_buffer_config(void);
 
 /** @} (end addtogroup sl_log_api_platform) */
 

@@ -36,6 +36,7 @@
 #include "sli_wisun_coap_mem.h"
 #include "sl_wisun_types.h"
 #include "sl_wisun_trace_util.h"
+#include "sl_common.h"
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
@@ -72,20 +73,20 @@ typedef struct _coap_mem {
 // -----------------------------------------------------------------------------
 
 /// Very Low memory buffer
-static uint8_t _mem0_very_low
-[(WISUN_COAP_MEMORY_VERY_LOW_SIZE * WISUN_COAP_MEMORY_VERY_LOW_COUNT)] = { 0 };
+SL_ALIGN(4) static uint8_t _mem0_very_low
+[(WISUN_COAP_MEMORY_VERY_LOW_SIZE * WISUN_COAP_MEMORY_VERY_LOW_COUNT)] SL_ATTRIBUTE_ALIGN(4) = { 0 };
 
 /// Low memory buffer
-static uint8_t _mem1_low
-[(WISUN_COAP_MEMORY_LOW_SIZE      * WISUN_COAP_MEMORY_LOW_COUNT)] = { 0 };
+SL_ALIGN(4) static uint8_t _mem1_low
+[(WISUN_COAP_MEMORY_LOW_SIZE      * WISUN_COAP_MEMORY_LOW_COUNT)] SL_ATTRIBUTE_ALIGN(4) = { 0 };
 
 /// Medium memory buffer
-static uint8_t _mem2_medium
-[(WISUN_COAP_MEMORY_MEDIUM_SIZE   * WISUN_COAP_MEMORY_MEDIUM_COUNT)] = { 0 };
+SL_ALIGN(4) static uint8_t _mem2_medium
+[(WISUN_COAP_MEMORY_MEDIUM_SIZE   * WISUN_COAP_MEMORY_MEDIUM_COUNT)] SL_ATTRIBUTE_ALIGN(4) = { 0 };
 
 /// High memory buffer
-static uint8_t _mem3_high
-[(WISUN_COAP_MEMORY_HIGH_SIZE     * WISUN_COAP_MEMORY_HIGH_COUNT)] = { 0 };
+SL_ALIGN(4) static uint8_t _mem3_high
+[(WISUN_COAP_MEMORY_HIGH_SIZE     * WISUN_COAP_MEMORY_HIGH_COUNT)] SL_ATTRIBUTE_ALIGN(4) = { 0 };
 
 /// Memory handler array
 static _coap_mem_t _mem[WISUN_COAP_MEMORY_OPTION_COUNT] = {

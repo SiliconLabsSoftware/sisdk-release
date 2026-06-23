@@ -150,12 +150,8 @@ void app_init(void)
   const osThreadAttr_t app_task_attr = {
     .name        = "AppMain",
     .attr_bits   = osThreadDetached,
-    .cb_mem      = NULL,
-    .cb_size     = 0,
-    .stack_mem   = NULL,
     .stack_size  = app_stack_size_word_to_byte(SL_WISUN_APP_CORE_MAIN_STACK_SIZE_WORD),
-    .priority    = osPriorityNormal,
-    .tz_module   = 0
+    .priority    = osPriorityNormal
   };
   osThreadId_t app_thr_id = osThreadNew(app_task,
                                         NULL,

@@ -123,10 +123,10 @@ static void app_proprietary_task(void *p_arg)
   // example, within a DMP application. However, it is commented out to      //
   // demonstrate the lowest possible power consumption as well.              //
   //                                                                         //
-  // PLEASE NOTE: ENABLING CONSTANT RECIEVING HAS HEAVY IMPACT ON POWER      //
+  // PLEASE NOTE: ENABLING CONSTANT RECEIVING HAS HEAVY IMPACT ON POWER      //
   // CONSUMPTION OF YOUR PRODUCT.                                            //
   //                                                                         //
-  // For further examples on sending / recieving in a DMP application, and   //
+  // For further examples on sending / receiving in a DMP application, and   //
   // also on reducing the overall power demand, the following Connect and    //
   // RAIL projects could serve as a good starting point:                     //
   //                                                                         //

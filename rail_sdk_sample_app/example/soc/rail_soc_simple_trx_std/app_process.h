@@ -43,11 +43,11 @@
 
 /// State machine states
 typedef enum {
-  S_INIT,             //!< Initialization before communication
-  S_IDLE,             //!< Idle state waiting for TX or RX
-  S_TRANSMIT,         //!< Request to TX a packet
-  S_RECEIVE,          //!< Receiving a packet
-  S_ERROR             //!< An error occurred
+  S_INIT = 0,             //!< Initialization before communication
+  S_IDLE = 1,             //!< Idle state waiting for TX or RX
+  S_TRANSMIT = 2,         //!< Request to TX a packet
+  S_RECEIVE = 3,          //!< Receiving a packet
+  S_ERROR = 4             //!< An error occurred
 } state_t;
 
 // -----------------------------------------------------------------------------
@@ -70,14 +70,9 @@ extern bool is_ieee802154_app(void);
  *****************************************************************************/
 extern bool is_ble_app(void);
 
-/**************************************************************************//**
- * The function is used for Application logic.
- *
- * @param[in] rail_handle     Handle to the RAIL context
- *
- * The function is used for Application logic.
- * It is called infinitely.
- *****************************************************************************/
+/*******************************************************************************
+ * Application state machine, called infinitely
+ ******************************************************************************/
 void app_process_action(void);
 
 /**************************************************************************//**

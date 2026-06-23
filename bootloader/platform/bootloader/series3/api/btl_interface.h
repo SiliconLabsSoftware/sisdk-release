@@ -21,7 +21,7 @@
 
 #include "btl_errorcode.h"
 #include "btl_reset_info.h"
-#include "application_properties.h"
+#include "api/application_properties.h"
 
 // Include component-specific interfaces
 #include "btl_interface_parser.h"

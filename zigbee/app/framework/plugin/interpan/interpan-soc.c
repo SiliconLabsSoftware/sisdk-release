@@ -57,9 +57,15 @@ void sl_zigbee_af_interpan_init_cb(uint8_t init_level)
 
 void interpanPluginSetMacMatchFilterEnable(bool enable)
 {
-  const sl_zigbee_mac_filter_match_data_t* matchData = enable ? filters : NULL;
+  uint8_t listLength = (uint8_t)(sizeof(filters) / sizeof(sl_zigbee_mac_filter_match_data_t));
+  const sl_zigbee_mac_filter_match_data_t* matchData = filters;
 
-  sl_status_t status = sl_zigbee_set_mac_filter_match_list(matchData, sizeof(filters) / sizeof(sl_zigbee_mac_filter_match_data_t));
+  if (!enable) {
+    matchData = NULL;
+    listLength = 0;
+  }
+
+  sl_status_t status = sl_zigbee_set_mac_filter_match_list(matchData, listLength);
   if (status != SL_STATUS_OK) {
     sl_zigbee_af_app_println("ERR: failed %s inter-PAN MAC filter (0x%02X)",
                              enable ? "enabling" : "disabling",

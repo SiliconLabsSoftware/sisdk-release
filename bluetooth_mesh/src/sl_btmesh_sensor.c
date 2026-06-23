@@ -260,7 +260,7 @@ uint8_t mesh_sensor_data_to_buf(uint16_t property_id, uint8_t *ptr, uint8_t *val
     case AVERAGE_OUTPUT_CURRENT:
     {
       uint8_to_buf(ptr++, 3);
-      average_current_t *ac = (average_current_t*)value;
+      const average_current_t *ac = (const average_current_t*)value;
       uint16_to_buf(ptr, ac->current);
       uint8_to_buf(ptr + 2, ac->duration);
       ret += 4;
@@ -270,7 +270,7 @@ uint8_t mesh_sensor_data_to_buf(uint16_t property_id, uint8_t *ptr, uint8_t *val
     case AVERAGE_OUTPUT_VOLTAGE:
     {
       uint8_to_buf(ptr++, 3);
-      average_voltage_t *av = (average_voltage_t*)value;
+      const average_voltage_t *av = (const average_voltage_t*)value;
       uint16_to_buf(ptr, av->voltage);
       uint8_to_buf(ptr + 2, av->duration);
       ret += 4;
@@ -280,7 +280,7 @@ uint8_t mesh_sensor_data_to_buf(uint16_t property_id, uint8_t *ptr, uint8_t *val
     case PRESENT_CIE_1931_CHROMATICITY_COORDINATES:
     {
       uint8_to_buf(ptr++, 4);
-      chromaticity_coordinates_t *cc = (chromaticity_coordinates_t*)value;
+      const chromaticity_coordinates_t *cc = (const chromaticity_coordinates_t*)value;
       uint16_to_buf(ptr, cc->x);
       uint16_to_buf(ptr + 2, cc->y);
       ret += 5;
@@ -289,7 +289,7 @@ uint8_t mesh_sensor_data_to_buf(uint16_t property_id, uint8_t *ptr, uint8_t *val
     case OUTPUT_CURRENT_RANGE:
     {
       uint8_to_buf(ptr++, 4);
-      electric_current_range_t *range = (electric_current_range_t*)value;
+      const electric_current_range_t *range = (const electric_current_range_t*)value;
       uint16_to_buf(ptr, range->minimum);
       uint16_to_buf(ptr + 2, range->maximum);
       ret += 5;
@@ -297,7 +297,7 @@ uint8_t mesh_sensor_data_to_buf(uint16_t property_id, uint8_t *ptr, uint8_t *val
     case INPUT_CURRENT_RANGE_SPECIFICATION:
     {
       uint8_to_buf(ptr++, 6);
-      electric_current_specification_t *spec = (electric_current_specification_t*)value;
+      const electric_current_specification_t *spec = (const electric_current_specification_t*)value;
       uint16_to_buf(ptr, spec->minimum);
       uint16_to_buf(ptr + 2, spec->typical);
       uint16_to_buf(ptr + 4, spec->maximum);
@@ -307,7 +307,7 @@ uint8_t mesh_sensor_data_to_buf(uint16_t property_id, uint8_t *ptr, uint8_t *val
     case OUTPUT_CURRENT_STATISTICS:
     {
       uint8_to_buf(ptr++, 9);
-      electric_current_statistics_t *stat = (electric_current_statistics_t*)value;
+      const electric_current_statistics_t *stat = (const electric_current_statistics_t*)value;
       uint16_to_buf(ptr, stat->current);
       uint16_to_buf(ptr + 2, stat->std_deviation);
       uint16_to_buf(ptr + 4, stat->minimum);
@@ -318,7 +318,7 @@ uint8_t mesh_sensor_data_to_buf(uint16_t property_id, uint8_t *ptr, uint8_t *val
     case RELATIVE_DEVICE_ENERGY_USE_IN_A_PERIOD_OF_DAY:
     {
       uint8_to_buf(ptr++, 4);
-      energy_in_a_period_of_day_t *e = (energy_in_a_period_of_day_t*)value;
+      const energy_in_a_period_of_day_t *e = (const energy_in_a_period_of_day_t*)value;
       uint16_to_buf(ptr, e->energy);
       uint8_to_buf(ptr + 2, e->start_time);
       uint8_to_buf(ptr + 3, e->end_time);
@@ -336,7 +336,7 @@ uint8_t mesh_sensor_data_to_buf(uint16_t property_id, uint8_t *ptr, uint8_t *val
     case SHORT_CIRCUIT_EVENT_STATISTICS:
     {
       uint8_to_buf(ptr++, 6);
-      event_statistics_t *stat = (event_statistics_t*)value;
+      const event_statistics_t *stat = (const event_statistics_t*)value;
       uint16_to_buf(ptr, stat->number_of_events);
       uint16_to_buf(ptr + 2, stat->average_event_duration);
       uint8_to_buf(ptr + 4, stat->time_since_last_event);
@@ -346,7 +346,7 @@ uint8_t mesh_sensor_data_to_buf(uint16_t property_id, uint8_t *ptr, uint8_t *val
     case DEVICE_POWER_RANGE_SPECIFICATION:
     {
       uint8_to_buf(ptr++, 9);
-      power_specification_t *spec = (power_specification_t*)value;
+      const power_specification_t *spec = (const power_specification_t*)value;
       uint24_to_buf(ptr, spec->minimum_power_value);
       uint24_to_buf(ptr + 3, spec->typical_power_value);
       uint24_to_buf(ptr + 6, spec->maximum_power_value);
@@ -355,7 +355,7 @@ uint8_t mesh_sensor_data_to_buf(uint16_t property_id, uint8_t *ptr, uint8_t *val
     case AVERAGE_AMBIENT_TEMPERATURE_IN_A_PERIOD_OF_DAY:
     {
       uint8_to_buf(ptr++, 3);
-      temperature_8_in_a_period_of_day_t *t = (temperature_8_in_a_period_of_day_t*)value;
+      const temperature_8_in_a_period_of_day_t *t = (const temperature_8_in_a_period_of_day_t*)value;
       uint8_to_buf(ptr, t->temperature);
       uint8_to_buf(ptr + 1, t->start_time);
       uint8_to_buf(ptr + 2, t->end_time);
@@ -365,7 +365,7 @@ uint8_t mesh_sensor_data_to_buf(uint16_t property_id, uint8_t *ptr, uint8_t *val
     case OUTDOOR_STATISTICAL_VALUES:
     {
       uint8_to_buf(ptr++, 5);
-      temperature_8_statistics_t *stat = (temperature_8_statistics_t*)value;
+      const temperature_8_statistics_t *stat = (const temperature_8_statistics_t*)value;
       uint8_to_buf(ptr, stat->average);
       uint8_to_buf(ptr + 1, stat->standard_deviation_value);
       uint8_to_buf(ptr + 2, stat->minimum_value);
@@ -376,7 +376,7 @@ uint8_t mesh_sensor_data_to_buf(uint16_t property_id, uint8_t *ptr, uint8_t *val
     case DEVICE_OPERATING_TEMPERATURE_RANGE_SPECIFICATION:
     {
       uint8_to_buf(ptr++, 4);
-      temperature_range_t *r = (temperature_range_t*)value;
+      const temperature_range_t *r = (const temperature_range_t*)value;
       uint16_to_buf(ptr, r->minimum);
       uint16_to_buf(ptr + 2, r->maximum);
       ret += 5;
@@ -384,7 +384,7 @@ uint8_t mesh_sensor_data_to_buf(uint16_t property_id, uint8_t *ptr, uint8_t *val
     case DEVICE_OPERATING_TEMPERATURE_STATISTICAL_VALUES:
     {
       uint8_to_buf(ptr++, 9);
-      temperature_statistics_t *stat = (temperature_statistics_t*)value;
+      const temperature_statistics_t *stat = (const temperature_statistics_t*)value;
       uint16_to_buf(ptr, stat->average);
       uint16_to_buf(ptr + 2, stat->standard_deviation);
       uint16_to_buf(ptr + 4, stat->minimum);
@@ -396,7 +396,7 @@ uint8_t mesh_sensor_data_to_buf(uint16_t property_id, uint8_t *ptr, uint8_t *val
     case OUTPUT_VOLTAGE_RANGE:
     {
       uint8_to_buf(ptr++, 6);
-      voltage_specification_t *v = (voltage_specification_t*)value;
+      const voltage_specification_t *v = (const voltage_specification_t*)value;
       uint16_to_buf(ptr, v->minimum);
       uint16_to_buf(ptr + 2, v->typical);
       uint16_to_buf(ptr + 4, v->maximum);
@@ -406,7 +406,7 @@ uint8_t mesh_sensor_data_to_buf(uint16_t property_id, uint8_t *ptr, uint8_t *val
     case OUTPUT_VOLTAGE_STATISTICS:
     {
       uint8_to_buf(ptr++, 9);
-      voltage_statistics_t *stat = (voltage_statistics_t*)value;
+      const voltage_statistics_t *stat = (const voltage_statistics_t*)value;
       uint16_to_buf(ptr, stat->average);
       uint16_to_buf(ptr + 2, stat->standard_deviation);
       uint16_to_buf(ptr + 4, stat->minimum);

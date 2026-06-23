@@ -115,7 +115,7 @@ void esl_lib_init(char *config)
 {
   sl_status_t sc;
 
-  // Allocate and intialize radio data container
+  // Allocate and initialize radio data container
   sc = ap_init(&ap_state);
   if (sc != SL_STATUS_OK) {
     esl_lib_log_core_critical("Failed to allocate memory!" APP_LOG_NL);
@@ -286,7 +286,7 @@ static void esl_lib_core_on_bt_event(sl_bt_msg_t *evt)
                                ESL_LIB_CONN_MAX_CE_LENGTH);
       }
 
-      // Try to set prefferred PHY (not forced, not critical)
+      // Try to set preferred PHY (not forced, not critical)
       sc = sl_bt_connection_set_default_preferred_phy(sl_bt_gap_phy_2m,
                                                       sl_bt_gap_phy_1m | sl_bt_gap_phy_2m);
       if (sc != SL_STATUS_OK) {
@@ -389,7 +389,7 @@ static void esl_lib_core_on_bt_event(sl_bt_msg_t *evt)
       } else {
         lib_critical_error = true;
       }
-      esl_lib_log_core_error("System error occured, sc = 0x%04x, data=0x%08x" APP_LOG_NL, evt->data.evt_system_error.reason, data);
+      esl_lib_log_core_error("System error occurred, sc = 0x%04x, data=0x%08x" APP_LOG_NL, evt->data.evt_system_error.reason, data);
     } break;
 
     default:

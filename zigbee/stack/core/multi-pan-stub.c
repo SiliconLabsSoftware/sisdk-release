@@ -27,6 +27,7 @@
 #endif
 #include "stack/config/sl_zigbee_token_defines.h"
 #include "sl_token_manager_api.h"
+#include "stack/include/sl_zigbee_token.h"
 
 const sl_zigbee_library_status_t sli_zigbee_multi_pan_library_status = SL_ZIGBEE_LIBRARY_IS_STUB;
 
@@ -75,7 +76,7 @@ sl_status_t sli_zigbee_get_child_token_for_current_network(void *data,
 
   switch (tokenAddress) {
     case COMMON_TOKEN_STACK_CHILD_TABLE: {
-      status = sl_token_manager_get_data(COMMON_TOKEN_STACK_CHILD_TABLE + childIndex,
+      status = slx_zigbee_token_manager_get_data(COMMON_TOKEN_STACK_CHILD_TABLE + childIndex,
                                          (void *)data,
                                          sizeof(tokTypeStackChildTable));
 
@@ -83,7 +84,7 @@ sl_status_t sli_zigbee_get_child_token_for_current_network(void *data,
     }
 
     case COMMON_TOKEN_STACK_ADDITIONAL_CHILD_DATA: {
-      status = sl_token_manager_get_data(COMMON_TOKEN_STACK_ADDITIONAL_CHILD_DATA + childIndex,
+      status = slx_zigbee_token_manager_get_data(COMMON_TOKEN_STACK_ADDITIONAL_CHILD_DATA + childIndex,
                                          (void *)data,
                                          sizeof(tokTypeStackAdditionalChildData));
 
@@ -105,13 +106,13 @@ sl_status_t sli_zigbee_set_child_token_for_current_network(uint32_t tokenAddress
 
   switch (tokenAddress) {
     case COMMON_TOKEN_STACK_CHILD_TABLE: {
-      status = sl_token_manager_set_data(COMMON_TOKEN_STACK_CHILD_TABLE + childIndex, (void *)data, sizeof(tokTypeStackChildTable));
+      status = slx_zigbee_token_manager_set_data(COMMON_TOKEN_STACK_CHILD_TABLE + childIndex, (void *)data, sizeof(tokTypeStackChildTable));
 
       break;
     }
 
     case COMMON_TOKEN_STACK_ADDITIONAL_CHILD_DATA: {
-      status = sl_token_manager_set_data(COMMON_TOKEN_STACK_ADDITIONAL_CHILD_DATA + childIndex, (void *)data, sizeof(tokTypeStackAdditionalChildData));
+      status = slx_zigbee_token_manager_set_data(COMMON_TOKEN_STACK_ADDITIONAL_CHILD_DATA + childIndex, (void *)data, sizeof(tokTypeStackAdditionalChildData));
 
       break;
     }

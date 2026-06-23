@@ -53,7 +53,8 @@ static const RAIL_PaAutoModeConfigEntry_t RAIL_PaAutoModeConfigDefault[] = {
 };
 #elif ((_SILICON_LABS_32B_SERIES_2_CONFIG == 2) \
   || (_SILICON_LABS_32B_SERIES_2_CONFIG == 7)   \
-  || (_SILICON_LABS_32B_SERIES_2_CONFIG == 9) )
+  || (_SILICON_LABS_32B_SERIES_2_CONFIG == 9)   \
+  || (_SILICON_LABS_32B_SERIES_2_CONFIG == 11))
 static const RAIL_PaAutoModeConfigEntry_t RAIL_PaAutoModeConfigDefault[] = {
   {
     .min = -287,
@@ -77,12 +78,57 @@ static const RAIL_PaAutoModeConfigEntry_t RAIL_PaAutoModeConfigDefault[] = {
 #elif ((_SILICON_LABS_32B_SERIES_2_CONFIG == 3) \
   || (_SILICON_LABS_32B_SERIES_2_CONFIG == 13))
 static const RAIL_PaAutoModeConfigEntry_t RAIL_PaAutoModeConfigDefault[] = {
+ #if ((_SILICON_LABS_EFR32_SUBGHZ_HP_PA_MAX_OUTPUT_DBM >= 19) \
+  && defined(_SILICON_LABS_EFR32_SUBGHZ_HP_PA_PRESENT))
+  // 20 dBm parts
   {
     .min = INT16_MIN,
+    .max = -101,
+    .mode = RAIL_TX_POWER_MODE_SUBGIG_LLP,
+    .band = RAIL_PA_BAND_SUBGIG
+  },
+  {
+    .min = -100,
+    .max = -10,
+    .mode = RAIL_TX_POWER_MODE_SUBGIG_LP,
+    .band = RAIL_PA_BAND_SUBGIG
+  },
+  {
+    .min = -9,
     .max = INT16_MAX,
     .mode = RAIL_TX_POWER_MODE_SUBGIG_HP,
     .band = RAIL_PA_BAND_SUBGIG
   },
+ #elif ((_SILICON_LABS_EFR32_SUBGHZ_HP_PA_MAX_OUTPUT_DBM >= 9) \
+  && defined(_SILICON_LABS_EFR32_SUBGHZ_HP_PA_PRESENT))
+  // 10 and 14 dBm parts
+  {
+    .min = INT16_MIN,
+    .max = -91,
+    .mode = RAIL_TX_POWER_MODE_SUBGIG_LLP,
+    .band = RAIL_PA_BAND_SUBGIG
+  },
+  {
+    .min = -90,
+    .max = -20,
+    .mode = RAIL_TX_POWER_MODE_SUBGIG_MP,
+    .band = RAIL_PA_BAND_SUBGIG
+  },
+  {
+    .min = -19,
+    .max = INT16_MAX,
+    .mode = RAIL_TX_POWER_MODE_SUBGIG_HP,
+    .band = RAIL_PA_BAND_SUBGIG
+  },
+ #else
+  // Other parts that don't fit above -- just use HIGHEST available
+  {
+    .min = INT16_MIN,
+    .max = INT16_MAX,
+    .mode = RAIL_TX_POWER_MODE_SUBGIG_HIGHEST,
+    .band = RAIL_PA_BAND_SUBGIG
+  },
+ #endif
   {
     .min = INT16_MIN,
     .max = INT16_MAX,
@@ -150,16 +196,61 @@ static const RAIL_PaAutoModeConfigEntry_t RAIL_PaAutoModeConfigDefault[] = {
 };
 #elif _SILICON_LABS_32B_SERIES_2_CONFIG == 8
 static const RAIL_PaAutoModeConfigEntry_t RAIL_PaAutoModeConfigDefault[] = {
+ #if ((_SILICON_LABS_EFR32_SUBGHZ_HP_PA_MAX_OUTPUT_DBM >= 19) \
+  && defined(_SILICON_LABS_EFR32_SUBGHZ_HP_PA_PRESENT))
+  // 20 dBm parts
   {
     .min = INT16_MIN,
+    .max = -101,
+    .mode = RAIL_TX_POWER_MODE_SUBGIG_LLP,
+    .band = RAIL_PA_BAND_SUBGIG
+  },
+  {
+    .min = -100,
+    .max = -10,
+    .mode = RAIL_TX_POWER_MODE_SUBGIG_LP,
+    .band = RAIL_PA_BAND_SUBGIG
+  },
+  {
+    .min = -9,
     .max = INT16_MAX,
     .mode = RAIL_TX_POWER_MODE_SUBGIG_HP,
     .band = RAIL_PA_BAND_SUBGIG
   },
+ #elif ((_SILICON_LABS_EFR32_SUBGHZ_HP_PA_MAX_OUTPUT_DBM >= 9) \
+  && defined(_SILICON_LABS_EFR32_SUBGHZ_HP_PA_PRESENT))
+  // 10 and 14 dBm parts
+  {
+    .min = INT16_MIN,
+    .max = -91,
+    .mode = RAIL_TX_POWER_MODE_SUBGIG_LLP,
+    .band = RAIL_PA_BAND_SUBGIG
+  },
+  {
+    .min = -90,
+    .max = -20,
+    .mode = RAIL_TX_POWER_MODE_SUBGIG_MP,
+    .band = RAIL_PA_BAND_SUBGIG
+  },
+  {
+    .min = -19,
+    .max = INT16_MAX,
+    .mode = RAIL_TX_POWER_MODE_SUBGIG_HP,
+    .band = RAIL_PA_BAND_SUBGIG
+  },
+ #else
+  // Other parts that don't fit above -- just use HIGHEST available
   {
     .min = INT16_MIN,
     .max = INT16_MAX,
-    .mode = RAIL_TX_POWER_MODE_2P4GIG_HP,
+    .mode = RAIL_TX_POWER_MODE_SUBGIG_HIGHEST,
+    .band = RAIL_PA_BAND_SUBGIG
+  },
+ #endif
+  {
+    .min = INT16_MIN,
+    .max = INT16_MAX,
+    .mode = RAIL_TX_POWER_MODE_2P4GIG_HIGHEST,
     .band = RAIL_PA_BAND_2P4GIG
   },
   {
@@ -206,7 +297,7 @@ static const RAIL_PaAutoModeConfigEntry_t RAIL_PaAutoModeConfigDefault[] = {
     .band = RAIL_PA_BAND_COUNT
   }
 };
-#endif
+#endif//!RAIL_PRIVATE_BUILD
 #endif
 
 // RAIL_PaAutoModeConfig points at a constant object of RAIL_PaAutoModeConfigDefault or
@@ -266,8 +357,9 @@ RAIL_Status_t RAILCb_PaAutoModeDecision(RAIL_Handle_t railHandle,
       continue;
     }
 #endif
-    if (RAIL_SupportsTxPowerMode(railHandle, entry.mode, NULL)) {
-      *mode = entry.mode;
+    RAIL_TxPowerMode_t tryMode = entry.mode;
+    if (RAIL_SupportsTxPowerModeAlt(railHandle, &tryMode, NULL, NULL)) {
+      *mode = tryMode;
       if ((entry.min <= *power) && (entry.max >= *power)) {
         return RAIL_STATUS_NO_ERROR;
       }

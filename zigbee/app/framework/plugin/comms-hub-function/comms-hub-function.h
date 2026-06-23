@@ -37,6 +37,10 @@
 // Printing macros for plugin: Comms Hub Function
 #define sl_zigbee_af_comms_hub_function_print(...)    sl_zigbee_af_app_print(__VA_ARGS__)
 #define sl_zigbee_af_comms_hub_function_println(...)  sl_zigbee_af_app_println(__VA_ARGS__)
+#define sl_zigbee_af_comms_hub_function_warn(...)     sl_zigbee_af_app_warn(__VA_ARGS__)
+#define sl_zigbee_af_comms_hub_function_warnln(...)   sl_zigbee_af_app_warnln(__VA_ARGS__)
+#define sl_zigbee_af_comms_hub_function_error(...)    sl_zigbee_af_app_error(__VA_ARGS__)
+#define sl_zigbee_af_comms_hub_function_errorln(...)  sl_zigbee_af_app_errorln(__VA_ARGS__)
 #define sl_zigbee_af_comms_hub_function_debug_exec(x)  sl_zigbee_af_app_debug_exec(x)
 #define sl_zigbee_af_comms_hub_function_print_buffer(buffer, len, withSpace) sl_zigbee_af_app_print_buffer(buffer, len, withSpace)
 

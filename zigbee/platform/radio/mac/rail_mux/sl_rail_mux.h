@@ -21,8 +21,11 @@
 #include PLATFORM_HEADER
 #include "sl_status.h"
 
-// TODO: possibly turn this into a CMSIS option
-#define SUPPORTED_PROTOCOL_COUNT 2
+/* Three slots: two primary stacks (0,1) + optional aux/manual (2). Override for 2-context legacy builds. */
+#ifndef SL_RAIL_MUX_SUPPORTED_PROTOCOL_COUNT
+#define SL_RAIL_MUX_SUPPORTED_PROTOCOL_COUNT 3
+#endif
+#define SUPPORTED_PROTOCOL_COUNT SL_RAIL_MUX_SUPPORTED_PROTOCOL_COUNT
 
 // Global flags
 #define RAIL_MUX_FLAGS_IEEE802154_INIT_COMPLETED                          0x0004
@@ -68,8 +71,9 @@
 
 #include "sl_rail_types.h"
 #include "sl_rail_ieee802154.h"
-#include "sl_rail_util_ieee802154/sl_rail_util_ieee802154_stack_event.h"
-#include "coexistence/protocol/ieee802154_uc/coexistence-802154.h"
+#include "sl_rail_util_ieee802154_stack_event.h"
+
+#include "coexistence-802154.h"
 
 typedef enum {
   SLI_RAIL_MUX_SCHEDULED_TX_REQUEST,
@@ -167,6 +171,23 @@ sl_rail_status_t sl_rail_mux_config_events(sl_rail_handle_t railHandle,
 sl_rail_status_t sl_rail_mux_init(sl_rail_handle_t *p_rail_handle,
                                   sl_rail_config_t *p_rail_config,
                                   sl_rail_init_complete_callback_t init_complete_callback);
+
+/** Like @ref sl_rail_mux_init but binds to a fixed @a context_index (must be free). */
+sl_rail_status_t sl_rail_mux_init_at_context_index(sl_rail_handle_t *p_rail_handle,
+                                                 sl_rail_config_t *p_rail_config,
+                                                 sl_rail_init_complete_callback_t init_complete_callback,
+                                                 uint8_t context_index);
+
+/**
+ * @brief First logical context index mapped to RAIL fast channel-switching slot 0.
+ *
+ * Starts at @c 0. When the highest-index mux context is successfully initialized (e.g. optional
+ * third client at index @c SUPPORTED_PROTOCOL_COUNT - 1), the base becomes @c 1 so logical
+ * contexts @c 1 and @c 2 map to RAIL slots @c 0 and @c 1. Unregistering that client restores base
+ * @c 0 (see Zigbee @c sl_zigbee_rail_mux_aux_unregister_protocol). Override with a strong
+ * (non-weak) implementation if needed.
+ */
+uint8_t sl_rail_mux_get_ieee802154_rx_channel_switching_slot_base(void);
 
 sl_rail_status_t sl_rail_mux_set_pti_protocol(sl_rail_handle_t railHandle,
                                             sl_rail_pti_protocol_t protocol);
@@ -383,6 +404,7 @@ sl_rail_status_t sl_rail_mux_ieee802154_enable_data_frame_pending(sl_rail_handle
                                                                bool enable);
 
 sl_rail_status_t sl_rail_mux_ieee802154_config_2p4_ghz_radio_2_mbps(sl_rail_handle_t railHandle);
+sl_rail_status_t sl_rail_mux_ieee802154_config_2p4_ghz_radio_rx_duty_cycling(sl_rail_handle_t railHandle);
 
 #ifdef HIGH_DATARATE_PHY
 void sl_rail_mux_set_high_datarate_phy_index(sl_rail_handle_t railHandle);

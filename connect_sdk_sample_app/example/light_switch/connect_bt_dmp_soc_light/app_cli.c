@@ -32,6 +32,8 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <string.h>
+#include <inttypes.h>
+
 #include PLATFORM_HEADER
 #include "em_system.h"
 #include "em_cmu.h"
@@ -112,13 +114,13 @@ void cli_info(sl_cli_command_arg_t *arguments)
   char* is_high_prio = ((tx_options & EMBER_OPTIONS_HIGH_PRIORITY) ? ENABLED : DISABLED);
 
   app_log_info("Info:\n");
-  app_log_info("         MCU Id: 0x%016llX\n", SYSTEM_GetUnique());
-  app_log_info("  Network state: 0x%02X\n", emberNetworkState());
-  app_log_info("      Node type: 0x%02X\n", emberGetNodeType());
-  app_log_info("        Node id: 0x%04X\n", emberGetNodeId());
-  app_log_info("         Pan id: 0x%04X\n", emberGetPanId());
-  app_log_info("        Channel: %d\n", (uint16_t)emberGetRadioChannel());
-  app_log_info("          Power: %d\n", (int16_t)emberGetRadioPower());
+  app_log_info("         MCU Id: 0x%016" PRIX64 "\n", SYSTEM_GetUnique());
+  app_log_info("  Network state: 0x%02" PRIX8 "\n", emberNetworkState());
+  app_log_info("      Node type: 0x%02" PRIX8 "\n", emberGetNodeType());
+  app_log_info("        Node id: 0x%04" PRIX16 "\n", emberGetNodeId());
+  app_log_info("         Pan id: 0x%04" PRIX16 "\n", emberGetPanId());
+  app_log_info("        Channel: %" PRIu16 "\n", emberGetRadioChannel());
+  app_log_info("          Power: %" PRId16 "\n", emberGetRadioPower());
   app_log_info("     TX options: MAC acks %s, security %s, priority %s\n", is_ack, is_security, is_high_prio);
 }
 
@@ -174,7 +176,7 @@ void cli_set_security_key(sl_cli_command_arg_t *arguments)
 #else
   (void)arguments;
   app_log_info("Security plugin: CONNECT AES SECURITY is missing\n");
-  app_log_info("Security key set failed 0x%02X\n", EMBER_ERR_FATAL);
+  app_log_info("Security key set failed 0x%02" PRIX8 "\n", (uint8_t)EMBER_ERR_FATAL);
 #endif
 }
 

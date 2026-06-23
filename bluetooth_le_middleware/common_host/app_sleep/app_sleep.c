@@ -53,7 +53,7 @@ void app_sleep_us(uint64_t usec)
   do {
     // using select() instead of usleep(usec) results in better precision and slightly lower overall CPU usage as well
     ret = select(1, NULL, NULL, NULL, &tv);
-  } while ((ret == -1) && (errno == EINTR)); // select can be interruped by SIGALRM
+  } while ((ret == -1) && (errno == EINTR)); // select can be interrupted by SIGALRM
 }
 #else
 typedef NTSTATUS (NTAPI * PZwSetTimerResolution)(ULONG, BOOLEAN, PULONG);

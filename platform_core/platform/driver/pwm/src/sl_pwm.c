@@ -45,7 +45,7 @@
 //                                Static Functions
 // -----------------------------------------------------------------------------
 
-static void get_timer_clock(TIMER_TypeDef *timer, sl_bus_clock_t *timer_clock, sl_peripheral_t *peripheral)
+static bool get_timer_clock(TIMER_TypeDef *timer, sl_bus_clock_t *timer_clock, sl_peripheral_t *peripheral)
 {
   switch ((uint32_t)timer) {
 #if defined(TIMER0_BASE)
@@ -92,15 +92,18 @@ static void get_timer_clock(TIMER_TypeDef *timer, sl_bus_clock_t *timer_clock, s
 #endif
     default:
       EFM_ASSERT(0);
-      break;
+      return false;
   }
+  return true;
 }
 
 sl_status_t sl_pwm_init(sl_pwm_instance_t *pwm, sl_pwm_config_t *config)
 {
   sl_bus_clock_t timer_clock;
   sl_peripheral_t peripheral;
-  get_timer_clock(pwm->timer, &timer_clock, &peripheral);
+  if (!get_timer_clock(pwm->timer, &timer_clock, &peripheral)) {
+    return SL_STATUS_FAIL;
+  }
   sl_clock_manager_enable_bus_clock(timer_clock);
 
   // Set PWM pin as output
@@ -240,7 +243,9 @@ sl_status_t sl_pwm_deinit(sl_pwm_instance_t *pwm)
 
   sl_bus_clock_t timer_clock;
   sl_peripheral_t peripheral;
-  get_timer_clock(pwm->timer, &timer_clock, &peripheral);
+  if (!get_timer_clock(pwm->timer, &timer_clock, &peripheral)) {
+    return SL_STATUS_FAIL;
+  }
   (void) peripheral;
   sl_clock_manager_disable_bus_clock(timer_clock);
 

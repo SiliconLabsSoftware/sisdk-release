@@ -93,6 +93,7 @@ configuration:
     value: 1
 
 tag:
+  - toolchain:gcc
   - hwfilter:device:device_family_host
 
 readme:

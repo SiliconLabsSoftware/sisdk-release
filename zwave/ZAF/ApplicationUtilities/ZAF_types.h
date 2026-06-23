@@ -326,25 +326,12 @@ typedef void(*ZW_TX_Multi_Callback_t)(uint8_t txStatus);
  */
 typedef void(*ZW_Void_Callback_t)(void);
 
-#ifdef __APPLE__
-#define HANDLER_V2_SECTION "__TEXT,__cc_handlers_v5"
-extern CC_handler_map_v5_t __start__cc_handlers_v5 __asm("section$start$__TEXT$__cc_handlers_v5");
-extern CC_handler_map_v5_t __stop__cc_handlers_v5 __asm("section$end$__TEXT$__cc_handlers_v5");
-#else
 #define HANDLER_SECTION "zw_cc_handlers_v5"
-/**
- * This is the first of the registered app handlers
- */
-extern const CC_handler_map_latest_t __start_zw_cc_handlers_v5;
+/* __start_ / __stop_ are GNU ld range symbols; extern T name[] is the usual incomplete-type idiom (see zaf_event_distributor_soc, ZAF_CC_Invoker). */
+extern const CC_handler_map_latest_t __start_zw_cc_handlers_v5[];
 #define cc_handlers_start __start_zw_cc_handlers_v5
-/**
- * This marks the end of the handlers. The element
- * after the last element. This means that this element
- * is not valid.
- */
-extern const CC_handler_map_latest_t __stop_zw_cc_handlers_v5;
+extern const CC_handler_map_latest_t __stop_zw_cc_handlers_v5[];
 #define cc_handlers_stop __stop_zw_cc_handlers_v5
-#endif
 
 /**
  * This marks the version of the command class handlers
@@ -537,11 +524,7 @@ typedef struct {
  */
 typedef zaf_cc_config_entry_v1_t zaf_cc_config_entry_latest_t;
 
-#ifdef __APPLE__
-#define ZAF_CC_CONFIG_SECTION "__TEXT,__zaf_cc_config"
-#else
 #define ZAF_CC_CONFIG_SECTION "zw_zaf_cc_config"
-#endif
 
 /**
  * Registers a given command class configuration.

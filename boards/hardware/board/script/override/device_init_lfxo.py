@@ -1,6 +1,8 @@
 import yaml
 import os
 
+from siliconlabs.slc.board_gen.util.clock_util import get_board_id
+
 board_data_file = os.path.dirname(__file__) + '/../util/board_data.yaml'
 if os.path.isfile(board_data_file):
     with open(board_data_file, 'r') as f:
@@ -20,16 +22,6 @@ def find_lfxo(hw):
                 if xtal.frequency == 32768:
                     return xtal
     return None
-
-def get_board_id(hw):
-    # Crude way of getting the actual board id that we are trying to generate for
-    # some boards like brd4182a have multiple revisions which we don't care about
-    # so we strip off the last part of the name which is separate by underscore.
-    board_id = ''
-    for bc in hw.board_components:
-        if bc.name != 'brd4001a' and bc.name != 'brd4002a' and bc.name != 'brd4002b':
-            board_id = bc.name
-    return board_id.split('_')[0]
 
 def compatible(provides, hw):
     board_id = get_board_id(hw)

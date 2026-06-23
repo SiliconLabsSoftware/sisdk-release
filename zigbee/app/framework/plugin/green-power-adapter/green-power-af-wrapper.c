@@ -378,6 +378,7 @@ WEAK(sl_status_t sli_zigbee_af_send(sl_zigbee_outgoing_message_type_t type,
   return 0;
 }
 
+#if (SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_PRINT_SYSTEM == 1)
 WEAK(void sl_zigbee_af_print(uint16_t area, const char * formatString, ...))
 {
   (void)area;
@@ -405,6 +406,19 @@ WEAK(void sl_zigbee_af_println(uint16_t functionality, const char * formatString
   (void)functionality;
   (void)formatString;
 }
+
+WEAK(void sl_zigbee_af_print_with_log(uint16_t functionality,
+                                      bool print_new_line,
+                                      uint32_t log_level,
+                                      const char *formatString,
+                                      ...))
+{
+  (void)functionality;
+  (void)print_new_line;
+  (void)log_level;
+  (void)formatString;
+}
+#endif // (SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_PRINT_SYSTEM == 1)
 
 WEAK(bool sl_zigbee_af_memory_byte_compare(const uint8_t *bytes, uint8_t count, uint8_t target))
 {

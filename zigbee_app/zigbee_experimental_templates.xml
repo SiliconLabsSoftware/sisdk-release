@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="ASCII"?>
 <model:MDescriptors xmlns:model="http://www.silabs.com/ss/Studio.ecore">
-  <descriptors name="zigbee_z3_gateway_cpc" label="Zigbee - Z3GatewayCpc" description="This is a Zigbee 3.0 gateway application for a Unix host. As opposed to the standard zigbee_z3_gateway application, this application here uses the Co-Processor Communication (CPC) feature to communicate to a NCP that is also configured with the CPC feature.
-">
+  <descriptors name="zigbee_z3_gateway_cpc" label="Zigbee - Host Z3 Gateway CPC" description="Zigbee 3.0 gateway for Unix host using Co-Processor Communication (CPC) to communicate with an NCP configured with CPC.">
     <properties key="namespace" value="template.uc"/>
     <properties key="keywords" value="universal\ configurator"/>
-    <properties key="solutionReferenceId" value="zigbee.z3.zigbee_z3_gateway_cpc.zigbee_z3_gateway_cpc.slcp"/>
+    <properties key="solutionReferenceId" value="zigbee.zigbee_app.z3.zigbee_z3_gateway_cpc.zigbee_z3_gateway_cpc.slcp"/>
     <properties key="projectFilePaths" value="z3/zigbee_z3_gateway_cpc/zigbee_z3_gateway_cpc.slcp"/>
     <properties key="readmeFiles" value="z3/zigbee_z3_gateway_cpc/readme.md"/>
     <properties key="boardCompatibility" value="com.silabs.board.none"/>

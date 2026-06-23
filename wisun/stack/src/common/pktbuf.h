@@ -32,6 +32,7 @@ struct pktbuf {
     size_t offset_head;
     size_t offset_tail;
     bool   err;
+    bool   use_ws_heap;
 };
 
 // WARN: calls to pktbuf_push_*() can invalidate the returned pointer

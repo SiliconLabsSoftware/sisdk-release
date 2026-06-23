@@ -41,6 +41,10 @@
 
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
+#include "host/posix/dnssd.hpp"
+#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_NAT64_TAYGA
+#include "host/posix/nat64_tayga_host.hpp"
+#endif
 #include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_decoder.hpp"
 #include "lib/spinel/spinel_driver.hpp"
@@ -63,6 +67,12 @@ NcpSpinel::NcpSpinel(void)
     , mPropsObserver(nullptr)
 #if OTBR_ENABLE_SRP_ADVERTISING_PROXY
     , mPublisher(nullptr)
+#endif
+#if OTBR_ENABLE_DNSSD_PLAT
+    , mDiscoveryProxyId(0)
+#endif
+#if OTBR_ENABLE_TREL
+    , mTrelThreadUdpPort(0)
 #endif
 {
     std::fill_n(mWaitingKeyTable, SPINEL_PROP_LAST_STATUS, sizeof(mWaitingKeyTable));
@@ -270,6 +280,9 @@ void NcpSpinel::SrpServerSetEnabled(bool aEnabled)
     }
 }
 
+#endif // OTBR_ENABLE_SRP_ADVERTISING_PROXY
+
+#if OTBR_ENABLE_MDNS && (OTBR_ENABLE_SRP_ADVERTISING_PROXY || OTBR_ENABLE_DNSSD_PLAT)
 void NcpSpinel::DnssdSetState(Mdns::Publisher::State aState)
 {
     otError          error;
@@ -282,7 +295,46 @@ void NcpSpinel::DnssdSetState(Mdns::Publisher::State aState)
         otbrLogWarning("Failed to call DnssdSetState, %s", otThreadErrorToString(error));
     }
 }
-#endif // OTBR_ENABLE_SRP_ADVERTISING_PROXY
+#endif
+
+#if OTBR_ENABLE_TREL
+void NcpSpinel::SetTrelStateChangedCallback(const TrelStateChangedCallback &aCallback)
+{
+    mTrelStateChangedCallback = aCallback;
+
+    otbrLogInfo("SetTrelStateChangedCallback: enabling TREL on NCP (SPINEL_PROP_TREL_USER_ENABLE)");
+    if (SetProperty(SPINEL_PROP_TREL_USER_ENABLE,
+                    [](ot::Spinel::Encoder &aEncoder) { return aEncoder.WriteBool(true); }) != OT_ERROR_NONE)
+    {
+        otbrLogWarning("Failed to set TREL user enable on NCP");
+    }
+
+    // Pull current TREL state so the UDP proxy starts when the NCP already had TREL enabled
+    // (otbr-only restart without an NCP reset does not emit a TREL_STATE notify).
+    SuccessOrDie(GetProperty(SPINEL_PROP_TREL_STATE), "Failed to get TREL state");
+}
+
+otError NcpSpinel::SetTrelHostUdpPort(bool aEnabled, uint16_t aHostPort)
+{
+    otError      error        = OT_ERROR_NONE;
+    EncodingFunc encodingFunc = [aEnabled, aHostPort](ot::Spinel::Encoder &aEncoder) {
+        otError encErr = OT_ERROR_NONE;
+        SuccessOrExit(encErr = aEncoder.WriteBool(aEnabled));
+        SuccessOrExit(encErr = aEncoder.WriteUint16(aHostPort));
+    exit:
+        return encErr;
+    };
+
+    otbrLogInfo("SetTrelHostUdpPort: enabled=%s hostUdpPort=%u", aEnabled ? "true" : "false", aHostPort);
+    error = SetProperty(SPINEL_PROP_TREL_STATE, encodingFunc);
+    if (error != OT_ERROR_NONE)
+    {
+        otbrLogWarning("Failed to set TREL host UDP port on NCP, %s", otThreadErrorToString(error));
+    }
+
+    return error;
+}
+#endif
 
 void NcpSpinel::SetBorderAgentMeshCoPServiceChangedCallback(const BorderAgentMeshCoPServiceChangedCallback &aCallback)
 {
@@ -438,6 +490,12 @@ void NcpSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, ui
 
         SuccessOrExit(error = SpinelDataUnpack(aBuffer, aLength, SPINEL_DATATYPE_UINT_PACKED_S, &status));
 
+        if (status >= SPINEL_STATUS_RESET__BEGIN && status <= SPINEL_STATUS_RESET__END)
+        {
+            HandleNcpUnexpectedReset(status);
+            ExitNow();
+        }
+
         otbrLogInfo("NCP last status: %s", spinel_status_to_cstr(status));
         break;
     }
@@ -520,6 +578,7 @@ void NcpSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, ui
     }
 
     case SPINEL_PROP_STREAM_NET:
+    case SPINEL_PROP_STREAM_NET_INSECURE:
     {
         const uint8_t *data;
         uint16_t       dataLen;
@@ -604,18 +663,32 @@ void NcpSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, ui
         break;
     }
 
-    case SPINEL_PROP_TREL_UDP_PORT:
+#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_NAT64_TAYGA
+    case SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX:
     {
-        uint16_t port;
-        SuccessOrExit(error = SpinelDataUnpack(aBuffer, aLength, SPINEL_DATATYPE_UINT16_S, &port));
-        if (port != mTrelPort)
-        {
-            mTrelPort = port;
-            SafeInvoke(mTrelPortChangedCallback, mTrelPort);
-        }
-        otbrLogInfo("TREL UDP port updated: %u", port);
+        otIp6Prefix prefix;
+
+        SuccessOrExit(ParseNat64FavoredPrefix(aBuffer, aLength, prefix) == OT_ERROR_NONE, error = OTBR_ERROR_PARSE);
+        SyncNat64Tayga(prefix);
         break;
     }
+#endif
+
+#if OTBR_ENABLE_TREL
+    case SPINEL_PROP_TREL_STATE:
+    {
+        bool                enabled;
+        uint16_t            port;
+        ot::Spinel::Decoder decoder;
+
+        decoder.Init(aBuffer, aLength);
+        SuccessOrExit(decoder.ReadBool(enabled), error = OTBR_ERROR_PARSE);
+        SuccessOrExit(decoder.ReadUint16(port), error = OTBR_ERROR_PARSE);
+        otbrLogInfo("NCP TREL_STATE notify: enabled=%s threadUdpPort=%u", enabled ? "true" : "false", port);
+        SafeInvoke(mTrelStateChangedCallback, enabled, port);
+        break;
+    }
+#endif
 
     default:
         otbrLogWarning("Received unrecognized key: %u", aKey);
@@ -623,71 +696,9 @@ void NcpSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, ui
     }
 
 exit:
-    otbrLogResult(error, "%s, Property:%s", __FUNCTION__, spinel_prop_key_to_cstr(aKey));
+    otbrLogResult(error, "%s, key: %u, Property:%s", __FUNCTION__, aKey, spinel_prop_key_to_cstr(aKey));
     return;
 }
-
-void ParseTrelPeerInfo(ot::Spinel::Decoder &aDecoder, NcpSpinel::TrelPeerInfo &aPeerInfo, otbrError &aError)
-{
-    const otExtAddress *extAddr;
-    const otIp6Address *ip6;
-    uint16_t            port;
-    uint8_t             flags;
-    const uint8_t      *txtData;
-    uint16_t            txtLen;
-    SuccessOrExit(aDecoder.ReadEui64(extAddr), aError = OTBR_ERROR_PARSE);
-    memcpy(aPeerInfo.mExtAddr, extAddr->m8, sizeof(aPeerInfo.mExtAddr));
-    SuccessOrExit(aDecoder.ReadIp6Address(ip6), aError = OTBR_ERROR_PARSE);
-    memcpy(&aPeerInfo.mIp6Addr, ip6->mFields.m8, sizeof(aPeerInfo.mIp6Addr.mFields.m8));
-    SuccessOrExit(aDecoder.ReadUint16(port), aError = OTBR_ERROR_PARSE);
-    aPeerInfo.mPort = port;
-    SuccessOrExit(aDecoder.ReadUint8(flags), aError = OTBR_ERROR_PARSE);
-    aPeerInfo.mFlags = flags;
-    SuccessOrExit(aDecoder.ReadUint16(txtLen), aError = OTBR_ERROR_PARSE);
-    SuccessOrExit(aDecoder.ReadData(txtData, txtLen), aError = OTBR_ERROR_PARSE);
-    aPeerInfo.mTxtData.assign(txtData, txtData + txtLen);
-exit:
-    return;
-}
-
-otError NcpSpinel::EncodeTrelPeerInfo(const TrelPeerInfo &aPeerInfo, ot::Spinel::Encoder &aEncoder)
-{
-    otError      error = OT_ERROR_NONE;
-    otExtAddress ext;
-    memcpy(ext.m8, aPeerInfo.mExtAddr, sizeof(ext.m8));
-    SuccessOrExit(error = aEncoder.WriteEui64(ext));
-    SuccessOrExit(error = aEncoder.WriteIp6Address(aPeerInfo.mIp6Addr));
-    SuccessOrExit(error = aEncoder.WriteUint16(aPeerInfo.mPort));
-    SuccessOrExit(error = aEncoder.WriteUint8(aPeerInfo.mFlags));
-    SuccessOrExit(error = aEncoder.WriteUint16(static_cast<uint16_t>(aPeerInfo.mTxtData.size())));
-    if (!aPeerInfo.mTxtData.empty())
-    {
-        SuccessOrExit(
-            error = aEncoder.WriteData(aPeerInfo.mTxtData.data(), static_cast<uint16_t>(aPeerInfo.mTxtData.size())));
-    }
-exit:
-    return error;
-}
-
-#if OTBR_ENABLE_TREL
-otError NcpSpinel::InsertTrelPeer(const TrelPeerInfo &aPeerInfo)
-{
-    EncodingFunc encodingFunc = [this, &aPeerInfo](ot::Spinel::Encoder &aEncoder) {
-        return EncodeTrelPeerInfo(aPeerInfo, aEncoder);
-    };
-    return InsertProperty(SPINEL_PROP_TREL_PEER_INFO, encodingFunc);
-}
-
-otError NcpSpinel::RemoveTrelPeer(const TrelPeerInfo &aPeerInfo)
-{
-    TrelPeerInfo tmp = aPeerInfo;
-    tmp.mFlags |= 0x01;
-    EncodingFunc encodingFunc = [this, &tmp](ot::Spinel::Encoder &aEncoder) {
-        return EncodeTrelPeerInfo(tmp, aEncoder);
-    };
-    return RemoveProperty(SPINEL_PROP_TREL_PEER_INFO, encodingFunc);
-}
-#endif // OTBR_ENABLE_TREL
 
 #if OTBR_ENABLE_SRP_ADVERTISING_PROXY
 static std::string KeyNameFor(const otPlatDnssdKey &aKey)
@@ -741,7 +752,7 @@ void NcpSpinel::HandleValueInserted(spinel_prop_key_t aKey, const uint8_t *aBuff
         otPlatDnssdService           service;
         Mdns::Publisher::SubTypeList subTypeList;
         const char                  *subTypeArray[kMaxSubTypes];
-        uint16_t                     subTypeCount;
+        uint16_t                     subTypeCount = kMaxSubTypes;
         Mdns::Publisher::TxtData     txtData;
         otPlatDnssdRequestId         requestId;
         const uint8_t               *callbackData;
@@ -749,7 +760,8 @@ void NcpSpinel::HandleValueInserted(spinel_prop_key_t aKey, const uint8_t *aBuff
         std::vector<uint8_t>         callbackDataCopy;
 
         SuccessOrExit(ot::Spinel::DecodeDnssdService(decoder, service, subTypeArray, subTypeCount, requestId,
-                                                     callbackData, callbackDataSize));
+                                                     callbackData, callbackDataSize),
+                      error = OTBR_ERROR_PARSE);
         for (uint16_t i = 0; i < subTypeCount; i++)
         {
             subTypeList.push_back(subTypeArray[i]);
@@ -783,6 +795,100 @@ void NcpSpinel::HandleValueInserted(spinel_prop_key_t aKey, const uint8_t *aBuff
         break;
     }
 #endif // OTBR_ENABLE_SRP_ADVERTISING_PROXY
+#if OTBR_ENABLE_DNSSD_PLAT
+    case SPINEL_PROP_DNSSD_BROWSER:
+    {
+        otPlatDnssdBrowser   browser;
+        const uint8_t       *callbackData;
+        uint16_t             callbackDataSize;
+        std::vector<uint8_t> callbackDataCopy;
+
+        SuccessOrExit(ot::Spinel::DecodeDnssdBrowser(decoder, browser, callbackData, callbackDataSize));
+        callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
+
+        DnssdPlatform::Get().StartServiceBrowser(browser,
+                                                 std::make_shared<DnssdPlatform::StdBrowseCallback>(
+                                                     [this, callbackDataCopy](const otPlatDnssdBrowseResult &aResult) {
+                                                         SendDnssdBrowseResult(aResult, callbackDataCopy);
+                                                     },
+                                                     AllocateDnssdStableId(callbackDataCopy)));
+        break;
+    }
+    case SPINEL_PROP_DNSSD_SRV_RESOLVER:
+    {
+        otPlatDnssdSrvResolver srvResolver;
+        const uint8_t         *callbackData;
+        uint16_t               callbackDataSize;
+        std::vector<uint8_t>   callbackDataCopy;
+
+        SuccessOrExit(ot::Spinel::DecodeDnssdSrvResolver(decoder, srvResolver, callbackData, callbackDataSize));
+        callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
+
+        DnssdPlatform::Get().StartServiceResolver(srvResolver,
+                                                  std::make_shared<DnssdPlatform::StdSrvCallback>(
+                                                      [this, callbackDataCopy](const otPlatDnssdSrvResult &aResult) {
+                                                          SendDnssdSrvResult(aResult, callbackDataCopy);
+                                                      },
+                                                      AllocateDnssdStableId(callbackDataCopy)));
+        break;
+    }
+    case SPINEL_PROP_DNSSD_TXT_RESOLVER:
+    {
+        otPlatDnssdTxtResolver txtResolver;
+        const uint8_t         *callbackData;
+        uint16_t               callbackDataSize;
+        std::vector<uint8_t>   callbackDataCopy;
+
+        SuccessOrExit(ot::Spinel::DecodeDnssdTxtResolver(decoder, txtResolver, callbackData, callbackDataSize));
+        callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
+
+        DnssdPlatform::Get().StartTxtResolver(txtResolver,
+                                              std::make_shared<DnssdPlatform::StdTxtCallback>(
+                                                  [this, callbackDataCopy](const otPlatDnssdTxtResult &aResult) {
+                                                      SendDnssdTxtResult(aResult, callbackDataCopy);
+                                                  },
+                                                  AllocateDnssdStableId(callbackDataCopy)));
+        break;
+    }
+    case SPINEL_PROP_DNSSD_IP6_ADDRESS_RESOLVER:
+    {
+        otPlatDnssdAddressResolver addrResolver;
+        const uint8_t             *callbackData;
+        uint16_t                   callbackDataSize;
+        std::vector<uint8_t>       callbackDataCopy;
+
+        SuccessOrExit(ot::Spinel::DecodeDnssdAddressResolver(decoder, addrResolver, callbackData, callbackDataSize));
+        callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
+
+        DnssdPlatform::Get().StartIp6AddressResolver(
+            addrResolver, std::make_shared<DnssdPlatform::StdAddressCallback>(
+                              [this, callbackDataCopy](const otPlatDnssdAddressResult &aResult) {
+                                  SendDnssdAddressResult(SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT, aResult,
+                                                         callbackDataCopy);
+                              },
+                              AllocateDnssdStableId(callbackDataCopy)));
+        break;
+    }
+    case SPINEL_PROP_DNSSD_IP4_ADDRESS_RESOLVER:
+    {
+        otPlatDnssdAddressResolver addrResolver;
+        const uint8_t             *callbackData;
+        uint16_t                   callbackDataSize;
+        std::vector<uint8_t>       callbackDataCopy;
+
+        SuccessOrExit(ot::Spinel::DecodeDnssdAddressResolver(decoder, addrResolver, callbackData, callbackDataSize));
+        callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
+
+        DnssdPlatform::Get().StartIp4AddressResolver(
+            addrResolver, std::make_shared<DnssdPlatform::StdAddressCallback>(
+                              [this, callbackDataCopy](const otPlatDnssdAddressResult &aResult) {
+                                  SendDnssdAddressResult(SPINEL_PROP_DNSSD_IP4_ADDRESS_RESULT, aResult,
+                                                         callbackDataCopy);
+                              },
+                              AllocateDnssdStableId(callbackDataCopy)));
+        break;
+    }
+#endif // OTBR_ENABLE_DNSSD_PLAT
     case SPINEL_PROP_BACKBONE_ROUTER_MULTICAST_LISTENER:
     {
         const otIp6Address *addr;
@@ -790,33 +896,6 @@ void NcpSpinel::HandleValueInserted(spinel_prop_key_t aKey, const uint8_t *aBuff
         VerifyOrExit(decoder.ReadIp6Address(addr) == OT_ERROR_NONE, error = OTBR_ERROR_PARSE);
         SafeInvoke(mBackboneRouterMulticastListenerCallback, OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ADDED,
                    Ip6Address(*addr));
-        break;
-    }
-    case SPINEL_PROP_MAC_EXTENDED_ADDR:
-    {
-        const otExtAddress *ext;
-        VerifyOrExit(decoder.ReadEui64(ext) == OT_ERROR_NONE, error = OTBR_ERROR_PARSE);
-        SafeInvoke(mExtAddrChangedCallback, ext->m8);
-        break;
-    }
-    case SPINEL_PROP_NET_XPANID:
-    {
-        const uint8_t *xp;
-        uint16_t       xpLen;
-        VerifyOrExit(decoder.ReadData(xp, xpLen) == OT_ERROR_NONE, error = OTBR_ERROR_PARSE);
-        VerifyOrExit(xpLen == OT_EXT_PAN_ID_SIZE, error = OTBR_ERROR_PARSE);
-        SafeInvoke(mExtPanIdChangedCallback, xp);
-        break;
-    }
-    case SPINEL_PROP_TREL_PEER_INFO:
-    {
-        decoder.Init(aBuffer, aLength);
-        TrelPeerInfo peerInfo;
-        ParseTrelPeerInfo(decoder, peerInfo, error);
-        if (error == OTBR_ERROR_NONE)
-        {
-            SafeInvoke(mTrelPeerAddedCallback, peerInfo);
-        }
         break;
     }
     default:
@@ -860,18 +939,19 @@ void NcpSpinel::HandleValueRemoved(spinel_prop_key_t aKey, const uint8_t *aBuffe
     {
         otPlatDnssdService   service;
         const char          *subTypeArray[kMaxSubTypes];
-        uint16_t             subTypeCount;
+        uint16_t             subTypeCount = kMaxSubTypes;
         otPlatDnssdRequestId requestId;
         const uint8_t       *callbackData;
         uint16_t             callbackDataSize;
         std::vector<uint8_t> callbackDataCopy;
 
         SuccessOrExit(ot::Spinel::DecodeDnssdService(decoder, service, subTypeArray, subTypeCount, requestId,
-                                                     callbackData, callbackDataSize));
+                                                     callbackData, callbackDataSize),
+                      error = OTBR_ERROR_PARSE);
         callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
 
         mPublisher->UnpublishService(
-            service.mHostName, service.mServiceType, [this, requestId, callbackDataCopy](otbrError aError) {
+            service.mServiceInstance, service.mServiceType, [this, requestId, callbackDataCopy](otbrError aError) {
                 OT_UNUSED_VARIABLE(SendDnssdResult(requestId, callbackDataCopy, OtbrErrorToOtError(aError)));
             });
         break;
@@ -893,6 +973,100 @@ void NcpSpinel::HandleValueRemoved(spinel_prop_key_t aKey, const uint8_t *aBuffe
         break;
     }
 #endif // OTBR_ENABLE_SRP_ADVERTISING_PROXY
+#if OTBR_ENABLE_DNSSD_PLAT
+    case SPINEL_PROP_DNSSD_BROWSER:
+    {
+        otPlatDnssdBrowser   browser;
+        const uint8_t       *callbackData;
+        uint16_t             callbackDataSize;
+        std::vector<uint8_t> callbackDataCopy;
+        uint64_t             stableId;
+
+        SuccessOrExit(ot::Spinel::DecodeDnssdBrowser(decoder, browser, callbackData, callbackDataSize));
+        callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
+
+        VerifyOrExit(ReleaseDnssdStableId(callbackDataCopy, stableId), error = OTBR_ERROR_NOT_FOUND);
+
+        DnssdPlatform::Get().StopServiceBrowser(
+            browser, DnssdPlatform::StdBrowseCallback(
+                         [](const DnssdPlatform::BrowseResult &aResult) { OT_UNUSED_VARIABLE(aResult); }, stableId));
+        break;
+    }
+    case SPINEL_PROP_DNSSD_SRV_RESOLVER:
+    {
+        otPlatDnssdSrvResolver srvResolver;
+        const uint8_t         *callbackData;
+        uint16_t               callbackDataSize;
+        std::vector<uint8_t>   callbackDataCopy;
+        uint64_t               stableId;
+
+        SuccessOrExit(ot::Spinel::DecodeDnssdSrvResolver(decoder, srvResolver, callbackData, callbackDataSize));
+        callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
+
+        VerifyOrExit(ReleaseDnssdStableId(callbackDataCopy, stableId), error = OTBR_ERROR_NOT_FOUND);
+
+        DnssdPlatform::Get().StopServiceResolver(
+            srvResolver, DnssdPlatform::StdSrvCallback(
+                             [](const DnssdPlatform::SrvResult &aResult) { OT_UNUSED_VARIABLE(aResult); }, stableId));
+        break;
+    }
+    case SPINEL_PROP_DNSSD_TXT_RESOLVER:
+    {
+        otPlatDnssdTxtResolver txtResolver;
+        const uint8_t         *callbackData;
+        uint16_t               callbackDataSize;
+        std::vector<uint8_t>   callbackDataCopy;
+        uint64_t               stableId;
+
+        SuccessOrExit(ot::Spinel::DecodeDnssdTxtResolver(decoder, txtResolver, callbackData, callbackDataSize));
+        callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
+
+        VerifyOrExit(ReleaseDnssdStableId(callbackDataCopy, stableId), error = OTBR_ERROR_NOT_FOUND);
+
+        DnssdPlatform::Get().StopTxtResolver(
+            txtResolver, DnssdPlatform::StdTxtCallback(
+                             [](const DnssdPlatform::TxtResult &aResult) { OT_UNUSED_VARIABLE(aResult); }, stableId));
+        break;
+    }
+    case SPINEL_PROP_DNSSD_IP6_ADDRESS_RESOLVER:
+    {
+        otPlatDnssdAddressResolver addrResolver;
+        const uint8_t             *callbackData;
+        uint16_t                   callbackDataSize;
+        std::vector<uint8_t>       callbackDataCopy;
+        uint64_t                   stableId;
+
+        SuccessOrExit(ot::Spinel::DecodeDnssdAddressResolver(decoder, addrResolver, callbackData, callbackDataSize));
+        callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
+
+        VerifyOrExit(ReleaseDnssdStableId(callbackDataCopy, stableId), error = OTBR_ERROR_NOT_FOUND);
+
+        DnssdPlatform::Get().StopIp6AddressResolver(
+            addrResolver,
+            DnssdPlatform::StdAddressCallback(
+                [](const DnssdPlatform::AddressResult &aResult) { OT_UNUSED_VARIABLE(aResult); }, stableId));
+        break;
+    }
+    case SPINEL_PROP_DNSSD_IP4_ADDRESS_RESOLVER:
+    {
+        otPlatDnssdAddressResolver addrResolver;
+        const uint8_t             *callbackData;
+        uint16_t                   callbackDataSize;
+        std::vector<uint8_t>       callbackDataCopy;
+        uint64_t                   stableId;
+
+        SuccessOrExit(ot::Spinel::DecodeDnssdAddressResolver(decoder, addrResolver, callbackData, callbackDataSize));
+        callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
+
+        VerifyOrExit(ReleaseDnssdStableId(callbackDataCopy, stableId), error = OTBR_ERROR_NOT_FOUND);
+
+        DnssdPlatform::Get().StopIp4AddressResolver(
+            addrResolver,
+            DnssdPlatform::StdAddressCallback(
+                [](const DnssdPlatform::AddressResult &aResult) { OT_UNUSED_VARIABLE(aResult); }, stableId));
+        break;
+    }
+#endif // OTBR_ENABLE_DNSSD_PLAT
     case SPINEL_PROP_BACKBONE_ROUTER_MULTICAST_LISTENER:
     {
         const otIp6Address *addr;
@@ -900,17 +1074,6 @@ void NcpSpinel::HandleValueRemoved(spinel_prop_key_t aKey, const uint8_t *aBuffe
         VerifyOrExit(decoder.ReadIp6Address(addr) == OT_ERROR_NONE, error = OTBR_ERROR_PARSE);
         SafeInvoke(mBackboneRouterMulticastListenerCallback, OT_BACKBONE_ROUTER_MULTICAST_LISTENER_REMOVED,
                    Ip6Address(*addr));
-        break;
-    }
-    case SPINEL_PROP_TREL_PEER_INFO:
-    {
-        TrelPeerInfo peerInfo;
-        ParseTrelPeerInfo(decoder, peerInfo, error);
-        if (error == OTBR_ERROR_NONE)
-        {
-            peerInfo.mFlags |= 0x01; // Removed flag
-            SafeInvoke(mTrelPeerRemovedCallback, peerInfo);
-        }
         break;
     }
     default:
@@ -948,26 +1111,31 @@ otbrError NcpSpinel::HandleResponseForPropGet(spinel_tid_t      aTid,
         SafeInvoke(mBorderAgentMeshCoPServiceChangedCallback, isActive, port, data, dataLen);
         break;
     }
-    case SPINEL_PROP_MAC_EXTENDED_ADDR:
+#if OTBR_ENABLE_TREL
+    case SPINEL_PROP_TREL_STATE:
     {
-        const otExtAddress *ext;
+        bool                enabled;
+        uint16_t            port;
         ot::Spinel::Decoder decoder;
+
         decoder.Init(aData, aLength);
-        SuccessOrExit(decoder.ReadEui64(ext), error = OTBR_ERROR_PARSE);
-        SafeInvoke(mExtAddrChangedCallback, ext->m8);
+        SuccessOrExit(decoder.ReadBool(enabled), error = OTBR_ERROR_PARSE);
+        SuccessOrExit(decoder.ReadUint16(port), error = OTBR_ERROR_PARSE);
+        SafeInvoke(mTrelStateChangedCallback, enabled, port);
         break;
     }
-    case SPINEL_PROP_NET_XPANID:
+#endif
+
+#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_NAT64_TAYGA
+    case SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX:
     {
-        const uint8_t      *xp;
-        uint16_t            xpLen;
-        ot::Spinel::Decoder decoder;
-        decoder.Init(aData, aLength);
-        SuccessOrExit(decoder.ReadData(xp, xpLen), error = OTBR_ERROR_PARSE);
-        VerifyOrExit(xpLen == OT_EXT_PAN_ID_SIZE, error = OTBR_ERROR_PARSE);
-        SafeInvoke(mExtPanIdChangedCallback, xp);
+        otIp6Prefix prefix;
+
+        SuccessOrExit(ParseNat64FavoredPrefix(aData, aLength, prefix) == OT_ERROR_NONE, error = OTBR_ERROR_PARSE);
+        SyncNat64Tayga(prefix);
         break;
     }
+#endif
 
     default:
         VerifyOrExit(aKey == mWaitingKeyTable[aTid], error = OTBR_ERROR_INVALID_STATE);
@@ -1030,6 +1198,7 @@ otbrError NcpSpinel::HandleResponseForPropSet(spinel_tid_t      aTid,
         break;
 
     case SPINEL_PROP_STREAM_NET:
+    case SPINEL_PROP_STREAM_NET_INSECURE:
         break;
 
     case SPINEL_PROP_STREAM_CLI:
@@ -1074,7 +1243,15 @@ otbrError NcpSpinel::HandleResponseForPropSet(spinel_tid_t      aTid,
         break;
 
     default:
-        VerifyOrExit(aKey == mWaitingKeyTable[aTid], error = OTBR_ERROR_INVALID_STATE);
+        if (aKey == SPINEL_PROP_LAST_STATUS)
+        {
+            SuccessOrExit(error = SpinelDataUnpack(aData, aLength, SPINEL_DATATYPE_UINT_PACKED_S, &status));
+            VerifyOrExit(status == SPINEL_STATUS_OK, error = OTBR_ERROR_OPENTHREAD);
+        }
+        else
+        {
+            VerifyOrExit(aKey == mWaitingKeyTable[aTid], error = OTBR_ERROR_INVALID_STATE);
+        }
         break;
     }
 
@@ -1146,6 +1323,13 @@ otbrError NcpSpinel::HandleResponseForPropRemove(spinel_tid_t      aTid,
 exit:
     otbrLogResult(error, "HandleResponseForPropRemove, key:%u", mWaitingKeyTable[aTid]);
     return error;
+}
+
+void NcpSpinel::HandleNcpUnexpectedReset(spinel_status_t aStatus)
+{
+    otbrLogCrit("Unexpected NCP reset: %s", spinel_status_to_cstr(aStatus));
+
+    DieNow("NCP reset detected!");
 }
 
 otbrError NcpSpinel::Ip6MulAddrUpdateSubscription(const otIp6Address &aAddress, bool aIsAdded)
@@ -1351,6 +1535,28 @@ exit:
     return error;
 }
 
+#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_NAT64_TAYGA
+otError NcpSpinel::ParseNat64FavoredPrefix(const uint8_t *aBuf, uint16_t aLen, otIp6Prefix &aPrefix)
+{
+    otError             error = OT_ERROR_NONE;
+    const otIp6Address *addr;
+    uint8_t             prefixLength;
+    ot::Spinel::Decoder decoder;
+
+    VerifyOrExit(aBuf != nullptr, error = OT_ERROR_INVALID_ARGS);
+
+    decoder.Init(aBuf, aLen);
+    SuccessOrExit(error = decoder.ReadIp6Address(addr));
+    SuccessOrExit(error = decoder.ReadUint8(prefixLength));
+
+    memcpy(&aPrefix.mPrefix, addr, sizeof(otIp6Address));
+    aPrefix.mLength = prefixLength;
+
+exit:
+    return error;
+}
+#endif // OTBR_ENABLE_NAT64 && OTBR_ENABLE_NAT64_TAYGA
+
 otError NcpSpinel::ParseOperationalDatasetTlvs(const uint8_t            *aBuf,
                                                uint16_t                  aLen,
                                                otOperationalDatasetTlvs &aDatasetTlvs)
@@ -1439,6 +1645,99 @@ otError NcpSpinel::SendDnssdResult(otPlatDnssdRequestId        aRequestId,
     return error;
 }
 
+#if OTBR_ENABLE_DNSSD_PLAT
+otError NcpSpinel::SendDnssdBrowseResult(const otPlatDnssdBrowseResult &aResult,
+                                         const std::vector<uint8_t>    &aCallbackData)
+{
+    otError      error        = OT_ERROR_NONE;
+    EncodingFunc encodingFunc = [&aResult, &aCallbackData](ot::Spinel::Encoder &aEncoder) {
+        return EncodeDnssdBrowseResult(aEncoder, aResult, aCallbackData.data(), aCallbackData.size());
+    };
+
+    error = SetProperty(SPINEL_PROP_DNSSD_BROWSE_RESULT, encodingFunc);
+    if (error != OT_ERROR_NONE)
+    {
+        otbrLogWarning("Failed to Send DnssdBrowseResult, %s", otThreadErrorToString(error));
+    }
+
+    return error;
+}
+
+otError NcpSpinel::SendDnssdSrvResult(const otPlatDnssdSrvResult &aResult, const std::vector<uint8_t> &aCallbackData)
+{
+    otError      error        = OT_ERROR_NONE;
+    EncodingFunc encodingFunc = [&aResult, &aCallbackData](ot::Spinel::Encoder &aEncoder) {
+        return EncodeDnssdSrvResult(aEncoder, aResult, aCallbackData.data(), aCallbackData.size());
+    };
+
+    error = SetProperty(SPINEL_PROP_DNSSD_SRV_RESULT, encodingFunc);
+    if (error != OT_ERROR_NONE)
+    {
+        otbrLogWarning("Failed to send DnssdSrvResult: %s", otThreadErrorToString(error));
+    }
+
+    return error;
+}
+
+otError NcpSpinel::SendDnssdTxtResult(const otPlatDnssdTxtResult &aResult, const std::vector<uint8_t> &aCallbackData)
+{
+    otError      error        = OT_ERROR_NONE;
+    EncodingFunc encodingFunc = [&aResult, &aCallbackData](ot::Spinel::Encoder &aEncoder) {
+        return EncodeDnssdTxtResult(aEncoder, aResult, aCallbackData.data(), aCallbackData.size());
+    };
+
+    error = SetProperty(SPINEL_PROP_DNSSD_TXT_RESULT, encodingFunc);
+
+    if (error != OT_ERROR_NONE)
+    {
+        otbrLogWarning("Failed to send DnssdTxtResult: %s", otThreadErrorToString(error));
+    }
+
+    return error;
+}
+
+otError NcpSpinel::SendDnssdAddressResult(spinel_prop_key_t               aKey,
+                                          const otPlatDnssdAddressResult &aResult,
+                                          const std::vector<uint8_t>     &aCallbackData)
+{
+    otError      error        = OT_ERROR_NONE;
+    EncodingFunc encodingFunc = [&aResult, &aCallbackData](ot::Spinel::Encoder &aEncoder) {
+        return EncodeDnssdAddressResult(aEncoder, aResult, aCallbackData.data(), aCallbackData.size());
+    };
+
+    error = SetProperty(aKey, encodingFunc);
+
+    if (error != OT_ERROR_NONE)
+    {
+        otbrLogWarning("Failed to send DnssdAddressResult: %s", otThreadErrorToString(error));
+    }
+
+    return error;
+}
+
+uint64_t NcpSpinel::AllocateDnssdStableId(const std::vector<uint8_t> &aCallbackData)
+{
+    uint64_t id = mDiscoveryProxyId++;
+
+    mDnssdStableIdByCallbackData[aCallbackData] = id;
+    return id;
+}
+
+bool NcpSpinel::ReleaseDnssdStableId(const std::vector<uint8_t> &aCallbackData, uint64_t &aStableIdOut)
+{
+    auto iter = mDnssdStableIdByCallbackData.find(aCallbackData);
+
+    if (iter == mDnssdStableIdByCallbackData.end())
+    {
+        return false;
+    }
+
+    aStableIdOut = iter->second;
+    mDnssdStableIdByCallbackData.erase(iter);
+    return true;
+}
+#endif
+
 otbrError NcpSpinel::SetInfraIf(uint32_t aInfraIfIndex, bool aIsRunning, const std::vector<Ip6Address> &aIp6Addresses)
 {
     otbrError    error        = OTBR_ERROR_NONE;
@@ -1456,6 +1755,10 @@ otbrError NcpSpinel::SetInfraIf(uint32_t aInfraIfIndex, bool aIsRunning, const s
     };
 
     SuccessOrExit(SetProperty(SPINEL_PROP_INFRA_IF_STATE, encodingFunc), error = OTBR_ERROR_OPENTHREAD);
+
+#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_BORDER_ROUTING
+    BorderRoutingSetNat64Enabled(true);
+#endif
 
 exit:
     return error;
@@ -1660,9 +1963,9 @@ void NcpSpinel::BorderRoutingSetDhcp6PdEnabled(bool aEnabled)
     }
 }
 
-otError NcpSpinel::BorderRoutingProcessDhcp6PdPrefix(const otBorderRoutingPrefixTableEntry *aPrefixInfo)
+otbrError NcpSpinel::BorderRoutingProcessDhcp6PdPrefix(const otBorderRoutingPrefixTableEntry *aPrefixInfo)
 {
-    otError      error        = OT_ERROR_NONE;
+    otbrError    error        = OTBR_ERROR_NONE;
     EncodingFunc encodingFunc = [aPrefixInfo](ot::Spinel::Encoder &aEncoder) {
         otError error = OT_ERROR_NONE;
 
@@ -1678,15 +1981,27 @@ otError NcpSpinel::BorderRoutingProcessDhcp6PdPrefix(const otBorderRoutingPrefix
         return error;
     };
 
-    error = SetProperty(SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX, encodingFunc);
-    if (error != OT_ERROR_NONE)
-    {
-        otbrLogWarning("Failed to send DHCP6 PD prefix to NCP, %s", otThreadErrorToString(error));
-    }
+    SuccessOrExit(SetProperty(SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX, encodingFunc), error = OTBR_ERROR_OPENTHREAD);
 
+exit:
     return error;
 }
 #endif // OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
+
+#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_BORDER_ROUTING
+void NcpSpinel::BorderRoutingSetNat64Enabled(bool aEnabled)
+{
+    otError      error;
+    EncodingFunc encodingFunc = [aEnabled](ot::Spinel::Encoder &aEncoder) { return aEncoder.WriteBool(aEnabled); };
+
+    error = SetProperty(SPINEL_PROP_BORDER_ROUTER_NAT64_ENABLE, encodingFunc);
+    if (error != OT_ERROR_NONE)
+    {
+        otbrLogWarning("Failed to call BorderRoutingSetNat64Enabled, %s (aEnabled: %d)", otThreadErrorToString(error),
+                       aEnabled);
+    }
+}
+#endif // OTBR_ENABLE_NAT64 && OTBR_ENABLE_BORDER_ROUTING
 
 } // namespace Host
 } // namespace otbr

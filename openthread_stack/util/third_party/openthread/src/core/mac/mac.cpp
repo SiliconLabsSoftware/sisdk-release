@@ -37,6 +37,7 @@
 
 #include "crypto/aes_ccm.hpp"
 #include "crypto/sha256.hpp"
+#include "crypto/storage.hpp"
 #include "instance/instance.hpp"
 #include "utils/static_counter.hpp"
 
@@ -93,8 +94,7 @@ Mac::Mac(Instance &aInstance)
     , mWakeupListenInterval(kDefaultWedListenInterval)
     , mWakeupListenDuration(kDefaultWedListenDuration)
 #endif
-    , mActiveScanHandler(nullptr) // Initialize `mActiveScanHandler` and `mEnergyScanHandler` union
-    , mScanHandlerContext(nullptr)
+    , mActiveScanCallback()
     , mLinks(aInstance)
     , mOperationTask(aInstance)
     , mTimer(aInstance)
@@ -116,7 +116,6 @@ Mac::Mac(Instance &aInstance)
 
     SetEnabled(true);
 
-    Get<KeyManager>().UpdateKeyMaterial();
     SetPanId(mPanId);
     SetExtAddress(randomExtAddress);
     SetShortAddress(GetShortAddress());
@@ -126,6 +125,8 @@ Mac::Mac(Instance &aInstance)
 
     mMode2KeyMaterial.SetFrom(AsCoreType(&sMode2Key));
 }
+
+void Mac::Init(void) { Get<KeyManager>().UpdateKeyMaterial(); }
 
 void Mac::SetEnabled(bool aEnable)
 {
@@ -141,15 +142,14 @@ void Mac::SetEnabled(bool aEnable)
     }
 }
 
-Error Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
+Error Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ScanResult::Handler aHandler, void *aContext)
 {
     Error error = kErrorNone;
 
     VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
     VerifyOrExit(!IsActiveScanInProgress() && !IsEnergyScanInProgress(), error = kErrorBusy);
 
-    mActiveScanHandler  = aHandler;
-    mScanHandlerContext = aContext;
+    mActiveScanCallback.Set(aHandler, aContext);
 
     if (aScanDuration == 0)
     {
@@ -169,8 +169,7 @@ Error Mac::EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScan
     VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
     VerifyOrExit(!IsActiveScanInProgress() && !IsEnergyScanInProgress(), error = kErrorBusy);
 
-    mEnergyScanHandler  = aHandler;
-    mScanHandlerContext = aContext;
+    mEnergyScanCallback.Set(aHandler, aContext);
 
     Scan(kOperationEnergyScan, aScanChannels, aScanDuration);
 
@@ -225,57 +224,6 @@ bool Mac::IsInTransmitState(void) const
     return retval;
 }
 
-Error Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveScanResult &aResult)
-{
-    Error   error = kErrorNone;
-    Address address;
-#if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
-    const BeaconPayload *beaconPayload = nullptr;
-    const Beacon        *beacon        = nullptr;
-    uint16_t             payloadLength;
-#endif
-
-    ClearAllBytes(aResult);
-
-    VerifyOrExit(aBeaconFrame != nullptr, error = kErrorInvalidArgs);
-
-    VerifyOrExit(aBeaconFrame->GetType() == Frame::kTypeBeacon, error = kErrorParse);
-    SuccessOrExit(error = aBeaconFrame->GetSrcAddr(address));
-    VerifyOrExit(address.IsExtended(), error = kErrorParse);
-    aResult.mExtAddress = address.GetExtended();
-
-    if (kErrorNone != aBeaconFrame->GetSrcPanId(aResult.mPanId))
-    {
-        IgnoreError(aBeaconFrame->GetDstPanId(aResult.mPanId));
-    }
-
-    aResult.mChannel = aBeaconFrame->GetChannel();
-    aResult.mRssi    = aBeaconFrame->GetRssi();
-    aResult.mLqi     = aBeaconFrame->GetLqi();
-
-#if OPENTHREAD_CONFIG_MAC_BEACON_PAYLOAD_PARSING_ENABLE
-    payloadLength = aBeaconFrame->GetPayloadLength();
-
-    beacon        = reinterpret_cast<const Beacon *>(aBeaconFrame->GetPayload());
-    beaconPayload = reinterpret_cast<const BeaconPayload *>(beacon->GetPayload());
-
-    if ((payloadLength >= (sizeof(*beacon) + sizeof(*beaconPayload))) && beacon->IsValid() && beaconPayload->IsValid())
-    {
-        aResult.mVersion    = beaconPayload->GetProtocolVersion();
-        aResult.mIsJoinable = beaconPayload->IsJoiningPermitted();
-        aResult.mIsNative   = beaconPayload->IsNative();
-        IgnoreError(AsCoreType(&aResult.mNetworkName).Set(beaconPayload->GetNetworkName()));
-        VerifyOrExit(IsValidUtf8String(aResult.mNetworkName.m8), error = kErrorParse);
-        aResult.mExtendedPanId = beaconPayload->GetExtendedPanId();
-    }
-#endif
-
-    LogBeacon("Received");
-
-exit:
-    return error;
-}
-
 Error Mac::UpdateScanChannel(void)
 {
     Error error;
@@ -293,10 +241,12 @@ void Mac::PerformActiveScan(void)
     if (UpdateScanChannel() == kErrorNone)
     {
         // If there are more channels to scan, send the beacon request.
+        mLinks.SetRxOnWhenIdle(true);
         BeginTransmit();
     }
     else
     {
+        mLinks.SetRxOnWhenIdle(mRxOnWhenIdle);
         mLinks.SetPanId(mPanId);
         FinishOperation();
         ReportActiveScanResult(nullptr);
@@ -306,18 +256,20 @@ void Mac::PerformActiveScan(void)
 
 void Mac::ReportActiveScanResult(const RxFrame *aBeaconFrame)
 {
-    VerifyOrExit(mActiveScanHandler != nullptr);
+    VerifyOrExit(mActiveScanCallback.IsSet());
 
     if (aBeaconFrame == nullptr)
     {
-        mActiveScanHandler(nullptr, mScanHandlerContext);
+        mActiveScanCallback.Invoke(nullptr);
     }
     else
     {
-        ActiveScanResult result;
+        ScanResult result;
 
-        SuccessOrExit(ConvertBeaconToActiveScanResult(aBeaconFrame, result));
-        mActiveScanHandler(&result, mScanHandlerContext);
+        SuccessOrExit(result.PopulateFromBeacon(aBeaconFrame));
+        LogBeacon("Received");
+
+        mActiveScanCallback.Invoke(&result);
     }
 
 exit:
@@ -354,10 +306,7 @@ exit:
     {
         FinishOperation();
 
-        if (mEnergyScanHandler != nullptr)
-        {
-            mEnergyScanHandler(nullptr, mScanHandlerContext);
-        }
+        mEnergyScanCallback.InvokeIfSet(nullptr);
 
         PerformNextOperation();
     }
@@ -367,12 +316,12 @@ void Mac::ReportEnergyScanResult(int8_t aRssi)
 {
     EnergyScanResult result;
 
-    VerifyOrExit((mEnergyScanHandler != nullptr) && (aRssi != Radio::kInvalidRssi));
+    VerifyOrExit(mEnergyScanCallback.IsSet() && (aRssi != Radio::kInvalidRssi));
 
     result.mChannel = mScanChannel;
     result.mMaxRssi = aRssi;
 
-    mEnergyScanHandler(&result, mScanHandlerContext);
+    mEnergyScanCallback.Invoke(&result);
 
 exit:
     return;
@@ -821,8 +770,8 @@ TxFrame *Mac::PrepareBeacon(void)
         beaconPayload->ClearJoiningPermitted();
     }
 
-    beaconPayload->SetNetworkName(Get<MeshCoP::NetworkNameManager>().GetNetworkName().GetAsData());
-    beaconPayload->SetExtendedPanId(Get<MeshCoP::ExtendedPanIdManager>().GetExtPanId());
+    beaconPayload->SetNetworkName(Get<MeshCoP::NetworkIdentity>().GetNetworkName().GetAsData());
+    beaconPayload->SetExtendedPanId(Get<MeshCoP::NetworkIdentity>().GetExtPanId());
 
     beaconLength += sizeof(*beaconPayload);
 
@@ -1398,9 +1347,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 
             if (requiredRadios.Contains(radio) && (aError != kErrorNone))
             {
-                LogDebg("Frame tx failed on required radio link %s with error %s", RadioTypeToString(radio),
-                        ErrorToString(aError));
-
+                LogDebgOnError(aError, "tx frame on required radio link %s", RadioTypeToString(radio));
                 mTxError = aError;
             }
         }
@@ -1678,6 +1625,10 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         ExitNow();
     }
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    VerifyOrExit((macKey != nullptr) && Crypto::Storage::IsKeyRefValid(macKey->GetKeyRef()));
+#endif
+
     SuccessOrExit(aFrame.ProcessReceiveAesCcm(*extAddress, *macKey));
 
     if ((keyIdMode == Frame::kKeyIdMode1) && aNeighbor->IsStateValid())
@@ -1800,6 +1751,10 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     {
         VerifyOrExit(frameCounter >= neighbor->GetLinkAckFrameCounter());
     }
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    VerifyOrExit((macKey != nullptr) && Crypto::Storage::IsKeyRefValid(macKey->GetKeyRef()));
+#endif
 
     error = aAckFrame.ProcessReceiveAesCcm(srcAddr.GetExtended(), *macKey);
     SuccessOrExit(error);
@@ -2301,45 +2256,37 @@ uint8_t Mac::ComputeLinkMargin(int8_t aRss) const { return ot::ComputeLinkMargin
 
 const char *Mac::OperationToString(Operation aOperation)
 {
-    static const char *const kOperationStrings[] = {
-        "Idle",               // (0) kOperationIdle
-        "ActiveScan",         // (1) kOperationActiveScan
-        "EnergyScan",         // (2) kOperationEnergyScan
-        "TransmitBeacon",     // (3) kOperationTransmitBeacon
-        "TransmitDataDirect", // (4) kOperationTransmitDataDirect
-        "TransmitPoll",       // (5) kOperationTransmitPoll
-        "WaitingForData",     // (6) kOperationWaitingForData
+#define OperationMapList(_)                               \
+    _(kOperationIdle, "Idle")                             \
+    _(kOperationActiveScan, "ActiveScan")                 \
+    _(kOperationEnergyScan, "EnergyScan")                 \
+    _(kOperationTransmitBeacon, "TransmitBeacon")         \
+    _(kOperationTransmitDataDirect, "TransmitDataDirect") \
+    _(kOperationTransmitPoll, "TransmitPoll")             \
+    _(kOperationWaitingForData, "WaitingForData")         \
+    FtdOperationMapList(_) CslTxOperationMapList(_) WakeupOperationMapList(_)
+
 #if OPENTHREAD_FTD
-        "TransmitDataIndirect", // (7) kOperationTransmitDataIndirect
+#define FtdOperationMapList(_) _(kOperationTransmitDataIndirect, "TransmitDataIndirect")
+#else
+#define FtdOperationMapList(_)
 #endif
+
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        "TransmitDataCsl", // (8) kOperationTransmitDataCsl
+#define CslTxOperationMapList(_) _(kOperationTransmitDataCsl, "TransmitDataCsl")
+#else
+#define CslTxOperationMapList(_)
 #endif
+
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE
-        "TransmitWakeup", // kOperationTransmitWakeup
+#define WakeupOperationMapList(_) _(kOperationTransmitWakeup, "TransmitWakeup")
+#else
+#define WakeupOperationMapList(_)
 #endif
-    };
 
-    struct OperationChecker
-    {
-        InitEnumValidatorCounter();
+    DefineEnumStringArray(OperationMapList);
 
-        ValidateNextEnum(kOperationIdle);
-        ValidateNextEnum(kOperationActiveScan);
-        ValidateNextEnum(kOperationEnergyScan);
-        ValidateNextEnum(kOperationTransmitBeacon);
-        ValidateNextEnum(kOperationTransmitDataDirect);
-        ValidateNextEnum(kOperationTransmitPoll);
-        ValidateNextEnum(kOperationWaitingForData);
-#if OPENTHREAD_FTD
-        ValidateNextEnum(kOperationTransmitDataIndirect);
-#endif
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        ValidateNextEnum(kOperationTransmitDataCsl);
-#endif
-    };
-
-    return kOperationStrings[aOperation];
+    return kStrings[aOperation];
 }
 
 void Mac::LogFrameRxFailure(const RxFrame *aFrame, Error aError) const
@@ -2592,16 +2539,16 @@ void Mac::ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor)
 
     const HeaderIe *enhAckProbingIe =
         reinterpret_cast<const HeaderIe *>(aFrame.GetThreadIe(ThreadIe::kEnhAckProbingIe));
-    const uint8_t *data =
-        reinterpret_cast<const uint8_t *>(enhAckProbingIe) + sizeof(HeaderIe) + sizeof(VendorIeHeader);
-    uint8_t dataLen = 0;
+    uint8_t dataLen;
 
     VerifyOrExit(enhAckProbingIe != nullptr);
 
     dataLen = enhAckProbingIe->GetLength() - sizeof(VendorIeHeader);
     VerifyOrExit(dataLen <= kEnhAckProbingIeMaxLen);
 
-    Get<LinkMetrics::Initiator>().ProcessEnhAckIeData(data, dataLen, aNeighbor);
+    Get<LinkMetrics::Initiator>().ProcessEnhAckIeData(reinterpret_cast<const uint8_t *>(enhAckProbingIe) +
+                                                          sizeof(HeaderIe) + sizeof(VendorIeHeader),
+                                                      dataLen, aNeighbor);
 exit:
     return;
 }

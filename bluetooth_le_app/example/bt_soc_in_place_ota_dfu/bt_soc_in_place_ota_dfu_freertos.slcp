@@ -6,7 +6,7 @@ description: >
   Bluetooth applications that provides Over-The-Air device firmware update
   using an apploader.
 category: Bluetooth Examples
-quality: experimental
+quality: production
 
 filter:
   - name: "Wireless Technology"

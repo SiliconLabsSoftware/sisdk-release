@@ -1,0 +1,26 @@
+id: zw_cc_wakeoncriticalmessage
+label: Wake On Critical Message Command Class
+category: Z-Wave|Command Classes
+description: >
+  Provides support of the Wake On Critical Message Command Class.
+  The Wake On Critical Message Command Class allows a device to be configured to send encapsulated critical messages.
+  Based on the configured severity level, those message will be able to wake up a sleeping host.
+  The Wake On Critical Message Command Class will be advertised in the non-secure NIF.
+package: zwave
+quality: production
+metadata:
+  sbom:
+    reference: zw_sbom_license
+
+source:
+- path: ZAF/CommandClasses/WakeOnCriticalMessage/src/CC_WakeOnCriticalMessage.c
+include:
+- path: ZAF/CommandClasses/WakeOnCriticalMessage/inc
+  file_list:
+  - path: CC_WakeOnCriticalMessage.h
+provides:
+- name: zw_cc_wakeoncriticalmessage
+requires:
+- name: zw_core
+- name: zw_cc_association
+root_path: zwave

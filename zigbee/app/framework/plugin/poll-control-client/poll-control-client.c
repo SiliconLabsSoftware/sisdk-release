@@ -57,11 +57,11 @@ sl_zigbee_af_zcl_request_status_t sl_zigbee_af_poll_control_cluster_check_in_cb(
 
 void sli_zigbee_af_poll_control_client_print(void)
 {
-  sl_zigbee_af_poll_control_cluster_println("Poll Control Client:\n%s %s\n%s 0x%04X",
-                                            "fast polling: ",
-                                            fastPolling ? "on" : "off",
-                                            "fast polling timeout: ",
-                                            fastPollingTimeout);
+  sl_zigbee_af_cli_println("Poll Control Client:\n%s %s\n%s 0x%04X",
+                           "fast polling: ",
+                           fastPolling ? "on" : "off",
+                           "fast polling timeout: ",
+                           fastPollingTimeout);
 }
 
 uint32_t sl_zigbee_af_poll_control_cluster_client_command_parse(sl_service_opcode_t opcode,

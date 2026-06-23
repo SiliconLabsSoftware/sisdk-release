@@ -7,8 +7,6 @@ quality: experimental
 metadata:
   sbom:
     license: Zlib
-ui_hints:
-  visibility: never
 root_path: platform_core/platform/service/iostream
 provides:
 - name: iostream_stdio
@@ -18,6 +16,8 @@ provides:
   allow_multiple: true
 requires:
 - name: iostream
+config_file:
+- path: config/sl_iostream_stdio_config.h
 include:
 - path: inc
   file_list:

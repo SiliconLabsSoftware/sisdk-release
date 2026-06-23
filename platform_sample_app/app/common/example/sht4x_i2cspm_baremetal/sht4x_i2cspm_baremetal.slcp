@@ -39,6 +39,8 @@ ui_hints:
   highlight: readme.md
 tag:
   - hardware:component:sensor:sht40-ad1f-r2
+  - hwfilter:board:hardware_board_has_sht4x
+  - hwfilter:device:device_series_2
 configuration:
   - name: SL_BOARD_ENABLE_VCOM
     value: 1

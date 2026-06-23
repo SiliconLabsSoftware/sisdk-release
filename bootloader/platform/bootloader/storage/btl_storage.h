@@ -46,7 +46,7 @@
  ******************************************************************************/
 
 /// Version number for bootloader storage functions struct
-#define BOOTLOADER_STORAGE_FUNCTIONS_VERSION 0x00000100
+#define BOOTLOADER_STORAGE_FUNCTIONS_VERSION 0x00000101
 
 /// Information about the storage backend
 typedef struct {
@@ -266,7 +266,7 @@ int32_t storage_readRaw(uint32_t address,
  *         @ref BOOTLOADER_ERROR_STORAGE_BASE range
  ******************************************************************************/
 int32_t storage_writeRaw(uint32_t address,
-                         uint8_t  *data,
+                         const uint8_t  *data,
                          size_t   numBytes);
 
 /***************************************************************************//**

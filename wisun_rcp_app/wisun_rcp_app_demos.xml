@@ -5,8 +5,8 @@
     <property key="demos.blurb" value="Wi-SUN - RCP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd2705a" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_rcp_app/brd2705a/wisun_rcp-brd2705a.s37" />
-    <property key="core.readmeFiles" value="doc/readme.md" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2026.6.0/wisun_rcp_app/brd2705a/wisun_rcp-brd2705a.s37" />
+    <property key="core.readmeFiles" value="readme.md" />
     <property key="filters" value="Device\ Type|RCP Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
   </demo>
@@ -15,8 +15,8 @@
     <property key="demos.blurb" value="Wi-SUN - RCP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4204d" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_rcp_app/brd4204d/wisun_rcp-brd4204d.s37" />
-    <property key="core.readmeFiles" value="doc/readme.md" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2026.6.0/wisun_rcp_app/brd4204d/wisun_rcp-brd4204d.s37" />
+    <property key="core.readmeFiles" value="readme.md" />
     <property key="filters" value="Device\ Type|RCP Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
   </demo>
@@ -25,8 +25,8 @@
     <property key="demos.blurb" value="Wi-SUN - RCP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4210a" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_rcp_app/brd4210a/wisun_rcp-brd4210a.s37" />
-    <property key="core.readmeFiles" value="doc/readme.md" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2026.6.0/wisun_rcp_app/brd4210a/wisun_rcp-brd4210a.s37" />
+    <property key="core.readmeFiles" value="readme.md" />
     <property key="filters" value="Device\ Type|RCP Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
   </demo>
@@ -35,8 +35,8 @@
     <property key="demos.blurb" value="Wi-SUN - RCP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4263c" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_rcp_app/brd4263c/wisun_rcp-brd4263c.s37" />
-    <property key="core.readmeFiles" value="doc/readme.md" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2026.6.0/wisun_rcp_app/brd4263c/wisun_rcp-brd4263c.s37" />
+    <property key="core.readmeFiles" value="readme.md" />
     <property key="filters" value="Device\ Type|RCP Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
   </demo>
@@ -45,8 +45,8 @@
     <property key="demos.blurb" value="Wi-SUN - RCP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4264c" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_rcp_app/brd4264c/wisun_rcp-brd4264c.s37" />
-    <property key="core.readmeFiles" value="doc/readme.md" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2026.6.0/wisun_rcp_app/brd4264c/wisun_rcp-brd4264c.s37" />
+    <property key="core.readmeFiles" value="readme.md" />
     <property key="filters" value="Device\ Type|RCP Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
   </demo>
@@ -55,8 +55,8 @@
     <property key="demos.blurb" value="Wi-SUN - RCP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4270a" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_rcp_app/brd4270a/wisun_rcp-brd4270a.s37" />
-    <property key="core.readmeFiles" value="doc/readme.md" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2026.6.0/wisun_rcp_app/brd4270a/wisun_rcp-brd4270a.s37" />
+    <property key="core.readmeFiles" value="readme.md" />
     <property key="filters" value="Device\ Type|RCP Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
   </demo>
@@ -65,8 +65,8 @@
     <property key="demos.blurb" value="Wi-SUN - RCP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4270b" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_rcp_app/brd4270b/wisun_rcp-brd4270b.s37" />
-    <property key="core.readmeFiles" value="doc/readme.md" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2026.6.0/wisun_rcp_app/brd4270b/wisun_rcp-brd4270b.s37" />
+    <property key="core.readmeFiles" value="readme.md" />
     <property key="filters" value="Device\ Type|RCP Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
   </demo>
@@ -75,8 +75,8 @@
     <property key="demos.blurb" value="Wi-SUN - RCP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4271a" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_rcp_app/brd4271a/wisun_rcp-brd4271a.s37" />
-    <property key="core.readmeFiles" value="doc/readme.md" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2026.6.0/wisun_rcp_app/brd4271a/wisun_rcp-brd4271a.s37" />
+    <property key="core.readmeFiles" value="readme.md" />
     <property key="filters" value="Device\ Type|RCP Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
   </demo>
@@ -85,8 +85,8 @@
     <property key="demos.blurb" value="Wi-SUN - RCP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4272a" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_rcp_app/brd4272a/wisun_rcp-brd4272a.s37" />
-    <property key="core.readmeFiles" value="doc/readme.md" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2026.6.0/wisun_rcp_app/brd4272a/wisun_rcp-brd4272a.s37" />
+    <property key="core.readmeFiles" value="readme.md" />
     <property key="filters" value="Device\ Type|RCP Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
   </demo>
@@ -95,8 +95,8 @@
     <property key="demos.blurb" value="Wi-SUN - RCP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4276a" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_rcp_app/brd4276a/wisun_rcp-brd4276a.s37" />
-    <property key="core.readmeFiles" value="doc/readme.md" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2026.6.0/wisun_rcp_app/brd4276a/wisun_rcp-brd4276a.s37" />
+    <property key="core.readmeFiles" value="readme.md" />
     <property key="filters" value="Device\ Type|RCP Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
   </demo>
@@ -105,8 +105,8 @@
     <property key="demos.blurb" value="Wi-SUN - RCP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4400a" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_rcp_app/brd4400a/wisun_rcp-brd4400a.s37" />
-    <property key="core.readmeFiles" value="doc/readme.md" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2026.6.0/wisun_rcp_app/brd4400a/wisun_rcp-brd4400a.s37" />
+    <property key="core.readmeFiles" value="readme.md" />
     <property key="filters" value="Device\ Type|RCP Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
   </demo>
@@ -115,8 +115,8 @@
     <property key="demos.blurb" value="Wi-SUN - RCP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4400b" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_rcp_app/brd4400b/wisun_rcp-brd4400b.s37" />
-    <property key="core.readmeFiles" value="doc/readme.md" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2026.6.0/wisun_rcp_app/brd4400b/wisun_rcp-brd4400b.s37" />
+    <property key="core.readmeFiles" value="readme.md" />
     <property key="filters" value="Device\ Type|RCP Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
   </demo>
@@ -125,8 +125,8 @@
     <property key="demos.blurb" value="Wi-SUN - RCP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4400c" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_rcp_app/brd4400c/wisun_rcp-brd4400c.s37" />
-    <property key="core.readmeFiles" value="doc/readme.md" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2026.6.0/wisun_rcp_app/brd4400c/wisun_rcp-brd4400c.s37" />
+    <property key="core.readmeFiles" value="readme.md" />
     <property key="filters" value="Device\ Type|RCP Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
   </demo>
@@ -135,8 +135,8 @@
     <property key="demos.blurb" value="Wi-SUN - RCP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4401a" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_rcp_app/brd4401a/wisun_rcp-brd4401a.s37" />
-    <property key="core.readmeFiles" value="doc/readme.md" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2026.6.0/wisun_rcp_app/brd4401a/wisun_rcp-brd4401a.s37" />
+    <property key="core.readmeFiles" value="readme.md" />
     <property key="filters" value="Device\ Type|RCP Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
   </demo>
@@ -145,8 +145,8 @@
     <property key="demos.blurb" value="Wi-SUN - RCP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4401b" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_rcp_app/brd4401b/wisun_rcp-brd4401b.s37" />
-    <property key="core.readmeFiles" value="doc/readme.md" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2026.6.0/wisun_rcp_app/brd4401b/wisun_rcp-brd4401b.s37" />
+    <property key="core.readmeFiles" value="readme.md" />
     <property key="filters" value="Device\ Type|RCP Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
   </demo>
@@ -155,8 +155,8 @@
     <property key="demos.blurb" value="Wi-SUN - RCP" />
     <property key="core.partCompatibility" value=".*" />
     <property key="core.boardCompatibility" value="brd4401c" />
-    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2025.12.3/wisun_rcp_app/brd4401c/wisun_rcp-brd4401c.s37" />
-    <property key="core.readmeFiles" value="doc/readme.md" />
+    <property key="demos.imageFile" value="asset://com.silabs.sdk.stack.sisdk_2026.6.0/wisun_rcp_app/brd4401c/wisun_rcp-brd4401c.s37" />
+    <property key="core.readmeFiles" value="readme.md" />
     <property key="filters" value="Device\ Type|RCP Project\ Difficulty|Advanced Wireless\ Technology|Wi-SUN" />
     <property key="core.quality" value="PRODUCTION" />
   </demo>

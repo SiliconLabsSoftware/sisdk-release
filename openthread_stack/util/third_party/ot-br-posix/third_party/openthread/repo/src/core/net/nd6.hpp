@@ -33,8 +33,8 @@
  * See RFC 4861 (https://tools.ietf.org/html/rfc4861) and RFC 4191 (https://tools.ietf.org/html/rfc4191).
  */
 
-#ifndef ND6_HPP_
-#define ND6_HPP_
+#ifndef OT_CORE_NET_ND6_HPP_
+#define OT_CORE_NET_ND6_HPP_
 
 #include "openthread-core-config.h"
 
@@ -278,6 +278,20 @@ public:
      * @returns  The preferred lifetime in seconds.
      */
     uint32_t GetPreferredLifetime(void) const { return BigEndian::HostSwap32(mPreferredLifetime); }
+
+    /**
+     * Returns the prefix length (in bits).
+     *
+     * @returns The prefix length (in bits).
+     */
+    uint8_t GetPrefixLength(void) const { return mPrefixLength; }
+
+    /**
+     * Sets the prefix length (in bits).
+     *
+     * @param[in] aPrefixLength  The prefix length (in bits).
+     */
+    void SetPrefixLength(uint8_t aPrefixLength) { mPrefixLength = aPrefixLength; }
 
     /**
      * Sets the prefix.
@@ -1290,4 +1304,4 @@ static_assert(sizeof(NeighborAdvertMessage) == 24, "Invalid NeighborAdvertMessag
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
-#endif // ND6_HPP_
+#endif // OT_CORE_NET_ND6_HPP_

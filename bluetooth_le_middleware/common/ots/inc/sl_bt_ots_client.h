@@ -369,7 +369,7 @@ sl_status_t sl_bt_ots_client_read_object_size(sl_bt_ots_client_handle_t client);
 sl_status_t sl_bt_ots_client_read_object_first_created(sl_bt_ots_client_handle_t client);
 
 /***************************************************************************//**
- * Read Object Last Modifed time of the Current Object.
+ * Read Object Last Modified time of the Current Object.
  *
  * Read response is given in callback.
  * @param[in] client    Client handle.
@@ -420,7 +420,7 @@ sl_status_t sl_bt_ots_client_write_object_first_created(sl_bt_ots_client_handle_
                                                         sl_bt_ots_time_t          *time);
 
 /***************************************************************************//**
- * Write Object Last Modifed field of the Current Object.
+ * Write Object Last Modified field of the Current Object.
  *
  * Write response is given in callback.
  * @param[in] client    Client handle.

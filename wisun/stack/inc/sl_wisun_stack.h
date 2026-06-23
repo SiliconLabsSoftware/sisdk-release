@@ -42,14 +42,6 @@ extern "C" {
  *****************************************************************************/
 void sl_wisun_stack_init();
 
-/**************************************************************************//**
- * Poll Wi-SUN stack for pending events.
- *
- * If there are none, the call will return immediately. Otherwise, a single
- * event is delivered via the callback handler sl_wisun_on_event().
- *****************************************************************************/
-void sl_wisun_stack_step();
-
 #ifdef __cplusplus
 }
 #endif

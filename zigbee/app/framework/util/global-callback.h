@@ -51,7 +51,7 @@ void sl_zigbee_af_add_to_current_app_tasks_cb(sl_zigbee_af_application_task_t ta
  * on an Energy Services Interface (ESI) (formerly called Energy Service Portal
  * (ESP) in SE 1.0).), a mirrored simple meter needs to write read-only
  * attributes on its mirror. The-meter-mirror sample application, located in
- * app/projects/testing, uses this callback to allow the mirrored device to
+ * zigbee_internal_app/testing, uses this callback to allow the mirrored device to
  * write simple metering attributes on the mirror regardless of the fact that
  * most simple metering attributes are defined as read-only by the ZigBee
  * specification.

@@ -31,8 +31,8 @@ void sli_zigbee_af_groups_server_cli_print(sl_cli_command_arg_t *args)
     sl_zigbee_binding_table_entry_t entry;
     status = sl_zigbee_get_binding(i, &entry);
     if ((status == SL_STATUS_OK) && (entry.type == SL_ZIGBEE_MULTICAST_BINDING)) {
-      sl_zigbee_af_core_println("ep[%02X] id[%04X]", entry.local,
-                                HIGH_LOW_TO_INT(entry.identifier[1], entry.identifier[0]));
+      sl_zigbee_af_cli_println("ep[%02X] id[%04X]", entry.local,
+                               HIGH_LOW_TO_INT(entry.identifier[1], entry.identifier[0]));
     }
   }
 }
@@ -41,6 +41,6 @@ void sli_zigbee_af_groups_server_cli_print(sl_cli_command_arg_t *args)
 void sli_zigbee_af_groups_server_cli_clear(sl_cli_command_arg_t *args)
 {
   (void)args;
-  sl_zigbee_af_core_println("Clearing all groups.");
+  sl_zigbee_af_cli_println("Clearing all groups.");
   sl_zigbee_af_groups_cluster_clear_group_table_cb(SL_ZIGBEE_BROADCAST_ENDPOINT);
 }

@@ -95,6 +95,7 @@
 #define uartdrv_eusart_get_status(eusart) sl_hal_eusart_get_status(eusart)
 #define uartdrv_eusart_tx(eusart, data) sl_hal_eusart_tx(eusart, data)
 #define uartdrv_eusart_reset(eusart) sl_hal_eusart_reset(eusart)
+#define uartdrv_eusart_clear_rx(eusart) sl_hal_eusart_clear_rx(eusart)
 #define uartdrv_eusart_enable(eusart, enable) do { if (enable == UARTDRV_EUSART_DISABLE)                                                                \
                                                    { sl_hal_eusart_disable(eusart); }                                                                   \
                                                    else if (enable == UARTDRV_EUSART_ENABLE_RX)                                                         \
@@ -119,6 +120,7 @@
 #define uartdrv_eusart_get_status(eusart) EUSART_StatusGet(eusart)
 #define uartdrv_eusart_tx(eusart, data) EUSART_Tx(eusart, data)
 #define uartdrv_eusart_reset(eusart) EUSART_Reset(eusart)
+#define uartdrv_eusart_clear_rx(eusart) do { while ((eusart)->STATUS & EUSART_STATUS_RXFL) { (void)(eusart)->RXDATA; } } while (0)
 #define uartdrv_eusart_enable(eusart, enable) EUSART_Enable(eusart, enable)
 #endif
 //****************************************************************************
@@ -131,12 +133,14 @@ static const bool enableRxWhenSleeping = UARTDRV_RESTRICT_ENERGY_MODE_TO_ALLOW_R
 
 //****************************************************************************
 
-static bool ReceiveDmaComplete(unsigned int channel,
-                               unsigned int sequenceNo,
-                               void *userParam);
-static bool TransmitDmaComplete(unsigned int channel,
-                                unsigned int sequenceNo,
-                                void *userParam);
+static void ReceiveDmaComplete(sl_dma_channel_handle_t *dma_handle,
+                               void *user_data,
+                               bool error,
+                               bool aborted);
+static void TransmitDmaComplete(sl_dma_channel_handle_t *dma_handle,
+                                void *user_data,
+                                bool error,
+                                bool aborted);
 
 /***************************************************************************//**
  * @brief Power management functions for the uartdrv.
@@ -242,15 +246,15 @@ static void HwFcManageClearToSend(uint8_t gpioPinNo, void *context)
     handle->fcSelfState = HwFcGetClearToSendPin(handle);
     // Only manage DMA if not already paused by SW
     if (handle->fcSelfCfg == uartdrvFlowControlAuto && (handle->txDmaPaused == 0)) {
-      bool active = false;
-      Ecode_t status = DMADRV_TransferActive(handle->txDmaCh, &active);
+      sl_dma_channel_status_t dmaStatus;
+      sl_dma_channel_get_status(&handle->txDmaCh, &dmaStatus);
       if ((handle->fcSelfState == uartdrvFlowControlOn) || handle->IgnoreRestrain) {
         handle->IgnoreRestrain = false;
-        DMADRV_ResumeTransfer(handle->txDmaCh);
+        sl_dma_channel_resume(&handle->txDmaCh);
       }
       // Only pause DMA if currently active
-      else if ((status == ECODE_EMDRV_DMADRV_OK) && active) {
-        DMADRV_PauseTransfer(handle->txDmaCh);
+      else if (dmaStatus.enabled) {
+        sl_dma_channel_suspend(&handle->txDmaCh);
       }
     }
   }
@@ -627,15 +631,13 @@ static void StartReceiveDma(UARTDRV_Handle_t handle,
   if (enableRxWhenSleeping) {
     em1RequestAdd(handle);
   }
-  DMADRV_PeripheralMemory(handle->rxDmaCh,
-                          handle->rxDmaSignal,
-                          buffer->data,
-                          rxPort,
-                          true,
-                          buffer->transferCount,
-                          dmadrvDataSize1,
-                          ReceiveDmaComplete,
-                          handle);
+
+  sl_dma_channel_submit_transfer_p2m(&handle->rxDmaCh,
+                                     rxPort,
+                                     buffer->data,
+                                     buffer->transferCount,
+                                     SL_DMA_CTRL_SIZE_BYTE,
+                                     NULL);
 }
 
 /***************************************************************************//**
@@ -680,31 +682,47 @@ static void StartTransmitDma(UARTDRV_Handle_t handle,
 #endif
 
   em1RequestAdd(handle);
-  DMADRV_MemoryPeripheral(handle->txDmaCh,
-                          handle->txDmaSignal,
-                          txPort,
-                          buffer->data,
-                          true,
-                          buffer->transferCount,
-                          dmadrvDataSize1,
-                          TransmitDmaComplete,
-                          handle);
+
+  sl_dma_channel_submit_transfer_m2p(&handle->txDmaCh,
+                                     buffer->data,
+                                     txPort,
+                                     buffer->transferCount,
+                                     SL_DMA_CTRL_SIZE_BYTE,
+                                     NULL);
 }
 
 /***************************************************************************//**
  * @brief DMA transfer completion callback. Called by the DMA interrupt handler.
  ******************************************************************************/
-static bool ReceiveDmaComplete(unsigned int channel,
-                               unsigned int sequenceNo,
-                               void *userParam)
+static void ReceiveDmaComplete(sl_dma_channel_handle_t * dma_handle,
+                               void *user_data,
+                               bool error,
+                               bool aborted)
 {
   CORE_DECLARE_IRQ_STATE;
   UARTDRV_Handle_t handle;
   UARTDRV_Buffer_t *buffer;
   Ecode_t status;
-  (void)channel;
-  (void)sequenceNo;
-  handle = (UARTDRV_Handle_t)userParam;
+  (void)dma_handle;
+  (void)error;
+
+  // If the transfer was aborted via sl_dma_channel_abort, return early.
+  if (aborted) {
+    return;
+  }
+
+  handle = (UARTDRV_Handle_t)user_data;
+
+  // When sl_dma_channel_abort walks the descriptor list, a transfer that
+  // completed between the critical section entry and the channel disable is
+  // classified as "completed" rather than "aborted". The abort path clears
+  // rxDmaActive before calling sl_dma_channel_abort, so we can detect this
+  // race and return early -- avoiding a spurious em1RequestRemove and a user
+  // callback with an OK status during teardown.
+  if (!handle->rxDmaActive) {
+    return;
+  }
+
   status = GetTailBuffer(handle->rxQueue, &buffer);
 
   if (enableRxWhenSleeping) {
@@ -715,7 +733,7 @@ static bool ReceiveDmaComplete(unsigned int channel,
   // until after the critical section. In this case, the buffers no longer
   // exist, even though the DMA complete callback was called.
   if (status == ECODE_EMDRV_UARTDRV_QUEUE_EMPTY) {
-    return true;
+    return;
   }
 
   EFM_ASSERT(buffer != NULL);
@@ -805,7 +823,6 @@ static bool ReceiveDmaComplete(unsigned int channel,
     }
   }
   CORE_EXIT_ATOMIC();
-  return true;
 }
 
 /***************************************************************************//**
@@ -902,23 +919,36 @@ static void TransmitDmaCompleteDelayed(sl_sleeptimer_timer_handle_t *timer_handl
 /***************************************************************************//**
  * @brief DMA transfer completion callback. Called by the DMA interrupt handler.
  ******************************************************************************/
-static bool TransmitDmaComplete(unsigned int channel,
-                                unsigned int sequenceNo,
-                                void *userParam)
+static void TransmitDmaComplete(sl_dma_channel_handle_t * dma_handle,
+                                void *user_data,
+                                bool error,
+                                bool aborted)
 {
   CORE_DECLARE_IRQ_STATE;
   UARTDRV_Handle_t handle;
   UARTDRV_Buffer_t *buffer;
   Ecode_t status;
-  (void)channel;
-  (void)sequenceNo;
+  (void)dma_handle;
+  (void)error;
 
-  handle = (UARTDRV_Handle_t)userParam;
+  // If the transfer was aborted via sl_dma_channel_abort, return early.
+  if (aborted) {
+    return;
+  }
+
+  handle = (UARTDRV_Handle_t)user_data;
+
+  // Same race-condition guard as ReceiveDmaComplete: the abort path clears
+  // txDmaActive before calling sl_dma_channel_abort.
+  if (!handle->txDmaActive) {
+    return;
+  }
+
   status = GetTailBuffer(handle->txQueue, &buffer);
 
 #if defined(SL_CATALOG_POWER_MANAGER_PRESENT)
   uint32_t ticks = calculateSleeptimerTicksToFlushTxBuffers(handle);
-  sl_sleeptimer_start_timer(&handle->delayedTxTimer, ticks, TransmitDmaCompleteDelayed, userParam, 0, 0);
+  sl_sleeptimer_start_timer(&handle->delayedTxTimer, ticks, TransmitDmaCompleteDelayed, user_data, 0, 0);
 #else
   em1RequestRemove(handle);
 #endif
@@ -927,7 +957,7 @@ static bool TransmitDmaComplete(unsigned int channel,
   // until after the critical section. In this case, the buffers no longer
   // exist, even though the DMA complete callback was called.
   if (status == ECODE_EMDRV_UARTDRV_QUEUE_EMPTY) {
-    return true;
+    return;
   }
 
   EFM_ASSERT(buffer != NULL);
@@ -960,7 +990,6 @@ static bool TransmitDmaComplete(unsigned int channel,
 #endif
   }
   CORE_EXIT_ATOMIC();
-  return true;
 }
 
 /***************************************************************************//**
@@ -971,7 +1000,7 @@ static Ecode_t CheckParams(UARTDRV_Handle_t handle, void *data, uint32_t count)
   if (handle == NULL) {
     return ECODE_EMDRV_UARTDRV_ILLEGAL_HANDLE;
   }
-  if ((data == NULL) || (count == 0) || (count > DMADRV_MAX_XFER_COUNT)) {
+  if ((data == NULL) || (count == 0)) {
     return ECODE_EMDRV_UARTDRV_PARAM_ERROR;
   }
   return ECODE_EMDRV_UARTDRV_OK;
@@ -1356,16 +1385,27 @@ static void InitializeGpioFlowControl(UARTDRV_Handle_t handle)
  ******************************************************************************/
 static Ecode_t InitializeDma(UARTDRV_Handle_t handle)
 {
-  // Initialize DMA.
-  DMADRV_Init();
+  sl_dma_manager_init(NULL, NULL);
 
-  if (DMADRV_AllocateChannel(&handle->txDmaCh, NULL) != ECODE_EMDRV_DMADRV_OK) {
+  uint8_t txChNum;
+  uint8_t rxChNum;
+
+  if (sl_dma_manager_allocate_channel(NULL, &txChNum) != SL_STATUS_OK) {
     return ECODE_EMDRV_UARTDRV_DMA_ALLOC_ERROR;
   }
 
-  if (DMADRV_AllocateChannel(&handle->rxDmaCh, NULL) != ECODE_EMDRV_DMADRV_OK) {
+  if (sl_dma_manager_allocate_channel(NULL, &rxChNum) != SL_STATUS_OK) {
+    sl_dma_manager_free_channel(NULL, txChNum);
     return ECODE_EMDRV_UARTDRV_DMA_ALLOC_ERROR;
   }
+
+  // Initialize TX DMA channel handle with completion callback
+  sl_dma_channel_init(&handle->txDmaCh, SL_PERIPHERAL_LDMA0, txChNum, TransmitDmaComplete, handle);
+  sl_dma_channel_set_peripheral_signal(&handle->txDmaCh, handle->txDmaSignal);
+
+  // Initialize RX DMA channel handle with completion callback
+  sl_dma_channel_init(&handle->rxDmaCh, SL_PERIPHERAL_LDMA0, rxChNum, ReceiveDmaComplete, handle);
+  sl_dma_channel_set_peripheral_signal(&handle->rxDmaCh, handle->rxDmaSignal);
 
   return ECODE_EMDRV_UARTDRV_OK;
 }
@@ -1436,20 +1476,20 @@ Ecode_t UARTDRV_InitUart(UARTDRV_Handle_t handle,
 #if defined(USART0)
   } else if (initData->port == USART0) {
     handle->usartPeripheral = SL_PERIPHERAL_USART0;
-    handle->txDmaSignal = dmadrvPeripheralSignal_USART0_TXBL;
-    handle->rxDmaSignal = dmadrvPeripheralSignal_USART0_RXDATAV;
+    handle->txDmaSignal = SL_DMA_SIGNAL_USART0_TXBL;
+    handle->rxDmaSignal = SL_DMA_SIGNAL_USART0_RXDATAV;
 #endif
 #if defined(USART1)
   } else if (initData->port == USART1) {
     handle->usartPeripheral = SL_PERIPHERAL_USART1;
-    handle->txDmaSignal = dmadrvPeripheralSignal_USART1_TXBL;
-    handle->rxDmaSignal = dmadrvPeripheralSignal_USART1_RXDATAV;
+    handle->txDmaSignal = SL_DMA_SIGNAL_USART1_TXBL;
+    handle->rxDmaSignal = SL_DMA_SIGNAL_USART1_RXDATAV;
 #endif
 #if defined(USART2)
   } else if (initData->port == USART2) {
     handle->usartPeripheral = SL_PERIPHERAL_USART2;
-    handle->txDmaSignal = dmadrvPeripheralSignal_USART2_TXBL;
-    handle->rxDmaSignal = dmadrvPeripheralSignal_USART2_RXDATAV;
+    handle->txDmaSignal = SL_DMA_SIGNAL_USART2_TXBL;
+    handle->rxDmaSignal = SL_DMA_SIGNAL_USART2_RXDATAV;
 #endif
   } else {
     return ECODE_EMDRV_UARTDRV_PARAM_ERROR;
@@ -1643,38 +1683,38 @@ Ecode_t UARTDRV_InitEuart(UARTDRV_Handle_t handle,
 #if defined(EUART0)
   } else if (initData->port == EUART0) {
     handle->usartPeripheral = SL_PERIPHERAL_EUART0;
-    handle->txDmaSignal = dmadrvPeripheralSignal_EUART0_TXBL;
-    handle->rxDmaSignal = dmadrvPeripheralSignal_EUART0_RXDATAV;
+    handle->txDmaSignal = SL_DMA_SIGNAL_EUART0_TXFL;
+    handle->rxDmaSignal = SL_DMA_SIGNAL_EUART0_RXFL;
 #endif
 #if defined(EUSART0)
   } else if (initData->port == EUSART0) {
     handle->usartPeripheral = SL_PERIPHERAL_EUSART0;
-    handle->txDmaSignal = dmadrvPeripheralSignal_EUSART0_TXBL;
-    handle->rxDmaSignal = dmadrvPeripheralSignal_EUSART0_RXDATAV;
+    handle->txDmaSignal = SL_DMA_SIGNAL_EUSART0_TXFL;
+    handle->rxDmaSignal = SL_DMA_SIGNAL_EUSART0_RXFL;
 #endif
 #if defined(EUSART1)
   } else if (initData->port == EUSART1) {
     handle->usartPeripheral = SL_PERIPHERAL_EUSART1;
-    handle->txDmaSignal = dmadrvPeripheralSignal_EUSART1_TXBL;
-    handle->rxDmaSignal = dmadrvPeripheralSignal_EUSART1_RXDATAV;
+    handle->txDmaSignal = SL_DMA_SIGNAL_EUSART1_TXFL;
+    handle->rxDmaSignal = SL_DMA_SIGNAL_EUSART1_RXFL;
 #endif
 #if defined(EUSART2)
   } else if (initData->port == EUSART2) {
     handle->usartPeripheral = SL_PERIPHERAL_EUSART2;
-    handle->txDmaSignal = dmadrvPeripheralSignal_EUSART2_TXBL;
-    handle->rxDmaSignal = dmadrvPeripheralSignal_EUSART2_RXDATAV;
+    handle->txDmaSignal = SL_DMA_SIGNAL_EUSART2_TXFL;
+    handle->rxDmaSignal = SL_DMA_SIGNAL_EUSART2_RXFL;
 #endif
 #if defined(EUSART3)
   } else if (initData->port == EUSART3) {
     handle->usartPeripheral = SL_PERIPHERAL_EUSART3;
-    handle->txDmaSignal = dmadrvPeripheralSignal_EUSART3_TXBL;
-    handle->rxDmaSignal = dmadrvPeripheralSignal_EUSART3_RXDATAV;
+    handle->txDmaSignal = SL_DMA_SIGNAL_EUSART3_TXFL;
+    handle->rxDmaSignal = SL_DMA_SIGNAL_EUSART3_RXFL;
 #endif
 #if defined(EUSART4)
   } else if (initData->port == EUSART4) {
     handle->usartPeripheral = SL_PERIPHERAL_EUSART4;
-    handle->txDmaSignal = dmadrvPeripheralSignal_EUSART4_TXBL;
-    handle->rxDmaSignal = dmadrvPeripheralSignal_EUSART4_RXDATAV;
+    handle->txDmaSignal = SL_DMA_SIGNAL_EUSART4_TXFL;
+    handle->rxDmaSignal = SL_DMA_SIGNAL_EUSART4_RXFL;
 #endif
   } else {
     return ECODE_EMDRV_UARTDRV_PARAM_ERROR;
@@ -1695,7 +1735,8 @@ Ecode_t UARTDRV_InitEuart(UARTDRV_Handle_t handle,
   if (initData->useLowFrequencyMode) {
 #if defined(_SILICON_LABS_32B_SERIES_2_CONFIG_2)    \
     || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_7) \
-    || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_9) \
+    || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_9)  \
+    || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_14) \
     || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_11)
     CMU_CLOCK_SELECT_SET(EM23GRPACLK, LFRCO);
 #if defined(EUART_PRESENT)
@@ -1717,7 +1758,8 @@ Ecode_t UARTDRV_InitEuart(UARTDRV_Handle_t handle,
   } else {
 #if defined(_SILICON_LABS_32B_SERIES_2_CONFIG_2)    \
     || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_7) \
-    || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_9) \
+    || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_9)  \
+    || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_14) \
     || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_11)
 #if defined(EUART_PRESENT)
     CMU_CLOCK_SELECT_SET(EUART0CLK, EM01GRPACLK);
@@ -1738,6 +1780,17 @@ Ecode_t UARTDRV_InitEuart(UARTDRV_Handle_t handle,
   }
 #endif
 
+  // Store GPIO configuration in handle first
+  if ((retVal = SetupGpioEuart(handle, initData)) != ECODE_EMDRV_UARTDRV_OK) {
+    return retVal;
+  }
+  // Configure GPIO pins BEFORE enabling EUSART routing.
+  // This ensures the TX pin is driven high (idle UART) before the EUSART
+  // output is connected to it, preventing glitches during initialization.
+  if ((retVal = ConfigGpio(handle, true)) != ECODE_EMDRV_UARTDRV_OK) {
+    return retVal;
+  }
+
 #if defined(EUART_COUNT) && (EUART_COUNT > 0)
   GPIO->EUARTROUTE->ROUTEEN = GPIO_EUART_ROUTEEN_TXPEN;
   GPIO->EUARTROUTE->TXROUTE = (initData->txPort
@@ -1755,13 +1808,6 @@ Ecode_t UARTDRV_InitEuart(UARTDRV_Handle_t handle,
                                                   << _GPIO_EUSART_RXROUTE_PORT_SHIFT)
                                                  | (initData->rxPin << _GPIO_EUSART_RXROUTE_PIN_SHIFT);
   #endif
-
-  if ((retVal = SetupGpioEuart(handle, initData)) != ECODE_EMDRV_UARTDRV_OK) {
-    return retVal;
-  }
-  if ((retVal = ConfigGpio(handle, true)) != ECODE_EMDRV_UARTDRV_OK) {
-    return retVal;
-  }
 
 #if defined(UARTDRV_USE_PERIPHERAL)
   // UARTDRV is fixed at 8 bit frames.
@@ -1880,7 +1926,6 @@ Ecode_t UARTDRV_DeInit(UARTDRV_Handle_t handle)
   }
 
   sl_bus_clock_t bus_clock;
-
   // Stop DMA transfers.
   UARTDRV_Abort(handle, uartdrvAbortAll);
 
@@ -1928,9 +1973,25 @@ Ecode_t UARTDRV_DeInit(UARTDRV_Handle_t handle)
   }
 #endif
 
-  DMADRV_FreeChannel(handle->txDmaCh);
-  DMADRV_FreeChannel(handle->rxDmaCh);
-  DMADRV_DeInit();
+  // Note: UARTDRV_Abort (called above) invokes sl_dma_channel_abort which handles:
+  // - Disabling channel requests and channels
+  // - Clearing LINK registers and interrupt flags
+  // - Invoking callbacks for pending descriptors (with aborted=true)
+  // - Freeing internally allocated descriptors
+  // - Clearing descriptor list pointers
+
+  // Save channel numbers before deinit (deinit zeroes the handle)
+  uint8_t txChNum = handle->txDmaCh.channel_number;
+  uint8_t rxChNum = handle->rxDmaCh.channel_number;
+
+  // Deinitialize DMA channel handles (disables interrupts, resets peripheral
+  // signal, unregisters IRQ callbacks, clears handle state)
+  EFM_ASSERT(sl_dma_channel_deinit(&handle->txDmaCh) == SL_STATUS_OK);
+  EFM_ASSERT(sl_dma_channel_deinit(&handle->rxDmaCh) == SL_STATUS_OK);
+
+  // Release channel allocations back to the DMA manager
+  EFM_ASSERT(sl_dma_manager_free_channel(NULL, txChNum) == SL_STATUS_OK);
+  EFM_ASSERT(sl_dma_manager_free_channel(NULL, rxChNum) == SL_STATUS_OK);
 
   handle->rxQueue->head = 0;
   handle->rxQueue->tail = 0;
@@ -1952,15 +2013,23 @@ __STATIC_INLINE void AbortTxDmaTransfers(UARTDRV_Handle_t handle)
 {
   UARTDRV_Buffer_t *txBuffer;
 
-  // Stop the current transfer
-  DMADRV_StopTransfer(handle->txDmaCh);
+  // Get bytes completed from the DMA channel before aborting
+  sl_dma_channel_status_t dmaStatus;
+  sl_dma_channel_get_status(&handle->txDmaCh, &dmaStatus);
+
+  // Mark DMA as inactive before aborting so that if sl_dma_channel_abort
+  // invokes TransmitDmaComplete for a transfer that completed between the
+  // critical section entry and the channel disable, the callback detects
+  // the abort-in-progress state and returns early.
   handle->txDmaActive = false;
+
+  // Abort the DMA channel and clean up its descriptor queue
+  sl_dma_channel_abort(&handle->txDmaCh);
 
   if (handle->txQueue->used > 0) {
     // Update the transfer status of the active transfer
     GetTailBuffer(handle->txQueue, &txBuffer);
-    DMADRV_TransferRemainingCount(handle->txDmaCh,
-                                  (int*)&txBuffer->itemsRemaining);
+    txBuffer->itemsRemaining = txBuffer->transferCount - dmaStatus.bytes_completed;
     txBuffer->transferStatus = ECODE_EMDRV_UARTDRV_ABORTED;
 
     // Dequeue all transfers and call callback
@@ -1999,22 +2068,30 @@ __STATIC_INLINE void AbortRxDmaTransfers(UARTDRV_Handle_t handle)
 {
   UARTDRV_Buffer_t *rxBuffer;
 
-  // Stop the current transfer
-  DMADRV_StopTransfer(handle->rxDmaCh);
+  // Get bytes completed from the DMA channel before aborting
+  sl_dma_channel_status_t dmaStatus;
+  sl_dma_channel_get_status(&handle->rxDmaCh, &dmaStatus);
+
+  // Mark DMA as inactive before aborting so that if sl_dma_channel_abort
+  // invokes ReceiveDmaComplete for a transfer that completed between the
+  // critical section entry and the channel disable, the callback detects
+  // the abort-in-progress state and returns early.
   handle->rxDmaActive = false;
+
+  // Abort the DMA channel and clean up its descriptor queue
+  sl_dma_channel_abort(&handle->rxDmaCh);
 
   if (handle->rxQueue->used > 0) {
     // Update the transfer status of the active transfer
     GetTailBuffer(handle->rxQueue, &rxBuffer);
-    DMADRV_TransferRemainingCount(handle->rxDmaCh,
-                                  (int*)&rxBuffer->itemsRemaining);
+    rxBuffer->itemsRemaining = rxBuffer->transferCount - dmaStatus.bytes_completed;
     rxBuffer->transferStatus = ECODE_EMDRV_UARTDRV_ABORTED;
-    // Dequeue all transfers and call callback
 
+    // Dequeue all transfers and call callback
     while (handle->rxQueue->used > 0) {
       DequeueBuffer(handle->rxQueue, &rxBuffer);
-      // Call the callback with ABORTED error code
 
+      // Call the callback with ABORTED error code
       if (rxBuffer->callback != NULL) {
         rxBuffer->callback(handle,
                            ECODE_EMDRV_UARTDRV_ABORTED,
@@ -2066,7 +2143,6 @@ Ecode_t UARTDRV_Abort(UARTDRV_Handle_t handle, UARTDRV_AbortType_t type)
   if ((type == uartdrvAbortTransmit) || (type == uartdrvAbortAll)) {
     AbortTxDmaTransfers(handle);
   }
-
   if ((type == uartdrvAbortReceive) || (type == uartdrvAbortAll)) {
     // Stop the current transfer
     AbortRxDmaTransfers(handle);
@@ -2157,17 +2233,18 @@ UARTDRV_Status_t UARTDRV_GetReceiveStatus(UARTDRV_Handle_t handle,
 {
   UARTDRV_Buffer_t *rxBuffer = NULL;
   Ecode_t retVal = ECODE_EMDRV_UARTDRV_OK;
-  uint32_t remaining = 0;
+  uint32_t bytesCompleted = 0;
 
   if (handle->rxQueue->used > 0) {
     retVal = GetTailBuffer(handle->rxQueue, &rxBuffer);
-    DMADRV_TransferRemainingCount(handle->rxDmaCh,
-                                  (int*)&remaining);
+    sl_dma_channel_status_t dmaStatus;
+    sl_dma_channel_get_status(&handle->rxDmaCh, &dmaStatus);
+    bytesCompleted = dmaStatus.bytes_completed;
   }
 
   if (rxBuffer && (retVal == ECODE_EMDRV_UARTDRV_OK)) {
-    *itemsReceived = rxBuffer->transferCount - remaining;
-    *itemsRemaining = remaining;
+    *itemsReceived = bytesCompleted;
+    *itemsRemaining = rxBuffer->transferCount - bytesCompleted;
     *buffer = rxBuffer->data;
   } else {
     *itemsRemaining = 0;
@@ -2229,17 +2306,18 @@ UARTDRV_Status_t UARTDRV_GetTransmitStatus(UARTDRV_Handle_t handle,
 {
   UARTDRV_Buffer_t *txBuffer = NULL;
   Ecode_t retVal = ECODE_EMDRV_UARTDRV_OK;
-  uint32_t remaining = 0;
+  uint32_t bytesCompleted = 0;
 
   if (handle->txQueue->used > 0) {
     retVal = GetTailBuffer(handle->txQueue, &txBuffer);
-    DMADRV_TransferRemainingCount(handle->txDmaCh,
-                                  (int*)&remaining);
+    sl_dma_channel_status_t dmaStatus;
+    sl_dma_channel_get_status(&handle->txDmaCh, &dmaStatus);
+    bytesCompleted = dmaStatus.bytes_completed;
   }
 
   if (txBuffer && (retVal == ECODE_EMDRV_UARTDRV_OK)) {
-    *itemsSent = txBuffer->transferCount - remaining;
-    *itemsRemaining = remaining;
+    *itemsSent = bytesCompleted;
+    *itemsRemaining = txBuffer->transferCount - bytesCompleted;
     *buffer = txBuffer->data;
   } else {
     *itemsRemaining = 0;
@@ -2541,7 +2619,7 @@ Ecode_t UARTDRV_PauseTransmit(UARTDRV_Handle_t handle)
   // Pause the transfer if 1) pause counter is 0
   //                       2) HW flow control hasn't already paused the DMA
   if ( (handle->txDmaPaused == 0) && (HwFcGetClearToSendPin(handle) == uartdrvFlowControlOn) ) {
-    DMADRV_PauseTransfer(handle->txDmaCh);
+    sl_dma_channel_suspend(&handle->txDmaCh);
   }
   // Increment counter to allow nested calls
   handle->txDmaPaused++;
@@ -2684,7 +2762,7 @@ Ecode_t UARTDRV_ResumeTransmit(UARTDRV_Handle_t handle)
     // Resume the transfer if 1) pause counter is 1
     //                        2) HW flow control doesn't need to pause the DMA
     if ( (handle->txDmaPaused == 1) && (HwFcGetClearToSendPin(handle) == uartdrvFlowControlOn) ) {
-      DMADRV_ResumeTransfer(handle->txDmaCh);
+      sl_dma_channel_resume(&handle->txDmaCh);
     }
     handle->txDmaPaused--;
   } else {

@@ -93,8 +93,8 @@ void spi_setCsInactive(void);
 uint32_t spi_getUsartPPUSATD(uint32_t *ppusatdNr);
 
 /**
- * @} // addtogroup Spi
- * @} // addtogroup Driver
+ * @} addtogroup Spi
+ * @} addtogroup Driver
  */
 
 #endif // BTL_DRIVER_SPI_H

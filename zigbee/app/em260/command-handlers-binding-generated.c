@@ -113,6 +113,13 @@ bool sli_zigbee_af_process_ezsp_command_binding(uint16_t commandId)
       break;
     }
 
+    case SL_ZIGBEE_EZSP_CLEAR_BINDING_TABLE_ON_LEAVE: {
+      bool clear;
+      clear = fetchInt8u();
+      sli_zigbee_stack_clear_binding_table_on_leave(clear);
+      break;
+    }
+
 //------------------------------------------------------------------------------
 
     default: {

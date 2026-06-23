@@ -135,7 +135,7 @@ void app_custom_regulation_tx_level_callback(sl_wisun_evt_t *evt)
   ptr = app_util_get_enum_by_integer(app_regulation_tx_level_enum,
                                      evt->evt.regulation_tx_level.tx_level);
   if (ptr) {
-    printf("[Regulation TX level: %s (%lu) (%lu ms)]\r\n", ptr->value_str, ptr->value, evt->evt.regulation_tx_level.tx_duration_ms);
+    printf("[Regulation TX level: %s (%"PRIu32") (%"PRIu32" ms)]\r\n", ptr->value_str, ptr->value, evt->evt.regulation_tx_level.tx_duration_ms);
   }
 }
 

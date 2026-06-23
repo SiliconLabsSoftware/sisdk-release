@@ -479,7 +479,7 @@ void gpAppGpTxQueueInit(sl_cli_command_arg_t *arguments)
                                                         0,
                                                         0xFFFF,
                                                         NULL);
-  sl_zigbee_app_debug_println("Additional RAIL handle %sinitialized", h ? "" : "not ");
+  sl_zigbee_af_cli_println("Additional RAIL handle %sinitialized", h ? "" : "not ");
 }
 
 void gpAppGpTxQueueSet(sl_cli_command_arg_t *arguments)
@@ -488,7 +488,7 @@ void gpAppGpTxQueueSet(sl_cli_command_arg_t *arguments)
 
   addr.applicationId = sl_cli_get_argument_uint8(arguments, 0);
   if (addr.applicationId != SL_ZIGBEE_GP_APPLICATION_SOURCE_ID) {
-    sl_zigbee_app_debug_println("Invalid application ID");
+    sl_zigbee_af_cli_println("Invalid application ID");
     return;
   }
   addr.id.sourceId = sl_cli_get_argument_uint32(arguments, 1);
@@ -507,7 +507,7 @@ void gpAppGpTxQueueSet(sl_cli_command_arg_t *arguments)
                           gpdAsdu,
                           0,
                           0) != SL_STATUS_OK) {
-    sl_zigbee_app_debug_println("Failed to add entry");
+    sl_zigbee_af_cli_println("Failed to add entry");
   }
 }
 
@@ -516,7 +516,7 @@ void gpAppGpTxQueueGet(sl_cli_command_arg_t *arguments)
   sl_zigbee_gp_tx_queue_entry_t txQueue;
   txQueue.addr.applicationId = sl_cli_get_argument_uint8(arguments, 0);
   if (txQueue.addr.applicationId != SL_ZIGBEE_GP_APPLICATION_SOURCE_ID) {
-    sl_zigbee_app_debug_println("Invalid application ID");
+    sl_zigbee_af_cli_println("Invalid application ID");
     return;
   }
   txQueue.addr.id.sourceId = sl_cli_get_argument_uint32(arguments, 1);
@@ -528,11 +528,11 @@ void gpAppGpTxQueueGet(sl_cli_command_arg_t *arguments)
                                                  buffer,
                                                  &length,
                                                  sizeof(buffer)) != SL_ZIGBEE_NULL_MESSAGE_BUFFER) {
-    sl_zigbee_app_debug_println("");
-    sl_zigbee_app_debug_print_buffer(buffer, length, true);
-    sl_zigbee_app_debug_println("");
+    sl_zigbee_af_cli_println("");
+    sl_zigbee_af_cli_print_buffer(buffer, length, true);
+    sl_zigbee_af_cli_println("");
   } else {
-    sl_zigbee_app_debug_println("No entry found");
+    sl_zigbee_af_cli_println("No entry found");
   }
 }
 
@@ -542,7 +542,7 @@ void gpAppGpTxQueueRemove(sl_cli_command_arg_t *arguments)
 
   addr.applicationId = sl_cli_get_argument_uint8(arguments, 0);
   if (addr.applicationId != SL_ZIGBEE_GP_APPLICATION_SOURCE_ID) {
-    sl_zigbee_app_debug_println("Invalid application ID");
+    sl_zigbee_af_cli_println("Invalid application ID");
     return;
   }
   addr.id.sourceId = sl_cli_get_argument_uint32(arguments, 1);
@@ -555,7 +555,7 @@ void gpAppGpTxQueueRemove(sl_cli_command_arg_t *arguments)
                           SL_ZIGBEE_NULL_MESSAGE_BUFFER,
                           0,
                           0) != SL_STATUS_OK) {
-    sl_zigbee_app_debug_println("No entry found");
+    sl_zigbee_af_cli_println("No entry found");
   }
 }
 
@@ -569,14 +569,14 @@ void gpAppGpGetTxQueueSize(sl_cli_command_arg_t *arguments)
 {
   UNUSED_VAR(arguments);
 
-  sl_zigbee_app_debug_println("Max Tx Queue Size = %d", sl_zigbee_get_gp_max_tx_q_list_count());
+  sl_zigbee_af_cli_println("Max Tx Queue Size = %d", sl_zigbee_get_gp_max_tx_q_list_count());
 }
 
 void gpAppGpGetTxQueueCount(sl_cli_command_arg_t *arguments)
 {
   UNUSED_VAR(arguments);
 
-  sl_zigbee_app_debug_print("Tx Queue Count = %d\n", sl_zigbee_get_gp_tx_q_list_count());
+  sl_zigbee_af_cli_println("Tx Queue Count = %d\n", sl_zigbee_get_gp_tx_q_list_count());
 }
 
 void gpAppGpPrintTxQueue(sl_cli_command_arg_t *arguments)
@@ -584,8 +584,8 @@ void gpAppGpPrintTxQueue(sl_cli_command_arg_t *arguments)
   UNUSED_VAR(arguments);
 
   uint16_t listCount = sl_zigbee_get_gp_tx_q_list_count();
-  sl_zigbee_app_debug_println("");
-  sl_zigbee_app_debug_println("Number of Gp Tx Queue entries : %d", listCount);
+  sl_zigbee_af_cli_println("");
+  sl_zigbee_af_cli_println("Number of Gp Tx Queue entries : %d", listCount);
   if (listCount != 0) {
     for (int i = 0; i < listCount; i++) {
       sl_zigbee_gp_tx_queue_entry_t entry;
@@ -596,13 +596,13 @@ void gpAppGpPrintTxQueue(sl_cli_command_arg_t *arguments)
                                                        data,
                                                        &dataLength);
 
-      sl_zigbee_app_debug_println("Entry [%d] :", i++);
-      sl_zigbee_app_debug_println("  App Id =  %d", entry.addr.applicationId);
-      sl_zigbee_app_debug_println("  Src Id = 0x%04X", entry.addr.id.sourceId);
-      sl_zigbee_app_debug_println("  Data Length = %d", dataLength);
-      sl_zigbee_app_debug_print("  Data = [");
-      sl_zigbee_app_debug_print_buffer(data, dataLength, true);
-      sl_zigbee_app_debug_println("]");
+      sl_zigbee_af_cli_println("Entry [%d] :", i++);
+      sl_zigbee_af_cli_println("  App Id =  %d", entry.addr.applicationId);
+      sl_zigbee_af_cli_println("  Src Id = 0x%04X", entry.addr.id.sourceId);
+      sl_zigbee_af_cli_println("  Data Length = %d", dataLength);
+      sl_zigbee_af_cli_print("  Data = [");
+      sl_zigbee_af_cli_print_buffer(data, dataLength, true);
+      sl_zigbee_af_cli_println("]");
     }
   }
 }

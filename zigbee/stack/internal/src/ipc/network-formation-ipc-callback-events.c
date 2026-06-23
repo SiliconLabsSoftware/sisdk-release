@@ -3,7 +3,7 @@
  * @brief callback event handlers for network-formation
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -26,6 +26,10 @@ void sli_zigbee_stack_energy_scan_result_handler(uint8_t channel,
                                                  int8_t maxRssiValue)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.energy_scan_result_handler.channel = channel;
   cb_event->data.energy_scan_result_handler.maxRssiValue = maxRssiValue;
   cb_event->tag = SLI_ZIGBEE_STACK_ENERGY_SCAN_RESULT_HANDLER_IPC_EVENT_TYPE;
@@ -41,6 +45,10 @@ void sli_zigbee_stack_network_found_handler(sl_zigbee_zigbee_network_t *networkF
                                             int8_t rssi)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
 
   if (networkFound != NULL) {
     cb_event->data.network_found_handler.networkFound = *networkFound;
@@ -59,6 +67,10 @@ void sli_zigbee_stack_network_found_handler(sl_zigbee_zigbee_network_t *networkF
 void sli_zigbee_stack_orphan_notification_handler(sl_802154_long_addr_t longId)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
 
   if (longId != NULL) {
     memmove(cb_event->data.orphan_notification_handler.longId, longId, sizeof(sl_802154_long_addr_t));
@@ -76,6 +88,10 @@ void sli_zigbee_stack_scan_complete_handler(uint8_t channel,
                                             sl_status_t status)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.scan_complete_handler.channel = channel;
   cb_event->data.scan_complete_handler.status = status;
   cb_event->tag = SLI_ZIGBEE_STACK_SCAN_COMPLETE_HANDLER_IPC_EVENT_TYPE;
@@ -90,6 +106,10 @@ void sli_zigbee_stack_unused_pan_id_found_handler(sl_802154_pan_id_t panId,
                                                   uint8_t channel)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.unused_pan_id_found_handler.panId = panId;
   cb_event->data.unused_pan_id_found_handler.channel = channel;
   cb_event->tag = SLI_ZIGBEE_STACK_UNUSED_PAN_ID_FOUND_HANDLER_IPC_EVENT_TYPE;

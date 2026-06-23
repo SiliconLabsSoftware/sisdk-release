@@ -40,7 +40,6 @@
 
 // -----------------------------------------------------------------------------
 // Macros
-#define CHANNEL_MAP_PRESET_LOW       0u
 #define CHANNEL_MAP_PRESET_MEDIUM    1u
 #define CHANNEL_MAP_PRESET_HIGH      2u // default
 #define CHANNEL_MAP_PRESET_CUSTOM    3u
@@ -229,8 +228,7 @@ void cs_initiator_cli_preset(sl_cli_command_arg_t *arguments)
 {
   uint8_t arg_data;
   arg_data = sl_cli_get_argument_uint8(arguments, 0);
-  if (arg_data != CHANNEL_MAP_PRESET_LOW
-      && arg_data != CHANNEL_MAP_PRESET_MEDIUM
+  if (arg_data != CHANNEL_MAP_PRESET_MEDIUM
       && arg_data != CHANNEL_MAP_PRESET_HIGH
       && arg_data != CHANNEL_MAP_PRESET_CUSTOM) {
     cli_print("ERROR. Unsupported preset (%d) provided!\n", arg_data);

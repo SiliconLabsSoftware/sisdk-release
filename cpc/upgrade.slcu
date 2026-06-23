@@ -17,3 +17,14 @@ upgrade:
           - cpc_secondary_driver_uart_usart
         remove:
           - cpc_secondary_driver_uart
+  - sdk:
+      id: simplicity_sdk
+      version: "2025.6.0"
+    component:
+      - trigger: cpc_secondary_recommended_interface
+        description: >
+          In sisdk-2025.6.0 the cpc_secondary_recommended_interface component was renamed cpc_secondary_recommended_uart_interface. Remove the cpc_secondary_recommended_interface component from your project.
+        add:
+          - cpc_secondary_recommended_uart_interface
+        remove:
+          - cpc_secondary_recommended_interface

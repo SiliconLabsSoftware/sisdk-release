@@ -210,13 +210,24 @@ void txAfterRx(sl_cli_command_arg_t *args)
 
 void getTxDelay(sl_cli_command_arg_t *args)
 {
-  responsePrint(sl_cli_get_command_string(args, 0), "txDelay:%d", continuousTransferPeriod);
+  responsePrint(sl_cli_get_command_string(args, 0), "txDelay:%d,when:%s",
+                continuousTransferPeriod,
+                ((txWaitForAck == TX_WAIT_FOR_ACK_DISABLED)
+                 ? "onTxComplete" : "afterAckWhenWaitForAck"));
 }
 
 void setTxDelay(sl_cli_command_arg_t *args)
 {
   uint32_t delay = sl_cli_get_argument_uint32(args, 0);
-
+  if (sl_cli_get_argument_count(args) > 1) {
+    if (txWaitForAck == TX_WAIT_FOR_ACK_ENABLED_ON) {
+      // Ignore change to txWaitForAck while wait-for-ack transmit is active
+    } else {
+      bool skipWaitForAck = (bool) sl_cli_get_argument_uint32(args, 1);
+      txWaitForAck = (skipWaitForAck
+                      ? TX_WAIT_FOR_ACK_DISABLED : TX_WAIT_FOR_ACK_ENABLED_OFF);
+    }
+  }
   continuousTransferPeriod = delay;
   args->argc = sl_cli_get_command_count(args); /* only reference cmd str */
   getTxDelay(args);
@@ -594,6 +605,11 @@ static uint32_t rfUs = 0;
 static const char * const rfSensitivity[] = { "High", "Low" };
 #endif
 
+// This CLI test function is used to force the device into a specific EM state,
+// bypassing the normal power manager sleep function. It only handles radio-related
+// interactions and the UART/RFSense wakeup mechanisms. It is not intended to be an
+// example of how to use the power manager correctly - customer code should use the
+// sl_power_manager_sleep() function to properly manage energy modes.
 void sleep(sl_cli_command_arg_t *args)
 {
 #if defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
@@ -1127,7 +1143,7 @@ void enableAutoLnaBypass(sl_cli_command_arg_t *args)
 
 void cancelScheduledTrx(sl_cli_command_arg_t *args)
 {
-#ifdef SL_RAIL_SUPPORTS_HARDWARE_SCHEDULER
+#if SL_RAIL_SUPPORTS_HARDWARE_SCHEDULER
   // Turn off ScheduledRx if we were in it
   if (currentAppMode() == RX_SCHEDULED) {
     (void) enableAppModeSync(RX_SCHEDULED, false, NULL);

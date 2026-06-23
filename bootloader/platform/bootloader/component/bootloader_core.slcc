@@ -12,7 +12,6 @@ source:
 - path: platform/bootloader/core/btl_bootload.c
 - path: platform/bootloader/core/btl_core.c
 - path: platform/bootloader/core/btl_main.c
-- path: platform/bootloader/core/flash/btl_internal_flash.c
 - path: platform/bootloader/core/btl_parse.c
 - path: platform/bootloader/core/btl_reset.c
 define:
@@ -20,17 +19,15 @@ define:
   value: 1
 - name: SL_RAMFUNC_DISABLE
   value: 1
-- name: __START
-  value: main
 - name: __STARTUP_CLEAR_BSS
   value: 1
 - name: BOOTLOADER_SECOND_STAGE
   value: 1
+- name: SL_APP_PROPERTIES
 
 include:
 - path: platform/bootloader
   file_list:
-  - path: api/btl_interface.h
   - path: config/btl_config.h
   - path: core/btl_core.h
   - path: core/btl_helper.h
@@ -38,14 +35,15 @@ include:
   - path: core/btl_parse.h
   - path: core/btl_bootload.h
   - path: core/btl_upgrade.h
-  - path: core/btl_util.h
   - path: driver/btl_driver_util.h
-  - path: core/flash/btl_internal_flash.h
 
 provides:
 - name: bootloader_core
 
 requires:
+- name: bootloader_interface_common
+- name: bootloader_interface_s2
+- name: btl_util_header
 - name: emlib
 - name: se_manager_mailbox
 - name: trustzone_secure
@@ -136,9 +134,24 @@ requires:
   condition: [device_generic_family_efr32xg2d, bootloader_uart_xmodem]
 - name: bootloader_tz_secure_config
   condition: [device_generic_family_efr32xg2d, bootloader_spiflash_storage_sfdp]
+- name: bootloader_tz_secure_config
+  condition: [device_generic_family_efr32xg2b, bootloader_ezsp_spi]
+- name: bootloader_tz_secure_config
+  condition: [device_generic_family_efr32xg2b, bootloader_internal_storage]
+- name: bootloader_tz_secure_config
+  condition: [device_generic_family_efr32xg2b, bootloader_spiflash_storage]
+- name: bootloader_tz_secure_config
+  condition: [device_generic_family_efr32xg2b, bootloader_bgapi_uartdfu]
+- name: bootloader_tz_secure_config
+  condition: [device_generic_family_efr32xg2b, bootloader_uart_xmodem]
+- name: bootloader_tz_secure_config
+  condition: [device_generic_family_efr32xg2b, bootloader_spiflash_storage_sfdp]
 - name: sl_fault_injection_hardening
 - name: bootloader_aes_ctr_stream_block_cfg
   condition: [device_has_semailbox]
+- name: bootloader_core_secure_policy
+  condition: [bootloader_tz_secure]
+- name: bootloader_core_validation_helper
 recommends:
 - id: bootloader_include_parser
   vendor: silabs
@@ -176,20 +189,6 @@ config_file:
   - device_sdid_205
   unless:
   - bootloader_tz_secure
-  - bootloader_apploader
-- path: platform/bootloader/config/device_series_2/btl_core_s_cfg.h
-  file_id: btl_core_config
-  condition:
-  - bootloader_tz_secure
-  unless:
-  - device_sdid_205
-  - bootloader_apploader
-- path: platform/bootloader/config/device_sdid_205/btl_core_s_cfg.h
-  file_id: btl_core_config
-  condition:
-  - device_sdid_205
-  - bootloader_tz_secure
-  unless:
   - bootloader_apploader
 
 - path: platform/bootloader/config/device_sdid_205/apploader/btl_core_cfg.h
@@ -309,12 +308,20 @@ template_contribution:
   - device_sdid_260
   unless:
   - bootloader_apploader
+- name: bootloader_flash_addr
+  value: 0x8000000
+  condition:
+  - device_sdid_250
+- name: bootloader_main_size
+  value: 0x6000
+  condition:
+  - device_sdid_250
+  unless:
+  - bootloader_apploader
 - name: bootloader_main_size
   value: 0x12000
   condition:
   - bootloader_apploader
-validation_helper:
-- path: platform/bootloader/component/scripts/bootloader_core_validation.lua
 
 toolchain_settings:
 - option: optimize

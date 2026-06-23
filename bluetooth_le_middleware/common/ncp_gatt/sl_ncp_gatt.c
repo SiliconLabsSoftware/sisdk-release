@@ -101,10 +101,10 @@ static sl_bt_gattdb_value_type_t map_value_type(uint8_t datatype);
 // sl_bt_gattdb_descriptor_properties macros.
 static uint16_t map_descriptor_property(uint16_t permissions);
 
-// Get the value and its related length informations of an attribute.
+// Get the value and its related length information of an attribute.
 static attribute_value_t get_attribute_value(const sli_bt_gattdb_attribute_t *attribute);
 
-// Get the index of the first attrubute to be processed.
+// Get the index of the first attribute to be processed.
 static uint16_t get_start_index(void);
 
 // Find if there is a user type CCCD present for the current characteristic
@@ -434,7 +434,7 @@ static uint16_t map_descriptor_property(uint16_t permissions)
 }
 
 /***************************************************************************//**
- * Get the value and its related length informations of an attribute.
+ * Get the value and its related length information of an attribute.
  *
  * @param[in] attribute. An attribute from provided by gatt_db.c.
  * @return The maximum length, length and the actual data of the attribute.
@@ -475,7 +475,7 @@ static attribute_value_t get_attribute_value(const sli_bt_gattdb_attribute_t *at
 }
 
 /***************************************************************************//**
- * Get the index of the first attrubute to be processed.
+ * Get the index of the first attribute to be processed.
  ******************************************************************************/
 static uint16_t get_start_index(void)
 {

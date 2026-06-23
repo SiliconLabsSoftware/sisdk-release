@@ -32,7 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include PLATFORM_HEADER
-
+#include <inttypes.h>
 #include "stack/include/ember.h"
 #include "em_system.h"
 #include "app_log.h"
@@ -84,22 +84,22 @@ void emberAfIncomingMessageCallback(const EmberIncomingMessage *message)
 {
   uint8_t i;
   if (message->endpoint == DATA_ENDPOINT) {
-    app_log_info("RX: Data from 0x%04X:{", message->source);
+    app_log_info("RX: Data from 0x%04" PRIX16 ":{", message->source);
     for ( i = 0; i < message->length; i++ ) {
       if ( i == 0) {
-        app_log_info("%02X", message->payload[i]);
+        app_log_info("%02" PRIX8, message->payload[i]);
       } else {
-        app_log_info(" %02X", message->payload[i]);
+        app_log_info(" %02" PRIX8, message->payload[i]);
       }
     }
     app_log_info("}\n");
   } else if (message->endpoint == TX_TEST_ENDPOINT && tx_test_print_en) {
-    app_log_info("RX: TX test packet from 0x%04X:{", message->source);
+    app_log_info("RX: TX test packet from 0x%04" PRIX16 ":{", message->source);
     for ( i = 0; i < message->length; i++ ) {
       if ( i == 0) {
-        app_log_info("%02X", message->payload[i]);
+        app_log_info("%02" PRIX8, message->payload[i]);
       } else {
-        app_log_info(" %02X", message->payload[i]);
+        app_log_info(" %02" PRIX8, message->payload[i]);
       }
     }
     app_log_info("}\n");
@@ -115,7 +115,7 @@ void emberAfMessageSentCallback(EmberStatus status,
 {
   if (message->endpoint == DATA_ENDPOINT) {
     if ( status != EMBER_SUCCESS ) {
-      app_log_info("TX: 0x%02X\n", status);
+      app_log_info("TX: 0x%02" PRIX8 "\n", status);
     }
   } else if (message->endpoint == TX_TEST_ENDPOINT) {
     if (tx_test_current_inflights_packets < tx_test_inflight_packets) {
@@ -142,7 +142,7 @@ void emberAfStackStatusCallback(EmberStatus status)
       app_log_info("Network down\n");
       break;
     default:
-      app_log_info("Stack status: 0x%02X\n", status);
+      app_log_info("Stack status: 0x%02" PRIX8 "\n", status);
       break;
   }
 }
@@ -174,6 +174,6 @@ void emberAfEnergyScanCompleteCallback(int8_t mean,
                                        int8_t max,
                                        uint16_t variance)
 {
-  app_log_info("Energy scan complete, mean=%d min=%d max=%d var=%d\n",
+  app_log_info("Energy scan complete, mean=%" PRId8 " min=%" PRId8 " max=%" PRId8 " var=%" PRIu16 "\n",
                mean, min, max, variance);
 }

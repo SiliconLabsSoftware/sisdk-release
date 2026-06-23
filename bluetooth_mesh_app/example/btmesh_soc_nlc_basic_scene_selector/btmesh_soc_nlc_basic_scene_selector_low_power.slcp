@@ -40,6 +40,8 @@ component:
   - id: simple_led_recommended_instance
   - id: sl_main
   - id: toolchain_gcc_lto
+    condition:
+      - toolchain_gcc
   - id: udelay
 
 source:

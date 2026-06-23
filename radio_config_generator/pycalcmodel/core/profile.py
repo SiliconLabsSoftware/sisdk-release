@@ -261,11 +261,16 @@ class ModelProfileContainer(object):
         assert isinstance(profile_incl_list, (list, type(None)))
         assert isinstance(phy_group_incl_list, (list, type(None)))
         profiles = model_type.profilesType()
-        for profile in self:
-            if profile_incl_list:
-                if profile.name in profile_incl_list:
-                    profiles.add_profile(profile.to_type_xml(phy_group_incl_list))
-            else:
+        if profile_incl_list:
+            seen_profiles = set()
+            for profile_name in profile_incl_list:
+                if profile_name in seen_profiles or profile_name not in self:
+                    continue
+                seen_profiles.add(profile_name)
+                profile = self.get_profile(profile_name)
+                profiles.add_profile(profile.to_type_xml(phy_group_incl_list))
+        else:
+            for profile in self:
                 profiles.add_profile(profile.to_type_xml(phy_group_incl_list))
         return profiles
 

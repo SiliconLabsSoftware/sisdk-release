@@ -40,12 +40,12 @@
 // -----------------------------------------------------------------------------
 /// States of rail_soc_simple_trx_multiphy
 typedef enum {
-  S_IDLE,
-  S_PACKET_RECEIVED,
-  S_PACKET_SENT,
-  S_RX_PACKET_ERROR,
-  S_TX_PACKET_ERROR,
-  S_CALIBRATION_ERROR
+  S_IDLE = 0,
+  S_PACKET_RECEIVED = 1,
+  S_PACKET_SENT = 2,
+  S_RX_PACKET_ERROR = 3,
+  S_TX_PACKET_ERROR = 4,
+  S_CALIBRATION_ERROR = 5
 } state_t;
 
 /// Device modes of rail_soc_simple_trx_multiphy
@@ -68,14 +68,9 @@ typedef enum {
 //                          Public Function Declarations
 // -----------------------------------------------------------------------------
 
-/**************************************************************************//**
- * The function is used for Application logic.
- *
- * @param[in] rail_handle A RAIL instance handle
- *
- * The function is used for Application logic.
- * It is called infinitely.
- *****************************************************************************/
+/*******************************************************************************
+ * Application state machine, called infinitely
+ ******************************************************************************/
 void app_process_action(void);
 
 /**************************************************************************//**

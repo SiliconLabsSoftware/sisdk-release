@@ -3,7 +3,7 @@
  * @brief Throughput test application.
  *******************************************************************************
  * # License
- * <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -46,6 +46,7 @@
 #include "throughput_ui_types.h"
 #include "throughput_ui.h"
 #include "throughput_types.h"
+#include "throughput_common.h"
 #include "cf_parse.h"
 #include "sl_bt_api.h"
 #include "app_assert.h"
@@ -85,19 +86,19 @@
 #define LOG_INTERVAL                  60.0
 
 // These constants are used for input validation
-#define FIXED_DATA_SIZE_MIN 1000
-#define FIXED_DATA_SIZE_MAX 10000000
-#define FIXED_TIME_MIN 1
-#define FIXED_TIME_MAX 600
+#define FIXED_DATA_SIZE_MIN     1000
+#define FIXED_DATA_SIZE_MAX     10000000
+#define FIXED_TIME_MIN          1
+#define FIXED_TIME_MAX          600
 #define CONNECTION_INTERVAL_MIN 6
 #define CONNECTION_INTERVAL_MAX 3200
-#define MTU_SIZE_MIN 23
-#define MTU_SIZE_MAX 250
+#define MTU_SIZE_MIN            23
+#define MTU_SIZE_MAX            THROUGHPUT_MAXIMUM_MTU_SIZE
 
 typedef struct {
   uint16_t connection_interval;
-  sl_bt_gap_phy_coding_t phy;
-  uint16_t mtu_size;
+  throughput_phy_t phy;
+  throughput_mtu_size_t mtu_size;
   sl_bt_gatt_client_config_flag_t test_type;
   throughput_mode_t mode;
   uint32_t fixed_amount;
@@ -165,9 +166,9 @@ void app_init(int argc, char *argv[])
 
       // PHY to use
       case 'p':
-        test_parameters.phy = (sl_bt_gap_phy_coding_t)strtoul(optarg,
-                                                              NULL,
-                                                              0);
+        test_parameters.phy = (throughput_phy_t)strtoul(optarg,
+                                                        NULL,
+                                                        0);
         // Validate input value
         if (test_parameters.phy != sl_bt_gap_phy_coding_1m_uncoded
             && test_parameters.phy != sl_bt_gap_phy_coding_2m_uncoded

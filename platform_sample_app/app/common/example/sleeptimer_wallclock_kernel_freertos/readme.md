@@ -1,30 +1,48 @@
-# Sleeptimer Wallclock Kernel FreeRTOS
+# Sleeptimer Wallclock FreeRTOS
 
-This example application demonstrates the use of the sleeptimer's wall clock interface in a FreeRTOS environment. The application uses the low frequency RTC (Real Time Clock) peripheral to set and get the date and time, with operations accessible over a virtual COM serial port.
+This example demonstrates the sleeptimer wall clock interface in a FreeRTOS environment. Set and get date/time via RTC over VCOM.
 
-All wallclock logic is managed in a FreeRTOS task, allowing other tasks to run concurrently.
+## Table of Contents
 
-Three types of time can be set and get in this application:
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-* Unix time (Shown as integer)
-* Network Protocol Time (Shown as integer)
-* Date and time (Shown in YYYY:MM:DD HH:MM:SS format)
+## Purpose / Scope
 
-## CLI Commands
+This FreeRTOS example uses the sleeptimer wall clock with the low-frequency RTC. All wall clock logic runs in a FreeRTOS task. You can get/set Unix time, NTP time, and date/time (YYYY-MM-DD HH:MM:SS) over VCOM. CLI commands: Help, get_unix_time, set_unix_time, get_ntp_time, set_ntp_time, get_datetime, set_datetime. Use it to learn RTC and wall clock with FreeRTOS.
 
-Help		- Prints list of supported commands
-get_unix_time 	- Prints unix time
-set_unix_time 	- Can be used to set unix time (Ex: set_unix_time 17)
-get_ntp_time	- Prints ntp time
-set_ntp_time	- Can be used to set ntp time (Ex: set_ntp_time 2208988825)
-get_datetime	- Prints date and time
-set_datetime	- Can be used to set date and time (Ex: set_datetime YYYY-MM-DD HH:MM:SS)
+## Prerequisites / Setup Requirements
 
-## Requirements
+**Hardware**
+- Silicon Labs board with RTC (low-frequency) peripheral.
 
-- Silicon Labs board with RTC peripheral
-- FreeRTOS kernel enabled
+**Software**
+- Simplicity Studio 5 (or later). A serial terminal for VCOM. FreeRTOS kernel enabled.
+
+## Steps to Run Demo
+
+1. Open the project in Simplicity Studio and build it.
+2. Connect the kit via USB, flash and run.
+3. Open a serial terminal on the kit's VCOM port. Use the CLI commands to get and set time.
+
+## Troubleshooting
+
+- **No VCOM or no response:** Ensure the kit is connected and VCOM drivers are installed; check FreeRTOS task and CLI initialization.
+- **Time not persisting:** RTC may need battery backup or correct clock source configuration.
+- **Build errors:** Verify target part has RTC and that sleeptimer wall clock and FreeRTOS are configured.
 
 ## Resources
-* [AN0014: EFM32 Timers](https://www.silabs.com/documents/public/application-notes/AN0014.pdf)
-* [FreeRTOS Kernel Documentation](https://www.freertos.org/)
+
+- [AN0014: EFM32 Timers](https://www.silabs.com/documents/public/application-notes/AN0014.pdf)
+- [FreeRTOS Kernel Documentation](https://www.freertos.org/)
+- [Silicon Labs Community](https://www.silabs.com/community)
+
+## Report Bugs & Get Support
+
+You are encouraged to report issues and get help from the community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

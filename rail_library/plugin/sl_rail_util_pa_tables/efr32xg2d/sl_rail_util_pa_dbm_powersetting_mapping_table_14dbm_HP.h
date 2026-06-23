@@ -38,52 +38,46 @@
 extern "C" {
 #endif
 
-#define SL_RAIL_PA_TABLE_0_NUM_VALUES  (39U)
+#define SL_RAIL_PA_TABLE_0_NUM_VALUES  (33U)
 #define SL_RAIL_PA_TABLE_0_STEP_DDBM   (10U)
-#define SL_RAIL_PA_TABLE_0_MAX_POWER_DDBM     (150U)
-#define SL_RAIL_PA_TABLE_0_MIN_POWER_DDBM     (-230)
+#define SL_RAIL_PA_TABLE_0_MAX_POWER_DDBM     (144U)
+#define SL_RAIL_PA_TABLE_0_MIN_POWER_DDBM     (-170)
 
 #define SL_RAIL_PA_TABLE_0                        \
   {                                               \
-    0x0 /* est_deci-dBm:-230 act_deci-dBm:-220*/, \
-    0x0 /* est_deci-dBm:-220 act_deci-dBm:-220*/, \
-    0x0 /* est_deci-dBm:-210 act_deci-dBm:-220*/, \
-    0x0 /* est_deci-dBm:-200 act_deci-dBm:-220*/, \
-    0x0 /* est_deci-dBm:-190 act_deci-dBm:-220*/, \
-    0x0 /* est_deci-dBm:-180 act_deci-dBm:-220*/, \
-    0x0 /* est_deci-dBm:-170 act_deci-dBm:-220*/, \
-    0x2 /* est_deci-dBm:-160 act_deci-dBm:-162*/, \
-    0x2 /* est_deci-dBm:-150 act_deci-dBm:-162*/, \
-    0x2 /* est_deci-dBm:-140 act_deci-dBm:-162*/, \
-    0x2 /* est_deci-dBm:-130 act_deci-dBm:-162*/, \
-    0x3 /* est_deci-dBm:-120 act_deci-dBm:-127*/, \
-    0x3 /* est_deci-dBm:-110 act_deci-dBm:-127*/, \
-    0x4 /* est_deci-dBm:-100 act_deci-dBm:-103*/, \
-    0x4 /* est_deci-dBm:-90 act_deci-dBm:-103*/,  \
-    0x5 /* est_deci-dBm:-80 act_deci-dBm:-84*/,   \
-    0x5 /* est_deci-dBm:-70 act_deci-dBm:-84*/,   \
-    0x6 /* est_deci-dBm:-60 act_deci-dBm:-69*/,   \
-    0x7 /* est_deci-dBm:-50 act_deci-dBm:-56*/,   \
+    0x0 /* est_deci-dBm:-170 act_deci-dBm:-173*/, \
+    0x0 /* est_deci-dBm:-160 act_deci-dBm:-173*/, \
+    0x0 /* est_deci-dBm:-150 act_deci-dBm:-173*/, \
+    0x0 /* est_deci-dBm:-140 act_deci-dBm:-173*/, \
+    0x2 /* est_deci-dBm:-130 act_deci-dBm:-138*/, \
+    0x2 /* est_deci-dBm:-120 act_deci-dBm:-138*/, \
+    0x3 /* est_deci-dBm:-110 act_deci-dBm:-114*/, \
+    0x3 /* est_deci-dBm:-100 act_deci-dBm:-114*/, \
+    0x4 /* est_deci-dBm:-90 act_deci-dBm:-95*/,   \
+    0x4 /* est_deci-dBm:-80 act_deci-dBm:-95*/,   \
+    0x5 /* est_deci-dBm:-70 act_deci-dBm:-79*/,   \
+    0x6 /* est_deci-dBm:-60 act_deci-dBm:-67*/,   \
+    0x7 /* est_deci-dBm:-50 act_deci-dBm:-55*/,   \
     0x8 /* est_deci-dBm:-40 act_deci-dBm:-45*/,   \
-    0x9 /* est_deci-dBm:-30 act_deci-dBm:-35*/,   \
-    0xa /* est_deci-dBm:-20 act_deci-dBm:-27*/,   \
-    0xc /* est_deci-dBm:-10 act_deci-dBm:-12*/,   \
-    0xe /* est_deci-dBm:0 act_deci-dBm:0*/,       \
-    0x10 /* est_deci-dBm:10 act_deci-dBm:10*/,    \
-    0x12 /* est_deci-dBm:20 act_deci-dBm:20*/,    \
-    0x14 /* est_deci-dBm:30 act_deci-dBm:28*/,    \
-    0x17 /* est_deci-dBm:40 act_deci-dBm:38*/,    \
-    0x1b /* est_deci-dBm:50 act_deci-dBm:50*/,    \
-    0x1f /* est_deci-dBm:60 act_deci-dBm:60*/,    \
-    0x23 /* est_deci-dBm:70 act_deci-dBm:69*/,    \
-    0x29 /* est_deci-dBm:80 act_deci-dBm:79*/,    \
-    0x31 /* est_deci-dBm:90 act_deci-dBm:90*/,    \
-    0x3a /* est_deci-dBm:100 act_deci-dBm:100*/,  \
-    0x46 /* est_deci-dBm:110 act_deci-dBm:110*/,  \
-    0x56 /* est_deci-dBm:120 act_deci-dBm:120*/,  \
-    0x75 /* est_deci-dBm:130 act_deci-dBm:130*/,  \
-    0xb2 /* est_deci-dBm:140 act_deci-dBm:140*/,  \
-    0xe9 /* est_deci-dBm:150 act_deci-dBm:145*/,  \
+    0x9 /* est_deci-dBm:-30 act_deci-dBm:-37*/,   \
+    0xb /* est_deci-dBm:-20 act_deci-dBm:-22*/,   \
+    0xd /* est_deci-dBm:-10 act_deci-dBm:-10*/,   \
+    0xe /* est_deci-dBm:0 act_deci-dBm:-4*/,      \
+    0x11 /* est_deci-dBm:10 act_deci-dBm:10*/,    \
+    0x13 /* est_deci-dBm:20 act_deci-dBm:18*/,    \
+    0x16 /* est_deci-dBm:30 act_deci-dBm:29*/,    \
+    0x1a /* est_deci-dBm:40 act_deci-dBm:40*/,    \
+    0x1e /* est_deci-dBm:50 act_deci-dBm:50*/,    \
+    0x21 /* est_deci-dBm:60 act_deci-dBm:58*/,    \
+    0x27 /* est_deci-dBm:70 act_deci-dBm:70*/,    \
+    0x2d /* est_deci-dBm:80 act_deci-dBm:80*/,    \
+    0x35 /* est_deci-dBm:90 act_deci-dBm:90*/,    \
+    0x3f /* est_deci-dBm:100 act_deci-dBm:100*/,  \
+    0x4c /* est_deci-dBm:110 act_deci-dBm:110*/,  \
+    0x5f /* est_deci-dBm:120 act_deci-dBm:120*/,  \
+    0x7e /* est_deci-dBm:130 act_deci-dBm:130*/,  \
+    0xbe /* est_deci-dBm:140 act_deci-dBm:140*/,  \
+    0xe8 /* est_deci-dBm:144 act_deci-dBm:144*/,  \
   }
 
 #ifdef __cplusplus

@@ -24,6 +24,22 @@ library:
   - cortexm33
   unless:
   - bluetooth_feature_accept_list
+- path: build/gcc/cortex-m33/advertiser/pawr_advertiser/release/libble_host_pawr_advertiser.a
+  condition:
+  - toolchain_gcc
+  - cortexm33
+  - bluetooth_feature_pawr_advertiser
+- path: build/gcc/cortex-m33/advertiser/periodic_advertiser/release/libble_host_periodic_advertiser.a
+  condition:
+  - toolchain_gcc
+  - cortexm33
+  - bluetooth_feature_periodic_advertiser
+- path: build/gcc/cortex-m33/advertiser/periodic_advertiser/release/libble_host_periodic_advertiser_stub.a
+  condition:
+  - toolchain_gcc
+  - cortexm33
+  unless:
+  - bluetooth_feature_periodic_advertiser
 - path: build/gcc/cortex-m33/bgstack/release/libble_host.a
   condition:
   - toolchain_gcc
@@ -59,6 +75,21 @@ library:
   - toolchain_gcc
   - cortexm33
   - bluetooth_feature_channel_classification
+- path: build/gcc/cortex-m33/channel_sounding/channel_sounding_test/release/libble_host_channel_sounding_test.a
+  condition:
+  - toolchain_gcc
+  - cortexm33
+  - bluetooth_feature_cs_test
+- path: build/gcc/cortex-m33/channel_sounding/release/libble_host_channel_sounding.a
+  condition:
+  - toolchain_gcc
+  - cortexm33
+  - bluetooth_feature_cs
+- path: build/gcc/cortex-m33/connection/connection_analyzer/release/libble_host_connection_analyzer.a
+  condition:
+  - toolchain_gcc
+  - cortexm33
+  - bluetooth_feature_connection_analyzer
 - path: build/gcc/cortex-m33/connection_subrating/release/libble_host_connection_subrating.a
   condition:
   - toolchain_gcc
@@ -74,6 +105,23 @@ library:
   condition:
   - toolchain_gcc
   - cortexm33
+- path: build/gcc/cortex-m33/crypto/crypto_lib/release/libble_host_crypto_lib_stub.a
+  condition:
+  - toolchain_gcc
+  - cortexm33
+  unless:
+  - bluetooth_crypto_lib_psa
+- path: build/gcc/cortex-m33/crypto/release/libble_host_crypto_stub.a
+  condition:
+  - toolchain_gcc
+  - cortexm33
+  unless:
+  - bluetooth_crypto
+- path: build/gcc/cortex-m33/cte_receiver/release/libble_host_cte_receiver.a
+  condition:
+  - toolchain_gcc
+  - cortexm33
+  - bluetooth_feature_cte_receiver
 - path: build/gcc/cortex-m33/cte_transmitter/release/libble_host_cte_transmitter.a
   condition:
   - toolchain_gcc
@@ -93,10 +141,188 @@ library:
   condition:
   - toolchain_gcc
   - cortexm33
+- path: build/gcc/cortex-m33/privacy/local_privacy/release/libble_host_local_privacy_stub.a
+  condition:
+  - toolchain_gcc
+  - cortexm33
+  unless:
+  - bluetooth_feature_local_privacy
+- path: build/gcc/cortex-m33/privacy/resolving_list/release/libble_host_resolving_list.a
+  condition:
+  - toolchain_gcc
+  - cortexm33
+  - bluetooth_feature_resolving_list
+- path: build/gcc/cortex-m33/privacy/resolving_list/release/libble_host_resolving_list_stub.a
+  condition:
+  - toolchain_gcc
+  - cortexm33
+  unless:
+  - bluetooth_feature_resolving_list
+- path: build/gcc/cortex-m33/privacy/rpa_resolution/release/libble_host_rpa_resolution_stub.a
+  condition:
+  - toolchain_gcc
+  - cortexm33
+  unless:
+  - bluetooth_feature_rpa_resolution
 - path: build/gcc/cortex-m33/system/release/libble_host_system.a
   condition:
   - toolchain_gcc
   - cortexm33
+- path: build/gcc/cortex-m55/accept_list/release/libble_host_accept_list.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  - bluetooth_feature_accept_list
+- path: build/gcc/cortex-m55/accept_list/release/libble_host_accept_list_stub.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  unless:
+  - bluetooth_feature_accept_list
+- path: build/gcc/cortex-m55/advertiser/pawr_advertiser/release/libble_host_pawr_advertiser.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  - bluetooth_feature_pawr_advertiser
+- path: build/gcc/cortex-m55/advertiser/periodic_advertiser/release/libble_host_periodic_advertiser.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  - bluetooth_feature_periodic_advertiser
+- path: build/gcc/cortex-m55/advertiser/periodic_advertiser/release/libble_host_periodic_advertiser_stub.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  unless:
+  - bluetooth_feature_periodic_advertiser
+- path: build/gcc/cortex-m55/bgstack/release/libble_host.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+- path: build/gcc/cortex-m55/bgstack/release/libbondingdb_stub.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  unless:
+  - bluetooth_feature_builtin_bonding_database
+- path: build/gcc/cortex-m55/ble_bgapi/release/libble_bgapi.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+- path: build/gcc/cortex-m55/ble_bgapi/release/libble_bgapi_stub_gatt_client.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  unless:
+  - bluetooth_feature_gatt
+- path: build/gcc/cortex-m55/ble_bgapi/release/libble_bgapi_stub_gatt_server.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  unless:
+  - bluetooth_feature_gatt_server
+- path: build/gcc/cortex-m55/ble_system/release/libble_system.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+- path: build/gcc/cortex-m55/channel_classification/release/libble_host_channel_classification.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  - bluetooth_feature_channel_classification
+- path: build/gcc/cortex-m55/channel_sounding/channel_sounding_test/release/libble_host_channel_sounding_test.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  - bluetooth_feature_cs_test
+- path: build/gcc/cortex-m55/channel_sounding/release/libble_host_channel_sounding.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  - bluetooth_feature_cs
+- path: build/gcc/cortex-m55/connection/connection_analyzer/release/libble_host_connection_analyzer.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  - bluetooth_feature_connection_analyzer
+- path: build/gcc/cortex-m55/connection_subrating/release/libble_host_connection_subrating.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  - bluetooth_feature_connection_subrating
+- path: build/gcc/cortex-m55/connection_subrating/release/libble_host_connection_subrating_stub.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  unless:
+  - bluetooth_feature_connection_subrating
+- path: build/gcc/cortex-m55/core/release/libble_host_core.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+- path: build/gcc/cortex-m55/crypto/crypto_lib/release/libble_host_crypto_lib_stub.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  unless:
+  - bluetooth_crypto_lib_psa
+- path: build/gcc/cortex-m55/crypto/release/libble_host_crypto_stub.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  unless:
+  - bluetooth_crypto
+- path: build/gcc/cortex-m55/cte_receiver/release/libble_host_cte_receiver.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  - bluetooth_feature_cte_receiver
+- path: build/gcc/cortex-m55/cte_transmitter/release/libble_host_cte_transmitter.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  - bluetooth_feature_cte_transmitter
+- path: build/gcc/cortex-m55/hal/release/libble_host_hal_series2.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  - device_series_2
+- path: build/gcc/cortex-m55/hal/release/libble_host_hal_series3.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  - device_series_3
+- path: build/gcc/cortex-m55/hci/release/libble_host_hci.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+- path: build/gcc/cortex-m55/privacy/local_privacy/release/libble_host_local_privacy_stub.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  unless:
+  - bluetooth_feature_local_privacy
+- path: build/gcc/cortex-m55/privacy/resolving_list/release/libble_host_resolving_list.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  - bluetooth_feature_resolving_list
+- path: build/gcc/cortex-m55/privacy/resolving_list/release/libble_host_resolving_list_stub.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  unless:
+  - bluetooth_feature_resolving_list
+- path: build/gcc/cortex-m55/privacy/rpa_resolution/release/libble_host_rpa_resolution_stub.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  unless:
+  - bluetooth_feature_rpa_resolution
+- path: build/gcc/cortex-m55/system/release/libble_host_system.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
 - path: build/iar/cortex-m33/accept_list/release/libble_host_accept_list.a
   condition:
   - toolchain_iar
@@ -108,6 +334,22 @@ library:
   - cortexm33
   unless:
   - bluetooth_feature_accept_list
+- path: build/iar/cortex-m33/advertiser/pawr_advertiser/release/libble_host_pawr_advertiser.a
+  condition:
+  - toolchain_iar
+  - cortexm33
+  - bluetooth_feature_pawr_advertiser
+- path: build/iar/cortex-m33/advertiser/periodic_advertiser/release/libble_host_periodic_advertiser.a
+  condition:
+  - toolchain_iar
+  - cortexm33
+  - bluetooth_feature_periodic_advertiser
+- path: build/iar/cortex-m33/advertiser/periodic_advertiser/release/libble_host_periodic_advertiser_stub.a
+  condition:
+  - toolchain_iar
+  - cortexm33
+  unless:
+  - bluetooth_feature_periodic_advertiser
 - path: build/iar/cortex-m33/bgstack/release/libble_host.a
   condition:
   - toolchain_iar
@@ -143,6 +385,21 @@ library:
   - toolchain_iar
   - cortexm33
   - bluetooth_feature_channel_classification
+- path: build/iar/cortex-m33/channel_sounding/channel_sounding_test/release/libble_host_channel_sounding_test.a
+  condition:
+  - toolchain_iar
+  - cortexm33
+  - bluetooth_feature_cs_test
+- path: build/iar/cortex-m33/channel_sounding/release/libble_host_channel_sounding.a
+  condition:
+  - toolchain_iar
+  - cortexm33
+  - bluetooth_feature_cs
+- path: build/iar/cortex-m33/connection/connection_analyzer/release/libble_host_connection_analyzer.a
+  condition:
+  - toolchain_iar
+  - cortexm33
+  - bluetooth_feature_connection_analyzer
 - path: build/iar/cortex-m33/connection_subrating/release/libble_host_connection_subrating.a
   condition:
   - toolchain_iar
@@ -158,6 +415,23 @@ library:
   condition:
   - toolchain_iar
   - cortexm33
+- path: build/iar/cortex-m33/crypto/crypto_lib/release/libble_host_crypto_lib_stub.a
+  condition:
+  - toolchain_iar
+  - cortexm33
+  unless:
+  - bluetooth_crypto_lib_psa
+- path: build/iar/cortex-m33/crypto/release/libble_host_crypto_stub.a
+  condition:
+  - toolchain_iar
+  - cortexm33
+  unless:
+  - bluetooth_crypto
+- path: build/iar/cortex-m33/cte_receiver/release/libble_host_cte_receiver.a
+  condition:
+  - toolchain_iar
+  - cortexm33
+  - bluetooth_feature_cte_receiver
 - path: build/iar/cortex-m33/cte_transmitter/release/libble_host_cte_transmitter.a
   condition:
   - toolchain_iar
@@ -177,10 +451,188 @@ library:
   condition:
   - toolchain_iar
   - cortexm33
+- path: build/iar/cortex-m33/privacy/local_privacy/release/libble_host_local_privacy_stub.a
+  condition:
+  - toolchain_iar
+  - cortexm33
+  unless:
+  - bluetooth_feature_local_privacy
+- path: build/iar/cortex-m33/privacy/resolving_list/release/libble_host_resolving_list.a
+  condition:
+  - toolchain_iar
+  - cortexm33
+  - bluetooth_feature_resolving_list
+- path: build/iar/cortex-m33/privacy/resolving_list/release/libble_host_resolving_list_stub.a
+  condition:
+  - toolchain_iar
+  - cortexm33
+  unless:
+  - bluetooth_feature_resolving_list
+- path: build/iar/cortex-m33/privacy/rpa_resolution/release/libble_host_rpa_resolution_stub.a
+  condition:
+  - toolchain_iar
+  - cortexm33
+  unless:
+  - bluetooth_feature_rpa_resolution
 - path: build/iar/cortex-m33/system/release/libble_host_system.a
   condition:
   - toolchain_iar
   - cortexm33
+- path: build/iar/cortex-m55/accept_list/release/libble_host_accept_list.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  - bluetooth_feature_accept_list
+- path: build/iar/cortex-m55/accept_list/release/libble_host_accept_list_stub.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  unless:
+  - bluetooth_feature_accept_list
+- path: build/iar/cortex-m55/advertiser/pawr_advertiser/release/libble_host_pawr_advertiser.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  - bluetooth_feature_pawr_advertiser
+- path: build/iar/cortex-m55/advertiser/periodic_advertiser/release/libble_host_periodic_advertiser.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  - bluetooth_feature_periodic_advertiser
+- path: build/iar/cortex-m55/advertiser/periodic_advertiser/release/libble_host_periodic_advertiser_stub.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  unless:
+  - bluetooth_feature_periodic_advertiser
+- path: build/iar/cortex-m55/bgstack/release/libble_host.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+- path: build/iar/cortex-m55/bgstack/release/libbondingdb_stub.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  unless:
+  - bluetooth_feature_builtin_bonding_database
+- path: build/iar/cortex-m55/ble_bgapi/release/libble_bgapi.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+- path: build/iar/cortex-m55/ble_bgapi/release/libble_bgapi_stub_gatt_client.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  unless:
+  - bluetooth_feature_gatt
+- path: build/iar/cortex-m55/ble_bgapi/release/libble_bgapi_stub_gatt_server.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  unless:
+  - bluetooth_feature_gatt_server
+- path: build/iar/cortex-m55/ble_system/release/libble_system.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+- path: build/iar/cortex-m55/channel_classification/release/libble_host_channel_classification.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  - bluetooth_feature_channel_classification
+- path: build/iar/cortex-m55/channel_sounding/channel_sounding_test/release/libble_host_channel_sounding_test.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  - bluetooth_feature_cs_test
+- path: build/iar/cortex-m55/channel_sounding/release/libble_host_channel_sounding.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  - bluetooth_feature_cs
+- path: build/iar/cortex-m55/connection/connection_analyzer/release/libble_host_connection_analyzer.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  - bluetooth_feature_connection_analyzer
+- path: build/iar/cortex-m55/connection_subrating/release/libble_host_connection_subrating.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  - bluetooth_feature_connection_subrating
+- path: build/iar/cortex-m55/connection_subrating/release/libble_host_connection_subrating_stub.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  unless:
+  - bluetooth_feature_connection_subrating
+- path: build/iar/cortex-m55/core/release/libble_host_core.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+- path: build/iar/cortex-m55/crypto/crypto_lib/release/libble_host_crypto_lib_stub.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  unless:
+  - bluetooth_crypto_lib_psa
+- path: build/iar/cortex-m55/crypto/release/libble_host_crypto_stub.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  unless:
+  - bluetooth_crypto
+- path: build/iar/cortex-m55/cte_receiver/release/libble_host_cte_receiver.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  - bluetooth_feature_cte_receiver
+- path: build/iar/cortex-m55/cte_transmitter/release/libble_host_cte_transmitter.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  - bluetooth_feature_cte_transmitter
+- path: build/iar/cortex-m55/hal/release/libble_host_hal_series2.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  - device_series_2
+- path: build/iar/cortex-m55/hal/release/libble_host_hal_series3.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  - device_series_3
+- path: build/iar/cortex-m55/hci/release/libble_host_hci.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+- path: build/iar/cortex-m55/privacy/local_privacy/release/libble_host_local_privacy_stub.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  unless:
+  - bluetooth_feature_local_privacy
+- path: build/iar/cortex-m55/privacy/resolving_list/release/libble_host_resolving_list.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  - bluetooth_feature_resolving_list
+- path: build/iar/cortex-m55/privacy/resolving_list/release/libble_host_resolving_list_stub.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  unless:
+  - bluetooth_feature_resolving_list
+- path: build/iar/cortex-m55/privacy/rpa_resolution/release/libble_host_rpa_resolution_stub.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  unless:
+  - bluetooth_feature_rpa_resolution
+- path: build/iar/cortex-m55/system/release/libble_host_system.a
+  condition:
+  - toolchain_iar
+  - cortexm55
 - path: build/llvm/cortex-m33/accept_list/release/libble_host_accept_list.a
   condition:
   - toolchain_llvm
@@ -192,6 +644,22 @@ library:
   - cortexm33
   unless:
   - bluetooth_feature_accept_list
+- path: build/llvm/cortex-m33/advertiser/pawr_advertiser/release/libble_host_pawr_advertiser.a
+  condition:
+  - toolchain_llvm
+  - cortexm33
+  - bluetooth_feature_pawr_advertiser
+- path: build/llvm/cortex-m33/advertiser/periodic_advertiser/release/libble_host_periodic_advertiser.a
+  condition:
+  - toolchain_llvm
+  - cortexm33
+  - bluetooth_feature_periodic_advertiser
+- path: build/llvm/cortex-m33/advertiser/periodic_advertiser/release/libble_host_periodic_advertiser_stub.a
+  condition:
+  - toolchain_llvm
+  - cortexm33
+  unless:
+  - bluetooth_feature_periodic_advertiser
 - path: build/llvm/cortex-m33/bgstack/release/libble_host.a
   condition:
   - toolchain_llvm
@@ -227,6 +695,21 @@ library:
   - toolchain_llvm
   - cortexm33
   - bluetooth_feature_channel_classification
+- path: build/llvm/cortex-m33/channel_sounding/channel_sounding_test/release/libble_host_channel_sounding_test.a
+  condition:
+  - toolchain_llvm
+  - cortexm33
+  - bluetooth_feature_cs_test
+- path: build/llvm/cortex-m33/channel_sounding/release/libble_host_channel_sounding.a
+  condition:
+  - toolchain_llvm
+  - cortexm33
+  - bluetooth_feature_cs
+- path: build/llvm/cortex-m33/connection/connection_analyzer/release/libble_host_connection_analyzer.a
+  condition:
+  - toolchain_llvm
+  - cortexm33
+  - bluetooth_feature_connection_analyzer
 - path: build/llvm/cortex-m33/connection_subrating/release/libble_host_connection_subrating.a
   condition:
   - toolchain_llvm
@@ -242,6 +725,23 @@ library:
   condition:
   - toolchain_llvm
   - cortexm33
+- path: build/llvm/cortex-m33/crypto/crypto_lib/release/libble_host_crypto_lib_stub.a
+  condition:
+  - toolchain_llvm
+  - cortexm33
+  unless:
+  - bluetooth_crypto_lib_psa
+- path: build/llvm/cortex-m33/crypto/release/libble_host_crypto_stub.a
+  condition:
+  - toolchain_llvm
+  - cortexm33
+  unless:
+  - bluetooth_crypto
+- path: build/llvm/cortex-m33/cte_receiver/release/libble_host_cte_receiver.a
+  condition:
+  - toolchain_llvm
+  - cortexm33
+  - bluetooth_feature_cte_receiver
 - path: build/llvm/cortex-m33/cte_transmitter/release/libble_host_cte_transmitter.a
   condition:
   - toolchain_llvm
@@ -261,10 +761,188 @@ library:
   condition:
   - toolchain_llvm
   - cortexm33
+- path: build/llvm/cortex-m33/privacy/local_privacy/release/libble_host_local_privacy_stub.a
+  condition:
+  - toolchain_llvm
+  - cortexm33
+  unless:
+  - bluetooth_feature_local_privacy
+- path: build/llvm/cortex-m33/privacy/resolving_list/release/libble_host_resolving_list.a
+  condition:
+  - toolchain_llvm
+  - cortexm33
+  - bluetooth_feature_resolving_list
+- path: build/llvm/cortex-m33/privacy/resolving_list/release/libble_host_resolving_list_stub.a
+  condition:
+  - toolchain_llvm
+  - cortexm33
+  unless:
+  - bluetooth_feature_resolving_list
+- path: build/llvm/cortex-m33/privacy/rpa_resolution/release/libble_host_rpa_resolution_stub.a
+  condition:
+  - toolchain_llvm
+  - cortexm33
+  unless:
+  - bluetooth_feature_rpa_resolution
 - path: build/llvm/cortex-m33/system/release/libble_host_system.a
   condition:
   - toolchain_llvm
   - cortexm33
+- path: build/llvm/cortex-m55/accept_list/release/libble_host_accept_list.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  - bluetooth_feature_accept_list
+- path: build/llvm/cortex-m55/accept_list/release/libble_host_accept_list_stub.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  unless:
+  - bluetooth_feature_accept_list
+- path: build/llvm/cortex-m55/advertiser/pawr_advertiser/release/libble_host_pawr_advertiser.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  - bluetooth_feature_pawr_advertiser
+- path: build/llvm/cortex-m55/advertiser/periodic_advertiser/release/libble_host_periodic_advertiser.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  - bluetooth_feature_periodic_advertiser
+- path: build/llvm/cortex-m55/advertiser/periodic_advertiser/release/libble_host_periodic_advertiser_stub.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  unless:
+  - bluetooth_feature_periodic_advertiser
+- path: build/llvm/cortex-m55/bgstack/release/libble_host.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+- path: build/llvm/cortex-m55/bgstack/release/libbondingdb_stub.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  unless:
+  - bluetooth_feature_builtin_bonding_database
+- path: build/llvm/cortex-m55/ble_bgapi/release/libble_bgapi.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+- path: build/llvm/cortex-m55/ble_bgapi/release/libble_bgapi_stub_gatt_client.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  unless:
+  - bluetooth_feature_gatt
+- path: build/llvm/cortex-m55/ble_bgapi/release/libble_bgapi_stub_gatt_server.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  unless:
+  - bluetooth_feature_gatt_server
+- path: build/llvm/cortex-m55/ble_system/release/libble_system.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+- path: build/llvm/cortex-m55/channel_classification/release/libble_host_channel_classification.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  - bluetooth_feature_channel_classification
+- path: build/llvm/cortex-m55/channel_sounding/channel_sounding_test/release/libble_host_channel_sounding_test.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  - bluetooth_feature_cs_test
+- path: build/llvm/cortex-m55/channel_sounding/release/libble_host_channel_sounding.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  - bluetooth_feature_cs
+- path: build/llvm/cortex-m55/connection/connection_analyzer/release/libble_host_connection_analyzer.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  - bluetooth_feature_connection_analyzer
+- path: build/llvm/cortex-m55/connection_subrating/release/libble_host_connection_subrating.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  - bluetooth_feature_connection_subrating
+- path: build/llvm/cortex-m55/connection_subrating/release/libble_host_connection_subrating_stub.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  unless:
+  - bluetooth_feature_connection_subrating
+- path: build/llvm/cortex-m55/core/release/libble_host_core.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+- path: build/llvm/cortex-m55/crypto/crypto_lib/release/libble_host_crypto_lib_stub.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  unless:
+  - bluetooth_crypto_lib_psa
+- path: build/llvm/cortex-m55/crypto/release/libble_host_crypto_stub.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  unless:
+  - bluetooth_crypto
+- path: build/llvm/cortex-m55/cte_receiver/release/libble_host_cte_receiver.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  - bluetooth_feature_cte_receiver
+- path: build/llvm/cortex-m55/cte_transmitter/release/libble_host_cte_transmitter.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  - bluetooth_feature_cte_transmitter
+- path: build/llvm/cortex-m55/hal/release/libble_host_hal_series2.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  - device_series_2
+- path: build/llvm/cortex-m55/hal/release/libble_host_hal_series3.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  - device_series_3
+- path: build/llvm/cortex-m55/hci/release/libble_host_hci.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+- path: build/llvm/cortex-m55/privacy/local_privacy/release/libble_host_local_privacy_stub.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  unless:
+  - bluetooth_feature_local_privacy
+- path: build/llvm/cortex-m55/privacy/resolving_list/release/libble_host_resolving_list.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  - bluetooth_feature_resolving_list
+- path: build/llvm/cortex-m55/privacy/resolving_list/release/libble_host_resolving_list_stub.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  unless:
+  - bluetooth_feature_resolving_list
+- path: build/llvm/cortex-m55/privacy/rpa_resolution/release/libble_host_rpa_resolution_stub.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  unless:
+  - bluetooth_feature_rpa_resolution
+- path: build/llvm/cortex-m55/system/release/libble_host_system.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
 metadata:
   sbom:
     license: MSLA

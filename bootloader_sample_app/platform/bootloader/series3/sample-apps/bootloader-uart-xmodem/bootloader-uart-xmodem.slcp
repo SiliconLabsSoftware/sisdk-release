@@ -3,7 +3,7 @@ package: bootloader
 quality: production
 label: Bootloader - NCP UART XMODEM
 description: >
-  Standalone Bootloader using XMODEM-CRC over UART. The bootloader shows a menu, where an XMODEM transfer can be started by sending ASCII '1', or the application can be started by sending ASCII '2'. This is the recommended UART bootloader for the EmberZNet and Connect protocol stacks.
+  Demonstrates how to perform firmware updates using XMODEM-CRC over UART, in a menu-driven standalone bootloader recommended for EmberZNet and Connect protocol stacks.
 
 category: Example|Bootloader
 filter:

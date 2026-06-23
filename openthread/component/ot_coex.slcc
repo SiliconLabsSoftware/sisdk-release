@@ -1,7 +1,7 @@
 id: ot_coex
 label: Coexistence
 package: openthread
-category: OpenThread
+category: OpenThread|Radio
 quality: production
 description: This component provides support for Wi-Fi coexistence with OpenThread
 provides:

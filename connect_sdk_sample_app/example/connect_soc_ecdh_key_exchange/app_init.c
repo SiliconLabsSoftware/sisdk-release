@@ -32,6 +32,8 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdio.h>
+#include <inttypes.h>
+
 #include "app_framework_common.h"
 #include "app_log.h"
 #include "app_process.h"
@@ -78,7 +80,7 @@ void emberAfInitCallback(void)
 
   psa_status_t psa_status;
   if ((psa_status = sl_connect_ecdh_key_exchange_init()) != PSA_SUCCESS) {
-    app_log_info("PSA init failed (status: %ld)\n", psa_status);
+    app_log_info("PSA init failed (status: %" PRId32 ")\n", psa_status);
   } else {
     app_log_error("PSA init succeed\n");
   }
@@ -86,7 +88,7 @@ void emberAfInitCallback(void)
   psa_status = psa_generate_random(connect_network_key.contents, EMBER_ENCRYPTION_KEY_SIZE);
   if (psa_status == PSA_SUCCESS) {
     app_log_info("PSA: generate random network key succeed\n");
-    app_log_info("PSA: random network key length: %u\n", EMBER_ENCRYPTION_KEY_SIZE);
+    app_log_info("PSA: random network key length: %d\n", EMBER_ENCRYPTION_KEY_SIZE);
     app_log_info("PSA: random network key: ");
     app_log_hexdump_info(connect_network_key.contents, EMBER_ENCRYPTION_KEY_SIZE);
     app_log_append_info("\n");
@@ -96,7 +98,7 @@ void emberAfInitCallback(void)
       app_log_error("Connect: set the random key as network key failed\n");
     }
   } else {
-    app_log_error("PSA: generate random network key failed (status: %ld)\n", psa_status);
+    app_log_error("PSA: generate random network key failed (status: %" PRId32 ")\n", psa_status);
   }
 }
 

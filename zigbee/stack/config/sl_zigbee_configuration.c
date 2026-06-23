@@ -179,6 +179,12 @@ uint16_t sli_mac_max_tx_flat_pkt_size = ALIGNED_MAX_FLAT_PACKET_SIZE;
 SL_ALIGN(4) static uint8_t outgoing_flat_packet[MAX_MAC_INDEX][ALIGNED_MAX_FLAT_PACKET_SIZE] SL_ATTRIBUTE_ALIGN(4);
 uint8_t *sli_mac_upper_mac_outgoing_flat_packet_ptr = (uint8_t *)outgoing_flat_packet;
 
+// Lower-MAC TX FIFO staging storage must be sized from the same resolved config
+// values as outgoing flat packet memory.
+uint16_t sli_mac_tx_fifo_staging_buffer_size = (ALIGNED_MAX_FLAT_PACKET_SIZE << 1U);
+SL_ALIGN(4) static uint8_t sl_mac_tx_fifo_staging_buffer[(ALIGNED_MAX_FLAT_PACKET_SIZE << 1U)] SL_ATTRIBUTE_ALIGN(4);
+uint8_t *sli_mac_tx_fifo_staging_buffer_ptr = sl_mac_tx_fifo_staging_buffer;
+
 //------------------------------------------------------------------------------
 // NWK Layer
 

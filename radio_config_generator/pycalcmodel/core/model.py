@@ -125,14 +125,19 @@ class ModelRoot(object):
             return -1
 
     def getProfilesInclList(self, phy_group_incl_list, phys):
-        if phy_group_incl_list:
-            profile_list = []
-            for phy in phys:
-                if phy.group_name in phy_group_incl_list:
-                    if phy.profile_name not in profile_list:
-                        profile_list.append(phy.profile_name)
-        else:
-            profile_list = None
+        if not phy_group_incl_list:
+            return None
+
+        profile_set = set()
+        for phy in phys:
+            if phy.group_name in phy_group_incl_list:
+                profile_set.add(phy.profile_name)
+        
+        profile_list = sorted(profile_set, key=str.lower)       
+        if "Base" in profile_list and profile_list[0] != "Base":
+            base_idx = profile_list.index("Base")
+            profile_list.insert(0, profile_list.pop(base_idx))
+            
         return profile_list
 
     def to_instance_xml(self, filename, part_revision, desc, processed, result_code, error_message, profile, phy=None, timestamp=None, phy_group_incl_list=None):

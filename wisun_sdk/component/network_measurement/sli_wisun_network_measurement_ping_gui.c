@@ -42,7 +42,6 @@
 #include "sl_wisun_network_measurement_config.h"
 #include "sl_display.h"
 #include "sl_gui.h"
-#include "socket/socket.h"
 #include "sl_wisun_ping.h"
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
@@ -65,64 +64,6 @@
 
 /// Max network size count
 #define MAX_NETWORK_SIZE_COUNT    (6U)
-
-/// Print Statistic format string
-#define PRINT_FULL_STAT_FORMAT_STR \
-  "[%s]\n\
-Packets:       %u\n\
-Packet length: %u\n\
-Lost packets:  %u\n\
-Packet loss:   %u%%\n\
-Min. Time[ms]: %lu\n\
-Max. Time[ms]: %lu\n\
-Avg. Time[ms]: %lu\n\
-lifetime:      %lu\n\
-mac_tx_count:  %lu\n\
-mac_tx_fail:   %lu\n\
-mac_tx_ms_cnt: %lu\n\
-mac_tx_ms_fail:%lu\n\
-rpl_rank:      %u\n\
-etx:           %u\n\
-rsl_out:       %u\n\
-rsl_in:        %u\n"
-
-/// Print neighbor statistic format string
-#define PRINT_NEIGHBOR_STAT_FORMAT_STR \
-  "[%s]\n\
-lifetime:      %lu\n\
-mac_tx_count:  %lu\n\
-mac_tx_fail:   %lu\n\
-mac_tx_ms_cnt: %lu\n\
-mac_tx_ms_fail:%lu\n\
-rpl_rank:      %u\n\
-etx:           %u\n\
-rsl_out:       %u\n\
-rsl_in:        %u\n"
-
-/// Print ping statistic format string
-#define PRINT_PING_STAT_FORMAT_STR \
-  "[%s]\n\
-Packets:       %u\n\
-Packet length: %u\n\
-Lost packets:  %u\n\
-Packet loss:   %u%%\n\
-Min. Time[ms]: %lu\n\
-Max. Time[ms]: %lu\n\
-Avg. Time[ms]: %lu\n"
-
-/// Print Node Info format string
-#define PRINT_NODE_INFO_FORMAT_STR \
-  "Network Name:\n%s\n\
-Nw. size: %s(%d)\n\
-TX Power: %d\n\
-Reg. domain: %s(%d)\n\
-Op. class: %d\n\
-Op. mode: 0x%x\n\
-Global:\n[%s]\n\
-Border Router:\n[%s]\n\
-Primary Parent:\n[%s]\n\
-Secondary Parent:\n[%s]\n\
-TX budget: %lums\n%s\n"
 
 /// Network Measurement settings structure
 typedef struct sl_wisun_nwm_setting {
@@ -562,7 +503,15 @@ static void _set_test_result_txtbox(void *args)
 
   ip_str = app_wisun_trace_util_get_ip_str(&stat->addr.sin6_addr);
   if (stat->type == SL_WISUN_NWM_NODE_TYPE_BORDER_ROUTER) {
-    snprintf(_str_buff, STR_BUFF_SIZE, PRINT_PING_STAT_FORMAT_STR,
+    snprintf(_str_buff, STR_BUFF_SIZE,
+             "[%s]\n"
+             "Packets:       %u\n"
+             "Packet length: %u\n"
+             "Lost packets:  %u\n"
+             "Packet loss:   %u%%\n"
+             "Min. Time[ms]: %"PRIu32"\n"
+             "Max. Time[ms]: %"PRIu32"\n"
+             "Avg. Time[ms]: %"PRIu32"\n",
              ip_str,
              stat->ping_stat.packet_count,
              stat->ping_stat.packet_length,
@@ -572,7 +521,24 @@ static void _set_test_result_txtbox(void *args)
              stat->ping_stat.max_time_ms,
              stat->ping_stat.avg_time_ms);
   } else {
-    snprintf(_str_buff, STR_BUFF_SIZE, PRINT_FULL_STAT_FORMAT_STR,
+    snprintf(_str_buff, STR_BUFF_SIZE,
+             "[%s]\n"
+             "Packets:       %u\n"
+             "Packet length: %u\n"
+             "Lost packets:  %u\n"
+             "Packet loss:   %u%%\n"
+             "Min. Time[ms]: %"PRIu32"\n"
+             "Max. Time[ms]: %"PRIu32"\n"
+             "Avg. Time[ms]: %"PRIu32"\n"
+             "lifetime:      %"PRIu32"\n"
+             "mac_tx_count:  %"PRIu32"\n"
+             "mac_tx_fail:   %"PRIu32"\n"
+             "mac_tx_ms_cnt: %"PRIu32"\n"
+             "mac_tx_ms_fail:%"PRIu32"\n"
+             "rpl_rank:      %u\n"
+             "etx:           %u\n"
+             "rsl_out:       %u\n"
+             "rsl_in:        %u\n",
              ip_str,
              stat->ping_stat.packet_count,
              stat->ping_stat.packet_length,

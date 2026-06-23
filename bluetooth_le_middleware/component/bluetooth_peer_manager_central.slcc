@@ -1,0 +1,61 @@
+id: bluetooth_peer_manager_central
+package: bluetooth_le_middleware
+label: Bluetooth Peer Manager Central
+description: >
+  Central role of Peer Manager for Bluetooth Low Energy.
+  Responsible for scanning and creating connections. Filters can be used
+  for setting Bluetooth specific parameters.
+category: Bluetooth|Application|Miscellaneous
+metadata:
+  sbom:
+    license: Zlib
+quality: production
+root_path: bluetooth_le_middleware/common/bluetooth_peer_manager/central
+include:
+- path: inc
+  file_list:
+  - path: sl_bt_peer_manager_central.h
+  - path: sli_bt_peer_manager_central.h
+source:
+- path: src/sl_bt_peer_manager_central.c
+requires:
+- name: app_log
+- name: app_timer
+- name: bluetooth_api
+- name: bluetooth_feature_system
+  condition:
+  - device_cortexm
+- name: bluetooth_feature_connection_role_central
+  condition:
+  - device_cortexm
+- name: bluetooth_feature_legacy_scanner
+  condition:
+  - device_cortexm
+- name: bluetooth_feature_extended_scanner
+  condition:
+  - device_cortexm
+- name: bluetooth_peer_manager_common
+- name: bluetooth_peer_manager_filter
+config_file:
+- path: config/sl_bt_peer_manager_central_config.h
+- path: config/ble_peer_manager_central_config_compat.h
+  condition:
+  - ble_peer_manager_central
+provides:
+- name: bluetooth_peer_manager_central
+template_contribution:
+- name: bluetooth_on_event
+  value:
+    include: sli_bt_peer_manager_central.h
+    function: sli_bt_peer_manager_central_on_bt_event
+  priority: 0
+- name: component_catalog
+  value: bluetooth_peer_manager_central
+- name: event_handler
+  value:
+    event: internal_app_init
+    include: sl_bt_peer_manager_central.h
+    handler: sl_bt_peer_manager_central_init
+documentation:
+  docset: bluetooth
+  document: bluetooth-service-api/bluetooth-peer-manager-central

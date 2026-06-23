@@ -1,0 +1,54 @@
+id: btl_ebl
+label: Bootloader EBL Parser Extension Component
+package: bootloader
+description: >
+  Extension component providing EBL parser and LZMA compression
+  functionality for bootloader.
+category: Platform|Bootloader|Utils
+quality: production
+source:
+- path: "platform/bootloader/core/btl_parse.c"
+- path: "platform/bootloader/parser/gbl/btl_gbl_parser.c"
+- path: "platform/bootloader/parser/gbl/btl_gbl_custom_tags.c"
+- path: "platform/bootloader/core/btl_bootload.c"
+  condition:
+  - brd4182a
+  - brd4001a
+- path: "platform/bootloader/core/btl_bootload.c"
+  condition:
+  - brd2503a
+- path: "platform/bootloader/core/btl_bootload.c"
+  condition:
+  - brd4116a
+- path: "platform/bootloader/core/btl_bootload.c"
+  condition:
+  - brd4263c
+- path: "platform/bootloader/core/btl_bootload.c"
+  condition:
+  - brd4263a
+- path: "platform/bootloader/core/btl_bootload.c"
+  condition:
+  - brd4400a
+include:
+- path: platform/bootloader/core
+- path: platform/bootloader
+  file_list:
+  - path: core/btl_reset.h
+  - path: core/btl_bootload.h
+  - path: core/btl_parse.h
+- path: platform/bootloader/parser
+  file_list:
+  - path: gbl/btl_gbl_parser.h
+  - path: gbl/btl_gbl_custom_tags.h
+  - path: gbl/btl_gbl_format.h
+requires:
+- name: bootloader_interface_common
+- name: btl_util_header
+provides:
+- name: btl_ebl
+metadata:
+  sbom:
+    license: MSLA
+ui_hints:
+  visibility: never
+root_path: bootloader

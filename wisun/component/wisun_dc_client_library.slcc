@@ -1,0 +1,69 @@
+id: "wisun_dc_client_library"
+label: "Wi-SUN direct connect client stack"
+description: "Wi-SUN stack library limited to direct connect client capability"
+package: "wisun"
+category: "Wi-SUN"
+quality: "production"
+root_path: "wisun/./stack"
+
+ui_hints:
+  visibility: never
+
+conflicts:
+- name: "wisun_br_stack"
+- name: "wisun_stack_ffn"
+- name: "wisun_stack_lfn"
+
+provides:
+- name: "wisun_implementation"
+- name: "wisun_dc_client_library"
+- name: "wisun_dc_client_implementation"
+
+define:
+- name: "HAVE_DC_ONLY_STACK"
+
+library:
+  # DC client stack (standalone):
+- path: "libwisun_dc_client_stack_efr32xg2x_gcc_debug.a"
+  condition:
+  - "device_series_2"
+  - "toolchain_gcc"
+  - "wisun_stack_debug"
+  - "wisun_stack_dc_client"
+- path: "libwisun_dc_client_stack_efr32xg2x_iar_debug.a"
+  condition:
+  - "device_series_2"
+  - "toolchain_iar"
+  - "wisun_stack_debug"
+  - "wisun_stack_dc_client"
+- path: "libwisun_dc_client_stack_efr32xg2x_llvm_debug.a"
+  condition:
+  - "device_series_2"
+  - "toolchain_llvm"
+  - "wisun_stack_debug"
+  - "wisun_stack_dc_client"
+- path: "libwisun_dc_client_stack_efr32xg2x_gcc_release.a"
+  condition:
+  - "device_series_2"
+  - "toolchain_gcc"
+  - "wisun_stack_dc_client"
+  unless:
+  - "wisun_stack_debug"
+- path: "libwisun_dc_client_stack_efr32xg2x_iar_release.a"
+  condition:
+  - "device_series_2"
+  - "toolchain_iar"
+  - "wisun_stack_dc_client"
+  unless:
+  - "wisun_stack_debug"
+- path: "libwisun_dc_client_stack_efr32xg2x_llvm_release.a"
+  condition:
+  - "device_series_2"
+  - "toolchain_llvm"
+  - "wisun_stack_dc_client"
+  unless:
+  - "wisun_stack_debug"
+
+metadata:
+  sbom:
+    license: MSLA

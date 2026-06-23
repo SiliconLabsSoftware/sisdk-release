@@ -1,0 +1,78 @@
+id: "bluetooth_crypto_lib_psa"
+label: "Bluetooth Crypto PSA Backend"
+package: bluetooth_le_host
+description: >
+  PSA Crypto backend for the Bluetooth Low Energy stack cryptographic
+  primitive interface.
+
+  This component provides the PSA Crypto-based implementation of the crypto_lib
+  interface.
+category: Bluetooth|Bluetooth Host (Stack)
+quality: "production"
+template_contribution:
+- name: component_catalog
+  value: bluetooth_crypto_lib_psa
+- name: psa_key_slots
+  value:
+    name: psa_key_slots_bluetooth_stack
+    count: 2
+  condition:
+  - psa_crypto
+  unless:
+  - bluetooth_feature_external_bonding_database
+- name: psa_key_slots
+  value:
+    name: psa_key_slots_bluetooth_stack
+    count: 3
+  condition:
+  - psa_crypto
+  - bluetooth_feature_external_bonding_database
+requires:
+- name: "psa_crypto"
+- name: "psa_crypto_cmac"
+- name: "psa_crypto_cipher_ecb"
+- name: "psa_crypto_ecdh"
+- name: "psa_crypto_ecc_secp256r1"
+- name: "psa_its"
+  condition:
+  - bluetooth_feature_builtin_bonding_database
+
+provides:
+- name: "bluetooth_crypto_lib_psa"
+- name: "bluetooth_crypto_lib"
+
+metadata:
+  sbom:
+    license: MSLA
+library:
+- path: build/gcc/cortex-m33/crypto/crypto_lib/crypto_lib_psa/release/libble_host_crypto_lib_psa.a
+  condition:
+  - toolchain_gcc
+  - cortexm33
+  - bluetooth_host_release_libraries
+- path: build/gcc/cortex-m55/crypto/crypto_lib/crypto_lib_psa/release/libble_host_crypto_lib_psa.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  - bluetooth_host_release_libraries
+- path: build/iar/cortex-m33/crypto/crypto_lib/crypto_lib_psa/release/libble_host_crypto_lib_psa.a
+  condition:
+  - toolchain_iar
+  - cortexm33
+  - bluetooth_host_release_libraries
+- path: build/iar/cortex-m55/crypto/crypto_lib/crypto_lib_psa/release/libble_host_crypto_lib_psa.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  - bluetooth_host_release_libraries
+- path: build/llvm/cortex-m33/crypto/crypto_lib/crypto_lib_psa/release/libble_host_crypto_lib_psa.a
+  condition:
+  - toolchain_llvm
+  - cortexm33
+  - bluetooth_host_release_libraries
+- path: build/llvm/cortex-m55/crypto/crypto_lib/crypto_lib_psa/release/libble_host_crypto_lib_psa.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  - bluetooth_host_release_libraries
+root_path: bluetooth_le_host

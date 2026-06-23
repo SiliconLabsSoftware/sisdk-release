@@ -28,34 +28,34 @@ void sli_zigbee_af_ias_zone_client_print_servers_command(sl_cli_command_arg_t *a
   UNUSED_VAR(arguments);
 
   uint8_t i;
-  sl_zigbee_af_ias_zone_cluster_println("Index IEEE                 EP   Type   Status State ID");
-  sl_zigbee_af_ias_zone_cluster_println("---------------------------------------------------");
+  sl_zigbee_af_cli_println("Index IEEE                 EP   Type   Status State ID");
+  sl_zigbee_af_cli_println("---------------------------------------------------");
   for (i = 0; i < SL_ZIGBEE_AF_PLUGIN_IAS_ZONE_CLIENT_MAX_DEVICES; i++) {
     if (i < 10) {
-      sl_zigbee_af_ias_zone_cluster_print(" ");
+      sl_zigbee_af_cli_print(" ");
     }
-    sl_zigbee_af_ias_zone_cluster_print("%d    (>)%02X%02X%02X%02X%02X%02X%02X%02X  ",
-                                        i,
-                                        sl_zigbee_af_ias_zone_client_known_servers[i].ieeeAddress[7],
-                                        sl_zigbee_af_ias_zone_client_known_servers[i].ieeeAddress[6],
-                                        sl_zigbee_af_ias_zone_client_known_servers[i].ieeeAddress[5],
-                                        sl_zigbee_af_ias_zone_client_known_servers[i].ieeeAddress[4],
-                                        sl_zigbee_af_ias_zone_client_known_servers[i].ieeeAddress[3],
-                                        sl_zigbee_af_ias_zone_client_known_servers[i].ieeeAddress[2],
-                                        sl_zigbee_af_ias_zone_client_known_servers[i].ieeeAddress[1],
-                                        sl_zigbee_af_ias_zone_client_known_servers[i].ieeeAddress[0]);
+    sl_zigbee_af_cli_print("%d    (>)%02X%02X%02X%02X%02X%02X%02X%02X  ",
+                           i,
+                           sl_zigbee_af_ias_zone_client_known_servers[i].ieeeAddress[7],
+                           sl_zigbee_af_ias_zone_client_known_servers[i].ieeeAddress[6],
+                           sl_zigbee_af_ias_zone_client_known_servers[i].ieeeAddress[5],
+                           sl_zigbee_af_ias_zone_client_known_servers[i].ieeeAddress[4],
+                           sl_zigbee_af_ias_zone_client_known_servers[i].ieeeAddress[3],
+                           sl_zigbee_af_ias_zone_client_known_servers[i].ieeeAddress[2],
+                           sl_zigbee_af_ias_zone_client_known_servers[i].ieeeAddress[1],
+                           sl_zigbee_af_ias_zone_client_known_servers[i].ieeeAddress[0]);
     if (sl_zigbee_af_ias_zone_client_known_servers[i].endpoint < 10) {
-      sl_zigbee_af_ias_zone_cluster_print(" ");
+      sl_zigbee_af_cli_print(" ");
     }
     if (sl_zigbee_af_ias_zone_client_known_servers[i].endpoint < 100) {
-      sl_zigbee_af_ias_zone_cluster_print(" ");
+      sl_zigbee_af_cli_print(" ");
     }
-    sl_zigbee_af_ias_zone_cluster_print("%d  ", sl_zigbee_af_ias_zone_client_known_servers[i].endpoint);
-    sl_zigbee_af_ias_zone_cluster_println("0x%04X 0x%04X 0x%02X 0x%02X",
-                                          sl_zigbee_af_ias_zone_client_known_servers[i].zoneType,
-                                          sl_zigbee_af_ias_zone_client_known_servers[i].zoneStatus,
-                                          sl_zigbee_af_ias_zone_client_known_servers[i].zoneState,
-                                          sl_zigbee_af_ias_zone_client_known_servers[i].zoneId);
+    sl_zigbee_af_cli_print("%d  ", sl_zigbee_af_ias_zone_client_known_servers[i].endpoint);
+    sl_zigbee_af_cli_println("0x%04X 0x%04X 0x%02X 0x%02X",
+                             sl_zigbee_af_ias_zone_client_known_servers[i].zoneType,
+                             sl_zigbee_af_ias_zone_client_known_servers[i].zoneStatus,
+                             sl_zigbee_af_ias_zone_client_known_servers[i].zoneState,
+                             sl_zigbee_af_ias_zone_client_known_servers[i].zoneId);
   }
 }
 

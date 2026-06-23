@@ -1,8 +1,8 @@
 project_name: ot-ncp-ftd
-label: OpenThread - NCP (FTD)
+label: OpenThread - NCP FTD
 package: openthread
 description: >
-  This is a simple OpenThread Full Thread Device NCP application. This is equivalent to the ot-ncp-ftd application in the OpenThread GitHub repo.
+  Demonstrates OpenThread Full Thread Device (FTD) Network Co-Processor (NCP) application.
 category: OpenThread Examples
 quality: production
 
@@ -26,8 +26,11 @@ component:
   - id: ot_rtt_log
   - id: clock_manager
   - id: ot_reset_utils
-  # Platform - Enable LTO for gcc by installing the following component
+  # Platform - Enable LTO for gcc and llvm by installing the following component
   - id: toolchain_gcc_lto
+    condition: [toolchain_gcc]
+  - id: toolchain_llvm_lto
+    condition: [toolchain_llvm]
   - id: ot_cli_source
 
 include:
@@ -41,6 +44,19 @@ source:
 configuration:
   - name: SL_BOARD_ENABLE_VCOM
     value: 1
+    # By default, OTBR is configured to work with 460800 baud rate on UART
+  - name: SL_IOSTREAM_USART_VCOM_BAUDRATE
+    value: 460800
+    condition: [iostream_usart]
+  - name: SL_IOSTREAM_EUSART_VCOM_BAUDRATE
+    value: 460800
+    condition: [iostream_eusart]
+  - name: SL_IOSTREAM_USART_VCOM_FLOW_CONTROL_TYPE
+    value: usartHwFlowControlCtsAndRts
+    condition: [iostream_usart]
+  - name: SL_IOSTREAM_EUSART_VCOM_FLOW_CONTROL_TYPE
+    value: SL_IOSTREAM_EUSART_UART_FLOW_CTRL_CTS_RTS
+    condition: [iostream_eusart]
   - name: SL_MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     value: 1
   - name: SL_MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
@@ -81,12 +97,6 @@ configuration:
     condition: [ot_rtt_log]
   - name: CIRCULAR_QUEUE_LEN_MAX
     value: 16
-  - name: SL_IOSTREAM_USART_VCOM_FLOW_CONTROL_TYPE
-    value: usartHwFlowControlCtsAndRts
-    condition: [iostream_usart]
-  - name: SL_IOSTREAM_EUSART_VCOM_FLOW_CONTROL_TYPE
-    value: SL_IOSTREAM_EUSART_UART_FLOW_CTRL_CTS_RTS
-    condition: [iostream_eusart]
   - name: SL_OPENTHREAD_STACK_TASK_MEM_SIZE
     value: 7168
     condition: [toolchain_lto]
@@ -94,10 +104,19 @@ configuration:
     value: 16384
     condition: [toolchain_lto, freertos]
 
+define:
+  - name: OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+    value: 1
+  - name: OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+    value: 0
+  - name: OPENTHREAD_CONFIG_PLATFORM_DNSSD_ALLOW_RUN_TIME_SELECTION
+    value: 0
+
 tag:
   - prebuilt_demo
   - hwfilter:device:device_supports_thread
   - toolchain:gcc
+  - toolchain:llvm
   - hwfilter:!device:device_family_efr32mr21
 readme:
   - path: ./README-OT-NCP.md

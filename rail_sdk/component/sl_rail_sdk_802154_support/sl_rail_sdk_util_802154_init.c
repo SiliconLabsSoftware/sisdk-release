@@ -31,6 +31,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include "sl_rail.h"
 #include "sli_rail_util_callbacks.h" // for internal-only callback signatures
 #include "sl_rail_sdk_util_802154_init.h"
@@ -101,9 +102,9 @@ void sl_rail_sdk_util_init(void)
                         &sli_rail_util_on_rf_ready
                         );
   app_assert((SL_RAIL_STATUS_NO_ERROR == status),
-             "sl_rail_init failed, return value: %ld", status);
+             "sl_rail_init failed, return value: 0x%08" PRIX32 "", status);
   app_assert((NULL != sl_rail_sdk_handle),
-             "sl_rail_init failed, return value: %ld", status);
+             "sl_rail_init failed, return value: 0x%08" PRIX32 "", status);
 
   sl_rail_tx_data_config_t tx_data_config = {
     .tx_source = SL_RAIL_TX_DATA_SOURCE_PACKET_DATA,
@@ -117,12 +118,12 @@ void sl_rail_sdk_util_init(void)
 
   status = sl_rail_config_tx_data(sl_rail_sdk_handle, &tx_data_config);
   app_assert((SL_RAIL_STATUS_NO_ERROR == status),
-             "sl_rail_config_tx_data failed, return value: %lu",
+             "sl_rail_config_tx_data failed, return value: 0x%08" PRIX32 "",
              status);
 
   status = sl_rail_config_rx_data(sl_rail_sdk_handle, &rx_data_config);
   app_assert((SL_RAIL_STATUS_NO_ERROR == status),
-             "sl_rail_config_rx_data failed, return value: %lu",
+             "sl_rail_config_rx_data failed, return value: 0x%08" PRIX32 "",
              status);
 
   // configures the channels
@@ -139,7 +140,7 @@ void sl_rail_sdk_util_init(void)
     if (channel != SL_RAIL_CHANNEL_INVALID) {
       status = sl_rail_prepare_channel(sl_rail_sdk_handle, channel);
       app_assert((SL_RAIL_STATUS_NO_ERROR == status),
-                 "sl_rail_prepare_channel failed, return value: %lu",
+                 "sl_rail_prepare_channel failed, return value: 0x%08" PRIX32 "",
                  status);
     }
   }
@@ -148,7 +149,7 @@ void sl_rail_sdk_util_init(void)
   status = sl_rail_sdk_util_802154_protocol_config(sl_rail_sdk_handle,
                                                    SL_RAIL_SDK_UTIL_INIT_PROTOCOL_INSTANCE_DEFAULT);
   app_assert((SL_RAIL_STATUS_NO_ERROR == status),
-             "sl_rail_util_protocol_config failed, return value: %lu",
+             "sl_rail_util_protocol_config failed, return value: 0x%08" PRIX32 "",
              status);
 
   // configures RAIL calibration
@@ -159,7 +160,7 @@ void sl_rail_sdk_util_init(void)
                               | (0
                                  ? SL_RAIL_CAL_ONETIME : 0U));
   app_assert((SL_RAIL_STATUS_NO_ERROR == status),
-             "sl_rail_config_cal failed, return value: %lu",
+             "sl_rail_config_cal failed, return value: 0x%08" PRIX32 "",
              status);
 
   // configures the using RAIL events
@@ -184,7 +185,7 @@ void sl_rail_sdk_util_init(void)
                                  | SL_RAIL_EVENT_TXACK_UNDERFLOW
                                  );
   app_assert((SL_RAIL_STATUS_NO_ERROR == status),
-             "sl_rail_config_events failed, return value: %lu",
+             "sl_rail_config_events failed, return value: 0x%08" PRIX32 "",
              status);
 }
 

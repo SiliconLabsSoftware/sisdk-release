@@ -1,0 +1,45 @@
+id: mbedtls_ecdhe_key_exchange
+package: platform_core
+label: ECDHE-Based Key Exchange
+description: >-
+  This component provides support for key exchange mechanisms in Mbed TLS'
+  TLS implementation based on ephemeral ECDH keys. It will turn on all ECDHE key
+  exchange methods available with the currently configured components.
+  If a smaller selection of key exchange mechanisms is preferable, then please
+  do not enable this component, but rather set the relevant
+  'SL_MBEDTLS_KEY_EXCHANGE_xxx' configuration options manually.
+  This component is DEPRECATED and will be removed in a future version of this product.
+  This component will be replaced by a new set of components including
+  mbedtls_key_exchange_ecdhe_psk and mbedtls_key_exchange_ecdhe_ecdsa.
+category: Platform|Security|Mbed TLS|Upper Layer
+quality: evaluation
+
+provides:
+- name: mbedtls_ecdhe_key_exchange
+- name: mbedtls_key_exchange
+  allow_multiple: true
+
+requires:
+- name: mbedtls_tls
+- name: psa_crypto_ecdh
+
+  # Added for backwards compatibility. There didn't use to exist any
+  # distinction between signatures and encryption for the RSA component.
+- name: psa_crypto_rsa_sign_pss
+  condition: [psa_crypto_rsa]
+- name: psa_crypto_rsa_sign_legacy
+  condition: [psa_crypto_rsa]
+
+template_contribution:
+- name: mbedtls_config
+  value: MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED
+- name: mbedtls_config
+  value: MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
+  condition: [psa_crypto_rsa_sign]
+- name: mbedtls_config
+  value: MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+  condition: [psa_crypto_ecdsa]
+metadata:
+  sbom:
+    reference: mbedtls_sbom
+root_path: platform_core

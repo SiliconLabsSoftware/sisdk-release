@@ -3,7 +3,7 @@ package: bootloader
 quality: production
 label: Bootloader - NCP BGAPI UART DFU
 description: >
-  Standalone Bootloader using the BGAPI protocol for UART DFU. This is the recommended UART bootloader for the BLE protocol stack.
+  Demonstrates how to perform firmware updates using the BGAPI protocol over UART DFU, in a standalone bootloader recommended for the Bluetooth LE protocol stack.
 
 category: Example|Bootloader
 filter:

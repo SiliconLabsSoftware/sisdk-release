@@ -50,7 +50,11 @@
  ******************************    MACROS    **********************************
  *****************************************************************************/
 
-#define CHECK_DATA  1           ///< Macro defining if data should be checked
+/// Macro defining if data should be checked
+#define CHECK_DATA              1
+
+/// Use data alias for all NVM operations to avoid L1ICACHE returning outdated data
+#define NVM3_DATA_ALIAS(addr)   ((void *)((uintptr_t)(addr) | 0x60000000UL))
 
 /******************************************************************************
  ***************************   LOCAL VARIABLES   ******************************
@@ -68,7 +72,7 @@
 static bool isErased(void *adr, size_t len)
 {
   size_t cnt;
-  uint32_t *dat = adr;
+  uint32_t *dat = (uint32_t *)adr;
 
   cnt = len / sizeof(uint32_t);
   for (size_t i = 0U; i < cnt; i++) {
@@ -152,7 +156,8 @@ static void nvm3_halFlashExtAccess(nvm3_HalNvmAccessCode_t access)
  ******************************************************************************/
 static sl_status_t nvm3_halFlashExtReadWords(nvm3_HalPtr_t nvmAdr, void *dst, size_t wordCnt)
 {
-  uint32_t *pSrc = (uint32_t *)nvmAdr;
+  void *adr = NVM3_DATA_ALIAS(nvmAdr);
+  uint32_t *pSrc = (uint32_t *)adr;
   uint32_t *pDst = dst;
 
   if ((((size_t)pSrc % 4) == 0) && (((size_t)pDst % 4) == 0)) {
@@ -161,7 +166,7 @@ static sl_status_t nvm3_halFlashExtReadWords(nvm3_HalPtr_t nvmAdr, void *dst, si
       wordCnt--;
     }
   } else {
-    (void)memcpy(dst, nvmAdr, wordCnt * sizeof(uint32_t));
+    (void)memcpy(dst, adr, wordCnt * sizeof(uint32_t));
   }
 
   return SL_STATUS_OK;
@@ -175,14 +180,15 @@ static sl_status_t nvm3_halFlashExtWriteWords(nvm3_HalPtr_t nvmAdr, void const *
   sl_status_t halSta;
   sl_se_command_context_t cmd_ctx;
   size_t byteCnt;
+  void *adr = NVM3_DATA_ALIAS(nvmAdr);
 
   byteCnt = wordCnt * sizeof(uint32_t);
   sl_se_init_command_context(&cmd_ctx);
-  halSta = sl_se_data_region_write(&cmd_ctx, (void *)nvmAdr, src, byteCnt);
+  halSta = sl_se_data_region_write(&cmd_ctx, adr, src, byteCnt);
 
 #if CHECK_DATA
   if (halSta == SL_STATUS_OK) {
-    if (memcmp(nvmAdr, src, byteCnt) != 0) {
+    if (memcmp(adr, src, byteCnt) != 0) {
       halSta = SL_STATUS_FLASH_PROGRAM_FAILED;
     }
   }
@@ -199,13 +205,14 @@ static sl_status_t nvm3_halFlashExtPageErase(nvm3_HalPtr_t nvmAdr)
   sl_status_t halSta;
   sl_se_command_context_t cmd_ctx;
   size_t numSectors = 1;
+  void *adr = NVM3_DATA_ALIAS(nvmAdr);
 
   sl_se_init_command_context(&cmd_ctx);
-  halSta = sl_se_data_region_erase(&cmd_ctx, (void *)nvmAdr, numSectors);
+  halSta = sl_se_data_region_erase(&cmd_ctx, adr, numSectors);
 
 #if CHECK_DATA
   if (halSta == SL_STATUS_OK) {
-    if (!isErased(nvmAdr, sl_hal_system_get_flash_page_size())) {
+    if (!isErased(adr, sl_hal_system_get_flash_page_size())) {
       halSta = SL_STATUS_FLASH_ERASE_FAILED;
     }
   }

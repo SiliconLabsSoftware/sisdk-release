@@ -99,4 +99,4 @@
 // [EUSART_SL_SPIDRV_EUSART_EXP]$
 // <<< sl:end pin_tool >>>
 
-#endif // SL_SPIDRV_EUSART_EXP_CONFIG_HEUSART_
+#endif // SL_SPIDRV_EUSART_EXP_CONFIG_H

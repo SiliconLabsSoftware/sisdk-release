@@ -11,7 +11,7 @@
 --  1. SL_PSA_ITS_USER_MAX_FILES must be set to 32 in Z_Wave applications for Series 2 with Security Vault
 --  2. SL_PSA_KEY_USER_SLOT_COUNT must be set to 12 in Z_Wave applications for Series 2 with Security Vault
 -- 3. sl_sleeptimer required settings
---  1. SL_SLEEPTIMER_PERIPHERAL must be set to SL_SLEEPTIMER_PERIPHERAL_BURTC in Z_Wave applications for Series 2
+--  1. SL_SLEEPTIMER_PERIPHERAL must be set to SL_SLEEPTIMER_PERIPHERAL_DEFAULT in Z_Wave applications for Series 2
 -- -- 5. sl_power_manager
 -- --  1. power_manager_deepsleep component must be added to Z_Wave applications to support the lowest energy mode EM3
 
@@ -65,7 +65,7 @@ end
 
 -- sl_sleeptimer
 if device_series_2 then
-    validate_config_component("SL_SLEEPTIMER_PERIPHERAL", "SL_SLEEPTIMER_PERIPHERAL_BURTC")
+    validate_config_component("SL_SLEEPTIMER_PERIPHERAL", "SL_SLEEPTIMER_PERIPHERAL_DEFAULT")
 end
 
 --

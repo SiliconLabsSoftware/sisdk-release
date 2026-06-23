@@ -9,28 +9,10 @@ quality: production
 ui_hints:
   visibility: never
 
-# This component allow choose between the sources of the precompiled libraries
-# depending of the environment:
-#
-#  wisun_rcp           requires   wisun_rcp_implementation
-#  wisun_rcp           recommends wisun_rcp_library
-#  wisun_rcp_library   requires   wisun_rcp
-#  wisun_rcp_library   provides   wisun_rcp_implementation
-#  wisun_rcp_sources   requires   wisun_rcp
-#  wisun_rcp_sources   provides   wisun_rcp_implementation
-
-# It also allows to factorise common data (dependencies and public headers)
-# between wisun_rcp_library and wisun_rcp_sources.
-
 requires:
 - name: iostream
 - name: rail_lib
-- name: wisun_rcp_implementation
 
-recommends:
-- id: wisun_rcp_library
-
-  vendor: silabs
 define:
 - name: "HAVE_LFN_PARENT"
 - name: "HAVE_FFN"
@@ -51,8 +33,6 @@ include:
 - path: "stack/inc/"
   file_list:
   - path: "sl_wisun_ip6string.h"
-  - path: "socket/socket.h"
-  - path: "arpa/inet.h"
 - path: stack/src
   file_list:
   - path: common/bits.h
@@ -63,6 +43,24 @@ include:
   - path: common/math_utils.h
   - path: common/ns_list.h
   - path: common/ns_types.h
+
+library:
+- path: stack/libwisun_rcp_efr32xg2x_gcc_debug.a
+  condition: [device_series_2, toolchain_gcc, wisun_stack_debug]
+- path: stack/libwisun_rcp_efr32xg2x_iar_debug.a
+  condition: [device_series_2, toolchain_iar, wisun_stack_debug]
+- path: stack/libwisun_rcp_efr32xg2x_llvm_debug.a
+  condition: [device_series_2, toolchain_llvm, wisun_stack_debug]
+
+- path: stack/libwisun_rcp_efr32xg2x_gcc_release.a
+  condition: [device_series_2, toolchain_gcc]
+  unless: [wisun_stack_debug]
+- path: stack/libwisun_rcp_efr32xg2x_iar_release.a
+  condition: [device_series_2, toolchain_iar]
+  unless: [wisun_stack_debug]
+- path: stack/libwisun_rcp_efr32xg2x_llvm_release.a
+  condition: [device_series_2, toolchain_llvm]
+  unless: [wisun_stack_debug]
 
 validation_helper:
 - path: component/component_validation/rcp_validation.lua

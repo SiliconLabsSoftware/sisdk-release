@@ -1,19 +1,52 @@
-# I2C SPM Micrium OS Application
+# SHT4x I2C SPM Micrium OS
 
+This example demonstrates the I2C Simple Polled Master driver with the SHT4x humidity and temperature sensor in a Micrium OS kernel task.
 
-This example project shows how to use the I2C Simple Polled Master driver using the SHT4X Relative Humidity and Temperature Sensor in a Micrium OS Task.
+## Table of Contents
 
-In this application, the initial temperature is read from the SHT4x sensor. Upper and lower limits are then set based on the defined TEMPERATURE\_BAND\_C. The program continuously monitors the temperature and responds as follows:
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-If two LEDs are available:
+## Purpose / Scope
 
-- When the temperature exceeds the upper limit, LED0 is turned on to indicate high temperature. A message, "Temperature is high", is printed to the VCOM serial console.
+This example uses the I2C SPM driver in a Micrium OS kernel task to read the SHT4x sensor. Temperature limits are set from TEMPERATURE_BAND_C; LEDs and VCOM messages indicate high/low temperature. Use it to learn I2C SPM and SHT4x with Micrium OS.
 
-- When the temperature falls below the lower limit, LED1 is turned on to indicate low temperature. A message, "Temperature is low", is printed to the VCOM serial console.
+## Prerequisites / Setup Requirements
 
-If only the console is available:
+**Hardware**
+- Silicon Labs board with I2C support and an SHT4x sensor. On-board LEDs if using LED feedback.
 
-- Regardless of the LED status, the application will output "Temperature is high" or "Temperature is low" on the VCOM serial console whenever the temperature goes above the upper limit or below the lower limit, respectively.
+**Software**
+- Simplicity Studio 5 (or later). A serial terminal for VCOM output.
+
+## Steps to Run Demo
+
+1. Open the project in Simplicity Studio and build it.
+2. Connect the kit and SHT4x sensor with correct I2C wiring.
+3. Flash and run. Observe temperature-based LED behavior and/or VCOM messages.
+4. Optionally adjust TEMPERATURE_BAND_C and rebuild.
+
+## Troubleshooting
+
+- **No sensor readings:** Check I2C wiring, pull-ups, and SHT4x address; verify SCL/SDA pins.
+- **No VCOM output:** Ensure correct VCOM port and baud rate; check Micrium OS task and USART configuration.
+- **Build errors:** Verify target part and I2C SPM, SHT4x, and Micrium OS components.
+
+## Resources
+
+- [Simplicity Studio 5 User's Guide](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/)
+- [Gecko Platform Documentation](https://docs.silabs.com/gecko-platform/latest/)
+- [Silicon Labs Community](https://www.silabs.com/community)
+
+## Report Bugs & Get Support
+
+You are encouraged to report issues and get help from the community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)
 
 ## Note
 

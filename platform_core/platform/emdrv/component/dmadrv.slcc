@@ -7,7 +7,7 @@ description: >
   The driver handles central management of the DMA channels and interrupt vector which
   allows sharing DMA resources between several users.
 category: Platform|Driver
-quality: production
+quality: deprecated
 metadata:
   sbom:
     license: Zlib
@@ -30,6 +30,8 @@ config_file:
   condition: [device_sdid_235]
 - path: platform/emdrv/dmadrv/config/s2_8ch/dmadrv_config.h
   condition: [device_sdid_240]
+- path: platform/emdrv/dmadrv/config/s2_8ch/dmadrv_config.h
+  condition: [device_generic_family_efr32xg2b]
 - path: platform/emdrv/dmadrv/config/s2_8ch/dmadrv_config.h
   condition: [device_sdid_260]
 - path: platform/emdrv/dmadrv/config/s3_8ch/dmadrv_config.h

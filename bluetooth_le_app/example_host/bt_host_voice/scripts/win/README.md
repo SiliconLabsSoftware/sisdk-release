@@ -34,6 +34,6 @@
 
 
 ## Convert ADPCM audio data to WAV
-1. Run convert.bat batch file. This file converts all *.ima or *.s16 files stored in default VoBLE folder. Possible convertion options:
+1. Run convert.bat batch file. This file converts all *.ima or *.s16 files stored in default VoBLE folder. Possible conversion options:
   ima - convert from ADPCM to WAV
   s16 - convert from PCM 16 bits to WAV

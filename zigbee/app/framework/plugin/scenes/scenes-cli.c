@@ -21,6 +21,6 @@
 void sli_plugin_scenes_server_clear(sl_cli_command_arg_t *arguments)
 {
   (void)arguments;
-  sl_zigbee_af_core_println("Clearing all scenes.");
+  sl_zigbee_af_cli_println("Clearing all scenes.");
   sl_zigbee_af_scenes_cluster_clear_scene_table_cb(SL_ZIGBEE_BROADCAST_ENDPOINT);
 }

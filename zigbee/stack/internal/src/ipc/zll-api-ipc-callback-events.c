@@ -3,7 +3,7 @@
  * @brief callback event handlers for zll-api
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -26,6 +26,10 @@ void sli_zigbee_stack_zll_address_assignment_handler(sl_zigbee_zll_address_assig
                                                      sl_zigbee_rx_packet_info_t *packetInfo)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
 
   if (addressInfo != NULL) {
     cb_event->data.zll_address_assignment_handler.addressInfo = *addressInfo;
@@ -49,6 +53,10 @@ void sli_zigbee_stack_zll_network_found_handler(sl_zigbee_zll_network_t *network
                                                 sl_zigbee_rx_packet_info_t *packetInfo)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
 
   if (networkInfo != NULL) {
     cb_event->data.zll_network_found_handler.networkInfo = *networkInfo;
@@ -75,6 +83,10 @@ void sli_zigbee_stack_zll_network_found_handler(sl_zigbee_zll_network_t *network
 void sli_zigbee_stack_zll_scan_complete_handler(sl_status_t status)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.zll_scan_complete_handler.status = status;
   cb_event->tag = SLI_ZIGBEE_STACK_ZLL_SCAN_COMPLETE_HANDLER_IPC_EVENT_TYPE;
   #ifndef SL_ZIGBEE_MULTI_NETWORK_STRIPPED
@@ -87,6 +99,10 @@ void sli_zigbee_stack_zll_scan_complete_handler(sl_status_t status)
 void sli_zigbee_stack_zll_touch_link_target_handler(const sl_zigbee_zll_network_t *networkInfo)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
 
   if (networkInfo != NULL) {
     cb_event->data.zll_touch_link_target_handler.networkInfo = *networkInfo;

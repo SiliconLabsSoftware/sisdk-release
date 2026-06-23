@@ -78,7 +78,11 @@ static inline uint32_t btl_checkAlignment(uint32_t length)
   return BTL_ALIGN4(length);
 }
 
+#if defined(__clang__)
+static __attribute__((noinline, used)) void jumpToApplicationRoutine(uint32_t startOfAppSpace)
+#else
 static inline void jumpToApplicationRoutine(uint32_t startOfAppSpace)
+#endif
 {
 #if defined(BOOTLOADER_SECURE)
 

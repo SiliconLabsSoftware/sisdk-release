@@ -96,7 +96,7 @@ int32_t storage_getBootloadList(int32_t slotIds[], size_t length);
  *
  * @return Error code: BOOTLOADER_OK if list of slots was successfully filled
  ******************************************************************************/
-int32_t storage_setBootloadList(int32_t slotIds[], size_t length);
+int32_t storage_setBootloadList(const int32_t slotIds[], size_t length);
 
 /***************************************************************************//**
  * Append a storage slot to the list of storage slots to try bootloading

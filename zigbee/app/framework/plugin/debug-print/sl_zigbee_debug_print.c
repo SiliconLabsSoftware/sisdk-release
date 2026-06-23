@@ -26,6 +26,26 @@
 #include "sl_zigbee_debug_print_config.h"
 #include "sl_common.h"
 
+/*
+ * Route Zigbee stack debug prints to the Silicon Labs Debug Logger (sl_log) when
+ * the Logger component is present in the component catalog.
+ *
+ */
+#if defined(SL_COMPONENT_CATALOG_PRESENT) && defined(SL_CATALOG_LOG_COMPONENT_PRESENT)
+#include "sl_log_common_config.h"
+#if (SL_LOG_CONFIG_LEVEL_COMPILE_TIME != SL_LOG_CONFIG_LEVEL_NONE)
+#include "sl_log_helper.h"
+#include <stdio.h>
+#define SLI_ZIGBEE_DEBUG_USE_SL_LOG 1
+#endif
+#endif
+
+
+#ifndef SLI_ZIGBEE_DEBUG_SL_LOG_BUFFER_SIZE
+/** Max formatted length for one Zigbee debug line before sending to sl_log */
+#define SLI_ZIGBEE_DEBUG_SL_LOG_BUFFER_SIZE 256
+#endif
+
 //------------------------------------------------------------------------------
 // Forward declarations
 
@@ -97,11 +117,31 @@ SL_WEAK void sli_zigbee_debug_print(uint32_t group_type, bool new_line, const ch
   }
 
   va_start(args, format);
+#if defined(SLI_ZIGBEE_DEBUG_USE_SL_LOG)
+  {
+    char buf[SLI_ZIGBEE_DEBUG_SL_LOG_BUFFER_SIZE]; /* Formatted string for sl_log (not va_list). */
+    int n = vsnprintf(buf, sizeof(buf), format, args); /* Format into buf; negative = error. */
+    buf[sizeof(buf) - 1U] = '\0'; /* Guarantee NUL if vsnprintf filled the buffer. */
+    va_end(args); /* Done with args before logging. */
+    if (n < 0) {
+      n = 0;
+    }
+    size_t len = (size_t)n;
+    if (len >= sizeof(buf)) {
+      len = sizeof(buf) - 1U;
+    }
+    (void)new_line;
+    if (len > 0U) {
+      SL_PRINT_STRING_DEBUG("%s", (uint32_t)(uintptr_t)buf);
+    }
+  }
+#else
   local_vprintf(format, args);
   if (new_line) {
     local_vprintf("\r\n", args);
   }
   va_end(args);
+#endif
 }
 
 void sli_zigbee_debug_print_buffer(uint32_t group_type,

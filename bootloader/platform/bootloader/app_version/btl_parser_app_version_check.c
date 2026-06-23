@@ -33,7 +33,7 @@ bool parser_applicationUpgradeValidCallback(ApplicationData_t *app)
       // Compatibility check of the application properties struct.
       if (((appProperties->structVersion & APPLICATION_PROPERTIES_VERSION_MAJOR_MASK)
            >> APPLICATION_PROPERTIES_VERSION_MAJOR_SHIFT)
-          > (uint32_t)APPLICATION_PROPERTIES_VERSION_MAJOR) {
+          > APPLICATION_PROPERTIES_VERSION_MAJOR) {
         return false;
       }
       if (app->version <= appProperties->app.version) {

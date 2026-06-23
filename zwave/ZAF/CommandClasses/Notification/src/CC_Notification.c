@@ -524,6 +524,9 @@ CC_Notification_handler(
 
       *pFrameOutLength = sizeof(ZW_NOTIFICATION_SUPPORTED_REPORT_1BYTE_V4_FRAME) - 1
                          + pFrameOut->ZW_NotificationSupportedReport1byteV4Frame.properties1;
+      if (*pFrameOutLength > sizeof(ZW_APPLICATION_TX_BUFFER)) {
+        *pFrameOutLength = sizeof(ZW_APPLICATION_TX_BUFFER);
+      }
 
       return RECEIVED_FRAME_STATUS_SUCCESS;
 
@@ -545,6 +548,9 @@ CC_Notification_handler(
 
       *pFrameOutLength = sizeof(ZW_EVENT_SUPPORTED_REPORT_1BYTE_V4_FRAME) - 1
                          + (pFrameOut->ZW_EventSupportedReport1byteV4Frame.properties1 & 0x1F); /*remove reserved bits*/
+      if (*pFrameOutLength > sizeof(ZW_APPLICATION_TX_BUFFER)) {
+        *pFrameOutLength = sizeof(ZW_APPLICATION_TX_BUFFER);
+      }
 
       return RECEIVED_FRAME_STATUS_SUCCESS;
 

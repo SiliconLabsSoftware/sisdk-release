@@ -617,4 +617,305 @@ library:
   condition:
   - toolchain_gcc
   - bgm270sc22sna
+
+- path: autogen/librail_release/librail_config_bgm210l022jif_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm210l022jif
+- path: autogen/librail_release/librail_config_bgm210l022jnf_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm210l022jnf
+- path: autogen/librail_release/librail_config_bgm210la22jif_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm210la22jif
+- path: autogen/librail_release/librail_config_bgm210la22jnf_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm210la22jnf
+- path: autogen/librail_release/librail_config_bgm210p022jia_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm210p022jia
+- path: autogen/librail_release/librail_config_bgm210p022jna_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm210p022jna
+- path: autogen/librail_release/librail_config_bgm210p032jia_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm210p032jia
+- path: autogen/librail_release/librail_config_bgm210p032jna_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm210p032jna
+- path: autogen/librail_release/librail_config_bgm210pa22jia_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm210pa22jia
+- path: autogen/librail_release/librail_config_bgm210pa22jna_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm210pa22jna
+- path: autogen/librail_release/librail_config_bgm210pa32jia_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm210pa32jia
+- path: autogen/librail_release/librail_config_bgm210pa32jna_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm210pa32jna
+- path: autogen/librail_release/librail_config_mgm210l022jif_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm210l022jif
+- path: autogen/librail_release/librail_config_mgm210l022jnf_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm210l022jnf
+- path: autogen/librail_release/librail_config_mgm210la22jif_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm210la22jif
+- path: autogen/librail_release/librail_config_mgm210la22jnf_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm210la22jnf
+- path: autogen/librail_release/librail_config_mgm210p022jia_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm210p022jia
+- path: autogen/librail_release/librail_config_mgm210p022jna_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm210p022jna
+- path: autogen/librail_release/librail_config_mgm210p032jia_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm210p032jia
+- path: autogen/librail_release/librail_config_mgm210p032jna_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm210p032jna
+- path: autogen/librail_release/librail_config_mgm210pa22jia_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm210pa22jia
+- path: autogen/librail_release/librail_config_bgm210pb22jia_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm210pb22jia
+- path: autogen/librail_release/librail_config_bgm210pb32jia_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm210pb32jia
+- path: autogen/librail_release/librail_config_mgm210pb22jia_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm210pb22jia
+- path: autogen/librail_release/librail_config_mgm210pb32jia_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm210pb32jia
+- path: autogen/librail_release/librail_config_mgm210pa22jna_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm210pa22jna
+- path: autogen/librail_release/librail_config_mgm210pa32jia_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm210pa32jia
+- path: autogen/librail_release/librail_config_mgm210pa32jna_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm210pa32jna
+- path: autogen/librail_release/librail_config_bgm220pc22hna_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm220pc22hna
+- path: autogen/librail_release/librail_config_bgm220pc22wga_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm220pc22wga
+- path: autogen/librail_release/librail_config_bgm220sc12wga_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm220sc12wga
+- path: autogen/librail_release/librail_config_bgm220sc22hna_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm220sc22hna
+- path: autogen/librail_release/librail_config_bgm220sc23hna_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm220sc23hna
+- path: autogen/librail_release/librail_config_bgm220sc22wga_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm220sc22wga
+- path: autogen/librail_release/librail_config_mgm220pc22hna_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm220pc22hna
+- path: autogen/librail_release/librail_config_mgm220sc22hna_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm220sc22hna
+- path: autogen/librail_release/librail_config_fgm230sa27hgn_llvm.a
+  condition:
+  - toolchain_llvm
+  - fgm230sa27hgn
+- path: autogen/librail_release/librail_config_fgm230sb27hgn_llvm.a
+  condition:
+  - toolchain_llvm
+  - fgm230sb27hgn
+- path: autogen/librail_release/librail_config_zgm230sa27hgn_llvm.a
+  condition:
+  - toolchain_llvm
+  - zgm230sa27hgn
+- path: autogen/librail_release/librail_config_zgm230sb27hgn_llvm.a
+  condition:
+  - toolchain_llvm
+  - zgm230sb27hgn
+- path: autogen/librail_release/librail_config_zgm230sa27hnn_llvm.a
+  condition:
+  - toolchain_llvm
+  - zgm230sa27hnn
+- path: autogen/librail_release/librail_config_bgm240pa22vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm240pa22vna
+- path: autogen/librail_release/librail_config_bgm240pb22vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm240pb22vna
+- path: autogen/librail_release/librail_config_bgm240pa32vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm240pa32vna
+- path: autogen/librail_release/librail_config_bgm240pb32vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm240pb32vna
+- path: autogen/librail_release/librail_config_mgm240l022vif_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm240l022vif
+- path: autogen/librail_release/librail_config_mgm240la22uif_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm240la22uif
+- path: autogen/librail_release/librail_config_mgm240la22vif_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm240la22vif
+- path: autogen/librail_release/librail_config_mgm240ld22vif_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm240ld22vif
+- path: autogen/librail_release/librail_config_mgm240l022rnf_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm240l022rnf
+- path: autogen/librail_release/librail_config_mgm240l022vnf_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm240l022vnf
+- path: autogen/librail_release/librail_config_mgm240pa22vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm240pa22vna
+- path: autogen/librail_release/librail_config_mgm240pb22vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm240pb22vna
+- path: autogen/librail_release/librail_config_mgm240pa32vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm240pa32vna
+- path: autogen/librail_release/librail_config_mgm240pb32vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm240pb32vna
+- path: autogen/librail_release/librail_config_bgm240pa32vnn_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm240pa32vnn
+- path: autogen/librail_release/librail_config_bgm240pb32vnn_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm240pb32vnn
+- path: autogen/librail_release/librail_config_bgm240sa22vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm240sa22vna
+- path: autogen/librail_release/librail_config_bgm240sb22vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm240sb22vna
+- path: autogen/librail_release/librail_config_bgm241sd22vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm241sd22vna
+- path: autogen/librail_release/librail_config_mgm240pa32vnn_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm240pa32vnn
+- path: autogen/librail_release/librail_config_mgm240pb32vnn_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm240pb32vnn
+- path: autogen/librail_release/librail_config_mgm240sa22vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm240sa22vna
+- path: autogen/librail_release/librail_config_mgm240sb22vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm240sb22vna
+- path: autogen/librail_release/librail_config_mgm240sd22vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm240sd22vna
+- path: autogen/librail_release/librail_config_mgm260pb22vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm260pb22vna
+- path: autogen/librail_release/librail_config_mgm260pb32vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm260pb32vna
+- path: autogen/librail_release/librail_config_mgm260pb32vnn_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm260pb32vnn
+- path: autogen/librail_release/librail_config_mgm260pd22vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm260pd22vna
+- path: autogen/librail_release/librail_config_mgm260pd32vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm260pd32vna
+- path: autogen/librail_release/librail_config_mgm260pd32vnn_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm260pd32vnn
+- path: autogen/librail_release/librail_config_bgm260pb22vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm260pb22vna
+- path: autogen/librail_release/librail_config_bgm260pb32vna_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm260pb32vna
+- path: autogen/librail_release/librail_config_mgm270sc22sna_llvm.a
+  condition:
+  - toolchain_llvm
+  - mgm270sc22sna
+- path: autogen/librail_release/librail_config_bgm270sc22sna_llvm.a
+  condition:
+  - toolchain_llvm
+  - bgm270sc22sna
 root_path: rail_library

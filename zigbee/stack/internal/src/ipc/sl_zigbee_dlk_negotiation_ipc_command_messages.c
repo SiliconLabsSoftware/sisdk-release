@@ -3,7 +3,7 @@
  * @brief internal wrappers for 'sl_zigbee_dlk_negotiation' ipc commands
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -86,6 +86,7 @@ sl_status_t sl_zigbee_dlk_finish_key_exchange(sl_zigbee_dlk_negotiation_context_
 
   if (partner_key_length > 64) {
     assert(false); // "vector partner_key length exceeds expected maximum
+    return msg.data.dlk_finish_key_exchange.response.result;
   }
 
   memmove(msg.data.dlk_finish_key_exchange.request.partner_key, partner_key, sizeof(uint8_t) * partner_key_length);

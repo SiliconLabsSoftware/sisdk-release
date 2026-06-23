@@ -14,7 +14,6 @@
  * sections of the MSLA applicable to Source Code.
  *
  ******************************************************************************/
-
 #ifdef SL_COMPONENT_CATALOG_PRESENT
 #include "sl_component_catalog.h"
 #endif
@@ -25,6 +24,7 @@
 #include "library.h"
 #ifdef SL_CATALOG_RAIL_UTIL_IEEE802154_PHY_SELECT_PRESENT
 #include "sl_rail_ieee802154.h"
+#include "sl_rail_util_ieee802154_phy_select.h"
 #endif
 #ifdef SL_ZIGBEE_AF_HAS_SECURITY_PROFILE_SE
   #include "stack/include/cbke-crypto-engine.h"  // sl_zigbee_get_certificate()
@@ -54,18 +54,59 @@ extern void sli_get_ztt_version_number_string(char *versionString);
 void  sli_get_pti_radio_config(sl_cli_command_arg_t *arguments)
 {
   (void)arguments;
-  sl_zigbee_core_debug_println("Current Config: %0x", sl_rail_ieee802154_get_phy_id(sl_zigbee_get_rail_handle()));
+  sl_zigbee_af_cli_println("Current Config: %0x", sl_rail_ieee802154_get_phy_id(sl_zigbee_get_rail_handle()));
 }
 
-#endif
+#ifndef SL_CATALOG_ZIGBEE_EZSP_PRESENT
+static const char *sli_zigbee_cli_phy_config_name(sl_rail_util_radio_config_t phy_id)
+{
+  switch (phy_id) {
+    case SL_RAIL_IEEE802154_PHY_2P4_GHZ:                    return "2P4_GHZ";
+    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_ANT_DIV:            return "2P4_GHZ_ANT_DIV";
+    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_COEX:               return "2P4_GHZ_COEX";
+    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_ANT_DIV_COEX:       return "2P4_GHZ_ANT_DIV_COEX";
+    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_FEM:                return "2P4_GHZ_FEM";
+    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_FEM_ANT_DIV:        return "2P4_GHZ_FEM_ANT_DIV";
+    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_FEM_COEX:           return "2P4_GHZ_FEM_COEX";
+    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_FEM_ANT_DIV_COEX:   return "2P4_GHZ_FEM_ANT_DIV_COEX";
+    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_2_MBPS:             return "2P4_GHZ_2_MBPS";
+    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_RX_CH_SWITCHING:    return "2P4_GHZ_RX_CH_SWITCHING";
+    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_1_MBPS_FEC:         return "2P4_GHZ_1_MBPS_FEC";
+    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_FCS_2_MBPS:         return "2P4_GHZ_FCS_2_MBPS";
+    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_FCS_1_MBPS_FEC:     return "2P4_GHZ_FCS_1_MBPS_FEC";
+    case SL_RAIL_IEEE802154_PHY_863_MHZ_GB868:              return "863_MHZ_GB868";
+    case SL_RAIL_IEEE802154_PHY_915_MHZ_GB868:              return "915_MHZ_GB868";
+    default:                                                return NULL;
+  }
+}
+
+void sli_zigbee_cli_get_active_phy_command(sl_cli_command_arg_t *arguments)
+{
+  sl_rail_util_radio_config_t active_phy;
+  const char *phy_name;
+
+  (void)arguments;
+
+  active_phy = sl_rail_util_ieee802154_get_active_radio_config();
+  phy_name = sli_zigbee_cli_phy_config_name(active_phy);
+
+  if (phy_name != NULL) {
+    sl_zigbee_af_cli_println("Active Radio PHY: %s", phy_name);
+  } else {
+    sl_zigbee_af_cli_println("Active Radio PHY: unknown PHY combination of (0x%02X)", active_phy);
+  }
+}
+#endif // !SL_CATALOG_ZIGBEE_EZSP_PRESENT
+
+#endif // SL_CATALOG_RAIL_UTIL_IEEE802154_PHY_SELECT_PRESENT
 
 void sli_zigbee_cli_config_cca_mode_command(sl_cli_command_arg_t *arguments)
 {
   uint8_t ccaMode = sl_cli_get_argument_uint8(arguments, 0);
   sl_status_t status = sl_zigbee_set_radio_ieee802154_cca_mode(ccaMode);
-  sl_zigbee_core_debug_println("Set CCA mode to %d: %0x",
-                               ccaMode,
-                               status);
+  sl_zigbee_af_cli_println("Set CCA mode to %d: %0x",
+                           ccaMode,
+                           status);
 }
 
 void sli_cli_pre_cmd_hook(sl_cli_command_arg_t* arguments)
@@ -84,7 +125,7 @@ void sli_cli_post_cmd_hook(sl_cli_command_arg_t* arguments)
   sl_zigbee_af_pop_network_index();
 
 #if defined(EMBER_QA)
-  sl_zigbee_core_debug_println("CLI Finished");
+  sl_zigbee_af_cli_println("CLI Finished");
 #endif
 
 #ifdef SL_CATALOG_KERNEL_PRESENT
@@ -103,22 +144,22 @@ static void printMfgString(void)
 
   // Note: We use '%s' here because this is a RAM string. Normally,
   // most strings are literals or constants in flash and use '%s'.
-  sl_zigbee_core_debug_println("MFG String: %s", mfgString);
+  sl_zigbee_af_cli_println("MFG String: %s", mfgString);
 }
 #endif
 
 static void printPacketBufferStats(void)
 {
-  sl_zigbee_core_debug_println("Buffer bytes: %d / %d",
-                               sli_zigbee_af_get_packet_buffer_free_space(),
-                               sli_zigbee_af_get_packet_buffer_total_space());
+  sl_zigbee_af_cli_println("Buffer bytes: %d / %d",
+                           sli_zigbee_af_get_packet_buffer_free_space(),
+                           sli_zigbee_af_get_packet_buffer_total_space());
 }
 
 static bool printSmartEnergySecurityInfo(void)
 {
 #ifdef SL_ZIGBEE_AF_HAS_SECURITY_PROFILE_SE
   bool securityGood = true;
-  sl_zigbee_core_debug_print("SE Security Info [");
+  sl_zigbee_af_cli_print("SE Security Info [");
   {
     // For SE security, print the state of ECC, CBKE, and the programmed Cert.
     sl_zigbee_certificate_data_t cert;
@@ -127,30 +168,30 @@ static bool printSmartEnergySecurityInfo(void)
     // Check the status of the ECC library.
     if ((sl_zigbee_get_library_status(SL_ZIGBEE_ECC_LIBRARY_ID)
          & SL_ZIGBEE_LIBRARY_PRESENT_MASK) != 0U) {
-      sl_zigbee_core_debug_print("Real163k1ECC ");
+      sl_zigbee_af_cli_print("Real163k1ECC ");
     } else {
-      sl_zigbee_core_debug_print("No163k1ECC ");
+      sl_zigbee_af_cli_print("No163k1ECC ");
       securityGood = false;
     }
 
     // Status of SL_STATUS_NOT_AVAILABLE means the CBKE is not present
     // in the image and that no information is known about the certificate.
     if (status == SL_STATUS_NOT_AVAILABLE) {
-      sl_zigbee_core_debug_print("No163k1Cbke UnknownCert ");
+      sl_zigbee_af_cli_print("No163k1Cbke UnknownCert ");
       securityGood = false;
     } else {
-      sl_zigbee_core_debug_print("Real163k1Cbke ");
+      sl_zigbee_af_cli_print("Real163k1Cbke ");
 
       if (status == SL_STATUS_OK) {
-        sl_zigbee_core_debug_print("GoodCert");
+        sl_zigbee_af_cli_print("GoodCert");
       } else {
-        sl_zigbee_core_debug_print("BadCert");
+        sl_zigbee_af_cli_print("BadCert");
         securityGood = false;
       }
     }
-    sl_zigbee_core_debug_println("]");
+    sl_zigbee_af_cli_println("]");
   }
-  sl_zigbee_af_app_flush();
+  sl_zigbee_af_cli_flush();
   return securityGood;
 #else
   return false;
@@ -161,7 +202,7 @@ static bool printSmartEnergySecurityInfo283k1(void)
 {
 #ifdef SL_ZIGBEE_AF_HAS_SECURITY_PROFILE_SE
   bool securityGood = true;
-  sl_zigbee_core_debug_print("SE Security 283k1 Info [");
+  sl_zigbee_af_cli_print("SE Security 283k1 Info [");
   {
     // For SE security, print the state of ECC, CBKE, and the programmed Cert.
     sl_zigbee_certificate_283k1_data_t cert;
@@ -172,30 +213,30 @@ static bool printSmartEnergySecurityInfo283k1(void)
     // Check the status of the ECC library.
     if ((sl_zigbee_get_library_status(SL_ZIGBEE_ECC_LIBRARY_283K1_ID)
          & SL_ZIGBEE_LIBRARY_PRESENT_MASK) != 0U) {
-      sl_zigbee_core_debug_print("Real283k1ECC ");
+      sl_zigbee_af_cli_print("Real283k1ECC ");
     } else {
-      sl_zigbee_core_debug_print("No283k1ECC ");
+      sl_zigbee_af_cli_print("No283k1ECC ");
       securityGood = false;
     }
 
     // Status of SL_STATUS_NOT_AVAILABLE means the CBKE is not present
     // in the image and that no information is known about the certificate.
     if (status == SL_STATUS_NOT_AVAILABLE) {
-      sl_zigbee_core_debug_print("No283k1Cbke UnknownCert");
+      sl_zigbee_af_cli_print("No283k1Cbke UnknownCert");
       securityGood = false;
     } else {
-      sl_zigbee_core_debug_print("Real283k1Cbke ");
+      sl_zigbee_af_cli_print("Real283k1Cbke ");
 
       if (status == SL_STATUS_OK) {
-        sl_zigbee_core_debug_print("GoodCert");
+        sl_zigbee_af_cli_print("GoodCert");
       } else {
-        sl_zigbee_core_debug_print("BadCert");
+        sl_zigbee_af_cli_print("BadCert");
         securityGood = false;
       }
     }
-    sl_zigbee_core_debug_println("]");
+    sl_zigbee_af_cli_println("]");
   }
-  sl_zigbee_af_app_flush();
+  sl_zigbee_af_cli_flush();
   return securityGood;
 #else
   return false;
@@ -230,19 +271,19 @@ void sli_zigbee_af_cli_info_command(sl_cli_command_arg_t *arguments)
 #if defined SL_CATALOG_ZIGBEE_TEST_HARNESS_Z3_PRESENT && !defined SL_ZIGBEE_TEST
   char versionString[10] = { 0 };
   sli_get_ztt_version_number_string(versionString);
-  sl_zigbee_app_debug_println("Silicon Labs ZTT Firmware Application v%s", versionString);
+  sl_zigbee_af_cli_println("Silicon Labs ZTT Firmware Application v%s", versionString);
 #else
   printMfgString();
 #endif
-  sl_zigbee_core_debug_println("AppBuilder MFG Code: 0x%04X", SL_ZIGBEE_ZCL_MANUFACTURER_CODE);
+  sl_zigbee_af_cli_println("AppBuilder MFG Code: 0x%04X", SL_ZIGBEE_ZCL_MANUFACTURER_CODE);
   sl_zigbee_af_get_eui64(myEui64);
   sl_zigbee_af_get_network_parameters(&nodeTypeResult, &networkParams);
-  sl_zigbee_core_debug_print("node [");
-  sl_zigbee_af_app_debug_exec(sl_zigbee_af_print_big_endian_eui64(myEui64));
-  sl_zigbee_af_app_flush();
-  sl_zigbee_core_debug_println("] chan [%d] pwr [%d]",
-                               networkParams.radioChannel,
-                               networkParams.radioTxPower);
+  sl_zigbee_af_cli_print("node [");
+  sl_zigbee_af_cli_exec(sl_zigbee_af_print_big_endian_eui64(myEui64));
+  sl_zigbee_af_cli_flush();
+  sl_zigbee_af_cli_println("] chan [%d] pwr [%d]",
+                           networkParams.radioChannel,
+                           networkParams.radioTxPower);
 
   numPhyInterfaces = sl_zigbee_get_phy_interface_count();
 
@@ -251,39 +292,39 @@ void sli_zigbee_af_cli_info_command(sl_cli_command_arg_t *arguments)
     uint8_t i;
     sl_status_t status;
 
-    sl_zigbee_core_debug_println("Additional interfaces");
+    sl_zigbee_af_cli_println("Additional interfaces");
     for (i = 1; i < numPhyInterfaces; ++i) {
-      sl_zigbee_core_debug_print("  %d: ", i);
+      sl_zigbee_af_cli_print("  %d: ", i);
       status = sl_zigbee_get_radio_parameters(i, &multiPhyRadioParams);
       switch (status) {
         case SL_STATUS_OK:
-          sl_zigbee_core_debug_println("page [%d] chan [%d] pwr [%d]",
-                                       multiPhyRadioParams.radioPage,
-                                       multiPhyRadioParams.radioChannel,
-                                       multiPhyRadioParams.radioTxPower);
+          sl_zigbee_af_cli_println("page [%d] chan [%d] pwr [%d]",
+                                   multiPhyRadioParams.radioPage,
+                                   multiPhyRadioParams.radioChannel,
+                                   multiPhyRadioParams.radioTxPower);
           break;
         case SL_STATUS_NETWORK_DOWN:
         case SL_STATUS_NOT_JOINED:
-          sl_zigbee_core_debug_println("not active");
+          sl_zigbee_af_cli_println("not active");
           break;
         default:
-          sl_zigbee_core_debug_println("error 0x%08X", status);
+          sl_zigbee_af_cli_println("error 0x%08X", status);
           break;
       }
     }
   }
 
-  sl_zigbee_core_debug_print("panID [0x%04X] nodeID [0x%04X] ",
-                             networkParams.panId,
-                             sl_zigbee_af_get_node_id());
-  sl_zigbee_af_app_flush();
-  sl_zigbee_core_debug_print("xpan [0x");
-  sl_zigbee_af_app_debug_exec(sl_zigbee_af_print_big_endian_eui64(networkParams.extendedPanId));
-  sl_zigbee_core_debug_println("]");
-  sl_zigbee_af_app_flush();
+  sl_zigbee_af_cli_print("panID [0x%04X] nodeID [0x%04X] ",
+                         networkParams.panId,
+                         sl_zigbee_af_get_node_id());
+  sl_zigbee_af_cli_flush();
+  sl_zigbee_af_cli_print("xpan [0x");
+  sl_zigbee_af_cli_exec(sl_zigbee_af_print_big_endian_eui64(networkParams.extendedPanId));
+  sl_zigbee_af_cli_println("]");
+  sl_zigbee_af_cli_flush();
 
   #ifndef EZSP_HOST
-  sl_zigbee_core_debug_println("parentID [0x%04X] parentRssi [%d]", sl_zigbee_get_parent_id(), sl_zigbee_get_avg_parent_rssi());
+  sl_zigbee_af_cli_println("parentID [0x%04X] parentRssi [%d]", sl_zigbee_get_parent_id(), sl_zigbee_get_avg_parent_rssi());
   sl_zigbee_af_app_flush();
   #endif // EZSP_HOST
 
@@ -291,21 +332,21 @@ void sli_zigbee_af_cli_info_command(sl_cli_command_arg_t *arguments)
   sli_zigbee_af_cli_version_command();
 #endif
 
-  sl_zigbee_core_debug_print("nodeType [");
+  sl_zigbee_af_cli_print("nodeType [");
   if (nodeTypeResult != 0xFF) {
-    sl_zigbee_core_debug_print("0x%02X", nodeTypeResult);
+    sl_zigbee_af_cli_print("0x%02X", nodeTypeResult);
   } else {
-    sl_zigbee_core_debug_print("unknown");
+    sl_zigbee_af_cli_print("unknown");
   }
-  sl_zigbee_core_debug_println("]");
-  sl_zigbee_af_app_flush();
+  sl_zigbee_af_cli_println("]");
+  sl_zigbee_af_cli_flush();
 
-  sl_zigbee_core_debug_println("Security level [%02X]", sl_zigbee_af_get_security_level());
+  sl_zigbee_af_cli_println("Security level [%02X]", sl_zigbee_af_get_security_level());
 
   printSmartEnergySecurityInfo();
   printSmartEnergySecurityInfo283k1();
 
-  sl_zigbee_core_debug_print("network state [%02X] ", sl_zigbee_af_network_state());
+  sl_zigbee_af_cli_print("network state [%02X] ", sl_zigbee_af_network_state());
   printPacketBufferStats();
 
   // EMZIGBEE-5125: apps with lots of endpoints will wdog while printing
@@ -313,36 +354,36 @@ void sli_zigbee_af_cli_info_command(sl_cli_command_arg_t *arguments)
   // Print the endpoint information.
   {
     uint8_t i, j;
-    sl_zigbee_core_debug_println("Ep cnt: %d", sl_zigbee_af_endpoint_count());
+    sl_zigbee_af_cli_println("Ep cnt: %d", sl_zigbee_af_endpoint_count());
     // Loop for each endpoint.
     for (i = 0; i < sl_zigbee_af_endpoint_count(); i++) {
       sl_zigbee_af_endpoint_type_t *et = sli_zigbee_af_endpoints[i].endpointType;
-      sl_zigbee_core_debug_print("ep %d [endpoint %s, device %s] ",
-                                 sl_zigbee_af_endpoint_from_index(i),
-                                 (sl_zigbee_af_endpoint_index_is_enabled(i)
-                                  ? "enabled"
-                                  : "disabled"),
-                                 (sl_zigbee_af_is_device_enabled(sl_zigbee_af_endpoint_from_index(i))
-                                  ? "enabled"
-                                  : "disabled"));
-      sl_zigbee_core_debug_println("nwk [%d] profile [0x%04X] devId [0x%04X] ver [0x%02X]",
-                                   sl_zigbee_af_network_index_from_endpoint_index(i),
-                                   sl_zigbee_af_profile_id_from_index(i),
-                                   sl_zigbee_af_device_id_from_index(i),
-                                   sl_zigbee_af_device_version_from_index(i));
+      sl_zigbee_af_cli_print("ep %d [endpoint %s, device %s] ",
+                             sl_zigbee_af_endpoint_from_index(i),
+                             (sl_zigbee_af_endpoint_index_is_enabled(i)
+                              ? "enabled"
+                              : "disabled"),
+                             (sl_zigbee_af_is_device_enabled(sl_zigbee_af_endpoint_from_index(i))
+                              ? "enabled"
+                              : "disabled"));
+      sl_zigbee_af_cli_println("nwk [%d] profile [0x%04X] devId [0x%04X] ver [0x%02X]",
+                               sl_zigbee_af_network_index_from_endpoint_index(i),
+                               sl_zigbee_af_profile_id_from_index(i),
+                               sl_zigbee_af_device_id_from_index(i),
+                               sl_zigbee_af_device_version_from_index(i));
       // Loop for the clusters within the endpoint.
       for (j = 0; j < et->clusterCount; j++) {
         sl_zigbee_af_cluster_t *zc = &(et->cluster[j]);
-        sl_zigbee_core_debug_print("    %s cluster: 0x%04X ",
-                                   (sl_zigbee_af_cluster_is_client(zc)
-                                    ? "out(client)"
-                                    : "in (server)"),
-                                   zc->clusterId);
-        sl_zigbee_af_app_debug_exec(sl_zigbee_af_decode_and_print_cluster_with_mfg_code(zc->clusterId, sli_zigbee_af_get_manufacturer_code_for_cluster(zc)));
-        sl_zigbee_core_debug_println("");
-        sl_zigbee_af_app_flush();
+        sl_zigbee_af_cli_print("    %s cluster: 0x%04X ",
+                               (sl_zigbee_af_cluster_is_client(zc)
+                                ? "out(client)"
+                                : "in (server)"),
+                               zc->clusterId);
+        sl_zigbee_af_cli_exec(sl_zigbee_af_decode_and_print_cluster_with_mfg_code(zc->clusterId, sli_zigbee_af_get_manufacturer_code_for_cluster(zc)));
+        sl_zigbee_af_cli_println("");
+        sl_zigbee_af_cli_flush();
       }
-      sl_zigbee_af_app_flush();
+      sl_zigbee_af_cli_flush();
       // EMZIGBEE-5125
       halResetWatchdog();
     }
@@ -355,27 +396,27 @@ void sli_zigbee_af_cli_info_command(sl_cli_command_arg_t *arguments)
       SL_ZIGBEE_AF_GENERATED_NETWORK_STRINGS
     };
     uint8_t i;
-    sl_zigbee_core_debug_println("Nwk cnt: %d", SL_ZIGBEE_SUPPORTED_NETWORKS);
+    sl_zigbee_af_cli_println("Nwk cnt: %d", SL_ZIGBEE_SUPPORTED_NETWORKS);
     for (i = 0; i < SL_ZIGBEE_SUPPORTED_NETWORKS; i++) {
       sl_zigbee_af_push_network_index(i);
-      sl_zigbee_core_debug_println("nwk %d [%s]", i, names[i]);
+      sl_zigbee_af_cli_println("nwk %d [%s]", i, names[i]);
       if (sli_zigbee_af_pro_is_current_network()) {
-        sl_zigbee_core_debug_println("  nodeType [0x%02X]",
-                                     sli_zigbee_af_current_zigbee_pro_network->nodeType);
-        sl_zigbee_core_debug_println("  securityProfile [0x%02X]",
-                                     sli_zigbee_af_current_zigbee_pro_network->securityProfile);
+        sl_zigbee_af_cli_println("  nodeType [0x%02X]",
+                                 sli_zigbee_af_current_zigbee_pro_network->nodeType);
+        sl_zigbee_af_cli_println("  securityProfile [0x%02X]",
+                                 sli_zigbee_af_current_zigbee_pro_network->securityProfile);
       }
       sl_zigbee_af_pop_network_index();
     }
   }
 #ifdef SL_CATALOG_KERNEL_PRESENT
 #ifdef SL_CATALOG_MICRIUMOS_KERNEL_PRESENT
-  sl_zigbee_core_debug_println("RTOS [Micrium]");
+  sl_zigbee_af_cli_println("RTOS [Micrium]");
 #elif defined(SL_CATALOG_FREERTOS_KERNEL_PRESENT)
-  sl_zigbee_core_debug_println("RTOS [FreeRTOS]");
+  sl_zigbee_af_cli_println("RTOS [FreeRTOS]");
 #endif // MICRIUMOS_KERNEL || FREERTOS_KERNEL
 #else // SL_CATALOG_KERNEL_PRESENT
-  sl_zigbee_core_debug_println("RTOS [No]");
+  sl_zigbee_af_cli_println("RTOS [No]");
 #endif // SL_CATALOG_KERNEL_PRESENT
 }
 
@@ -417,13 +458,13 @@ void endpointPrint(sl_cli_command_arg_t *arguments)
   (void)arguments;
   uint8_t i;
   for (i = 0; i < sl_zigbee_af_endpoint_count(); i++) {
-    sl_zigbee_core_debug_print("EP %d: %s ",
-                               sli_zigbee_af_endpoints[i].endpoint,
-                               (sl_zigbee_af_endpoint_index_is_enabled(i)
-                                ? "Enabled"
-                                : "Disabled"));
+    sl_zigbee_af_cli_print("EP %d: %s ",
+                           sli_zigbee_af_endpoints[i].endpoint,
+                           (sl_zigbee_af_endpoint_index_is_enabled(i)
+                            ? "Enabled"
+                            : "Disabled"));
     sli_zigbee_af_print_ezsp_endpoint_flags(sli_zigbee_af_endpoints[i].endpoint);
-    sl_zigbee_core_debug_println("");
+    sl_zigbee_af_cli_println("");
   }
 }
 
@@ -435,7 +476,7 @@ void enableDisableEndpoint(sl_cli_command_arg_t *arguments)
                  : false);
   if (!sl_zigbee_af_endpoint_enable_disable(endpoint,
                                             enable)) {
-    sl_zigbee_core_debug_println("Error:  Unknown endpoint.");
+    sl_zigbee_af_cli_println("Error:  Unknown endpoint.");
   }
 }
 
@@ -453,24 +494,24 @@ void printEvents(sl_cli_command_arg_t *arguments)
   sl_zigbee_af_event_t *finger = sli_zigbee_af_app_event_queue.events;
 
   while (finger != EVENT_QUEUE_LIST_END) {
-    sl_zigbee_core_debug_print("Event %s : ", (finger->actions.name == NULL
-                                               ? "?"
-                                               : finger->actions.name));
+    sl_zigbee_af_cli_print("Event %s : ", (finger->actions.name == NULL
+                                           ? "?"
+                                           : finger->actions.name));
     // Get NWK Index
     if (sli_zigbee_af_event_is_network_event(finger)) {
-      sl_zigbee_core_debug_print("NWK %d : ", sli_zigbee_af_event_get_network_index(finger));
+      sl_zigbee_af_cli_print("NWK %d : ", sli_zigbee_af_event_get_network_index(finger));
     }
 
     // Get Endpoint
     if (sli_zigbee_af_event_is_endpoint_event(finger)) {
-      sl_zigbee_core_debug_print("EP %d : ", sli_zigbee_af_event_get_endpoint(finger));
+      sl_zigbee_af_cli_print("EP %d : ", sli_zigbee_af_event_get_endpoint(finger));
     }
 
     // Get Remaining Time
-    sl_zigbee_core_debug_println("%d ms", sl_zigbee_af_event_get_remaining_ms(finger));
+    sl_zigbee_af_cli_println("%d ms", sl_zigbee_af_event_get_remaining_ms(finger));
     finger = finger->next;
   }
 #else
-  sl_zigbee_core_debug_print("Enable event debug info in Core CLI component");
+  sl_zigbee_af_cli_print("Enable event debug info in Core CLI component");
 #endif // SL_ZIGBEE_EVENT_DEBUG_ENABLED
 }

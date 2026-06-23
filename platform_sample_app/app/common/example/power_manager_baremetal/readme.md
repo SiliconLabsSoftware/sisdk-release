@@ -1,21 +1,49 @@
-# Power Manager Bare Metal Application
+# Power Manager Bare-metal
 
+This example demonstrates use of the Power Manager module in a bare-metal application. Cycle through energy modes with buttons.
 
-This example project demonstrates use of the Power Manager module
-in a bare metal application.
+## Table of Contents
 
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-The application starts in awake mode (EM0). To cycle through desired energy modes, click Button 1.
- * 1 click -> EM1
- * 2 clicks -> EM2, etc.
-Button 0 is used to confirm selection.
+## Purpose / Scope
 
+This bare-metal example shows the Power Manager: the device starts in EM0. Click Button 1 to cycle energy modes (1 click → EM1, 2 clicks → EM2, etc.); Button 0 confirms selection. The device stays in the selected mode until: EM1/EM2 — sleep timer expires; EM3 — button push; EM4 — reset. **Note:** DCDC Boost devices do not enter EM4. Enabling SL_POWER_MANAGER_INIT_EMU_EM2_DEBUG_ENABLE keeps PD0B/PD0D active in EM2 for debugger connectivity but increases EM2/EM3 power.
 
-Once a mode is selected, the device will remain in that mode until the following conditions are met:
- * EM1, EM2: the sleep timer expires
- * EM3: a button is pushed
- * EM4: the device resets 
+## Prerequisites / Setup Requirements
 
-#### Note:
->* DCDC Boost devices will not enter EM4 mode. 
->* Enabling SL_POWER_MANAGER_INIT_EMU_EM2_DEBUG_ENABLE forces PD0B/PD0D power domain to remain active in EM2, ensuring debugger connectivity in both EM2 and EM3. Consequently, if either power domain is active, PD0E is also powered on, resulting in increased power consumption in EM2 and EM3.
+**Hardware**
+- Silicon Labs board with buttons (and optional LCD if used by the demo).
+
+**Software**
+- Simplicity Studio 5 (or later).
+
+## Steps to Run Demo
+
+1. Open the project in Simplicity Studio and build it.
+2. Connect the kit and flash the application.
+3. Run the application. Use Button 1 to cycle modes, Button 0 to confirm. Observe behavior (e.g. wake from timer or button).
+4. Use Energy Profiler to measure current in each mode if desired.
+
+## Troubleshooting
+
+- **Cannot enter EM4:** On DCDC Boost devices, EM4 is not supported.
+- **Debugger loses connection in EM2/EM3:** Consider EM2 debug option; note it increases power.
+- **Build errors:** Verify target part and that the Power Manager component is configured.
+
+## Resources
+
+- [Simplicity Studio 5 User's Guide](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/)
+- [Gecko Platform Documentation](https://docs.silabs.com/gecko-platform/latest/)
+- [Silicon Labs Community](https://www.silabs.com/community)
+
+## Report Bugs & Get Support
+
+You are encouraged to report issues and get help from the community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

@@ -12,13 +12,10 @@ ui_hints:
   visibility: never
 source:
 - path: src/sl_hal_sysrtc.c
-- path: src/sl_hal_sysrtc_subsystem.c
 include:
 - path: inc
   file_list:
   - path: sl_hal_sysrtc.h
-  - path: sl_hal_sysrtc_compat.h
-  - path: sl_hal_sysrtc_subsystem.h
   - path: peripheral_sysrtc.h
   - path: peripheral_sysrtc_compat.h
 provides:

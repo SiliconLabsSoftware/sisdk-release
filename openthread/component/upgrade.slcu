@@ -65,3 +65,17 @@ upgrade:
         description: >
           Ensure SL_OPENTHREAD_SERIAL_TASK_MEM_SIZE is at least the required minimum in RTOS applications;
           upgrade if less, leave unchanged if greater than or equal.
+
+  - sdk:
+      id: simplicity_sdk
+      version: "2026.6.0"
+    configuration:
+      - script: openthread/component/script/upgrade_multipan_instance_aware_configs.lua
+        description: >
+          For MultiPAN-enabled projects, enable the instance-aware logging platform API
+          (OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE) so logs can be attributed to the correct OpenThread instance.
+      - script: openthread/component/script/upgrade_mle_ip_addrs_to_register.lua
+        description: >
+          OPENTHREAD_CONFIG_MLE_IP_ADDRS_TO_REGISTER has been removed (OpenThread PR #12997).
+          MTDs now register all valid unicast/multicast addresses unconditionally.
+          Projects that override this config will fail to compile; the override is removed automatically.

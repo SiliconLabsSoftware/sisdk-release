@@ -2,11 +2,11 @@ id: zw_release
 label: Z-Wave Release
 category: Z-Wave
 description: >
-  This component is used to optimize the code for production by removing
-  unnecessary debug information and adjusting the toolchain to prioritize a
-  small final binary size.
-  By reducing the code size and eliminating debug statements, it helps improve
-  performance and shrink memory usage.
+  This component is used to optimize the code for production by adjusting
+  the toolchain to prioritize a small final binary size.
+  Debug information is emitted at compile time (-g) and removed by the linker
+  or post-build strip, so the shipped binary stays small while .unstripped.out
+  or RelWithDebInfo artifacts can retain symbols and sources.
 package: zwave
 quality: production
 metadata:
@@ -23,5 +23,5 @@ toolchain_settings:
 - option: optimize
   value: size
 - option: debug_level
-  value: none
+  value: default
 root_path: zwave

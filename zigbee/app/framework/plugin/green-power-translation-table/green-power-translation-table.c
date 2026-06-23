@@ -47,8 +47,8 @@
 
 #ifdef SL_CATALOG_ZIGBEE_ZCL_FRAMEWORK_CORE_PRESENT
 // wrapper for common token manager APIs if GP adapter isn't present
-#define sl_zigbee_gp_set_token(token, data, length) (void)sl_token_manager_set_data(token, data, length)
-#define sl_zigbee_gp_get_token(token, data, length) (void)sl_token_manager_get_data(token, data, length)
+#define sl_zigbee_gp_set_token(token, data, length) (void)slx_zigbee_token_manager_set_data(token, data, length)
+#define sl_zigbee_gp_get_token(token, data, length) (void)slx_zigbee_token_manager_get_data(token, data, length)
 #endif
 
 #ifndef USER_HAS_DEFAULT_TRANSLATION_TABLE
@@ -1050,7 +1050,7 @@ uint16_t sli_zigbee_af_gp_copy_additional_info_block_array_to_structure(uint8_t 
   totalLengthOfAddInfoBlockCnt = additionalInfoBlockOut->totalLengthOfAddInfoBlock;
 
   if ((additionalInfoBlockOut->totalLengthOfAddInfoBlock) != 0x00) {
-    optionSelector = sl_zigbee_af_get_int8u(additionalInfoBlockInPtr, 0, totalLengthOfAddInfoBlock);
+    optionSelector = sl_zigbee_af_get_int8u(additionalInfoBlockInPtr, 0, totalLengthOfAddInfoBlockCnt);
     additionalInfoBlockInPtr += sizeof(uint8_t);
     totalLengthOfAddInfoBlockCnt -= 1;
 

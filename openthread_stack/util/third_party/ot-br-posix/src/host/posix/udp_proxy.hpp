@@ -34,6 +34,8 @@
 #ifndef OTBR_AGENT_POSIX_UDP_PROXY_HPP_
 #define OTBR_AGENT_POSIX_UDP_PROXY_HPP_
 
+#include <map>
+
 #include <openthread/error.h>
 #include <openthread/ip6.h>
 
@@ -65,13 +67,24 @@ public:
     ~UdpProxy(void) = default;
 
     /**
+     * Sets the infrastructure interface used for link-local egress on this proxy.
+     *
+     * Should be called before @p Start. When unset or empty, outbound link-local packets are not scoped to an
+     * interface (legacy behavior).
+     *
+     * @param[in] aInfraIfName  The infrastructure interface name (e.g. backbone `-B` interface), or `nullptr`.
+     */
+    void SetInfraInterface(const char *aInfraIfName);
+
+    /**
      * Start the UDP Proxy for Thread UDP port @p aPort.
      *
      * The UDP Proxy will bind to an ephemeral port and set a mapping between the ephemeral port and @p aPort.
      *
-     * @param[in] aPort  The UDP port to be proxied in Thread stack.
+     * @param[in] aPort      The UDP port to be proxied in Thread stack.
+     * @param[in] aHostPort  The UDP port to bind on host, or `0` to use an ephemeral port.
      */
-    void Start(uint16_t aPort);
+    void Start(uint16_t aPort, uint16_t aHostPort = 0);
 
     /**
      * Stop the UDP Proxy if started.
@@ -107,13 +120,31 @@ private:
     void Process(const MainloopContext &aMainloop) override;
     void Update(MainloopContext &aMainloop) override;
 
-    bool      IsStarted(void) const { return mHostPort != 0; }
-    otbrError BindToEphemeralPort(void);
-    otbrError ReceivePacket(uint8_t *aPayload, uint16_t &aLength, otIp6Address &aRemoteAddr, uint16_t &aRemotePort);
+    bool         IsStarted(void) const { return mHostPort != 0; }
+    otbrError    BindToPort(uint16_t aHostPort);
+    otbrError    ReceivePacket(uint8_t *aPayload, uint16_t &aLength, otIp6Address &aRemoteAddr, uint16_t &aRemotePort);
+    void         UpdatePeerLocalAddr(const otIp6Address &aPeerAddr, uint16_t aPeerPort, const otIp6Address &aLocalAddr);
+    otIp6Address GetPeerLocalAddr(const otIp6Address &aPeerAddr, uint16_t aPeerPort) const;
+
+    struct PeerKey
+    {
+        otIp6Address mAddr;
+        uint16_t     mPort;
+
+        bool operator<(const PeerKey &aOther) const
+        {
+            int cmp = memcmp(mAddr.mFields.m8, aOther.mAddr.mFields.m8, sizeof(mAddr.mFields.m8));
+
+            return (cmp != 0) ? (cmp < 0) : (mPort < aOther.mPort);
+        }
+    };
 
     int      mFd; ///< Used to proxy UDP packets in Thread network.
     uint16_t mHostPort;
     uint16_t mThreadPort;
+    uint32_t mInfraIfIndex; ///< Backbone interface for link-local egress (0 if unset).
+
+    std::map<PeerKey, otIp6Address> mPeerLocalAddrs;
 
     Dependencies &mDeps;
 };

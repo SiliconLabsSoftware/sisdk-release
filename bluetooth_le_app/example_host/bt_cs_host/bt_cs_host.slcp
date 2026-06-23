@@ -4,7 +4,7 @@ label: Bluetooth - CS Host
 description: >
   CS host
 category: Bluetooth Examples
-quality: experimental
+quality: production
 
 filter:
   - name: "Wireless Technology"

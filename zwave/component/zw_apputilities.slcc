@@ -42,7 +42,7 @@ provides:
 - name: zw_apputilities
 template_contribution:
 - name: rodata_sections   # Ensure memory section define by Z-Wave stack are placed in the rodata section
-  value: zw_cc_handlers_v3
+  value: zw_cc_handlers_v5
 - name: rodata_sections   # Ensure memory section define by Z-Wave stack are placed in the rodata section
   value: zw_zaf_cc_config
 root_path: zwave

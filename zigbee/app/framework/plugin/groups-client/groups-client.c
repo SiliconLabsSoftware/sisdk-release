@@ -70,15 +70,27 @@ sl_zigbee_af_zcl_request_status_t sl_zigbee_af_groups_cluster_view_group_respons
 
 sl_zigbee_af_zcl_request_status_t sl_zigbee_af_groups_cluster_get_group_membership_response_cb(sl_zigbee_af_cluster_command_t *cmd)
 {
-  (void)cmd;
-
 #ifdef SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
   sl_zcl_groups_cluster_get_group_membership_response_command_t cmd_data;
   uint8_t i;
+  uint16_t groupListOffset;
+  uint16_t groupListAvail;
+  uint8_t maxGroupsInPayload;
 
   if (zcl_decode_groups_cluster_get_group_membership_response_command(cmd, &cmd_data)
       != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
     return SL_ZIGBEE_ZCL_STATUS_UNSUP_COMMAND;
+  }
+
+  if (cmd_data.groupCount != 0) {
+    groupListOffset = (uint16_t)(cmd_data.groupList - cmd->buffer);
+    groupListAvail = (cmd->bufLen > groupListOffset)
+                       ? (cmd->bufLen - groupListOffset) : 0;
+    maxGroupsInPayload = (uint8_t)(groupListAvail / 2u);
+
+    if (cmd_data.groupCount > maxGroupsInPayload) {
+      return SL_ZIGBEE_ZCL_STATUS_MALFORMED_COMMAND;
+    }
   }
 
   sl_zigbee_af_groups_cluster_print("RX: GetGroupMembershipResponse 0x%02X, 0x%02X,",
@@ -86,9 +98,13 @@ sl_zigbee_af_zcl_request_status_t sl_zigbee_af_groups_cluster_get_group_membersh
                                     cmd_data.groupCount);
   for (i = 0; i < cmd_data.groupCount; i++) {
     sl_zigbee_af_groups_cluster_print(" [0x%04X]",
-                                      sl_zigbee_af_get_int16u(cmd_data.groupList + (i << 1), 0, 2));
+                                      sl_zigbee_af_get_int16u(cmd->buffer,
+                                                              (uint16_t)(groupListOffset + ((uint16_t)i << 1)),
+                                                              cmd->bufLen));
   }
   sl_zigbee_af_groups_cluster_println("");
+#else
+  (void)cmd;
 #endif // SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
 
   return SL_ZIGBEE_ZCL_STATUS_SUCCESS;

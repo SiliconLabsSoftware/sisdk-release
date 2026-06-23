@@ -3,7 +3,7 @@
  * @brief internal wrappers for 'bootload' ipc commands
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -48,6 +48,7 @@ sl_status_t sl_zigbee_send_bootload_message(bool broadcast,
 
   if (messageLength > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector messageContents length exceeds expected maximum
+    return msg.data.send_bootload_message.response.result;
   }
 
   memmove(msg.data.send_bootload_message.request.messageContents, messageContents, sizeof(uint8_t) * messageLength);
@@ -59,6 +60,7 @@ sl_status_t sl_zigbee_send_bootload_message(bool broadcast,
 
   if (messageLength > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector messageContents length exceeds expected maximum
+    return msg.data.send_bootload_message.response.result;
   }
 
   memmove(messageContents, msg.data.send_bootload_message.request.messageContents, sizeof(uint8_t) * messageLength);

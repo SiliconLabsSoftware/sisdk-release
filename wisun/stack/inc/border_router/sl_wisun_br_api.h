@@ -87,8 +87,11 @@ sl_status_t sl_wisun_br_set_gtk(const uint8_t *gtk, uint8_t index);
  * may exhibit non-optimal behavior. Setting the size too large may cause
  * slow connection speed and increased latency. Conversely, a value too
  * small may cause increased network traffic.
+ *
+ * @deprecated This function will be removed in the future versions of the
+ *             Wi-SUN stack, use sl_wisun_br_set_connection_parameters() instead.
  *****************************************************************************/
-sl_status_t sl_wisun_br_set_network_size(sl_wisun_network_size_t size);
+sl_status_t sl_wisun_br_set_network_size(sl_wisun_network_size_t size) SL_DEPRECATED_API_SDK_2026_6;
 
 /**************************************************************************//**
  * Get the unicast IPv6 addresses configured in the Border Router.
@@ -129,9 +132,6 @@ sl_status_t sl_wisun_br_get_state(sl_wisun_br_state_t *state);
  * @param[in] certificate_options Options for the certificate.
  *   <br/><b>SL_WISUN_CERTIFICATE_OPTION_APPEND</b>: Append the certificate to the list of server certificates
  *                                                   instead of replacing the previous entries
- *   <br/><b>SL_WISUN_CERTIFICATE_OPTION_IS_REF</b>: The application guarantees the certificate data will remain
- *                                                   in scope and can therefore be referenced instead of copied
- *   <br/><b>SL_WISUN_CERTIFICATE_OPTION_HAS_KEY</b>: The certificate has a private key
  * @param[in] certificate_length Size of the certificate data
  * @param[in] certificate Pointer to the certificate data
  * @return SL_STATUS_OK if successful, an error code otherwise
@@ -180,6 +180,41 @@ sl_status_t sl_wisun_br_set_broadcast_settings(uint32_t interval_ms,
  * This function must be called before starting the Border Router.
  *****************************************************************************/
 sl_status_t sl_wisun_br_set_connection_parameters(const sl_wisun_br_connection_params_t *params);
+
+/**************************************************************************//**
+ * Set advanced Border Router connection parameters.
+ *
+ * @param[in] params Pointer to the advanced parameter structure
+ * @return SL_STATUS_OK on success.
+ * @return SL_STATUS_INVALID_STATE if the border router is started, or
+ *         if @ref sl_wisun_br_set_connection_parameters has been
+ *         called previously.
+ * @return SL_STATUS_INVALID_PARAMETER if one or more parameters are
+ *         invalid.
+ *
+ * By default, the stack automatically adapts its behavior based on the
+ * PAN Size advertised in the Wi-SUN PAN-IE.
+ *
+ * This function overrides that automatic adjustment with explicit values.
+ *
+ * This function and @ref sl_wisun_br_set_connection_parameters are mutually
+ * exclusive. If @ref sl_wisun_br_set_connection_parameters has been called,
+ * any subsequent call to this function will fail with SL_STATUS_INVALID_STATE.
+ *
+ * This restriction remains in effect even if the border router is
+ * later stopped. To switch back to auto mode and allow this
+ * function again, call @ref sl_wisun_reset_parameters.
+ *
+ * A later call to @ref sl_wisun_br_set_connection_parameters also
+ * overrides any overlapping settings previously applied with this
+ * function.
+ *
+ * This function can be used together with
+ * @ref sl_wisun_set_option.
+ *
+ * This function must be called before starting the border router.
+ *****************************************************************************/
+sl_status_t sl_wisun_br_set_advanced_parameters(const sl_wisun_br_advanced_parameters_t *params);
 
 /**************************************************************************//**
  * Configure LFN parenting parameter set.

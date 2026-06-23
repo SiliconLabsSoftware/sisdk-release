@@ -1,0 +1,42 @@
+project_name: ledsink_kernel_freertos
+package: platform
+quality: evaluation
+label: Platform - LEDSINK Kernel FreeRTOS
+description: >
+  This example project demonstrates how to use the LEDSINK peripheral with hardware pattern generation with no PWM, PWM brightness, software direct drive, and a button-triggered EM2 deep-sleep test in a FreeRTOS kernel task.
+category: Example|Platform
+filter:
+  - name: "Device Type"
+    value: ["SoC"]
+  - name: "MCU"
+    value: ["32-bit MCU"]
+  - name: "Project Difficulty"
+    value: ["Beginner"]
+source:
+  - path: app.c
+  - path: ledsink_kernel_freertos.c
+include:
+  - path: .
+    file_list:
+    - path: app.h
+    - path: ledsink_kernel_freertos.h
+component:
+  - id: sl_main
+  - id: device_init
+  - id: clock_manager
+  - id: freertos
+  - id: power_manager
+  - id: hal_ledsink
+  - id: simple_button
+    instance: [btn0]
+define:
+  - name: DEBUG_EFM
+readme:
+  - path: readme.md
+ui_hints:
+  highlight: readme.md
+tag:
+  - hardware:component:led:4
+  - hardware:component:button:1+
+  - hwfilter:board:simple_button:btn0
+  - hardware:device:ram:20

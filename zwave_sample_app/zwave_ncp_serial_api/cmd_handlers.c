@@ -60,36 +60,6 @@ static void SetupNodeManagement(const comm_interface_frame_ptr frame, uint8_t fu
 }
 #endif
 
-#if SUPPORT_ZW_INITIATE_SHUTDOWN
-/*
-   This callback function called from protocol just before going into deep sleep (Deep Sleep)
-   The function itself sends a respond to the host notifying it that the device is ready to go into deep sleep.
- */
-static void Initiate_shutdown_cb(void)
-{
-  // 0x1 0x03 0x00 0xd9
-  const uint8_t status = 0x01;
-  comm_interface_transmit_frame(FUNC_ID_ZW_INITIATE_SHUTDOWN, RESPONSE, &status, sizeof(status), NULL);
-  comm_interface_wait_transmit_done();
-}
-
-/*
-   HOST->ZW
-   ZW-HOST 0x01
- */
-ZW_ADD_CMD(FUNC_ID_ZW_INITIATE_SHUTDOWN)
-{
-  AppTimerStopAll();
-  if (InitiateShutdown(&Initiate_shutdown_cb)) {
-    set_state_and_notify(stateIdle);
-  } else {
-    // somthing went wrong we failed to start the graceful shutdown
-    DoRespond(0);
-  }
-}
-
-#endif
-
 #if SUPPORT_FUNC_ID_CLEAR_TX_TIMERS
 static void ClearTxTimers(void)
 {
@@ -188,7 +158,7 @@ ZW_ADD_CMD(FUNC_ID_ZW_CLEAR_NETWORK_STATS)
   /* HOST->ZW: */
   /* ZW->HOST: 0x01 */
   ClearNetworkStats();
-  DoRespond(1);
+  DoRespond(SAPI_COMMAND_STATUS_SUCCESS);
 }
 #endif /* SUPPORT_ZW_CLEAR_NETWORK_STATS */
 
@@ -248,13 +218,17 @@ ZW_ADD_CMD(FUNC_ID_ZW_SET_RF_RECEIVE_MODE)
 {
   /* HOST->ZW: mode */
   /* ZW->HOST: retVal */
-  const uint8_t retVal = SetRFReceiveMode(frame->payload[0]);
+  const uint8_t mode = frame->payload[0];
+  const uint8_t retVal = SetRFReceiveMode(mode);
   DoRespond(retVal);
+  if (retVal && mode) {
+    comm_interface_wait_transmit_done();
+    zpal_reboot_with_info(MFG_ID_ZWAVE, ZPAL_RESET_RADIO_RECONFIGURE);
+  }
 }
 #endif /* SUPPORT_ZW_SET_RF_RECEIVE_MODE */
-
 #if SUPPORT_ZW_SEND_NODE_INFORMATION
-uint8_t funcID_ComplHandler_ZW_SendNodeInformation;
+uint8_t app_session_id_ComplHandler_ZW_SendNodeInformation;
 
 static uint8_t SendNodeInformation(uint16_t destID, uint8_t txOptions, ZW_TX_Callback_t pCallBack)
 {
@@ -269,7 +243,6 @@ static uint8_t SendNodeInformation(uint16_t destID, uint8_t txOptions, ZW_TX_Cal
   QueueStatus = QueueNotifyingSendToBack(ZAF_getZwTxQueue(), (uint8_t *)&FramePackage, 0);
   return (EQUEUENOTIFYING_STATUS_SUCCESS == QueueStatus) ? true : false;
 }
-
 /*=====================   ComplHandler_ZW_SendNodeInformation   =============
 **    Completion handler for ZW_SendNodeInformation
 **
@@ -279,18 +252,18 @@ ZCB_ComplHandler_ZW_SendNodeInformation(
   uint8_t txStatus,   /* IN   Transmit completion status  */
   __attribute__((unused)) TX_STATUS_TYPE *txStatusReport)
 {
-  compl_workbuf[0] = funcID_ComplHandler_ZW_SendNodeInformation;
+  compl_workbuf[0] = app_session_id_ComplHandler_ZW_SendNodeInformation;
   compl_workbuf[1] = txStatus;
   Request(FUNC_ID_ZW_SEND_NODE_INFORMATION, compl_workbuf, 2);
 }
 
 ZW_ADD_CMD(FUNC_ID_ZW_SEND_NODE_INFORMATION)
 {
-  /* HOST->ZW: destNode | txOptions | funcID */
+  /* HOST->ZW: destNode | txOptions | app_session_id */
   /* ZW->HOST: retVal */
   uint8_t offset = 0;
   node_id_t destNode = (node_id_t)GET_NODEID(&frame->payload[0], offset);
-  funcID_ComplHandler_ZW_SendNodeInformation = frame->payload[offset + 2];
+  app_session_id_ComplHandler_ZW_SendNodeInformation = frame->payload[offset + 2];  // Session identifier
   const uint8_t retVal = SendNodeInformation(destNode, frame->payload[offset + 1], (frame->payload[offset + 2] != 0) ? &ZCB_ComplHandler_ZW_SendNodeInformation : NULL);
   DoRespond(retVal);
 }
@@ -305,14 +278,10 @@ ZW_ADD_CMD(FUNC_ID_ZW_SECURITY_SETUP)
 }
 #endif
 
-#if SUPPORT_ZW_SEND_DATA || SUPPORT_ZW_SEND_DATA_BRIDGE
-uint8_t funcID_ComplHandler_ZW_SendData;
-#endif
-
 #if SUPPORT_ZW_SEND_PROTOCOL_DATA
 
 static struct {
-  uint8_t session_id;
+  uint8_t app_session_id;
   uint8_t callback_id;
 } nlsEncryptionMetadata = { 0 };
 #endif
@@ -321,12 +290,12 @@ static struct {
 static void
 GenerateTxStatusRequest(
   uint8_t cmd,
-  uint8_t txStatusfuncID,
+  const uint8_t app_session_id,
   uint8_t txStatus,
   TX_STATUS_TYPE *txStatusReport)   /* IN   Transmit completion status  */
 {
   uint8_t bIdx = 0;
-  compl_workbuf[bIdx++] = txStatusfuncID;
+  compl_workbuf[bIdx++] = app_session_id;
   compl_workbuf[bIdx++] = txStatus;
   if (bTxStatusReportEnabled /* Do HOST want txStatusReport */
       && txStatusReport) {   /* Check if detailed info is available from protocol */
@@ -369,16 +338,18 @@ ZCB_ComplHandler_ZW_SendData(
   uint8_t txStatus,
   TX_STATUS_TYPE *txStatusReport)   /* IN   Transmit completion status  */
 {
-  GenerateTxStatusRequest(FUNC_ID_ZW_SEND_DATA, funcID_ComplHandler_ZW_SendData, txStatus, txStatusReport);
+  GenerateTxStatusRequest(FUNC_ID_ZW_SEND_DATA, txStatusReport ? txStatusReport->app_session_id : 0, txStatus, txStatusReport);
 }
 
-static uint8_t SendData(uint16_t nodeID, const uint8_t *pData, uint8_t dataLength, uint8_t txOptions, ZW_TX_Callback_t pCallBack)
+static uint8_t SendData(uint16_t nodeID, const uint8_t *pData, uint8_t dataLength, uint8_t txOptions, ZW_TX_Callback_t pCallBack,
+                        const uint8_t app_session_id)
 {
 #ifndef ZW_SECURITY_PROTOCOL
   SZwaveTransmitPackage FramePackage = {
     .uTransmitParams.SendData.DestNodeId = nodeID,
     .uTransmitParams.SendData.FrameConfig.TransmitOptions = txOptions,
     .uTransmitParams.SendData.FrameConfig.Handle = pCallBack,
+    .uTransmitParams.SendData.FrameConfig.app_session_id = app_session_id,
     .eTransmitType = EZWAVETRANSMITTYPE_STD,
     .uTransmitParams.SendData.FrameConfig.iFrameLength = dataLength,
   };
@@ -388,6 +359,7 @@ static uint8_t SendData(uint16_t nodeID, const uint8_t *pData, uint8_t dataLengt
     .uTransmitParams.SendDataEx.DestNodeId = nodeID,
     .uTransmitParams.SendDataEx.FrameConfig.TransmitOptions = txOptions,
     .uTransmitParams.SendDataEx.FrameConfig.Handle = pCallBack,
+    .uTransmitParams.SendDataEx.FrameConfig.app_session_id = app_session_id,
     .eTransmitType = EZWAVETRANSMITTYPE_EX,
     .uTransmitParams.SendDataEx.FrameConfig.iFrameLength = dataLength,
   };
@@ -398,11 +370,11 @@ static uint8_t SendData(uint16_t nodeID, const uint8_t *pData, uint8_t dataLengt
 
 ZW_ADD_CMD(FUNC_ID_ZW_SEND_DATA)
 {
-  /* HOST->ZW: nodeID | dataLength | pData[] | txOptions | funcID */
+  /* HOST->ZW: nodeID | dataLength | pData[] | txOptions | app_session_id */
   /* ZW->HOST: RetVal */
   /* If RetVal == false -> no callback */
   /* If RetVal == true then callback returns with */
-  /* ZW->HOST: funcID | txStatus | wTransmitTicksMSB | wTransmitTicksLSB | bRepeaters | rssi_values.incoming[0] |
+  /* ZW->HOST: app_session_id | txStatus | wTransmitTicksMSB | wTransmitTicksLSB | bRepeaters | rssi_values.incoming[0] |
    *           rssi_values.incoming[1] | rssi_values.incoming[2] | rssi_values.incoming[3] | rssi_values.incoming[4] |
    *           bRouteSchemeState | repeater0 | repeater1 | repeater2 | repeater3 | routespeed |
    *           bRouteTries | bLastFailedLink.from | bLastFailedLink.to |
@@ -412,20 +384,23 @@ ZW_ADD_CMD(FUNC_ID_ZW_SEND_DATA)
   node_id_t nodeId = (node_id_t)GET_NODEID(&frame->payload[0], offset);
   uint8_t dataLength = frame->payload[offset + 1];
 
-  assert(dataLength <= BUF_SIZE_RX);
-  dataLength = MIN(dataLength, BUF_SIZE_RX);
+  const uint8_t payload_len = frame_payload_len(frame);
+  if ((dataLength > BUF_SIZE_RX) || ((offset + dataLength + SEND_DATA_FRAME_OVERHEAD) > payload_len)) {
+    assert(false);
+    DoRespond(0);
+    return;
+  }
   const uint8_t * const pSerInData = frame->payload + offset + 2;
-  funcID_ComplHandler_ZW_SendData = frame->payload[offset + 3 + dataLength];
+  const uint8_t app_session_id = frame->payload[offset + 3 + dataLength];  // Session identifier
 
   // Create transmit frame package
   const uint8_t retVal = SendData(nodeId, pSerInData, dataLength, frame->payload[offset + 2 + dataLength],
-                                  (funcID_ComplHandler_ZW_SendData) ? &ZCB_ComplHandler_ZW_SendData : NULL);
+                                  (app_session_id) ? &ZCB_ComplHandler_ZW_SendData : NULL, app_session_id);
   DoRespond(retVal);
 }
 #endif
 
 #if SUPPORT_ZW_SEND_DATA_EX
-uint8_t funcID_ComplHandler_ZW_SendDataEx;
 
 /*======================   ComplHandler_ZW_SendDataEx   ========================
 **    Completion handler for ZW_SendDataEx
@@ -436,12 +411,13 @@ ZCB_ComplHandler_ZW_SendDataEx(
   uint8_t txStatus,
   TX_STATUS_TYPE *txStatusReport)   /* IN   Transmit completion status  */
 {
-  GenerateTxStatusRequest(FUNC_ID_ZW_SEND_DATA_EX, funcID_ComplHandler_ZW_SendDataEx, txStatus, txStatusReport);
+  GenerateTxStatusRequest(FUNC_ID_ZW_SEND_DATA_EX, txStatusReport ? txStatusReport->app_session_id : 0, txStatus, txStatusReport);
 }
 
 static uint8_t SendDataEx(uint16_t nodeID, uint8_t *pData, uint8_t dataLength,
                           uint8_t txOptions, uint8_t txSecOptions, uint8_t txOptions2, uint8_t secKeyType,
-                          ZW_TX_Callback_t pCallBack)
+                          ZW_TX_Callback_t pCallBack,
+                          const uint8_t app_session_id)
 {
   // Create transmit frame package
   SZwaveTransmitPackage FramePackage = {
@@ -451,6 +427,7 @@ static uint8_t SendDataEx(uint16_t nodeID, uint8_t *pData, uint8_t dataLength,
     .uTransmitParams.SendDataEx.eKeyType = secKeyType,
     .uTransmitParams.SendDataEx.FrameConfig.TransmitOptions = txOptions,
     .uTransmitParams.SendDataEx.FrameConfig.Handle = pCallBack,
+    .uTransmitParams.SendDataEx.FrameConfig.app_session_id = app_session_id,
     .uTransmitParams.SendDataEx.FrameConfig.iFrameLength = dataLength,
     .eTransmitType = EZWAVETRANSMITTYPE_EX
   };
@@ -462,11 +439,11 @@ static uint8_t SendDataEx(uint16_t nodeID, uint8_t *pData, uint8_t dataLength,
 
 ZW_ADD_CMD(FUNC_ID_ZW_SEND_DATA_EX)
 {
-  /* HOST->ZW: nodeID | dataLength | pData[] | txOptions | txSecOptions | securityKey | txOptions2 | funcID */
+  /* HOST->ZW: nodeID | dataLength | pData[] | txOptions | txSecOptions | securityKey | txOptions2 | app_session_id */
   /* ZW->HOST: RetVal */
   /* If "RetVal != 1" -> no callback */
-  /* If "RetVal == 1" and "funcID != 0" then callback returns with */
-  /* ZW->HOST: funcID | txStatus | wTransmitTicksMSB | wTransmitTicksLSB | bRepeaters | rssi_values.incoming[0] | */
+  /* If "RetVal == 1" and "app_session_id != 0" then callback returns with */
+  /* ZW->HOST: app_session_id | txStatus | wTransmitTicksMSB | wTransmitTicksLSB | bRepeaters | rssi_values.incoming[0] | */
   /*           rssi_values.incoming[1] | rssi_values.incoming[2] | rssi_values.incoming[3] | rssi_values.incoming[4] | */
   /*           bRouteSchemeState | repeater0 | repeater1 | repeater2 | repeater3 | routespeed | */
   /*           bRouteTries | bLastFailedLink.from | bLastFailedLink.to */
@@ -475,20 +452,20 @@ ZW_ADD_CMD(FUNC_ID_ZW_SEND_DATA_EX)
   uint8_t dataLength;
 
   dataLength = frame->payload[offset + 1];
-  assert(dataLength <= BUF_SIZE_RX);
-  dataLength = MIN(dataLength, BUF_SIZE_RX);
-  funcID_ComplHandler_ZW_SendDataEx = frame->payload[offset + 6 + dataLength];
+  const uint8_t payload_len = frame_payload_len(frame);
+  if ((dataLength > BUF_SIZE_RX) || ((offset + dataLength + SEND_DATA_EX_FRAME_OVERHEAD) > payload_len)) {
+    assert(false);
+    DoRespond(0);
+    return;
+  }
+  const uint8_t app_session_id = frame->payload[offset + 6 + dataLength];  // Session identifier
 
   const uint8_t retVal = SendDataEx(nodeId, &frame->payload[offset + 2], dataLength, frame->payload[offset + 2 + dataLength],
                                     frame->payload[offset + 3 + dataLength], frame->payload[offset + 5 + dataLength],
-                                    frame->payload[offset + 4 + dataLength], (funcID_ComplHandler_ZW_SendDataEx != 0) ? ZCB_ComplHandler_ZW_SendDataEx : NULL);
+                                    frame->payload[offset + 4 + dataLength], (app_session_id != 0) ? ZCB_ComplHandler_ZW_SendDataEx : NULL, app_session_id);
 
   DoRespond(retVal);
 }
-#endif
-
-#if SUPPORT_ZW_SEND_DATA_MULTI || SUPPORT_ZW_SEND_DATA_MULTI_BRIDGE
-uint8_t funcID_ComplHandler_ZW_SendDataMulti;
 #endif
 
 #if SUPPORT_ZW_SEND_DATA_MULTI
@@ -499,14 +476,15 @@ uint8_t funcID_ComplHandler_ZW_SendDataMulti;
 static void /* RET  Nothing                     */
 ZCB_ComplHandler_ZW_SendDataMulti(
   uint8_t txStatus,
-  __attribute__((unused)) TX_STATUS_TYPE *txStatusType)   /* IN   Transmit completion status  */
+  TX_STATUS_TYPE *txStatusReport)   /* IN   Transmit completion status  */
 {
-  compl_workbuf[0] = funcID_ComplHandler_ZW_SendDataMulti;
+  compl_workbuf[0] = txStatusReport ? txStatusReport->app_session_id : 0;
   compl_workbuf[1] = txStatus;
   Request(FUNC_ID_ZW_SEND_DATA_MULTI, compl_workbuf, 2);
 }
 
-static uint8_t SendDataMulti(uint8_t numberOfNodes, const uint8_t *pNodeList, const uint8_t *pData, uint8_t dataLength, uint8_t txOptions, ZW_TX_Callback_t pCallBack)
+static uint8_t SendDataMulti(uint8_t numberOfNodes, const uint8_t *pNodeList, const uint8_t *pData, uint8_t dataLength, uint8_t txOptions, ZW_TX_Callback_t pCallBack,
+                             const uint8_t app_session_id)
 {
   // Create transmit frame package
   SZwaveTransmitPackage FramePackage;
@@ -523,6 +501,7 @@ static uint8_t SendDataMulti(uint8_t numberOfNodes, const uint8_t *pNodeList, co
   pSendDataMulti->FrameConfig.TransmitOptions = txOptions;
   memcpy(&pSendDataMulti->FrameConfig.aFrame, pData, dataLength);
   pSendDataMulti->FrameConfig.Handle = pCallBack;
+  pSendDataMulti->FrameConfig.app_session_id = app_session_id;
   FramePackage.eTransmitType = EZWAVETRANSMITTYPE_MULTI;
   FramePackage.uTransmitParams.SendDataMulti.FrameConfig.iFrameLength = dataLength;
 
@@ -533,38 +512,43 @@ static uint8_t SendDataMulti(uint8_t numberOfNodes, const uint8_t *pNodeList, co
 
 ZW_ADD_CMD(FUNC_ID_ZW_SEND_DATA_MULTI)
 {
-  /* numberNodes | pNodeIDList[] | dataLength | pData[] | txOptions | funcId */
-  // Create transmit frame package
+  /* numberNodes | pNodeIDList[] | dataLength | pData[] | txOptions | app_session_id */
+  const uint8_t payload_len = frame_payload_len(frame);
   uint8_t numOfNodes = frame->payload[0];
   uint8_t tLength = frame->payload[1 + numOfNodes];
+  if ((numOfNodes + tLength + SEND_DATA_MULTI_FRAME_OVERHEAD) > payload_len) {
+    assert(false);
+    DoRespond(0);
+    return;
+  }
   uint8_t tOptions = frame->payload[2 + numOfNodes + tLength];
-  funcID_ComplHandler_ZW_SendDataMulti = frame->payload[3 + numOfNodes + tLength];
+  const uint8_t app_session_id = frame->payload[3 + numOfNodes + tLength];  // Session identifier
 
   const uint8_t retVal = SendDataMulti(numOfNodes, &frame->payload[1], &frame->payload[2 + numOfNodes], tLength, tOptions,
-                                       (funcID_ComplHandler_ZW_SendDataMulti != 0) ? &ZCB_ComplHandler_ZW_SendDataMulti : NULL);
+                                       (app_session_id != 0) ? &ZCB_ComplHandler_ZW_SendDataMulti : NULL, app_session_id);
 
   DoRespond(retVal);
 }
 #endif
 
 #if SUPPORT_ZW_SEND_DATA_MULTI_EX
-uint8_t funcID_ComplHandler_ZW_SendDataMultiEx;
 
-/*=====================   ComplHandler_ZW_SendDataMulti   ====================
-**    Completion handler for ZW_SendDataMulti
+/*=====================   ComplHandler_ZW_SendDataMultiEx   ====================
+**    Completion handler for ZW_SendDataMultiEx
 **
 **--------------------------------------------------------------------------*/
 static void
 ZCB_ComplHandler_ZW_SendDataMultiEx(
   uint8_t txStatus,   /* IN   Transmit completion status  */
-  __attribute__((unused)) TX_STATUS_TYPE* extendedTxStatus)
+  TX_STATUS_TYPE* extendedTxStatus)
 {
-  compl_workbuf[0] = funcID_ComplHandler_ZW_SendDataMultiEx;
+  compl_workbuf[0] = extendedTxStatus ? extendedTxStatus->app_session_id : 0;
   compl_workbuf[1] = txStatus;
   Request(FUNC_ID_ZW_SEND_DATA_MULTI_EX, compl_workbuf, 2);
 }
 
-static uint8_t SendDataMultiEx(uint8_t dataLength, uint8_t *pData, uint8_t txOptions, uint8_t secKeyType, uint8_t groupID, ZW_TX_Callback_t pCallBack)
+static uint8_t SendDataMultiEx(uint8_t dataLength, uint8_t *pData, uint8_t txOptions, uint8_t secKeyType, uint8_t groupID, ZW_TX_Callback_t pCallBack,
+                               const uint8_t app_session_id)
 {
   assert(dataLength <= BUF_SIZE_RX);
   dataLength = MIN(dataLength, BUF_SIZE_RX);
@@ -572,6 +556,7 @@ static uint8_t SendDataMultiEx(uint8_t dataLength, uint8_t *pData, uint8_t txOpt
   SZwaveTransmitPackage FramePackage = {
     .uTransmitParams.SendDataMultiEx.FrameConfig.Handle = pCallBack,
     .uTransmitParams.SendDataMultiEx.FrameConfig.TransmitOptions = txOptions,
+    .uTransmitParams.SendDataMultiEx.FrameConfig.app_session_id = app_session_id,
     .uTransmitParams.SendDataMultiEx.FrameConfig.iFrameLength = dataLength,
     .uTransmitParams.SendDataMultiEx.GroupId = groupID,
     .uTransmitParams.SendDataMultiEx.eKeyType = secKeyType,
@@ -585,14 +570,20 @@ static uint8_t SendDataMultiEx(uint8_t dataLength, uint8_t *pData, uint8_t txOpt
 
 ZW_ADD_CMD(FUNC_ID_ZW_SEND_DATA_MULTI_EX)
 {
-  /* dataLength | pData[] | txOptions | securityKey | groupId | funcId */
+  /* dataLength | pData[] | txOptions | securityKey | groupId | app_session_id */
   uint8_t dataLength = frame->payload[0];
-  funcID_ComplHandler_ZW_SendDataMultiEx = frame->payload[4 + dataLength];
+  const uint8_t payload_len = frame_payload_len(frame);
+  if ((dataLength + SEND_DATA_MULTI_EX_FRAME_OVERHEAD) > payload_len) {
+    assert(false);
+    DoRespond(0);
+    return;
+  }
+  const uint8_t app_session_id = frame->payload[4 + dataLength];  // Session identifier
   uint8_t tOptions = frame->payload[1 + dataLength];
   uint8_t tGID = frame->payload[3 + dataLength];
   uint8_t tKey = frame->payload[2 + dataLength];
 
-  const uint8_t retVal = SendDataMultiEx(dataLength, &frame->payload[1], tOptions, tKey, tGID, (funcID_ComplHandler_ZW_SendDataMultiEx != 0) ? ZCB_ComplHandler_ZW_SendDataMultiEx : NULL);
+  const uint8_t retVal = SendDataMultiEx(dataLength, &frame->payload[1], tOptions, tKey, tGID, (app_session_id != 0) ? ZCB_ComplHandler_ZW_SendDataMultiEx : NULL, app_session_id);
 
   DoRespond(retVal);
 }
@@ -632,10 +623,11 @@ ZCB_ComplHandler_ZW_SendData_Bridge(
   uint8_t txStatus,
   TX_STATUS_TYPE *txStatusReport)   /* IN   Transmit completion status  */
 {
-  GenerateTxStatusRequest(FUNC_ID_ZW_SEND_DATA_BRIDGE, funcID_ComplHandler_ZW_SendData, txStatus, txStatusReport);
+  GenerateTxStatusRequest(FUNC_ID_ZW_SEND_DATA_BRIDGE, txStatusReport ? txStatusReport->app_session_id : 0, txStatus, txStatusReport);
 }
 
-static uint8_t SendDataBridge(uint16_t srcNode, uint16_t destNode, uint8_t dataLength, const uint8_t *pData, uint8_t txOptions, ZW_TX_Callback_t pCallBack)
+static uint8_t SendDataBridge(uint16_t srcNode, uint16_t destNode, uint8_t dataLength, const uint8_t *pData, uint8_t txOptions, ZW_TX_Callback_t pCallBack,
+                              const uint8_t app_session_id)
 {
   assert(dataLength <= BUF_SIZE_RX);
   dataLength = MIN(dataLength, BUF_SIZE_RX);
@@ -643,6 +635,7 @@ static uint8_t SendDataBridge(uint16_t srcNode, uint16_t destNode, uint8_t dataL
   SZwaveTransmitPackage FramePackage = {
     .uTransmitParams.SendDataBridge.FrameConfig.Handle = pCallBack,
     .uTransmitParams.SendDataBridge.FrameConfig.TransmitOptions = txOptions,
+    .uTransmitParams.SendDataBridge.FrameConfig.app_session_id = app_session_id,
     .uTransmitParams.SendDataBridge.FrameConfig.iFrameLength = dataLength,
     .uTransmitParams.SendDataBridge.DestNodeId = destNode,
     .uTransmitParams.SendDataBridge.SourceNodeId = srcNode,
@@ -656,7 +649,7 @@ static uint8_t SendDataBridge(uint16_t srcNode, uint16_t destNode, uint8_t dataL
 
 ZW_ADD_CMD(FUNC_ID_ZW_SEND_DATA_BRIDGE)
 {
-  /* HOST->ZW: srcNodeID | destNodeID | dataLength | pData[] | txOptions | pRoute[4] | funcID */
+  /* HOST->ZW: srcNodeID | destNodeID | dataLength | pData[] | txOptions | pRoute[4] | app_session_id */
   /* Devkit 6.0x pRoute[4] not used... Use [0,0,0,0] */
   uint8_t  offset = 0;
   node_id_t sourceNodeId;
@@ -664,10 +657,16 @@ ZW_ADD_CMD(FUNC_ID_ZW_SEND_DATA_BRIDGE)
   sourceNodeId = (node_id_t)GET_NODEID(&frame->payload[0], offset);
   destNodeId   = (node_id_t)GET_NODEID(&frame->payload[1 + offset], offset);
   uint8_t dataLength = frame->payload[offset + 2];
-  funcID_ComplHandler_ZW_SendData = frame->payload[offset + 3 + 1 + 4 + dataLength];
+  const uint8_t payload_len = frame_payload_len(frame);
+  if ((dataLength > BUF_SIZE_RX) || ((offset + dataLength + SEND_DATA_BRIDGE_FRAME_OVERHEAD) > payload_len)) {
+    assert(false);
+    DoRespond(0);
+    return;
+  }
+  const uint8_t app_session_id = frame->payload[offset + 3 + 1 + 4 + dataLength];  // Session identifier
   uint8_t tOptions = frame->payload[offset + 3 + dataLength];
   const uint8_t retVal = SendDataBridge(sourceNodeId, destNodeId, dataLength, &frame->payload[offset + 3], tOptions,
-                                        (funcID_ComplHandler_ZW_SendData != 0) ? &ZCB_ComplHandler_ZW_SendData_Bridge : NULL);
+                                        (app_session_id != 0) ? &ZCB_ComplHandler_ZW_SendData_Bridge : NULL, app_session_id);
 
   DoRespond(retVal);
 }
@@ -681,15 +680,16 @@ ZW_ADD_CMD(FUNC_ID_ZW_SEND_DATA_BRIDGE)
 static void /* RET  Nothing                     */
 ZCB_ComplHandler_ZW_SendDataMulti_Bridge(
   uint8_t txStatus,   /* IN   Transmit completion status  */
-  __attribute__((unused)) TX_STATUS_TYPE* extendedTxStatus)
+  TX_STATUS_TYPE* extendedTxStatus)
 {
-  compl_workbuf[0] = funcID_ComplHandler_ZW_SendDataMulti;
+  compl_workbuf[0] = extendedTxStatus ? extendedTxStatus->app_session_id : 0;
   compl_workbuf[1] = txStatus;
   Request(FUNC_ID_ZW_SEND_DATA_MULTI_BRIDGE, compl_workbuf, 2);
 }
 
 static uint8_t SendDataMultiBridge(node_id_t srcNode, uint8_t numOfNodes, uint8_t *pNodeIDList,
-                                   uint8_t dataLength, const uint8_t *pData, uint8_t txOptions, ZW_TX_Callback_t pCallBack)
+                                   uint8_t dataLength, const uint8_t *pData, uint8_t txOptions, ZW_TX_Callback_t pCallBack,
+                                   const uint8_t app_session_id)
 {
   // when nodeIdBaseType is 2 then we handle the FramePackage.uTransmitParams.SendDataMultiBridge.NodeMask as node list
   // when nodeIdBaseType is 1 then we handle the FramePackage.uTransmitParams.SendDataMultiBridge.NodeMask as node mask
@@ -700,6 +700,7 @@ static uint8_t SendDataMultiBridge(node_id_t srcNode, uint8_t numOfNodes, uint8_
   SZwaveTransmitPackage FramePackage = {
     .uTransmitParams.SendDataMultiBridge.FrameConfig.Handle = pCallBack,
     .uTransmitParams.SendDataMultiBridge.FrameConfig.TransmitOptions = txOptions,
+    .uTransmitParams.SendDataMultiBridge.FrameConfig.app_session_id = app_session_id,
     .uTransmitParams.SendDataMultiBridge.FrameConfig.iFrameLength = dataLength,
     .uTransmitParams.SendDataMultiBridge.SourceNodeId = srcNode,
     .eTransmitType = EZWAVETRANSMITTYPE_MULTI_BRIDGE
@@ -762,11 +763,12 @@ static uint8_t SendDataMultiBridge(node_id_t srcNode, uint8_t numOfNodes, uint8_
 
 ZW_ADD_CMD(FUNC_ID_ZW_SEND_DATA_MULTI_BRIDGE)
 {
-  /* HOST->ZW: srcNodeID | numberNodes | pNodeIDList[] | dataLength | pData[] | txOptions | funcId */
+  /* HOST->ZW: srcNodeID | numberNodes | pNodeIDList[] | dataLength | pData[] | txOptions | app_session_id */
   uint8_t   numberNodes;
   uint8_t   dataLength;
   uint8_t   txOptions;
   uint8_t   offset = 0;
+  const uint8_t payload_len = frame_payload_len(frame);
   node_id_t   srcNodeId = (node_id_t)GET_NODEID(&frame->payload[0], offset);
   uint8_t   nodeid_list_size;
 
@@ -780,13 +782,18 @@ ZW_ADD_CMD(FUNC_ID_ZW_SEND_DATA_MULTI_BRIDGE)
   }
 
   dataLength = frame->payload[offset + 2 + nodeid_list_size];
+  if ((offset + nodeid_list_size + dataLength + SEND_DATA_MULTI_BRIDGE_FRAME_OVERHEAD) > payload_len) {
+    assert(false);
+    DoRespond(0);
+    return;
+  }
   txOptions = frame->payload[offset + 2 + 1 + nodeid_list_size + dataLength];
-  funcID_ComplHandler_ZW_SendDataMulti = frame->payload[offset + 2 + 1 + 1 + nodeid_list_size + dataLength];
+  const uint8_t app_session_id = frame->payload[offset + 2 + 1 + 1 + nodeid_list_size + dataLength];  // Session identifier
   uint8_t *pDataBuf = &frame->payload[offset + 3 + nodeid_list_size];
 
   const uint8_t retVal = SendDataMultiBridge(srcNodeId, numberNodes, pNodeList,
                                              dataLength, pDataBuf, txOptions,
-                                             (funcID_ComplHandler_ZW_SendDataMulti != 0) ? &ZCB_ComplHandler_ZW_SendDataMulti_Bridge : NULL);
+                                             (app_session_id != 0) ? &ZCB_ComplHandler_ZW_SendDataMulti_Bridge : NULL, app_session_id);
 
   DoRespond(retVal);
 }
@@ -797,7 +804,7 @@ static void ZCB_ComplHandler_ZW_SendProtocolData(
   uint8_t txStatus,
   TX_STATUS_TYPE *txStatusReport)   /* IN   Transmit completion status  */
 {
-  GenerateTxStatusRequest(FUNC_ID_ZW_SEND_PROTOCOL_DATA, nlsEncryptionMetadata.session_id, txStatus, txStatusReport);
+  GenerateTxStatusRequest(FUNC_ID_ZW_SEND_PROTOCOL_DATA, txStatusReport ? txStatusReport->app_session_id : 0, txStatus, txStatusReport);
 }
 
 static uint8_t SendProtocolData(node_id_t destNodeID,
@@ -805,13 +812,15 @@ static uint8_t SendProtocolData(node_id_t destNodeID,
                                 const uint8_t * const pData,
                                 uint8_t protocolMetadataLength,
                                 const uint8_t * const protocolMetadata,
-                                ZW_TX_Callback_t pCallback)
+                                ZW_TX_Callback_t pCallback,
+                                const uint8_t app_session_id)
 {
   SZwaveTransmitPackage FramePackage = { 0 };
 
   FramePackage.eTransmitType = EZWAVETRANSMITTYPE_NLS;
   FramePackage.uTransmitParams.SendProtocolData.DestNodeID = destNodeID;
   FramePackage.uTransmitParams.SendProtocolData.FrameConfig.Handle = pCallback;
+  FramePackage.uTransmitParams.SendProtocolData.FrameConfig.app_session_id = app_session_id;
   FramePackage.uTransmitParams.SendProtocolData.FrameConfig.protocolMetadataLength = protocolMetadataLength;
   FramePackage.uTransmitParams.SendProtocolData.FrameConfig.FrameLength = dataLength;
 
@@ -835,6 +844,7 @@ ZW_ADD_CMD(FUNC_ID_ZW_SEND_PROTOCOL_DATA)
   /* HOST->ZW: srcNodeID | destNodeID | dataLength | pData[] | protocolMetadataLength | protocolMetadata[] | sessionID */
   uint8_t retVal = 0;
   uint8_t index = 1;
+  const uint8_t payload_len = frame_payload_len(frame);
   node_id_t destNodeID = (node_id_t) GET_NODEID(&frame->payload[0], index);
   uint8_t dataLength = frame->payload[index++];
 
@@ -846,12 +856,17 @@ ZW_ADD_CMD(FUNC_ID_ZW_SEND_PROTOCOL_DATA)
   index += dataLength;
   uint8_t protocolMetadataLength = frame->payload[index++];
   assert(protocolMetadataLength == PROTOCOL_METADATA_LENGTH);
+  /* Validate that protocolMetadata + sessionID fit in the frame */
+  if ((index + protocolMetadataLength + 1) > payload_len) {
+    DoRespond(retVal);
+    return;
+  }
   const uint8_t * const protocolMetadata = &frame->payload[index];
   index += protocolMetadataLength;
-  nlsEncryptionMetadata.session_id = frame->payload[index];
+  nlsEncryptionMetadata.app_session_id = frame->payload[index];  // Session identifier
 
   // Create transmit frame package
-  retVal = SendProtocolData(destNodeID, dataLength, pData, protocolMetadataLength, protocolMetadata, ZCB_ComplHandler_ZW_SendProtocolData);
+  retVal = SendProtocolData(destNodeID, dataLength, pData, protocolMetadataLength, protocolMetadata, ZCB_ComplHandler_ZW_SendProtocolData, nlsEncryptionMetadata.app_session_id);
   DoRespond(retVal);
 }
 
@@ -876,12 +891,12 @@ static bool ActivateProtocolCallback(uint8_t callbackId, uint8_t tx_status, TX_S
 ZW_ADD_CMD(FUNC_ID_ZW_REQUEST_PROTOCOL_CC_ENCRYPTION)
 {
   uint8_t idx = 0;
-  uint8_t session_id = 0;
+  uint8_t app_session_id = 0;
   volatile uint8_t rpcce_tx_status = TRANSMIT_COMPLETE_FAIL;
   TX_STATUS_TYPE extended_tx_status = { 0 };
 
-  session_id = frame->payload[idx++];
-  if (session_id != nlsEncryptionMetadata.session_id) {
+  app_session_id = frame->payload[idx++];  // Session identifier
+  if (app_session_id != nlsEncryptionMetadata.app_session_id) {
     return;
   }
   rpcce_tx_status = frame->payload[idx++];
@@ -2271,24 +2286,34 @@ static uint8_t SetPriorityRoute(uint16_t nodeID, const uint8_t *routeInfo)
 
 ZW_ADD_CMD(FUNC_ID_ZW_SET_PRIORITY_ROUTE)
 {
-  /* HOST->ZW: nodeID | repeater0 | repeater1 | repeater2 | repeater3 | routespeed */
-  /* ZW->HOST: nodeID | routeUpdated */
+  /* HOST->ZW: nodeID (8/16 bits) | repeater0 | repeater1 | repeater2 | repeater3 | routespeed */
+  /* ZW->HOST: nodeID (8/16 bits) | Command Status */
   uint8_t  offset = 0;
   node_id_t nodeId = (node_id_t)GET_NODEID(&frame->payload[0], offset);
+
+  /* According to spec: NodeID + 4 repeaters (4 bytes) + Route Speed (1 byte) = 5 bytes after NodeID */
+  const uint8_t expectedDataLength = 5; /* 4 repeaters + 1 route speed */
+  /* minFrameLength = node ID size (offset+1) + expected data (5 bytes) */
+  const uint8_t minFrameLength = (offset + 1) + expectedDataLength;
+
+  uint8_t commandStatus = 0;
+  if (minFrameLength <= frame_payload_len(frame)) {
+    /* Set Priority Route - routeInfo contains: repeater0, repeater1, repeater2, repeater3, routespeed */
+    commandStatus = SetPriorityRoute(nodeId, &frame->payload[offset + 1]);
+  } else {
+    /* Clear/Release Priority Route - insufficient data provided */
+    commandStatus = SetPriorityRoute(nodeId, NULL);
+  }
+
+  /* Response format per spec Table 4.165 (Set Priority Route Command - Response data frame) : nodeID (8/16 bits) | Command Status (8 bits) */
   if (SERIAL_API_SETUP_NODEID_BASE_TYPE_16_BIT == nodeIdBaseType) {
     compl_workbuf[0] = (uint8_t)(nodeId >> 8);     // MSB
     compl_workbuf[1] = (uint8_t)(nodeId & 0xFF);   // LSB
   } else {
     compl_workbuf[0] = (uint8_t)(nodeId & 0xFF);   // Legacy 8 bit nodeIDs
   }
-  if ((offset + 9) <= frame->len) {
-    /* Set Priority Route Devkit 6.6x */
-    compl_workbuf[offset + 1] = SetPriorityRoute(nodeId, &frame->payload[offset + 1]);
-  } else {
-    /* Clear/Release Golden Route - Devkit 6.6x+ */
-    compl_workbuf[offset + 1] = SetPriorityRoute(nodeId, NULL);
-  }
-  DoRespond_workbuf(2);
+  compl_workbuf[offset + 1] = commandStatus;
+  DoRespond_workbuf(offset + 2);
 }
 #endif
 
@@ -2821,7 +2846,7 @@ static void zw_set_routing_max_handler(const comm_interface_frame_ptr frame)
     .uCommandParams.SetRoutingMax.value = frame->payload[0]
   };
   QueueNotifyingSendToBack(ZAF_getZwCommandQueue(), (uint8_t *)&Command, 0);
-  DoRespond(1);
+  DoRespond(SAPI_COMMAND_STATUS_SUCCESS);
 }
 
 ZW_ADD_CMD(FUNC_ID_ZW_SET_ROUTING_MAX)
@@ -2853,7 +2878,7 @@ ZW_ADD_CMD(FUNC_ID_SERIAL_API_EXT)
       break;
       default:
       {
-        DoRespond(0);
+        DoRespond(SAPI_COMMAND_STATUS_FAILURE);
       }
       break;
     }
@@ -2956,7 +2981,7 @@ ZW_ADD_CMD(FUNC_ID_ZW_SET_LISTEN_BEFORE_TALK_THRESHOLD)
 #endif
 
 #ifdef SUPPORT_ZW_NETWORK_MANAGEMENT_SET_MAX_INCLUSION_REQUEST_INTERVALS
-static bool SetMaxInclReqIntervals(uint32_t maxInclReqIntervals)
+static bool SetMaxInclReqIntervals(uint8_t maxInclReqIntervals)
 {
   SZwaveCommandPackage setMaxInclusionRequestIntervals = {
     .eCommandType = EZWAVECOMMANDTYPE_ZW_SET_MAX_INCL_REQ_INTERVALS,

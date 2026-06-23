@@ -66,6 +66,17 @@ class RAILAdapter(object):
     "Access": "BaseAddrCfgDefault"
   }
 
+# Jump table for WiFi. Each entry jumps to the next one.
+  WIFI_JUMP_TABLE = [
+    "_everest_WLAN_common",
+    "_everest_Rx_Gain_LUT_2p4GHz_HP",
+    "_everest_Rx_Gain_LUT_2p4GHz_LP",
+    "_everest_Rx_Gain_LUT_5GHz_HP",
+    "_everest_Rx_Gain_LUT_5GHz_LP",
+    "_everest_TX_PP_LUT",
+    "_everest_WLAN_OFDM",
+  ]
+
   import os
   current_dir =  os.path.dirname(os.path.abspath(__file__))
 

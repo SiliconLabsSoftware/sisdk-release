@@ -107,7 +107,7 @@ static const LDMA_TransferCfg_t ldmaRxTransfer = LDMA_TRANSFER_CFG_PERIPHERAL(
 static LDMA_Descriptor_t ldmaTxDesc = LDMA_DESCRIPTOR_SINGLE_M2P_BYTE(
   txBuffer,
   &(BTL_SPI_PERIPHERAL->TXDATA),
-  0
+  1
   );
 
 static const LDMA_Descriptor_t ldmaRxDesc[4] = {

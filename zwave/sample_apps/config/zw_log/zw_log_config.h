@@ -70,6 +70,11 @@
 // <i> Default: 1
 #define ZW_LOG_ENABLE_APP  1
 
+// <q ZW_LOG_ENABLE_APP_JAMMING> Application Jamming Detection
+// <i> If enabled, log messages related to jamming detection by the application will be displayed
+// <i> Default: 0
+#define ZW_LOG_ENABLE_APP_JAMMING  0
+
 // <q ZW_LOG_ENABLE_HW> Hardware
 // <i> If enabled, log messages from the platform hardware layer will be displayed
 // <i> Default: 0

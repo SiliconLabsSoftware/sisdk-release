@@ -28,15 +28,15 @@
 void sli_zigbee_af_memory_usage_print_current_data(sl_cli_command_arg_t *arguments)
 {
   (void)arguments;
-  sl_zigbee_af_core_println("Total heap size: %zu bytes", sl_zigbee_get_memory_usage_data(TOTAL_HEAP_SIZE));
-  sl_zigbee_af_core_println("Current used heap size: %zu bytes", sl_zigbee_get_memory_usage_data(CURRENT_USED_HEAP_SIZE));
-  sl_zigbee_af_core_println("Current heap size high watermark: %zu bytes", sl_zigbee_get_memory_usage_data(CURRENT_HEAP_HIGH_WATERMARK));
+  sl_zigbee_af_cli_println("Total heap size: %zu bytes", sl_zigbee_get_memory_usage_data(TOTAL_HEAP_SIZE));
+  sl_zigbee_af_cli_println("Current used heap size: %zu bytes", sl_zigbee_get_memory_usage_data(CURRENT_USED_HEAP_SIZE));
+  sl_zigbee_af_cli_println("Current heap size high watermark: %zu bytes", sl_zigbee_get_memory_usage_data(CURRENT_HEAP_HIGH_WATERMARK));
 }
 
 void sli_zigbee_af_memory_usage_print_init_data(sl_cli_command_arg_t *arguments)
 {
   (void)arguments;
-  sl_zigbee_af_core_println("Total heap size: %zu bytes", sl_zigbee_get_memory_usage_data(TOTAL_HEAP_SIZE));
-  sl_zigbee_af_core_println("Init used heap size: %zu bytes", sl_zigbee_get_memory_usage_data(INIT_USED_HEAP_SIZE));
-  sl_zigbee_af_core_println("Init heap size high watermark: %zu bytes", sl_zigbee_get_memory_usage_data(INIT_HEAP_HIGH_WATERMARK));
+  sl_zigbee_af_cli_println("Total heap size: %zu bytes", sl_zigbee_get_memory_usage_data(TOTAL_HEAP_SIZE));
+  sl_zigbee_af_cli_println("Init used heap size: %zu bytes", sl_zigbee_get_memory_usage_data(INIT_USED_HEAP_SIZE));
+  sl_zigbee_af_cli_println("Init heap size high watermark: %zu bytes", sl_zigbee_get_memory_usage_data(INIT_HEAP_HIGH_WATERMARK));
 }

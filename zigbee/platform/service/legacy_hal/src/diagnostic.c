@@ -24,15 +24,15 @@
 #include "sl_component_catalog.h"
 #endif // SL_COMPONENT_CATALOG_PRESENT
 
-#ifdef SL_CATALOG_EMLIB_RMU_PRESENT
+#if defined(SL_CATALOG_HAL_EMU_PRESENT)
+#include "sl_hal_emu.h"
+#elif defined(SL_CATALOG_EMLIB_RMU_PRESENT)
 #include "em_rmu.h"
 #define sl_hal_emu_get_reset_cause   RMU_ResetCauseGet
 #define sl_hal_emu_clear_reset_cause RMU_ResetCauseClear
-#endif // SL_CATALOG_EMLIB_RMU_PRESENT
-
-#ifdef SL_CATALOG_HAL_EMU_PRESENT
-#include "sl_hal_emu.h"
-#endif // SL_CATALOG_HAL_EMU_PRESENT
+#else
+#error "No reset-cause backend available"
+#endif
 
 #if defined(SL_CATALOG_IOSTREAM_UART_COMMON_PRESENT)
 #include "sl_iostream.h"

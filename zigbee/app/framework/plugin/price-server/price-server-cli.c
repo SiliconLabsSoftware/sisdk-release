@@ -107,7 +107,7 @@ void sli_zigbee_af_price_server_cli_valid(sl_cli_command_arg_t *arguments)
                                                    index,
                                                    NULL,
                                                    NULL)) {
-      sl_zigbee_af_price_cluster_println("tariff entry %d not present", index);
+      sl_zigbee_af_cli_println("tariff entry %d not present", index);
     }
 
     return;
@@ -118,7 +118,7 @@ void sli_zigbee_af_price_server_cli_valid(sl_cli_command_arg_t *arguments)
                                                 (command_first_character == 'v'
                                                  ? &price
                                                  : NULL))) {
-    sl_zigbee_af_price_cluster_println("price entry %d not present", index);
+    sl_zigbee_af_cli_println("price entry %d not present", index);
   }
 }
 
@@ -128,7 +128,7 @@ void sli_zigbee_af_price_server_cli_get(sl_cli_command_arg_t *arguments)
   uint8_t endpoint = sl_cli_get_argument_uint8(arguments, 0);
   uint8_t index = sl_cli_get_argument_uint8(arguments, 1);
   if (!sl_zigbee_af_price_get_price_table_entry(endpoint, index, &price)) {
-    sl_zigbee_af_price_cluster_println("price entry %d not present", index);
+    sl_zigbee_af_cli_println("price entry %d not present", index);
   }
 }
 

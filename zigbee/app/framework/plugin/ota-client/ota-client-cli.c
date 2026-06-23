@@ -68,8 +68,8 @@
  */
 static void otaStartStopClientCommand(bool starting)
 {
-  sl_zigbee_af_core_println("%s" "ing OTA client state machine",
-                            starting ? "start" : "stopp");
+  sl_zigbee_af_cli_println("%s" "ing OTA client state machine",
+                           starting ? "start" : "stopp");
   if (starting) {
     sl_zigbee_af_ota_client_start_cb();
   } else {
@@ -94,7 +94,7 @@ void otaCliBootload(sl_cli_command_arg_t *arguments)
   uint8_t index = sl_cli_get_argument_uint8(arguments, 0);
   sl_zigbee_af_ota_image_id_t id = sli_zigbee_af_ota_find_image_id_by_index(index);
   if (!sl_zigbee_af_is_ota_image_id_valid(&id)) {
-    otaPrintln("Error: No image at index %d", index);
+    sl_zigbee_af_cli_println("Error: No image at index %d", index);
     return;
   }
   sl_zigbee_af_ota_client_bootload_cb(&id);
@@ -106,7 +106,7 @@ void otaCliVerify(sl_cli_command_arg_t *arguments)
   uint8_t index = sl_cli_get_argument_uint8(arguments, 0);
   sl_zigbee_af_ota_image_id_t id = sli_zigbee_af_ota_find_image_id_by_index(index);
   if (!sl_zigbee_af_is_ota_image_id_valid(&id)) {
-    otaPrintln("Error: No image at index %d", index);
+    sl_zigbee_af_cli_println("Error: No image at index %d", index);
     return;
   }
   sli_zigbee_af_ota_image_signature_verify(0,       // max number of hash calculations
@@ -114,7 +114,7 @@ void otaCliVerify(sl_cli_command_arg_t *arguments)
                                            true); // new verification?
 #else
   UNUSED_VAR(arguments);
-  otaPrintln("Not supported.");
+  sl_zigbee_af_cli_println("Not supported.");
 #endif
 }
 
@@ -124,39 +124,39 @@ void otaPrintClientInfo(sl_cli_command_arg_t *arguments)
   sl_zigbee_af_ota_image_id_t myId;
   uint16_t hardwareVersion;
   sl_zigbee_af_ota_client_version_info_cb(&myId, &hardwareVersion);
-  otaPrintln("Client image query info");
-  otaPrintln("Manuf ID:         0x%04X", myId.manufacturerId);
-  otaPrintln("Image Type ID:    0x%04X", myId.imageTypeId);
-  otaPrintln("Current Version:  0x%08X", myId.firmwareVersion);
+  sl_zigbee_af_cli_println("Client image query info");
+  sl_zigbee_af_cli_println("Manuf ID:         0x%04X", myId.manufacturerId);
+  sl_zigbee_af_cli_println("Image Type ID:    0x%04X", myId.imageTypeId);
+  sl_zigbee_af_cli_println("Current Version:  0x%08X", myId.firmwareVersion);
   sl_zigbee_af_ota_bootload_cluster_print("Hardware Version: ");
   if (hardwareVersion != SL_ZIGBEE_AF_INVALID_HARDWARE_VERSION) {
-    otaPrintln("0x%04X", hardwareVersion);
+    sl_zigbee_af_cli_println("0x%04X", hardwareVersion);
   } else {
-    otaPrintln("NA");
+    sl_zigbee_af_cli_println("NA");
   }
-  sl_zigbee_af_core_flush();
+  sl_zigbee_af_cli_flush();
 
-  otaPrintln("Query Delay ms:            %ld", (uint32_t)SL_ZIGBEE_AF_OTA_QUERY_DELAY_MS);
-  sl_zigbee_af_core_flush();
-  otaPrintln("Server Discovery Delay ms: %ld", (uint32_t)SL_ZIGBEE_AF_OTA_SERVER_DISCOVERY_DELAY_MS);
-  otaPrintln("Download Delay ms:         %ld", (uint32_t)SL_ZIGBEE_AF_PLUGIN_OTA_CLIENT_DOWNLOAD_DELAY_MS);
-  otaPrintln("Run Upgrade Delay ms:      %ld", (uint32_t)SL_ZIGBEE_AF_RUN_UPGRADE_REQUEST_DELAY_MS);
-  sl_zigbee_af_core_flush();
-  otaPrintln("Verify Delay ms:           %ld", (uint32_t)SL_ZIGBEE_AF_PLUGIN_OTA_CLIENT_VERIFY_DELAY_MS);
-  otaPrintln("Download Error Threshold:  %d", SL_ZIGBEE_AF_PLUGIN_OTA_CLIENT_DOWNLOAD_ERROR_THRESHOLD);
-  otaPrintln("Upgrade Wait Threshold:    %d", SL_ZIGBEE_AF_PLUGIN_OTA_CLIENT_UPGRADE_WAIT_THRESHOLD);
-  sl_zigbee_af_core_flush();
+  sl_zigbee_af_cli_println("Query Delay ms:            %ld", (uint32_t)SL_ZIGBEE_AF_OTA_QUERY_DELAY_MS);
+  sl_zigbee_af_cli_flush();
+  sl_zigbee_af_cli_println("Server Discovery Delay ms: %ld", (uint32_t)SL_ZIGBEE_AF_OTA_SERVER_DISCOVERY_DELAY_MS);
+  sl_zigbee_af_cli_println("Download Delay ms:         %ld", (uint32_t)SL_ZIGBEE_AF_PLUGIN_OTA_CLIENT_DOWNLOAD_DELAY_MS);
+  sl_zigbee_af_cli_println("Run Upgrade Delay ms:      %ld", (uint32_t)SL_ZIGBEE_AF_RUN_UPGRADE_REQUEST_DELAY_MS);
+  sl_zigbee_af_cli_flush();
+  sl_zigbee_af_cli_println("Verify Delay ms:           %ld", (uint32_t)SL_ZIGBEE_AF_PLUGIN_OTA_CLIENT_VERIFY_DELAY_MS);
+  sl_zigbee_af_cli_println("Download Error Threshold:  %d", SL_ZIGBEE_AF_PLUGIN_OTA_CLIENT_DOWNLOAD_ERROR_THRESHOLD);
+  sl_zigbee_af_cli_println("Upgrade Wait Threshold:    %d", SL_ZIGBEE_AF_PLUGIN_OTA_CLIENT_UPGRADE_WAIT_THRESHOLD);
+  sl_zigbee_af_cli_flush();
 
 #if defined(USE_PAGE_REQUEST)
-  otaPrintln("Use Page Request: %s", sli_zigbee_af_using_page_request() ? "yes" : "no");
-  otaPrintln("Page Request Size: %d bytes",
-             SL_ZIGBEE_AF_PLUGIN_OTA_CLIENT_PAGE_REQUEST_SIZE);
-  otaPrintln("Page Request Timeout: %d sec.",
-             SL_ZIGBEE_AF_PLUGIN_OTA_CLIENT_PAGE_REQUEST_TIMEOUT_SECONDS);
+  sl_zigbee_af_cli_println("Use Page Request: %s", sli_zigbee_af_using_page_request() ? "yes" : "no");
+  sl_zigbee_af_cli_println("Page Request Size: %d bytes",
+                           SL_ZIGBEE_AF_PLUGIN_OTA_CLIENT_PAGE_REQUEST_SIZE);
+  sl_zigbee_af_cli_println("Page Request Timeout: %d sec.",
+                           SL_ZIGBEE_AF_PLUGIN_OTA_CLIENT_PAGE_REQUEST_TIMEOUT_SECONDS);
 #endif
 
 #if defined(SIGNATURE_VERIFICATION_SUPPORT)
-  otaPrintln("");
+  sl_zigbee_af_cli_println("");
   sli_zigbee_af_ota_client_signature_verify_print_signers();
 #endif
 }
@@ -185,13 +185,13 @@ void otaSendUpgradeRequest(sl_cli_command_arg_t *arguments)
 void sli_zigbee_af_ota_client_disable_downgrades(sl_cli_command_arg_t *arguments)
 {
   UNUSED_VAR(arguments);
-  otaPrintln("OTA Downgrades: Disabled");
+  sl_zigbee_af_cli_println("OTA Downgrades: Disabled");
   sl_zigbee_af_set_disable_ota_downgrades(true);
 }
 
 void sli_zigbee_af_ota_client_enable_downgrades(sl_cli_command_arg_t *arguments)
 {
   UNUSED_VAR(arguments);
-  otaPrintln("OTA Downgrades: Enabled");
+  sl_zigbee_af_cli_println("OTA Downgrades: Enabled");
   sl_zigbee_af_set_disable_ota_downgrades(false);
 }

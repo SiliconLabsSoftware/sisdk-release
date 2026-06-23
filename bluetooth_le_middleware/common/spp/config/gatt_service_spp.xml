@@ -1,0 +1,27 @@
+<gatt>
+    <!--Serial Port Profile (SPP)-->
+    <service advertise="true" id="spp" name="Serial Port Profile (SPP)" requirement="mandatory" sourceId="" type="primary" uuid="8b92fe46-327f-479f-85a8-51e7cc9ea1a4">
+        <informativeText>Service used for the Serial Port Profile (SPP) communication</informativeText>
+        <!--Peripheral TX-->
+        <characteristic id="spp_tx" const="false" name="Peripheral TX" sourceId="" uuid="8b92fe47-327f-479f-85a8-51e7cc9ea1a4">
+            <informativeText>SPP Peripheral transmission characteristic</informativeText>
+            <value length="255" type="hex" variable_length="true">00</value>
+            <properties>
+                <notify authenticated="false" bonded="false" encrypted="false"/>
+                <write authenticated="false" bonded="false" encrypted="false"/>
+                <write_no_response authenticated="false" bonded="false" encrypted="false"/>
+            </properties>
+        </characteristic>
+
+        <!--Peripheral RX-->
+        <characteristic id="spp_rx" const="false" name="Peripheral RX" sourceId="" uuid="8b92fe48-327f-479f-85a8-51e7cc9ea1a4">
+            <informativeText>SPP Peripheral reception characteristic</informativeText>
+            <value length="255" type="hex" variable_length="true">00</value>
+            <properties>
+                <notify authenticated="false" bonded="false" encrypted="false"/>
+                <indicate authenticated="false" bonded="false" encrypted="false"/>
+                <write_no_response authenticated="false" bonded="false" encrypted="false"/>
+            </properties>
+        </characteristic>
+    </service>
+</gatt>

@@ -34,7 +34,7 @@ import textwrap
 from datetime import datetime as dt
 from ap_logger import getLogger, log, setLogLevel, LEVELS, logLevelName
 from ap_core import AccessPoint
-from ap_config import IOP_TEST, BLOCKING_WAIT_TIMEOUT
+from ap_config import IOP_TEST, BLOCKING_WAIT_TIMEOUT, ITP_MAX_PARALLEL_CONNECTIONS
 from ap_constants import (
     LED_PATTERN_LENGTH,
     LED_DEFAULT_GAMUT,
@@ -584,7 +584,7 @@ class CliProcessor(ScriptMixin, cmd.Cmd):
             description=self.do_led.__doc__,
             epilog="""
         Notes: Almost all of the optional led control parameters are "sticky", meaning that the last values are
-               preserved by the AP internally and will be re-used next time, if the given parameter is omitted in the
+               preserved by the AP internally and will be reused next time, if the given parameter is omitted in the
                argument list. This doesn't apply on the delay, time and absolute parameters, though.""",
         )
         group_led_delay_absolute = parser_led.add_mutually_exclusive_group()
@@ -1236,6 +1236,18 @@ class CliProcessor(ScriptMixin, cmd.Cmd):
             metavar="u7",
             help="The highest ESL group id (inclusive) for tags to enroll at start; ignored for stop.",
         )
+        parser_itp.add_argument(
+            "--parallel_connections",
+            "-p",
+            type=int,
+            default=None,
+            metavar="N",
+            help=(
+                "Cap on parallel BLE connections (1-%(max)d), or 0 to clear a "
+                "previously set/discovered limit; if omitted, any existing limit is kept."
+                % {"max": ITP_MAX_PARALLEL_CONNECTIONS}
+            ),
+        )
 
     def do_image_throughput(self, arg):
         """
@@ -1247,6 +1259,7 @@ class CliProcessor(ScriptMixin, cmd.Cmd):
         """
         max_count = arg.max_count if arg.action == "start" else None
         max_group = arg.max_group if arg.action == "start" else None
+        parallel_conn = arg.parallel_connections if arg.action == "start" else None
         if max_count is not None and max_count < 1:
             self.log.error(
                 "Device count must be in the range 1-%d!",
@@ -1259,8 +1272,20 @@ class CliProcessor(ScriptMixin, cmd.Cmd):
                 PA_SUBEVENT_MAX - 1,
             )
             return
+        if (
+            parallel_conn is not None
+            and not (0 <= parallel_conn <= ITP_MAX_PARALLEL_CONNECTIONS)
+        ):
+            self.log.error(
+                "Parallel connections must be 0 or in the range 1-%d!",
+                ITP_MAX_PARALLEL_CONNECTIONS,
+            )
+            return
         self.ap.ap_image_throughput(
-            arg.action == "start", max_tag_count=max_count, max_group_id=max_group
+            arg.action == "start",
+            max_tag_count=max_count,
+            max_group_id=max_group,
+            parallel_connections=parallel_conn,
         )
 
     def arg_network(self):
@@ -2010,7 +2035,7 @@ class CliProcessor(ScriptMixin, cmd.Cmd):
             ),
             description=self.do_update_complete.__doc__,
             epilog="""
-        Notes: This command used only for testing purposes in IOP test mode. 
+        Notes: This command used only for testing purposes in IOP test mode.
                If the group is specified along with the keyword `all`, then only devices in the group will be affected.
                """,
         )
@@ -2047,7 +2072,7 @@ class CliProcessor(ScriptMixin, cmd.Cmd):
             description=self.do_verbosity.__doc__,
             epilog="""
         Notes:   To check current verbosity level you can issue the command without argument.
-                 NOTSET can be used to display debugging messages not only for AP code, but also for all python modules that may utilze logging.
+                 NOTSET can be used to display debugging messages not only for AP code, but also for all python modules that may utilize logging.
         """,
         )
         parser_verbosity.add_argument(

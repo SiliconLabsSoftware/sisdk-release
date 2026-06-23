@@ -19,18 +19,18 @@ define:
 - name: ZAF_VERSION_MAJOR
   value: 11
 - name: ZAF_VERSION_MINOR
-  value: 0
+  value: 1
 - name: ZAF_VERSION_PATCH
-  value: 2
+  value: 0
 - name: ZAF_BUILD_NO
   value: 0xABCD
 # SDK
 - name: SDK_VERSION_MAJOR
   value: 8
 - name: SDK_VERSION_MINOR
-  value: 0
+  value: 1
 - name: SDK_VERSION_PATCH
-  value: 2
+  value: 0
 
 include:
 - path: "ZAF/ApplicationUtilities/"

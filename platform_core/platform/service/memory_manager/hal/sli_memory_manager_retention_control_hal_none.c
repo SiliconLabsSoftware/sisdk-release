@@ -30,12 +30,15 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "sli_memory_manager.h"
 #include "sli_memory_manager_retention_control.h"
 #include "sli_code_classification.h"
 #include "em_device.h"
 #include "sl_assert.h"
 
+#if !defined(DMEM_MEM_BASE)
 #define DMEM_MEM_BASE  SRAM_BASE
+#endif
 
 #if !defined(DMEM_NUM_BANKS)
 // On XG21 DMEM_NUM_BANKS is named DMEM_NUM_BANK
@@ -45,26 +48,28 @@
 #elif defined(DMEM0_NUM_BANKS)
 #define DMEM_NUM_BANKS DMEM0_NUM_BANKS
 #define DMEM_BANK0_SIZE DMEM0_BANK0_SIZE
+#elif defined(HOSTDMEM_NUM_BANKS)
+#define DMEM_NUM_BANKS HOSTDMEM_NUM_BANKS
+#define DMEM_BANK0_SIZE HOSTDMEM_BANK0_SIZE
 #endif
 #endif
 
-
-static uint32_t memory_manager_dmem_get_smallest_bank_id(void *addr);
-static uint32_t memory_manager_dmem_smallest_to_real_bank_id(uint32_t small_bank_id);
+static uint32_t memory_manager_dmem_get_bank_id(void *addr);
+static uintptr_t memory_manager_dmem_get_bank_start_address_by_id(uint32_t bank_id);
 static void memory_manager_dmem_enable_retention(uint32_t bank_id);
 static void memory_manager_dmem_disable_retention(uint32_t bank_id);
 static sli_bank_coverage_t memory_manager_dmem_get_block_bank_coverage(void *start_addr,
                                                                        uint32_t block_size);
 
 // Banks allocation counters for DMEM.
-static uint16_t dmem_banks_counter[DMEM_NUM_BANKS] SL_FAST_DATA = { 0 };
+static uint16_t dmem_banks_counter[DMEM_NUM_BANKS] SLI_MEMORY_MANAGER_GLOBAL_VARIABLE_ATTRIBUTES = { 0 };
 
 // DMEM RAM type.
-static sli_retention_control_t retention_control_dmem SL_FAST_DATA = {
-  .smallest_bank_size = DMEM_BANK0_SIZE,
+static sli_retention_control_t retention_control_dmem SLI_MEMORY_MANAGER_GLOBAL_VARIABLE_ATTRIBUTES = {
+  .bank_size = DMEM_BANK0_SIZE,
   .banks_counter = dmem_banks_counter,
-  .get_smallest_bank_id = memory_manager_dmem_get_smallest_bank_id,
-  .smallest_to_real_bank_id = memory_manager_dmem_smallest_to_real_bank_id,
+  .get_bank_id = memory_manager_dmem_get_bank_id,
+  .get_bank_start_address_by_id = memory_manager_dmem_get_bank_start_address_by_id,
   .enable_retention = memory_manager_dmem_enable_retention,
   .disable_retention = memory_manager_dmem_disable_retention,
   .get_block_bank_coverage = memory_manager_dmem_get_block_bank_coverage,
@@ -75,9 +80,17 @@ static sli_retention_control_t retention_control_dmem SL_FAST_DATA = {
  ******************************************************************************/
 
 /***************************************************************************//**
+ * Initialize Memory Manager related hardware.
+ ******************************************************************************/
+void sli_memory_manager_hal_init(void)
+{
+  // No hardware initialization needed.
+}
+
+/***************************************************************************//**
  * Initialize Memory Manager HAL for the given heap.
  ******************************************************************************/
-void sli_memory_manager_hal_init(sl_memory_heap_t *heap)
+void sli_memory_manager_hal_heap_init(sl_memory_heap_t *heap)
 {
   heap->retention_control = &retention_control_dmem;
 }
@@ -96,12 +109,23 @@ uint32_t sli_memory_manager_get_bank_id_by_addr(const sl_memory_heap_t *heap,
 
   // Get the bank ID as if all banks were of the same size being the smallest
   // bank size for the given heap.
-  bank_id = retention_control->get_smallest_bank_id(addr);
-
-  // Convert the bank ID into the real ID as exposed in the registers.
-  bank_id = retention_control->smallest_to_real_bank_id(bank_id);
+  bank_id = retention_control->get_bank_id(addr);
 
   return bank_id;
+}
+
+/***************************************************************************//**
+ * Gets the address of the start of a RAM bank.
+ ******************************************************************************/
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_MEMORY_MANAGER, SL_CODE_CLASS_TIME_CRITICAL)
+uintptr_t sli_memory_manager_get_bank_start_address_by_id(const sl_memory_heap_t *heap,
+                                                          uint32_t bank_id)
+{
+  sli_retention_control_t *retention_control =
+    (sli_retention_control_t *)heap->retention_control;
+
+  EFM_ASSERT(retention_control != NULL);
+  return retention_control->get_bank_start_address_by_id(bank_id);
 }
 
 /***************************************************************************//**
@@ -115,7 +139,6 @@ void sli_memory_manager_increment_bank_counter(sl_memory_heap_t *heap,
   EFM_ASSERT(start_id <= end_id);
   sli_retention_control_t *retention_control = (sli_retention_control_t *)heap->retention_control;
 
-  // Update banks' counter and retention.
   for (uint32_t id = start_id; id <= end_id; id++) {
     retention_control->banks_counter[id]++;
     retention_control->enable_retention(id);
@@ -133,7 +156,6 @@ void sli_memory_manager_decrement_bank_counter(sl_memory_heap_t *heap,
   EFM_ASSERT(start_id <= end_id);
   sli_retention_control_t *retention_control = (sli_retention_control_t *)heap->retention_control;
 
-  // Update banks' counter and retention.
   for (uint32_t id = start_id; id <= end_id; id++) {
     retention_control->banks_counter[id]--;
     if (!retention_control->banks_counter[id]) {
@@ -142,36 +164,60 @@ void sli_memory_manager_decrement_bank_counter(sl_memory_heap_t *heap,
   }
 }
 
+/***************************************************************************//**
+ * Adds size_bytes to retained_size (retention statistics). No-op when disabled.
+ ******************************************************************************/
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_MEMORY_MANAGER, SL_CODE_CLASS_TIME_CRITICAL)
+void sli_memory_manager_retention_add_size(sl_memory_heap_t *heap,
+                                           size_t size_bytes)
+{
+  (void)heap;
+  (void)size_bytes;
+}
+
+/***************************************************************************//**
+ * Subtracts size_bytes from retained_size (retention statistics). No-op when disabled.
+ ******************************************************************************/
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_MEMORY_MANAGER, SL_CODE_CLASS_TIME_CRITICAL)
+void sli_memory_manager_retention_subtract_size(sl_memory_heap_t *heap,
+                                                size_t size_bytes)
+{
+  (void)heap;
+  (void)size_bytes;
+}
+
+/***************************************************************************//**
+ * Updates the retained high watermark from the current retained_size. No-op when disabled.
+ ******************************************************************************/
+void sli_memory_manager_retention_update_high_watermark(const sl_memory_heap_t *heap)
+{
+  (void)heap;
+}
+
 /*******************************************************************************
  **************************   LOCAL FUNCTIONS   *******************************
  ******************************************************************************/
 
 /***************************************************************************//**
- * Get DMEM bank ID as if all banks were of the same size (Using the smallest
- * bank size).
+ * Get DMEM bank ID.
  *
  * @param[in]  addr  Address.
  *
- * @return  DMEM smallest bank ID.
+ * @return  DMEM bank ID.
  ******************************************************************************/
 SL_CODE_CLASSIFY(SL_CODE_COMPONENT_MEMORY_MANAGER, SL_CODE_CLASS_TIME_CRITICAL)
-static uint32_t memory_manager_dmem_get_smallest_bank_id(void *addr)
+static uint32_t memory_manager_dmem_get_bank_id(void *addr)
 {
   return ((size_t)((uint8_t *)addr - DMEM_MEM_BASE) / DMEM_BANK0_SIZE);
 }
 
 /***************************************************************************//**
- * Convert a smallest bank ID (As if all banks had the smallest bank size)
- * to a real bank ID for DMEM.
- *
- * @param[in]  small_bank_id  Smallest bank ID.
- *
- * @return  DMEM real bank ID.
+ * Get DMEM bank start address from bank ID.
  ******************************************************************************/
 SL_CODE_CLASSIFY(SL_CODE_COMPONENT_MEMORY_MANAGER, SL_CODE_CLASS_TIME_CRITICAL)
-static uint32_t memory_manager_dmem_smallest_to_real_bank_id(uint32_t small_bank_id)
+static uintptr_t memory_manager_dmem_get_bank_start_address_by_id(uint32_t bank_id)
 {
-  return small_bank_id;
+  return (uintptr_t)DMEM_MEM_BASE + (uintptr_t)bank_id * (uintptr_t)DMEM_BANK0_SIZE;
 }
 
 /***************************************************************************//**
@@ -201,7 +247,7 @@ static void memory_manager_dmem_disable_retention(uint32_t bank_id)
  * The block may span multiple banks.
  *
  * @param[in]  start_addr   Pointer to the start address of the block.
- * @param[in]  pool_handle  Pointer to the pool handle.
+ * @param[in]  block_size  Size of the block.
  *
  * @return     The bank coverage of the block.
  ******************************************************************************/
@@ -212,8 +258,8 @@ static sli_bank_coverage_t memory_manager_dmem_get_block_bank_coverage(void *sta
   sli_bank_coverage_t block_coverage;
 
   // Assumes consistent bank sizes.
-  block_coverage.start = ((uintptr_t)start_addr - (uintptr_t)SRAM_BASE) / retention_control_dmem.smallest_bank_size;
-  block_coverage.end = (((uintptr_t)start_addr + block_size - 1) - (uintptr_t)SRAM_BASE) / retention_control_dmem.smallest_bank_size;
+  block_coverage.start = ((uintptr_t)start_addr - (uintptr_t)DMEM_MEM_BASE) / DMEM_BANK0_SIZE;
+  block_coverage.end = (((uintptr_t)start_addr + block_size - 1) - (uintptr_t)DMEM_MEM_BASE) / DMEM_BANK0_SIZE;
 
   return block_coverage;
 }

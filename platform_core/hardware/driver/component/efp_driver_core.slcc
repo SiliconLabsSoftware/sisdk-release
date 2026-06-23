@@ -20,6 +20,7 @@ requires:
 - name: clock_manager_runtime
 - name: sl_core
 - name: gpio
+- name: gpiointerrupt
 - name: i2cspm_core
 - name: status
 - name: se_manager
@@ -36,6 +37,7 @@ template_contribution:
     event: driver_init
     include: sl_efp_instances.h
     handler: sl_efp_init_instances
+  priority: 100
 documentation:
   docset: gecko-platform
   document: platform-hardware-driver/sl-efp

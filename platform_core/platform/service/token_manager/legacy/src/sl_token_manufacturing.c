@@ -419,7 +419,9 @@ static void halFlashWriteSE(uint32_t realAddress, void *data, uint32_t len)
   || (_SILICON_LABS_32B_SERIES_2_CONFIG == 7)    \
   || (_SILICON_LABS_32B_SERIES_2_CONFIG == 8)    \
   || (_SILICON_LABS_32B_SERIES_2_CONFIG == 9)    \
-  || (_SILICON_LABS_32B_SERIES_2_CONFIG == 13)
+  || (_SILICON_LABS_32B_SERIES_2_CONFIG == 11)   \
+  || (_SILICON_LABS_32B_SERIES_2_CONFIG == 13) \
+  || (_SILICON_LABS_32B_SERIES_2_CONFIG == 14)
     #define FLASHWRITE(realAddress, data, len) \
   (hal_flash_write((realAddress), (data), (len)))
   #else

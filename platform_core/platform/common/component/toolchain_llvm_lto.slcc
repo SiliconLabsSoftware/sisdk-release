@@ -1,23 +1,40 @@
 id: toolchain_llvm_lto
 label: Enable Link time optimization (using LLVM)
 package: platform_core
-description: Toolchain profile for building with LLVM+LTO instead of GCC
+description: >
+  This component enables Link time optimization using LLVM.
+  Please refer to the release notes of individual
+  protocols to know which supports LTO.
 category: Platform|Toolchain
-quality: experimental
-provides:
-- name: toolchain_llvm_lto
-requires:
-- name: toolchain_llvm
-- name: toolchain_lto
-conflicts:
-- name: device_riscv
-- name: device_host
-define:
-- name: SLI_BUILT_WITH_LLVM_LTO
-template_contribution:
-- name: compiler_is_llvm_lto
-  value: true
+quality: production
 metadata:
   sbom:
     license: Zlib
+provides:
+- name: toolchain_llvm_lto
+- name: toolchain_lto
+  allow_multiple: true
+requires:
+- name: toolchain_llvm
+toolchain_settings:
+- option: link_time_optimization
+  value: "enabled"
+  unless:
+  - toolchain_lto_disable
+  - toolchain_gcc_lto_disable
+  - toolchain_llvm_lto_disable
+  - toolchain_gcc_lto     # GCC will set the LTO toolchain setting if present
+define:
+- name: SLI_BUILT_WITH_LLVM_LTO
+  unless:
+  - toolchain_lto_disable
+  - toolchain_llvm_lto_disable
+  - toolchain_gcc_lto_disable
+template_contribution:
+- name: compiler_is_llvm_lto
+  value: true
+  unless:
+  - toolchain_lto_disable
+  - toolchain_llvm_lto_disable
+  - toolchain_gcc_lto_disable
 root_path: platform_core

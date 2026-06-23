@@ -46,7 +46,7 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "socket/socket.h"
+#include "netinet/in.h"
 #include "sl_wisun_event_mgr.h"
 #include "sl_component_catalog.h"
 

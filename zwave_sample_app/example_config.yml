@@ -18,6 +18,7 @@ template:
     - .*zgm23.*
   z_wave_toolchains: &z_wave_toolchains
     - gcc
+    - llvm
   z_wave_ides: &z_wave_ides
     - makefile-ide
     - simplicity-ide

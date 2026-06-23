@@ -1,0 +1,19 @@
+id: mbedtls_x509_crl_parse
+package: platform_core
+label: X.509 CRL Parsing
+description: >-
+  This component provides support parsing revocation lists in
+  X.509 certificates in Mbed TLS.
+category: Platform|Security|Mbed TLS|Upper Layer
+quality: production
+provides:
+- name: mbedtls_x509_crl_parse
+requires:
+- name: mbedtls_x509_use
+template_contribution:
+- name: mbedtls_config
+  value: MBEDTLS_X509_CRL_PARSE_C
+metadata:
+  sbom:
+    reference: mbedtls_sbom
+root_path: platform_core

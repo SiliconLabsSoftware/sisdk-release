@@ -11,9 +11,6 @@ metadata:
     license: MSLA
 requires:
 - name: rail_lib
-- name: rail_util_built_in_phys
-  condition:
-  - device_init
 - name: rail_lib_singleprotocol_alpha_chips_support
 - name: rail_lib_singleprotocol_internal_chips_support
 recommends:

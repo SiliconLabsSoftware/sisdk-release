@@ -3,7 +3,7 @@
  * @brief internal wrappers for 'sl_zigbee_zdo_configuration' ipc commands
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -56,6 +56,7 @@ sl_status_t sl_zigbee_zdo_get_configuration_req(sl_802154_short_addr_t device_sh
 
   if (count > 10) {
     assert(false); // "vector tag_ids length exceeds expected maximum
+    return msg.data.zdo_get_configuration_req.response.result;
   }
 
   memmove(msg.data.zdo_get_configuration_req.request.tag_ids, tag_ids, sizeof(uint8_t) * count);
@@ -64,6 +65,7 @@ sl_status_t sl_zigbee_zdo_get_configuration_req(sl_802154_short_addr_t device_sh
 
   if (count > 10) {
     assert(false); // "vector tag_ids length exceeds expected maximum
+    return msg.data.zdo_get_configuration_req.response.result;
   }
 
   memmove(tag_ids, msg.data.zdo_get_configuration_req.request.tag_ids, sizeof(uint8_t) * count);
@@ -80,6 +82,7 @@ sl_status_t sl_zigbee_zdo_set_add_configuration(uint8_t tag_id,
 
   if (zdo_config_arg_len > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector zdo_config_arg length exceeds expected maximum
+    return msg.data.zdo_set_add_configuration.response.result;
   }
 
   memmove(msg.data.zdo_set_add_configuration.request.zdo_config_arg, zdo_config_arg, sizeof(uint8_t) * zdo_config_arg_len);

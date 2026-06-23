@@ -29,6 +29,7 @@
 #include "event_queue/event-queue.h"
 #include "stack/core/sl_zigbee_multi_network.h"
 #include "stack/config/sl_zigbee_token_defines.h"
+#include "stack/include/sl_zigbee_token.h"
 #include "sl_token_manager_api.h"
 
 //------------------------------------------------------------------------------
@@ -98,7 +99,10 @@ sl_status_t getOfflineNodeParameters(sl_802154_short_addr_t *myNodeIdReturn,
                                      uint8_t* stackProfileReturn)
 {
   tokTypeStackNodeData tok;
-  (void)sl_token_manager_get_data(COMMON_TOKEN_STACK_NODE_DATA, (void *)&tok, sizeof(tokTypeStackNodeData));
+  sl_status_t tokStatus = slx_zigbee_token_manager_get_data(COMMON_TOKEN_STACK_NODE_DATA, (void *)&tok, sizeof(tokTypeStackNodeData));
+  if (tokStatus != SL_STATUS_OK) {
+    return tokStatus;
+  }
   *myNodeIdReturn = tok.zigbeeNodeId;
   *myNodeTypeReturn = tok.nodeType;
   *stackProfileReturn = tok.stackProfile;

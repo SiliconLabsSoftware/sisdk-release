@@ -26,7 +26,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#if __has_include("em_core.h")
 #include "em_core.h"
+#else
+#include "sl_core.h"
+#endif
 
 #include "sl_string.h"
 #include "sl_bit.h"

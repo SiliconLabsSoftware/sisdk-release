@@ -1,0 +1,29 @@
+id: btl_flash
+label: Bootloader Flash Extension Component
+package: bootloader
+description: >
+  Extension component providing internal flash functionality for
+  bootloader.
+category: Platform|Bootloader|Utils
+quality: production
+include:
+- path: "platform/bootloader/config/device_series_2"
+  file_list:
+  - path: "btl_core_cfg.h"
+- path: platform/bootloader
+  file_list:
+  - path: storage/btl_storage.h
+  - path: storage/internal_flash/btl_storage_internal_flash.h
+- path: platform/bootloader/storage
+  file_list:
+  - path: bootloadinfo/btl_storage_bootloadinfo.h
+requires:
+- name: bootloader_interface_common
+provides:
+- name: btl_flash
+metadata:
+  sbom:
+    license: MSLA
+ui_hints:
+  visibility: never
+root_path: bootloader

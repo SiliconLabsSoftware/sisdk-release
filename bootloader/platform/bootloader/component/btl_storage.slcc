@@ -1,0 +1,32 @@
+id: btl_storage
+label: Bootloader Storage Extension Component
+package: bootloader
+description: >
+  Extension component providing storage SPI flash SFDP functionality
+  for bootloader.
+category: Platform|Bootloader|Utils
+quality: production
+source:
+- path: "platform/bootloader/core/btl_core.c"
+- path: "platform/bootloader/driver/btl_driver_util.c"
+- path: "platform/bootloader/storage/btl_storage_library.c"
+- path: "platform/bootloader/storage/bootloadinfo/btl_storage_bootloadinfo.c"
+include:
+- path: platform/bootloader
+  file_list:
+  - path: driver/btl_driver_util.h
+  - path: core/btl_core.h
+  - path: core/btl_reset.h
+  - path: core/btl_bootload.h
+  - path: core/btl_parse.h
+  - path: parser/gbl/btl_gbl_parser.h
+requires:
+- name: bootloader_interface_common
+provides:
+- name: btl_storage
+metadata:
+  sbom:
+    license: MSLA
+ui_hints:
+  visibility: never
+root_path: bootloader

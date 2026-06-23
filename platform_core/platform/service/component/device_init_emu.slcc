@@ -14,17 +14,83 @@ metadata:
 root_path: platform_core/platform/service/device_init
 config_file:
 - path: config/s2/sl_device_init_emu_config.h
-  condition: [device_series_2]
+  condition: [device_sdid_200]
+- path: config/s2/sl_device_init_emu_config.h
+  condition: [device_sdid_205]
+- path: config/s2/sl_device_init_emu_config.h
+  condition: [device_sdid_210]
+- path: config/s2/sl_device_init_emu_config.h
+  condition: [device_sdid_215]
+- path: config/s2/sl_device_init_emu_config.h
+  condition: [device_sdid_220]
+- path: config/s2/sl_device_init_emu_config.h
+  condition: [device_sdid_225]
+- path: config/s2/sl_device_init_emu_config.h
+  condition: [device_sdid_230]
+- path: config/s2/sl_device_init_emu_config.h
+  condition: [device_sdid_235]
+- path: config/s2/sl_device_init_emu_config.h
+  condition: [device_sdid_240]
+- path: config/s2/sl_device_init_emu_config.h
+  condition: [device_generic_family_efr32xg2b]
+- path: config/s2/sl_device_init_emu_config.h
+  condition: [device_sdid_260]
+- path: config/s2/sl_device_init_emu_config.h
+  condition: [device_sdid_265]
 include:
 - path: inc
   file_list:
   - path: sl_device_init_emu.h
 source:
 - path: src/sl_device_init_emu_s2.c
-  condition: [device_series_2]
+  condition: [device_sdid_200]
+- path: src/sl_device_init_emu_s2.c
+  condition: [device_sdid_205]
+- path: src/sl_device_init_emu_s2.c
+  condition: [device_sdid_210]
+- path: src/sl_device_init_emu_s2.c
+  condition: [device_sdid_215]
+- path: src/sl_device_init_emu_s2.c
+  condition: [device_sdid_220]
+- path: src/sl_device_init_emu_s2.c
+  condition: [device_sdid_225]
+- path: src/sl_device_init_emu_s2.c
+  condition: [device_sdid_230]
+- path: src/sl_device_init_emu_s2.c
+  condition: [device_sdid_235]
+- path: src/sl_device_init_emu_s2.c
+  condition: [device_sdid_240]
+- path: src/sl_device_init_emu_s2.c
+  condition: [device_generic_family_efr32xg2b]
+- path: src/sl_device_init_emu_s2.c
+  condition: [device_sdid_260]
+- path: src/sl_device_init_emu_s2.c
+  condition: [device_sdid_265]
 provides:
 - name: device_init_emu
-  condition: [device_series_2]
+  condition: [device_sdid_200]
+- name: device_init_emu
+  condition: [device_sdid_205]
+- name: device_init_emu
+  condition: [device_sdid_210]
+- name: device_init_emu
+  condition: [device_sdid_215]
+- name: device_init_emu
+  condition: [device_sdid_220]
+- name: device_init_emu
+  condition: [device_sdid_225]
+- name: device_init_emu
+  condition: [device_sdid_230]
+- name: device_init_emu
+  condition: [device_sdid_235]
+- name: device_init_emu
+  condition: [device_sdid_240]
+- name: device_init_emu
+  condition: [device_generic_family_efr32xg2b]
+- name: device_init_emu
+  condition: [device_sdid_260]
+- name: device_init_emu
+  condition: [device_sdid_265]
 requires:
 - name: emlib_emu
 - name: status

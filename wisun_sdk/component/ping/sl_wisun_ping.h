@@ -46,7 +46,7 @@ extern "C" {
 
 #include <stdint.h>
 
-#include "socket/socket.h"
+#include "netinet/in.h"
 #include "sl_wisun_ping_config.h"
 
 // -----------------------------------------------------------------------------

@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "sl_rail_sdk_simple_assistance.h"
 #include "sl_rail.h"
@@ -175,8 +176,6 @@ void set_first_run(bool is_first_run)
 
 /*******************************************************************************
  * Application state machine, called infinitely
- *
- * @param[in] rail_handle: which rail handler to use for rx and tx
  ******************************************************************************/
 void app_process_action(void)
 {
@@ -257,7 +256,7 @@ void app_process_action(void)
         rail_status = sl_rail_release_rx_packet(rail_handle, rx_packet_handle);
 
         if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-          app_log_warning("sl_rail_release_rx_packet() result: %lu", rail_status);
+          app_log_warning("sl_rail_release_rx_packet() result: 0x%08" PRIX32, rail_status);
         }
         if (rx_requested) {
           printf_rx_packet(start_of_packet, packet_size);
@@ -381,20 +380,20 @@ static void process_rail_errors(void)
 {
   if (rail_tx_error) {
     rail_tx_error = false;
-    app_log_warning("Radio TX Error occurred\nEvents: %lld\n",
+    app_log_warning("Radio TX Error occurred\nEvents: 0x%" PRIX64 "\n",
                     (current_rail_err & SL_RAIL_EVENTS_TX_COMPLETION));
     duty_cycle_end = true;
   }
   if (rail_rx_error) {
     rail_rx_error = false;
-    app_log_warning("Radio RX Error occurred\nEvents: %lld\n",
+    app_log_warning("Radio RX Error occurred\nEvents: 0x%" PRIX64 "\n",
                     (current_rail_err & SL_RAIL_EVENTS_RX_COMPLETION));
     duty_cycle_end = true;
   }
   if (rail_cal_error) {
     rail_cal_error = false;
     uint64_t current_rail_err_tmp = current_rail_err;
-    app_log_error("Radio Calibration Error occurred\nEvents: %lld\nsl_rail_calibrate() result:%ld\n",
+    app_log_error("Radio Calibration Error occurred\nEvents: 0x%" PRIX64 "\nsl_rail_calibrate() result:0x%08" PRIX32 "\n",
                   (current_rail_err_tmp & SL_RAIL_EVENT_CAL_NEEDED),
                   calibration_status);
   }
@@ -417,7 +416,7 @@ static sl_rail_status_t send_tx_packet(sl_rail_handle_t rail_handle)
 #endif
   rail_status = sl_rail_start_tx(rail_handle, get_selected_channel(), SL_RAIL_TX_OPTION_ALT_PREAMBLE_LEN, NULL);
   if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_warning("sl_rail_start_tx() result:%ld ", rail_status);
+    app_log_warning("sl_rail_start_tx() result:0x%08" PRIX32 " ", rail_status);
   }
 
   return rail_status;

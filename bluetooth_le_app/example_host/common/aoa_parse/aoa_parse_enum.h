@@ -45,7 +45,7 @@ typedef enum {
  *
  * @param[in] str Input string.
  * @param[out] report_mode Locator reporting mode.
- * @return Status ot the conversion.
+ * @return Status of the conversion.
  * @retval SL_STATUS_OK The conversion was successful.
  * @retval SL_STATUS_NULL_POINTER Invalid null pointer received as argument.
  * @retval SL_STATUS_INVALID_PARAMETER The input was invalid.
@@ -57,7 +57,7 @@ sl_status_t aoa_parse_report_mode_from_string(char *str, aoa_report_mode_t *repo
  *
  * @param[in] report_mode Locator reporting mode.
  * @param[out] str Output string.
- * @return Status ot the conversion.
+ * @return Status of the conversion.
  * @retval SL_STATUS_OK The conversion was successful.
  * @retval SL_STATUS_NULL_POINTER Invalid null pointer received as argument.
  * @retval SL_STATUS_INVALID_PARAMETER The input was invalid.
@@ -69,7 +69,7 @@ sl_status_t aoa_parse_report_mode_to_string(aoa_report_mode_t report_mode, char 
  *
  * @param[in] str Input string.
  * @param[out] aox_mode AoA/AoD estimator mode.
- * @return Status ot the conversion.
+ * @return Status of the conversion.
  * @retval SL_STATUS_OK The conversion was successful.
  * @retval SL_STATUS_NULL_POINTER Invalid null pointer received as argument.
  * @retval SL_STATUS_INVALID_PARAMETER The input was invalid.
@@ -81,7 +81,7 @@ sl_status_t aoa_parse_aox_mode_from_string(char *str, enum sl_rtl_aox_mode *aox_
  *
  * @param[in] aox_mode AoA/AoD estimator mode.
  * @param[out] str Output string.
- * @return Status ot the conversion.
+ * @return Status of the conversion.
  * @retval SL_STATUS_OK The conversion was successful.
  * @retval SL_STATUS_NULL_POINTER Invalid null pointer received as argument.
  * @retval SL_STATUS_INVALID_PARAMETER The input was invalid.
@@ -93,7 +93,7 @@ sl_status_t aoa_parse_aox_mode_to_string(enum sl_rtl_aox_mode aox_mode, char **s
  *
  * @param[in] str Input string.
  * @param[out] antenna_type Antenna array type.
- * @return Status ot the conversion.
+ * @return Status of the conversion.
  * @retval SL_STATUS_OK The conversion was successful.
  * @retval SL_STATUS_NULL_POINTER Invalid null pointer received as argument.
  * @retval SL_STATUS_INVALID_PARAMETER The input was invalid.
@@ -105,7 +105,7 @@ sl_status_t aoa_parse_antenna_type_from_string(char *str, enum sl_rtl_aox_array_
  *
  * @param[in] antenna_type Antenna array type.
  * @param[out] str Output string.
- * @return Status ot the conversion.
+ * @return Status of the conversion.
  * @retval SL_STATUS_OK The conversion was successful.
  * @retval SL_STATUS_NULL_POINTER Invalid null pointer received as argument.
  * @retval SL_STATUS_INVALID_PARAMETER The input was invalid.
@@ -117,7 +117,7 @@ sl_status_t aoa_parse_antenna_type_to_string(enum sl_rtl_aox_array_type antenna_
  *
  * @param[in] str Input string.
  * @param[out] estimation_mode Location estimation mode.
- * @return Status ot the conversion.
+ * @return Status of the conversion.
  * @retval SL_STATUS_OK The conversion was successful.
  * @retval SL_STATUS_NULL_POINTER Invalid null pointer received as argument.
  * @retval SL_STATUS_INVALID_PARAMETER The input was invalid.
@@ -129,7 +129,7 @@ sl_status_t aoa_parse_estimation_mode_from_string(char *str, enum sl_rtl_loc_est
  *
  * @param[in] estimation_mode Location estimation mode.
  * @param[out] str Output string.
- * @return Status ot the conversion.
+ * @return Status of the conversion.
  * @retval SL_STATUS_OK The conversion was successful.
  * @retval SL_STATUS_NULL_POINTER Invalid null pointer received as argument.
  * @retval SL_STATUS_INVALID_PARAMETER The input was invalid.
@@ -141,7 +141,7 @@ sl_status_t aoa_parse_estimation_mode_to_string(enum sl_rtl_loc_estimation_mode 
  *
  * @param[in] str Input string.
  * @param[out] validation_mode Measurement validation mode.
- * @return Status ot the conversion.
+ * @return Status of the conversion.
  * @retval SL_STATUS_OK The conversion was successful.
  * @retval SL_STATUS_NULL_POINTER Invalid null pointer received as argument.
  * @retval SL_STATUS_INVALID_PARAMETER The input was invalid.
@@ -153,7 +153,7 @@ sl_status_t aoa_parse_validation_mode_from_string(char *str, enum sl_rtl_loc_mea
  *
  * @param[in] validation_mode Measurement validation mode.
  * @param[out] str Output string.
- * @return Status ot the conversion.
+ * @return Status of the conversion.
  * @retval SL_STATUS_OK The conversion was successful.
  * @retval SL_STATUS_NULL_POINTER Invalid null pointer received as argument.
  * @retval SL_STATUS_INVALID_PARAMETER The input was invalid.

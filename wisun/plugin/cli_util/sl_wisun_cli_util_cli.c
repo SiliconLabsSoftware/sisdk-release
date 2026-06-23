@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdio.h>
+#include <inttypes.h>
 #include "sl_assert.h"
 #include <string.h>
 #include "sl_cli.h"
@@ -148,7 +149,7 @@ void app_save(sl_cli_command_arg_t *arguments)
   if (ret == SL_STATUS_OK) {
     printf("[Settings saved]\r\n");
   } else {
-    printf("[Failed to save settings: %lu]\r\n", ret);
+    printf("[Failed to save settings: %"PRIu32"]\r\n", ret);
   }
 
   app_wisun_cli_mutex_unlock();

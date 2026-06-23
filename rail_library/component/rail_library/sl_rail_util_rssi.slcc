@@ -65,6 +65,11 @@ config_file:
   - device_series_2
   - device_sdid_240
   file_id: rail_util_rssi_config
+- path: plugin/sl_rail_util_rssi/config/efr32xg2b/sl_rail_util_rssi_config.h
+  condition:
+  - device_series_2
+  - device_sdid_250
+  file_id: rail_util_rssi_config
 - path: plugin/sl_rail_util_rssi/config/efr32xg2d/sl_rail_util_rssi_config.h
   condition:
   - device_series_2

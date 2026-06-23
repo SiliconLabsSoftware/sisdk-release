@@ -3,7 +3,7 @@
  * @brief Throughput common definitions
  *******************************************************************************
  * # License
- * <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -30,6 +30,8 @@
 #ifndef THROUGHPUT_COMMON_H
 #define THROUGHPUT_COMMON_H
 
+#include "sl_bgapi_config.h"
+
 /***********************************************************************************************//**
  * @addtogroup throughput
  * @{
@@ -49,6 +51,9 @@ typedef enum {
 
 /// The default PDU size if 27 bytes according to the Core Specification
 #define THROUGHPUT_DEFAULT_PDU_SIZE 27u
+
+/// The maximum available MTU size
+#define THROUGHPUT_MAXIMUM_MTU_SIZE (SL_BGAPI_MAX_PAYLOAD_SIZE - 7)
 
 /** @} (end addtogroup throughput) */
 #endif // THROUGHPUT_COMMON_H

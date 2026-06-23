@@ -18,6 +18,7 @@
 #include "tfm_crypto_api.h"
 #include "tfm_crypto_defs.h"
 #include "tfm_memory_utils.h"
+#include "sl_psa_crypto.h"
 
 #if !defined(TFM_CONFIG_SL_SECURE_LIBRARY)
 #include "tfm_plat_crypto_keys.h"

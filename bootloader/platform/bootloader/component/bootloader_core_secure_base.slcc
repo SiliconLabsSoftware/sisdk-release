@@ -1,0 +1,55 @@
+id: bootloader_core_secure_base
+label: Bootloader Core (Secure) Base
+package: bootloader
+description: >
+  Shared secure bootloader core sources (driver util, bootload, core, parse, reset, veneers)
+  only. Compile-time dependencies for those sources are listed here, including
+  bootloader_interface_common for btl_internal_flash.c (flash_erasePage,
+  flash_writeBuffer_dma) required by btl_bootload.c. TrustZone integration,
+  secure policy (config, linker templates, validation), and toolchain settings live on the
+  visible secure entry components (bootloader_core_secure, custom_btl_tz_core_secure).
+  Does not include the secure-world entry main file.
+category: Platform|Bootloader|TrustZone Secure|Core
+quality: production
+ui_hints:
+  visibility: never
+source:
+- path: platform/bootloader/driver/btl_driver_util.c
+- path: platform/bootloader/core/btl_bootload.c
+- path: platform/bootloader/core/btl_core.c
+- path: platform/bootloader/core/btl_parse.c
+- path: platform/bootloader/core/btl_reset.c
+
+  # Veneers
+- path: platform/bootloader/core/btl_reset_veneers.c
+- path: platform/bootloader/core/btl_bootload_veneers.c
+
+include:
+- path: platform/bootloader/core
+- path: platform/bootloader
+  file_list:
+  - path: config/btl_config.h
+  - path: core/btl_core.h
+  - path: core/btl_helper.h
+  - path: core/btl_reset.h
+  - path: core/btl_parse.h
+  - path: core/btl_bootload.h
+  - path: core/btl_upgrade.h
+  - path: driver/btl_driver_util.h
+  - path: debug/btl_debug.h
+
+provides:
+- name: bootloader_core_secure_base
+
+requires:
+- name: btl_util_header
+- name: bootloader_interface_common
+- name: emlib
+- name: se_manager_mailbox
+- name: sl_fault_injection_hardening
+- name: bootloader_aes_ctr_stream_block_cfg
+  condition: [device_has_semailbox]
+metadata:
+  sbom:
+    license: MSLA
+root_path: bootloader

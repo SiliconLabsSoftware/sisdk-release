@@ -45,12 +45,12 @@ std::unique_ptr<ThreadHost> ThreadHost::Create(const char                      *
                                                const std::vector<const char *> &aRadioUrls,
                                                const char                      *aBackboneInterfaceName,
                                                bool                             aDryRun,
-                                               bool                             aEnableAutoAttach)
+                                               bool                             aEnableAutoAttach,
+                                               const char                      *aDataPath)
 {
     CoprocessorType             coprocessorType;
     otPlatformCoprocessorUrls   urls;
     std::unique_ptr<ThreadHost> host;
-    otLogLevel                  level = ConvertToOtLogLevel(otbrLogGetLevel());
 
     VerifyOrDie(aRadioUrls.size() <= OT_PLATFORM_CONFIG_MAX_RADIO_URLS, "Too many Radio URLs!");
 
@@ -60,14 +60,13 @@ std::unique_ptr<ThreadHost> ThreadHost::Create(const char                      *
         urls.mUrls[urls.mNum++] = url;
     }
 
-    VerifyOrDie(otLoggingSetLevel(level) == OT_ERROR_NONE, "Failed to set OT log Level!");
-
     coprocessorType = otSysInitCoprocessor(&urls);
 
     switch (coprocessorType)
     {
     case OT_COPROCESSOR_RCP:
-        host = MakeUnique<RcpHost>(aInterfaceName, aRadioUrls, aBackboneInterfaceName, aDryRun, aEnableAutoAttach);
+        host = MakeUnique<RcpHost>(aInterfaceName, aRadioUrls, aBackboneInterfaceName, aDryRun, aEnableAutoAttach,
+                                   aDataPath);
         break;
 
     case OT_COPROCESSOR_NCP:

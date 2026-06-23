@@ -45,7 +45,7 @@ extern "C" {
 #include "sl_component_catalog.h"
 #include "sl_status.h"
 #include "em_common.h"
-#include "socket/socket.h"
+#include "netinet/in.h"
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------

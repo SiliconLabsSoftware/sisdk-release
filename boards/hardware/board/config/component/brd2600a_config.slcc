@@ -116,6 +116,21 @@
       vendor: silabs
     path: brd2600a/sl_rail_util_pa_config.h
   - override:
+      component: sl_rail_util_pa
+      file_id: sl_rail_util_pa_config
+      vendor: silabs
+    path: brd2600a/sl_rail_util_pa_config.h
+  - override:
+      component: rail_util_pti
+      file_id: rail_util_pti_config
+      vendor: silabs
+    path: brd2600a/sl_rail_util_pti_config.h
+  - override:
+      component: sl_rail_util_pti
+      file_id: rail_util_pti_config
+      vendor: silabs
+    path: brd2600a/sl_rail_util_pti_config.h
+  - override:
       component: simple_button
       file_id: simple_button_config
       instance: btn0
@@ -133,16 +148,6 @@
       instance: led0
       vendor: silabs
     path: brd2600a/sl_simple_led_led0_config.h
-  - override:
-      component: sl_rail_util_pa
-      file_id: sl_rail_util_pa_config
-      vendor: silabs
-    path: brd2600a/sl_rail_util_pa_config.h
-  - override:
-      component: sl_rail_util_pti
-      file_id: rail_util_pti_config
-      vendor: silabs
-    path: brd2600a/sl_rail_util_pti_config.h
   - override:
       component: uartdrv_eusart
       file_id: uartdrv_eusart_config

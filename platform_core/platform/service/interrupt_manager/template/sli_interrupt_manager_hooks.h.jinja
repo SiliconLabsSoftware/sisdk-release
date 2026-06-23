@@ -32,13 +32,13 @@ SL_CODE_CLASSIFY(SL_CODE_COMPONENT_INTERRUPT_MANAGER, SL_CODE_CLASS_TIME_CRITICA
 __STATIC_INLINE void sli_interrupt_manager_irq_enter_hook(void)
 {
 {%- if ccv_enable %}
-  sli_code_classification_validator_pause();
+  sli_code_classification_validator_irq_hook_prologue();
 {%- endif %}
 {%- for irq in interrupt_manager_irq_enter_hook %}
   {{ irq['function'] }}();
 {%- endfor %}
 {%- if ccv_enable %}
-  sli_code_classification_validator_resume();
+  sli_code_classification_validator_irq_hook_epilogue();
 {%- endif %}
   return;
 }
@@ -51,13 +51,13 @@ SL_CODE_CLASSIFY(SL_CODE_COMPONENT_INTERRUPT_MANAGER, SL_CODE_CLASS_TIME_CRITICA
 __STATIC_INLINE void sli_interrupt_manager_irq_exit_hook(void)
 {
 {%- if ccv_enable %}
-  sli_code_classification_validator_pause();
+  sli_code_classification_validator_irq_hook_prologue();
 {%- endif %}
 {%- for irq in interrupt_manager_irq_exit_hook %}
   {{ irq['function'] }}();
 {%- endfor %}
 {%- if ccv_enable %}
-  sli_code_classification_validator_resume();
+  sli_code_classification_validator_irq_hook_epilogue();
 {%- endif %}
   return;
 }

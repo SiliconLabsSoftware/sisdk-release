@@ -70,12 +70,8 @@ static osThreadId_t _udp_server_thr_id;
 static const osThreadAttr_t _udp_server_task_attr = {
   .name       = "UDP Server",
   .attr_bits  = osThreadDetached,
-  .cb_mem     = NULL,
-  .cb_size    = 0,
-  .stack_mem  = NULL,
   .stack_size = app_stack_size_word_to_byte(SL_WISUN_UDP_SERVER_STACK_SIZE_WORD),
-  .priority   = osPriorityNormal,
-  .tz_module  = 0
+  .priority   = osPriorityNormal
 };
 
 // -----------------------------------------------------------------------------

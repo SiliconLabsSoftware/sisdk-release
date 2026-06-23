@@ -9,12 +9,17 @@ quality: production
 source:
 - path: platform/bootloader/series3/storage/bootloadinfo/btl_storage_bootloadinfo.c
 include:
-- path: platform/bootloader/series3/storage/bootloadinfo
+- path: platform/bootloader/series3
   file_list:
-  - path: btl_storage_bootloadinfo.h
+  - path: storage/btl_storage.h
+- path: platform/bootloader/series3/storage/ext_mem
+  file_list:
+  - path: btl_storage_ext_mem.h
 provides:
 - name: btl_interface_bootloadinfo
+- name: btl_interface_bootloadinfo_provider
 requires:
+- name: btl_storage_bootloadinfo_header
 - name: btl_crc
 metadata:
   sbom:

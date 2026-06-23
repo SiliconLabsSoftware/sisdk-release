@@ -146,7 +146,7 @@
 
 // <o SL_BT_CONTROLLER_SCHEDULER_PRI_RAIL_WINDOW_MIN> Rail Mapping Window Min
 // <0-255:1>
-// <i> Default: 16
+// <i> Default: 32
 // <i> Define the minimum value of RAIL mapping window.
 // <i> This parameter specifies how task priorities are passed to radio
 // <i> coexistence and multiprotocol schedulers.
@@ -157,17 +157,17 @@
 // <i> If coexistence or multiprotocol configuration is not used, then these
 // <i> parameters have no effect.
 #ifndef SL_BT_CONTROLLER_SCHEDULER_PRI_RAIL_WINDOW_MIN
-#define SL_BT_CONTROLLER_SCHEDULER_PRI_RAIL_WINDOW_MIN 16
+#define SL_BT_CONTROLLER_SCHEDULER_PRI_RAIL_WINDOW_MIN 32
 #endif // SL_BT_CONTROLLER_SCHEDULER_PRI_RAIL_WINDOW_MIN
 
 // <o SL_BT_CONTROLLER_SCHEDULER_PRI_RAIL_WINDOW_MAX> Rail Mapping Window Range
 // <0-255:1>
-// <i> Default: 32
+// <i> Default: 16
 // <i> Define the maximum value of the RAIL mapping window.
 // <i> See SL_BT_CONTROLLER_SCHEDULER_PRI_RAIL_WINDOW_MIN for a description of
 // <i> this parameter.
 #ifndef SL_BT_CONTROLLER_SCHEDULER_PRI_RAIL_WINDOW_MAX
-#define SL_BT_CONTROLLER_SCHEDULER_PRI_RAIL_WINDOW_MAX 32
+#define SL_BT_CONTROLLER_SCHEDULER_PRI_RAIL_WINDOW_MAX 16
 #endif // SL_BT_CONTROLLER_SCHEDULER_PRI_RAIL_WINDOW_MAX
 
 // <o SL_BT_CONTROLLER_SCHEDULER_PRI_PAWR_TX_MIN> PAwR Tx - Min
@@ -220,9 +220,9 @@
     .conn_max = SL_BT_CONTROLLER_SCHEDULER_PRI_CONN_MAX,                      \
     .init_min = SL_BT_CONTROLLER_SCHEDULER_PRI_INIT_MIN,                      \
     .init_max = SL_BT_CONTROLLER_SCHEDULER_PRI_INIT_MAX,                      \
-    .rail_mapping_offset = SL_BT_CONTROLLER_SCHEDULER_PRI_RAIL_WINDOW_MIN,    \
-    .rail_mapping_range = (SL_BT_CONTROLLER_SCHEDULER_PRI_RAIL_WINDOW_MAX     \
-                           - SL_BT_CONTROLLER_SCHEDULER_PRI_RAIL_WINDOW_MIN), \
+    .rail_mapping_offset = SL_BT_CONTROLLER_SCHEDULER_PRI_RAIL_WINDOW_MAX,    \
+    .rail_mapping_range = (SL_BT_CONTROLLER_SCHEDULER_PRI_RAIL_WINDOW_MIN     \
+                           - SL_BT_CONTROLLER_SCHEDULER_PRI_RAIL_WINDOW_MAX), \
     0,                                                                        \
     .adv_step = SL_BT_CONTROLLER_SCHEDULER_PRI_ADV_STEP,                      \
     .scan_step = SL_BT_CONTROLLER_SCHEDULER_PRI_SCAN_STEP,                    \

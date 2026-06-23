@@ -72,6 +72,7 @@ tag:
   - companion:nonsecure_app  # Needs a companion app and cannot be built alone
   - hwfilter:device:device_series_2
   - hwfilter:device:armv8m.main
+  - hwfilter:ram:64k
 
 import:
   # Import the config files from the TZ Non-Secure application

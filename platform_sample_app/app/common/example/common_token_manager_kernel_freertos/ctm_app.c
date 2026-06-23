@@ -73,8 +73,8 @@
 // Buffer for reading from CTM
 static char read_buffer[SL_CTM_READ_BUFFER_SIZE];
 
-uint32_t uint32_test_data = 0x87654321;
-uint8_t array_test_data[8] = { 0xab, 0xac, 0xba, 0xbe, 0xec, 0xfc, 0xda, 0xae };
+static uint32_t uint32_test_data = 0x87654321;
+static uint8_t array_test_data[CTM_SAMPLE_APP_BYTE_ARRAY_SIZE] = { 0xab, 0xac, 0xba, 0xbe, 0xec, 0xfc, 0xda, 0xae };
 
 /*******************************************************************************
  **************************   LOCAL FUNCTIONS   ********************************
@@ -320,7 +320,35 @@ void ctm_write_dynamic_token(sl_cli_command_arg_t *arguments)
       }
       token_key = key | SL_TOKEN_STATIC_DEVICE_TOKENS; // Set the key to static device token range
       printf("Writing static device override token...\r\n");
-      status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVER_RIDE_TOKEN(token_key), data, strlen(data));
+      switch (token_key)
+      {
+      case CTM_SAMPLE_APP_TOK_UINT16_STATIC_DEVICE:
+        uint16_t data_u16 = (uint16_t)strtoul(data, NULL, 0);
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVER_RIDE_TOKEN(token_key), &data_u16, CTM_SAMPLE_APP_TOK_UINT16_STATIC_SECURE_SIZE);
+        break;
+
+      case CTM_SAMPLE_APP_TOK_UINT32_STATIC_DEVICE:
+        uint32_t data_u32 = (uint32_t)strtoul(data, NULL, 0);
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVER_RIDE_TOKEN(token_key), &data_u32, CTM_SAMPLE_APP_TOK_UINT32_STATIC_SECURE_SIZE);        
+        break;
+        
+      case CTM_SAMPLE_APP_TOK_STRING_STATIC_DEVICE:
+        char string_data[CTM_SAMPLE_APP_STRING_SIZE];
+        strncpy(string_data, data, CTM_SAMPLE_APP_STRING_SIZE);
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVER_RIDE_TOKEN(token_key), string_data, CTM_SAMPLE_APP_TOK_STRING_STATIC_SECURE_SIZE);
+        break;
+
+      case CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_DEVICE:
+        if(strlen(data) != CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_DEVICE_SIZE) {
+          printf("Invalid data length for static device byte array token. Data length should be %u.\r\n", CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_DEVICE_SIZE);
+          return;
+        }
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVER_RIDE_TOKEN(token_key), data, CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_DEVICE_SIZE);
+        break;
+      default:
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVER_RIDE_TOKEN(token_key), data, strlen(data));
+        break;
+      }
       if (SL_STATUS_OK == status) {
         printf("Override static device token written: \r\n key:0x%lx \r\n data: %s \r\n", key, data);
       } else {
@@ -335,7 +363,34 @@ void ctm_write_dynamic_token(sl_cli_command_arg_t *arguments)
       }
       token_key = key | SL_TOKEN_STATIC_SECURE_DATA_TOKENS; // Set the key to static secure token range
       printf("Writing override token for static secure token...\r\n");
-      status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVER_RIDE_TOKEN(token_key), data, strlen(data));
+      switch (token_key)
+      {
+      case CTM_SAMPLE_APP_TOK_UINT16_STATIC_SECURE:
+        uint16_t data_u16 = (uint16_t)strtoul(data, NULL, 0);
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVER_RIDE_TOKEN(token_key), &data_u16, CTM_SAMPLE_APP_TOK_UINT16_STATIC_SECURE_SIZE);
+        break;
+
+      case CTM_SAMPLE_APP_TOK_UINT32_STATIC_SECURE:
+        uint32_t data_u32 = (uint32_t)strtoul(data, NULL, 0);
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVER_RIDE_TOKEN(token_key), &data_u32, CTM_SAMPLE_APP_TOK_UINT32_STATIC_SECURE_SIZE);        
+        break;
+        
+      case CTM_SAMPLE_APP_TOK_STRING_STATIC_SECURE:
+        char string_data[CTM_SAMPLE_APP_STRING_SIZE];
+        strncpy(string_data, data, CTM_SAMPLE_APP_STRING_SIZE);
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVER_RIDE_TOKEN(token_key), string_data, CTM_SAMPLE_APP_TOK_STRING_STATIC_SECURE_SIZE);
+        break;
+      case CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_SECURE:
+        if(strlen(data) != CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_SECURE_SIZE) {
+          printf("Invalid data length for static secure byte array token. Data length should be %u.\r\n", CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_SECURE_SIZE);
+          return;
+        }
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVER_RIDE_TOKEN(token_key), data, CTM_SAMPLE_APP_TOK_BYTE_ARRAY_STATIC_SECURE_SIZE);
+        break;
+      default:
+        status = sl_token_manager_set_data(SL_TOKEN_GET_DYNAMIC_OVER_RIDE_TOKEN(token_key), data, strlen(data));
+        break;
+      }
       if (SL_STATUS_OK == status) {
         printf("Override static secure token written: \r\n key:0x%lx \r\n data: %s \r\n", key, data);
       } else {

@@ -1,3 +1,4 @@
+workspace_name: zwave_soc_switch_on_off_ota
 label: ZWave_SoC_SwitchOnOff_Solution
 description: >
   Demonstrates Switch On/Off application combined with OTA bootloader.

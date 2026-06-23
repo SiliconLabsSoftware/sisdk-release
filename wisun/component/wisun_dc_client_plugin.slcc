@@ -1,0 +1,66 @@
+id: "wisun_dc_client_plugin"
+label: "Wi-SUN Direct connect client plugin"
+description: "Extends Wi-SUN FFN stack with Direct Connect Client capability"
+package: "wisun"
+category: "Wi-SUN"
+quality: "production"
+root_path: "wisun/./stack"
+
+ui_hints:
+  visibility: never
+
+requires:
+- name: "wisun_stack_ffn"
+
+conflicts:
+- name: "wisun_br_stack"
+
+provides:
+- name: "wisun_dc_client_implementation"
+- name: "wisun_dc_client_plugin"
+
+library:
+  # FFN DC client plugin: link when FFN stack is present (extends FFN with DC client). Series 2 only.
+- path: "libwisun_dc_client_plugin_efr32xg2x_gcc_debug.a"
+  condition:
+  - "device_series_2"
+  - "toolchain_gcc"
+  - "wisun_stack_debug"
+  - "wisun_stack_ffn"
+- path: "libwisun_dc_client_plugin_efr32xg2x_iar_debug.a"
+  condition:
+  - "device_series_2"
+  - "toolchain_iar"
+  - "wisun_stack_debug"
+  - "wisun_stack_ffn"
+- path: "libwisun_dc_client_plugin_efr32xg2x_llvm_debug.a"
+  condition:
+  - "device_series_2"
+  - "toolchain_llvm"
+  - "wisun_stack_debug"
+  - "wisun_stack_ffn"
+- path: "libwisun_dc_client_plugin_efr32xg2x_gcc_release.a"
+  condition:
+  - "device_series_2"
+  - "toolchain_gcc"
+  - "wisun_stack_ffn"
+  unless:
+  - "wisun_stack_debug"
+- path: "libwisun_dc_client_plugin_efr32xg2x_iar_release.a"
+  condition:
+  - "device_series_2"
+  - "toolchain_iar"
+  - "wisun_stack_ffn"
+  unless:
+  - "wisun_stack_debug"
+- path: "libwisun_dc_client_plugin_efr32xg2x_llvm_release.a"
+  condition:
+  - "device_series_2"
+  - "toolchain_llvm"
+  - "wisun_stack_ffn"
+  unless:
+  - "wisun_stack_debug"
+
+metadata:
+  sbom:
+    license: MSLA

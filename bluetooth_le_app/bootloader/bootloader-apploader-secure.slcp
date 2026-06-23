@@ -35,6 +35,7 @@ export:
     - path: artifact/trustzone_secure_library.o
 tag:
   - toolchain:gcc
+  - toolchain:llvm
   - companion:bootloader-apploader-nonsecure
   - hwfilter:device:device_supports_bluetooth
   - hwfilter:device:device_series_2

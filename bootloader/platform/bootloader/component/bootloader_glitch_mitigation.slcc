@@ -1,0 +1,27 @@
+id: bootloader_glitch_mitigation
+label: Bootloader Glitch Mitigation
+package: bootloader
+description: >
+  The Bootloader Glitch Mitigation component provides functionality to protect the bootloader
+  against glitches and unexpected resets during critical operations.
+category: Platform|Bootloader|Core
+quality: production
+source:
+- path: platform/bootloader/core/btl_glitch_mitigation.c
+
+include:
+- path: platform/bootloader
+  file_list:
+  - path: core/btl_glitch_mitigation.h
+
+provides:
+- name: bootloader_glitch_mitigation
+
+define:
+- name: BTL_ENFORCE_GLITCH_MITIGATION
+  value: 1
+
+metadata:
+  sbom:
+    license: MSLA
+root_path: bootloader

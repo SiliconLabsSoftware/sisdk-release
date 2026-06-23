@@ -62,6 +62,7 @@
 <para><parblock><para>Enum <ref refid="group__sl__bt__sync_1ga4d6dbc6ce7a4dfc5ba8e473253161d30" kindref="member">sl_bt_sync_reporting_mode_t</ref>. Specifies the initial mode for reporting data received in the periodic advertising train after it has achieved synchronization. Values:<itemizedlist>
 <listitem><para><bold>sl_bt_sync_report_none (0x0):</bold> Data received in periodic advertising trains is not reported to the application.</para>
 </listitem><listitem><para><bold>sl_bt_sync_report_all (0x1):</bold> Data received in periodic advertising trains is reported to the application.</para>
+</listitem><listitem><para><bold>sl_bt_sync_report_non_duplicate (0x2):</bold> Data received in periodic advertising trains is reported to the application, but only if the advertisement is not a duplicate of an already received periodic advertisement. A periodic advertisement is considered a duplicate if it included Advertising Data Information (ADI) with the same Advertising Set ID (SID) and Advertising Data ID (DID) as a previously received periodic advertisement on the same periodic advertising train.</para>
 </listitem></itemizedlist>
 </para>
 <para>Default: <ref refid="group__sl__bt__sync_1gga4d6dbc6ce7a4dfc5ba8e473253161d30aac59b61bf5411ed41d7079f22c122f8b" kindref="member">sl_bt_sync_report_all</ref> (Data received in periodic advertising trains is reported to the application) </para>
@@ -76,7 +77,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="4497" column="13" declfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" declline="4497" declcolumn="13"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="4775" column="13" declfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" declline="4775" declcolumn="13"/>
       </memberdef>
       <memberdef kind="function" id="group__sl__bt__sync__scanner_1gafc4271a3a5784987925927e6aae8652b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
         <type>sl_status_t</type>
@@ -169,7 +170,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="4589" column="13" declfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" declline="4589" declcolumn="13"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="4867" column="13" declfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" declline="4867" declcolumn="13"/>
       </memberdef>
       </sectiondef>
       <sectiondef kind="define">
@@ -182,7 +183,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="4443" column="9" bodyfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="4443" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="4714" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="4714" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bt__sync__scanner_1ga7b2baad7bf90aaa27d836af5395a71f6" prot="public" static="no">
         <name>sl_bt_cmd_sync_scanner_open_id</name>
@@ -193,7 +194,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="4444" column="9" bodyfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="4444" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="4715" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="4715" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bt__sync__scanner_1ga14f9c5ce3668c00d9c7b365a7900758f" prot="public" static="no">
         <name>sl_bt_rsp_sync_scanner_set_sync_parameters_id</name>
@@ -204,7 +205,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="4445" column="9" bodyfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="4445" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="4716" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="4716" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bt__sync__scanner_1gae8f4761e5bfd613f06e83e88d9fc0824" prot="public" static="no">
         <name>sl_bt_rsp_sync_scanner_open_id</name>
@@ -215,7 +216,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="4446" column="9" bodyfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="4446" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="4717" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="4717" bodyend="-1"/>
       </memberdef>
       </sectiondef>
     <briefdescription>

@@ -221,7 +221,9 @@ RAIL_RxPacketHandle_t processRxPacket(RAIL_Handle_t railHandle,
       RAIL_CancelAutoAck(railHandle);
     }
 
-    // Use Tx Buffer for Ack if user requested
+    // When RAIL_EVENT_RX_FILTER_PASSED is not enabled, finish selecting the TX FIFO for
+    // auto-ACK here (later in the Rx-to-Tx turnaround). With FILTER_PASSED enabled,
+    // app_main does this earlier; the flag is already cleared before we run.
     if (afterRxUseTxBufferForAck) {
       afterRxUseTxBufferForAck = false;
       RAIL_UseTxFifoForAutoAck(railHandle);

@@ -1,6 +1,6 @@
 {
   "networkName": "Wi-SUN Network",
-  "networkSize": "SL_WISUN_NETWORK_SIZE_SMALL",
+  "networkSize": "SL_WISUN_NETWORK_SIZE_AUTOMATIC",
   "deviceType": "SL_WISUN_ROUTER",
   "deviceProfile": null,
   "macAddress": null,

@@ -83,7 +83,7 @@ toolchain_settings:
     unless: [wisun_stack_debug]
 
 readme:
-  - path: doc/readme.md
+  - path: readme.md
 
 other_file:
   - path: doc/readme_img0.png
@@ -91,7 +91,7 @@ other_file:
 
 ui_hints:
   highlight:
-    - path: doc/readme.md
+    - path: readme.md
       focus: true
 
 tag:

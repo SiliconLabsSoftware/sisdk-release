@@ -31,6 +31,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include "em_system.h"
 #include "app_log.h"
 #include "app_common.h"
@@ -76,7 +77,7 @@ void emberAfTickCallback(void)
 void emberAfChildJoinCallback(EmberNodeType nodeType,
                               EmberNodeId nodeId)
 {
-  app_log_info("Node with short address 0x%04X joined as %s\n", nodeId,
+  app_log_info("Node with short address 0x%04" PRIX16 " joined as %s\n", nodeId,
                (nodeType == EMBER_STAR_RANGE_EXTENDER)
                ? "range extender"
                : ((nodeType == EMBER_STAR_END_DEVICE)
@@ -106,21 +107,21 @@ void emberAfIncomingMacMessageCallback(EmberIncomingMacMessage *message)
   }
 
   if (message->macFrame.srcAddress.mode == EMBER_MAC_ADDRESS_MODE_SHORT) {
-    app_log_info("MAC RX: Data from 0x%04X:{", message->macFrame.srcAddress.addr.shortAddress);
+    app_log_info("MAC RX: Data from 0x%04" PRIX16 ":{", message->macFrame.srcAddress.addr.shortAddress);
   } else if (message->macFrame.srcAddress.mode == EMBER_MAC_ADDRESS_MODE_NONE) {
     app_log_info("MAC RX: Data from unspecified address: {");
   } else {
     // print long address
-    app_log_info("MAC RX: Data from ");
+    app_log_info("MAC RX: Data from 0x");
     for ( i = 0; i < EUI64_SIZE; i++ ) {
-      app_log_info("%2X", message->macFrame.srcAddress.addr.longAddress[i]);
+      app_log_info("%02" PRIX8, message->macFrame.srcAddress.addr.longAddress[i]);
     }
-    app_log_info(":{");
+    app_log_info(":{ ");
   }
   for ( i = 0; i < message->length; i++ ) {
-    app_log_info(" %2X", message->payload[i]);
+    app_log_info(" %02" PRIX8, message->payload[i]);
   }
-  app_log_info("}\n");
+  app_log_info(" }\n");
 }
 
 /******************************************************************************
@@ -131,7 +132,7 @@ void emberAfMacMessageSentCallback(EmberStatus status,
 {
   (void) message;
   if ( status != EMBER_SUCCESS ) {
-    app_log_info("MAC TX: 0x%02X\n", status);
+    app_log_info("MAC TX: 0x%02" PRIX8 "\n", status);
   }
 }
 
@@ -149,7 +150,7 @@ void emberAfStackStatusCallback(EmberStatus status)
       app_log_info("Network down\n");
       break;
     default:
-      app_log_info("Stack status: 0x%02X\n", status);
+      app_log_info("Stack status: 0x%02" PRIX8 "\n", status);
       break;
   }
 }
@@ -172,18 +173,18 @@ void emberAfIncomingBeaconCallback(EmberPanId panId,
   (void) beaconFieldsLength;
   (void) beaconFields;
 
-  app_log_info("BEACON: panId 0x%04X source ", panId);
+  app_log_info("BEACON: panId 0x%04" PRIX16 " source ", panId);
   if (source->mode == EMBER_MAC_ADDRESS_MODE_SHORT) {
-    app_log_info("0x%04X", source->addr.shortAddress);
+    app_log_info("0x%04" PRIX16, source->addr.shortAddress);
   } else if (source->mode == EMBER_MAC_ADDRESS_MODE_LONG) {
-    app_log_info("0x%llX\n", SYSTEM_GetUnique());
+    app_log_info("0x%016" PRIX64 "\n", SYSTEM_GetUnique());
   } else {
     app_log_info("none");
   }
 
   app_log_info(" payload {");
   for (uint8_t i = 0; i < beaconPayloadLength; i++) {
-    app_log_info("%02X", beaconPayload[i]);
+    app_log_info("%02" PRIX8, beaconPayload[i]);
   }
   app_log_info("}\n");
 }
@@ -196,7 +197,7 @@ void emberAfEnergyScanCompleteCallback(int8_t mean,
                                        int8_t max,
                                        uint16_t variance)
 {
-  app_log_info("Energy scan complete, mean=%d min=%d max=%d var=%d\n",
+  app_log_info("Energy scan complete, mean=%" PRId8 " min=%" PRId8 " max=%" PRId8 " var=%" PRIu16 "\n",
                mean, min, max, variance);
 }
 

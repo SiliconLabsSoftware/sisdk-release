@@ -38,11 +38,14 @@
 
 #if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA
 #include "security_manager.h"
+#include <stdint.h>
+#include <string.h>
 #include "common/debug.hpp"
 #include "utils/code_utils.h"
 
 #include "em_device.h"
 #include <mbedtls/ecdsa.h>
+#include <mbedtls/ecp.h>
 #include <mbedtls/md.h>
 #include <mbedtls/pk.h>
 #include "mbedtls/psa_util.h"
@@ -51,10 +54,16 @@
 #else
 #include "sl_hal_system.h"
 #endif
+#include "sl_memory_manager.h"
 #include "sl_psa_crypto.h"
+#include "sl_status.h"
+#include "sli_psa_crypto.h"
 
 #define PERSISTENCE_KEY_ID_USED_MAX (7)
 #define MAX_HMAC_KEY_SIZE (32)
+
+// Buffer size for exporting an IKM key (80 bytes is the maximum size for a SHA-256 key).
+#define HKDF_IKM_EXPORT_BUFFER_BYTES (80)
 
 #if !defined(_SILICON_LABS_32B_SERIES_3)
 static psa_status_t reImportUnwrapped(const otCryptoKey *aKey, otCryptoKeyRef *aHmacKeyRef);
@@ -75,6 +84,52 @@ static inline otCryptoKeyRef getHmacKeyRef(const otCryptoKey *aKey)
 #endif
 
     return keyRef;
+}
+
+sl_status_t sli_ot_crypto_context_init(otCryptoContext *aContext, size_t aContextSize)
+{
+    sl_status_t status = SL_STATUS_OK;
+
+    otEXPECT_ACTION((aContext != NULL), status = SL_STATUS_INVALID_PARAMETER);
+
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT
+    if (aContext->mContext == NULL)
+    {
+        status = sl_memory_alloc_advanced(aContextSize,
+                                          SL_MEMORY_BLOCK_ALIGN_8_BYTES,
+                                          BLOCK_TYPE_SHORT_TERM,
+                                          &aContext->mContext);
+        otEXPECT(status == SL_STATUS_OK);
+        aContext->mContextSize = (uint16_t)aContextSize;
+    }
+#else
+    otEXPECT_ACTION((aContext->mContext != NULL), status = SL_STATUS_INVALID_PARAMETER);
+#endif
+
+    otEXPECT_ACTION(((size_t)aContext->mContextSize >= aContextSize), status = SL_STATUS_WOULD_OVERFLOW);
+    memset(aContext->mContext, 0, aContextSize);
+
+exit:
+    return status;
+}
+
+sl_status_t sli_ot_crypto_context_deinit(otCryptoContext *aContext)
+{
+    sl_status_t status = SL_STATUS_OK;
+
+    otEXPECT_ACTION((aContext != NULL), status = SL_STATUS_INVALID_PARAMETER);
+    otEXPECT_ACTION((aContext->mContext != NULL), status = SL_STATUS_INVALID_PARAMETER);
+
+    memset(aContext->mContext, 0, aContext->mContextSize);
+
+#if OPENTHREAD_CONFIG_CRYPTO_PLATFORM_ALLOCS_CONTEXT
+    sl_free(aContext->mContext);
+    aContext->mContext     = NULL;
+    aContext->mContextSize = 0;
+#endif
+
+exit:
+    return status;
 }
 
 // Helper function to convert otCryptoKeyType to psa_key_type_t
@@ -98,6 +153,10 @@ static psa_key_type_t getPsaKeyType(otCryptoKeyType aKeyType)
 
     case OT_CRYPTO_KEY_TYPE_ECDSA:
         aPsaKeyType = PSA_KEY_TYPE_ECC_KEY_PAIR(PSA_ECC_FAMILY_SECP_R1);
+        break;
+
+    case OT_CRYPTO_KEY_TYPE_DERIVE:
+        aPsaKeyType = PSA_KEY_TYPE_DERIVE;
         break;
     }
 
@@ -125,6 +184,10 @@ static psa_algorithm_t getPsaAlgorithm(otCryptoKeyAlgorithm aKeyAlgorithm)
 
     case OT_CRYPTO_KEY_ALG_ECDSA:
         aPsaKeyAlgorithm = PSA_ALG_ECDSA(PSA_ALG_ANY_HASH);
+        break;
+
+    case OT_CRYPTO_KEY_ALG_HKDF_SHA256:
+        aPsaKeyAlgorithm = PSA_ALG_HKDF(PSA_ALG_SHA_256);
         break;
     }
 
@@ -161,6 +224,11 @@ static psa_key_usage_t getPsaKeyUsage(int aKeyUsage)
         aPsaKeyUsage |= PSA_KEY_USAGE_VERIFY_HASH;
     }
 
+    if (aKeyUsage & OT_CRYPTO_KEY_USAGE_DERIVE)
+    {
+        aPsaKeyUsage |= PSA_KEY_USAGE_DERIVE;
+    }
+
     return aPsaKeyUsage;
 }
 
@@ -181,6 +249,32 @@ static psa_key_persistence_t getPsaKeyPersistence(otCryptoKeyStorage aKeyPersist
     }
 
     return aPsaKeyPersistence;
+}
+
+// Helper function to map sl_status_t status codes to OpenThread error codes
+static otError mapSlStatusToOtError(sl_status_t status)
+{
+    otError error = OT_ERROR_NONE;
+
+    switch (status)
+    {
+    case SL_STATUS_OK:
+        error = OT_ERROR_NONE;
+        break;
+    case SL_STATUS_INVALID_PARAMETER:
+        error = OT_ERROR_INVALID_ARGS;
+        break;
+    case SL_STATUS_WOULD_OVERFLOW:
+    case SL_STATUS_ALLOCATION_FAILED:
+    case SL_STATUS_NO_MORE_RESOURCE:
+        error = OT_ERROR_NO_BUFS;
+        break;
+    default:
+        error = OT_ERROR_FAILED;
+        break;
+    }
+
+    return error;
 }
 
 // Helper function to map psa_status_t status codes to OpenThread error codes
@@ -294,6 +388,7 @@ static otError extractPrivateKeyFromDer(uint8_t *aPrivateKey, const uint8_t *aDe
     otError              error = OT_ERROR_NONE;
     mbedtls_pk_context   pk;
     mbedtls_ecp_keypair *keyPair;
+    int                  ret;
 
     mbedtls_pk_init(&pk);
 
@@ -308,9 +403,18 @@ static otError extractPrivateKeyFromDer(uint8_t *aPrivateKey, const uint8_t *aDe
 #endif
 
     keyPair = mbedtls_pk_ec(pk);
-    mbedtls_mpi_write_binary(&keyPair->MBEDTLS_PRIVATE(d), aPrivateKey, SL_OPENTHREAD_ECDSA_PRIVATE_KEY_SIZE);
+#if (MBEDTLS_VERSION_NUMBER >= 0x03060000)
+    {
+        size_t olen = 0;
+        ret         = mbedtls_ecp_write_key_ext(keyPair, &olen, aPrivateKey, SL_OPENTHREAD_ECDSA_PRIVATE_KEY_SIZE);
+    }
+#else
+    ret = mbedtls_ecp_write_key(keyPair, aPrivateKey, SL_OPENTHREAD_ECDSA_PRIVATE_KEY_SIZE);
+#endif
+    otEXPECT_ACTION(ret == 0, error = OT_ERROR_FAILED);
 
 exit:
+    mbedtls_pk_free(&pk);
     return error;
 }
 
@@ -322,16 +426,19 @@ otError otPlatCryptoImportKey(otCryptoKeyRef      *aKeyId,
                               const uint8_t       *aKey,
                               size_t               aKeyLen)
 {
-    otError         error = OT_ERROR_NONE;
-    psa_status_t    status;
-    uint8_t         aPrivateKey[SL_OPENTHREAD_ECDSA_PRIVATE_KEY_SIZE];
-    const uint8_t  *keyToImport  = aKey;
-    size_t          keySize      = aKeyLen;
-    psa_key_usage_t keyUsageMask = 0;
+    otError      error = OT_ERROR_NONE;
+    psa_status_t status;
+    // Zero-init to avoid accidental use of uninitialized stack data if DER parsing fails.
+    uint8_t         aPrivateKey[SL_OPENTHREAD_ECDSA_PRIVATE_KEY_SIZE] = {0};
+    const uint8_t  *keyToImport                                       = aKey;
+    size_t          keySize                                           = aKeyLen;
+    psa_key_usage_t keyUsageMask                                      = 0;
 
     if (aKeyType == OT_CRYPTO_KEY_TYPE_ECDSA)
     {
-        error       = extractPrivateKeyFromDer(aPrivateKey, aKey, aKeyLen);
+        error = extractPrivateKeyFromDer(aPrivateKey, aKey, aKeyLen);
+        // If DER parsing fails, do not attempt to import potentially invalid/uninitialized key material.
+        otEXPECT(error == OT_ERROR_NONE);
         keyToImport = aPrivateKey;
         keySize     = SL_OPENTHREAD_ECDSA_PRIVATE_KEY_SIZE;
     }
@@ -352,6 +459,9 @@ otError otPlatCryptoImportKey(otCryptoKeyRef      *aKeyId,
 
     error = mapPsaStatusToOtError(status);
 
+exit:
+    // clear extracted private key bytes (stack buffer).
+    memset(aPrivateKey, 0, sizeof(aPrivateKey));
     return error;
 }
 
@@ -389,8 +499,16 @@ bool otPlatCryptoHasKey(otCryptoKeyRef aKeyRef)
 // AES  Implementation
 otError otPlatCryptoAesInit(otCryptoContext *aContext)
 {
-    otError error = OT_ERROR_NONE;
-    (void)aContext;
+    otError     error = OT_ERROR_NONE;
+    sl_status_t status;
+
+    // PSA AES ECB stores `otCryptoKeyRef` (PSA key id) in `mContext`.
+    status = sli_ot_crypto_context_init(aContext, sizeof(otCryptoKeyRef));
+    otEXPECT_ACTION(status == SL_STATUS_OK, error = mapSlStatusToOtError(status));
+
+    *(otCryptoKeyRef *)aContext->mContext = PSA_KEY_ID_NULL;
+
+exit:
     return error;
 }
 
@@ -427,30 +545,51 @@ exit:
 
 otError otPlatCryptoAesFree(otCryptoContext *aContext)
 {
-    otError error = OT_ERROR_NONE;
-    (void)aContext;
+    otError     error = OT_ERROR_NONE;
+    sl_status_t status;
+
+    status = sli_ot_crypto_context_deinit(aContext);
+    otEXPECT_ACTION(status == SL_STATUS_OK, error = mapSlStatusToOtError(status));
+
+exit:
     return error;
 }
 
 // HMAC implementations
 otError otPlatCryptoHmacSha256Init(otCryptoContext *aContext)
 {
-    otError              error         = OT_ERROR_NONE;
-    psa_mac_operation_t *mMacOperation = (psa_mac_operation_t *)aContext->mContext;
-    *mMacOperation                     = psa_mac_operation_init();
+    otError     error = OT_ERROR_NONE;
+    sl_status_t status;
+    size_t      contextSize;
+
+    contextSize = sli_psa_context_get_size(SLI_PSA_CONTEXT_ENUM_NAME(psa_mac_operation_t));
+    status      = sli_ot_crypto_context_init(aContext, contextSize);
+    otEXPECT_ACTION(status == SL_STATUS_OK, error = mapSlStatusToOtError(status));
+
+    *(psa_mac_operation_t *)aContext->mContext = psa_mac_operation_init();
+
+exit:
     return error;
 }
 
 otError otPlatCryptoHmacSha256Deinit(otCryptoContext *aContext)
 {
-    otError              error         = OT_ERROR_NONE;
-    psa_mac_operation_t *mMacOperation = (psa_mac_operation_t *)aContext->mContext;
-    psa_status_t         status;
+    otError      error = OT_ERROR_NONE;
+    psa_status_t status;
+    sl_status_t  slstatus = SL_STATUS_OK;
 
-    status = sl_sec_man_hmac_deinit(mMacOperation);
+    otEXPECT_ACTION((aContext != NULL) && (aContext->mContext != NULL), error = OT_ERROR_INVALID_ARGS);
 
-    error = mapPsaStatusToOtError(status);
+    status = sl_sec_man_hmac_deinit((psa_mac_operation_t *)aContext->mContext);
+    error  = mapPsaStatusToOtError(status);
 
+    slstatus = sli_ot_crypto_context_deinit(aContext);
+    if (error == OT_ERROR_NONE)
+    {
+        otEXPECT_ACTION(slstatus == SL_STATUS_OK, error = mapSlStatusToOtError(slstatus));
+    }
+
+exit:
     return error;
 }
 
@@ -544,13 +683,15 @@ otError otPlatCryptoHmacSha256Finish(otCryptoContext *aContext, uint8_t *aBuf, s
 // SHA256 platform implementations
 otError otPlatCryptoSha256Init(otCryptoContext *aContext)
 {
-    otError error = OT_ERROR_NONE;
-    otEXPECT_ACTION((aContext != NULL), error = OT_ERROR_INVALID_ARGS);
-    psa_hash_operation_t *ctx = (psa_hash_operation_t *)aContext->mContext;
+    otError     error = OT_ERROR_NONE;
+    sl_status_t status;
+    size_t      contextSize;
 
-    otEXPECT_ACTION((ctx != NULL), error = OT_ERROR_INVALID_ARGS);
+    contextSize = sli_psa_context_get_size(SLI_PSA_CONTEXT_ENUM_NAME(psa_hash_operation_t));
+    status      = sli_ot_crypto_context_init(aContext, contextSize);
+    otEXPECT_ACTION(status == SL_STATUS_OK, error = mapSlStatusToOtError(status));
 
-    *ctx = sl_sec_man_hash_init();
+    *(psa_hash_operation_t *)aContext->mContext = sl_sec_man_hash_init();
 
 exit:
     return error;
@@ -560,12 +701,18 @@ otError otPlatCryptoSha256Deinit(otCryptoContext *aContext)
 {
     otError      error = OT_ERROR_NONE;
     psa_status_t status;
-    otEXPECT_ACTION((aContext != NULL), error = OT_ERROR_INVALID_ARGS);
-    psa_hash_operation_t *ctx = (psa_hash_operation_t *)aContext->mContext;
+    sl_status_t  slstatus = SL_STATUS_OK;
 
-    otEXPECT_ACTION((ctx != NULL), error = OT_ERROR_INVALID_ARGS);
-    status = sl_sec_man_hash_deinit(ctx);
+    otEXPECT_ACTION((aContext != NULL) && (aContext->mContext != NULL), error = OT_ERROR_INVALID_ARGS);
+
+    status = sl_sec_man_hash_deinit((psa_hash_operation_t *)aContext->mContext);
     error  = mapPsaStatusToOtError(status);
+
+    slstatus = sli_ot_crypto_context_deinit(aContext);
+    if (error == OT_ERROR_NONE)
+    {
+        otEXPECT_ACTION(slstatus == SL_STATUS_OK, error = mapSlStatusToOtError(slstatus));
+    }
 
 exit:
     return error;
@@ -830,6 +977,120 @@ otError otPlatCryptoEcdsaVerify(const otPlatCryptoEcdsaPublicKey *aPublicKey,
     error = mapPsaStatusToOtError(status);
 
 exit:
+    return error;
+}
+
+otError otPlatCryptoHkdfInit(otCryptoContext *aContext)
+{
+    otError     error = OT_ERROR_NONE;
+    sl_status_t status;
+    size_t      contextSize;
+
+    otEXPECT_ACTION(aContext != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    contextSize = sli_psa_context_get_size(SLI_PSA_CONTEXT_ENUM_NAME(psa_key_derivation_operation_t));
+    status      = sli_ot_crypto_context_init(aContext, contextSize);
+    otEXPECT_ACTION(status == SL_STATUS_OK, error = mapSlStatusToOtError(status));
+
+exit:
+    return error;
+}
+
+otError otPlatCryptoHkdfExtract(otCryptoContext   *aContext,
+                                const uint8_t     *aSalt,
+                                uint16_t           aSaltLength,
+                                const otCryptoKey *aInputKey)
+{
+    otError                         error     = OT_ERROR_NONE;
+    psa_status_t                    status    = PSA_SUCCESS;
+    psa_key_derivation_operation_t *operation = NULL;
+    otCryptoKeyRef                  keyRef    = PSA_KEY_ID_NULL;
+    size_t                          keyLength = 0;
+    uint8_t                         keyBuffer[HKDF_IKM_EXPORT_BUFFER_BYTES];
+    psa_key_attributes_t            attributes = PSA_KEY_ATTRIBUTES_INIT;
+
+    otEXPECT_ACTION(aContext != NULL, error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(aContext->mContext != NULL, error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(aInputKey != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    operation = (psa_key_derivation_operation_t *)aContext->mContext;
+
+    status = sl_sec_man_export_key(aInputKey->mKeyRef, keyBuffer, sizeof(keyBuffer), &keyLength);
+    otEXPECT_ACTION(status == PSA_SUCCESS, error = mapPsaStatusToOtError(status));
+
+    psa_set_key_usage_flags(&attributes, getPsaKeyUsage(OT_CRYPTO_KEY_USAGE_DERIVE));
+    psa_set_key_algorithm(&attributes, getPsaAlgorithm(OT_CRYPTO_KEY_ALG_HKDF_SHA256));
+    psa_set_key_type(&attributes, getPsaKeyType(OT_CRYPTO_KEY_TYPE_DERIVE));
+    psa_set_key_bits(&attributes, (8 * keyLength));
+    psa_set_key_lifetime(&attributes, PSA_KEY_LIFETIME_VOLATILE);
+
+    status = psa_import_key(&attributes, keyBuffer, keyLength, &keyRef);
+    otEXPECT_ACTION(status == PSA_SUCCESS, error = mapPsaStatusToOtError(status));
+
+    status = sl_sec_man_key_derivation_extract(operation, PSA_ALG_SHA_256, keyRef, aSalt, aSaltLength);
+    otEXPECT_ACTION(status == PSA_SUCCESS, error = mapPsaStatusToOtError(status));
+
+exit:
+    psa_reset_key_attributes(&attributes);
+    if (keyRef != PSA_KEY_ID_NULL)
+    {
+        psa_destroy_key(keyRef);
+    }
+
+    memset(keyBuffer, 0, sizeof(keyBuffer));
+
+    return error;
+}
+
+otError otPlatCryptoHkdfExpand(otCryptoContext *aContext,
+                               const uint8_t   *aInfo,
+                               uint16_t         aInfoLength,
+                               uint8_t         *aOutputKey,
+                               uint16_t         aOutputKeyLength)
+{
+    otError                         error  = OT_ERROR_NONE;
+    psa_status_t                    status = PSA_SUCCESS;
+    psa_key_derivation_operation_t *operation;
+
+    otEXPECT_ACTION(aContext != NULL, error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(aContext->mContext != NULL, error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(aOutputKey != NULL, error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(aOutputKeyLength != 0, error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(aInfo != NULL || aInfoLength == 0, error = OT_ERROR_INVALID_ARGS);
+
+    operation = (psa_key_derivation_operation_t *)aContext->mContext;
+
+    status = sl_sec_man_key_derivation_expand(operation, aInfo, aInfoLength, aOutputKey, aOutputKeyLength);
+    otEXPECT_ACTION(status == PSA_SUCCESS, error = mapPsaStatusToOtError(status));
+
+exit:
+    return error;
+}
+
+otError otPlatCryptoHkdfDeinit(otCryptoContext *aContext)
+{
+    otError                         error = OT_ERROR_NONE;
+    psa_status_t                    status;
+    sl_status_t                     slstatus = SL_STATUS_OK;
+    psa_key_derivation_operation_t *operation;
+
+    otEXPECT_ACTION(aContext != NULL, error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(aContext->mContext != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    operation = (psa_key_derivation_operation_t *)aContext->mContext;
+
+    status = psa_key_derivation_abort(operation);
+    otEXPECT_ACTION(status == PSA_SUCCESS, error = mapPsaStatusToOtError(status));
+
+exit:
+    slstatus = sli_ot_crypto_context_deinit(aContext);
+
+    if (error == OT_ERROR_NONE && slstatus != SL_STATUS_OK)
+    {
+        // PSA abort already reported in `error', only override when abort succeeded.
+        error = mapSlStatusToOtError(slstatus);
+    }
+
     return error;
 }
 

@@ -59,6 +59,30 @@
 //
 
 #include  "mac-types.h"
+// IEEE 802.15.4 MAC header field sizes (Inter-PAN always uses long source).
+#define INTERPAN_MAC_FRAME_CONTROL_FIELD_SIZE   2
+#define INTERPAN_MAC_SEQUENCE_FIELD_SIZE        1
+#define INTERPAN_MAC_PAN_ID_FIELD_SIZE          2
+#define INTERPAN_MAC_SHORT_ADDRESS_FIELD_SIZE   2
+#define INTERPAN_MAC_LONG_ADDRESS_FIELD_SIZE    8
+
+// Bytes from frame start through destination addressing.
+#define INTERPAN_MAC_LONG_DEST_PREFIX_SIZE \
+  (INTERPAN_MAC_FRAME_CONTROL_FIELD_SIZE   \
+   + INTERPAN_MAC_SEQUENCE_FIELD_SIZE      \
+   + INTERPAN_MAC_PAN_ID_FIELD_SIZE        \
+   + INTERPAN_MAC_LONG_ADDRESS_FIELD_SIZE)
+
+#define INTERPAN_MAC_SHORT_DEST_PREFIX_SIZE \
+  (INTERPAN_MAC_FRAME_CONTROL_FIELD_SIZE   \
+   + INTERPAN_MAC_SEQUENCE_FIELD_SIZE      \
+   + INTERPAN_MAC_PAN_ID_FIELD_SIZE        \
+   + INTERPAN_MAC_SHORT_ADDRESS_FIELD_SIZE)
+
+// Source PAN ID + long source address (always present on Inter-PAN).
+#define INTERPAN_MAC_SOURCE_FIELDS_SIZE \
+  (INTERPAN_MAC_PAN_ID_FIELD_SIZE + INTERPAN_MAC_LONG_ADDRESS_FIELD_SIZE)
+
 // MAC Frame Max size
 // - Frame control   (2-bytes)
 // - Sequence        (1-byte)
@@ -66,11 +90,22 @@
 // - Dest long       (8-bytes)
 // - Source PAN ID   (2-bytes)
 // - Source long     (8-bytes)
-#define MAX_INTER_PAN_MAC_SIZE 23
+#define MAX_INTER_PAN_MAC_SIZE \
+  (INTERPAN_MAC_LONG_DEST_PREFIX_SIZE + INTERPAN_MAC_SOURCE_FIELDS_SIZE)
+
+#define INTERPAN_MAC_SHORT_DEST_FRAME_SIZE \
+  (INTERPAN_MAC_SHORT_DEST_PREFIX_SIZE + INTERPAN_MAC_SOURCE_FIELDS_SIZE)
 
 // NWK stub frame has two control bytes.
 #define STUB_NWK_SIZE 2
 #define STUB_NWK_FRAME_CONTROL 0x000B
+
+// Minimum wire length to read stub APS frame control after MAC + NWK stub.
+#define INTERPAN_STUB_APS_FRAME_CONTROL_SIZE    1
+#define INTERPAN_MIN_PEEK_LONG_DEST_MESSAGE_SIZE  \
+  (MAX_INTER_PAN_MAC_SIZE + STUB_NWK_SIZE + INTERPAN_STUB_APS_FRAME_CONTROL_SIZE)
+#define INTERPAN_MIN_PEEK_SHORT_DEST_MESSAGE_SIZE \
+  (INTERPAN_MAC_SHORT_DEST_FRAME_SIZE + STUB_NWK_SIZE + INTERPAN_STUB_APS_FRAME_CONTROL_SIZE)
 
 // Interpan APS Unicast
 //  - Frame Control   (1-byte)
@@ -107,23 +142,31 @@
 
 #define INTERPAN_APS_FRAME_DELIVERY_MODE_MASK 0x0C
 #define INTERPAN_APS_FRAME_SECURITY           0x20
+// APS frame control bit 7: extended frame control byte follows cluster/profile
+#define INTERPAN_APS_FRAME_EXTENDED_FC        0x80
 
 // 5 byte AUX header + 4 byte MIC
 #define INTERPAN_APS_ENCRYPTION_OVERHEAD      (5 + 4)
 
-// Control byte (1), Index IPMF (1), Number IPMF (1), Len IPMF (1)
-#define SL_ZIGBEE_APS_INTERPAN_FRAGMENTATION_OVERHEAD           4
-// Control byte (1), Index IPMF (1), Response (1)
+// Extended FC byte (1) + info byte (1): total blocks (first) or block index (next).
+// Requires APS FC bit 7 on the wire. Not used for IPMF responses.
+#define SL_ZIGBEE_APS_INTERPAN_FRAGMENTATION_OVERHEAD           2
+// IPMF response APS payload only (no APS FC bit 7): control, block index, status
 #define SL_ZIGBEE_APS_INTERPAN_FRAGMENTATION_RESPONSE_LEN       3
 #define SL_ZIGBEE_APS_INTERPAN_FRAGMENT_MIN_LEN \
-  SL_ZIGBEE_APS_INTERPAN_FRAGMENTATION_RESPONSE_LEN
+  SL_ZIGBEE_APS_INTERPAN_FRAGMENTATION_OVERHEAD
 
-#define INTERPAN_FRAGMENTATION_APS_CONTROL_BYTE_INDEX   0
-#define INTERPAN_FRAGMENTATION_APS_INDEX_IPMF_INDEX     1
-#define INTERPAN_FRAGMENTATION_APS_IPMF_RESPONSE_INDEX  2 // IPMF response only
-#define INTERPAN_FRAGMENTATION_APS_LEN_IPMF_INDEX       3 // IPMF only
-#define INTERPAN_FRAGMENTATION_APS_CONTROL_BYTE_IPMF_VAL            0x00
-#define INTERPAN_FRAGMENTATION_APS_CONTROL_BYTE_IPMF_RESPONSE_VAL   0x80
+#define INTERPAN_FRAGMENTATION_APS_EXTENDED_FC_INDEX            0
+#define INTERPAN_FRAGMENTATION_APS_INFO_BYTE_INDEX              1
+#define INTERPAN_FRAGMENTATION_APS_IPMF_RESPONSE_INDEX          2
+
+// Extended frame control bits [1:0] in the APS payload when APS FC bit 7 is set
+#define INTERPAN_APS_EXTENDED_FC_FRAGMENT_FIRST                 0x01
+#define INTERPAN_APS_EXTENDED_FC_FRAGMENT_NEXT                  0x02
+#define INTERPAN_APS_EXTENDED_FC_FRAGMENT_NONE                  0x00
+#define INTERPAN_APS_EXTENDED_FC_FRAGMENT_RESERVED                0x03
+// IPMF response payload byte 0 (not APS extended FC; APS FC bit 7 clear)
+#define INTERPAN_FRAGMENTATION_APS_CONTROL_BYTE_IPMF_RESPONSE_VAL 0x80
 
 #define INTERPAN_IPMF_RESPONSE_SUCCESS    0x00
 #define INTERPAN_IPMF_RESPONSE_FAILURE    0x01

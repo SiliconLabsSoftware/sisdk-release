@@ -103,6 +103,7 @@ void sli_zigbee_gp_write_incoming_fc_to_token(uint8_t index);
   (sli_zigbee_gp_proxy_table[(index)].options &= (~SL_ZIGBEE_AF_GP_PROXY_TABLE_ENTRY_OPTIONS_FIRST_TO_FORWARD))
 
 void sli_zigbee_gp_proxy_table_init(void);
+void sli_zigbee_gp_load_proxy_table_entry_key(uint8_t index);
 sl_status_t sli_zigbee_gp_proxy_table_set_entry(uint8_t proxyIndex,
                                                 sl_zigbee_gp_proxy_table_entry_t *entry);
 uint8_t sli_zigbee_gp_proxy_table_get_free_entry_index(void);

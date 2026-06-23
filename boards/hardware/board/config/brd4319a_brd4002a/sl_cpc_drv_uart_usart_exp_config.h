@@ -88,13 +88,7 @@
 #define SL_CPC_DRV_UART_EXP_RX_PORT              SL_GPIO_PORT_D
 #define SL_CPC_DRV_UART_EXP_RX_PIN               0
 
-// USART0 CTS on PC03
-#define SL_CPC_DRV_UART_EXP_CTS_PORT             SL_GPIO_PORT_C
-#define SL_CPC_DRV_UART_EXP_CTS_PIN              3
 
-// USART0 RTS on PC02
-#define SL_CPC_DRV_UART_EXP_RTS_PORT             SL_GPIO_PORT_C
-#define SL_CPC_DRV_UART_EXP_RTS_PIN              2
 
 // [USART_SL_CPC_DRV_UART_EXP]$
 // <<< sl:end pin_tool >>>

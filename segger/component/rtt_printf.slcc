@@ -6,7 +6,7 @@ category: Third Party|Segger|RTT
 quality: production
 metadata:
   sbom:
-    license: Segger
+    license: zlib
 source:
 - path: systemview/SEGGER/SEGGER_RTT_printf.c
 provides:

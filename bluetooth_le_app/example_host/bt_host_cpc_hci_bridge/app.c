@@ -55,7 +55,7 @@ static cpc_endpoint_t cpc_endpoint;
 static uint8_t cpc_tx_buffer[CPC_TX_BUF_SIZE];
 static uint8_t cpc_rx_buffer[CPC_RX_BUF_SIZE];
 
-// Master and slave file decriptors for the PTY
+// Master and slave file descriptors for the PTY
 static int pty_master_fd;
 static int pty_slave_fd;
 // CPC socket file descriptor

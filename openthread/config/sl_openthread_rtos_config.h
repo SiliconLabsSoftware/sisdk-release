@@ -78,14 +78,6 @@
 #define SL_OPENTHREAD_SERIAL_TASK_MEM_SIZE (3840)
 
 // </h>
-// <h>  Priority Configuration for OpenThread RTOS Stack Task
-// <o SL_OPENTHREAD_RTOS_SERIAL_TASK_PRIORITY> OpenThread serial task prority
-// <i> Default: 16 (CMSIS-RTOS2 osPriorityBelowNormal)
-// <i> Defines OpenThread serial task priority. This must be a valid priority value
-// <i> from CMSIS-RTOS2 osPriority_t definition.
-#define SL_OPENTHREAD_RTOS_SERIAL_TASK_PRIORITY (16)
-
-// </h>
 // <h> App Task
 // <i> Enable default App task
 // <i> Default: On (for non-RCP apps)

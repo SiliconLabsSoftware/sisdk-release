@@ -31,7 +31,7 @@ static void addOrSubtractChannel(uint8_t maskToAddTo,
 {
   if (channelToAdd < SL_ZIGBEE_MIN_802_15_4_CHANNEL_NUMBER
       || channelToAdd > SL_ZIGBEE_MAX_802_15_4_CHANNEL_NUMBER) {
-    sl_zigbee_af_core_println("Channel not valid: %d", channelToAdd);
+    sl_zigbee_af_cli_println("Channel not valid: %d", channelToAdd);
   } else if (maskToAddTo == 1) {
     if (operationIsAdd) {
       SETBIT(sli_zigbee_af_network_steering_primary_channel_mask, channelToAdd);
@@ -39,9 +39,9 @@ static void addOrSubtractChannel(uint8_t maskToAddTo,
       CLEARBIT(sli_zigbee_af_network_steering_primary_channel_mask, channelToAdd);
     }
 
-    sl_zigbee_af_core_println("%s mask now 0x%08X",
-                              "Primary",
-                              sli_zigbee_af_network_steering_primary_channel_mask);
+    sl_zigbee_af_cli_println("%s mask now 0x%08X",
+                             "Primary",
+                             sli_zigbee_af_network_steering_primary_channel_mask);
   } else if (maskToAddTo == 2) {
     if (operationIsAdd) {
       SETBIT(sli_zigbee_af_network_steering_secondary_channel_mask, channelToAdd);
@@ -49,11 +49,11 @@ static void addOrSubtractChannel(uint8_t maskToAddTo,
       CLEARBIT(sli_zigbee_af_network_steering_secondary_channel_mask, channelToAdd);
     }
 
-    sl_zigbee_af_core_println("%s mask now 0x%08X",
-                              "Secondary",
-                              sli_zigbee_af_network_steering_secondary_channel_mask);
+    sl_zigbee_af_cli_println("%s mask now 0x%08X",
+                             "Secondary",
+                             sli_zigbee_af_network_steering_secondary_channel_mask);
   } else {
-    sl_zigbee_af_core_println("Mask not valid: %d", maskToAddTo);
+    sl_zigbee_af_cli_println("Mask not valid: %d", maskToAddTo);
   }
 }
 
@@ -89,54 +89,54 @@ void sl_zigbee_af_network_steering_channel_set_command(sl_cli_command_arg_t *arg
                     ? &sli_zigbee_af_network_steering_primary_channel_mask
                     : &sli_zigbee_af_network_steering_secondary_channel_mask);
 
-  sl_zigbee_af_core_println("%s: Set %s mask to 0x%08X",
-                            sli_zigbee_af_network_steering_plugin_name,
-                            (maskIsPrimary ? "primary" : "secondary"),
-                            (*mask = value));
+  sl_zigbee_af_cli_println("%s: Set %s mask to 0x%08X",
+                           sli_zigbee_af_network_steering_plugin_name,
+                           (maskIsPrimary ? "primary" : "secondary"),
+                           (*mask = value));
 }
 
 // // plugin network-steering status
 void sl_zigbee_af_network_steering_status_command(sl_cli_command_arg_t *arguments)
 {
   (void)arguments;
-  sl_zigbee_af_core_println("%s: %s:",
-                            sli_zigbee_af_network_steering_plugin_name,
-                            "Status");
+  sl_zigbee_af_cli_println("%s: %s:",
+                           sli_zigbee_af_network_steering_plugin_name,
+                           "Status");
 
-  sl_zigbee_af_core_println("Channel mask:");
-  sl_zigbee_af_core_print("    (1) 0x%08X [",
-                          sli_zigbee_af_network_steering_primary_channel_mask);
+  sl_zigbee_af_cli_println("Channel mask:");
+  sl_zigbee_af_cli_print("    (1) 0x%08X [",
+                         sli_zigbee_af_network_steering_primary_channel_mask);
   sl_zigbee_af_print_channel_list_from_mask(sli_zigbee_af_network_steering_primary_channel_mask);
-  sl_zigbee_af_core_println("]");
-  sl_zigbee_af_core_print("    (2) 0x%08X [",
-                          sli_zigbee_af_network_steering_secondary_channel_mask);
+  sl_zigbee_af_cli_println("]");
+  sl_zigbee_af_cli_print("    (2) 0x%08X [",
+                         sli_zigbee_af_network_steering_secondary_channel_mask);
   sl_zigbee_af_print_channel_list_from_mask(sli_zigbee_af_network_steering_secondary_channel_mask);
-  sl_zigbee_af_core_println("]");
+  sl_zigbee_af_cli_println("]");
 
-  sl_zigbee_af_core_println("State: 0x%02X (%s)",
-                            sli_zigbee_af_network_steering_state,
-                            sli_zigbee_af_network_steering_stateNames[sli_zigbee_af_network_steering_state]);
+  sl_zigbee_af_cli_println("State: 0x%02X (%s)",
+                           sli_zigbee_af_network_steering_state,
+                           sli_zigbee_af_network_steering_stateNames[sli_zigbee_af_network_steering_state]);
 #ifndef OPTIMIZE_SCANS
-  sl_zigbee_af_core_println("Pan ID index: %d",
-                            sli_zigbee_af_network_steering_pan_id_index);
+  sl_zigbee_af_cli_println("Pan ID index: %d",
+                           sli_zigbee_af_network_steering_pan_id_index);
 #endif //  OPTIMIZE_SCANS
-  sl_zigbee_af_core_println("Current channel: %d",
-                            sli_zigbee_af_network_steering_get_current_channel());
-  sl_zigbee_af_core_println("Total beacons: %d",
-                            sli_zigbee_af_network_steering_total_beacons);
-  sl_zigbee_af_core_println("Join attempts: %d",
-                            sli_zigbee_af_network_steering_join_attempts);
-  sl_zigbee_af_core_println("Network state: 0x%02X",
-                            sl_zigbee_af_network_state());
+  sl_zigbee_af_cli_println("Current channel: %d",
+                           sli_zigbee_af_network_steering_get_current_channel());
+  sl_zigbee_af_cli_println("Total beacons: %d",
+                           sli_zigbee_af_network_steering_total_beacons);
+  sl_zigbee_af_cli_println("Join attempts: %d",
+                           sli_zigbee_af_network_steering_join_attempts);
+  sl_zigbee_af_cli_println("Network state: 0x%02X",
+                           sl_zigbee_af_network_state());
 }
 
 void sl_zigbee_af_network_steering_stop_command(sl_cli_command_arg_t *arguments)
 {
   (void)arguments;
-  sl_zigbee_af_core_println("%s: %s: 0x%02X",
-                            sli_zigbee_af_network_steering_plugin_name,
-                            "Stop",
-                            sl_zigbee_af_network_steering_stop());
+  sl_zigbee_af_cli_println("%s: %s: 0x%02X",
+                           sli_zigbee_af_network_steering_plugin_name,
+                           "Stop",
+                           sl_zigbee_af_network_steering_stop());
 }
 
 void sl_zigbee_af_network_steering_set_preconfigured_key_command(sl_cli_command_arg_t *arguments)

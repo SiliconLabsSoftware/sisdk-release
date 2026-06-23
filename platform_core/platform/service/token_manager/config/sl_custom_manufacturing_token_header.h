@@ -85,7 +85,7 @@
  *     uint8_t data[TOKEN_MFG_EXAMPLE_SIZE];
  *     uint32_t size;
  *     sl_token_manager_get_data(SL_TOKEN_GET_STATIC_DEVICE_TOKEN(TOKEN_MFG_EXAMPLE),
- *                               &data, sizeof(data), &size);
+ *                               &data, sizeof(data));
  *
  *     Static secure token read API example:
  *     uint32_t data1;

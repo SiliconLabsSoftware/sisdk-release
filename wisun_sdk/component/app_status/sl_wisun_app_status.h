@@ -44,7 +44,7 @@ extern "C" {
 
 #include "sl_status.h"
 #include "sl_wisun_coap_notify.h"
-#include "socket.h"
+#include "netinet/in.h"
 #include "sl_common.h"
 
 /**************************************************************************//**

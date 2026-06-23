@@ -30,6 +30,7 @@
 
 #include "sl_wisun_regdb.h"
 #include "sl_wisun_types.h"
+#include <stdlib.h>
 
 const sl_wisun_chan_params_t chan_params_table[] = {
   /*              operating_class -.                  chan_plan_id -.   chan_spacing_hz -.    ,- chan_count
@@ -70,8 +71,8 @@ const sl_wisun_chan_params_t chan_params_table[] = {
   { SL_WISUN_REGULATORY_DOMAIN_NA, 1, SL_WISUN_REGULATION_NONE,     1,  902200000,  200000, 129, {  2,  3, 18, 19, 84, 85, 86, }, NULL },
   { SL_WISUN_REGULATORY_DOMAIN_NA, 2, SL_WISUN_REGULATION_NONE,     2,  902400000,  400000,  64, {  5,  6, 21, 22, 68, 69, 70, }, NULL },
   { SL_WISUN_REGULATORY_DOMAIN_NA, 3, SL_WISUN_REGULATION_NONE,     3,  902600000,  600000,  42, {  8, 24,                     }, NULL },
-  { SL_WISUN_REGULATORY_DOMAIN_NA, 0, SL_WISUN_REGULATION_NONE,     4,  902800000,  800000,  31, { 51, 52, 53, 54,             }, "0-30", },
-  { SL_WISUN_REGULATORY_DOMAIN_NA, 0, SL_WISUN_REGULATION_NONE,     5,  903200000, 1200000,  20, { 34, 35, 36, 37, 38,         }, "0-19", },
+  { SL_WISUN_REGULATORY_DOMAIN_NA, 0, SL_WISUN_REGULATION_NONE,     4,  902800000,  800000,  31, { 51, 52, 53, 54,             }, NULL },
+  { SL_WISUN_REGULATORY_DOMAIN_NA, 0, SL_WISUN_REGULATION_NONE,     5,  903200000, 1200000,  20, { 34, 35, 36, 37, 38,         }, NULL },
   { SL_WISUN_REGULATORY_DOMAIN_PH, 1, SL_WISUN_REGULATION_NONE,    48,  915200000,  200000,  64, {  2,  3,  18, 19             }, "0-13", },
   { SL_WISUN_REGULATORY_DOMAIN_PH, 2, SL_WISUN_REGULATION_NONE,    49,  915400000,  400000,  32, {  5,  6,  8,  21, 22, 24     }, "0-6", },
   { SL_WISUN_REGULATORY_DOMAIN_SG, 1, SL_WISUN_REGULATION_NONE,    41,  866100000,  100000,  29, {  1,                         }, NULL },

@@ -3,7 +3,7 @@
  * @brief global dispatch for 'module' specific callback event handlers
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -16,6 +16,9 @@
  ******************************************************************************/
 // automatically generated from stack headers.  Do not manually edit
 #include "stack/internal/src/ipc/zigbee_ipc_callback_events.h"
+#ifdef SL_CATALOG_RAIL_MUX_AUX_PRESENT
+#include "stack/internal/src/ipc/sl_zigbee_rail_mux_aux_raw_ipc_callback_events.h"
+#endif
 #include "stack/internal/src/ipc/binding-table-ipc-callback-events.h"
 #include "stack/internal/src/ipc/bootload_ipc_callback_events.h"
 #ifdef SL_CATALOG_ZIGBEE_CBKE_CORE_PRESENT
@@ -51,6 +54,7 @@
 typedef void (*callback_dispatcher)(sl_zigbee_stack_cb_event_t *cb_event);
 
 static const callback_dispatcher stack_callbacks[] = {
+  sli_zigbee_sl_zigbee_rail_mux_aux_raw_process_ipc_event,
   sli_zigbee_binding_table_process_ipc_event,
   sli_zigbee_bootload_process_ipc_event,
   sli_zigbee_cbke_crypto_engine_process_ipc_event,

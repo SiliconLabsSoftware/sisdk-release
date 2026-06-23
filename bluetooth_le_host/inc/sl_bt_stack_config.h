@@ -23,11 +23,6 @@
 typedef struct {
   uint32_t max_buffer_memory; //!< Maximum number of bytes to use for data buffers
   uint32_t linklayer_config;
-  /**
-   * <b>Deprecated</b> and replaced by @ref SL_BTCTRL_SCHEDULER_PRIORITIES, implemented
-   * by the Bluetooth Low Energy Controller component.
-   */
-  sl_btctrl_ll_priorities * linklayer_priorities; //Priority configuration, if NULL uses default values
 }sl_bt_stack_config_t;
 
 /** Flag indicating Bluetooth runs in RTOS */

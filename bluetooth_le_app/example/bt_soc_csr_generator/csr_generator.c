@@ -266,7 +266,7 @@ void csr_generate(void)
       app_log_info("Provisioning record control block does not exist yet." APP_LOG_NL);
       break;
     default:
-      app_log_info("Unexpected error occured when reading the provisioning record." APP_LOG_NL);
+      app_log_info("Unexpected error occurred when reading the provisioning record." APP_LOG_NL);
       return;
   }
 

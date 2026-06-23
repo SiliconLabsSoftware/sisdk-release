@@ -13,7 +13,7 @@ source:
 - path: platform/service/mpu/src/sl_mpu_s2.c
   condition: [device_series_2]
 - path: platform/service/mpu/src/sl_mpu_s3.c
-  condition: [device_series_3, cortexm33]
+  condition: [device_series_3]
 include:
 - path: platform/service/mpu/inc
   file_list:
@@ -22,12 +22,14 @@ provides:
 - name: mpu
   condition: [device_series_2]
 - name: mpu
-  condition: [device_series_3, cortexm33]
+  condition: [device_series_3]
 requires:
 - name: status
 - name: device_has_mpu
 - name: mpa_manager
-  condition: [device_series_3, cortexm33]
+  condition: [device_series_3]
+- name: hal_system
+  condition: [device_series_3]
 template_contribution:
 - name: linker_mpu
   value: true

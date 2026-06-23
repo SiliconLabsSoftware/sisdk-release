@@ -15,10 +15,11 @@ include:
   file_list:
   - path: storage/ext_mem/btl_storage_ext_mem.h
   - path: storage/btl_storage.h
-  - path: storage/bootloadinfo/btl_storage_bootloadinfo.h
 provides:
 - name: btl_common_storage_single
+- name: btl_interface_bootloadinfo_provider
 requires:
+- name: btl_storage_bootloadinfo_header
 - name: btl_storage_slots
 - name: bootloader_debug
 config_file:

@@ -31,6 +31,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include PLATFORM_HEADER
 #include "stack/include/ember.h"
 #include "em_system.h"
@@ -76,9 +77,9 @@ void emberAfIncomingMessageCallback(EmberIncomingMessage *message)
     return;
   }
 
-  app_log_info("RX: Data from 0x%04X:", message->source);
+  app_log_info("RX: Data from 0x%04" PRIX16 ":", message->source);
   for (int j = 0; j < message->length; j++) {
-    app_log_info(" %02X", message->payload[j]);
+    app_log_info(" %02" PRIX8, message->payload[j]);
   }
 
   int32_t temperature = 0;
@@ -100,7 +101,7 @@ void emberAfIncomingMessageCallback(EmberIncomingMessage *message)
   humidity_decimal = humidity -  (humidity / 1000) * 1000;
   humidity = humidity / 1000;
 
-  app_log_info(" Temperature: %s%d.%03dC Humidity: %d.%03d%%\n", (temperature_is_negative ? "-" : "+"), temperature, temperature_decimal, humidity, humidity_decimal);
+  app_log_info(" Temperature: %s%" PRId32 ".%03" PRId32 "C Humidity: %" PRIu32 ".%03" PRIu32 "%%\n", (temperature_is_negative ? "-" : "+"), temperature, temperature_decimal, humidity, humidity_decimal);
 }
 
 /**************************************************************************//**
@@ -112,7 +113,7 @@ void emberAfMessageSentCallback(EmberStatus status,
 {
   (void) message;
   if (status != EMBER_SUCCESS) {
-    app_log_info("TX: 0x%02X\n", status);
+    app_log_info("TX: 0x%02" PRIX8 "\n", status);
   }
 }
 
@@ -130,7 +131,7 @@ void emberAfStackStatusCallback(EmberStatus status)
       app_log_info("Network down\n");
       break;
     default:
-      app_log_info("Stack status: 0x%02X\n", status);
+      app_log_info("Stack status: 0x%02" PRIX8 "\n", status);
       break;
   }
 }
@@ -141,7 +142,7 @@ void emberAfStackStatusCallback(EmberStatus status)
 void emberAfChildJoinCallback(EmberNodeType nodeType,
                               EmberNodeId nodeId)
 {
-  app_log_info("Sensor joined with node ID 0x%04X, node type: 0x%02X\n", nodeId, nodeType);
+  app_log_info("Sensor joined with node ID 0x%04" PRIX16 ", node type: 0x%02" PRIX8 "\n", nodeId, nodeType);
 }
 
 /**************************************************************************//**
@@ -164,7 +165,7 @@ void emberAfTickCallback(void)
 void emberAfFrequencyHoppingStartClientCompleteCallback(EmberStatus status)
 {
   if (status != EMBER_SUCCESS) {
-    app_log_error("FH Client sync failed, status=0x%02X\n", status);
+    app_log_error("FH Client sync failed, status=0x%02" PRIX8 "\n", status);
   } else {
     app_log_info("FH Client Sync Success\n");
   }
@@ -178,7 +179,7 @@ void emberAfEnergyScanCompleteCallback(int8_t mean,
                                        int8_t max,
                                        uint16_t variance)
 {
-  app_log_info("Energy scan complete, mean=%d min=%d max=%d var=%d\n",
+  app_log_info("Energy scan complete, mean=%" PRId8 " min=%" PRId8 " max=%" PRId8 " var=%" PRIu16 "\n",
                mean, min, max, variance);
 }
 

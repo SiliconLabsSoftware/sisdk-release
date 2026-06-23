@@ -3,7 +3,7 @@
  * @brief NCP host application module.
  *******************************************************************************
  * # License
- * <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -28,6 +28,7 @@
  *
  ******************************************************************************/
 
+#include <stdlib.h>
 #include "app_log.h"
 #include "app_assert.h"
 #include "sl_bt_ncp_host.h"
@@ -35,9 +36,14 @@
 #include "ncp_host.h"
 #include "app_sleep.h"
 #include "app_timer.h"
+#include "app_log.h"
 #include "ncp_host_config.h"
 #include "host_comm_config.h"
-#include <stdlib.h>
+
+#if defined(VERIFY_BGAPI_PAYLOAD_SIZES) && (VERIFY_BGAPI_PAYLOAD_SIZES == 1)
+#include "sl_bgapi_service_api.h"
+#include "sl_bgapi_config.h"
+#endif // VERIFY_BGAPI_PAYLOAD_SIZES
 
 // Default parameter values.
 #define MAX_OPT_LEN                   255
@@ -298,7 +304,7 @@ static int32_t ncp_host_get_msg(void)
   }
   ret = ncp_host_peek_timeout(msg_len, MSG_RECV_TIMEOUT_COUNT * msg_len);
   if (ret < 0) {
-    app_log_error("Message reveice timeout occured, the BGAPI data stream has been corrupted!" APP_LOG_NL);
+    app_log_error("Message reveice timeout occurred, the BGAPI data stream has been corrupted!" APP_LOG_NL);
     return -1;
   }
   // Read the rest of the message
@@ -418,6 +424,71 @@ static void on_boot_timer_expire(app_timer_t *timer, void *data)
     app_assert_status(sc);
   } else {
     app_assert(false, "NCP target unreachable.");
+  }
+}
+
+/**************************************************************************//**
+ * Bluetooth stack event handler.
+ *
+ * @param[in] evt Event coming from the Bluetooth stack.
+ *****************************************************************************/
+void ncp_host_on_bt_event(sl_bt_msg_t *evt)
+{
+  switch (SL_BT_MSG_ID(evt->header)) {
+    // -------------------------------
+    // This event indicates the device has started and the radio is ready.
+    // Do not call any stack command before receiving this boot event!
+    case sl_bt_evt_system_boot_id:
+#if defined(VERIFY_BGAPI_PAYLOAD_SIZES) && (VERIFY_BGAPI_PAYLOAD_SIZES == 1)
+      {
+        sl_status_t sc;
+        uint32_t max_command_payload;
+        uint32_t max_response_payload;
+        uint32_t max_event_payload;
+
+        // Check max BGAPI payload sizes on NCP target
+        sc = sl_bgapi_system_get_max_payload_sizes(&max_command_payload,
+                                                   &max_response_payload,
+                                                   &max_event_payload);
+        if (sc == SL_STATUS_OK) {
+          // Display warning if payload sizes are not matching.
+          if (max_command_payload != SL_BGAPI_MAX_PAYLOAD_SIZE) {
+            app_log_warning("BGAPI command payload size mismatch! On target: %u. On host: %u. " \
+                            "Please configure SL_BGAPI_MAX_PAYLOAD_SIZE." APP_LOG_NL,
+                            max_command_payload,
+                            SL_BGAPI_MAX_PAYLOAD_SIZE);
+          } else {
+            app_log_debug("BGAPI command payload size matches on host and target." APP_LOG_NL);
+          }
+
+          if (max_response_payload != SL_BGAPI_MAX_PAYLOAD_SIZE) {
+            app_log_warning("BGAPI response payload size mismatch! On target: %u. On host: %u. " \
+                            "Please configure SL_BGAPI_MAX_PAYLOAD_SIZE." APP_LOG_NL,
+                            max_response_payload,
+                            SL_BGAPI_MAX_PAYLOAD_SIZE);
+          } else {
+            app_log_debug("BGAPI response payload size matches on host and target." APP_LOG_NL);
+          }
+
+          if (max_event_payload != SL_BGAPI_MAX_PAYLOAD_SIZE) {
+            app_log_warning("BGAPI event payload size mismatch! On target: %u. On host: %u. " \
+                            "Please configure SL_BGAPI_MAX_PAYLOAD_SIZE." APP_LOG_NL,
+                            max_event_payload,
+                            SL_BGAPI_MAX_PAYLOAD_SIZE);
+          } else {
+            app_log_debug("BGAPI event payload size matches on host and target." APP_LOG_NL);
+          }
+        } else if (sc == SL_STATUS_NOT_AVAILABLE || sc == SL_STATUS_NOT_SUPPORTED) {
+          // Ignore if NCP target does not support this command.
+        } else {
+          app_log_status_error(sc);
+        }
+      }
+#endif // VERIFY_BGAPI_PAYLOAD_SIZES
+      break;
+
+    default:
+      break;
   }
 }
 

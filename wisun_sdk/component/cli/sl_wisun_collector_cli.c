@@ -36,7 +36,9 @@
 #include "sl_string.h"
 #include "sl_cli.h"
 #include "sl_status.h"
-#include "socket/socket.h"
+#include "sys/socket.h"
+#include "arpa/inet.h"
+#include "netinet/in.h"
 #include "sl_wisun_cli_core.h"
 #include "sl_wisun_meter_collector_config.h"
 #include "sli_wisun_meter_collector.h"
@@ -141,9 +143,9 @@ static void _send_request(const char *ip_str, const char *request)
   if (sendto(sockid, request, sl_strlen(request), 0,
              (const struct sockaddr *)&meter_addr, sizeof(meter_addr)) == SOCKET_RETVAL_ERROR) {
     printf("[Failed: collector sendto failed]\n");
-    return;
+  } else {
+    printf("[Request sent: '%s']\n", request);
   }
 
-  printf("[Request sent: '%s']\n", request);
   close(sockid);
 }

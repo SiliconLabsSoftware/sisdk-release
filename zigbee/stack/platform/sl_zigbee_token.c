@@ -252,8 +252,8 @@ uint32_t sli_zigbee_stack_get_token_count(void)
 
 // Note: this only works where token is a base indexed token ID, like COMMON_TOKEN_STACK_BINDING_TABLE
 // It does not work if you pass in one of the indices, like COMMON_TOKEN_STACK_BINDING_TABLE+1
-sl_status_t sl_zigbee_get_token_default(uint32_t base_token,
-                                        uint8_t *default_token_value)
+sl_status_t sli_zigbee_stack_get_token_default(uint32_t base_token,
+                                               uint8_t *default_token_value)
 {
   if (tokenNvm3Keys == NULL) {
     return SL_STATUS_NOT_INITIALIZED;
@@ -296,9 +296,9 @@ sl_status_t sli_zigbee_stack_get_token_data(uint32_t token,
         token |= SL_TOKEN_NVM3_OBJ_TYPE_BIT_MASK;
       }
       tokenData->size = tokenSize[i];
-      return sl_token_manager_get_data(token + index,
-                                       tokenData->data,
-                                       tokenData->size);
+      return slx_zigbee_token_manager_get_data(token + index,
+                                               tokenData->data,
+                                               tokenData->size);
     }
   }
   tokenData->size = 0;
@@ -315,16 +315,16 @@ sl_status_t sli_zigbee_stack_set_token_data(uint32_t token,
       break;
     }
   }
-  sl_status_t status = sl_token_manager_set_data(token + index,
-                                                 tokenData->data,
-                                                 tokenData->size);
+  sl_status_t status = slx_zigbee_token_manager_set_data(token + index,
+                                                         tokenData->data,
+                                                         tokenData->size);
   if (status != SL_STATUS_OK) {
     tokenData->size = 0;
   }
   return status;
 }
 
-sl_status_t sl_zigbee_initialize_app_tokens(void)
+sl_status_t sli_zigbee_stack_initialize_app_tokens(void)
 {
   sl_status_t status = SL_STATUS_OK;
 
@@ -419,26 +419,22 @@ sl_status_t sli_zigbee_stack_initialize_token(uint32_t token_base,
   memcpy(tokenDefaults + sli_zigbee_base_token_total_size, default_token_value, token_size);
   sli_zigbee_token_total_size += (token_size * token_index_size);
   sli_zigbee_base_token_total_size += token_size;
+
 #if defined(SL_ZIGBEE_TEST)
   // for unit tests and simulation, we don't want to call sl_token_manager_set_data until the simulated EEPRON
   // (tokens in ram) exists, and that cannot be malloc-ed until the total number of tokens is known.
   status = SL_STATUS_OK;
 #elif !defined(EZSP_HOST) && !defined(ZIGBEE_STACK_ON_HOST)
-  void * current_token_value = malloc(token_size);
-  // If it doesn't exist in flash, push it
-  status = sl_token_manager_get_data(token_base, current_token_value, token_size);
-  free(current_token_value);
-  if (status != SL_STATUS_NOT_FOUND) {
-    return status;
-  }
-
-  // reset the status to OK
+  // For EFR builds, initializing a non-counter token does not write it to storage. We only cache the default value in variables above
+  // The token is written to storage when the stack or app calls slx_zigbee_token_manager_set_data()
+  // For counter tokens, we check if the token exists in storage and if not, we set it to the default value.
   status = SL_STATUS_OK;
-
-  for (uint8_t index_offset = 0; index_offset < token_index_size; index_offset++) {
-    status = sl_token_manager_set_data(token_base + index_offset, default_token_value, token_size);
-    if (status != SL_STATUS_OK) {
-      break;
+  if (token_is_counter == true) {
+    void * current_token_value = malloc(token_size);
+    status = sl_token_manager_get_data(token_base, current_token_value, token_size);
+    free(current_token_value);
+    if (status == SL_STATUS_NOT_FOUND) {
+      status = sl_token_manager_set_data(token_base, default_token_value, token_size);
     }
   }
 #else // EZSP_HOST
@@ -447,27 +443,80 @@ sl_status_t sli_zigbee_stack_initialize_token(uint32_t token_base,
   return status;
 }
 
-sl_status_t sl_zigbee_initialize_basic_token(uint32_t token,
-                                             void *default_token_value,
-                                             uint32_t token_size)
+sl_status_t sli_zigbee_stack_initialize_basic_token(uint32_t token,
+                                                    void *default_token_value,
+                                                    uint32_t token_size)
 {
   return sli_zigbee_stack_initialize_token(token, default_token_value, token_size, 1, 0);
 }
 
-sl_status_t sl_zigbee_initialize_counter_token(uint32_t token,
-                                               void *default_token_value,
-                                               uint32_t token_size)
+sl_status_t sli_zigbee_stack_initialize_counter_token(uint32_t token,
+                                                      void *default_token_value,
+                                                      uint32_t token_size)
 {
   return sli_zigbee_stack_initialize_token(token, default_token_value, token_size, 1, 1);
 }
 
-sl_status_t sl_zigbee_initialize_index_token(uint32_t token_base,
-                                             void *default_token_value,
-                                             uint32_t token_size,
-                                             uint8_t token_index_size)
+sl_status_t sli_zigbee_stack_initialize_index_token(uint32_t token_base,
+                                                    void *default_token_value,
+                                                    uint32_t token_size,
+                                                    uint8_t token_index_size)
 {
   return sli_zigbee_stack_initialize_token(token_base, default_token_value, token_size, token_index_size, 0);
 }
+
+/**
+ * @brief Read a dynamic token, with in-RAM defaults when NVM has no object yet.
+ *
+ * Flow:
+ * 1. Try NVM via sl_token_manager_get_data; return that status if not NOT_FOUND.
+ * 2. If NOT_FOUND: copy the registered default from
+ *    tokenDefaults into @a data and return SL_STATUS_OK (no NVM write here).
+ * 3. Otherwise return NOT_FOUND (or INVALID_PARAMETER if caller length mismatches
+ *    the registered token size).
+ */
+sl_status_t slxi_zigbee_stack_token_manager_get_data(uint32_t token,
+                                                      void *data,
+                                                      uint32_t length)
+{
+  // Normal path: object exists in NVM (or token manager reports another status).
+  sl_status_t status = sl_token_manager_get_data(token, data, length);
+  if (status != SL_STATUS_NOT_FOUND) {
+    return status;
+  }
+#if !defined(EZSP_HOST)
+  {
+    // Strip to 20-bit NVM3 key (ignores counter-type bit above the key field).
+    uint32_t key = token & NVM3_KEY_MASK;
+    if (tokenNvm3Keys == NULL || tokenDefaults == NULL) {
+      return SL_STATUS_EMPTY;
+    }
+
+    // Walk registration order; running is byte offset into concatenated tokenDefaults.
+    uint32_t running = 0;
+    for (uint8_t i = 0; i < sli_zigbee_token_count; i++) {
+      uint32_t base = tokenNvm3Keys[i];
+      if (key >= base && key < base + tokenArraySize[i]) {
+        if (length != tokenSize[i]) {
+          return SL_STATUS_INVALID_PARAMETER;
+        }
+        memcpy(data, tokenDefaults + running, (size_t)tokenSize[i]);
+        return SL_STATUS_OK;
+      }
+      running += tokenSize[i];
+    }
+  }
+#endif
+  return SL_STATUS_NOT_FOUND;
+}
+
+sl_status_t slx_zigbee_token_manager_set_data(uint32_t token,
+                                              void *data,
+                                              uint32_t length)
+{
+  return sl_token_manager_set_data(token, data, length);
+}
+
 
 // UC simulation test default values
 __attribute__((weak)) uint8_t sl_zigbee_get_zc_and_zr_count(void)
@@ -493,4 +542,41 @@ __attribute__((weak)) uint8_t sl_zigbee_get_certificate_table_size(void)
 __attribute__((weak)) uint8_t sl_zigbee_get_binding_table_size(void)
 {
   return 30;
+}
+__attribute__((weak)) sl_status_t slx_zigbee_token_manager_get_data(uint32_t token, void *data, uint32_t size_in)
+{
+  return slxi_zigbee_stack_token_manager_get_data(token, data, size_in);
+}
+
+__attribute__((weak)) sl_status_t sl_zigbee_initialize_basic_token(uint32_t token,
+                                                                   void *default_token_value,
+                                                                   uint32_t token_size)
+{
+  return sli_zigbee_stack_initialize_basic_token(token, default_token_value, token_size);
+}
+
+__attribute__((weak)) sl_status_t sl_zigbee_initialize_counter_token(uint32_t token,
+                                                                     void *default_token_value,
+                                                                     uint32_t token_size)
+{
+  return sli_zigbee_stack_initialize_counter_token(token, default_token_value, token_size);
+}
+
+__attribute__((weak)) sl_status_t sl_zigbee_initialize_index_token(uint32_t token_base,
+                                                                  void *default_token_value,
+                                                                  uint32_t token_size,
+                                                                  uint8_t token_index_size)
+{
+    return sli_zigbee_stack_initialize_index_token(token_base, default_token_value, token_size, token_index_size);
+}
+
+__attribute__((weak)) sl_status_t sl_zigbee_get_token_default(uint32_t base_token,
+                                                              uint8_t *default_token_value)
+{
+  return sli_zigbee_stack_get_token_default(base_token, default_token_value);
+}
+
+__attribute__((weak)) sl_status_t sl_zigbee_initialize_app_tokens(void)
+{
+  return sli_zigbee_stack_initialize_app_tokens();
 }

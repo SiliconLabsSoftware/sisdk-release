@@ -66,7 +66,6 @@ sl_status_t sl_zigbee_set_token_data(uint32_t token,
                                      uint32_t index,
                                      sl_zigbee_token_data_t *tokenData);
 
-#ifndef ZNET_HEADER_SCRIPT
 /**
  * @brief Get the default value of the given token.
  * @param token The NVM3 key of the token, the base if an index token.
@@ -74,10 +73,11 @@ sl_status_t sl_zigbee_set_token_data(uint32_t token,
  * @return status.
  *
  * Use this to get the number of tokens configured in a node.
+ * @internal SL_ZIGBEE_IPC_ARGS
+ * {# default_token_value | length: MAX_IPC_VEC_ARG_CAPACITY | max: MAX_IPC_VEC_ARG_CAPACITY #}
  */
 sl_status_t sl_zigbee_get_token_default(uint32_t token,
                                         uint8_t *default_token_value);
-
 /**
  * @brief Initialize a basic, non-counter, non-index token
  * (Common Token Manager Component only).
@@ -87,7 +87,9 @@ sl_status_t sl_zigbee_get_token_default(uint32_t token,
  * @return status.
  *
  * Use this to get the number of tokens configured in a node.
- */
+ * @internal SL_ZIGBEE_IPC_ARGS
+ * {# default_token_value | length: token_size | max: MAX_IPC_VEC_ARG_CAPACITY | storage_type: uint8_t #}
+*/
 sl_status_t sl_zigbee_initialize_basic_token(uint32_t token,
                                              void *default_token_value,
                                              uint32_t token_size);
@@ -101,7 +103,9 @@ sl_status_t sl_zigbee_initialize_basic_token(uint32_t token,
  * @return status.
  *
  * Use this to get the number of tokens configured in a node.
- */
+ * @internal SL_ZIGBEE_IPC_ARGS
+ * {# default_token_value | length: token_size | max: MAX_IPC_VEC_ARG_CAPACITY | storage_type: uint8_t #}
+*/
 sl_status_t sl_zigbee_initialize_counter_token(uint32_t token,
                                                void *default_token_value,
                                                uint32_t token_size);
@@ -116,12 +120,52 @@ sl_status_t sl_zigbee_initialize_counter_token(uint32_t token,
  * @return status.
  *
  * Use this to get the number of tokens configured in a node.
- */
+ * @internal SL_ZIGBEE_IPC_ARGS
+ * {# default_token_value | length: token_size | max: MAX_IPC_VEC_ARG_CAPACITY | storage_type: uint8_t #}
+*/
 sl_status_t sl_zigbee_initialize_index_token(uint32_t token_base,
                                              void *default_token_value,
                                              uint32_t token_size,
                                              uint8_t token_index_size);
 
-#endif // ZNET_HEADER_SCRIPT
+/**
+ * @brief Internal use only: a utility function to fetch the token value from storage medium 
+ * (NVM3 or filesystem) with a default value fallback if the token has never been written to storage. 
+ * This API returns the default value if the token has been initialized using 
+ * ::sl_zigbee_initialize_basic_token, ::sl_zigbee_initialize_counter_token, or 
+ * ::sl_zigbee_initialize_index_token but subsequently said token has never been written 
+ * to flash or filesystem (the initialization routines do not propagate the token to storage medium). 
+ * In general, a user application may get and set token values using the Common Token Manager routines. 
+ * This API here is provided as a utility for the EmberZNet stack to handle cases where the token 
+ * is not found in storage and a default value fallback is desired. 
+ * Users are encouraged to avoid calling this API, as it is subject to removal/rework in the future.
+ * @param token The KLV of the token.
+ * @param data Pointer to the output buffer for the token's data.
+ * @param length Size of the token's data.
+ * @return status.
+ *
+ * @internal SL_ZIGBEE_IPC_ARGS
+ * {# data | length: length | max: MAX_IPC_TOKEN_MANAGER_DATA_LENGTH_ARG_CAPACITY | storage_type: uint8_t #}
+ */
+sl_status_t slx_zigbee_token_manager_get_data(uint32_t token,
+                                              void *data,
+                                              uint32_t length);
 
+#ifndef ZNET_HEADER_SCRIPT
+/**
+ * @brief Internal use only: write token data in storage medium. 
+ * This is just a pair to complete the ::sli_zigbee_token_manager_get_data API. 
+ * Users are encouraged to avoid calling this API, as it is subject to removal/rework in the future.
+ * Thread-safe via sl_token_manager_set_data; no IPC wrapper.
+ * @param token The KLV of the token.
+ * @param data Pointer to the input buffer for the token's data.
+ * @param length Size of the token's data.
+ * @return status.
+ *
+ * Use this to set the token's data.
+ */
+sl_status_t slx_zigbee_token_manager_set_data(uint32_t token,
+                                              void *data,
+                                              uint32_t length);
+#endif // ZNET_HEADER_SCRIPT
 #endif // SL_ZIGBEE_TOKEN_H

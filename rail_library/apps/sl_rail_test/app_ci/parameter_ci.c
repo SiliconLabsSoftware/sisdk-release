@@ -42,6 +42,8 @@
 #include "sl_core.h"
 #include SL_RAIL_UTIL_PA_PLUGIN_HEADER
 
+const char * const paModeStrings[] = SL_RAIL_TX_PA_MODE_NAMES;
+
 // This function gets the power mode index from a string.
 // Returns 0xFF if the string is not found.
 static uint8_t getPowerModeIndexFromString(char *modeString)
@@ -149,6 +151,15 @@ void setFreqOffset(sl_cli_command_arg_t *args)
     currentFreqOffset = freqOffset;
   }
   responsePrint(sl_cli_get_command_string(args, 0), "freqOffset:%d", currentFreqOffset);
+}
+
+void getPaMode(sl_cli_command_arg_t *args)
+{
+  CHECK_RAIL_HANDLE(sl_cli_get_command_string(args, 0));
+  sl_rail_tx_pa_mode_t pa_mode = sl_rail_get_pa_mode(railHandle);
+
+  responsePrint(sl_cli_get_command_string(args, 0), "success:true,PaMode:%s",
+                pa_mode < (sizeof(paModeStrings) / sizeof(paModeStrings[0])) ? paModeStrings[pa_mode] : "SL_RAIL_TX_PA_MODE_INVALID");
 }
 
 void getPowerConfig(sl_cli_command_arg_t *args)
@@ -671,19 +682,16 @@ void setEventConfig(sl_cli_command_arg_t *args)
   }
 
   CHECK_RAIL_HANDLE(sl_cli_get_command_string(args, 0));
+  sl_rail_events_t oldEvents = sl_rail_get_events_config(railHandle);
   sl_rail_config_events(railHandle, eventMask, eventConfig);
+  sl_rail_events_t newEvents = sl_rail_get_events_config(railHandle);
   // Avoid use of %ll long-long formats due to iffy printf library support
-  if (sl_cli_get_argument_count(args) >= 4) {
-    responsePrint(sl_cli_get_command_string(args, 0), "Mask:0x%x%08x,Values:0x%x%08x",
-                  (uint32_t)(eventMask >> 32),
-                  (uint32_t)eventMask,
-                  (uint32_t)(eventConfig >> 32),
-                  (uint32_t)eventConfig);
-  } else {
-    responsePrint(sl_cli_get_command_string(args, 0), "Mask:0x%x,Values:0x%x",
-                  (uint32_t)eventMask,
-                  (uint32_t)eventConfig);
-  }
+  responsePrint(sl_cli_get_command_string(args, 0),
+                "EnabLH:0x%08x 0x%08x,PrevLH:0x%08x 0x%08x",
+                (uint32_t)(newEvents),
+                (uint32_t)(newEvents >> 32),
+                (uint32_t)(oldEvents),
+                (uint32_t)(oldEvents >> 32));
 }
 
 void delayUs(sl_cli_command_arg_t *args)
@@ -970,7 +978,7 @@ void testNvmPowerCurves(sl_cli_command_arg_t *args)
   }
 }
 
-#else// !((!defined(SL_CATALOG_SL_RAIL_UTIL_PA_PRESENT))  &&  SL_RAIL_UTIL_PA_NVM_ENABLED)
+#else // !((!defined(SL_CATALOG_SL_RAIL_UTIL_PA_PRESENT))  &&  SL_RAIL_UTIL_PA_NVM_ENABLED)
 
 void printPowerCurves(sl_cli_command_arg_t *args)
 {
@@ -987,4 +995,4 @@ void testNvmPowerCurves(sl_cli_command_arg_t *args)
   responsePrintError(sl_cli_get_command_string(args, 0), 0x11, "This command is not supported on this platform");
 }
 
-#endif// ((!defined(SL_CATALOG_SL_RAIL_UTIL_PA_PRESENT))  &&  SL_RAIL_UTIL_PA_NVM_ENABLED)
+#endif // ((!defined(SL_CATALOG_SL_RAIL_UTIL_PA_PRESENT))  &&  SL_RAIL_UTIL_PA_NVM_ENABLED)

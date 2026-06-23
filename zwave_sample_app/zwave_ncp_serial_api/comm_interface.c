@@ -63,6 +63,7 @@ static comm_interface_t comm_interface = {
   .transport.type = TRANSPORT_TYPE_UART,
   .state = COMM_INTERFACE_STATE_SOF,
   .buffer_len = 0,
+  .buffer = { 0 },
 };
 
 comm_interface_frame_ptr const serial_frame = (comm_interface_frame_ptr)comm_interface.buffer;
@@ -265,6 +266,7 @@ static comm_interface_parse_result_t handle_sof(uint8_t input)
   if (input == SOF) {
     comm_interface.state = COMM_INTERFACE_STATE_LEN;
     comm_interface.buffer_len = 0;
+    memset(comm_interface.buffer, 0, sizeof(comm_interface.buffer));
     comm_interface.rx_active = true; // now we're receiving - check for timeout
     store_byte(input);
   } else {

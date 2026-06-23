@@ -3,7 +3,7 @@
  * @brief internal names for 'sl_zigbee_token' declarations
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -28,11 +28,31 @@ sl_status_t sli_zigbee_stack_get_token_data(uint32_t token,
                                             uint32_t index,
                                             sl_zigbee_token_data_t *tokenData);
 
+sl_status_t sli_zigbee_stack_get_token_default(uint32_t token,
+                                               uint8_t *default_token_value);
+
 sl_status_t sli_zigbee_stack_get_token_info(uint8_t index,
                                             sl_zigbee_token_info_t *tokenInfo);
+
+sl_status_t sli_zigbee_stack_initialize_basic_token(uint32_t token,
+                                                    void *default_token_value,
+                                                    uint32_t token_size);
+
+sl_status_t sli_zigbee_stack_initialize_counter_token(uint32_t token,
+                                                      void *default_token_value,
+                                                      uint32_t token_size);
+
+sl_status_t sli_zigbee_stack_initialize_index_token(uint32_t token_base,
+                                                    void *default_token_value,
+                                                    uint32_t token_size,
+                                                    uint8_t token_index_size);
 
 sl_status_t sli_zigbee_stack_set_token_data(uint32_t token,
                                             uint32_t index,
                                             sl_zigbee_token_data_t *tokenData);
+
+sl_status_t slxi_zigbee_stack_token_manager_get_data(uint32_t token,
+                                                     void *data,
+                                                     uint32_t length);
 
 #endif // SL_ZIGBEE_TOKEN_INTERNAL_DEF_H

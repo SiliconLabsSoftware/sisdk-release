@@ -1,7 +1,7 @@
 id: ot_reference_device
 label: Reference Device Configuration
 package: openthread
-category: OpenThread
+category: OpenThread|Certification
 quality: production
 description: OpenThread configuration for applications that will be used as reference devices in the Thread test harness.
 provides:

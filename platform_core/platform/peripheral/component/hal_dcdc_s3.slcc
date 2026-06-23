@@ -1,0 +1,19 @@
+# This HAL applies to 3 devices.
+id: hal_dcdc_s3
+label: DCDC
+package: platform_core
+description: >
+  DC-to-DC converter peripheral API
+category: Platform|Peripheral|HAL
+quality: evaluation
+metadata:
+  sbom:
+    license: Zlib
+ui_hints:
+  visibility: never
+provides:
+- name: hal_dcdc_s3
+requires:
+- name: hal_emu
+- name: hal_dcdc_impl
+root_path: platform_core

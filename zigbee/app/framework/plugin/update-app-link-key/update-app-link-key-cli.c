@@ -25,5 +25,5 @@ void sl_zigbee_af_set_app_link_key_update_request_command(sl_cli_command_arg_t *
   sl_802154_long_addr_t eui;
   sl_zigbee_copy_eui64_arg(arguments, 0, eui, true);
   sl_status_t status = sl_zigbee_af_update_app_link_key(eui);
-  sl_zigbee_af_core_println("Requesting app link key: 0x%02X", status);
+  sl_zigbee_af_cli_println("Requesting app link key: 0x%02X", status);
 }

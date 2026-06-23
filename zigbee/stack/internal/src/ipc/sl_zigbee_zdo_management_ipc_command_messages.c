@@ -3,7 +3,7 @@
  * @brief internal wrappers for 'sl_zigbee_zdo_management' ipc commands
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -43,6 +43,7 @@ sl_status_t sl_zigbee_request_beacon_survey(sl_802154_short_addr_t dest,
 
   if (channel_page_count > 5) {
     assert(false); // "vector channel_masks length exceeds expected maximum
+    return msg.data.request_beacon_survey.response.result;
   }
 
   memmove(msg.data.request_beacon_survey.request.channel_masks, channel_masks, sizeof(uint32_t) * channel_page_count);
@@ -51,6 +52,7 @@ sl_status_t sl_zigbee_request_beacon_survey(sl_802154_short_addr_t dest,
 
   if (channel_page_count > 5) {
     assert(false); // "vector channel_masks length exceeds expected maximum
+    return msg.data.request_beacon_survey.response.result;
   }
 
   memmove(channel_masks, msg.data.request_beacon_survey.request.channel_masks, sizeof(uint32_t) * channel_page_count);

@@ -1,13 +1,9 @@
 project_name: sleeptimer_kernel_freertos
 package: platform
 quality: production
-label: Platform - Sleeptimer kernel FreeRTOS
+label: Platform - Sleeptimer Kernel FreeRTOS
 description: >
-  This example project demonstrates periodic and
-  one-shot timers using the low-frequency real-time
-  clock peripheral in a freertos configuration. Timers can be stopped and restarted
-  using the buttons. Timer status is reported on the
-  virtual COM serial port.
+  Demonstrates periodic and one-shot RTC timers in a FreeRTOS task. Use buttons to stop or restart timers; status is reported over VCOM.
 category: Example|Platform
 filter:
   - name: "Device Type"
@@ -57,3 +53,8 @@ tag:
   - hardware:component:led:2+
   - hardware:component:button:2+
   - hardware:!shared:button:led
+  - hwfilter:board:simple_led:led0
+  - hwfilter:board:simple_led:led1
+  - hwfilter:board:simple_button:btn0
+  - hwfilter:board:simple_button:btn1
+  - hwfilter:!board:hardware:shares:button:led

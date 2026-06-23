@@ -1,5 +1,5 @@
 project_name: zigbee_ncp_xncp_led
-label: Zigbee - NCP Xncp Led
+label: Zigbee - NCP xNCP LED
 package: zigbee
 category: Zigbee Application
 quality: production
@@ -36,8 +36,13 @@ component:
     instance:
       - led0
   - id: clock_manager
-  # Platform - enable LTO for gcc
+  # Platform - enable LTO for gcc and llvm
   - id: toolchain_gcc_lto
+    condition:
+      - toolchain_gcc
+  - id: toolchain_llvm_lto
+    condition:
+      - toolchain_llvm
 
 configuration:
   - name: SL_BOARD_ENABLE_VCOM
@@ -104,5 +109,9 @@ filter:
     value: [Advanced]
 
 tag:
+  - hwfilter:ram:64k
   - hwfilter:device:device_supports_zigbee
   - hwfilter:board:simple_led:led0
+  - toolchain:gcc
+  - toolchain:iar
+  - toolchain:llvm

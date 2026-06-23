@@ -69,14 +69,13 @@ int8_t sl_zigbee_af_gpdf_send(uint8_t frameType,
   if (!gpd->skipCca) {
     return FAILED;
   }
-  // Check packet length
-#if defined(SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID) && (SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID == SL_ZIGBEE_GPD_APP_ID_SRC_ID)
-  payloadLength = SL_MIN(payloadLength, SL_ZIGBEE_GPD_SRC_ID_MAX_PAYLOAD_SIZE);
-#elif defined(SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID) && (SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID == SL_ZIGBEE_GPD_APP_ID_IEEE_ID)
-  payloadLength = SL_MIN(payloadLength, SL_ZIGBEE_GPD_IEEE_ID_MAX_PAYLOAD_SIZE);
-#else
-#error "Unsupported GPD Application Id"
-#endif
+  // Check packet length (runtime AppId-aware)
+  {
+    uint8_t maxPayload = (gpd->addr.appId == SL_ZIGBEE_GPD_APP_ID_IEEE_ID)
+                         ? SL_ZIGBEE_GPD_IEEE_ID_MAX_PAYLOAD_SIZE
+                         : SL_ZIGBEE_GPD_SRC_ID_MAX_PAYLOAD_SIZE;
+    payloadLength = SL_MIN(payloadLength, maxPayload);
+  }
 
   if (frameType == SL_ZIGBEE_GPD_NWK_FC_FRAME_TYPE_DATA
       || frameType == SL_ZIGBEE_GPD_NWK_FC_FRAME_TYPE_MAINT) {

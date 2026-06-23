@@ -56,8 +56,8 @@ Once the button is released the average throughput will be calculated and shown 
 
 ### EFR32 (SoC) <-> EFR32 (NCP) + Host (typically PC)
 
-The final use case consists of one kit flashed with **Bluetooth - SoC Throughput** example and a second kit flashed with an extended version of the **Bluetooth - NCP** example. To achieve that, create a **Bluetooth - NCP** example from the Laucher and under the Software Components tab, install the **LE Power Control** component. Finally build and flash the image to the target board.
-The NCP device will be controlled by a dedicated host application which is located under *<SDK-installation-location>/app/bluetooth/example_host/bt_host_throughput*. 
+The final use case consists of one kit flashed with **Bluetooth - SoC Throughput** example and a second kit flashed with an extended version of the **Bluetooth - NCP** example. To achieve that, create a **Bluetooth - NCP** example from the Launcher and under the Software Components tab, install the **LE Power Control** component. Finally build and flash the image to the target board.
+The NCP device will be controlled by a dedicated host application which is located under *<SDK-installation-location>/app/bluetooth/example_host/bt_host_throughput*.
 
 To learn more about NCP firmware and how to build the host applications, see [AN1259: Using the v3.x Silicon Labs Bluetooth Stack in Network Co-Processor Mode](https://www.silabs.com/documents/public/application-notes/an1259-bt-ncp-mode-sdk-v3x.pdf).
 
@@ -72,7 +72,7 @@ These next sections describe some more details about the example.
 The **Bluetooth - SoC Throughput** example also runs on boards that only have 1 user button, such as [SLTB010A](https://www.silabs.com/development-tools/thunderboard/thunderboard-bg22-kit) or [BGM220-EK4314A](https://www.silabs.com/development-tools/wireless/bluetooth/bgm220-explorer-kit). The behavior is determined by the button press duration:
 * Short press switches between sending notifications or indications. The default out of boot is sending notifications.
 * Long press sends data.
-* To boot into central mode instead of periperal, keep the button pressed while resetting the device.
+* To boot into central mode instead of peripheral, keep the button pressed while resetting the device.
 
 ### CLI (Command Line Interface)
 

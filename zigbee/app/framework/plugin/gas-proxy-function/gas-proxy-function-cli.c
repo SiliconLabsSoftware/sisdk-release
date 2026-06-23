@@ -123,7 +123,7 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg_creation(sl_cli_comma
                                                                  buffer,
                                                                  maxLen);
   if (!writtenByte) {
-    sl_zigbee_af_gas_proxy_function_println("GPF: Unable to initialize GBZ message creator!");
+    sl_zigbee_af_cli_println("GPF: Unable to initialize GBZ message creator!");
     return;
   }
 
@@ -135,7 +135,7 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg_creation(sl_cli_comma
                                                                  NULL,
                                                                  0);
   if (!writtenByte) {
-    sl_zigbee_af_gas_proxy_function_println("GPF: Unable to initialize GBZ message creator!");
+    sl_zigbee_af_cli_println("GPF: Unable to initialize GBZ message creator!");
     return;
   }
 
@@ -151,19 +151,19 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg_creation(sl_cli_comma
   sl_zigbee_af_gbz_message_controller_append_command(&creatorAllocMem, &cmd);
 
   result = sl_zigbee_af_gbz_message_controller_creator_assemble(&creator);
-  sl_zigbee_af_gas_proxy_function_println("GPF: In Place message construction");
-  sl_zigbee_af_gas_proxy_function_println("GPF: GBZ command message len: %d", result->payloadLength);
-  sl_zigbee_af_gas_proxy_function_print("GPF: GBZ command message: ");
-  sl_zigbee_af_gas_proxy_function_print_buffer((result->payload), (result->payloadLength), true);
-  sl_zigbee_af_gas_proxy_function_println("");
+  sl_zigbee_af_cli_println("GPF: In Place message construction");
+  sl_zigbee_af_cli_println("GPF: GBZ command message len: %d", result->payloadLength);
+  sl_zigbee_af_cli_print("GPF: GBZ command message: ");
+  sl_zigbee_af_cli_print_buffer((result->payload), (result->payloadLength), true);
+  sl_zigbee_af_cli_println("");
   sl_zigbee_af_gbz_message_controller_creator_cleanup(&creator);
 
   result = sl_zigbee_af_gbz_message_controller_creator_assemble(&creatorAllocMem);
-  sl_zigbee_af_gas_proxy_function_println("GPF: In New Memory message construction");
-  sl_zigbee_af_gas_proxy_function_println("GPF: GBZ command message len: %d", result->payloadLength);
-  sl_zigbee_af_gas_proxy_function_print("GPF: GBZ command message: ");
-  sl_zigbee_af_gas_proxy_function_print_buffer(result->payload, result->payloadLength, true);
-  sl_zigbee_af_gas_proxy_function_println("");
+  sl_zigbee_af_cli_println("GPF: In New Memory message construction");
+  sl_zigbee_af_cli_println("GPF: GBZ command message len: %d", result->payloadLength);
+  sl_zigbee_af_cli_print("GPF: GBZ command message: ");
+  sl_zigbee_af_cli_print_buffer(result->payload, result->payloadLength, true);
+  sl_zigbee_af_cli_println("");
   sl_zigbee_af_gbz_message_controller_creator_cleanup(&creatorAllocMem);
 
   writtenByte = sl_zigbee_af_gbz_message_controller_creator_init(&creator,
@@ -174,7 +174,7 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg_creation(sl_cli_comma
                                                                  &buffer[0],
                                                                  maxLen);
   if (!writtenByte) {
-    sl_zigbee_af_gas_proxy_function_println("GPF: Unable to initialize GBZ message creator!");
+    sl_zigbee_af_cli_println("GPF: Unable to initialize GBZ message creator!");
     return;
   }
 
@@ -189,10 +189,10 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg_creation(sl_cli_comma
   sl_zigbee_af_gbz_message_controller_append_command(&creator, &cmd);
   result = sl_zigbee_af_gbz_message_controller_creator_assemble(&creator);
 
-  sl_zigbee_af_gas_proxy_function_println("GPF: GBZ response message len: %d", result->payloadLength);
-  sl_zigbee_af_gas_proxy_function_print("GPF: GBZ response message: ");
-  sl_zigbee_af_gas_proxy_function_print_buffer(result->payload, result->payloadLength, true);
-  sl_zigbee_af_gas_proxy_function_println("");
+  sl_zigbee_af_cli_println("GPF: GBZ response message len: %d", result->payloadLength);
+  sl_zigbee_af_cli_print("GPF: GBZ response message: ");
+  sl_zigbee_af_cli_print_buffer(result->payload, result->payloadLength, true);
+  sl_zigbee_af_cli_println("");
   sl_zigbee_af_gbz_message_controller_creator_cleanup(&creator);
 
   /* Testing encrypted command */
@@ -206,7 +206,7 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg_creation(sl_cli_comma
                                                                  &buffer[0],
                                                                  maxLen);
   if (!writtenByte) {
-    sl_zigbee_af_gas_proxy_function_println("GPF: Unable to initialize GBZ message creator!");
+    sl_zigbee_af_cli_println("GPF: Unable to initialize GBZ message creator!");
     return;
   }
 
@@ -214,10 +214,10 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg_creation(sl_cli_comma
   sl_zigbee_af_gbz_message_controller_append_command(&creator, &cmd);
   result = sl_zigbee_af_gbz_message_controller_creator_assemble(&creator);
 
-  sl_zigbee_af_gas_proxy_function_println("GPF: GBZ command encrypted message len: %d", result->payloadLength);
-  sl_zigbee_af_gas_proxy_function_print("GPF: GBZ command encrypted message: ");
-  sl_zigbee_af_gas_proxy_function_print_buffer(result->payload, result->payloadLength, true);
-  sl_zigbee_af_gas_proxy_function_println("");
+  sl_zigbee_af_cli_println("GPF: GBZ command encrypted message len: %d", result->payloadLength);
+  sl_zigbee_af_cli_print("GPF: GBZ command encrypted message: ");
+  sl_zigbee_af_cli_print_buffer(result->payload, result->payloadLength, true);
+  sl_zigbee_af_cli_println("");
   sl_zigbee_af_gbz_message_controller_creator_cleanup(&creator);
 
   /* Appending in new memory */
@@ -233,10 +233,10 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg_creation(sl_cli_comma
   sl_zigbee_af_gbz_message_controller_append_command(&creatorAllocMem, &cmd);
   result = sl_zigbee_af_gbz_message_controller_creator_assemble(&creatorAllocMem);
 
-  sl_zigbee_af_gas_proxy_function_println("GPF: GBZ command encrypted message len: %d", result->payloadLength);
-  sl_zigbee_af_gas_proxy_function_print("GPF: GBZ command encrypted message: ");
-  sl_zigbee_af_gas_proxy_function_print_buffer(result->payload, result->payloadLength, true);
-  sl_zigbee_af_gas_proxy_function_println("");
+  sl_zigbee_af_cli_println("GPF: GBZ command encrypted message len: %d", result->payloadLength);
+  sl_zigbee_af_cli_print("GPF: GBZ command encrypted message: ");
+  sl_zigbee_af_cli_print_buffer(result->payload, result->payloadLength, true);
+  sl_zigbee_af_cli_println("");
   sl_zigbee_af_gbz_message_controller_creator_cleanup(&creatorAllocMem);
 
   /* end of Testing encrypted command */
@@ -249,7 +249,7 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg_creation(sl_cli_comma
                                                                  &buffer[0],
                                                                  maxLen);
   if (!writtenByte) {
-    sl_zigbee_af_gas_proxy_function_println("GPF: Unable to initialize GBZ message creator!");
+    sl_zigbee_af_cli_println("GPF: Unable to initialize GBZ message creator!");
     return;
   }
 
@@ -264,10 +264,10 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg_creation(sl_cli_comma
   sl_zigbee_af_gbz_message_controller_append_command(&creator, &cmd);
   result = sl_zigbee_af_gbz_message_controller_creator_assemble(&creator);
 
-  sl_zigbee_af_gas_proxy_function_println("GPF: GBZ alert message len: %d", result->payloadLength);
-  sl_zigbee_af_gas_proxy_function_print("GPF: GBZ alert message: ");
-  sl_zigbee_af_gas_proxy_function_print_buffer(result->payload, result->payloadLength, true);
-  sl_zigbee_af_gas_proxy_function_println("");
+  sl_zigbee_af_cli_println("GPF: GBZ alert message len: %d", result->payloadLength);
+  sl_zigbee_af_cli_print("GPF: GBZ alert message: ");
+  sl_zigbee_af_cli_print_buffer(result->payload, result->payloadLength, true);
+  sl_zigbee_af_cli_println("");
   sl_zigbee_af_gbz_message_controller_creator_cleanup(&creator);
 
   // Simulate memory Cleanup() in case no Assemble() was called.
@@ -288,7 +288,7 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_future_dated_msg(sl_cli_comma
   UNUSED_VAR(arguments);
 
   uint32_t futureTime = sl_zigbee_af_get_current_time() + 20000;
-  sl_zigbee_af_gas_proxy_function_println("GPF: Future Time: 0x%08X", futureTime);
+  sl_zigbee_af_cli_println("GPF: Future Time: 0x%08X", futureTime);
 
   // Command
   uint8_t gbzCommand[] = { 0x01, 0x09, // profile id
@@ -325,9 +325,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_future_dated_msg(sl_cli_comma
 
   sl_zigbee_af_copy_int32u(gbzCommand, 15, futureTime);
 
-  sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-  sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-  sl_zigbee_af_gas_proxy_function_println("");
+  sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+  sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+  sl_zigbee_af_cli_println("");
 
   sl_zigbee_af_gas_proxy_function_tap_off_message_handler(gbzCommand,
                                                           sizeof(gbzCommand),
@@ -344,13 +344,13 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
 
   uint16_t index = findUseCaseDescription(messageCode);
   if (index >= GBCS_NUM_USE_CASES) {
-    sl_zigbee_af_gas_proxy_function_println("GPF: Unsupported message code: 0x%04X", messageCode);
+    sl_zigbee_af_cli_println("GPF: Unsupported message code: 0x%04X", messageCode);
     sli_zigbee_af_gas_proxy_function_cli_print_supported_use_cases(arguments);
     return;
   }
 
-  sl_zigbee_af_gas_proxy_function_println("GPF: GBCS Use Case: %s", useCaseDescriptions[index].description);
-  sl_zigbee_af_gas_proxy_function_println("GPF: Current Time: 0x%08X", currentTime);
+  sl_zigbee_af_cli_println("GPF: GBCS Use Case: %s", useCaseDescriptions[index].description);
+  sl_zigbee_af_cli_println("GPF: Current Time: 0x%08X", currentTime);
 
   if (messageCode == GCS23_MESSAGE_CODE) {
     // Command
@@ -410,9 +410,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
     sl_zigbee_af_copy_int32u(gbzCommand, 11, currentTime);
     sl_zigbee_af_copy_int32u(gbzCommand, 33, currentTime);
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_tap_off_message_handler(gbzCommand,
                                                             sizeof(gbzCommand),
@@ -438,9 +438,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
     };
     sl_zigbee_af_copy_int32u(gbzCommand, 11, currentTime);
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -761,9 +761,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
     sl_zigbee_af_copy_int32u(gbzCommand, 294, currentTime);
     sl_zigbee_af_copy_int32u(gbzCommand, 334, currentTime);
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_tap_off_message_handler(gbzCommand,
                                                             sizeof(gbzCommand),
@@ -806,9 +806,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
 
     sl_zigbee_af_copy_int32u(gbzCommand, 11, currentTime);
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_tap_off_message_handler(gbzCommand,
                                                             sizeof(gbzCommand),
@@ -833,9 +833,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0x70, 0x4A   // Number Of Samples = 19056
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -878,9 +878,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
 
     sl_zigbee_af_copy_int32u(gbzCommand, 15, currentTime);
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_tap_off_message_handler(gbzCommand,
                                                             sizeof(gbzCommand),
@@ -960,9 +960,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                                0x07, // logId - 4 / Security Event Log
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(tomGbzCmd, sizeof(tomGbzCmd), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(tomGbzCmd, sizeof(tomGbzCmd), true);
+    sl_zigbee_af_cli_println("");
 
     // Since CS11 can be both a TOM and a non-TOM we will test both by first
     // treating it as a TOM then treating it as a non-TOM.  In the real application
@@ -975,9 +975,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                                                             sizeof(tomGbzCmdResp),
                                                             messageCode);
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(nonTomGbzCmd, sizeof(nonTomGbzCmd), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(nonTomGbzCmd, sizeof(nonTomGbzCmd), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(nonTomGbzCmd,
                                                                 sizeof(nonTomGbzCmd),
@@ -1084,9 +1084,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
     sl_zigbee_af_copy_int32u(gbzCommand, 58, currentTime);
     sl_zigbee_af_copy_int32u(gbzCommand, 98, currentTime);
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_tap_off_message_handler(gbzCommand,
                                                             sizeof(gbzCommand),
@@ -1111,9 +1111,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0x00, 0x00,  // Attribute ID - CurrentSummationDelivered
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -1140,9 +1140,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0x06, 0x01,  // Attribute ID - CurrentTier4SummationDelivered
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -1167,9 +1167,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0x00, 0x03,  // Attribute ID - UnitOfMeasure
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -1204,9 +1204,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0x21, 0x02,  // Attribute ID - Time-based Debt (2)
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -1247,9 +1247,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0x07, 0x06,  // Attribute ID - SupplyTamperState
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -1269,9 +1269,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0x00, 0x00,  // Attribute ID - Payment Control Configuration
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -1290,9 +1290,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0x07, 0x03,  // Attribute ID - Site ID
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -1313,9 +1313,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0x14, 0x00,  // Attribute ID - SupplyStatus
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -1335,9 +1335,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0x06, 0x02,  // Attribute ID - CurrentMeterID (used for current firmware version)
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -1366,9 +1366,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0x01, 0x00,  // Attribute ID - Credit Remaining
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -1687,9 +1687,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
     sl_zigbee_af_copy_int32u(gbzCommand, 299, currentTime);
     sl_zigbee_af_copy_int32u(gbzCommand, 303, currentTime);
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_tap_off_message_handler(gbzCommand,
                                                             sizeof(gbzCommand),
@@ -1734,9 +1734,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0x00, 0x00,  // Event Offset
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -1779,9 +1779,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0x00, 0x00,  // Event Offset
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -1804,9 +1804,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0xDB, 0x02   // Number Of Samples = 731
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -1831,9 +1831,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0x01, 0x00, 0x00, 0x00   // Snapshot Cause (General)
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -1858,9 +1858,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0x01, 0x00, 0x00, 0x00   // Snapshot Cause (General)
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -1930,9 +1930,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
     sl_zigbee_af_copy_int32u(gbzCommand, 15, currentTime);
     sl_zigbee_af_copy_int32u(gbzCommand, 40, currentTime);
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_tap_off_message_handler(gbzCommand,
                                                             sizeof(gbzCommand),
@@ -2005,9 +2005,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
       gbzCommandIndex += 4;
     }
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -2080,9 +2080,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
       gbzCommandIndex += 4;
     }
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -2105,9 +2105,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0x02,  // Debt Type
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -2129,9 +2129,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0x0A,  // Number of Records
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -2224,9 +2224,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0x00, // Active Price
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -2313,9 +2313,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0xFE, 0xFF, 0xFF, 0xFF, // Issuer Calendar ID
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -2339,9 +2339,9 @@ void sli_zigbee_af_gas_proxy_function_cli_simulate_gbz_msg(sl_cli_command_arg_t 
                              0x44, 0x33, 0x22, 0x11, // proposed tenancy change control
     };
 
-    sl_zigbee_af_gas_proxy_function_print("GPF: GBZ Command: ");
-    sl_zigbee_af_gas_proxy_function_print_buffer(gbzCommand, sizeof(gbzCommand), true);
-    sl_zigbee_af_gas_proxy_function_println("");
+    sl_zigbee_af_cli_print("GPF: GBZ Command: ");
+    sl_zigbee_af_cli_print_buffer(gbzCommand, sizeof(gbzCommand), true);
+    sl_zigbee_af_cli_println("");
 
     sl_zigbee_af_gas_proxy_function_non_tap_off_message_handler(gbzCommand,
                                                                 sizeof(gbzCommand),
@@ -2354,10 +2354,10 @@ void sli_zigbee_af_gas_proxy_function_cli_print_supported_use_cases(sl_cli_comma
   UNUSED_VAR(arguments);
 
   uint16_t index;
-  sl_zigbee_af_gas_proxy_function_println("GPF: Supported Use Cases");
+  sl_zigbee_af_cli_println("GPF: Supported Use Cases");
   for (index = 0; index < GBCS_NUM_USE_CASES; index++) {
-    sl_zigbee_af_gas_proxy_function_println("GPF: Message Code: 0x%04X, GBCS Use Case: %s",
-                                            useCaseDescriptions[index].messageCode,
-                                            useCaseDescriptions[index].description);
+    sl_zigbee_af_cli_println("GPF: Message Code: 0x%04X, GBCS Use Case: %s",
+                             useCaseDescriptions[index].messageCode,
+                             useCaseDescriptions[index].description);
   }
 }

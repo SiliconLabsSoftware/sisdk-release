@@ -137,7 +137,6 @@
   "        2 : moving object tracking fast (REAL_TIME_FAST)\n"                     \
   "    -p  Pre-set parameters for channel map selection, default: 2\n"             \
   "        Used only for initiator instances\n"                                    \
-  "        0 : low (channel spacing: 1, number of channels: 20)\n"                 \
   "        1 : medium (channel spacing: 2, number of channels: 38)\n"              \
   "        2 : high (channel spacing: 1, number of channels: 72)\n"                \
   "        3 : load custom from configuration macro CS_CUSTOM_CHANNEL_MAP\n"       \
@@ -363,8 +362,7 @@ void app_cli_init(int argc, char *argv[])
       case 'p':
       {
         int preset = atoi(optarg);
-        if (preset != CS_CHANNEL_MAP_PRESET_LOW
-            && preset != CS_CHANNEL_MAP_PRESET_MEDIUM
+        if (preset != CS_CHANNEL_MAP_PRESET_MEDIUM
             && preset != CS_CHANNEL_MAP_PRESET_HIGH
             && preset != CS_CHANNEL_MAP_PRESET_CUSTOM) {
           app_log_error(APP_PREFIX "Unsupported preset (%d) provided!" APP_LOG_NL, preset);
@@ -733,6 +731,7 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
       app_assert_status(sc);
       break;
     }
+    // --------------------------------
     case sl_bt_evt_connection_parameters_id:
       for (uint32_t i = 0u; i < cs_host_config.max_initiator_instances; i++) {
         if (cs_host_state.reflector_conn_handles[i] == evt->data.evt_connection_parameters.connection) {
@@ -771,6 +770,7 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
         }
       }
       break;
+    // --------------------------------
     case sl_bt_evt_cs_read_remote_supported_capabilities_complete_id:
     {
       uint16_t proc_interval;
@@ -781,15 +781,31 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
           check_supported_capabilities(evt);
           cs_host_state.read_remote_capabilities = false;
           if (initiator_config.max_procedure_count == 0) {
-            sc = cs_initiator_get_intervals(initiator_config.cs_main_mode,
-                                            initiator_config.cs_sub_mode,
-                                            initiator_config.procedure_scheduling,
-                                            initiator_config.channel_map_preset,
-                                            rtl_config.algo_mode,
-                                            initiator_config.cs_tone_antenna_config_idx,
-                                            initiator_config.use_real_time_ras_mode,
-                                            &conn_interval,
-                                            &proc_interval);
+            cs_initiator_config_t effective_config = initiator_config;
+            // Apply antenna selection based on local/remote antenna counts before
+            // computing the optimized intervals so that the antenna configuration
+            // index used for the lookup reflects any applied fallback.
+            sc = cs_initiator_select_antennas(&effective_config,
+                                              effective_config.num_antennas,
+                                              evt->data.evt_cs_read_remote_supported_capabilities_complete.num_antennas,
+                                              NULL);
+            if (sc == SL_STATUS_NOT_SUPPORTED) {
+              app_log_info(APP_PREFIX "Requested antenna usage not supported, "
+                                      "fallback configuration applied." APP_LOG_NL);
+            } else if (sc != SL_STATUS_OK) {
+              app_log_error(APP_PREFIX "Antenna selection failed: 0x%lx" APP_LOG_NL,
+                            (unsigned long)sc);
+            }
+            sc = cs_initiator_get_multiple_intervals(effective_config.cs_main_mode,
+                                                     effective_config.cs_sub_mode,
+                                                     effective_config.procedure_scheduling,
+                                                     effective_config.channel_map_preset,
+                                                     rtl_config.algo_mode,
+                                                     effective_config.cs_tone_antenna_config_idx,
+                                                     effective_config.use_real_time_ras_mode,
+                                                     1,
+                                                     &conn_interval,
+                                                     &proc_interval);
             if (sc == SL_STATUS_NOT_SUPPORTED) {
               app_log_info(APP_PREFIX "Parameter optimization is not supported with the given input parameters" APP_LOG_NL);
             } else if (sc == SL_STATUS_IDLE) {
@@ -863,6 +879,7 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
       }
       break;
     }
+    // --------------------------------
     case sl_bt_evt_user_message_to_host_id:
     {
       // handle button press security confirmation
@@ -1391,10 +1408,9 @@ static void cs_on_result(const uint8_t conn_handle,
   sl_status_t sc = SL_STATUS_OK;
   float value = .0f;
   cs_result_session_data_t result_data;
-  
+
   const bd_addr *bt_address = ble_peer_manager_get_bt_address(conn_handle);
   for (uint8_t is_data = ((measurement_counter % CS_HOST_HEADER_LOG) > 0); is_data <= 1; is_data++) {
-
     app_log_info(APP_INSTANCE_PREFIX, conn_handle);
     cs_initiator_print_bt_address(!is_data, bt_address);
 
@@ -1570,7 +1586,6 @@ static void cs_on_result(const uint8_t conn_handle,
   }
   measurement_counter++;
 }
-
 
 /******************************************************************************
  * Extract and display intermediate results between measurement results

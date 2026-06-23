@@ -12,7 +12,7 @@ category: Application|Utility
 metadata:
   sbom:
     license: Zlib
-quality: experimental
+quality: production
 tag:
 - No-Code
 config_file:

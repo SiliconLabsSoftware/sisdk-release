@@ -1,0 +1,42 @@
+project_name: ledboost_baremetal
+package: platform
+quality: evaluation
+label: Platform - LED Boost DCDC Bare-metal
+description: >
+  This example project demonstrates the DCDC boost LEDVDD behaviour with a
+  self-driven loop that alternates between an EM0 ramp and an EM2 dwell.
+  On odd iterations the app brings LEDVDD up at 1.8 V, ramps it to 3.8 V
+  using the DCDC LEDVDDRAMPDONE interrupt for each step, and then powers
+  the DCDC off.
+  On even iterations the app parks LEDVDD at 1.8 V and drops the device
+  into EM2 for a fixed dwell so the WSTK reads the EM2 current with
+  LEDVDD held at 1.8 V.
+category: Example|Platform
+filter:
+  - name: "Device Type"
+    value: ["SoC"]
+  - name: "MCU"
+    value: ["32-bit MCU"]
+  - name: "Project Difficulty"
+    value: ["Beginner"]
+source:
+  - path: app.c
+  - path: ledboost.c
+include:
+  - path: .
+    file_list:
+    - path: app.h
+    - path: ledboost.h
+component:
+  - id: sl_main
+  - id: device_init
+  - id: clock_manager
+  - id: hal_emu
+  - id: power_manager
+  - id: sleeptimer
+define:
+  - name: DEBUG_EFM
+readme:
+  - path: readme.md
+ui_hints:
+  highlight: readme.md

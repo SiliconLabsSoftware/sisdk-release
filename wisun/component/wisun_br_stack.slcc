@@ -21,16 +21,26 @@ requires:
 - name: "wisun_crypto"
 - name: "mbedtls_tls_server"
 - name: "wisun_br_implementation"
-- name: "wisun_stack_ffn"
 - name: "event_system"
 - name: "errno"
+- name: "wisun_dc_client_implementation"
+- name: "hal_prs"
+- name: "clock_manager_runtime"
+- name: "event_queue_task"
 
 recommends:
+- id: "wisun_dc_client_stubs"
+  vendor: silabs
 - id: "wisun_br_common_library"
   vendor: silabs
 - id: "rail_lib_singleprotocol"
+  vendor: silabs
+- id: "wisun_event_task"
 
   vendor: silabs
+conflicts:
+- name: "wisun_dc_client_library"
+
 provides:
 - name: "wisun_br_stack"
 - name: "a_wisun_stack"
@@ -61,6 +71,7 @@ include:
   - path: "sl_wisun_types.h"
   - path: "sl_wisun_version.h"
   - path: "sl_wisun_trace_api.h"
+  - path: "sl_wisun_alloc.h"
   - path: "sli_wisun_internal_api.h"
   - path: "sli_wisun_timer_service.h"
   - path: "border_router/sl_wisun_br_api.h"
@@ -70,9 +81,12 @@ include:
 - path: "inc/socket/"
   file_list:
   - path: "socket.h"
-- path: "inc/arpa/"
+- path: "inc/posix/"
   file_list:
-  - path: "inet.h"
+  - path: "sys/socket.h"
+  - path: "arpa/inet.h"
+  - path: "netinet/in.h"
+  - path: "netinet/ip6.h"
 - path: "src/"
   file_list:
   - path: "sli_wisun_certificate.h"

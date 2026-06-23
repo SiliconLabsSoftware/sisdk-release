@@ -79,7 +79,7 @@ static sl_hal_ldma_descriptor_t ldmaTxDesc = SL_HAL_LDMA_DESCRIPTOR_SINGLE_M2P(
   SL_HAL_LDMA_CTRL_SIZE_BYTE,
   txBuffer,
   &(BTL_SPI_PERIPHERAL_EUSART->TXDATA),
-  0
+  1
   );
 
 static const sl_hal_ldma_descriptor_t ldmaRxDesc[4] = {

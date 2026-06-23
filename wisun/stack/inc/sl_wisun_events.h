@@ -32,6 +32,9 @@
 #define SL_WISUN_EVENT_H
 
 #include "sl_wisun_types.h"
+#include "sl_status.h"
+
+#define SL_WISUN_EVENT_IND_MASK 1
 
 /**************************************************************************//**
  * @defgroup SL_WISUN_EVT API events
@@ -92,6 +95,14 @@ typedef enum {
   SL_WISUN_BR_MSG_ROUTING_TABLE_UPDATE_IND_ID     = 0x97,
   /// This event is sent once an event has been logged.
   SL_WISUN_MSG_LOGGER_EVENT_IND_ID                = 0x98,
+  /// This event is sent when a Direct Connect client is requesting servers to identify themselves.
+  SL_WISUN_MSG_DIRECT_CONNECT_ID_SOLICIT_IND_ID   = 0x99,
+  /// This event is sent when a Direct Connect Identifier (DC ID) is received.
+  SL_WISUN_MSG_DIRECT_CONNECT_ID_RECEIVED_IND_ID  = 0x9A,
+  /// This event is sent when the state of the DC client changes
+  SL_WISUN_MSG_DIRECT_CONNECT_CLIENT_STATE_CHANGED_IND_ID = 0x9B,
+  /// This event is sent when the device is ready to send First Breath datagram.
+  SL_WISUN_MSG_FB_READY_IND_ID                    = 0x9C,
 } sl_wisun_msg_ind_id_t;
 
 /**************************************************************************//**
@@ -439,7 +450,7 @@ SL_PACK_END()
 SL_PACK_START(1)
 typedef struct {
   /// Status of the indication
-  uint32_t status;
+  sl_status_t status;
 } SL_ATTRIBUTE_PACKED sl_wisun_msg_error_ind_body_t;
 SL_PACK_END()
 
@@ -664,7 +675,7 @@ SL_PACK_END()
 /// Indication message body
 SL_PACK_START(1)
 typedef struct {
-  /// LinkLocal IPv6 address of the client
+  /// Link Local IPv6 address of the client
   in6_addr_t link_local_ipv6;
 } SL_ATTRIBUTE_PACKED sl_wisun_msg_direct_connect_link_available_ind_body_t;
 SL_PACK_END()
@@ -682,6 +693,60 @@ SL_PACK_END()
 /** @} (end SL_WISUN_MSG_DIRECT_CONNECT_LINK_AVAILABLE_IND) */
 
 /**************************************************************************//**
+ * @defgroup SL_WISUN_MSG_DIRECT_CONNECT_ID_SOLICIT_IND sl_wisun_msg_direct_connect_id_solicit_ind
+ * @{
+ ******************************************************************************/
+
+/// Indication message body
+SL_PACK_START(1)
+typedef struct {
+  /// Link Local IPv6 address of the client
+  in6_addr_t link_local_ipv6;
+  /// DC ID used for scanning
+  sl_wisun_dc_id_t dc_id;
+} SL_ATTRIBUTE_PACKED sl_wisun_msg_direct_connect_id_solicit_ind_body_t;
+SL_PACK_END()
+
+/// Indication message
+SL_PACK_START(1)
+typedef struct {
+  /// Common message header
+  sl_wisun_msg_header_t header;
+  /// Indication message body
+  sl_wisun_msg_direct_connect_id_solicit_ind_body_t body;
+} SL_ATTRIBUTE_PACKED sl_wisun_msg_direct_connect_id_solicit_ind_t;
+SL_PACK_END()
+
+/** @} (end SL_WISUN_MSG_DIRECT_CONNECT_ID_SOLICIT_IND) */
+
+/**************************************************************************//**
+ * @defgroup SL_WISUN_MSG_DIRECT_CONNECT_ID_RECEIVED_IND sl_wisun_msg_direct_connect_id_received_ind
+ * @{
+ ******************************************************************************/
+
+/// Indication message body
+SL_PACK_START(1)
+typedef struct {
+  /// MAC address of the server
+  sl_wisun_mac_address_t mac_address;
+  /// DC ID of the server
+  sl_wisun_dc_id_t dc_id;
+} SL_ATTRIBUTE_PACKED sl_wisun_msg_direct_connect_id_received_ind_body_t;
+SL_PACK_END()
+
+/// Indication message
+SL_PACK_START(1)
+typedef struct {
+  /// Common message header
+  sl_wisun_msg_header_t header;
+  /// Indication message body
+  sl_wisun_msg_direct_connect_id_received_ind_body_t body;
+} SL_ATTRIBUTE_PACKED sl_wisun_msg_direct_connect_id_received_ind_t;
+SL_PACK_END()
+
+/** @} (end SL_WISUN_MSG_DIRECT_CONNECT_ID_RECEIVED_IND) */
+
+/**************************************************************************//**
  * @defgroup SL_WISUN_MSG_DIRECT_CONNECT_LINK_STATUS_IND sl_wisun_msg_direct_connect_link_status_ind
  * @{
  *****************************************************************************/
@@ -689,7 +754,7 @@ SL_PACK_END()
 /// Indication message body
 SL_PACK_START(1)
 typedef struct {
-  /// LinkLocal IPv6 address of the client
+  /// Link Local IPv6 address of the client
   in6_addr_t link_local_ipv6;
   /// Link status
   uint32_t   link_status;
@@ -707,6 +772,33 @@ typedef struct {
 SL_PACK_END()
 
 /** @} (end SL_WISUN_MSG_DIRECT_CONNECT_LINK_STATUS_IND) */
+
+/**************************************************************************//**
+ * @defgroup SL_WISUN_MSG_DIRECT_CONNECT_CLIENT_STATE_CHANGED_IND sl_wisun_msg_direct_connect_client_state_changed_ind
+ * @{
+ ******************************************************************************/
+
+/// Indication message body
+SL_PACK_START(1)
+typedef struct {
+  /// State of the Direct Connect client
+  uint32_t state;
+  /// link local IPv6 address of the server
+  in6_addr_t link_local_ipv6;
+} SL_ATTRIBUTE_PACKED sl_wisun_msg_direct_connect_client_state_changed_ind_body_t;
+SL_PACK_END()
+
+/// Indication message
+SL_PACK_START(1)
+typedef struct {
+  /// Common message header
+  sl_wisun_msg_header_t header;
+  /// Indication message body
+  sl_wisun_msg_direct_connect_client_state_changed_ind_body_t body;
+} SL_ATTRIBUTE_PACKED sl_wisun_msg_direct_connect_client_state_changed_ind_t;
+SL_PACK_END()
+
+/** @} (end SL_WISUN_MSG_DIRECT_CONNECT_CLIENT_STATE_CHANGED_IND) */
 
 /**************************************************************************//**
  * @defgroup SL_WISUN_BR_MSG_STOPPED_IND sl_wisun_br_msg_stopped_ind
@@ -761,6 +853,31 @@ SL_PACK_END()
 
 /** @} (end SL_WISUN_BR_MSG_ROUTING_TABLE_UPDATE_IND_ID) */
 
+/**************************************************************************//**
+ * @defgroup SL_WISUN_MSG_FB_READY_IND_ID sl_wisun_msg_fb_ready_ind
+ * @{
+ *****************************************************************************/
+
+/// Indication message body
+SL_PACK_START(1)
+typedef struct {
+  /// Status of the indication
+  uint32_t status;
+} SL_ATTRIBUTE_PACKED sl_wisun_msg_fb_ready_ind_body_t;
+SL_PACK_END()
+
+/// Indication message
+SL_PACK_START(1)
+typedef struct {
+  /// Common message header
+  sl_wisun_msg_header_t header;
+  /// Indication message body
+  sl_wisun_msg_fb_ready_ind_body_t body;
+} SL_ATTRIBUTE_PACKED sl_wisun_msg_fb_ready_ind_t;
+SL_PACK_END()
+
+/** @} (end SL_WISUN_MSG_FB_READY_IND_ID) */
+
 /// @brief Wi-SUN event definitions
 /// @details This structure contains a Wi-SUN API event and its associated data.
 SL_PACK_START(1)
@@ -814,14 +931,22 @@ typedef struct {
     sl_wisun_msg_pan_defect_ind_body_t pan_defect;
     /// #SL_WISUN_MSG_DIRECT_CONNECT_LINK_AVAILABLE_IND_ID event data
     sl_wisun_msg_direct_connect_link_available_ind_body_t direct_connect_link_available;
+    /// #SL_WISUN_MSG_DIRECT_CONNECT_ID_SOLICIT_IND_ID event data
+    sl_wisun_msg_direct_connect_id_solicit_ind_body_t direct_connect_id_solicit;
+    /// #SL_WISUN_MSG_DIRECT_CONNECT_ID_RECEIVED_IND_ID event data
+    sl_wisun_msg_direct_connect_id_received_ind_body_t direct_connect_id_received;
     /// #SL_WISUN_MSG_DIRECT_CONNECT_LINK_STATUS_IND_ID event data
     sl_wisun_msg_direct_connect_link_status_ind_body_t direct_connect_link_status;
+    /// #SL_WISUN_MSG_DIRECT_CONNECT_CLIENT_STATE_CHANGED_IND_ID event data
+    sl_wisun_msg_direct_connect_client_state_changed_ind_body_t direct_connect_client_state_changed;
     /// #SL_WISUN_BR_MSG_STOPPED_IND_ID event data
     sl_wisun_br_msg_stopped_ind_body_t br_stopped;
     /// #SL_WISUN_BR_MSG_ROUTING_TABLE_UPDATE_IND_ID event data
     sl_wisun_br_msg_routing_table_update_ind_body_t br_routing_table_update;
-    ///  #SL_WISUN_MSG_LOGGER_EVENT_IND_ID event data
+    /// #SL_WISUN_MSG_LOGGER_EVENT_IND_ID event data
     sl_wisun_msg_logger_event_ind_body_t logger_event;
+    /// #SL_WISUN_MSG_FB_READY_IND_ID event data
+    sl_wisun_msg_fb_ready_ind_body_t fb_ready;
   } evt;
 } SL_ATTRIBUTE_PACKED sl_wisun_evt_t;
 SL_PACK_END()

@@ -28,10 +28,11 @@ provides:
 requires:
 - name: cpc_secondary
 - name: status
-- name: dmadrv
+- name: hal_gpio
+- name: hal_ldma
+- name: hal_usart
+- name: dma_manager
 - name: device_manager
-- name: hal_generic_gpio
-- name: emlib_usart
 - name: clock_manager_runtime
 - name: emlib_cmu
   condition: [device_series_2]

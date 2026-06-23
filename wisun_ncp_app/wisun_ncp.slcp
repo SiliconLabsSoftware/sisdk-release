@@ -106,7 +106,12 @@ toolchain_settings:
     unless: [wisun_stack_debug]
 
 readme:
-  - path: doc/readme.md
+  - path: readme.md
+
+ui_hints:
+  highlight:
+    - path: readme.md
+      focus: true
 
 other_file:
   - path: doc/readme_img0.png

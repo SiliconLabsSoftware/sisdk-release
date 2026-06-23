@@ -1,7 +1,7 @@
 id: ot_crash_handler
 label: Crash Handler
 package: openthread
-category: OpenThread
+category: OpenThread|Utility
 quality: production
 description: |-
   This component provides a set of APIs for printing crash info.
@@ -66,6 +66,13 @@ template_contribution:
     event: platform_init
     include: crash_handler.h
     handler: sl_ot_crash_handler_init
+  unless: [sl_main]
+- name: event_handler
+  value:
+    event: internal_init_early
+    include: crash_handler.h
+    handler: sl_ot_crash_handler_init
+  condition: [sl_main]
 - name: event_handler
   value:
     event: internal_app_init

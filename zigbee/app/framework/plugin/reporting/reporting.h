@@ -63,18 +63,23 @@
 
 #define NULL_INDEX 0xFFFF
 
-#if defined(ENABLE_EXPANDED_TABLE)
+// define the token ids for non-host depending on table configuration
 #ifndef EZSP_HOST
-  #include "nvm3.h"
-  #define NVM3KEY_REPORTING_TABLE_EXPANDED (NVM3KEY_DOMAIN_ZIGBEE | 0x6000)
-  #define COMMON_TOKEN_REPORTING_TABLE_EXPANDED SL_TOKEN_GET_DYNAMIC_TOKEN((SL_TOKEN_NVM3_REGION_ZIGBEE | 0x6000), 0)
-#endif //!EZSP_HOST
+  #ifdef ENABLE_EXPANDED_TABLE
+    #define CTM_REPORTING_TABLE SL_TOKEN_GET_DYNAMIC_TOKEN((SL_TOKEN_NVM3_REGION_ZIGBEE | 0x6000), 0)
+  #else
+    #define CTM_REPORTING_TABLE SL_TOKEN_GET_DYNAMIC_TOKEN((SL_TOKEN_NVM3_REGION_ZIGBEE | 0x4000), 0)
+  #endif
+#endif // EZSP_HOST
+
+// define the table constraints based on the configuration
+#ifdef ENABLE_EXPANDED_TABLE
   #define REPORTING_TABLE_MAX_RANGE 0x400
   #define REPORTING_TABLE_PLUGIN_SIZE (SL_ZIGBEE_AF_PLUGIN_REPORTING_EXPANDED_TABLE_SIZE)
-#else // not expanded
+#else
   #define REPORTING_TABLE_MAX_RANGE 127
   #define REPORTING_TABLE_PLUGIN_SIZE (SL_ZIGBEE_AF_PLUGIN_REPORTING_TABLE_SIZE)
-#endif
+#endif // ENABLE_EXPANDED_TABLE
 
 // The default reporting will generate a table that is mandatory
 // but user may still allocate some table for adding more reporting over

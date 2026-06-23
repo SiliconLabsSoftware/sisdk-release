@@ -41,15 +41,15 @@ void sli_zigbee_af_device_query_service_status_command(sl_cli_command_arg_t *arg
   sl_802154_long_addr_t currentEui64;
   bool enabled = sl_zigbee_af_device_query_service_get_enabled_state();
   sl_zigbee_af_device_query_service_get_current_discovery_target_eui64(currentEui64);
-  sl_zigbee_af_core_println("Enabled: %s", enabled ? "yes" : "no");
-  sl_zigbee_af_core_print("Current Discovery Target: ");
+  sl_zigbee_af_cli_println("Enabled: %s", enabled ? "yes" : "no");
+  sl_zigbee_af_cli_print("Current Discovery Target: ");
   sl_zigbee_af_print_big_endian_eui64(currentEui64);
-  sl_zigbee_af_core_println("");
+  sl_zigbee_af_cli_println("");
   const sl_zigbee_af_device_info_t* device = sl_zigbee_af_device_database_find_device_by_eui64(currentEui64);
-  sl_zigbee_af_core_println("Status: %s",
-                            (device == NULL
-                             ? ""
-                             : device_database_get_status_string(device->status)));
+  sl_zigbee_af_cli_println("Status: %s",
+                           (device == NULL
+                            ? ""
+                            : device_database_get_status_string(device->status)));
 }
 
 void sli_zigbee_af_device_query_service_discover_command(sl_cli_command_arg_t *arguments)
@@ -58,5 +58,5 @@ void sli_zigbee_af_device_query_service_discover_command(sl_cli_command_arg_t *a
   sl_zigbee_copy_eui64_arg(arguments, 0, eui64, true);
   (void)sl_zigbee_af_device_database_erase_device(eui64);
   sl_status_t status = sl_zigbee_af_device_query_service_discover_target(eui64, 0xFF); // Node Descriptor will update device capabilities
-  sl_zigbee_af_core_println("Discover device: 0x%02X", status);
+  sl_zigbee_af_cli_println("Discover device: 0x%02X", status);
 }

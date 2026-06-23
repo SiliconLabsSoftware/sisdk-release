@@ -3,7 +3,7 @@ package: bootloader
 quality: production
 label: Bootloader - NCP EZSP SPI
 description: >
-  Standalone Bootloader using the EZSP protocol over SPI. This is the recommended SPI bootloader for the EmberZNet and Connect protocol stacks.
+   Demonstrates how to perform firmware updates using the EZSP protocol over SPI, in a standalone bootloader recommended for EmberZNet and Connect protocol stacks.
 
 category: Example|Bootloader
 filter:

@@ -53,6 +53,14 @@
 #endif
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
+#if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE
+#include <openthread/platform/mdns_socket.h>
+#endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#include <openthread/trel.h>
+#include <openthread/platform/trel.h>
+#include "radio/trel_interface.hpp"
+#endif
 #if OPENTHREAD_FTD
 #include <openthread/thread_ftd.h>
 #endif
@@ -64,9 +72,6 @@
 #endif
 #if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
 #include <openthread/srp_client_buffers.h>
-#endif
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-#include <openthread/trel.h>
 #endif
 
 #include "cli/cli_config.h"
@@ -329,7 +334,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MLR_REQUEST>(v
 
     while (mDecoder.GetRemainingLengthInStruct())
     {
-        VerifyOrExit(addressesCount < Ip6AddressesTlv::kMaxAddresses, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(addressesCount < OT_IP6_MAX_MLR_ADDRESSES, error = OT_ERROR_NO_BUFS);
         SuccessOrExit(error = mDecoder.ReadIp6Address(addresses[addressesCount]));
         ++addressesCount;
     }
@@ -4192,91 +4197,65 @@ exit:
     return error;
 }
 
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_TREL_UDP_PORT>(void)
-{
-    otError error = OT_ERROR_NONE;
+void NcpBase::HandleTrelStateChanged(void *aContext) { static_cast<NcpBase *>(aContext)->HandleTrelStateChanged(); }
 
-    // Report actual selected UDP port when TREL is enabled, zero otherwise.
-    uint16_t port = otTrelIsEnabled(mInstance) ? otTrelGetUdpPort(mInstance) : 0;
-    SuccessOrExit(error = mEncoder.WriteUint16(port));
-exit:
-    return error;
+void NcpBase::HandleTrelStateChanged(void)
+{
+    mChangedPropsSet.AddProperty(SPINEL_PROP_TREL_STATE);
+    mUpdateChangedPropsTask.Post();
 }
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_TREL_STATE>(void)
 {
+    otError  error   = OT_ERROR_NONE;
+    bool     enabled = otTrelIsEnabled(mInstance);
+    uint16_t port    = enabled ? otTrelGetUdpPort(mInstance) : 0;
+
+    SuccessOrExit(error = mEncoder.WriteBool(enabled));
+    SuccessOrExit(error = mEncoder.WriteUint16(port));
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_TREL_STATE>(void)
+{
+    bool     enabled;
+    uint16_t port;
+    otError  error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadBool(enabled));
+    SuccessOrExit(error = mDecoder.ReadUint16(port));
+
+    // Host `b`: whether the infrastructure TREL socket is active and `S` is the bound port; if false, clear the
+    // stored host port (e.g. proxy stopped). Does not change stack TREL enablement (see SPINEL_PROP_TREL_USER_ENABLE).
+    if (otTrelIsEnabled(mInstance))
+    {
+#if OPENTHREAD_CONFIG_TREL_DELEGATE_INFRA_TO_HOST_ENABLE
+        mInstance->Get<Trel::Interface>().SetHostUdpPort(enabled ? port : 0);
+#endif
+    }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_TREL_USER_ENABLE>(void)
+{
+    bool    enabled;
+    bool    wasEnabled;
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = mEncoder.WriteBool(otTrelIsEnabled(mInstance)));
-    SuccessOrExit(error = mEncoder.WriteUint16(otTrelGetUdpPort(mInstance)));
+    SuccessOrExit(error = mDecoder.ReadBool(enabled));
 
-exit:
-    return error;
-}
+    wasEnabled = otTrelIsEnabled(mInstance);
+    otTrelSetEnabled(mInstance, enabled);
 
-template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_TREL_PEER_INFO>(void)
-{
-    otError             error   = OT_ERROR_NONE;
-    const otExtAddress *extAddr = nullptr; // Present in Spinel payload but not needed directly (info in TXT).
-    const otIp6Address *ip6Addr = nullptr;
-    uint16_t            port    = 0;
-    uint8_t             flags   = 0;
-    uint16_t            txtLen  = 0;
-    const uint8_t      *txtData = nullptr;
-    otPlatTrelPeerInfo  peerInfo;
-
-    SuccessOrExit(error = mDecoder.ReadEui64(extAddr)); // Extended MAC address (ignored here).
-    SuccessOrExit(error = mDecoder.ReadIp6Address(ip6Addr));
-    SuccessOrExit(error = mDecoder.ReadUint16(port));
-    SuccessOrExit(error = mDecoder.ReadUint8(flags));
-    SuccessOrExit(error = mDecoder.ReadUint16(txtLen));
-
-    if (txtLen > 0)
+    // Re-notify when TREL was already enabled so a reconnecting host can sync without toggling TREL.
+    if (enabled && wasEnabled)
     {
-        SuccessOrExit(error = mDecoder.ReadData(txtData, txtLen));
+        HandleTrelStateChanged();
     }
-
-    peerInfo.mRemoved           = (flags & 0x01) != 0; // Should normally be false for INSERT.
-    peerInfo.mSockAddr.mAddress = *ip6Addr;
-    peerInfo.mSockAddr.mPort    = port;
-    peerInfo.mTxtData           = txtData;
-    peerInfo.mTxtLength         = txtLen;
-
-    otPlatTrelHandleDiscoveredPeerInfo(mInstance, &peerInfo);
-
-exit:
-    return error;
-}
-
-template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_TREL_PEER_INFO>(void)
-{
-    otError             error   = OT_ERROR_NONE;
-    const otExtAddress *extAddr = nullptr; // Present in Spinel payload but not needed directly (info in TXT).
-    const otIp6Address *ip6Addr = nullptr;
-    uint16_t            port    = 0;
-    uint8_t             flags   = 0;
-    uint16_t            txtLen  = 0;
-    const uint8_t      *txtData = nullptr;
-    otPlatTrelPeerInfo  peerInfo;
-
-    SuccessOrExit(error = mDecoder.ReadEui64(extAddr));
-    SuccessOrExit(error = mDecoder.ReadIp6Address(ip6Addr));
-    SuccessOrExit(error = mDecoder.ReadUint16(port));
-    SuccessOrExit(error = mDecoder.ReadUint8(flags)); // Flags should have bit0 set, but we force removal regardless.
-    SuccessOrExit(error = mDecoder.ReadUint16(txtLen));
-
-    if (txtLen > 0)
-    {
-        SuccessOrExit(error = mDecoder.ReadData(txtData, txtLen));
-    }
-
-    peerInfo.mRemoved           = true;
-    peerInfo.mSockAddr.mAddress = *ip6Addr;
-    peerInfo.mSockAddr.mPort    = port;
-    peerInfo.mTxtData           = txtData;
-    peerInfo.mTxtLength         = txtLen;
-
-    otPlatTrelHandleDiscoveredPeerInfo(mInstance, &peerInfo);
 
 exit:
     return error;
@@ -4920,27 +4899,9 @@ void NcpBase::ProcessThreadChangedFlags(void)
 
     mThreadChangedFlags = 0;
 
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    // After processing Thread changes, if TREL is enabled advertise its UDP port.
-    if (otTrelIsEnabled(mInstance))
-    {
-        mChangedPropsSet.AddProperty(SPINEL_PROP_TREL_UDP_PORT);
-    }
-#endif
-
 exit:
     return;
 }
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-void NcpBase::HandleTrelStateChange(void *aContext) { static_cast<NcpBase *>(aContext)->HandleTrelStateChange(); }
-
-void NcpBase::HandleTrelStateChange(void)
-{
-    mChangedPropsSet.AddProperty(SPINEL_PROP_TREL_STATE);
-    mUpdateChangedPropsTask.Post();
-}
-#endif
 
 #if OPENTHREAD_CONFIG_WAKEUP_COORDINATOR_ENABLE || OPENTHREAD_CONFIG_WAKEUP_END_DEVICE_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_WAKEUP_CHANNEL>(void)

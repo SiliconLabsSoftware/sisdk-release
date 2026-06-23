@@ -21,6 +21,7 @@
 #include "app/framework/util/attribute-storage.h"
 #include "app/util/common/common.h"
 #include "stack/config/sl_zigbee_token_defines.h"
+#include "stack/include/sl_zigbee_token.h"
 
 bool sl_zigbee_af_read_diagnostic_attribute(
   sl_zigbee_af_attribute_metadata_t *attributeMetadata,
@@ -130,7 +131,11 @@ bool sl_zigbee_af_read_diagnostic_attribute(
 
       uint16_t rebootCounter16;
 
-      (void)sl_token_manager_get_data(COMMON_TOKEN_STACK_BOOT_COUNTER, (void *)&rebootCounter, sizeof(tokTypeStackBootCounter));
+      status = slx_zigbee_token_manager_get_data(COMMON_TOKEN_STACK_BOOT_COUNTER, (void *)&rebootCounter, sizeof(tokTypeStackBootCounter));
+      if (status != SL_STATUS_OK) {
+        sl_zigbee_af_core_println("Failed to get boot counter, status: 0x%08X", status);
+        return false;
+      }
 
       // The token is a uint32, but the attribute is a uint16
       rebootCounter16 = (uint16_t) rebootCounter;

@@ -1,11 +1,10 @@
 project_name: zigbee_standardized_rf_testing
-label: Zigbee - StandardizedRfTesting
+label: Zigbee - SoC Standardized RF Testing
 package: zigbee
 category: Zigbee Application
 quality: production
 
-description: >
-  This is a pre-standardization implementation of Zigbee's RF testing standard.  It utilizes the TIS (Total Isotropic Sensitivity)/ TRP (Total Radiated Power)  testing interfaces and is optional for Zigbee certifications. This application adheres to the Zigbee RF Performance Test Spec v1.0.
+description: Pre-standardization Zigbee RF testing (TIS/TRP). Adheres to Zigbee RF Performance Test Spec v1.0; optional for certification.
 author: Silicon Laboratories, Inc.
 
 component:
@@ -23,8 +22,13 @@ component:
   - id: zigbee_mfglib
   - id: zigbee_system_common
   - id: clock_manager
-  # Platform - enable LTO for gcc
+  # Platform - enable LTO for gcc and llvm
   - id: toolchain_gcc_lto
+    condition:
+      - toolchain_gcc
+  - id: toolchain_llvm_lto
+    condition:
+      - toolchain_llvm
 
 configuration:
   - name: SL_BOARD_ENABLE_VCOM
@@ -110,4 +114,8 @@ filter:
   - name: Project Difficulty
     value: [Beginner]
 tag:
+  - hwfilter:ram:64k
   - hwfilter:device:device_supports_zigbee
+  - toolchain:gcc
+  - toolchain:iar
+  - toolchain:llvm

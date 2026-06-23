@@ -25,15 +25,30 @@ library:
   condition:
   - toolchain_gcc
   - cortexm33
-  - bluetooth_feature_linklayer_interface
+  - bluetooth_host_release_libraries
+- path: build/gcc/cortex-m55/linklayer_interface/release/libble_host_linklayer_interface.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
+  - bluetooth_host_release_libraries
 - path: build/iar/cortex-m33/linklayer_interface/release/libble_host_linklayer_interface.a
   condition:
   - toolchain_iar
   - cortexm33
-  - bluetooth_feature_linklayer_interface
+  - bluetooth_host_release_libraries
+- path: build/iar/cortex-m55/linklayer_interface/release/libble_host_linklayer_interface.a
+  condition:
+  - toolchain_iar
+  - cortexm55
+  - bluetooth_host_release_libraries
 - path: build/llvm/cortex-m33/linklayer_interface/release/libble_host_linklayer_interface.a
   condition:
   - toolchain_llvm
   - cortexm33
-  - bluetooth_feature_linklayer_interface
+  - bluetooth_host_release_libraries
+- path: build/llvm/cortex-m55/linklayer_interface/release/libble_host_linklayer_interface.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
+  - bluetooth_host_release_libraries
 root_path: bluetooth_le_host

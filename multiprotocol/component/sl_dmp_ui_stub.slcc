@@ -1,0 +1,21 @@
+id: sl_dmp_ui_stub
+package: multiprotocol
+label: Header stub for DMP UI APIs
+category: Zigbee|Zigbee 3.0
+quality: production
+description: Stubs for DMP UI when zigbee_display is not used.
+ui_hints:
+  visibility: never
+
+provides:
+- name: sl_dmp_ui_stub
+
+include:
+- path: zigbee_ble_common
+  file_list:
+  - path: sl_dmp_ui_stub.h
+
+metadata:
+  sbom:
+    license: MSLA
+root_path: multiprotocol

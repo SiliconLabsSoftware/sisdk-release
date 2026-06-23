@@ -35,12 +35,18 @@
 #define OTBR_AGENT_NCP_SPINEL_HPP_
 
 #include <functional>
+#include <map>
 #include <memory>
 
 #include <vector>
 
+#include "openthread-br/config.h"
+
 #include <openthread/backbone_router_ftd.h>
 #include <openthread/border_agent.h>
+#if OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
+#include <openthread/border_routing.h>
+#endif
 #include <openthread/dataset.h>
 #include <openthread/error.h>
 #include <openthread/link.h>
@@ -59,10 +65,6 @@
 #include "host/posix/infra_if.hpp"
 #include "host/posix/netif.hpp"
 #include "mdns/mdns.hpp"
-
-#if OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
-#include <openthread/border_routing.h>
-#endif
 
 namespace otbr {
 namespace Host {
@@ -128,20 +130,6 @@ public:
         std::function<void(otBackboneRouterMulticastListenerEvent, Ip6Address)>;
     using BackboneRouterStateChangedCallback = std::function<void(otBackboneRouterState)>;
     using EphemeralKeyStateChangedCallback   = std::function<void(otBorderAgentEphemeralKeyState, uint16_t)>;
-
-    using TrelPortChangedCallback = std::function<void(uint16_t)>;
-    using ExtAddrChangedCallback  = std::function<void(const uint8_t[OT_EXT_ADDRESS_SIZE])>;
-    using ExtPanIdChangedCallback = std::function<void(const uint8_t[OT_EXT_PAN_ID_SIZE])>;
-    struct TrelPeerInfo
-    {
-        uint8_t              mExtAddr[OT_EXT_ADDRESS_SIZE];
-        otIp6Address         mIp6Addr;
-        uint16_t             mPort  = 0;
-        uint8_t              mFlags = 0; // Bit 0 = removed.
-        std::vector<uint8_t> mTxtData;
-    };
-    using TrelPeerAddedCallback   = std::function<void(const TrelPeerInfo &)>;
-    using TrelPeerRemovedCallback = std::function<void(const TrelPeerInfo &)>;
 
     /**
      * Constructor.
@@ -362,13 +350,16 @@ public:
      */
     void SrpServerSetAutoEnableMode(bool aEnabled);
 
+#endif // OTBR_ENABLE_SRP_ADVERTISING_PROXY
+
+#if OTBR_ENABLE_MDNS && (OTBR_ENABLE_SRP_ADVERTISING_PROXY || OTBR_ENABLE_DNSSD_PLAT)
     /**
      * This method sets the dnssd state on NCP.
      *
      * @param[in] aState  The dnssd state.
      */
     void DnssdSetState(Mdns::Publisher::State aState);
-#endif // OTBR_ENABLE_SRP_ADVERTISING_PROXY
+#endif
 
 #if OTBR_ENABLE_MDNS
     /**
@@ -394,6 +385,18 @@ public:
      * @param[in] aCallback  The callback function.
      */
     void AddEphemeralKeyStateChangedCallback(const EphemeralKeyStateChangedCallback &aCallback);
+
+#if OTBR_ENABLE_TREL
+    /**
+     * Invoked when the NCP signals TREL state (`SPINEL_PROP_TREL_STATE`): `aThreadPort` is the UDP port on the
+     * NCP/Thread side to associate with the host UDP proxy.
+     */
+    using TrelStateChangedCallback = std::function<void(bool aEnabled, uint16_t aThreadPort)>;
+
+    void SetTrelStateChangedCallback(const TrelStateChangedCallback &aCallback);
+
+    otError SetTrelHostUdpPort(bool aEnabled, uint16_t aHostPort);
+#endif
 
     /**
      * This method forwards a UDP packet to the NCP.
@@ -451,25 +454,6 @@ public:
      */
     void SetHostPowerState(uint8_t aState, AsyncTaskPtr aAsyncTask);
 
-#if OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
-    /**
-     * This method enables/disables the DHCP6 PD on NCP.
-     *
-     * @param[in] aEnabled  A boolean to enable/disable the DHCP6 PD.
-     */
-    void BorderRoutingSetDhcp6PdEnabled(bool aEnabled);
-
-    /**
-     * This method processes a DHCP6 PD prefix by sending it to the NCP via SPINEL.
-     *
-     * @param[in] aPrefixInfo  A pointer to the prefix information structure containing all fields.
-     *
-     * @retval OT_ERROR_NONE  The prefix was sent successfully.
-     * @retval OT_ERROR_FAILED  Failed to encode or send the SPINEL command.
-     */
-    otError BorderRoutingProcessDhcp6PdPrefix(const otBorderRoutingPrefixTableEntry *aPrefixInfo);
-#endif
-
 #if OTBR_ENABLE_EPSKC
     /**
      * Enables or disables the Ephemeral Key on the NCP.
@@ -504,16 +488,37 @@ public:
     void DeactivateEphemeralKey(bool aRetainActiveSession, AsyncTaskPtr aAsyncTask);
 #endif // OTBR_ENABLE_EPSKC
 
-#if OTBR_ENABLE_TREL
-    void SetTrelPortChangedCallback(TrelPortChangedCallback aCallback) { mTrelPortChangedCallback = aCallback; }
-    void SetExtAddrChangedCallback(ExtAddrChangedCallback aCallback) { mExtAddrChangedCallback = aCallback; }
-    void SetExtPanIdChangedCallback(ExtPanIdChangedCallback aCallback) { mExtPanIdChangedCallback = aCallback; }
+#if OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
+    /**
+     * This method enables/disables the DHCP6 PD on NCP.
+     *
+     * @param[in] aEnabled  A boolean to enable/disable the DHCP6 PD.
+     */
+    void BorderRoutingSetDhcp6PdEnabled(bool aEnabled);
 
-    void SetTrelPeerAddedCallback(TrelPeerAddedCallback aCallback) { mTrelPeerAddedCallback = aCallback; }
-    void SetTrelPeerRemovedCallback(TrelPeerRemovedCallback aCallback) { mTrelPeerRemovedCallback = aCallback; }
+    /**
+     * This method processes a DHCP6 PD prefix by sending it to the NCP via SPINEL.
+     *
+     * @param[in] aPrefixInfo  A pointer to the prefix information structure containing all fields.
+     *
+     * @retval OTBR_ERROR_NONE        The prefix was sent successfully.
+     * @retval OTBR_ERROR_OPENTHREAD  Failed to encode or send the SPINEL command.
+     */
+    otbrError BorderRoutingProcessDhcp6PdPrefix(const otBorderRoutingPrefixTableEntry *aPrefixInfo);
+#endif
 
-    otError InsertTrelPeer(const TrelPeerInfo &aPeerInfo);
-    otError RemoveTrelPeer(const TrelPeerInfo &aPeerInfo);
+#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_BORDER_ROUTING
+    /**
+     * This method enables/disables NAT64 prefix management on NCP.
+     *
+     * With border-routing NAT64 enabled on the co-processor, the NCP discovers NAT64
+     * prefixes on the infrastructure link (for example from Router Advertisements) and
+     * publishes them in Thread Network Data. Packet translation is outside the NCP when
+     * the NAT64 translator is not built or enabled on the co-processor.
+     *
+     * @param[in] aEnabled  A boolean to enable/disable NAT64 prefix management.
+     */
+    void BorderRoutingSetNat64Enabled(bool aEnabled);
 #endif
 
 private:
@@ -575,6 +580,7 @@ private:
                                           spinel_prop_key_t aKey,
                                           const uint8_t    *aData,
                                           uint16_t          aLength);
+    void      HandleNcpUnexpectedReset(spinel_status_t aStatus);
 
     spinel_tid_t GetNextTid(void);
     void         FreeTidTableItem(spinel_tid_t aTid);
@@ -606,7 +612,20 @@ private:
                                   const otIp6Address *&aPeerAddr,
                                   uint16_t            &aPeerPort,
                                   uint16_t            &aLocalPort);
+#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_NAT64_TAYGA
+    otError ParseNat64FavoredPrefix(const uint8_t *aBuf, uint16_t aLen, otIp6Prefix &aPrefix);
+#endif
     otError SendDnssdResult(otPlatDnssdRequestId aRequestId, const std::vector<uint8_t> &aCallbackData, otError aError);
+#if OTBR_ENABLE_DNSSD_PLAT
+    otError  SendDnssdBrowseResult(const otPlatDnssdBrowseResult &aResult, const std::vector<uint8_t> &aCallbackData);
+    otError  SendDnssdSrvResult(const otPlatDnssdSrvResult &aResult, const std::vector<uint8_t> &aCallbackData);
+    otError  SendDnssdTxtResult(const otPlatDnssdTxtResult &aResult, const std::vector<uint8_t> &aCallbackData);
+    otError  SendDnssdAddressResult(spinel_prop_key_t               aKey,
+                                    const otPlatDnssdAddressResult &aResult,
+                                    const std::vector<uint8_t>     &aCallbackData);
+    uint64_t AllocateDnssdStableId(const std::vector<uint8_t> &aCallbackData);
+    bool     ReleaseDnssdStableId(const std::vector<uint8_t> &aCallbackData, uint64_t &aStableIdOut);
+#endif
 
     ot::Spinel::SpinelDriver *mSpinelDriver;
     uint16_t                  mCmdTidsInUse; ///< Used transaction ids.
@@ -627,6 +646,10 @@ private:
     PropsObserver *mPropsObserver;
 #if OTBR_ENABLE_MDNS
     otbr::Mdns::Publisher *mPublisher;
+#endif
+#if OTBR_ENABLE_DNSSD_PLAT
+    uint64_t                                 mDiscoveryProxyId;
+    std::map<std::vector<uint8_t>, uint64_t> mDnssdStableIdByCallbackData;
 #endif
 
     AsyncTaskPtr mDatasetSetActiveTask;
@@ -649,15 +672,11 @@ private:
     BackboneRouterStateChangedCallback       mBackboneRouterStateChangedCallback;
     BackboneRouterMulticastListenerCallback  mBackboneRouterMulticastListenerCallback;
     EphemeralKeyStateChangedCallback         mEphemeralKeyStateChangedCallback;
-
-    uint16_t                mTrelPort = 0; // Last observed TREL UDP port (0 = unknown).
-    TrelPortChangedCallback mTrelPortChangedCallback;
-    ExtAddrChangedCallback  mExtAddrChangedCallback;
-    ExtPanIdChangedCallback mExtPanIdChangedCallback;
-    TrelPeerAddedCallback   mTrelPeerAddedCallback;
-    TrelPeerRemovedCallback mTrelPeerRemovedCallback;
-
-    otError EncodeTrelPeerInfo(const TrelPeerInfo &aPeerInfo, ot::Spinel::Encoder &aEncoder);
+#if OTBR_ENABLE_TREL
+    TrelStateChangedCallback mTrelStateChangedCallback;
+    /// TREL stack UDP port on the NCP (from `SPINEL_PROP_TREL_STATE`); 0 when TREL is off or not yet known.
+    uint16_t mTrelThreadUdpPort;
+#endif
 };
 
 } // namespace Host

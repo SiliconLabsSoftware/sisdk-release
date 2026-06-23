@@ -1,0 +1,114 @@
+id: rail_mux_aux
+label: RAIL multiplexer aux (CLI and raw API)
+package: zigbee
+category: 802.15.4|Radio
+quality: evaluation
+description: >
+  Auxiliary RAIL multiplexer hooks (rail-mux-aux CLI group, raw RX/TX helpers). Evaluation-quality
+  (alpha-stage); selected automatically when rail_mux is used with CLI.
+
+provides:
+- name: rail_mux_aux
+
+requires:
+- name: zigbee_cli
+
+include:
+- path: platform/radio/mac/rail_mux
+  file_list:
+  - path: sl_rail_mux.h
+  - path: sl_rail_mux_rename.h
+  - path: sli_rail_mux_aux.h
+- path: app/framework/include
+  file_list:
+  - path: sl_zigbee_rail_mux_aux_cli.h
+  - path: sl_zigbee_rail_mux_aux_raw.h
+- path: stack/internal/inc
+  file_list:
+  - path: sl_zigbee_rail_mux_aux_raw_internal_def.h
+- path: stack/internal/src/ipc
+  file_list:
+  - path: sl_zigbee_rail_mux_aux_raw_ipc_command_messages.h
+    condition:
+    - zigbee_use_ipc
+  - path: sl_zigbee_rail_mux_aux_raw_ipc_callback_events.h
+    condition:
+    - zigbee_use_ipc
+
+source:
+- path: platform/radio/mac/rail_mux/sli_rail_mux_aux.c
+- path: app/framework/cli/rail_mux_aux_cli.c
+  condition:
+  - zigbee_cli
+- path: stack/internal/src/baremetal/sl_zigbee_rail_mux_aux_raw_baremetal_wrapper.c
+  unless:
+  - zigbee_use_ipc
+- path: stack/internal/src/baremetal/sl_zigbee_rail_mux_aux_raw_baremetal_callbacks.c
+  unless:
+  - zigbee_use_ipc
+- path: stack/internal/src/ipc/sl_zigbee_rail_mux_aux_raw_ipc_command_messages.c
+  condition:
+  - zigbee_use_ipc
+- path: stack/internal/src/ipc/sl_zigbee_rail_mux_aux_raw_ipc_callback_events.c
+  condition:
+  - zigbee_use_ipc
+
+
+template_contribution:
+- name: component_catalog
+  value: rail_mux_aux
+- name: cli_group
+  value:
+    name: rail-mux-aux
+    help: RAIL multiplexer aux CLI (PAN, mux register/unregister, raw aux RX/TX helpers).
+- name: cli_command
+  value:
+    group: rail-mux-aux
+    name: try-register
+    handler: sl_zigbee_cli_rail_mux_aux_try_register
+    help: Last mux context via sl_zigbee_rail_mux_aux_register_protocol; distinct PAN + short 0xFFFF; sl_rail_config_events (RX path); sl_rail_start_rx. Aux PAN must differ from stack (e.g. 0xCAFE vs 0xBABE). Channel 0 uses stack channel. Prints aux_rx_listen:ok or aux_rx_listen:skipped.
+    argument:
+    - type: uint16
+      help: Auxiliary 802.15.4 PAN for the mux context (must not equal stack PAN).
+    - type: uint8
+      help: 802.15.4 channel for sl_rail_start_rx (0 = current Zigbee channel).
+- name: cli_command
+  value:
+    group: rail-mux-aux
+    name: unregister-aux
+    handler: sl_zigbee_cli_rail_mux_aux_unregister_aux
+    help: sl_zigbee_rail_mux_aux_unregister_protocol; stops aux RX, restores slot_base 0 and ZB+OT FCS listen. Prints mux_aux_tear:0xXXXX.
+- name: cli_command
+  value:
+    group: rail-mux-aux
+    name: auxcount
+    handler: sl_zigbee_cli_rail_mux_aux_rx_count
+    help: Prints mux_aux N; SL_RAIL_RX_PACKET_READY_SUCCESS/CRC_ERROR frames copied+released for try-register aux handle (not Zigbee stack MAC).
+- name: cli_command
+  value:
+    group: rail-mux-aux
+    name: mac-rx-unicast
+    handler: sl_zigbee_cli_rail_mux_aux_mac_rx_unicast
+    help: Zigbee stack MAC_RX_UNICAST counter (sl_zigbee_read_counters); not aux try-register RAIL RX. Use rail-mux-aux auxcount for the latter.
+- name: cli_command
+  value:
+    group: rail-mux-aux
+    name: tx-fixed-psdu
+    handler: sl_zigbee_cli_rail_mux_aux_tx_fixed_psdu
+    help: Aux TX fixed PSDU to FIFO then start_tx or CSMA TX; arms one-shot raw RX dump and TX complete observer via the unified internal aux event callback. try-register first. Ch0=stack ch.
+    argument:
+    - type: uint8
+      help: 802.15.4 channel (0 = current Zigbee channel).
+    - type: uint8
+      help: 1 = start_cca_csma_tx (802.15.4 CSMA), 0 = start_tx.
+- name: cli_command
+  value:
+    group: rail-mux-aux
+    name: aux-rx-callback-off
+    handler: sl_zigbee_cli_rail_mux_aux_raw_rx_off
+    help: Clears unified aux event observer so auxcount drain resumes (e.g. after tx-fixed-psdu).
+
+metadata:
+  sbom:
+    license: MSLA
+root_path: zigbee

@@ -3,7 +3,7 @@
  * @brief callback event handlers for security
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -25,6 +25,10 @@ extern sl_status_t sl_zigbee_af_pop_network_index(void);
 void sli_zigbee_stack_switch_network_key_handler(uint8_t sequenceNumber)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.switch_network_key_handler.sequenceNumber = sequenceNumber;
   cb_event->tag = SLI_ZIGBEE_STACK_SWITCH_NETWORK_KEY_HANDLER_IPC_EVENT_TYPE;
   #ifndef SL_ZIGBEE_MULTI_NETWORK_STRIPPED
@@ -38,6 +42,10 @@ void sli_zigbee_stack_zigbee_key_establishment_handler(sl_802154_long_addr_t par
                                                        sl_zigbee_key_status_t status)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
 
   if (partner != NULL) {
     memmove(cb_event->data.zigbee_key_establishment_handler.partner, partner, sizeof(sl_802154_long_addr_t));

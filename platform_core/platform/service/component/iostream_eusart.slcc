@@ -29,7 +29,6 @@ provides:
 - name: iostream_transport
   allow_multiple: true
 requires:
-- name: dmadrv
 - name: iostream_eusart_core
 - name: iostream
 - name: hal_eusart

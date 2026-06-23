@@ -102,6 +102,7 @@
     path: brd1019a_brd4002b/btl_spi_peripheral_eusart_driver_cfg.h
   - condition:
     - brd4001a
+    unless: [clock_manager_oscillator_config_override]
     override:
       component: clock_manager
       file_id: clock_manager_oscillator_config
@@ -116,6 +117,7 @@
     path: brd1019a_brd4001a/sl_clock_manager_tree_config.h
   - condition:
     - brd4002a
+    unless: [clock_manager_oscillator_config_override]
     override:
       component: clock_manager
       file_id: clock_manager_oscillator_config
@@ -123,6 +125,7 @@
     path: brd1019a_brd4002a/sl_clock_manager_oscillator_config.h
   - condition:
     - brd4002b
+    unless: [clock_manager_oscillator_config_override]
     override:
       component: clock_manager
       file_id: clock_manager_oscillator_config

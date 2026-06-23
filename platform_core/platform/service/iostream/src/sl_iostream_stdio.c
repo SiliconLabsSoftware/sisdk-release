@@ -31,6 +31,7 @@
 #include "sl_status.h"
 #include "sl_iostream.h"
 #include "sl_iostream_stdio.h"
+#include "sl_iostream_stdio_config.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -78,6 +79,13 @@ sl_status_t sl_iostream_stdio_init(void)
 {
   sl_iostream_set_system_default(&sl_iostream_stdio);
 
+  if (SL_IOSTREAM_STDIO_DISABLE_WRITE_BUFFERING) {
+    setvbuf(stdout, NULL, _IONBF, 0);
+  }
+
+  if (SL_IOSTREAM_STDIO_DISABLE_READ_BUFFERING) {
+    setvbuf(stdin, NULL, _IONBF, 0);
+  }
   return SL_STATUS_OK;
 }
 
@@ -101,7 +109,6 @@ static sl_status_t stdio_write(void *context,
     fputc(*ch, stdout);
     ch++;
   }
-  fflush(stdout);
   return status;
 }
 

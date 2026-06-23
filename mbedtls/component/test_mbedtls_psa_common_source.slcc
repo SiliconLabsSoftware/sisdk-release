@@ -1,0 +1,33 @@
+id: test_mbedtls_psa_common_source
+label: Test dependencies for running Mbed TLS / PSA Crypto unit tests (Source)
+package: mbedtls
+description: Utility component providing mbed TLS upstream test dependencies.
+category: unittest|mbedtls
+quality: production
+ui_hints:
+  visibility: never
+provides:
+- name: test_mbedtls_psa_common_source
+requires:
+- name: test_mbedtls_framework_source
+source:
+- path: tests/src/certs.c
+- path: tests/src/psa_test_wrappers.c
+- path: tests/src/test_helpers/ssl_helpers.c
+- path: library/memory_buffer_alloc.c
+  condition:
+  - trustzone_secure
+- path: library/memory_buffer_alloc.c
+  condition:
+  - trustzone_unaware
+include:
+- path: tests/include
+  file_list:
+  - path: test/certs.h
+  - path: test/psa_test_wrappers.h
+  - path: test/ssl_helpers.h
+  - path: test/test_certs.h
+metadata:
+  sbom:
+    reference: mbedtls_sbom
+root_path: mbedtls

@@ -144,7 +144,7 @@ template_contribution:
     help: Set transmission mode
     argument:
     - type: uint8
-      help: "Mode: 0:Continous, 1:Fixed size, 2: Fixed time"
+      help: "Mode: 0:Continuous, 1:Fixed size, 2:Fixed time"
     - type: uint32
       help: Value to set (in case of fixed time/size)
   condition:
@@ -156,7 +156,7 @@ template_contribution:
     handler: cli_throughput_peripheral_mode_get
     shortcuts:
     - name: g
-    help: "Get transmission mode, 0:Continous, 1:Fixed size, 2: Fixed time"
+    help: "Get transmission mode, 0:Continuous, 1:Fixed size, 2:Fixed time"
   condition:
   - cli
 - name: cli_group
@@ -213,11 +213,11 @@ template_contribution:
     - name: s
     help: Set data sizes
     argument:
-    - type: uint8
+    - type: uint16
       help: Maximum MTU size
-    - type: uint8
+    - type: uint16
       help: Indication transfer size
-    - type: uint8
+    - type: uint16
       help: Notification transfer size
   condition:
   - cli
@@ -231,6 +231,8 @@ template_contribution:
     help: Read data settings
   condition:
   - cli
+validation_helper:
+- path: throughput_peripheral_validation.lua
 documentation:
   docset: bluetooth
   document: bluetooth-service-api/throughput-peripheral

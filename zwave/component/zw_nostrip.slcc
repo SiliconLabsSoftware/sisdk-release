@@ -1,0 +1,13 @@
+id: zw_nostrip
+label: Z-Wave No Strip
+category: Z-Wave
+description: >
+  When present, the linker is not passed -s (strip), so symbols already in the object
+  files remain in the final binary. Useful for post-mortem or crash analysis. Typically
+  for internal or diagnostic builds. This component only controls the linker strip; it
+  does not change how symbols are generated.
+package: zwave
+quality: production
+provides:
+- name: zw_nostrip
+root_path: zwave

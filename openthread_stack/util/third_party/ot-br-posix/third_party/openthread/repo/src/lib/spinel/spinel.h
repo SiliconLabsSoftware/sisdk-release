@@ -30,8 +30,8 @@
  *   This file contains definitions of spinel.
  */
 
-#ifndef SPINEL_HEADER_INCLUDED
-#define SPINEL_HEADER_INCLUDED 1
+#ifndef OT_LIB_SPINEL_SPINEL_H_
+#define OT_LIB_SPINEL_SPINEL_H_
 
 /*
  *   Spinel is a host-controller protocol designed to enable
@@ -4925,6 +4925,97 @@ enum
      */
     SPINEL_PROP_DNSSD_BROWSE_RESULT = SPINEL_PROP_DNSSD__BEGIN + 7,
 
+    /// DNS-SD Service Resolver
+    /**
+     * Format: `UULD`: Inserted/Removed
+     *
+     * `U`: The service instance label.
+     * `U`: The service type.
+     * `L`: The infrastructure network interface index.
+     * `D`: The context of the request. A pointer to the callback to receive the result.
+     *
+     * NCP uses this property to resolve services.
+     */
+    SPINEL_PROP_DNSSD_SRV_RESOLVER = SPINEL_PROP_DNSSD__BEGIN + 8,
+
+    /**
+     * DNS-SD SRV Resolution Result
+     *
+     * Format: `UUt(U)SSSLLD`: Set
+     *
+     * Reports the result of a DNS-SD service resolution on the infrastructure
+     * network.
+     *
+     * Content of the `otPlatDnssdSrvResult` struct:
+     *  `U`: The service instance name label.
+     *  `U`: The service type.
+     *  `U`: The host name (e.g., "myhost"). Can be NULL when `mTtl` is zero.
+     *  `S`: The service port number.
+     *  `S`: The service priority.
+     *  `S`: The service weight.
+     *  `L`: The service TTL in seconds. Zero TTL indicates SRV record is removed.
+     *  `L`: The infrastructure network interface index.
+     *  `D`: The context of the request. A pointer to the callback to receive the result.
+     */
+    SPINEL_PROP_DNSSD_SRV_RESULT = SPINEL_PROP_DNSSD__BEGIN + 9,
+
+    /// DNS-SD TXT Resolver
+    /**
+     * Format: `UULD`: Inserted/Removed
+     *
+     * `U`: The service instance label.
+     * `U`: The service type.
+     * `L`: The infrastructure network interface index.
+     * `D`: The context of the request (pointer to `otPlatDnssdTxtCallback`).
+     */
+    SPINEL_PROP_DNSSD_TXT_RESOLVER = SPINEL_PROP_DNSSD__BEGIN + 10,
+
+    /// DNS-SD TXT Resolution Result
+    /**
+     * Format: `UUdLLD`: Set
+     *
+     * `U`: Service instance label.
+     * `U`: Service type.
+     * `d`: Encoded TXT data bytes (empty if removed).
+     * `L`: TTL in seconds (zero indicates removal).
+     * `L`: Infrastructure interface index.
+     * `D`: Callback context (`sizeof(otPlatDnssdTxtCallback)`).
+     */
+    SPINEL_PROP_DNSSD_TXT_RESULT = SPINEL_PROP_DNSSD__BEGIN + 11,
+
+    /// DNS-SD IPv6 Address Resolver
+    /**
+     * Format: `ULD`: Inserted/Removed
+     *
+     * `U`: Host name (no domain).
+     * `L`: Infrastructure interface index.
+     * `D`: Callback context (`sizeof(otPlatDnssdAddressCallback)`).
+     */
+    SPINEL_PROP_DNSSD_IP6_ADDRESS_RESOLVER = SPINEL_PROP_DNSSD__BEGIN + 12,
+
+    /// DNS-SD IPv6 Address Resolution Result
+    /**
+     * Format: `ULt(A(6)L)D`: Set
+     *
+     * `U`: Host name.
+     * `L`: Infrastructure interface index.
+     * `t(A(6)L)`: Array of (`A(6)` IPv6 address, `L` TTL) entries.
+     * `D`: Callback context (`sizeof(otPlatDnssdAddressCallback)`).
+     */
+    SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT = SPINEL_PROP_DNSSD__BEGIN + 13,
+
+    /// DNS-SD IPv4 Address Resolver
+    /**
+     * Format: `ULD`: Inserted/Removed (same as IPv6 resolver; IPv4 uses IPv4-mapped IPv6 in results).
+     */
+    SPINEL_PROP_DNSSD_IP4_ADDRESS_RESOLVER = SPINEL_PROP_DNSSD__BEGIN + 14,
+
+    /// DNS-SD IPv4 Address Resolution Result
+    /**
+     * Format: Same as `SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT`.
+     */
+    SPINEL_PROP_DNSSD_IP4_ADDRESS_RESULT = SPINEL_PROP_DNSSD__BEGIN + 15,
+
     SPINEL_PROP_DNSSD__END = 0x950,
 
     SPINEL_PROP_BORDER_AGENT__BEGIN = 0x950,
@@ -5038,39 +5129,56 @@ enum
      */
     SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX = SPINEL_PROP_BORDER_ROUTER__BEGIN + 2,
 
+    /// Enables or disables NAT64 prefix management.
+    /**
+     * Format: `b` - Write-Only
+     *
+     * `b`: Enables or disables OpenThread NAT64 prefix management.
+     *
+     * In NCP deployments with an external NAT64 translator, this allows the NCP
+     * Border Routing Manager to publish a NAT64 prefix discovered on the
+     * infrastructure link without enabling an internal translator.
+     */
+    SPINEL_PROP_BORDER_ROUTER_NAT64_ENABLE = SPINEL_PROP_BORDER_ROUTER__BEGIN + 3,
+
+    /// Returns the favored NAT64 prefix from the Border Routing Manager.
+    /**
+     * Format: `6C` - Get and unsolicited updates (NCP to host).
+     *
+     * `6` : IPv6 prefix address
+     * `C` : Prefix length in bits
+     */
+    SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX = SPINEL_PROP_BORDER_ROUTER__BEGIN + 4,
+
     SPINEL_PROP_BORDER_ROUTER__END = 0x9A0,
 
     SPINEL_PROP_TREL__BEGIN = 0x9A0,
 
-    /// TREL UDP Port (publish selected local UDP port used by NCP for TREL)
-    /** Format `S` (read-only)
-     *
-     *  Provides the 16-bit UDP port number bound locally for TREL packets.
-     *  Only present when OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE is true.
-     */
-    SPINEL_PROP_TREL_UDP_PORT = SPINEL_PROP_TREL__BEGIN + 1,
-
-    /// TREL Peer Info (discovery insert/remove events)
-    /** Format (struct): E6SCSd
-     *   E : Extended Address (peer EUI-64)
-     *   6 : Peer IPv6 address (if known, otherwise all zeros)
-     *   S : Peer UDP port
-     *   C : Flags (bit 0 = removed (VALUE_REMOVED), other bits reserved)
-     *   S : TXT-DATA length
-     *   d : TXT-DATA bytes
-     * Emitted as VALUE_INSERTED when a peer is discovered, VALUE_REMOVED when peer disappears.
-     * Only present when OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE && NCP build.
-     */
-    SPINEL_PROP_TREL_PEER_INFO = SPINEL_PROP_TREL__BEGIN + 2,
-
     /// TREL service state.
     /**
-     * Format: `bS`: Get and Unsolicited notifications.
+     * Format: `bS` - Get, Set (Host to NCP), and Unsolicited notifications (NCP to Host).
      *
-     * `b`: Whether the TREL service is running or not.
-     * `S`: The UDP port that is being used by the TREL service. If the TREL is not active, the port MUST be 0.
+     * `b`: Meaning depends on direction. In a get response or unsolicited update from the NCP, whether TREL is
+     * enabled on the NCP. When set by the host, whether the host-side TREL UDP proxy has an active bound socket.
+     * `S`: UDP port number associated with the TREL service.
+     *
+     * In a get response and in unsolicited updates from the NCP, `S` is the Thread stack UDP port used for TREL
+     * traffic carried over `SPINEL_PROP_THREAD_UDP_FORWARD_STREAM`. When TREL is not enabled, `S` MUST be 0.
+     *
+     * When set by the host, if `b` is true, `S` is the UDP port on which the host has bound the infrastructure-facing
+     * TREL socket (for example an OS-assigned ephemeral port). If `b` is false, the host is not publishing a port
+     * and the NCP clears any stored host-side port. The NCP applies host sets only while stack TREL is enabled; the
+     * host typically sets this after receiving an unsolicited update with the stack-side port known.
      */
-    SPINEL_PROP_TREL_STATE = SPINEL_PROP_TREL__BEGIN + 3,
+    SPINEL_PROP_TREL_STATE = SPINEL_PROP_TREL__BEGIN + 1,
+
+    /// TREL user enablement.
+    /**
+     * Format: `b` - Write-Only
+     *
+     * `b`: Whether to enable or disable TREL on the NCP (user preference).
+     */
+    SPINEL_PROP_TREL_USER_ENABLE = SPINEL_PROP_TREL__BEGIN + 2,
 
     SPINEL_PROP_TREL__END = 0x9C0,
 
@@ -5352,4 +5460,4 @@ SPINEL_API_EXTERN const char *spinel_link_metrics_status_to_cstr(uint8_t status)
 }
 #endif
 
-#endif /* defined(SPINEL_HEADER_INCLUDED) */
+#endif // OT_LIB_SPINEL_SPINEL_H_

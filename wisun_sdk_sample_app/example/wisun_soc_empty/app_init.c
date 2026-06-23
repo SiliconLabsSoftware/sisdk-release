@@ -63,12 +63,8 @@ void app_init(void)
   const osThreadAttr_t app_task_attr = {
     .name        = "AppMain",
     .attr_bits   = osThreadDetached,
-    .cb_mem      = NULL,
-    .cb_size     = 0,
-    .stack_mem   = NULL,
     .stack_size  = APP_STACK_SIZE_BYTES,
-    .priority    = osPriorityNormal,
-    .tz_module   = 0
+    .priority    = osPriorityNormal
   };
 
   osThreadId_t app_thr_id = osThreadNew(app_task,

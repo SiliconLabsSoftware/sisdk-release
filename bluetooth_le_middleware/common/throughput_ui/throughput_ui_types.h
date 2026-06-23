@@ -3,7 +3,7 @@
  * @brief User Interface type definitions for throughput test UI.
  *******************************************************************************
  * # License
- * <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -75,9 +75,9 @@ typedef enum {
 #define THROUGHPUT_UI_LATENCY_FORMAT             "LATENCY: %04d"
 #define THROUGHPUT_UI_TIMEOUT_FORMAT             "TIMEOUT: %04d"
 
-#define THROUGHPUT_UI_PDU_SIZE_FORMAT            "PDU: %3d"
-#define THROUGHPUT_UI_MTU_SIZE_FORMAT            "MTU: %3d"
-#define THROUGHPUT_UI_DATA_SIZE_FORMAT           "DATA: %3d"
+#define THROUGHPUT_UI_PDU_SIZE_FORMAT            "PDU: %5d"
+#define THROUGHPUT_UI_MTU_SIZE_FORMAT            "MTU: %5d"
+#define THROUGHPUT_UI_DATA_SIZE_FORMAT           "DATA: %5d"
 
 #define THROUGHPUT_UI_PHY_1M_TEXT                "PHY: 1M"
 #define THROUGHPUT_UI_PHY_2M_TEXT                "PHY: 2M"

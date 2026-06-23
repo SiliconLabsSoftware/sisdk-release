@@ -3,7 +3,7 @@
  * @brief Throughput test application - platform interface
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -52,7 +52,7 @@
 #define THROUGHPUT_CENTRAL_RESULT_TIMEOUT                1.0f
 
 // Maximum data size
-#define THROUGHPUT_CENTRAL_DATA_SIZE_MAX                 255
+#define THROUGHPUT_CENTRAL_DATA_SIZE_MAX                 THROUGHPUT_MAXIMUM_MTU_SIZE
 
 // Number of remote characteristics
 #define THROUGHPUT_CENTRAL_CHARACTERISTICS_COUNT         4
@@ -253,7 +253,7 @@ static void handle_scan_event(bd_addr *address,
 
     // Handle if the default PHY is not supported
     if (sc == SL_STATUS_INVALID_PARAMETER) {
-      app_log_status_warning_f(sc, 
+      app_log_status_warning_f(sc,
                                "Connection open on the requested PHY is not supported. "
                                "Opening connection on 1M PHY and changing it later." APP_LOG_NL);
 
@@ -1060,7 +1060,7 @@ sl_status_t throughput_central_set_mode(throughput_mode_t mode,
 /**************************************************************************//**
  * Set data sizes for reception.
  *****************************************************************************/
-sl_status_t throughput_central_set_mtu_size(uint8_t mtu)
+sl_status_t throughput_central_set_mtu_size(throughput_mtu_size_t mtu)
 {
   sl_status_t res = SL_STATUS_OK;
   if (enabled && central_state.state != THROUGHPUT_STATE_TEST) {
@@ -1913,7 +1913,7 @@ void cli_throughput_central_data_set(sl_cli_command_arg_t *arguments)
   }
   uint8_t mtu;
   if (central_state.state != THROUGHPUT_STATE_TEST) {
-    mtu = sl_cli_get_argument_uint8(arguments, 0);
+    mtu = sl_cli_get_argument_uint16(arguments, 0);
     central_state.mtu_size = mtu;
     CLI_RESPONSE(CLI_OK);
     throughput_central_scanning_restart();

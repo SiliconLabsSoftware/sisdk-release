@@ -95,6 +95,11 @@ void sl_btctrl_hci_packet_step(void)
           bytes_remaining = hci_acl_data_header_size;
           break;
         }
+        case hci_packet_type_iso_data:
+        {
+          bytes_remaining = hci_iso_data_header_size;
+          break;
+        }
         default:
         {
           reception_failure();
@@ -116,6 +121,11 @@ void sl_btctrl_hci_packet_step(void)
         case hci_packet_type_acl_data:
         {
           bytes_remaining = PACKET->acl_pkt.length;
+          break;
+        }
+        case hci_packet_type_iso_data:
+        {
+          bytes_remaining = PACKET->iso_pkt.length;
           break;
         }
         default:

@@ -44,6 +44,7 @@
 // component when trustzone_secure component is used.
 #include "nvm3_default.h"
 #endif
+#include "sl_common.h"
 
 uint16_t getLikelyChannel(void)
 {
@@ -302,6 +303,18 @@ void setPtiProtocol(sl_cli_command_arg_t *args)
   getPti(args);
 }
 
+void offsetLqi(sl_cli_command_arg_t *args)
+{
+  int16_t offset = sl_cli_get_argument_int16(args, 0);
+  if ((offset > 0xFF) || (offset < -0xFF)) {
+    responsePrintError(sl_cli_get_command_string(args, 0), 0x08,
+                       "Invalid value. Must be between -255 and 255.");
+    return;
+  }
+  lqiOffset = offset;
+  responsePrint(sl_cli_get_command_string(args, 0), "lqiOffset:%d", lqiOffset);
+}
+
 void getRssi(sl_cli_command_arg_t *args)
 {
   char bufRssi[10];
@@ -341,23 +354,20 @@ void startAvgRssi(sl_cli_command_arg_t *args)
   }
   CHECK_RAIL_HANDLE(sl_cli_get_command_string(args, 0));
 
-#if defined(_SILICON_LABS_IP_PROJ_IS_LPWH74000) || (_SILICON_LABS_32B_SERIES_3_CONFIG == 353)
-  if ((!inRadioState(SL_RAIL_RF_STATE_IDLE, NULL)) && (!inRadioState(SL_RAIL_RF_STATE_RX, NULL))) {
-    responsePrintError(sl_cli_get_command_string(args, 0), 0x08, "Could not read RSSI. Ensure Radio is in Rx or in Idle State.");
-    return;
-  }
-#else
-  if (!inRadioState(SL_RAIL_RF_STATE_IDLE, NULL)) {
-    responsePrintError(sl_cli_get_command_string(args, 0), 0x08, "Could not read RSSI. Ensure RX is disabled.");
-    return;
-  }
-#endif
   sl_rail_time_t startTime = sl_rail_get_time(railHandle);
-  if (sl_rail_start_average_rssi(railHandle, avgChannel, averageTimeUs, NULL) != SL_RAIL_STATUS_NO_ERROR) {
-    responsePrintError(sl_cli_get_command_string(args, 0), 0x08, "Could not start RSSI averaging.");
-    return;
+  sl_rail_status_t status = sl_rail_start_average_rssi(railHandle, avgChannel, averageTimeUs, NULL);
+  switch (status) {
+    case SL_RAIL_STATUS_NO_ERROR:
+      responsePrint(sl_cli_get_command_string(args, 0), "Time:%d", startTime);
+      break;
+    case SL_RAIL_STATUS_INVALID_STATE:
+      responsePrintError(sl_cli_get_command_string(args, 0), 0x08, "Could not read RSSI. Ensure Radio is in Rx or in Idle State.");
+      break;
+    default:
+      responsePrintError(sl_cli_get_command_string(args, 0), status, "Could not start RSSI averaging.");
+      break;
   }
-  responsePrint(sl_cli_get_command_string(args, 0), "Time:%d", startTime);
+  return;
 }
 
 void getAvgRssi(sl_cli_command_arg_t *args)

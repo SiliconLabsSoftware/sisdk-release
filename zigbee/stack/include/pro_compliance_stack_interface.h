@@ -49,6 +49,10 @@ void sl_zigbee_test_send_network_rejoin_command(uint8_t cmd_id,
                                                 uint8_t status,
                                                 bool reallySend);
 
+/**
+ * @internal SL_ZIGBEE_IPC_ARGS
+ * {# payload | length: payload_len | max: MAX_IPC_VEC_ARG_CAPACITY #}
+ */
 void sl_zigbee_test_send_route_error_payload_no_network_encryption(sl_802154_short_addr_t destination,
                                                                    sl_802154_short_addr_t target,
                                                                    uint8_t errorCode,
@@ -63,11 +67,19 @@ bool sl_zigbee_test_send_report_or_update(uint8_t command,
 
 void sl_zigbee_test_send_network_timeout_request(uint8_t requestedTimeoutValue);
 
+/**
+ * @internal SL_ZIGBEE_IPC_ARGS
+ * {# sourceEUI64 | length: EUI64_SIZE | max: EUI64_SIZE #}
+ */
 void sl_zigbee_test_spoof_device_announcement(uint16_t shortId,
                                               uint8_t *sourceEUI64,
                                               sl_802154_long_addr_t deviceAnnounceEui,
                                               uint8_t capabilities);
 
+/**
+ * @internal SL_ZIGBEE_IPC_ARGS
+ * {# commandFrame | length: length | max: MAX_IPC_VEC_ARG_CAPACITY #}
+ */
 bool sl_zigbee_test_network_send_command(sl_802154_short_addr_t destination,
                                          uint8_t *commandFrame,
                                          uint8_t length,
@@ -83,6 +95,10 @@ sl_status_t sl_zigbee_test_ieee_address_request_to_target(sl_802154_short_addr_t
 
 void sl_zigbee_test_send_our_end_device_announcement(void);
 
+/**
+ * @internal SL_ZIGBEE_IPC_ARGS
+ * {# payload | length: payload_len | max: MAX_IPC_VEC_ARG_CAPACITY #}
+ */
 void sl_zigbee_test_send_route_error_payload(sl_802154_short_addr_t destination,
                                              sl_802154_short_addr_t target,
                                              uint8_t errorCode,
@@ -230,5 +246,4 @@ void slx_zigbee_ignore_incoming_aps_acks(bool ignore);
  * {# debug_data | length: MAX_IPC_VEC_ARG_CAPACITY | max: MAX_IPC_VEC_ARG_CAPACITY #}
  */
 void slx_zigbee_insecure_debug_generate_trace(uint8_t msg_type, uint8_t *debug_data);
-
 #endif //PRO_COMPLIANCE_STACK_INTERFACE_H

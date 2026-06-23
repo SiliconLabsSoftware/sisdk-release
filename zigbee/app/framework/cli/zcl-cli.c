@@ -81,9 +81,9 @@ void keysPrintCommand(sl_cli_command_arg_t *arguments)
 {
   (void)arguments;
 
-  sl_zigbee_core_debug_println("%sSECURITY_LEVEL: %02X",
-                               "EMBER_",
-                               SL_ZIGBEE_SECURITY_LEVEL);
+  sl_zigbee_af_cli_println("%sSECURITY_LEVEL: %02X",
+                           "EMBER_",
+                           SL_ZIGBEE_SECURITY_LEVEL);
   printKeyInfo();
 }
 
@@ -92,10 +92,10 @@ void eraseKeyTableEntry(uint8_t index)
   sl_status_t status = sl_zigbee_erase_key_table_entry(index);
 
   if (status != SL_STATUS_OK) {
-    sl_zigbee_core_debug_println("%serase key %d: 0x%08X",
-                                 "ERROR: ",
-                                 index,
-                                 status);
+    sl_zigbee_af_cli_println("%serase key %d: 0x%08X",
+                             "ERROR: ",
+                             index,
+                             status);
   }
 }
 
@@ -117,13 +117,13 @@ static void cliBufferPrint(void)
 {
   uint8_t cmdIndex = (appZclBuffer[0] & ZCL_MANUFACTURER_SPECIFIC_MASK) ? 4 : 2;
   zclCmdIsBuilt = true;
-  sl_zigbee_core_debug_println("Msg: clus 0x%04X, cmd 0x%02X, len %d",
-                               globalApsFrame.clusterId,
-                               appZclBuffer[cmdIndex],
-                               appZclBufferLen);
-  sl_zigbee_core_debug_print("buffer: ");
-  sl_zigbee_core_debug_print_buffer(appZclBuffer, appZclBufferLen, true);
-  sl_zigbee_core_debug_println("");
+  sl_zigbee_af_cli_println("Msg: clus 0x%04X, cmd 0x%02X, len %d",
+                           globalApsFrame.clusterId,
+                           appZclBuffer[cmdIndex],
+                           appZclBufferLen);
+  sl_zigbee_af_cli_print("buffer: ");
+  sl_zigbee_af_cli_print_buffer(appZclBuffer, appZclBufferLen, true);
+  sl_zigbee_af_cli_println("");
 }
 
 static void zclBufferSetup(uint8_t frameType, uint16_t clusterId, uint8_t commandId)
@@ -167,19 +167,19 @@ void sli_zigbee_af_cli_bsend_command(sl_cli_command_arg_t *arguments)
 
   // check that cmd is built
   if (zclCmdIsBuilt == false) {
-    sl_zigbee_core_debug_println("cmd not built");
+    sl_zigbee_af_cli_println("cmd not built");
     return;
   }
 
   srcEndpointToUse = sl_cli_get_argument_uint8(arguments, 0);
 
-  sl_zigbee_core_debug_println("src ep %02x, clus %04x",
-                               srcEndpointToUse,
-                               globalApsFrame.clusterId);
+  sl_zigbee_af_cli_println("src ep %02x, clus %04x",
+                           srcEndpointToUse,
+                           globalApsFrame.clusterId);
 
   globalApsFrame.sourceEndpoint = srcEndpointToUse;
   if (useMulticastBinding) {
-    sl_zigbee_core_debug_println("sending to multicast bind");
+    sl_zigbee_af_cli_println("sending to multicast bind");
     status = sl_zigbee_af_send_multicast_to_bindings(&globalApsFrame,
                                                      appZclBufferLen,
                                                      appZclBuffer);
@@ -190,21 +190,21 @@ void sli_zigbee_af_cli_bsend_command(sl_cli_command_arg_t *arguments)
                                                    appZclBuffer);
   }
 #if (defined(SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT) && (SL_ZIGBEE_DEBUG_PRINTS_ZCL_LEGACY_AF_DEBUG_ENABLED == 1))
-  sl_zigbee_legacy_af_debug_println("T%08x:TX (%s) %ccast 0x%08x%s",
-                                    sl_zigbee_af_get_current_time(),
-                                    "CLI",
-                                    'U',
-                                    status,
-                                    ((globalApsFrame.options & SL_ZIGBEE_APS_OPTION_ENCRYPTION)
-                                     ? " w/ link key" : ""));
-  sl_zigbee_legacy_af_debug_print("TX buffer: [");
-  sl_zigbee_legacy_af_debug_print_buffer(appZclBuffer, appZclBufferLen, true);
-  sl_zigbee_legacy_af_debug_println("]");
+  sl_zigbee_af_cli_println("T%08x:TX (%s) %ccast 0x%08x%s",
+                           sl_zigbee_af_get_current_time(),
+                           "CLI",
+                           'U',
+                           status,
+                           ((globalApsFrame.options & SL_ZIGBEE_APS_OPTION_ENCRYPTION)
+                            ? " w/ link key" : ""));
+  sl_zigbee_af_cli_print("TX buffer: [");
+  sl_zigbee_af_cli_print_buffer(appZclBuffer, appZclBufferLen, true);
+  sl_zigbee_af_cli_println("]");
 #else
   UNUSED_VAR(status);
 #endif // (defined(SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT) && (SL_ZIGBEE_DEBUG_PRINTS_ZCL_LEGACY_AF_DEBUG_ENABLED == 1))
 #else
-  sl_zigbee_core_debug_println("Error: binding table size is 0");
+  sl_zigbee_af_cli_println("Error: binding table size is 0");
 #endif // (SL_ZIGBEE_BINDING_TABLE_SIZE > 0)
 }
 
@@ -230,7 +230,7 @@ void sli_zigbee_cli_send_command(sl_cli_command_arg_t *arguments)
 
   // check that cmd is built
   if (zclCmdIsBuilt == false) {
-    sl_zigbee_core_debug_println("no cmd");
+    sl_zigbee_af_cli_println("no cmd");
     return;
   }
 
@@ -270,19 +270,19 @@ void sli_zigbee_cli_send_command(sl_cli_command_arg_t *arguments)
   }
 
   if (status != SL_STATUS_OK) {
-    sl_zigbee_core_debug_println("Error: CLI Send failed, status: 0x%08X", status);
+    sl_zigbee_af_cli_println("Error: CLI Send failed, status: 0x%08X", status);
   }
   UNUSED_VAR(label);
-  sl_zigbee_legacy_af_debug_println("T%08x:TX (%s) %ccast 0x%08x%s",
-                                    sl_zigbee_af_get_current_time(),
-                                    "CLI",
-                                    label,
-                                    status,
-                                    ((globalApsFrame.options & SL_ZIGBEE_APS_OPTION_ENCRYPTION)
-                                     ? " w/ link key" : ""));
-  sl_zigbee_legacy_af_debug_println("TX buffer: [");
-  sl_zigbee_legacy_af_debug_print_buffer(appZclBuffer, appZclBufferLen, true);
-  sl_zigbee_legacy_af_debug_println("]");
+  sl_zigbee_af_cli_println("T%08x:TX (%s) %ccast 0x%08x%s",
+                           sl_zigbee_af_get_current_time(),
+                           "CLI",
+                           label,
+                           status,
+                           ((globalApsFrame.options & SL_ZIGBEE_APS_OPTION_ENCRYPTION)
+                            ? " w/ link key" : ""));
+  sl_zigbee_af_cli_println("TX buffer: [");
+  sl_zigbee_af_cli_print_buffer(appZclBuffer, appZclBufferLen, true);
+  sl_zigbee_af_cli_println("]");
 
   zclCmdIsBuilt = false;
   mfgSpecificId = SL_ZIGBEE_AF_NULL_MANUFACTURER_CODE;
@@ -300,12 +300,12 @@ void sli_zigbee_zcl_read_cli_command(sl_cli_command_arg_t *arguments)
   uint8_t data[ZCL_ATTRIBUTE_MAX_DATA_SIZE + 2]; // Addional 2 bytes to accommodate the long string length fields
   uint8_t dataType;
 
-  sl_zigbee_core_debug_print("%s: ep: %d, cl: 0x%04X, attr: 0x%04X",
-                             "read",
-                             endpoint,
-                             cluster,
-                             attribute);
-  sl_zigbee_core_debug_println(", svr: %c", (serverAttribute ? 'y' : 'n'));
+  sl_zigbee_af_cli_print("%s: ep: %d, cl: 0x%04X, attr: 0x%04X",
+                         "read",
+                         endpoint,
+                         cluster,
+                         attribute);
+  sl_zigbee_af_cli_println(", svr: %c", (serverAttribute ? 'y' : 'n'));
 
   status = sl_zigbee_af_read_attribute(endpoint,
                                        cluster,
@@ -318,15 +318,15 @@ void sli_zigbee_zcl_read_cli_command(sl_cli_command_arg_t *arguments)
                                        &dataType);
   if (status == SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
     if (sl_zigbee_af_is_string_attribute_type(dataType)) {
-      sl_zigbee_core_debug_print_string(data);
+      sl_zigbee_af_cli_print_string(data);
     } else if (sl_zigbee_af_is_long_string_attribute_type(dataType)) {
-      sl_zigbee_core_debug_print_long_string(data);
+      sl_zigbee_af_cli_print_long_string(data);
     } else {
-      sl_zigbee_core_debug_print_buffer(data, sl_zigbee_af_get_data_size(dataType), true);
+      sl_zigbee_af_cli_print_buffer(data, sl_zigbee_af_get_data_size(dataType), true);
     }
-    sl_zigbee_core_debug_println("");
+    sl_zigbee_af_cli_println("");
   } else {
-    sl_zigbee_core_debug_println("%s: read: 0x%02x", "Error", status);
+    sl_zigbee_af_cli_println("%s: read: 0x%02x", "Error", status);
   }
 }
 // ******************************************************
@@ -346,14 +346,14 @@ void sli_zigbee_zcl_write_cli_command(sl_cli_command_arg_t *arguments)
   bool serverAttribute = sl_cli_get_argument_uint8(arguments, 3);
   uint8_t  dataType  = sl_cli_get_argument_uint8(arguments, 4);
 
-  sl_zigbee_core_debug_print("%s: ep: %d, cl: 0x%04X, attr: 0x%04X",
-                             "write",
-                             endpoint,
-                             cluster,
-                             attribute);
-  sl_zigbee_core_debug_println(", svr: %c, dtype: 0x%02X",
-                               (serverAttribute ? 'y' : 'n'),
-                               dataType);
+  sl_zigbee_af_cli_print("%s: ep: %d, cl: 0x%04X, attr: 0x%04X",
+                         "write",
+                         endpoint,
+                         cluster,
+                         attribute);
+  sl_zigbee_af_cli_println(", svr: %c, dtype: 0x%02X",
+                           (serverAttribute ? 'y' : 'n'),
+                           dataType);
 
   // If the data type is a string, automatically prepend a length to the data;
   // otherwise, just copy the raw bytes.
@@ -585,11 +585,11 @@ void sli_zigbee_zcl_simple_command(uint8_t frameControl,
 void sli_zigbee_cli_zcl_mfg_code_command(sl_cli_command_arg_t *arguments)
 {
   if (zclCmdIsBuilt) {
-    sl_zigbee_zcl_debug_println("Command already built.  Cannot set MFG specific code for command.");
+    sl_zigbee_af_cli_println("Command already built.  Cannot set MFG specific code for command.");
     return;
   }
   mfgSpecificId = sl_cli_get_argument_uint16(arguments, 0);
-  sl_zigbee_zcl_debug_println("MFG Code Set for next command: 0x%04X", mfgSpecificId);
+  sl_zigbee_af_cli_println("MFG Code Set for next command: 0x%04X", mfgSpecificId);
 }
 
 void sli_zigbee_cli_zcl_time_command(sl_cli_command_arg_t *arguments)
@@ -600,13 +600,13 @@ void sli_zigbee_cli_zcl_time_command(sl_cli_command_arg_t *arguments)
 void sli_zigbee_cli_zcl_use_next_sequence_command(sl_cli_command_arg_t *arguments)
 {
   useNextSequence = sl_cli_get_argument_uint8(arguments, 0);
-  sl_zigbee_zcl_debug_println("Use Next Sequence Set for next command: 0x%02X", useNextSequence);
+  sl_zigbee_af_cli_println("Use Next Sequence Set for next command: 0x%02X", useNextSequence);
 }
 
 void sli_zigbee_cli_zcl_x_default_resp_command(sl_cli_command_arg_t *arguments)
 {
   disableDefaultResponse = sl_cli_get_argument_uint8(arguments, 0);
-  sl_zigbee_zcl_debug_println("Disable Default Response Set for next command: 0x%02X", disableDefaultResponse);
+  sl_zigbee_af_cli_println("Disable Default Response Set for next command: 0x%02X", disableDefaultResponse);
 }
 
 // zcl test response on
@@ -633,12 +633,12 @@ static void sli_zigbee_cli_zcl_identify_on_off_command(sl_cli_command_arg_t *arg
     (uint8_t *)&timeS,
     ZCL_INT16U_ATTRIBUTE_TYPE);
   if (SL_ZIGBEE_ZCL_STATUS_SUCCESS != afStatus) {
-    sl_zigbee_legacy_af_debug_println("Identify On/Off: failed to write value 0x%04x  to cluster "
-                                      "0x%04x attribute ID 0x%04x: error 0x%02x",
-                                      timeS,
-                                      ZCL_IDENTIFY_CLUSTER_ID,
-                                      ZCL_IDENTIFY_TIME_ATTRIBUTE_ID,
-                                      afStatus);
+    sl_zigbee_af_cli_println("Identify On/Off: failed to write value 0x%04x  to cluster "
+                             "0x%04x attribute ID 0x%04x: error 0x%02x",
+                             timeS,
+                             ZCL_IDENTIFY_CLUSTER_ID,
+                             ZCL_IDENTIFY_TIME_ATTRIBUTE_ID,
+                             afStatus);
   }
 }
 
@@ -907,7 +907,7 @@ void sli_zigbee_cli_zcl_global_report_command(sl_cli_command_arg_t *arguments)
                                        sizeof(data),
                                        &type);
   if (status != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
-    sl_zigbee_zcl_debug_println("ERR: reading attribute %02x", status);
+    sl_zigbee_af_cli_println("ERR: reading attribute %02x", status);
     return;
   }
 
@@ -922,7 +922,7 @@ void sli_zigbee_cli_zcl_global_report_command(sl_cli_command_arg_t *arguments)
 
   size = sl_zigbee_af_attribute_value_size(type, data, sizeof(data));
   if (size == 0 || size > (APP_ZCL_BUFFER_SIZE - appZclBufferLen)) {
-    sl_zigbee_zcl_debug_println("ERR: attribute size %d too large for buffer", size);
+    sl_zigbee_af_cli_println("ERR: attribute size %d too large for buffer", size);
     return;
   }
 #if (BIGENDIAN_CPU)
@@ -973,10 +973,10 @@ void sli_zigbee_cli_zcl_global_send_me_a_report_command(sl_cli_command_arg_t *ar
     size_t len = dataSize;
     uint8_t *ptr_string = sl_cli_get_argument_hex(arguments, 5, &len);
     if (len != dataSize) {
-      printf("Error: attribute ID 0x%04X reportable change is size %dB, but %dB entered\n",
-             attributeId,
-             dataSize,
-             (int)len);
+      sl_zigbee_af_cli_print("Error: attribute ID 0x%04X reportable change is size %dB, but %dB entered\n",
+                             attributeId,
+                             dataSize,
+                             (int)len);
       return;
     }
     memmove(appZclBuffer + appZclBufferLen,

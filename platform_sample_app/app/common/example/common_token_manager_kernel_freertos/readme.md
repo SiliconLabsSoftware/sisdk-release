@@ -1,62 +1,49 @@
-# COMMON TOKEN MANAGER FreeRTOS Application
+# Common Token Manager Kernel FreeRTOS
 
-This example application demonstrates the use of Common Token Manager for series 3 devices. The application uses command line interface to execute operations which are given by user.
+This example demonstrates use of the CTM (Common Token Manager) interface with FreeRTOS. Use the CLI to write, read, and delete tokens.
 
-CAUTION:
-Static device token writes are limited after which the tokens can't be updated.
-Operations on static device are disabled by default using a macro SAMPLE_APP_ENABLE_STATIC_DEVICE_TOKENS.
-To enable it, define SAMPLE_APP_ENABLE_STATIC_DEVICE_TOKENS in ctm_app.c.
+## Table of Contents
 
-Users can give the following commands:
-NOTE: write_static_token and read_static_token automatically performs operations by using predefined tokens through the application itself. All other commands are interactive through CLI.
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-* Write Static Token (write_custom_static_token)
-Argument 0:
-0 - To write the static secure tokens
-1 - To write the static device tokens (CAUTION: Static device token writes are limited after which the tokens can't be updated. So, they are disabled by default)
+## Purpose / Scope
 
-* Read Static Token (read_custom_static_token)
-Argument 0:
-0 - To write the custom static secure tokens
-1 - To write the custom static device tokens (CAUTION: Static device token writes are limited after which the tokens can't be updated. So, they are disabled by default)
+This example shows the Common Token Manager (CTM) for series 3 devices running with FreeRTOS. The CLI is used to execute token operations. Commands include write_static_token, read_static_token, write_dynamic_token, read_dynamic_token, delete_dynamic_token, write_counter_token, read_counter_token, increment_counter_token. CAUTION: Static device token writes are limited; they are disabled by default (define SAMPLE_APP_ENABLE_STATIC_DEVICE_TOKENS in ctm_app.c to enable). See application source for arguments.
 
-* Write Dynamic Token (write_dynamic_token)
-Argument 0:
-0 - To write a data object token
-1 - To write an override token created for static device tokens
-2 - To write an override token created for static secure tokens
-Argument 1:
-This argument is for the key.
-If argument 0 is either 2 or 3, the key should be less than 0xFFF.
-Argument 2:
-This argument is for providing data.
+## Prerequisites / Setup Requirements
 
-* Read Dynamic Token (read_dynamic_token)
-Argument 0:
-0 - To read a data object token
-1 - To read an override token created for static device tokens
-2 - To read an override token created for static secure tokens
-Argument 1:
-This argument is for providing a key which has already been entered else it will throw an error.
+**Hardware**
+- Silicon Labs board (series 3) with CTM and serial (VCOM).
 
-* Delete Dynamic Token (delete_dynamic_token)
-Argument 0:
-0 - To delete a dynamic token
-1 - To delete a static device override token
-2 - To delete a static secure override token
-Argument 1:
-This argument is for the key.
+**Software**
+- Simplicity Studio 5 (or later). A serial terminal for VCOM.
 
-* Write Counter Token (write_counter_token)
-Argument 0:
-This argument is to specify the value that you want to set the counter to.
+## Steps to Run Demo
 
-* Read Counter Token (read_counter_token)
-No Arguments
+1. Open the project in Simplicity Studio and build it.
+2. Connect the kit via USB, flash and run.
+3. Open a serial terminal on the kit's VCOM port.
+4. Use the CLI commands to write, read, and delete tokens as needed.
 
-* Increment Counter Token (increment_counter_token)
-No Arguments
+## Troubleshooting
 
-## Requirements
+- **No VCOM or no CLI response:** Ensure the kit is connected and VCOM drivers are installed; confirm correct port and baud rate.
+- **Token errors:** Check token key/size; note static device token write limits.
+- **Build errors:** Verify target part and that CTM/CLI/FreeRTOS are correctly configured.
 
-Silicon Labs board
+## Resources
+
+- [Simplicity Studio 5 User's Guide](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/)
+- [Gecko Platform Documentation](https://docs.silabs.com/gecko-platform/latest/)
+- [Silicon Labs Community](https://www.silabs.com/community)
+
+## Report Bugs & Get Support
+
+You are encouraged to report issues and get help from the community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

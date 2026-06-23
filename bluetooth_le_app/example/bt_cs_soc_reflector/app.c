@@ -197,18 +197,6 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
       break;
 
     // -------------------------------
-    // This event is received when a bonding procedure fails
-    case sl_bt_evt_sm_bonding_failed_id:
-    {
-      app_log_error(APP_INSTANCE_PREFIX "Bonding failed; reason='0x%02x'" APP_LOG_NL,
-                    evt->data.evt_sm_bonding_failed.connection,
-                    evt->data.evt_sm_bonding_failed.reason);
-      sl_status_t sc = sl_bt_connection_close(evt->data.evt_sm_bonding_failed.connection);
-      app_assert_status(sc);
-    }
-    break;
-
-    // -------------------------------
     // This event indicates that a MTU exchange has finished
     case sl_bt_evt_gatt_mtu_exchanged_id:
       app_log_debug(APP_INSTANCE_PREFIX "MTU exchange completed" APP_LOG_NL,

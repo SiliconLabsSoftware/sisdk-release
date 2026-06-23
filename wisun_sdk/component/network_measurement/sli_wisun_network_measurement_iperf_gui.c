@@ -48,7 +48,6 @@
 #include "sl_wisun_network_measurement_config.h"
 #include "sl_display.h"
 #include "sl_gui.h"
-#include "socket/socket.h"
 #include "sl_wisun_ping.h"
 #include "sl_wisun_network_measurement_stat.h"
 // -----------------------------------------------------------------------------
@@ -71,37 +70,10 @@
 #define IPERF_START_STAT_FORMAT_STR \
   "Port: %u\n\
 Remote Address: %s\n\
-Bandwidth:  %lu\n\
+Bandwidth:  %"PRIu32"\n\
 Buffer Length: %u\n\
 Duration: %u\n\
 Interval: %u\n"
-
-/// Print neighbor statistic format string
-#define IPERF_RESULT_STAT_FORMAT_STR \
-  "nbr_calls:\n%lu\n\
-bytes:\n%lu\n\
-tot_packets:\n%lu\n\
-nbr_rcv_snt_packets:\n%lu\n\
-errs:\n%lu\n\
-transitory_error_cnts:\n%lu\n\
-last_recv_pkt_cnt:\n%lu\n\
-ts_curr_recv_ms:\n%llu\n\
-ts_prev_recv_ms:\n%llu\n\
-ts_curr_sent_ms:\n%llu\n\
-ts_prev_sent_ms:\n%llu\n\
-udp_jitter:\n%lld\n\
-udp_rx_last_pkt:\n%lu\n\
-udp_lost_pkt:\n%lu\n\
-udp_out_of_order:\n%lu\n\
-udp_dup_pkt:\n%lu\n\
-udp_async_error:\n%d\n\
-end_err:\n%d\n\
-ts_start_ms:\n%llu\n\
-ts_end_ms:\n%llu\n\
-bandwidth:\n%lu\n\
-finack_tot_len:\n%lu\n\
-finack_duration_ms:\n%llu\n\
-finack_pkt:\n%lu\n"
 
 /// Remote address structure
 typedef struct remote_addr{
@@ -342,7 +314,31 @@ static void _iperf_result_form(void *args)
   sl_gui_title_update();
   sl_gui_textbox_init();
 
-  snprintf(_str_buff, STR_BUFF_SIZE, IPERF_RESULT_STAT_FORMAT_STR,
+  snprintf(_str_buff, STR_BUFF_SIZE,
+           "nbr_calls:\n%"PRIu32"\n"
+           "bytes:\n%"PRIu32"\n"
+           "tot_packets:\n%"PRIu32"\n"
+           "nbr_rcv_snt_packets:\n%"PRIu32"\n"
+           "errs:\n%"PRIu32"\n"
+           "transitory_error_cnts:\n%"PRIu32"\n"
+           "last_recv_pkt_cnt:\n%"PRIu32"\n"
+           "ts_curr_recv_ms:\n%"PRIu64"\n"
+           "ts_prev_recv_ms:\n%"PRIu64"\n"
+           "ts_curr_sent_ms:\n%"PRIu64"\n"
+           "ts_prev_sent_ms:\n%"PRIu64"\n"
+           "udp_jitter:\n%lld\n"
+           "udp_rx_last_pkt:\n%"PRIu32"\n"
+           "udp_lost_pkt:\n%"PRIu32"\n"
+           "udp_out_of_order:\n%"PRIu32"\n"
+           "udp_dup_pkt:\n%"PRIu32"\n"
+           "udp_async_error:\n%d\n"
+           "end_err:\n%d\n"
+           "ts_start_ms:\n%"PRIu64"\n"
+           "ts_end_ms:\n%"PRIu64"\n"
+           "bandwidth:\n%"PRIu32"\n"
+           "finack_tot_len:\n%"PRIu32"\n"
+           "finack_duration_ms:\n%"PRIu64"\n"
+           "finack_pkt:\n%"PRIu32"\n",
            _last_test.statistic.nbr_calls,
            _last_test.statistic.bytes,
            _last_test.statistic.tot_packets,

@@ -18,8 +18,10 @@
 // semantic types for little/big endian
 typedef uint16_t be_uint16_t;
 typedef uint32_t be_uint32_t;
+typedef uint64_t be_uint64_t;
 typedef uint16_t le_uint16_t;
 typedef uint32_t le_uint32_t;
+typedef uint64_t le_uint64_t;
 
 /*
  * Convert native numbers to/from little/big endian. These functions are only

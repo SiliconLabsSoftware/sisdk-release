@@ -1,0 +1,21 @@
+id: btl_util_header
+label: Series-2 bootloader core utility header
+package: bootloader
+description: >
+  Header-only owner for core/btl_util.h (single package-analysis owner). Lives in the
+  interface extension so host apps resolve it without the full bootloader extension;
+  bootloader components pull it via requires.
+category: Platform|Bootloader|Core
+quality: production
+ui_hints:
+  visibility: never
+include:
+- path: platform/bootloader
+  file_list:
+  - path: core/btl_util.h
+provides:
+- name: btl_util_header
+metadata:
+  sbom:
+    license: MSLA
+root_path: bootloader

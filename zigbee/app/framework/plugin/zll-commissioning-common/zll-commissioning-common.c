@@ -117,9 +117,11 @@ static void initFactoryNew(void)
 {
   // We use the node type token to indicate if we have joined a network and thus
   tokTypeStackNodeData tokNode;
-  (void)sl_token_manager_get_data(COMMON_TOKEN_STACK_NODE_DATA,
-                                  (void *)&tokNode,
-                                  sizeof(tokTypeStackNodeData));
+  sl_status_t status = slx_zigbee_token_manager_get_data(COMMON_TOKEN_STACK_NODE_DATA, (void *)&tokNode, sizeof(tokTypeStackNodeData));
+  if (status != SL_STATUS_OK) {
+    sl_zigbee_af_app_println("Failed to get Stack Node Data, status: 0x%08X", status);
+    return;
+  }
 
   // The initialization is only performed if we are factory new in the BDB sense,
   // i.e. not joined to a centralized or distributed network.

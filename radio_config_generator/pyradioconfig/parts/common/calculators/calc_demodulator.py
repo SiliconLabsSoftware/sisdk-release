@@ -54,12 +54,13 @@ class CALC_Demodulator(ICalculator):
         self._addModelVariable(model, 'src1_bit_width', int, ModelVariableFormat.DECIMAL)
         self._addModelVariable(model, 'src2_bit_width', int, ModelVariableFormat.DECIMAL)
 
-        self._addModelVariable(model, 'ch_filt_bw_available', int, ModelVariableFormat.DECIMAL, desc='Values of BWSEL available to use in SRC calculation.', is_array=True, units='unitless')
+        self._addModelVariable(model, 'ch_filt_bw_available', float, ModelVariableFormat.DECIMAL, desc='Values of BWSEL available to use in SRC calculation.', is_array=True, units='unitless')
 
         self._addModelVariable(model, 'src1_range_available', int, ModelVariableFormat.DECIMAL, desc='Values of SRCRATIO1 available to use in SRC calculation.', is_array=True, units='unitless')
 
         self._addModelVariable(model, 'input_decimation_filter_allow_dec3', int, ModelVariableFormat.DECIMAL, desc='1=Allow input decimation filter decimate by 3', is_array=False, units='unitless')
         self._addModelVariable(model, 'input_decimation_filter_allow_dec8', int, ModelVariableFormat.DECIMAL, desc='1=Allow input decimation filter decimate by 8', is_array=False, units='unitless')
+        self._addModelVariable(model, 'input_decimation_filter_allow_dec5', int, ModelVariableFormat.DECIMAL, desc='1=Allow input decimation filter decimate by 5', is_array=False, units='unitless')
 
         self._addModelVariable(model, 'rx_ch_hopping_order_num', int, ModelVariableFormat.DECIMAL)
 
@@ -106,7 +107,7 @@ class CALC_Demodulator(ICalculator):
     def calc_ch_filt_bw_available(self, model):
         # EFR32 90nm parts (Dumbo, Jumbo, Nerio, Nixi)
         # Note Panther will overload this to reflect its different architecture.
-        model.vars.ch_filt_bw_available = [0.263, 0.196]
+        model.vars.ch_filt_bw_available.value = [0.263, 0.196]
 
     def calc_src1_range_available(self, model):
         # EFR32 90nm parts (Dumbo, Jumbo, Nerio, Nixi)
@@ -1366,3 +1367,4 @@ class CALC_Demodulator(ICalculator):
         # EFR32 90nm parts (Dumbo, Jumbo, Nerio, Nixi) always allow all rates to be available
         model.vars.input_decimation_filter_allow_dec3.value = 1
         model.vars.input_decimation_filter_allow_dec8.value = 1
+        model.vars.input_decimation_filter_allow_dec5.value = 0

@@ -400,6 +400,16 @@
       vendor: silabs
     path: brd2603a/sl_pwm_init_led1_config.h
   - override:
+      component: rail_util_pti
+      file_id: rail_util_pti_config
+      vendor: silabs
+    path: brd2603a/sl_rail_util_pti_config.h
+  - override:
+      component: sl_rail_util_pti
+      file_id: rail_util_pti_config
+      vendor: silabs
+    path: brd2603a/sl_rail_util_pti_config.h
+  - override:
       component: simple_button
       file_id: simple_button_config
       instance: btn0
@@ -447,11 +457,6 @@
       instance: rgb_led0
       vendor: silabs
     path: brd2603a/sl_simple_rgb_pwm_led_rgb_led0_config.h
-  - override:
-      component: sl_rail_util_pti
-      file_id: rail_util_pti_config
-      vendor: silabs
-    path: brd2603a/sl_rail_util_pti_config.h
   - override:
       component: spidrv
       file_id: spidrv_config

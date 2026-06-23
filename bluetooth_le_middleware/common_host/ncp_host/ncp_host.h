@@ -3,7 +3,7 @@
  * @brief NCP host application module.
  *******************************************************************************
  * # License
- * <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -32,6 +32,7 @@
 #define NCP_HOST_H
 
 #include "sl_status.h"
+#include "sl_bt_api.h"
 #include "host_comm.h"
 
 #if defined(SECURITY) && SECURITY == 1
@@ -104,5 +105,10 @@ void ncp_host_reboot(void);
  * Reboot the NCP target into DFU mode.
  *****************************************************************************/
 void ncp_host_reboot_dfu(void);
+
+/**************************************************************************//**
+ * Bluetooth stack event handler.
+ *****************************************************************************/
+void ncp_host_on_bt_event(sl_bt_msg_t *evt);
 
 #endif // NCP_HOST_H

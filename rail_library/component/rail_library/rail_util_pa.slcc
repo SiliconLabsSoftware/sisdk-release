@@ -111,6 +111,13 @@ config_file:
   unless:
   - fpga
   file_id: rail_util_pa_config
+- path: plugin/pa-conversions/efr32xg2b/config/sl_rail_util_pa_config.h
+  condition:
+  - device_series_2
+  - device_sdid_250
+  unless:
+  - fpga
+  file_id: rail_util_pa_config
 - path: plugin/pa-conversions/efr32xg2d/config/sl_rail_util_pa_config.h
   condition:
   - device_series_2
@@ -208,6 +215,7 @@ include:
 - path: plugin/pa-conversions/efr32xg2d
   file_list:
   - path: sl_rail_util_pa_curves_14dbm.h
+  - path: sl_rail_util_pa_curves_20dbm_169M.h
   - path: sl_rail_util_pa_curves_20dbm.h
   condition:
   - device_series_2

@@ -42,11 +42,11 @@ extern "C" {
 #endif
 
 #include "em_device.h"
-#include "sl_status.h"
+
+#include "sl_hal_ldma.h"
 #include "sl_iostream.h"
 #include "sl_slist.h"
 #include "sl_status.h"
-#include "dmadrv.h"
 
 #if defined(SL_CATALOG_POWER_MANAGER_PRESENT)
 #include "sl_power_manager.h"
@@ -155,36 +155,8 @@ extern "C" {
 #define LDMA_PERIPH   LDMA
 #endif
 
-#if defined(EMDRV_DMADRV_LDMA)
-#define IOSTREAM_LDMA_DESCRIPTOR_DST_ADDR        dstAddr
-#define IOSTREAM_LDMA_DESCRIPTOR_XFER_CNT        xferCnt
-#define IOSTREAM_LDMA_DESCRIPTOR_DONE_IFS        doneIfs
-#define IOSTREAM_LDMA_DESCRIPTOR_LINK_MODE       linkMode
-#define IOSTREAM_LDMA_DESCRIPTOR_LINK_ADDR       linkAddr
-#define IOSTREAM_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR
-#define IOSTREAM_LDMA_TFER_CFG_PERIPH            LDMA_TRANSFER_CFG_PERIPHERAL
-#define IOSTREAM_LDMA_DESCRIPTOR_SINGLE_P2M_BYTE LDMA_DESCRIPTOR_SINGLE_P2M_BYTE
-#define IOSTREAM_LDMA_DESCRIPTOR_SINGLE_M2P_BYTE LDMA_DESCRIPTOR_SINGLE_M2P_BYTE
-#define IOSTREAM_LDMA_TFER_CFG_REQ_SEL           ldmaReqSel
-#define IOSTREAM_LDMA_MAX_XFER_SIZE              LDMA_DESCRIPTOR_MAX_XFER_SIZE
-#elif defined(EMDRV_DMADRV_LDMA_S3)
-typedef sl_hal_ldma_descriptor_t LDMA_Descriptor_t;
-typedef sl_hal_ldma_transfer_config_t LDMA_TransferCfg_t;
-#define IOSTREAM_LDMA_DESCRIPTOR_DST_ADDR        dst_addr
-#define IOSTREAM_LDMA_DESCRIPTOR_XFER_CNT        xfer_count
-#define IOSTREAM_LDMA_DESCRIPTOR_DONE_IFS        done_ifs
-#define IOSTREAM_LDMA_DESCRIPTOR_LINK_MODE       link_mode
-#define IOSTREAM_LDMA_DESCRIPTOR_LINK_ADDR       link_addr
-#define IOSTREAM_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR
-#define IOSTREAM_LDMA_TFER_CFG_PERIPH            SL_HAL_LDMA_TRANSFER_CFG_PERIPHERAL
-#define IOSTREAM_LDMA_TFER_CFG_REQ_SEL           request_sel
 #define IOSTREAM_LDMA_DESCRIPTOR_SINGLE_P2M_BYTE(src, dst, cnt) SL_HAL_LDMA_DESCRIPTOR_SINGLE_P2M(SL_HAL_LDMA_CTRL_SIZE_BYTE, src, dst, cnt)
 #define IOSTREAM_LDMA_DESCRIPTOR_SINGLE_M2P_BYTE(src, dst, cnt) SL_HAL_LDMA_DESCRIPTOR_SINGLE_M2P(SL_HAL_LDMA_CTRL_SIZE_BYTE, src, dst, cnt)
-#define IOSTREAM_LDMA_MAX_XFER_SIZE              SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE
-#else
-#error unsupported LDMA backend
-#endif
-/// @endcond
 
 #define uartFlowControlNone  0                     ///< uart flow control none
 #define uartFlowControlSoftware    0xFFFF          ///< uart flow control software
@@ -212,7 +184,7 @@ typedef struct {
 
 /// @brief I/O Stream (L)DMA Config
 typedef struct {
-  LDMA_TransferCfg_t xfer_cfg;                        ///< DMA Transfer Configuration
+  sl_hal_ldma_transfer_config_t xfer_cfg;       ///< DMA Transfer Configuration
   union {
     uint8_t *src;                               ///< Pointer to IO Stream peripheral source register
     uint8_t *dst;                               ///< Pointer to IO Stream peripheral destination register
@@ -223,16 +195,16 @@ typedef struct {
 typedef struct {
   sl_iostream_dma_config_t cfg;                       ///< DMA Configuration
   uint8_t channel;                                    ///< DMA Channel
-  LDMA_Descriptor_t rx_resume_desc;                   ///< DMA reception resume descriptor
-  LDMA_Descriptor_t wrap_desc;                        ///< DMA wrap descriptor
-  LDMA_Descriptor_t data_detect_desc;                 ///< DMA data detect descriptor
+  sl_hal_ldma_descriptor_t rx_resume_desc;            ///< DMA reception resume descriptor
+  sl_hal_ldma_descriptor_t wrap_desc;                 ///< DMA wrap descriptor
+  sl_hal_ldma_descriptor_t data_detect_desc;          ///< DMA data detect descriptor
 } sl_iostream_rx_dma_context_t;
 
 /// @brief I/O Steam TX (L)DMA Context
 typedef struct {
   sl_iostream_dma_config_t cfg;                        ///< DMA Configuration
   uint8_t channel;                                     ///< DMA Channel
-  LDMA_Descriptor_t desc;                              ///< DMA tx descriptors
+  sl_hal_ldma_descriptor_t desc;                       ///< DMA tx descriptors
 } sl_iostream_tx_dma_context_t;
 
 /// @brief UART Peripheral context

@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "sl_rail_sdk_simple_assistance.h"
 #include "sl_rail.h"
@@ -59,10 +60,10 @@
 
 /// States of the Auto-ACK app
 typedef enum {
-  S_IDLE,             //!< Idle state waiting for TX or RX
-  S_TRANSMIT,         //!< CLI or button push request to TX a packet
-  S_RECEIVE,          //!< Receiving a packet or an ACK for previous TX
-  S_ERROR             //!< An error occurred
+  S_IDLE = 1,             //!< Idle state waiting for TX or RX
+  S_TRANSMIT = 2,         //!< CLI or button push request to TX a packet
+  S_RECEIVE = 3,          //!< Receiving a packet or an ACK for previous TX
+  S_ERROR = 4             //!< An error occurred
 } state_t;
 
 // -----------------------------------------------------------------------------
@@ -281,7 +282,7 @@ static void handle_packet_transmission(sl_rail_handle_t rail_handle)
   prepare_packet(rail_handle, out_packet, sizeof(out_packet));
   rail_status = sl_rail_start_tx(rail_handle, get_selected_channel(), SL_RAIL_TX_OPTION_WAIT_FOR_ACK, NULL);
   if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_warning("sl_rail_start_tx() result: %lu\n ", rail_status);
+    app_log_warning("sl_rail_start_tx() result: 0x%08" PRIX32 "\n ", rail_status);
   }
 }
 
@@ -295,7 +296,7 @@ static void start_receiving(sl_rail_handle_t rail_handle)
 
   rail_status = sl_rail_start_rx(rail_handle, get_selected_channel(), NULL);
   if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_warning("sl_rail_start_rx() result: %lu\n", rail_status);
+    app_log_warning("sl_rail_start_rx() result: 0x%08" PRIX32 "\n", rail_status);
   }
 }
 
@@ -326,7 +327,7 @@ static void handle_received_packet(sl_rail_handle_t rail_handle)
     // Get packet details to identify ACK of last Tx
     packet_status =  sl_rail_get_rx_packet_details(rail_handle, rx_packet_handle, &packet_details);
     if (packet_status != SL_RAIL_STATUS_NO_ERROR) {
-      app_log_error("sl_rail_get_rx_packet_details() error: %lu\n", packet_status);
+      app_log_error("sl_rail_get_rx_packet_details() error: 0x%08" PRIX32 "\n", packet_status);
     }
 
     uint8_t *start_of_packet = 0;
@@ -344,7 +345,7 @@ static void handle_received_packet(sl_rail_handle_t rail_handle)
     }
     rail_status = sl_rail_release_rx_packet(rail_handle, rx_packet_handle);
     if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-      app_log_warning("sl_rail_release_rx_packet() result: %lu\n", rail_status);
+      app_log_warning("sl_rail_release_rx_packet() result: 0x%08" PRIX32 "\n", rail_status);
     }
     if (packet_details.is_ack) {
       app_log_info("ACK was received\n");
@@ -361,13 +362,13 @@ static void handle_error_state(void)
 {
   // Handle Rx error
   if (rail_last_state & SL_RAIL_EVENTS_RX_COMPLETION) {
-    app_log_error("Radio RX Error occurred\nEvents: %lld\n", rail_last_state);
+    app_log_error("Radio RX Error occurred\nEvents: 0x%" PRIX64 "\n", rail_last_state);
     // Handle Tx error
   } else if (rail_last_state & SL_RAIL_EVENTS_TX_COMPLETION) {
-    app_log_error("Radio TX Error occurred\nEvents: %lld\n", rail_last_state);
+    app_log_error("Radio TX Error occurred\nEvents: 0x%" PRIX64 "\n", rail_last_state);
     // Handle calibration error
   } else if (rail_last_state & SL_RAIL_EVENT_CAL_NEEDED) {
-    app_log_warning("Radio Calibration Error occurred\nEvents: %lld\nsl_rail_calibrate() result:%ld\n",
+    app_log_warning("Radio Calibration Error occurred\nEvents: 0x%" PRIX64 "\nsl_rail_calibrate() result: 0x%08" PRIX32 "\n",
                     rail_last_state,
                     calibration_status);
   }

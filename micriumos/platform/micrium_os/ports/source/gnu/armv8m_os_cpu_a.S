@@ -40,12 +40,17 @@
     .extern  OS_CPU_ExceptStkLimit
     .extern  OS_TaskReturn
     .extern  OSIdleContext
+#if defined(__clang__)
+    .extern  OSEnableIRQ
+    .extern  OSDisableIRQ
+#else
     .extern  OSEnableIRQ1
     .extern  OSEnableIRQ2
     .extern  OSEnableIRQ3
     .extern  OSDisableIRQ1
     .extern  OSDisableIRQ2
     .extern  OSDisableIRQ3
+#endif
 
     .global  OSStartHighRdy                                     @ Functions declared in this file
     .global  OSCtxSw
@@ -237,9 +242,15 @@ OSIntCtxSw:
 .thumb_func
 PendSV_Handler:
 
+#if defined(__clang__)
+    PUSH    {LR}                                                @ Prevent interruption during context switch
+    BL      OSDisableIRQ
+    POP     {LR}
+#else
     .short  OSDisableIRQ1                                       @ Prevent interruption during context switch
     .short  OSDisableIRQ2
     .short  OSDisableIRQ3
+#endif
 
     MOVW   R2, #:lower16:OSTCBCurPtr                            @ if current TCB == null, we were in idle ...
     MOVT   R2, #:upper16:OSTCBCurPtr
@@ -341,10 +352,16 @@ PendSV_Handler:
     MOVT    LR, #:upper16:0xFFFFFFF9
 #endif
 .end_context_restore:
+#if defined(__clang__)
+    PUSH    {LR}                                                @ Re-enable interrupts
+    BL      OSEnableIRQ
+    POP     {PC}                                                @ Return from exception
+#else
     .short  OSEnableIRQ1                                        @ Re-enable interrupts
     .short  OSEnableIRQ2
     .short  OSEnableIRQ3
 
     BX      LR                                                  @ Exception return will restore remaining context
+#endif
 
 .end

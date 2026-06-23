@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "sl_rail.h"
 #include "app_init.h"
@@ -70,10 +71,10 @@
 
 /// State machine of Duty Cycle
 typedef enum {
-  S_IDLE,             //!< Idling in default Slave Mode
-  S_BURST_RECEIVE,    //!< Burst received in Slave mode
-  S_BURST_SENDING,    //!< Burst TX in progress in Master Mode
-  S_ERROR             //!< An error occurred
+  S_IDLE = 0,             //!< Idling in default Slave Mode
+  S_BURST_RECEIVE = 1,    //!< Burst received in Slave mode
+  S_BURST_SENDING = 2,    //!< Burst TX in progress in Master Mode
+  S_ERROR = 3             //!< An error occurred
 } state_t;
 
 // -----------------------------------------------------------------------------
@@ -198,8 +199,6 @@ void set_first_run(bool is_first_run)
 
 /*******************************************************************************
  * Application state machine, called infinitely
- *
- * @param[in] rail_handle: which rail handler to use for rx and tx
  ******************************************************************************/
 void app_process_action(void)
 {
@@ -235,7 +234,7 @@ void app_process_action(void)
       break;
     default:
       // Unexpected state
-      app_log_error("Unexpected state occurred:%d\n", state);
+      app_log_error("Unexpected state occurred: %d\n", state);
 #if DUTY_CYCLE_USE_LCD_BUTTON == 1
       display_error_on_lcd(INVALID_APP_STATE);
       refresh_display = false;
@@ -417,7 +416,7 @@ static void handle_receive_state(sl_rail_handle_t rail_handle)
     app_ready_to_sleep = true;
     rail_status = sl_rail_release_rx_packet(rail_handle, rx_packet_handle);
     if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-      app_log_warning("sl_rail_release_rx_packet() result: %lu", rail_status);
+      app_log_warning("sl_rail_release_rx_packet() result: 0x%08" PRIX32, rail_status);
     }
     // Check if this is a new burst
     if (slave_rx_burst_id != start_of_packet[0]) {
@@ -459,11 +458,11 @@ static void handle_send_state(sl_rail_handle_t rail_handle)
 #if DUTY_CYCLE_USE_LCD_BUTTON == 1
     refresh_display = true;
 #endif
-    app_log_info("Burst of %lu packets sent.\n", master_burst_packets_count);
+    app_log_info("Burst of %" PRIu32 " packets sent.\n", master_burst_packets_count);
     // Run-time check if the listener had no chance to receive the burst
     if ((BURST_TIME / master_burst_packets_count) > DUTY_CYCLE_ON_TIME) {
-      app_log_info("WARNING! Packet time of %lu is longer than the ON time of %lu!\n",
-                   (BURST_TIME / master_burst_packets_count),
+      app_log_info("WARNING! Packet time of %" PRIu32 " is longer than the ON time of %" PRIu32 "!\n",
+                   (uint32_t)(BURST_TIME / master_burst_packets_count),
                    (uint32_t)DUTY_CYCLE_ON_TIME);
     }
     master_burst_packets_count = 0UL;
@@ -496,13 +495,13 @@ static void handle_error_state(sl_rail_handle_t rail_handle)
   (void)rail_handle;
   // Handle Rx error
   if (rail_last_state & SL_RAIL_EVENTS_RX_COMPLETION) {
-    app_log_error("Radio RX Error occurred\nEvents: %lld\n", rail_last_state);
+    app_log_error("Radio RX Error occurred\nEvents: 0x%" PRIX64 "\n", rail_last_state);
     // Handle Tx error
   } else if (rail_last_state & SL_RAIL_EVENTS_TX_COMPLETION) {
-    app_log_error("Radio TX Error occurred\nEvents: %lld\n", rail_last_state);
+    app_log_error("Radio TX Error occurred\nEvents: 0x%" PRIX64 "\n", rail_last_state);
     // Handle calibration error
   } else if (rail_last_state & SL_RAIL_EVENT_CAL_NEEDED) {
-    app_log_error("Radio Calibration Error occurred\nEvents: %lld\nsl_rail_calibrate() result:%ld\n",
+    app_log_error("Radio Calibration Error occurred\nEvents: 0x%" PRIX64 "\nsl_rail_calibrate() result: 0x%08" PRIX32 "\n",
                   rail_last_state,
                   calibration_status);
   }
@@ -530,7 +529,7 @@ static sl_rail_status_t send_tx_packet(sl_rail_handle_t rail_handle)
   rail_status = sl_rail_start_tx(rail_handle, get_selected_channel(), SL_RAIL_TX_OPTIONS_DEFAULT, NULL);
 
   if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_warning("sl_rail_start_tx() result: %lu ", rail_status);
+    app_log_warning("sl_rail_start_tx() result: 0x%08" PRIX32, rail_status);
   }
 
   return rail_status;

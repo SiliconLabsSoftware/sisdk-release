@@ -3,7 +3,7 @@
  * @brief CS RAS Client - Core implementation
  *******************************************************************************
  * # License
- * <b>Copyright 2024 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -40,12 +40,14 @@
 #include "cs_ras_client_log.h"
 #include "sl_bluetooth_connection_config.h"
 #include "cs_ras_client_control_point.h"
+#include "app_rta.h"
 
 // -----------------------------------------------------------------------------
 // Private variables
 
 // Client storage
 static cs_ras_client_t storage[SL_BT_CONFIG_MAX_CONNECTIONS];
+static app_rta_context_t cs_ras_client_rta_context;
 
 // Default configuration
 static const cccd_config_t default_config = {
@@ -77,6 +79,9 @@ static sl_status_t change_mode(cs_ras_client_t *client,
 static void data_arrived_timer_rised(app_timer_t *timer, void *next);
 static void data_ready_timer_rised(app_timer_t *timer, void *next);
 static void control_point_timer_rised(app_timer_t *timer, void *data);
+static void on_runtime_error(app_rta_error_t error, sl_status_t result);
+static sl_status_t get_mode_internal(cs_ras_client_t *client,
+                                     cs_ras_mode_t *mode);
 
 // -----------------------------------------------------------------------------
 // Public functions
@@ -102,9 +107,14 @@ sl_status_t cs_ras_client_create(uint8_t                 connection,
       || (handles->array[CS_RAS_CHARACTERISTIC_INDEX_RANGING_DATA_OVERWRITTEN] == CS_RAS_INVALID_CHARACTERISTIC_HANDLE)) {
     return SL_STATUS_INVALID_PARAMETER;
   }
+  sc = app_rta_acquire(cs_ras_client_rta_context);
+  if (sc != SL_STATUS_OK) {
+    return sc;
+  }
   // Find empty slot
   cs_ras_client_t *client = cs_ras_client_find(SL_BT_INVALID_CONNECTION_HANDLE);
   if (client == NULL) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_ALLOCATION_FAILED;
   }
   // Start reading RAS server features
@@ -125,29 +135,38 @@ sl_status_t cs_ras_client_create(uint8_t                 connection,
     // Set initial state
     set_state(client, CLIENT_STATE_READ_FEATURES);
   }
+  (void)app_rta_release(cs_ras_client_rta_context);
   return sc;
 }
 
 sl_status_t cs_ras_client_get_features(uint8_t           connection,
                                        cs_ras_features_t *features)
 {
+  sl_status_t sc;
   if (connection == SL_BT_INVALID_CONNECTION_HANDLE) {
     return SL_STATUS_INVALID_HANDLE;
   }
   if (features == NULL) {
     return SL_STATUS_NULL_POINTER;
   }
+  sc = app_rta_acquire(cs_ras_client_rta_context);
+  if (sc != SL_STATUS_OK) {
+    return sc;
+  }
   cs_ras_client_t *client = cs_ras_client_find(connection);
   if (client == NULL) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_NOT_FOUND;
   }
   // Check for state validity
   if (client->state == CLIENT_STATE_NOT_INITIALIZED
       || client->state == CLIENT_STATE_READ_FEATURES) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_INVALID_STATE;
   }
   // Assign features
   *features = client->features;
+  (void)app_rta_release(cs_ras_client_rta_context);
   return SL_STATUS_OK;
 }
 
@@ -165,15 +184,22 @@ sl_status_t cs_ras_client_real_time_receive(uint8_t  connection,
   if (data == NULL) {
     return SL_STATUS_NULL_POINTER;
   }
+  sc = app_rta_acquire(cs_ras_client_rta_context);
+  if (sc != SL_STATUS_OK) {
+    return sc;
+  }
   cs_ras_client_t *client = cs_ras_client_find(connection);
   if (client == NULL) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_NOT_FOUND;
   }
   // Check for state validity
   if (client->state != CLIENT_STATE_REAL_TIME) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_INVALID_STATE;
   }
   if (client->operation) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_IN_PROGRESS;
   }
   // Configure messaging
@@ -195,6 +221,7 @@ sl_status_t cs_ras_client_real_time_receive(uint8_t  connection,
   if (sc == SL_STATUS_OK) {
     client->operation = true;
   }
+  (void)app_rta_release(cs_ras_client_rta_context);
   return sc;
 }
 
@@ -204,21 +231,28 @@ sl_status_t cs_ras_client_abort(uint8_t connection)
   if (connection == SL_BT_INVALID_CONNECTION_HANDLE) {
     return SL_STATUS_INVALID_HANDLE;
   }
+  sc = app_rta_acquire(cs_ras_client_rta_context);
+  if (sc != SL_STATUS_OK) {
+    return sc;
+  }
   cs_ras_client_t *client = cs_ras_client_find(connection);
   if (client == NULL) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_NOT_FOUND;
   }
   // Check for state validity
   if (client->state != CLIENT_STATE_ON_DEMAND) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_INVALID_STATE;
   }
   if (!client->operation
       || (client->op_code != CS_RAS_CP_OPCODE_GET
           && client->op_code != CS_RAS_CP_OPCODE_RETRIEVE_LOST_SEGMENTS)) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_INVALID_STATE;
   }
   if ((client->features & CS_RAS_FEATURE_ABORT_OP_MASK) == 0) {
-    // Abort Op Code not supported by the RAS server
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_NOT_SUPPORTED;
   }
   sc = cs_ras_client_control_point_abort(client);
@@ -230,6 +264,7 @@ sl_status_t cs_ras_client_abort(uint8_t connection)
                           NULL,
                           false);
   }
+  (void)app_rta_release(cs_ras_client_rta_context);
   return sc;
 }
 
@@ -240,15 +275,22 @@ sl_status_t cs_ras_client_ack(uint8_t                  connection,
   if (connection == SL_BT_INVALID_CONNECTION_HANDLE) {
     return SL_STATUS_INVALID_HANDLE;
   }
+  sc = app_rta_acquire(cs_ras_client_rta_context);
+  if (sc != SL_STATUS_OK) {
+    return sc;
+  }
   cs_ras_client_t *client = cs_ras_client_find(connection);
   if (client == NULL) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_NOT_FOUND;
   }
   // Check for state validity
   if (client->state != CLIENT_STATE_ON_DEMAND) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_INVALID_STATE;
   }
   if (client->operation) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_IN_PROGRESS;
   }
   sc = cs_ras_client_control_point_ack(client, ranging_counter);
@@ -260,21 +302,29 @@ sl_status_t cs_ras_client_ack(uint8_t                  connection,
                           NULL,
                           false);
   }
+  (void)app_rta_release(cs_ras_client_rta_context);
   return sc;
 }
 
 sl_status_t cs_ras_client_configure(uint8_t                connection,
                                     cs_ras_client_config_t config)
 {
+  sl_status_t sc;
   if (connection == SL_BT_INVALID_CONNECTION_HANDLE) {
     return SL_STATUS_INVALID_HANDLE;
   }
+  sc = app_rta_acquire(cs_ras_client_rta_context);
+  if (sc != SL_STATUS_OK) {
+    return sc;
+  }
   cs_ras_client_t *client = cs_ras_client_find(connection);
   if (client == NULL) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_NOT_FOUND;
   }
   // Configuration is permitted only in CS_RAS_MODE_NONE
   if (client->state != CLIENT_STATE_INITIALIZED) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_INVALID_STATE;
   }
   // Apply configuration to CCCD subscription configuration
@@ -290,6 +340,7 @@ sl_status_t cs_ras_client_configure(uint8_t                connection,
   client->subscription.cccd.config.array[CS_RAS_CHARACTERISTIC_INDEX_RANGING_DATA_OVERWRITTEN]
     = config.ranging_data_overwritten_notification ? sl_bt_gatt_notification : sl_bt_gatt_indication;
 
+  (void)app_rta_release(cs_ras_client_rta_context);
   return SL_STATUS_OK;
 }
 
@@ -307,14 +358,20 @@ sl_status_t cs_ras_client_select_mode(uint8_t connection,
   if (mode == CS_RAS_MODE_CHANGE_IN_PROGRESS) {
     return SL_STATUS_INVALID_PARAMETER;
   }
+  sc = app_rta_acquire(cs_ras_client_rta_context);
+  if (sc != SL_STATUS_OK) {
+    return sc;
+  }
   cs_ras_client_t *client = cs_ras_client_find(connection);
   if (client == NULL) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_NOT_FOUND;
   }
   // Check state validity (no operation should be in progress)
   if (client->state != CLIENT_STATE_INITIALIZED
       && client->state != CLIENT_STATE_ON_DEMAND
       && client->state != CLIENT_STATE_REAL_TIME) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_INVALID_STATE;
   }
   if (mode == CS_RAS_MODE_REAL_TIME_RANGING_DATA) {
@@ -322,16 +379,16 @@ sl_status_t cs_ras_client_select_mode(uint8_t connection,
     // Check if Real-Time Ranging Data characteristic
     if (client->handles->array[CS_RAS_CHARACTERISTIC_INDEX_REAL_TIME_RANGING_DATA]
         == CS_RAS_INVALID_CHARACTERISTIC_HANDLE) {
+      (void)app_rta_release(cs_ras_client_rta_context);
       return SL_STATUS_NOT_SUPPORTED;
     }
     if ((client->features & CS_RAS_FEATURE_RT_RANGING_DATA_MASK) == 0) {
-      // Real-Time Ranging Data is requested but that is not supported by the RAS
-      // server.
+      (void)app_rta_release(cs_ras_client_rta_context);
       return SL_STATUS_NOT_SUPPORTED;
     }
   }
 
-  (void)cs_ras_client_get_mode(client->connection, &current_mode);
+  (void)get_mode_internal(client, &current_mode);
 
   cs_ras_client_log_info(CONN_PREFIX "Select mode: %u. Current mode: %u" LOG_NL,
                          client->connection,
@@ -343,49 +400,41 @@ sl_status_t cs_ras_client_select_mode(uint8_t connection,
     cs_ras_client_on_mode_changed(client->connection,
                                   current_mode,
                                   SL_STATUS_OK);
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_OK;
   }
 
   // Changing mode is required
   sc = change_mode(client, mode);
 
+  (void)app_rta_release(cs_ras_client_rta_context);
   return sc;
 }
 
 sl_status_t cs_ras_client_get_mode(uint8_t connection, cs_ras_mode_t *mode)
 {
+  sl_status_t sc;
   if (mode == NULL) {
     return SL_STATUS_NULL_POINTER;
   }
   if (connection == SL_BT_INVALID_CONNECTION_HANDLE) {
     return SL_STATUS_INVALID_HANDLE;
   }
+  sc = app_rta_acquire(cs_ras_client_rta_context);
+  if (sc != SL_STATUS_OK) {
+    return sc;
+  }
   cs_ras_client_t *client = cs_ras_client_find(connection);
   if (client == NULL) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_NOT_FOUND;
   }
-  // Get mode based on the current state
-  switch (client->state) {
-    case CLIENT_STATE_ON_DEMAND:
-      *mode = CS_RAS_MODE_ON_DEMAND_RANGING_DATA;
-      return SL_STATUS_OK;
-      break;
-    case CLIENT_STATE_REAL_TIME:
-      *mode = CS_RAS_MODE_REAL_TIME_RANGING_DATA;
-      return SL_STATUS_OK;
-      break;
-    case CLIENT_STATE_INITIALIZED:
-      *mode = CS_RAS_MODE_NONE;
-      return SL_STATUS_OK;
-      break;
-    default:
-      *mode = CS_RAS_MODE_CHANGE_IN_PROGRESS;
-      return SL_STATUS_OK;
-      break;
-  }
+  sc = get_mode_internal(client, mode);
   cs_ras_client_log_info(CONN_PREFIX "Get mode: %u" LOG_NL,
                          client->connection,
                          *mode);
+  (void)app_rta_release(cs_ras_client_rta_context);
+  return sc;
 }
 
 sl_status_t cs_ras_client_get_ranging_data(uint8_t  connection,
@@ -403,15 +452,22 @@ sl_status_t cs_ras_client_get_ranging_data(uint8_t  connection,
   if (data == NULL) {
     return SL_STATUS_NULL_POINTER;
   }
+  sc = app_rta_acquire(cs_ras_client_rta_context);
+  if (sc != SL_STATUS_OK) {
+    return sc;
+  }
   cs_ras_client_t *client = cs_ras_client_find(connection);
   if (client == NULL) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_NOT_FOUND;
   }
   // Check for state validity
   if (client->state != CLIENT_STATE_ON_DEMAND) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_INVALID_STATE;
   }
   if (client->operation) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_IN_PROGRESS;
   }
   cs_ras_messaging_config_t config = {
@@ -430,14 +486,13 @@ sl_status_t cs_ras_client_get_ranging_data(uint8_t  connection,
                                        &config,
                                        client->handles);
   if (sc != SL_STATUS_OK) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return sc;
   }
 
   // Send request using RAS control point
   sc = cs_ras_client_control_point_get_ranging_data(client, ranging_counter);
   if (sc == SL_STATUS_OK) {
-    // Configure messaging
-
     // Start timer with timeout for Get On-Demand Ranging Data
     (void)app_timer_start(&client->timer.data_arrived,
                           CS_RAS_CLIENT_GET_ON_DEMAND_RANGING_DATA_TIMEOUT_MS,
@@ -450,6 +505,7 @@ sl_status_t cs_ras_client_get_ranging_data(uint8_t  connection,
     // Stop reception
     (void)cs_ras_client_messaging_stop(&client->messaging);
   }
+  (void)app_rta_release(cs_ras_client_rta_context);
   return sc;
 }
 
@@ -473,20 +529,26 @@ sl_status_t cs_ras_client_retreive_lost_segments(uint8_t  connection,
   if (start_segment > end_segment) {
     return SL_STATUS_INVALID_PARAMETER;
   }
+  sc = app_rta_acquire(cs_ras_client_rta_context);
+  if (sc != SL_STATUS_OK) {
+    return sc;
+  }
   cs_ras_client_t *client = cs_ras_client_find(connection);
   if (client == NULL) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_NOT_FOUND;
   }
   // Check for state validity
   if (client->state != CLIENT_STATE_ON_DEMAND) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_INVALID_STATE;
   }
   if (client->operation) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_IN_PROGRESS;
   }
   if ((client->features & CS_RAS_FEATURE_RETRIEVE_LOST_SEGMENT_MASK) == 0) {
-    // Retrieve Lost Segments is requested but that is not supported by the RAS
-    // server.
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_NOT_SUPPORTED;
   }
   // Configure messaging
@@ -508,6 +570,7 @@ sl_status_t cs_ras_client_retreive_lost_segments(uint8_t  connection,
                                             start_segment,
                                             end_segment);
   if (sc != SL_STATUS_OK) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return sc;
   }
 
@@ -529,40 +592,57 @@ sl_status_t cs_ras_client_retreive_lost_segments(uint8_t  connection,
     // Stop reception
     (void)cs_ras_client_messaging_stop(&client->messaging);
   }
+  (void)app_rta_release(cs_ras_client_rta_context);
   return sc;
 }
 
 sl_status_t cs_ras_client_read_data_ready(uint8_t connection)
 {
+  sl_status_t sc;
   if (connection == SL_BT_INVALID_CONNECTION_HANDLE) {
     return SL_STATUS_INVALID_HANDLE;
   }
+  sc = app_rta_acquire(cs_ras_client_rta_context);
+  if (sc != SL_STATUS_OK) {
+    return sc;
+  }
   cs_ras_client_t *client = cs_ras_client_find(connection);
   if (client == NULL) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_NOT_FOUND;
   }
   if (client->state != CLIENT_STATE_ON_DEMAND) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_INVALID_STATE;
   }
-  sl_status_t sc = sl_bt_gatt_read_characteristic_value(client->connection,
-                                                        client->handles->array[CS_RAS_CHARACTERISTIC_INDEX_RANGING_DATA_READY]);
+  sc = sl_bt_gatt_read_characteristic_value(client->connection,
+                                            client->handles->array[CS_RAS_CHARACTERISTIC_INDEX_RANGING_DATA_READY]);
+  (void)app_rta_release(cs_ras_client_rta_context);
   return sc;
 }
 
 sl_status_t cs_ras_client_read_data_overwritten(uint8_t connection)
 {
+  sl_status_t sc;
   if (connection == SL_BT_INVALID_CONNECTION_HANDLE) {
     return SL_STATUS_INVALID_HANDLE;
   }
+  sc = app_rta_acquire(cs_ras_client_rta_context);
+  if (sc != SL_STATUS_OK) {
+    return sc;
+  }
   cs_ras_client_t *client = cs_ras_client_find(connection);
   if (client == NULL) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_NOT_FOUND;
   }
   if (client->state != CLIENT_STATE_ON_DEMAND) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_INVALID_STATE;
   }
-  sl_status_t sc = sl_bt_gatt_read_characteristic_value(client->connection,
-                                                        client->handles->array[CS_RAS_CHARACTERISTIC_INDEX_RANGING_DATA_OVERWRITTEN]);
+  sc = sl_bt_gatt_read_characteristic_value(client->connection,
+                                            client->handles->array[CS_RAS_CHARACTERISTIC_INDEX_RANGING_DATA_OVERWRITTEN]);
+  (void)app_rta_release(cs_ras_client_rta_context);
   return sc;
 }
 
@@ -573,8 +653,13 @@ sl_status_t cs_ras_client_procedure_enabled(uint8_t connection,
   if (connection == SL_BT_INVALID_CONNECTION_HANDLE) {
     return SL_STATUS_INVALID_HANDLE;
   }
+  sc = app_rta_acquire(cs_ras_client_rta_context);
+  if (sc != SL_STATUS_OK) {
+    return sc;
+  }
   cs_ras_client_t *client = cs_ras_client_find(connection);
   if (client == NULL) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_NOT_FOUND;
   }
 
@@ -582,6 +667,7 @@ sl_status_t cs_ras_client_procedure_enabled(uint8_t connection,
     // Stop timers
     (void)app_timer_stop(&client->timer.data_ready);
     (void)app_timer_stop(&client->timer.data_arrived);
+    (void)app_rta_release(cs_ras_client_rta_context);
     return SL_STATUS_OK;
   }
 
@@ -606,6 +692,7 @@ sl_status_t cs_ras_client_procedure_enabled(uint8_t connection,
       sc = SL_STATUS_INVALID_STATE;
       break;
   }
+  (void)app_rta_release(cs_ras_client_rta_context);
   return sc;
 }
 
@@ -646,6 +733,11 @@ bool cs_ras_client_on_bt_event(sl_bt_msg_t *evt)
 {
   cs_ras_client_t *client;
   bool handled = false;
+
+  sl_status_t sc = app_rta_acquire(cs_ras_client_rta_context);
+  if (sc != SL_STATUS_OK) {
+    return !handled;
+  }
 
   handled |= !cs_ras_client_messaging_on_bt_event(evt);
   handled |= !cs_ras_client_control_point_on_bt_event(evt);
@@ -700,11 +792,32 @@ bool cs_ras_client_on_bt_event(sl_bt_msg_t *evt)
                                             &evt->data.evt_gatt_procedure_completed);
       break;
   }
+  (void)app_rta_release(cs_ras_client_rta_context);
   return !handled;
 }
 
 // -----------------------------------------------------------------------------
 // Private functions
+
+static sl_status_t get_mode_internal(cs_ras_client_t *client,
+                                     cs_ras_mode_t *mode)
+{
+  switch (client->state) {
+    case CLIENT_STATE_ON_DEMAND:
+      *mode = CS_RAS_MODE_ON_DEMAND_RANGING_DATA;
+      break;
+    case CLIENT_STATE_REAL_TIME:
+      *mode = CS_RAS_MODE_REAL_TIME_RANGING_DATA;
+      break;
+    case CLIENT_STATE_INITIALIZED:
+      *mode = CS_RAS_MODE_NONE;
+      break;
+    default:
+      *mode = CS_RAS_MODE_CHANGE_IN_PROGRESS;
+      break;
+  }
+  return SL_STATUS_OK;
+}
 
 static sl_status_t change_mode(cs_ras_client_t *client,
                                cs_ras_mode_t   mode)
@@ -1122,9 +1235,14 @@ static sl_status_t do_action(cs_ras_client_t                *client,
 
 static void data_arrived_timer_rised(app_timer_t *timer, void *next)
 {
+  sl_status_t sc = app_rta_acquire(cs_ras_client_rta_context);
+  if (sc != SL_STATUS_OK) {
+    return;
+  }
   // Search for client
   cs_ras_client_t *client = cs_ras_client_find_by_timer(timer);
   if (client == NULL) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return;
   }
   cs_ras_client_timeout_t timeout;
@@ -1151,14 +1269,20 @@ static void data_arrived_timer_rised(app_timer_t *timer, void *next)
   if (!response) {
     (void)do_action(client, action);
   }
+  (void)app_rta_release(cs_ras_client_rta_context);
 }
 
 static void data_ready_timer_rised(app_timer_t *timer, void *data)
 {
   (void)data;
+  sl_status_t sc = app_rta_acquire(cs_ras_client_rta_context);
+  if (sc != SL_STATUS_OK) {
+    return;
+  }
   // Search for client
   cs_ras_client_t *client = cs_ras_client_find_by_timer(timer);
   if (client == NULL) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return;
   }
 
@@ -1182,14 +1306,20 @@ static void data_ready_timer_rised(app_timer_t *timer, void *data)
   if (!response) {
     (void)do_action(client, action);
   }
+  (void)app_rta_release(cs_ras_client_rta_context);
 }
 
 static void control_point_timer_rised(app_timer_t *timer, void *data)
 {
   (void)data;
+  sl_status_t sc = app_rta_acquire(cs_ras_client_rta_context);
+  if (sc != SL_STATUS_OK) {
+    return;
+  }
   // Search for client
   cs_ras_client_t *client = cs_ras_client_find_by_timer(timer);
   if (client == NULL) {
+    (void)app_rta_release(cs_ras_client_rta_context);
     return;
   }
   client->abort = false;
@@ -1208,6 +1338,7 @@ static void control_point_timer_rised(app_timer_t *timer, void *data)
   if (!response) {
     (void)do_action(client, action);
   }
+  (void)app_rta_release(cs_ras_client_rta_context);
 }
 
 void cs_ras_client_messaging_segment_received(cs_ras_client_messaging_reception_t *rx,
@@ -1224,6 +1355,47 @@ void cs_ras_client_messaging_segment_received(cs_ras_client_messaging_reception_
                         data_arrived_timer_rised,
                         (void *)1,
                         false);
+}
+
+void cs_ras_client_rta_init(void)
+{
+  sl_status_t sc;
+  app_rta_config_t config = { .requirement.runtime = false,
+                              .requirement.guard = true,
+                              .requirement.signal = false,
+                              .step = NULL,
+                              .priority = 0,
+                              .stack_size = 0,
+                              .error = on_runtime_error,
+                              .wait_for_guard = CS_RAS_CLIENT_WAIT_FOR_GUARD };
+  sc = app_rta_create_context(&config, &cs_ras_client_rta_context);
+  if (sc != SL_STATUS_OK) {
+    cs_ras_client_log_error("Failed to create rta context, sc=0x%lx" LOG_NL, sc);
+  }
+}
+
+void cs_ras_client_rta_ready(void)
+{
+  (void)app_rta_proceed(cs_ras_client_rta_context);
+}
+
+static void on_runtime_error(app_rta_error_t error, sl_status_t result)
+{
+  (void)result;
+  switch (error) {
+    case APP_RTA_ERROR_RUNTIME_INIT_FAILED:
+      cs_ras_client_log_error("RTA runtime init failed, sc=0x%lx" LOG_NL, result);
+      break;
+    case APP_RTA_ERROR_ACQUIRE_FAILED:
+      cs_ras_client_log_error("RTA acquire failed, sc=0x%lx" LOG_NL, result);
+      break;
+    case APP_RTA_ERROR_RELEASE_FAILED:
+      cs_ras_client_log_error("RTA release failed, sc=0x%lx" LOG_NL, result);
+      break;
+    default:
+      cs_ras_client_log_error("RTA generic error, sc=0x%lx" LOG_NL, result);
+      break;
+  }
 }
 
 // -----------------------------------------------------------------------------

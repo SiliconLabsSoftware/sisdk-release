@@ -277,7 +277,7 @@ typedef struct sl_bt_ots_server {
   uint8_t                             concurrency;     ///< Maximum number of concurrent connections
   sl_bt_ots_features_t                features;        ///< Features of the server
   sl_bt_ots_server_client_db_entry_t  *client_db;      ///< Internal database of clients
-  sl_bt_ots_server_capabilities_t     capabilities;    ///< Server capabilites
+  sl_bt_ots_server_capabilities_t     capabilities;    ///< Server capabilities
 } sl_bt_ots_server_t;
 
 // -----------------------------------------------------------------------------

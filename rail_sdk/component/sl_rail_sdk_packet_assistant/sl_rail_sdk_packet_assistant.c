@@ -31,6 +31,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include "sl_rail_sdk_packet_assistant.h"
 #include "sl_rail_sdk_packet_assistant_config.h"
 #include "sl_component_catalog.h"
@@ -289,7 +290,7 @@ uint16_t unpack_packet_wisun_fsk(sl_rail_handle_t rail_handle, uint8_t *rx_desti
   sl_rail_status_t result = sl_rail_copy_rx_packet(rail_handle, rx_destination, packet_information);
   if (result != SL_RAIL_STATUS_NO_ERROR) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_warning("sl_rail_copy_rx_packet failed with error: %ld\n", result);
+    app_log_warning("sl_rail_copy_rx_packet failed with error: 0x%08" PRIX32 "\n", result);
     #endif
   }
   uint8_t fcsType = 0U;
@@ -303,9 +304,15 @@ uint16_t unpack_packet_wisun_fsk(sl_rail_handle_t rail_handle, uint8_t *rx_desti
   if (print_packet_info) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
     if (current_protocol == CONNECT) {
-      app_log_info("Connect SUN_FSK Packet is ready, %d bytes payload read with %d fcsType and %d whitening\n ", payload_size, fcsType, whitening);
+      app_log_info("Connect SUN_FSK Packet is ready, %" PRIu16 " bytes payload read with %" PRIu8 " fcsType and whitening %s\n ",
+                   payload_size,
+                   fcsType,
+                   (whitening > 0) ? "ON" : "OFF");
     } else {
-      app_log_info("WISUN_FSK Packet is ready, %d bytes payload read with %d fcsType and %d whitening\n ", payload_size, fcsType, whitening);
+      app_log_info("WISUN_FSK Packet is ready, %" PRIu16 " bytes payload read with %" PRIu8 " fcsType and whitening %s\n ",
+                   payload_size,
+                   fcsType,
+                   (whitening > 0) ? "ON" : "OFF");
     }
     #endif
   }
@@ -330,7 +337,7 @@ void prepare_packet_wisun_fsk(sl_rail_handle_t rail_handle, uint8_t *out_data, u
   bytes_written_in_fifo = sl_rail_write_tx_fifo(rail_handle, tx_frame_buffer, packet_size, true);
   #if defined(SL_CATALOG_APP_ASSERT_PRESENT)
   app_assert(bytes_written_in_fifo == packet_size,
-             "sl_rail_write_tx_fifo() failed to write in fifo (%d bytes instead of %d bytes)\n",
+             "sl_rail_write_tx_fifo() failed to write in fifo (%" PRIu16 " bytes instead of %" PRIu16 " bytes)\n",
              bytes_written_in_fifo,
              packet_size);
   #endif
@@ -338,9 +345,15 @@ void prepare_packet_wisun_fsk(sl_rail_handle_t rail_handle, uint8_t *out_data, u
   if (print_packet_info) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
     if (current_protocol == CONNECT) {
-      app_log_info("Connect SUN_FSK Packet is ready, %d bytes written with %d fcsType and %d whitening\n ", bytes_written_in_fifo, wisun_fsk_fcs, wisun_fsk_whitening);
+      app_log_info("Connect SUN_FSK Packet is ready, %" PRIu16 " bytes written with %" PRIu8 " fcsType and whitening %s\n ",
+                   bytes_written_in_fifo,
+                   wisun_fsk_fcs,
+                   (wisun_fsk_whitening > 0) ? "ON" : "OFF");
     } else {
-      app_log_info("WISUN_FSK Packet is ready, %d bytes written with %d fcsType and %d whitening\n ", bytes_written_in_fifo, wisun_fsk_fcs, wisun_fsk_whitening);
+      app_log_info("WISUN_FSK Packet is ready, %" PRIu16 " bytes written with %" PRIu8 " fcsType and whitening %s\n ",
+                   bytes_written_in_fifo,
+                   wisun_fsk_fcs,
+                   (wisun_fsk_whitening > 0) ? "ON" : "OFF");
     }
     #endif
   }
@@ -365,7 +378,7 @@ uint16_t unpack_packet_wisun_ofdm(sl_rail_handle_t rail_handle, uint8_t *rx_dest
   sl_rail_status_t result = sl_rail_copy_rx_packet(rail_handle, rx_destination, packet_information);
   if (result != SL_RAIL_STATUS_NO_ERROR) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_warning("sl_rail_copy_rx_packet failed with error: %ld\n", result);
+    app_log_warning("sl_rail_copy_rx_packet failed with error: 0x%08" PRIX32 "\n", result);
     #endif
   }
   *start_of_payload = sl_rail_sdk_802154_packet_unpack_ofdm_data_frame(packet_information,
@@ -376,9 +389,15 @@ uint16_t unpack_packet_wisun_ofdm(sl_rail_handle_t rail_handle, uint8_t *rx_dest
   if (print_packet_info) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
     if (current_protocol == CONNECT) {
-      app_log_info("Connect_OFDM Packet is ready, %d bytes payload read with %d rate and %d scrambler\n ", payload_size, rate, scrambler);
+      app_log_info("Connect_OFDM Packet is ready, %" PRIu16 " bytes payload read with %" PRIu8 " rate and %" PRIu8 " scrambler\n ",
+                   payload_size,
+                   rate,
+                   scrambler);
     } else {
-      app_log_info("WISUN_OFDM Packet is ready, %d bytes payload read with %d rate and %d scrambler\n ", payload_size, rate, scrambler);
+      app_log_info("WISUN_OFDM Packet is ready, %" PRIu16 " bytes payload read with %" PRIu8 " rate and %" PRIu8 " scrambler\n ",
+                   payload_size,
+                   rate,
+                   scrambler);
     }
     #endif
   }
@@ -404,7 +423,7 @@ void prepare_packet_wisun_ofdm(sl_rail_handle_t rail_handle, uint8_t *out_data, 
 
   #if defined(SL_CATALOG_APP_ASSERT_PRESENT)
   app_assert(bytes_written_in_fifo == packet_size,
-             "sl_rail_write_tx_fifo() failed to write in fifo (%d bytes instead of %d bytes)\n",
+             "sl_rail_write_tx_fifo() failed to write in fifo (%" PRIu16 " bytes instead of %" PRIu16 " bytes)\n",
              bytes_written_in_fifo,
              packet_size);
   #endif
@@ -412,9 +431,15 @@ void prepare_packet_wisun_ofdm(sl_rail_handle_t rail_handle, uint8_t *out_data, 
   if (print_packet_info) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
     if (current_protocol == CONNECT) {
-      app_log_info("Connect_OFDM Packet is ready, %d bytes written with %d rate and %d scrambler\n ", bytes_written_in_fifo, wisun_ofdm_rate, wisun_ofdm_scrambler);
+      app_log_info("Connect_OFDM Packet is ready, %" PRIu16 " bytes written with %" PRIu8 " rate and %" PRIu8 " scrambler\n ",
+                   bytes_written_in_fifo,
+                   wisun_ofdm_rate,
+                   wisun_ofdm_scrambler);
     } else {
-      app_log_info("WISUN_OFDM Packet is ready, %d bytes written with %d rate and %d scrambler\n ", bytes_written_in_fifo, wisun_ofdm_rate, wisun_ofdm_scrambler);
+      app_log_info("WISUN_OFDM Packet is ready, %" PRIu16 " bytes written with %" PRIu8 " rate and %" PRIu8 " scrambler\n ",
+                   bytes_written_in_fifo,
+                   wisun_ofdm_rate,
+                   wisun_ofdm_scrambler);
     }
     #endif
   }
@@ -437,7 +462,7 @@ uint16_t unpack_packet_sun_oqpsk(sl_rail_handle_t rail_handle, uint8_t *rx_desti
   sl_rail_status_t result = sl_rail_copy_rx_packet(rail_handle, rx_destination, packet_information);
   if (result != SL_RAIL_STATUS_NO_ERROR) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_warning("sl_rail_copy_rx_packet failed with error: %ld\n", result);
+    app_log_warning("sl_rail_copy_rx_packet failed with error: 0x%08" PRIX32 "\n", result);
     #endif
   }
   *start_of_payload = sl_rail_sdk_802154_packet_unpack_oqpsk_data_frame(packet_information,
@@ -447,7 +472,10 @@ uint16_t unpack_packet_sun_oqpsk(sl_rail_handle_t rail_handle, uint8_t *rx_desti
                                                                         rx_destination);
   if (print_packet_info) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_info("SUN_OQPSK Packet is ready, %d bytes payload read with %d spreading mode and %d rate mode\n ", payload_size, spreadingMode, rateMode);
+    app_log_info("SUN_OQPSK Packet is ready, %" PRIu16 " bytes payload read with spreading mode %s and %" PRIu8 " rate mode\n ",
+                 payload_size,
+                 spreadingMode ? "ON" : "OFF",
+                 rateMode);
     #endif
   }
   return payload_size;
@@ -473,14 +501,17 @@ void prepare_packet_sun_oqpsk(sl_rail_handle_t rail_handle, uint8_t *out_data, u
   bytes_written_in_fifo = sl_rail_write_tx_fifo(rail_handle, tx_frame_buffer, packet_size, true);
   #if defined(SL_CATALOG_APP_ASSERT_PRESENT)
   app_assert(bytes_written_in_fifo == packet_size,
-             "sl_rail_write_tx_fifo() failed to write in fifo (%d bytes instead of %d bytes)\n",
+             "sl_rail_write_tx_fifo() failed to write in fifo (%" PRIu16 " bytes instead of %" PRIu16 " bytes)\n",
              bytes_written_in_fifo,
              packet_size);
   #endif
 
   if (print_packet_info) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_info("SUN_OQPSK Packet is ready, %d bytes written with %d spreading mode and %d rate mode\n ", bytes_written_in_fifo, sun_oqpsk_spreading_mode, sun_oqpsk_rate_mode);
+    app_log_info("SUN_OQPSK Packet is ready, %" PRIu16 " bytes written with spreading mode %s and %" PRIu8 " rate mode\n ",
+                 bytes_written_in_fifo,
+                 sun_oqpsk_spreading_mode ? "ON" : "OFF",
+                 sun_oqpsk_rate_mode);
     #endif
   }
 
@@ -500,7 +531,7 @@ uint16_t unpack_packet_sidewalk(sl_rail_handle_t rail_handle, uint8_t *rx_destin
   sl_rail_status_t result = sl_rail_copy_rx_packet(rail_handle, rx_destination, packet_information);
   if (result != SL_RAIL_STATUS_NO_ERROR) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_warning("sl_rail_copy_rx_packet failed with error: %ld\n", result);
+    app_log_warning("sl_rail_copy_rx_packet failed with error: 0x%08" PRIX32 "\n", result);
     #endif
   }
   uint8_t fcsType = 0U;
@@ -513,7 +544,10 @@ uint16_t unpack_packet_sidewalk(sl_rail_handle_t rail_handle, uint8_t *rx_destin
                                                            rx_destination);
   if (print_packet_info) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_info("SideWalk Packet is ready, %d bytes payload read with %d fcsType and %d whitening\n ", payload_size, fcsType, whitening);
+    app_log_info("SideWalk Packet is ready, %" PRIu16 " bytes payload read with %" PRIu8 " fcsType and whitening %s\n ",
+                 payload_size,
+                 fcsType,
+                 (whitening > 0) ? "ON" : "OFF");
     #endif
   }
   return payload_size;
@@ -537,14 +571,18 @@ void prepare_packet_sidewalk(sl_rail_handle_t rail_handle, uint8_t *out_data, ui
   bytes_written_in_fifo = sl_rail_write_tx_fifo(rail_handle, tx_frame_buffer, packet_size, true);
   #if defined(SL_CATALOG_APP_ASSERT_PRESENT)
   app_assert(bytes_written_in_fifo == packet_size,
-             "sl_rail_write_tx_fifo() failed to write in fifo (%d bytes instead of %d bytes)\n",
+             "sl_rail_write_tx_fifo() failed to write in fifo (%" PRIu16 " bytes instead of %" PRIu16 " bytes)\n",
              bytes_written_in_fifo,
              packet_size);
   #endif
 
   if (print_packet_info) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_info("SideWalk Packet is ready, %d bytes written with %d fcsType and %d whitening\n ", bytes_written_in_fifo, sidewalk_fcs_type, sidewalk_whitening);
+    app_log_info("SideWalk Packet is ready, %" PRIu16 " bytes written with %" PRIu8 " fcsType and whitening %s\n ",
+                 bytes_written_in_fifo,
+                 sidewalk_fcs_type,
+                 (sidewalk_whitening > 0) ? "ON" : "OFF"
+                 );
     #endif
   }
 
@@ -564,7 +602,7 @@ uint16_t unpack_packet_longrange(sl_rail_handle_t rail_handle, uint8_t *rx_desti
   sl_rail_status_t result = sl_rail_copy_rx_packet(rail_handle, rx_destination, packet_information);
   if (result != SL_RAIL_STATUS_NO_ERROR) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_warning("sl_rail_copy_rx_packet failed with error: %ld\n", result);
+    app_log_warning("sl_rail_copy_rx_packet failed with error: 0x%08" PRIX32 "\n", result);
     #endif
   }
   *start_of_payload
@@ -573,7 +611,7 @@ uint16_t unpack_packet_longrange(sl_rail_handle_t rail_handle, uint8_t *rx_desti
                                                             rx_destination);
   if (print_packet_info) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_info("Long Range Packet is ready, %d bytes payload read\n ", payload_size);
+    app_log_info("Long Range Packet is ready, %" PRIu16 " bytes payload read\n ", payload_size);
     #endif
   }
   return payload_size;
@@ -595,14 +633,14 @@ void prepare_packet_longrange(sl_rail_handle_t rail_handle, uint8_t *out_data, u
   bytes_written_in_fifo = sl_rail_write_tx_fifo(rail_handle, tx_frame_buffer, packet_size, true);
   #if defined(SL_CATALOG_APP_ASSERT_PRESENT)
   app_assert(bytes_written_in_fifo == packet_size,
-             "sl_rail_write_tx_fifo() failed to write in fifo (%d bytes instead of %d bytes)\n",
+             "sl_rail_write_tx_fifo() failed to write in fifo (%" PRIu16 " bytes instead of %" PRIu16 " bytes)\n",
              bytes_written_in_fifo,
              packet_size);
   #endif
 
   if (print_packet_info) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_info("Long Range Packet is ready, %d bytes written\n ", bytes_written_in_fifo);
+    app_log_info("Long Range Packet is ready, %" PRIu16 " bytes written\n ", bytes_written_in_fifo);
     #endif
   }
 
@@ -622,7 +660,7 @@ uint16_t unpack_packet_bpsk(sl_rail_handle_t rail_handle, uint8_t *rx_destinatio
   sl_rail_status_t result = sl_rail_copy_rx_packet(rail_handle, rx_destination, packet_information);
   if (result != SL_RAIL_STATUS_NO_ERROR) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_warning("sl_rail_copy_rx_packet failed with error: %ld\n", result);
+    app_log_warning("sl_rail_copy_rx_packet failed with error: 0x%08" PRIX32 "\n", result);
     #endif
   }
   *start_of_payload
@@ -631,7 +669,7 @@ uint16_t unpack_packet_bpsk(sl_rail_handle_t rail_handle, uint8_t *rx_destinatio
                                                        rx_destination);
   if (print_packet_info) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_info("BPSK Packet is ready, %d bytes payload read\n ", payload_size);
+    app_log_info("BPSK Packet is ready, %" PRIu16 " bytes payload read\n ", payload_size);
     #endif
   }
   return payload_size;
@@ -653,14 +691,14 @@ void prepare_packet_bpsk(sl_rail_handle_t rail_handle, uint8_t *out_data, uint16
   bytes_written_in_fifo = sl_rail_write_tx_fifo(rail_handle, tx_frame_buffer, packet_size, true);
   #if defined(SL_CATALOG_APP_ASSERT_PRESENT)
   app_assert(bytes_written_in_fifo == packet_size,
-             "sl_rail_write_tx_fifo() failed to write in fifo (%d bytes instead of %d bytes)\n",
+             "sl_rail_write_tx_fifo() failed to write in fifo (%" PRIu16 " bytes instead of %" PRIu16 " bytes)\n",
              bytes_written_in_fifo,
              packet_size);
   #endif
 
   if (print_packet_info) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_info("BPSK Packet is ready, %d bytes written\n ", bytes_written_in_fifo);
+    app_log_info("BPSK Packet is ready, %" PRIu16 " bytes written\n ", bytes_written_in_fifo);
     #endif
   }
 
@@ -678,14 +716,14 @@ uint16_t unpack_packet_base(sl_rail_handle_t rail_handle, uint8_t *rx_destinatio
   sl_rail_status_t result = sl_rail_copy_rx_packet(rail_handle, rx_destination, packet_information);
   if (result != SL_RAIL_STATUS_NO_ERROR) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_warning("sl_rail_copy_rx_packet failed with error: %ld\n", result);
+    app_log_warning("sl_rail_copy_rx_packet failed with error: 0x%08" PRIX32 "\n", result);
     #endif
   }
   *start_of_payload = rx_destination;
 
   if (print_packet_info) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_info("Packet is ready, %d bytes read\n", packet_information->packet_bytes);
+    app_log_info("Packet is ready, %" PRIu16 " bytes read\n", packet_information->packet_bytes);
     #endif
   }
 
@@ -702,14 +740,14 @@ void prepare_packet_base(sl_rail_handle_t rail_handle, uint8_t *out_data, uint16
   bytes_written_in_fifo = sl_rail_write_tx_fifo(rail_handle, out_data, length, true);
   #if defined(SL_CATALOG_APP_ASSERT_PRESENT)
   app_assert(bytes_written_in_fifo == length,
-             "sl_rail_write_tx_fifo() failed to write in fifo (%d bytes instead of %d bytes)\n",
+             "sl_rail_write_tx_fifo() failed to write in fifo (%" PRIu16 " bytes instead of %" PRIu16 " bytes)\n",
              bytes_written_in_fifo,
              length);
   #endif
 
   if (print_packet_info) {
     #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_info("Packet is ready, %d bytes written\n", bytes_written_in_fifo);
+    app_log_info("Packet is ready, %" PRIu16 " bytes written\n", bytes_written_in_fifo);
     #endif
   }
 
@@ -734,9 +772,9 @@ void printf_rx_packet(const uint8_t * const rx_buffer, uint16_t length)
     for (uint16_t i = 0; i < length; i++) {
       // last byte
       if (i == length - 1) {
-        app_log_info("0x%02X", rx_buffer[i]);
+        app_log_info("0x%02" PRIX8, rx_buffer[i]);
       } else {
-        app_log_info("0x%02X, ", rx_buffer[i]);
+        app_log_info("0x%02" PRIX8 ", ", rx_buffer[i]);
       }
     }
     app_log_info("\n");

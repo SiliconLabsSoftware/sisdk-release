@@ -538,7 +538,9 @@ void zigbee_frag_raw_tx_command(sl_cli_command_arg_t *arguments)
   sl_zigbee_aps_frame_t aps_frame;
   aps_frame.sourceEndpoint = 0x01;
   aps_frame.destinationEndpoint = 0x01;
-  aps_frame.options = (SL_ZIGBEE_APS_OPTION_RETRY | SL_ZIGBEE_APS_OPTION_ENABLE_ADDRESS_DISCOVERY);
+  aps_frame.options = (SL_ZIGBEE_APS_OPTION_RETRY
+                       | SL_ZIGBEE_APS_OPTION_ENABLE_ADDRESS_DISCOVERY
+                       | SL_ZIGBEE_APS_OPTION_ENABLE_ROUTE_DISCOVERY);
   aps_frame.profileId = 0x7F01; // test profile ID
   aps_frame.clusterId = 0x0043; // counted packets cluster
 
@@ -586,6 +588,9 @@ bool sl_zigbee_af_pre_command_received_cb(sl_zigbee_af_cluster_command_t* cmd)
       sl_zigbee_aps_frame_t apsFrame;
       memcpy(&apsFrame, cmd->apsFrame, sizeof(apsFrame));
       apsFrame.clusterId = 0x0044;
+      apsFrame.options |= (SL_ZIGBEE_APS_OPTION_RETRY
+                           | SL_ZIGBEE_APS_OPTION_ENABLE_ADDRESS_DISCOVERY
+                           | SL_ZIGBEE_APS_OPTION_ENABLE_ROUTE_DISCOVERY);
       (void)sl_zigbee_af_send_unicast(SL_ZIGBEE_OUTGOING_DIRECT,
                                       cmd->source,
                                       &apsFrame,

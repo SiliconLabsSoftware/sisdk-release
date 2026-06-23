@@ -3,7 +3,7 @@
  * @brief Clock Manager - Clock Tree configuration file.
  *******************************************************************************
  * # License
- * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -45,7 +45,6 @@
 #define SL_CLOCK_MANAGER_DEFAULT_LF_CLOCK_SOURCE_LFRCO        0xFC
 #define SL_CLOCK_MANAGER_DEFAULT_LF_CLOCK_SOURCE_LFXO         0xFB
 #define SL_CLOCK_MANAGER_DEFAULT_LF_CLOCK_SOURCE_ULFRCO       0xFA
-#define SL_CLOCK_MANAGER_DEFAULT_EUSART0_LF_CLOCK_SOURCE      SL_CLOCK_MANAGER_DEFAULT_LF_CLOCK_SOURCE
 
 #if defined(SL_CATALOG_RAIL_LIB_PRESENT)
 #define SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE_AUTO         SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE_HFXO
@@ -278,7 +277,6 @@
 
 // <h> Mixed Frequency Clock Branch Settings
 // <o SL_CLOCK_MANAGER_EUSART0CLK_SOURCE> Clock Source Selection for EUSART0CLK branch
-//   <SL_CLOCK_MANAGER_DEFAULT_EUSART0_LF_CLOCK_SOURCE=> LF_DEFAULT
 //   <CMU_EUSART0CLKCTRL_CLKSEL_DISABLED=> DISABLED
 //   <CMU_EUSART0CLKCTRL_CLKSEL_EM01GRPCCLK=> EM01GRPCCLK
 //   <CMU_EUSART0CLKCTRL_CLKSEL_HFRCOEM23=> HFRCOEM23

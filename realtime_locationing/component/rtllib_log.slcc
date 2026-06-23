@@ -1,0 +1,69 @@
+id: rtllib_log
+label: Real-Time Locationing Library Log
+package: realtime_locationing
+description: Real time locationing library logging component.
+category: Bluetooth|Direction Finding
+quality: production
+metadata:
+  sbom:
+    license: MSLA
+root_path: realtime_locationing/.
+provides:
+- name: rtllib_log
+library:
+- path: lib/gcc/cortex-m33/release/librtl_log_static.a
+  condition:
+  - toolchain_gcc
+  - cortexm33
+- path: lib/llvm/cortex-m33/release/librtl_log_static.a
+  condition:
+  - toolchain_llvm
+  - cortexm33
+- path: lib/gcc/linux/x86-64/release/librtl_log_static.a
+  condition:
+  - toolchain_gcc
+  - linux_arch_x86_64
+- path: lib/gcc/darwin/x86-64/release/librtl_log_static.a
+  condition:
+  - toolchain_gcc
+  - macos
+- path: lib/gcc/windows/x86-64/release/librtl_log_static.a
+  condition:
+  - toolchain_gcc
+  - win32
+- path: lib/gcc/linux/aarch64/release/librtl_log_static.a
+  condition:
+  - toolchain_gcc
+  - linux_arch_aarch64
+- path: lib/gcc/linux/armv7l/release/librtl_log_static.a
+  condition:
+  - toolchain_gcc
+  - linux_arch_arm32v7
+- system: m
+  condition:
+  - device_host
+- system: pthread
+  condition:
+  - device_host
+- system: stdc++
+  condition:
+  - device_host
+
+requires:
+- name: rtllib_log_api
+- name: rtl_log_mutex
+- name: cortexm33
+  condition: [device_cortexm]
+- name: memory_manager_cpp
+  condition: [device_cortexm]
+- name: printf
+- name: rtllib_printf
+- name: cmsis_core
+
+template_contribution:
+- name: component_catalog
+  value: rtl_lib_log
+
+documentation:
+  docset: rtl-lib
+  document: modules

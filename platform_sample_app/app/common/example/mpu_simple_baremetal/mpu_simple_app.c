@@ -109,10 +109,11 @@ SL_CODE_RAM static void function_executing_from_ram(void)
   #error "unsupported compiler"
 #endif
 
+static const char* malicious_string =
+  "\r\n  *** Malicious function executing from ram outside RAMFUNC. ***\r\n";
+
 ASM_FUNCTION static void exploit_payload(void)
 {
-  static const char* malicious_string = "\r\n  *** Malicious function executing from ram outside RAMFUNC. ***\r\n";
-
   __ASM volatile ("mov r0, %0\n" // Store the address of the malicious string in r0.
                                  // r0 is where the first argument to a function is placed
 

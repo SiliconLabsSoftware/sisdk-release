@@ -39,6 +39,24 @@
 #include "btl_reset_info.h"
 #endif
 
+#if defined(BTL_ENFORCE_GLITCH_MITIGATION) && (BTL_ENFORCE_GLITCH_MITIGATION == 1)
+#include "core/btl_glitch_mitigation.h"
+#endif
+
+#if defined(BTL_SMP_SUPPORT)
+#include "btl_smp_cfg.h"
+
+static void storage_get_smp_switch_page_bases(uint32_t *page1Base, uint32_t *page2Base)
+{
+  if (page1Base != NULL) {
+    *page1Base = BTL_SMP_PAGE_1_BASE;
+  }
+  if (page2Base != NULL) {
+    *page2Base = BTL_SMP_PAGE_2_BASE;
+  }
+}
+#endif
+
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Warray-bounds"
@@ -80,6 +98,11 @@ const BootloaderStorageFunctions_t storageFunctions = {
   .eraseRaw = &storage_eraseRaw,
   // Get configured DMA channel
   .getDMAchannel = &storage_getDMAchannel,
+#if defined(BTL_SMP_SUPPORT)
+  .getSmpSwitchPageBases = &storage_get_smp_switch_page_bases,
+#else
+  .getSmpSwitchPageBases = NULL,
+#endif
 };
 
 #if defined(BTL_PARSER_SUPPORT_DELTA_DFU)
@@ -265,11 +288,19 @@ int32_t storage_initParseSlot(uint32_t                  slotId,
     return retval;
   }
 
+#if defined(BTL_ENFORCE_GLITCH_MITIGATION) && (BTL_ENFORCE_GLITCH_MITIGATION == 1)
+  BTL_SEC_ASSERT_EQUAL(retval, BOOTLOADER_OK);
+#endif
+
   BootloaderStorageSlot_t slot;
   retval = storage_getSlotInfo(slotId, &slot);
   if (retval != BOOTLOADER_OK) {
     return retval;
   }
+
+#if defined(BTL_ENFORCE_GLITCH_MITIGATION) && (BTL_ENFORCE_GLITCH_MITIGATION == 1)
+  BTL_SEC_ASSERT_EQUAL(retval, BOOTLOADER_OK);
+#endif
 
   context->slotId = slotId;
   context->slotSize = slot.length;

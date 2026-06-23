@@ -59,7 +59,9 @@
 #include "sl_clock_manager.h"
 #include "ecode.h"
 #include "uartdrv_config.h"
-#include "dmadrv.h"
+#include "sl_dma_channel.h"
+#include "sl_dma_manager.h"
+#include "sl_device_dma.h"
 #include "sl_enum.h"
 #include "sl_sleeptimer.h"
 
@@ -360,10 +362,10 @@ typedef struct UARTDRV_HandleData{
     void * __reserved_space;
   } peripheral;
   uint8_t                       uartNum;           // UART instance number
-  unsigned int                  txDmaCh;           // A DMA ch assigned to Tx
-  unsigned int                  rxDmaCh;           // A DMA ch assigned to Rx
-  DMADRV_PeripheralSignal_t     txDmaSignal;       // A DMA Tx trigger source signal
-  DMADRV_PeripheralSignal_t     rxDmaSignal;       // A DMA Rx trigger source signal
+  sl_dma_channel_handle_t       txDmaCh;           // A DMA ch assigned to Tx
+  sl_dma_channel_handle_t       rxDmaCh;           // A DMA ch assigned to Rx
+  sl_dma_signal_t               txDmaSignal;       // A DMA Tx trigger source signal
+  sl_dma_signal_t               rxDmaSignal;       // A DMA Rx trigger source signal
   UARTDRV_FlowControlState_t    fcSelfState;       // A current self flow control state
   UARTDRV_FlowControlState_t    fcSelfCfg;         // A self flow control override configuration
   UARTDRV_FlowControlState_t    fcPeerState;       // A current peer flow control state

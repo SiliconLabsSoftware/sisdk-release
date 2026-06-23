@@ -34,7 +34,7 @@
  * 0 is default value and corresponds to 512 sec.
  * The range 5-99 corresponds to 640-12672sec.
  */
-void ZAF_SetMaxInclusionRequestIntervals(uint32_t intervals);
+void ZAF_SetMaxInclusionRequestIntervals(uint8_t intervals);
 
 /**
  * Broadcasts an Included Node Information Frame (INIF).

@@ -1,0 +1,75 @@
+id: "wisun_dc_client_cli"
+label: "Wi-SUN direct connect client CLI"
+description: "Provides CLI commands for Wi-SUN Direct Connect Client"
+package: "wisun"
+category: "Wi-SUN|Wi-SUN Plugin"
+quality: "production"
+
+ui_hints:
+  visibility: never
+
+requires:
+- name: "wisun_dc_client_plugin"
+- name: "wisun_cli_util"
+- name: "cli"
+
+provides:
+- name: "wisun_dc_client_cli"
+
+source:
+- path: "plugin/sl_wisun_dc_client_cli.c"
+
+include:
+- path: "plugin"
+  file_list:
+  - path: "sl_wisun_dc_client_cli.h"
+
+template_contribution:
+- name: "cli_command"
+  value:
+    group: "wisun"
+    name: "start_direct_connect_client"
+    handler: "app_wisun_start_direct_connect_client"
+    help: "Start direct connect client"
+    argument:
+    - type: uint32
+      help: "PHY configuration type"
+- name: "cli_command"
+  value:
+    group: "wisun"
+    name: "stop_direct_connect_client"
+    handler: "app_wisun_stop_direct_connect_client"
+    help: "Stop direct connect client"
+- name: "cli_command"
+  value:
+    group: "wisun"
+    name: "start_direct_connect_client_scan"
+    handler: "app_wisun_direct_connect_scan"
+    help: "Start direct connect client scan"
+    argument:
+    - type: string
+      help: "Direct connect identifier"
+    - type: uint8
+      help: "Max direct connect identity solicitations"
+- name: "cli_command"
+  value:
+    group: "wisun"
+    name: "stop_direct_connect_client_scan"
+    handler: "app_wisun_stop_direct_connect_scan"
+    help: "Stop direct connect client scan"
+- name: "cli_command"
+  value:
+    group: "wisun"
+    name: "connect_to_direct_connect_server"
+    handler: "app_wisun_connect_to_direct_connect_server"
+    help: "Connect to direct connect server"
+    argument:
+    - type: string
+      help: "MAC address"
+    - type: uint8
+      help: "Max direct connect identity solicitations"
+
+metadata:
+  sbom:
+    license: MSLA
+root_path: wisun

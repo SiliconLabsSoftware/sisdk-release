@@ -95,10 +95,10 @@ void sli_zigbee_af_test_harness_z3_beacon_beacon_req_command(sl_cli_command_arg_
                                 sli_zigbee_af_network_steering_primary_channel_mask,
                                 4); // 4 = 261 msec - will cause problems if too short
 
-  sl_zigbee_af_core_println("%s: %s: 0x%02X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Beacon request",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%02X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Beacon request",
+                           status);
 }
 
 // plugin test-harness z3 beacon beacons-config <options:4>
@@ -153,10 +153,10 @@ void sli_zigbee_af_test_harness_z3_beacon_beacons_config_command(sl_cli_command_
 #endif /* EZSP_HOST */
 
   // All options are handled in the negative behaviour callbacks
-  sl_zigbee_af_core_println("%s: %s: 0x%02X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Beacon",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%02X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Beacon",
+                           status);
 }
 
 void sl_zigbee_af_test_harness_z3_beacon_send_event_handler(sl_zigbee_af_event_t * event)

@@ -17,6 +17,8 @@ class CALC_longrange_ocelot(ICalculator):
             # Owner: Rossano Pantaleoni
             # Jira Link: https://jira.silabs.com/browse/MCUW_RADIO_CFG-2364
             ['LR_76p8k', 7, 'OQPSK DSSS SF8 76.8k long range'],
+            ['LR_6p25k', 8, 'OQPSK DSSS SF8 6p25k long range'],
+            ['LR_12p5k', 9, 'OQPSK DSSS SF8 12p5k long range']
             ]
         var.var_enum = CreateModelVariableEnum(
             'LongRangeModeEnum',

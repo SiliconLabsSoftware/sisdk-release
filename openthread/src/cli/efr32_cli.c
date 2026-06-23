@@ -33,13 +33,14 @@
 #include "radio_counters.h"
 #include "radio_extension.h"
 #include "sl_ot_custom_cli.h"
+#include <inttypes.h>
 #include <stdint.h>
 #include <string.h>
 #include <openthread/cli.h>
 #include "common/code_utils.hpp"
 
 #define PRINT_RADIO_COUNTER_FIELD(label, counter) \
-    (otCliOutputFormat("  %-s:%*s%12u\r\n", label, (40 - strlen(label)), "", counter));
+    (otCliOutputFormat("  %-s:%*s%12" PRIu32 "\r\n", label, (40 - strlen(label)), "", counter));
 
 static otError helpCommand(void *context, uint8_t argc, char *argv[]);
 

@@ -21,7 +21,7 @@
 
 // <e SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_EVENT_SYSTEM>Use custom event system for green-power plugins
 // <i> Default: TRUE
-// <i> This enables abbility to use custom event system on green-power plugins.
+// <i> This enables ability to use custom event system on green-power plugins.
 #define SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_EVENT_SYSTEM  1
 
 // <s SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_CUSTOM_EVENT_SYSTEM_HEADER> File containing custom data type used for green power plugins
@@ -32,7 +32,7 @@
 
 // <e SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_ATTRIBUTE_SYSTEM>Use custom attribute system for green-power plugins
 // <i> Default: TRUE
-// <i> This enables abbility to use custom attribute system on green-power plugins.
+// <i> This enables ability to use custom attribute system on green-power plugins.
 #define SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_ATTRIBUTE_SYSTEM  1
 
 // <s SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_CUSTOM_ATTRIBUTE_SYSTEM_HEADER> File containing custom data type used for green power plugins
@@ -43,7 +43,7 @@
 
 // <e SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_GP_STACK> Use custom GP Stack implementation for green-power plugins
 // <i> Default: TRUE
-// <i> This enables abbility to use custom gp stack on green-power plugins.
+// <i> This enables ability to use custom gp stack on green-power plugins.
 #define SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_GP_STACK  1
 
 // <s SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_CUSTOM_GP_STACK_HEADER> File containing custom data type used for green power plugins
@@ -54,7 +54,7 @@
 
 // <e SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_AF_INTERFACE> Use custom AF implementation for green-power plugins
 // <i> Default: TRUE
-// <i> This enables abbility to use custom AF interface  on green-power plugins.
+// <i> This enables ability to use custom AF interface  on green-power plugins.
 #define SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_AF_INTERFACE  1
 
 // <s SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_AF_HEADER> File containing custom data type used for green power plugins
@@ -65,7 +65,7 @@
 
 // <e SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_TOKEN_SYSTEM> Use custom token system implementation for green-power plugins
 // <i> Default: TRUE
-// <i> This enables abbility to use custom gp token system on green-power plugins.
+// <i> This enables ability to use custom gp token system on green-power plugins.
 #define SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_TOKEN_SYSTEM  1
 
 // <s SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_TOKEN_HEADER> File containing custom data type used for green power plugins
@@ -74,5 +74,10 @@
 #define SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_TOKEN_HEADER "green-power-adapter-custom-type.h"
 // </e>
 
+// <e SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_PRINT_SYSTEM> Use custom print system implementation for green-power plugins
+// <i> Default: TRUE
+// <i> This enables ability to use custom gp print system from app framework.
+#define SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_PRINT_SYSTEM  1
+// </e>
 // </h>
 // <<< end of configuration section >>>

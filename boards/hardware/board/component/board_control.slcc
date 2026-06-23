@@ -69,3 +69,6 @@ template_contribution:
 documentation:
   docset: gecko-platform
   document: platform-hardware-board/board-control
+recommends:
+- id: configuration_over_swo
+  vendor: silabs

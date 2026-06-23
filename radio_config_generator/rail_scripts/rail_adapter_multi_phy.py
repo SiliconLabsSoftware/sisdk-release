@@ -26,16 +26,6 @@ class ConcPhyEnum(IntEnum):
   CONC_PHY_9_6_NON_HOP = 3      # DEPRECATED - Leave for regression purpose
   CONC_PHY_FAST_SWITCH = 4
 
-class ProtocolIDEnum(IntEnum):
-  CUSTOM = 0
-  EMBERPHY = 1
-  THREAD = 2
-  BLE = 3
-  CONNECT = 4
-  ZIGBEE = 5
-  ZWAVE = 6
-  WISUN = 7
-
 class RAIL_OptArgInput(object):
   channel_timing_name = "channel_timing_name"
   conc_phy_opt_hop = "conc_phy_opt_hop"

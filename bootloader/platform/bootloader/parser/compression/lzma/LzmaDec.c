@@ -294,7 +294,8 @@ static int MY_FAST_CALL LzmaDec_DecodeReal(CLzmaDec *p, SizeT limit, const Byte 
 
       #ifdef _LZMA_SIZE_OPT
       {
-        unsigned lim, offset;
+        unsigned lim;
+        unsigned offset;
         CLzmaProb *probLen = prob + LenChoice;
         IF_BIT_0(probLen)
         {
@@ -360,8 +361,8 @@ static int MY_FAST_CALL LzmaDec_DecodeReal(CLzmaDec *p, SizeT limit, const Byte 
                + ((len < kNumLenToPosStates ? len : kNumLenToPosStates - 1) << kNumPosSlotBits);
         TREE_6_DECODE(prob, distance);
         if (distance >= kStartPosModelIndex) {
-          unsigned posSlot = (unsigned)distance;
-          unsigned numDirectBits = (unsigned)(((distance >> 1) - 1));
+          unsigned posSlot = distance;
+          unsigned numDirectBits = (distance >> 1) - 1;
           distance = (2 | (distance & 1));
           if (posSlot < kEndPosModelIndex) {
             distance <<= numDirectBits;
@@ -383,18 +384,10 @@ static int MY_FAST_CALL LzmaDec_DecodeReal(CLzmaDec *p, SizeT limit, const Byte 
               {
                 UInt32 t;
                 code -= range;
-                t = (0 - ((UInt32)code >> 31)); /* (UInt32)((Int32)code >> 31) */
+                t = (0 - (code >> 31)); /* (UInt32)((Int32)code >> 31) */
                 distance = (distance << 1) + (t + 1);
                 code += range & t;
               }
-              /*
-                 distance <<= 1;
-                 if (code >= range)
-                 {
-                 code -= range;
-                 distance |= 1;
-                 }
-               */
             } while (--numDirectBits != 0);
             prob = probs + Align;
             distance <<= kNumAlignBits;
@@ -405,7 +398,7 @@ static int MY_FAST_CALL LzmaDec_DecodeReal(CLzmaDec *p, SizeT limit, const Byte 
               GET_BIT2(prob + i, i,; , distance |= 4);
               GET_BIT2(prob + i, i,; , distance |= 8);
             }
-            if (distance == (UInt32)0xFFFFFFFF) {
+            if (distance == 0xFFFFFFFF) {
               len += kMatchSpecLenStart;
               state -= kNumStates;
               break;
@@ -441,7 +434,7 @@ static int MY_FAST_CALL LzmaDec_DecodeReal(CLzmaDec *p, SizeT limit, const Byte 
           return SZ_ERROR_DATA;
         }
 
-        curLen = ((rem < len) ? (unsigned)rem : len);
+        curLen = (rem < len) ? rem : len;
         pos = dicPos - rep0 + (dicPos < rep0 ? dicBufSize : 0);
 
         processedPos += curLen;
@@ -453,7 +446,7 @@ static int MY_FAST_CALL LzmaDec_DecodeReal(CLzmaDec *p, SizeT limit, const Byte 
           const Byte *lim = dest + curLen;
           dicPos += curLen;
           do {
-            *dest = (Byte) * (dest + src);
+            *dest = *(dest + src);
           } while (++dest != lim);
         } else {
           do {
@@ -494,7 +487,7 @@ static void MY_FAST_CALL LzmaDec_WriteRem(CLzmaDec *p, SizeT limit)
     SizeT rep0 = p->reps[0]; /* we use SizeT to avoid the BUG of VC14 for AMD64 */
     SizeT rem = limit - dicPos;
     if (rem < len) {
-      len = (unsigned)(rem);
+      len = rem;
     }
 
     if (p->checkDicSize == 0 && p->prop.dicSize - p->processedPos <= len) {
@@ -565,8 +558,6 @@ static ELzmaDummy LzmaDec_TryDummy(const CLzmaDec *p, const Byte *buf, SizeT inS
     IF_BIT_0_CHECK(prob)
     {
       UPDATE_0_CHECK;
-
-      /* if (bufLimit - buf >= 7) return DUMMY_LIT; */
 
       prob = probs + Literal;
       if (p->checkDicSize != 0 || p->processedPos != 0) {
@@ -681,8 +672,6 @@ static ELzmaDummy LzmaDec_TryDummy(const CLzmaDec *p, const Byte *buf, SizeT inS
         if (posSlot >= kStartPosModelIndex) {
           unsigned numDirectBits = ((posSlot >> 1) - 1);
 
-          /* if (bufLimit - buf >= 8) return DUMMY_MATCH; */
-
           if (posSlot < kEndPosModelIndex) {
             prob = probs + SpecPos + ((2 | (posSlot & 1)) << numDirectBits) - posSlot - 1;
           } else {
@@ -691,7 +680,6 @@ static ELzmaDummy LzmaDec_TryDummy(const CLzmaDec *p, const Byte *buf, SizeT inS
               NORMALIZE_CHECK
                 range >>= 1;
               code -= range & (((code - range) >> 31) - 1);
-              /* if (code >= range) code -= range; */
             } while (--numDirectBits != 0);
             prob = probs + Align;
             numDirectBits = kNumAlignBits;
@@ -805,7 +793,7 @@ SRes LzmaDec_DecodeToDic(CLzmaDec *p, SizeT dicLimit, const Byte *src, SizeT *sr
         int dummyRes = LzmaDec_TryDummy(p, src, inSize);
         if (dummyRes == DUMMY_ERROR) {
           memcpy(p->tempBuf, src, inSize);
-          p->tempBufSize = (unsigned)inSize;
+          p->tempBufSize = inSize;
           (*srcLen) += inSize;
           *status = LZMA_STATUS_NEEDS_MORE_INPUT;
           return SZ_OK;
@@ -827,7 +815,8 @@ SRes LzmaDec_DecodeToDic(CLzmaDec *p, SizeT dicLimit, const Byte *src, SizeT *sr
       src += processed;
       inSize -= processed;
     } else {
-      unsigned rem = p->tempBufSize, lookAhead = 0;
+      unsigned rem = p->tempBufSize;
+      unsigned lookAhead = 0;
       while (rem < LZMA_REQUIRED_INPUT_MAX && lookAhead < inSize)
         p->tempBuf[rem++] = src[lookAhead++];
       p->tempBufSize = rem;
@@ -997,7 +986,7 @@ SRes LzmaDec_Allocate(CLzmaDec *p, const Byte *props, unsigned propsSize, ISzAll
     } else if (dictSize >= ((UInt32)1 << 22)) {
       mask = ((UInt32)1 << 20) - 1;
     }
-    dicBufSize = ((SizeT)dictSize + mask) & ~mask;
+    dicBufSize = (dictSize + mask) & ~mask;
     if (dicBufSize < dictSize) {
       dicBufSize = dictSize;
     }

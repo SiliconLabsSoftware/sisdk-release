@@ -590,7 +590,7 @@ PACKSTRUCT(struct mesh_generic_history_record {
   mesh_addr_t src; /**< Sent from */
   mesh_addr_t dst; /**< Sent to */
   uint8_t tid; /**< Transaction ID */
-  unsigned aborted: 1; /**< Aborted transaction */
+  uint8_t aborted: 1; /**< Aborted transaction */
 });
 
 /** Per model transaction history length */

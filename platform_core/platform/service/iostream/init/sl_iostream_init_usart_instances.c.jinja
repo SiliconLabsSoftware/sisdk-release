@@ -5,6 +5,7 @@
 #include "sl_power_manager.h"
 #endif
 #include "em_device.h"
+#include "sl_device_peripheral.h"
 #include "sl_iostream.h"
 #include "sl_iostream_uart.h"
 #include "sl_iostream_usart.h"
@@ -33,8 +34,8 @@
 #define SL_IOSTREAM_USART_TX_IRQ_HANDLER(periph_nbr)    SL_IOSTREAM_USART_CONCAT_PASTER(USART, periph_nbr, {{ tx_irq_handler_suffix }})  {# Create IRQ Handler function name#}
 #define SL_IOSTREAM_USART_RX_IRQ_HANDLER(periph_nbr)    SL_IOSTREAM_USART_CONCAT_PASTER(USART, periph_nbr, {{ rx_irq_handler_suffix }})  {# Create IRQ Handler function name#}
 {% endif %}
-#define SL_IOSTREAM_USART_RX_DMA_SIGNAL(periph_nbr)     SL_IOSTREAM_USART_CONCAT_PASTER(dmadrvPeripheralSignal_USART, periph_nbr, _RXDATAV)  {# Create DMA RX Signal name#}
-#define SL_IOSTREAM_USART_TX_DMA_SIGNAL(periph_nbr)     SL_IOSTREAM_USART_CONCAT_PASTER(dmadrvPeripheralSignal_USART, periph_nbr, _TXBL)  {# Create DMA TX Signal name#}
+#define SL_IOSTREAM_USART_RX_DMA_SIGNAL(periph_nbr)     SL_IOSTREAM_USART_CONCAT_PASTER(SL_DMA_SIGNAL_USART, periph_nbr, _RXDATAV)
+#define SL_IOSTREAM_USART_TX_DMA_SIGNAL(periph_nbr)     SL_IOSTREAM_USART_CONCAT_PASTER(SL_DMA_SIGNAL_USART, periph_nbr, _TXBL)
 
 #define SL_IOSTREAM_USART_CLOCK_REF(periph_nbr)         SL_IOSTREAM_USART_CONCAT_PASTER(cmuClock_, USART, periph_nbr)       {# Create clock reference #}
 // EM Events
@@ -129,10 +130,10 @@ sl_status_t sl_iostream_usart_init_{{ instance }}(void)
   };
 
   sl_iostream_dma_config_t rx_dma_config_{{ instance }} = {.src = (uint8_t *)&SL_IOSTREAM_USART_{{ instance | upper }}_PERIPHERAL->RXDATA,
-                                                        .xfer_cfg = IOSTREAM_LDMA_TFER_CFG_PERIPH(SL_IOSTREAM_USART_RX_DMA_SIGNAL(SL_IOSTREAM_USART_{{ instance | upper }}_PERIPHERAL_NO))};
+                                                        .xfer_cfg = SL_HAL_LDMA_TRANSFER_CFG_PERIPHERAL(*(SL_IOSTREAM_USART_RX_DMA_SIGNAL(SL_IOSTREAM_USART_{{ instance | upper }}_PERIPHERAL_NO)))};
 
   sl_iostream_dma_config_t tx_dma_config_{{ instance }} = {.dst = (uint8_t *)&SL_IOSTREAM_USART_{{ instance | upper }}_PERIPHERAL->TXDATA,
-                                                        .xfer_cfg = IOSTREAM_LDMA_TFER_CFG_PERIPH(SL_IOSTREAM_USART_TX_DMA_SIGNAL(SL_IOSTREAM_USART_{{ instance | upper }}_PERIPHERAL_NO))};
+                                                        .xfer_cfg = SL_HAL_LDMA_TRANSFER_CFG_PERIPHERAL(*(SL_IOSTREAM_USART_TX_DMA_SIGNAL(SL_IOSTREAM_USART_{{ instance | upper }}_PERIPHERAL_NO)))};
 
   sl_iostream_uart_config_t uart_config_{{ instance }} = {
     .rx_dma_cfg = rx_dma_config_{{ instance }},

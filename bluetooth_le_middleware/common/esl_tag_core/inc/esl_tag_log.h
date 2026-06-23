@@ -74,7 +74,7 @@ void sli_bt_esl_logger(uint8_t component, uint8_t level, const char *fmt, ...);
  * @param[in] component The component that is logging.
  * @param[in] level Logging level.
  * @param[in] p_data Data pointer.
- * @param[in] len Data lenght in bytes.
+ * @param[in] len Data length in bytes.
  *****************************************************************************/
 void sli_bt_esl_log_hex_dump(uint8_t component,
                              uint8_t level,

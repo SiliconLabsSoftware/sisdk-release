@@ -31,9 +31,9 @@ void sl_zigbee_af_address_table_add_command(sl_cli_command_arg_t *arguments)
   index = sl_zigbee_af_address_table_add_entry(entry);
 
   if (index == SL_ZIGBEE_NULL_ADDRESS_TABLE_INDEX) {
-    sl_zigbee_af_core_println("Table full, entry not added");
+    sl_zigbee_af_cli_println("Table full, entry not added");
   } else {
-    sl_zigbee_af_core_println("Entry added at position 0x%02X", index);
+    sl_zigbee_af_cli_println("Entry added at position 0x%02X", index);
   }
 }
 
@@ -46,9 +46,9 @@ void sl_zigbee_af_address_table_remove_command(sl_cli_command_arg_t *arguments)
   status = sl_zigbee_af_address_table_remove_entry(entry);
 
   if (status == SL_STATUS_OK) {
-    sl_zigbee_af_core_println("Entry removed");
+    sl_zigbee_af_cli_println("Entry removed");
   } else {
-    sl_zigbee_af_core_println("Entry removal failed");
+    sl_zigbee_af_cli_println("Entry removal failed");
   }
 }
 
@@ -60,9 +60,9 @@ void sl_zigbee_af_address_table_lookup_command(sl_cli_command_arg_t *arguments)
   index = sl_zigbee_af_address_table_lookup_by_eui64(entry);
 
   if (index == SL_ZIGBEE_NULL_ADDRESS_TABLE_INDEX) {
-    sl_zigbee_af_core_println("Entry not found");
+    sl_zigbee_af_cli_println("Entry not found");
   } else {
-    sl_zigbee_af_core_println("Found entry at position 0x%02X", index);
+    sl_zigbee_af_cli_println("Found entry at position 0x%02X", index);
   }
 }
 
@@ -72,22 +72,22 @@ void sl_zigbee_af_address_table_print_command(sl_cli_command_arg_t *arguments)
   (void)arguments;
   uint8_t i;
   uint8_t used = 0;
-  sl_zigbee_core_debug_println("#  node   eui");
+  sl_zigbee_af_cli_println("#  node   eui");
   for (i = 0; i < sl_zigbee_af_get_address_table_size(); i++) {
     sl_802154_long_addr_t eui64;
     sl_802154_short_addr_t nodeId;
     sl_zigbee_get_address_table_info(i, &nodeId, eui64);
     if (nodeId != SL_ZIGBEE_TABLE_ENTRY_UNUSED_NODE_ID) {
       used++;
-      sl_zigbee_core_debug_print("%d: 0x%04X ", i, nodeId);
-      sl_zigbee_af_app_debug_exec(sl_zigbee_af_print_big_endian_eui64(eui64));
-      sl_zigbee_core_debug_println("");
-      sl_zigbee_af_app_flush();
+      sl_zigbee_af_cli_print("%d: 0x%04X ", i, nodeId);
+      sl_zigbee_af_cli_exec(sl_zigbee_af_print_big_endian_eui64(eui64));
+      sl_zigbee_af_cli_println("");
+      sl_zigbee_af_cli_flush();
     }
   }
-  sl_zigbee_core_debug_println("%d of %d entries used.",
-                               used,
-                               sl_zigbee_af_get_address_table_size());
+  sl_zigbee_af_cli_println("%d of %d entries used.",
+                           used,
+                           sl_zigbee_af_get_address_table_size());
 }
 
 void sl_zigbee_af_address_table_set_command(sl_cli_command_arg_t *arguments)
@@ -99,5 +99,5 @@ void sl_zigbee_af_address_table_set_command(sl_cli_command_arg_t *arguments)
   sl_zigbee_copy_eui64_arg(arguments, 1, eui64, true);
   status = sl_zigbee_af_set_address_table_entry(index, eui64, nodeId);
   UNUSED_VAR(status);
-  sl_zigbee_core_debug_println("set address %d: 0x%08X", index, status);
+  sl_zigbee_af_cli_println("set address %d: 0x%08X", index, status);
 }

@@ -32,13 +32,14 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdlib.h>
+#include <inttypes.h>
 
 #include "sl_assert.h"
 #include "sl_component_catalog.h"
 #include "sl_cli.h"
 #include "sl_wisun_cli_core.h"
 #include "sl_mempool.h"
-#include "socket/socket.h"
+#include "sys/socket.h"
 
 #if defined(SL_CATALOG_WISUN_TCP_CLIENT_PRESENT)
 #include "sl_wisun_tcp_client.h"
@@ -111,7 +112,7 @@ void app_tcp_client(const sl_cli_command_arg_t *arguments)
 
   tmp_socket = sl_mempool_alloc(&_cli_sockets);
   if (tmp_socket == NULL) {
-    printf("[Failed to allocate socket, socket closed: %ld]\n", sockid);
+    printf("[Failed to allocate socket, socket closed: %"PRIi32"]\n", sockid);
     sl_wisun_tcp_client_close(sockid);
     return;
   }
@@ -135,7 +136,7 @@ void app_udp_client(const sl_cli_command_arg_t *arguments)
 
   tmp_socket = sl_mempool_alloc(&_cli_sockets);
   if (tmp_socket == NULL) {
-    printf("[Failed to allocate socket, socket closed: %ld]\n", sockid);
+    printf("[Failed to allocate socket, socket closed: %"PRIi32"]\n", sockid);
     sl_wisun_udp_client_close(sockid);
     return;
   }

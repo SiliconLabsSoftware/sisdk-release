@@ -38,7 +38,7 @@ int32_t storage_readRaw(uint32_t address, uint8_t *data, size_t length)
   return BOOTLOADER_OK;
 }
 
-int32_t storage_writeRaw(uint32_t address, uint8_t *data, size_t numBytes)
+int32_t storage_writeRaw(uint32_t address, const uint8_t *data, size_t numBytes)
 {
   // Ensure address is is within chip
   if (!verifyAddressRange(address, numBytes)) {

@@ -3,25 +3,12 @@
  */
 #include "ZAF_CC_Invoker.h"
 #include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
 
-#ifdef __APPLE__
-extern zaf_cc_config_entry_latest_t __start__zaf_cc_config __asm("section$start$__TEXT$__zaf_cc_config");
-extern zaf_cc_config_entry_latest_t __stop__zaf_cc_config __asm("section$end$__TEXT$__zaf_cc_config");
-#else
-/**
- * This is the first of the registered CC configurations.
- */
-extern const zaf_cc_config_entry_latest_t __start_zw_zaf_cc_config;
-/**
- * This marks the end of the CC configurations. The element
- * after the last element. This means that this element
- * is not valid.
- */
-extern const  zaf_cc_config_entry_latest_t __stop_zw_zaf_cc_config;
-#endif
-
-#define cc_config_start __start_zw_zaf_cc_config
-#define cc_config_stop __stop_zw_zaf_cc_config
+/* Linker: section zw_zaf_cc_config. __start_ / __stop_ are range symbols; extern T name[] is the incomplete-type idiom. */
+extern const zaf_cc_config_entry_latest_t __start_zw_zaf_cc_config[];
+extern const zaf_cc_config_entry_latest_t __stop_zw_zaf_cc_config[];
 
 received_frame_status_t ZAF_CC_invoke_specific(CC_handler_map_latest_t const * const p_cc_entry,
                                                cc_handler_input_t *input,
@@ -55,10 +42,9 @@ received_frame_status_t ZAF_CC_invoke_specific(CC_handler_map_latest_t const * c
 received_frame_status_t invoke_cc_handler(cc_handler_input_t * input,
                                           cc_handler_output_t * output)
 {
-  CC_handler_map_latest_t const * iter = &cc_handlers_start;
-  for ( ; iter < &cc_handlers_stop; ++iter) {
-    if (iter->CC == input->frame->ZW_Common.cmdClass) {
-      return ZAF_CC_invoke_specific(iter, input, output);
+  for (CC_handler_map_latest_t const *p = cc_handlers_start; p < cc_handlers_stop; p++) {
+    if (p->CC == input->frame->ZW_Common.cmdClass) {
+      return ZAF_CC_invoke_specific(p, input, output);
     }
   }
 
@@ -67,10 +53,9 @@ received_frame_status_t invoke_cc_handler(cc_handler_input_t * input,
 
 void ZAF_CC_init_specific(uint8_t cmdClass)
 {
-  CC_handler_map_latest_t const * iter = &cc_handlers_start;
-  for ( ; iter < &cc_handlers_stop; ++iter) {
-    if ((iter->CC == cmdClass) && (NULL != iter->init)) {
-      iter->init();
+  for (CC_handler_map_latest_t const *p = cc_handlers_start; p < cc_handlers_stop; p++) {
+    if ((p->CC == cmdClass) && (NULL != p->init)) {
+      p->init();
       break;
     }
   }
@@ -78,10 +63,9 @@ void ZAF_CC_init_specific(uint8_t cmdClass)
 
 void ZAF_CC_reset_specific(uint8_t cmdClass)
 {
-  CC_handler_map_latest_t const * iter = &cc_handlers_start;
-  for ( ; iter < &cc_handlers_stop; ++iter) {
-    if ((iter->CC == cmdClass) && (NULL != iter->reset)) {
-      iter->reset();
+  for (CC_handler_map_latest_t const *p = cc_handlers_start; p < cc_handlers_stop; p++) {
+    if ((p->CC == cmdClass) && (NULL != p->reset)) {
+      p->reset();
       break;
     }
   }
@@ -90,9 +74,8 @@ void ZAF_CC_reset_specific(uint8_t cmdClass)
 void ZAF_CC_foreach(zaf_cc_invoker_callback_t callback, zaf_cc_context_t context)
 {
   assert(callback != NULL);
-  CC_handler_map_latest_t const * iter = &cc_handlers_start;
-  for ( ; iter < &cc_handlers_stop; ++iter) {
-    if (true == callback(iter, context)) {
+  for (CC_handler_map_latest_t const *p = cc_handlers_start; p < cc_handlers_stop; p++) {
+    if (true == callback(p, context)) {
       break;
     }
   }
@@ -100,15 +83,14 @@ void ZAF_CC_foreach(zaf_cc_invoker_callback_t callback, zaf_cc_context_t context
 
 size_t ZAF_CC_handler_map_size(void)
 {
-  return (size_t) ((&cc_handlers_stop) - (&cc_handlers_start));
+  return (size_t)(cc_handlers_stop - cc_handlers_start);
 }
 
 void ZAF_CC_config_foreach(zaf_cc_config_invoker_callback_t callback, void *context)
 {
   assert(callback != NULL);
-  zaf_cc_config_entry_latest_t const * iter = &cc_config_start;
-  for ( ; iter < &cc_config_stop; ++iter) {
-    if (callback(iter, context)) {
+  for (zaf_cc_config_entry_latest_t const *p = __start_zw_zaf_cc_config; p < __stop_zw_zaf_cc_config; p++) {
+    if (callback(p, context)) {
       break;
     }
   }
@@ -116,7 +98,7 @@ void ZAF_CC_config_foreach(zaf_cc_config_invoker_callback_t callback, void *cont
 
 size_t ZAF_CC_config_map_size(void)
 {
-  return (size_t) ((&cc_config_stop) - (&cc_config_start));
+  return (size_t)(__stop_zw_zaf_cc_config - __start_zw_zaf_cc_config);
 }
 
 /*

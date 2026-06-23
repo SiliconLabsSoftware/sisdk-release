@@ -82,10 +82,23 @@ sl_zigbee_af_zcl_request_status_t sl_zigbee_af_simple_metering_cluster_get_profi
 {
   sl_zcl_simple_metering_cluster_get_profile_response_command_t cmd_data;
   uint8_t i;
+  uint16_t intervalsOffset;
+  uint16_t intervalsAvail;
+  uint8_t maxPeriodsInPayload;
+  uint32_t intervalVal;
 
   if (zcl_decode_simple_metering_cluster_get_profile_response_command(cmd, &cmd_data)
       != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
     return SL_ZIGBEE_ZCL_STATUS_UNSUP_COMMAND;
+  }
+
+  intervalsOffset = (uint16_t)(cmd_data.intervals - cmd->buffer);
+  intervalsAvail = (cmd->bufLen > intervalsOffset)
+                     ? (cmd->bufLen - intervalsOffset) : 0;
+  maxPeriodsInPayload = (uint8_t)(intervalsAvail / 3u);
+
+  if (cmd_data.numberOfPeriodsDelivered > maxPeriodsInPayload) {
+    return SL_ZIGBEE_ZCL_STATUS_MALFORMED_COMMAND;
   }
 
   sl_zigbee_af_simple_metering_cluster_print("RX: GetProfileResponse 0x%08X, 0x%02X, 0x%02X, 0x%02X",
@@ -97,9 +110,11 @@ sl_zigbee_af_zcl_request_status_t sl_zigbee_af_simple_metering_cluster_get_profi
     cmd_data.numberOfPeriodsDelivered = SL_ZIGBEE_AF_PLUGIN_SIMPLE_METERING_CLIENT_NUMBER_OF_INTERVALS_SUPPORTED;
   }
   for (i = 0; i < cmd_data.numberOfPeriodsDelivered; i++) {
-    sl_zigbee_af_simple_metering_cluster_print(" [0x%08X]",
-                                               sl_zigbee_af_get_int24u(cmd_data.intervals + i * 3, 0, 3));
-    profileIntervals[i] = sl_zigbee_af_get_int24u(cmd_data.intervals + i * 3, 0, 3);
+    intervalVal = sl_zigbee_af_get_int24u(cmd->buffer,
+                                          intervalsOffset + ((uint16_t)i * 3u),
+                                          cmd->bufLen);
+    sl_zigbee_af_simple_metering_cluster_print(" [0x%08X]", intervalVal);
+    profileIntervals[i] = intervalVal;
   }
   sl_zigbee_af_simple_metering_cluster_println("");
   return SL_ZIGBEE_ZCL_STATUS_SUCCESS;

@@ -24,7 +24,7 @@ void sl_hci_cpc_rx_done()
 }
 #else
 static uint32_t read_notifications = 0;
-void sl_btctrl_hci_cpc_rx(uint8_t endpoint_id, void *arg)
+void sl_btctrl_hci_cpc_on_transport_notify(uint8_t endpoint_id, void *arg)
 {
   (void)endpoint_id;
   (void)arg;
@@ -43,6 +43,11 @@ void sl_hci_cpc_rx_done()
 }
 #endif
 
+void sl_btctrl_hci_cpc_rx(uint8_t endpoint_id, void *arg)
+{
+  sl_btctrl_hci_cpc_on_transport_notify(endpoint_id, arg);
+}
+
 void sl_hci_cpc_tx_callback(sl_cpc_user_endpoint_id_t endpoint_id, void *buffer, void *arg, sl_status_t status);
 
 void sl_hci_cpc_init(void)
@@ -53,7 +58,7 @@ void sl_hci_cpc_init(void)
   EFM_ASSERT(status == SL_STATUS_OK);
   status = sl_cpc_set_endpoint_option(&endpoint_handle, SL_CPC_ENDPOINT_ON_IFRAME_WRITE_COMPLETED, (void *)sl_hci_cpc_tx_callback);
   EFM_ASSERT(status == SL_STATUS_OK);
-  status = sl_cpc_set_endpoint_option(&endpoint_handle, SL_CPC_ENDPOINT_ON_IFRAME_RECEIVE, (void *)sl_btctrl_hci_cpc_rx);
+  status = sl_cpc_set_endpoint_option(&endpoint_handle, SL_CPC_ENDPOINT_ON_IFRAME_RECEIVE, (void *)sl_btctrl_hci_cpc_on_transport_notify);
   EFM_ASSERT(status == SL_STATUS_OK);
   status = sl_cpc_set_endpoint_option(&endpoint_handle, SL_CPC_ENDPOINT_ON_CONNECT, (void*)sl_hci_cpc_on_connect);
   EFM_ASSERT(status == SL_STATUS_OK);
@@ -90,6 +95,7 @@ void sl_hci_cpc_error(uint8_t endpoint_id, void *arg)
   cpc_state = SL_HCI_CPC_STATE_DISCONNECTED;
   status = sl_cpc_terminate_endpoint(&endpoint_handle, 0);
   EFM_ASSERT(status == SL_STATUS_OK);
+  sl_btctrl_hci_cpc_on_transport_notify(0, NULL);
 }
 
 int sl_hci_cpc_read(uint8_t **read_buf)

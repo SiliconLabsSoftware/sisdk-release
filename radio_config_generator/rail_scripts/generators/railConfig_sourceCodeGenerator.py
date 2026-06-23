@@ -25,10 +25,12 @@ class RAILConfig_generator:
     self.pte_script = railAdapter.pte_script_flag()
     self.wifi_script_seqacc = railAdapter.wifi_script_seqacc_flag()
     self.wifi_script = railAdapter.wifi_script_flag()
+    self.series = railAdapter.series
 
     if self.wifi_script_seqacc is True:
       self.sequenceCfg = railAdapter.sequenceCfg
       self.baseAddrAccess = railAdapter.baseAddrAccess
+      self.jump_table = railAdapter.WIFI_JUMP_TABLE
     # Instantiate jinja environment and register template path with FileSystemLoader
     self.jinja_env = jinja2.Environment(extensions=[jinja2.ext.do],loader=jinja2.FileSystemLoader(RAILConfig_generator._TEMPLATE_PATH or './'))
 
@@ -42,6 +44,8 @@ class RAILConfig_generator:
     self.jinja_env.filters['split16'] = self.split16
     self.jinja_env.filters['first16'] = self.first16
     self.jinja_env.filters['last16'] = self.last16
+    self.jinja_env.filters['endOfSequence'] = self.endOfSequence
+    self.jinja_env.globals['storeInRam'] = self.storeInRam
     self.jinja_env.globals['zip'] = zip
 
     # Register the templates
@@ -50,7 +54,8 @@ class RAILConfig_generator:
     if self.pte_script is True:
       self.template_path_c = "rail_config_multi_phy_pte_{}x.c.j2".format(self.rail_version)
     elif self.wifi_script_seqacc is True or self.wifi_script is True:
-      self.template_path_c = "rail_config_multi_phy_wifi.c.j2".format(self.rail_version)
+      self.template_path_c = "rail_config_multi_phy_wifi.c.j2"
+      self.template_path_h = "rail_config_multi_phy_wifi.h.j2"
     else:
       self.template_path_c = "rail_config_multi_phy_{}x.c.j2".format(self.rail_version)
 
@@ -70,10 +75,12 @@ class RAILConfig_generator:
     self.context['rail_version'] = self.rail_version
     self.context['rc_version'] = self.rc_version
     self.context['ra_version'] = self.version
+    self.context['series'] = self.series
 
     if self.wifi_script_seqacc is True:
       self.context['sequenceCfg'] = self.sequenceCfg
       self.context['baseAddrAccess'] = self.baseAddrAccess
+      self.context['jumpTable'] = self.jump_table
     try:
       multiPhyConfigEntriesBase = self.context['multiPhyConfig']['commonStructures']['modemConfigEntriesBase']
       maxAccelerationBufferSize = 0
@@ -189,6 +196,31 @@ class RAILConfig_generator:
     for key, value in dictionary.items():
       break
     return key, dict(value)
+
+  # Filter used to link LUT together using seqacc JUMPABS opcode.
+  # Returns default ENDSEQ (0xFFFFFFFF) otherwise, except for FPGA output.
+  def endOfSequence(self, entry_name):
+    string = "  0xFFFFFFFFUL\n"
+
+    if self.wifi_script_seqacc is True:
+      for lut_index, lut_name in enumerate(self.jump_table):
+        if entry_name in lut_name and (lut_index + 1) != len(self.jump_table):
+          string = "  0xA0010000UL, (uint32_t) {}\n".format(self.jump_table[lut_index + 1])
+          break
+    elif self.wifi_script is True:
+      # Used for FPGA output
+      string = ""
+    else:
+      pass
+
+    return string
+
+  def storeInRam(self):
+    string = ""
+
+    if self.series == 3 and self.context.get("rail_secondary_config", False):
+      string = "SL_CODE_CLASSIFY(rail_lib, SL_CODE_CLASS_TIME_CRITICAL)\n"
+    return string
 
   # Render function to encapsulate jinja
   def render(self, tpl_path, context=None):

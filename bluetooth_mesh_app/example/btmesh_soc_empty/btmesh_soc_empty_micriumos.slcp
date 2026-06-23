@@ -30,6 +30,8 @@ component:
   - id: rail_util_pti
   - id: sl_main
   - id: toolchain_gcc_lto
+    condition:
+      - toolchain_gcc
 
 source:
   - path: app.c

@@ -22,6 +22,10 @@ source:
 - path: source/gnu/armv7m_cpu_a.S
   condition:
   - toolchain_gcc
+# llvm
+- path: source/gnu/armv7m_cpu_a.S
+  condition:
+  - toolchain_llvm
 include:
 - path: source
   file_list:
@@ -39,6 +43,13 @@ include:
   - path: gnu/armv7m_os_cpu.h
     condition:
     - toolchain_gcc
+    # llvm
+  - path: gnu/armv7m_cpu_port.h
+    condition:
+    - toolchain_llvm
+  - path: gnu/armv7m_os_cpu.h
+    condition:
+    - toolchain_llvm
     # iar
   - path: iar/armv7m_cpu_port.h
     condition:

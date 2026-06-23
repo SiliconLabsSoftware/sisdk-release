@@ -79,8 +79,26 @@ static const debugSignal_t debugSignals[] =
         .signal = _PRS_ASYNC_CH_CTRL_SIGSEL_RACRX,
         .source = _PRS_ASYNC_CH_CTRL_SOURCESEL_RAC,
 #else
+
+// TODO: We might want to extend debugSignals on Curl for these different HADM PRS registers rather than
+//       hardcode piggyback on existing signals.
+#if _SILICON_LABS_32B_SERIES_2_CONFIG == 11
+        // .signal = _PRS_ASYNC_CH_CTRL_SIGSEL_HADMHADMRTT,
+        // .source = _PRS_ASYNC_CH_CTRL_SOURCESEL_HADM,
+        // .signal = _PRS_ASYNC_CH_CTRL_SIGSEL_HADMHADMRX,
+        // .source = _PRS_ASYNC_CH_CTRL_SOURCESEL_HADM,
+        // .signal = _PRS_ASYNC_CH_CTRL_SIGSEL_HADMHADMCTRL,
+        // .source = _PRS_ASYNC_CH_CTRL_SOURCESEL_HADM,
+        // .signal = _PRS_ASYNC_CH_CTRL_SIGSEL_HADMHADMTX,
+        // .source = _PRS_ASYNC_CH_CTRL_SOURCESEL_HADM,
+
         .signal = _PRS_ASYNC_CH_CTRL_SIGSEL_RACLRX,
         .source = _PRS_ASYNC_CH_CTRL_SOURCESEL_RACL,
+#else
+        .signal = _PRS_ASYNC_CH_CTRL_SIGSEL_RACLRX,
+        .source = _PRS_ASYNC_CH_CTRL_SOURCESEL_RACL,
+#endif
+
 #endif
       }
     }
@@ -94,8 +112,26 @@ static const debugSignal_t debugSignals[] =
         .signal = _PRS_ASYNC_CH_CTRL_SIGSEL_RACTX,
         .source = _PRS_ASYNC_CH_CTRL_SOURCESEL_RAC,
 #else
+
+// TODO: We might want to extend debugSignals on Curl for these different HADM PRS registers rather than
+//       hardcode piggyback on existing signals.
+#if _SILICON_LABS_32B_SERIES_2_CONFIG == 11
+        // .signal = _PRS_ASYNC_CH_CTRL_SIGSEL_HADMHADMRTT,
+        // .source = _PRS_ASYNC_CH_CTRL_SOURCESEL_HADM,
+        // .signal = _PRS_ASYNC_CH_CTRL_SIGSEL_HADMHADMRX,
+        // .source = _PRS_ASYNC_CH_CTRL_SOURCESEL_HADM,
+        // .signal = _PRS_ASYNC_CH_CTRL_SIGSEL_HADMHADMCTRL,
+        // .source = _PRS_ASYNC_CH_CTRL_SOURCESEL_HADM,
+        // .signal = _PRS_ASYNC_CH_CTRL_SIGSEL_HADMHADMTX,
+        // .source = _PRS_ASYNC_CH_CTRL_SOURCESEL_HADM,
+
         .signal = _PRS_ASYNC_CH_CTRL_SIGSEL_RACLTX,
         .source = _PRS_ASYNC_CH_CTRL_SOURCESEL_RACL,
+#else
+        .signal = _PRS_ASYNC_CH_CTRL_SIGSEL_RACLTX,
+        .source = _PRS_ASYNC_CH_CTRL_SOURCESEL_RACL,
+#endif
+
 #endif
       }
     }

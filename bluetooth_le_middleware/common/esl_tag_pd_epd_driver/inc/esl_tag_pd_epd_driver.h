@@ -133,7 +133,7 @@ sl_status_t pd_epd_deinit_GPIOs(void);
  *
  * @param[in] reg The register to write.
  * @param[in] data Data to write.
- * @param[in] len Data lenght.
+ * @param[in] len Data length.
  *****************************************************************************/
 sl_status_t pd_epd_write_data(const uint8_t *reg, const uint8_t *data, uint32_t len);
 

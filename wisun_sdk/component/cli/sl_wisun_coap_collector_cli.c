@@ -33,6 +33,9 @@
 // -----------------------------------------------------------------------------
 #include "sl_cli.h"
 #include "sl_status.h"
+#include "sys/socket.h"
+#include "arpa/inet.h"
+#include "netinet/in.h"
 #include "sl_wisun_cli_core.h"
 #include "sl_wisun_coap_collector.h"
 #include "sl_wisun_meter_collector_config.h"

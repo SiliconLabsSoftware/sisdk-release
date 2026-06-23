@@ -1357,6 +1357,13 @@ void sl_zigbee_ezsp_set_binding_remote_node_id(
       // The short ID of the destination node.
       sl_802154_short_addr_t nodeId);
 
+// When enabled, the stack clears the binding table on definitive leave (not
+// leave-with-rejoin), as required for Zigbee 4.0 security profile (e.g.
+// CN-Reset-TC-01).
+void sl_zigbee_ezsp_clear_binding_table_on_leave(
+      // True to clear bindings on leave; false to disable.
+      bool clear);
+
 // Callback
 // The NCP used the external binding modification policy to decide how to handle
 // a remote set binding request. The Host cannot change the current decision,

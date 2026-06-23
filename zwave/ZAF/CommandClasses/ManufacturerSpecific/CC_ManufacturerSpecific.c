@@ -70,21 +70,34 @@ CC_ManufacturerSpecific_handler(
 
       return RECEIVED_FRAME_STATUS_SUCCESS;
     case DEVICE_SPECIFIC_GET_V2:
-      pFrameOut->ZW_DeviceSpecificReport1byteV2Frame.cmdClass = COMMAND_CLASS_MANUFACTURER_SPECIFIC_V2;
-      pFrameOut->ZW_DeviceSpecificReport1byteV2Frame.cmd      = DEVICE_SPECIFIC_REPORT_V2;
+    {
+      /*
+       * Spec: Device Specific Report is variable-length (Device ID Length + Device ID Data 1..N).
+       * ZW_classcmd.h is auto-generated and only has fixed-size structs (1/2/3/4 bytes). We build
+       * the variable-length frame in the tx buffer so the full serial is sent without truncation.
+       */
+      size_t serialLen = zpal_get_serial_number_length();
+      /* Length field is 5 bits (max 31); frame must fit in tx buffer */
+      if (serialLen > (TX_DATA_MAX_DATA_SIZE - 4)) {
+        serialLen = TX_DATA_MAX_DATA_SIZE - 4;
+      }
+      if (serialLen > 31) {
+        serialLen = 31;
+      }
 
-      uint8_t deviceIDType       = DEVICE_ID_TYPE_SERIAL_NUMBER;
-      uint8_t deviceIDDataFormat = DEVICE_ID_DATA_FORMAT_BINARY;
-      uint8_t deviceIDDataLength = (uint8_t)zpal_get_serial_number_length();
-      zpal_get_serial_number(&pFrameOut->ZW_DeviceSpecificReport1byteV2Frame.deviceIdData1);
+      /* ZW_classcmd.h has no variable-length struct; we write the frame by hand into the tx buffer
+       * (same layout as ZW_DEVICE_SPECIFIC_REPORT_1BYTE_V2_FRAME header + deviceIdData1..N). */
+      uint8_t *p = (uint8_t *)pFrameOut;
+      p[0] = COMMAND_CLASS_MANUFACTURER_SPECIFIC_V2;         /* cmdClass */
+      p[1] = DEVICE_SPECIFIC_REPORT_V2;                      /* cmd */
+      p[2] = (uint8_t)(DEVICE_ID_TYPE_SERIAL_NUMBER & DEVICE_SPECIFIC_REPORT_PROPERTIES1_DEVICE_ID_TYPE_MASK_V2);   /* properties1 */
+      p[3] = (uint8_t)((DEVICE_ID_DATA_FORMAT_BINARY << DEVICE_SPECIFIC_REPORT_PROPERTIES2_DEVICE_ID_DATA_FORMAT_SHIFT_V2) & DEVICE_SPECIFIC_REPORT_PROPERTIES2_DEVICE_ID_DATA_FORMAT_MASK_V2)
+             | ((uint8_t)serialLen & DEVICE_SPECIFIC_REPORT_PROPERTIES2_DEVICE_ID_DATA_LENGTH_INDICATOR_MASK_V2);   /* properties2 */
+      zpal_get_serial_number(&p[4]);                         /* deviceIdData1..N (variable-length) */
 
-      pFrameOut->ZW_DeviceSpecificReport1byteV2Frame.properties1 = deviceIDType & 0x07;
-      pFrameOut->ZW_DeviceSpecificReport1byteV2Frame.properties2 = (uint8_t)(deviceIDDataFormat << 5) & 0xE0;
-      uint8_t length_masked = deviceIDDataLength & 0x1F; // Silence conversion warning with separate line.
-      pFrameOut->ZW_DeviceSpecificReport1byteV2Frame.properties2 |= length_masked;
-
-      *pLengthOut = sizeof(ZW_DEVICE_SPECIFIC_REPORT_1BYTE_V2_FRAME) + (pFrameOut->ZW_DeviceSpecificReport1byteV2Frame.properties2 & 0x1F) - 1;
+      *pLengthOut = 4 + (uint8_t)serialLen;
       return RECEIVED_FRAME_STATUS_SUCCESS;
+    }
     default:
       return RECEIVED_FRAME_STATUS_NO_SUPPORT;
   }

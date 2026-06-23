@@ -1,0 +1,19 @@
+id: ot_linux_host
+label: OpenThread Linux host
+package: openthread
+category: OpenThread|Host Support
+quality: production
+description: Component to provide common requirements for linux host builds.
+provides:
+- name: ot_linux_host
+requires:
+- name: operating_system
+- name: native_host
+- name: toolchain_variant_host
+- name: toolchain_gcc_standard
+ui_hints:
+  visibility: never
+metadata:
+  sbom:
+    license: Zlib
+root_path: openthread

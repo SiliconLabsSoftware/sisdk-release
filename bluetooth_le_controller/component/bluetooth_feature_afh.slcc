@@ -12,6 +12,8 @@ description: >
   channels.
 category: Bluetooth|Bluetooth LE Controller (Link Layer)|Additional Features
 quality: "production"
+config_file:
+- path: "config/sl_bluetooth_afh_config.h"
 requires:
 - name: "bluetooth_controller"
 - name: "bluetooth_feature_high_power"

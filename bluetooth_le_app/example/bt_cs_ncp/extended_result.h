@@ -31,7 +31,6 @@
 #ifndef EXTENDED_RESULT_H
 #define EXTENDED_RESULT_H
 
-#include "sl_rtl_clib_api.h"
 #include "cs_initiator.h"
 
 /**************************************************************************//**

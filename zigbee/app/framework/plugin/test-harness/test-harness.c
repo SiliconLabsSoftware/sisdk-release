@@ -32,7 +32,11 @@
 #ifdef SL_COMPONENT_CATALOG_PRESENT
 #include "sl_component_catalog.h"
 #endif
+#if defined(SL_CATALOG_WATCHDOG_MANAGER_PRESENT)
+#include "sl_watchdog_manager.h"
+#endif
 #include "test-harness-config.h"
+
 #if (SL_ZIGBEE_AF_PLUGIN_TEST_HARNESS_AUTO_REGISTRATION_START == 1)
 #define AUTO_REGISTRATION_START
 #endif
@@ -628,7 +632,7 @@ void sl_zigbee_af_test_harness_key_establishment_set_mode_command(sl_cli_command
     testHarnessMode = MODE_NORMAL;
     sli_zigbee_af_test_harness_advance_aps_frame_counter();
   } else {
-    testHarnessPrintln("Error: Unknown command.");
+    sl_zigbee_af_cli_println("Error: Unknown command.");
     return;
   }
 
@@ -644,7 +648,7 @@ void sl_zigbee_af_test_harness_set_registration_command(sl_cli_command_arg_t *ar
   } else if (commandChar1 == 'f') {
     sli_zigbee_af_test_harness_allow_registration = false;
   } else {
-    testHarnessPrintln("Error: Unknown command.");
+    sl_zigbee_af_cli_println("Error: Unknown command.");
   }
 }
 
@@ -657,7 +661,7 @@ void sl_zigbee_af_test_harness_set_aps_security_for_cluster_command(sl_cli_comma
   } else if (commandChar1 == 'f') {
     clusterIdRequiringApsSecurity = NULL_CLUSTER_ID;
   } else {
-    testHarnessPrintln("Error: Unknown command.");
+    sl_zigbee_af_cli_println("Error: Unknown command.");
   }
 }
 
@@ -694,70 +698,90 @@ void sl_zigbee_af_test_harness_key_establishment_set_available_suite_command(sl_
 void sl_zigbee_af_test_harness_status_command(sl_cli_command_arg_t *arguments)
 {
   UNUSED_VAR(arguments);
-  sl_zigbee_af_key_establishment_cluster_print("Test Harness Mode: %s", modeText[testHarnessMode]);
+  sl_zigbee_af_cli_print("Test Harness Mode: %s", modeText[testHarnessMode]);
   if (testHarnessMode == MODE_CERT_MANGLE) {
-    sl_zigbee_af_key_establishment_cluster_println("");
-    sl_zigbee_af_key_establishment_cluster_print("Cert Mangling Type: %s", certMangleText[certMangleType]);
+    sl_zigbee_af_cli_println("");
+    sl_zigbee_af_cli_print("Cert Mangling Type: %s", certMangleText[certMangleType]);
     if (certMangleType == CERT_MANGLE_LENGTH) {
-      sl_zigbee_af_key_establishment_cluster_print(" (%s%d bytes)",
-                                                   ((certLengthMod > 0)
-                                                    ? "+"
-                                                    : ""),
-                                                   certLengthMod);
+      sl_zigbee_af_cli_print(" (%s%d bytes)",
+                             ((certLengthMod > 0)
+                              ? "+"
+                              : ""),
+                             certLengthMod);
     } else if (certMangleType == CERT_MANGLE_CORRUPT) {
-      sl_zigbee_af_key_establishment_cluster_print(" (index: %d)",
-                                                   certIndexToCorrupt);
+      sl_zigbee_af_cli_print(" (index: %d)",
+                             certIndexToCorrupt);
     }
   } else if (testHarnessMode == MODE_DELAY_CBKE) {
-    sl_zigbee_af_key_establishment_cluster_print(" (by %d seconds",
-                                                 cbkeDelaySeconds);
+    sl_zigbee_af_cli_print(" (by %d seconds",
+                           cbkeDelaySeconds);
   }
-  sl_zigbee_af_key_establishment_cluster_println("");
+  sl_zigbee_af_cli_println("");
 
-  sl_zigbee_af_key_establishment_cluster_println("Auto SE Registration: %s",
-                                                 (sli_zigbee_af_test_harness_allow_registration
-                                                  ? "On"
-                                                  : "Off"));
-  sl_zigbee_af_key_establishment_cluster_print("Additional Cluster Security: ");
+  sl_zigbee_af_cli_println("Auto SE Registration: %s",
+                           (sli_zigbee_af_test_harness_allow_registration
+                            ? "On"
+                            : "Off"));
+  sl_zigbee_af_cli_print("Additional Cluster Security: ");
   if (clusterIdRequiringApsSecurity == NULL_CLUSTER_ID) {
-    sl_zigbee_af_key_establishment_cluster_println("off");
+    sl_zigbee_af_cli_println("off");
   } else {
-    sl_zigbee_af_key_establishment_cluster_println("0x%04X",
-                                                   clusterIdRequiringApsSecurity);
+    sl_zigbee_af_cli_println("0x%04X",
+                             clusterIdRequiringApsSecurity);
   }
 
-  sl_zigbee_af_key_establishment_cluster_println("Publish Price includes SE 1.1 fields: %s",
-                                                 (sli_zigbee_af_test_harness_support_for_new_price_fields
-                                                  ? "yes"
-                                                  : "no"));
-  sl_zigbee_af_key_establishment_cluster_flush();
+  sl_zigbee_af_cli_println("Publish Price includes SE 1.1 fields: %s",
+                           (sli_zigbee_af_test_harness_support_for_new_price_fields
+                            ? "yes"
+                            : "no"));
+  sl_zigbee_af_cli_flush();
 
 #if defined(STACK_TEST_HARNESS)
   {
     uint8_t beaconsLeft = sli_zigbee_test_harness_beacon_suppress_get();
-    sl_zigbee_af_key_establishment_cluster_print("Beacon Suppress: %s",
-                                                 (beaconsLeft == 255
-                                                  ? "Disabled "
-                                                  : "Enabled "));
+    sl_zigbee_af_cli_print("Beacon Suppress: %s",
+                           (beaconsLeft == 255
+                            ? "Disabled "
+                            : "Enabled "));
     if (beaconsLeft != 255) {
-      sl_zigbee_af_key_establishment_cluster_print(" (%d left to be sent)",
-                                                   beaconsLeft);
+      sl_zigbee_af_cli_print(" (%d left to be sent)",
+                             beaconsLeft);
     }
-    sl_zigbee_af_key_establishment_cluster_flush();
-    sl_zigbee_af_key_establishment_cluster_println("");
+    sl_zigbee_af_cli_flush();
+    sl_zigbee_af_cli_println("");
   }
 #endif
 
 #if defined(SL_CATALOG_ZIGBEE_NETWORK_FIND_PRESENT)
   {
-    sl_zigbee_af_key_establishment_cluster_print("Channel Mask: ");
+    sl_zigbee_af_cli_print("Channel Mask: ");
     sl_zigbee_af_print_channel_list_from_mask(testHarnessChannelMask);
-    sl_zigbee_af_key_establishment_cluster_println("");
+    sl_zigbee_af_cli_println("");
   }
 #endif
 }
 
-#ifndef SL_CATALOG_ZIGBEE_APS_LINK_KEY_AUTHORIZATION_PRESENT
+#if defined(SL_CATALOG_WATCHDOG_MANAGER_PRESENT)
+#define SLI_ZIGBEE_AF_TEST_HARNESS_WD_TRIGGER_SW_UID  (0x534C5754u) // "SLWT"
+
+void sl_zigbee_af_test_harness_wd_trigger_command(sl_cli_command_arg_t *arguments)
+{
+  (void)arguments;
+  // create a dummy SW watchdog which is never fed, so the HW WDOG expires and triggers a reset
+  {
+    sl_watchdog_handle_t wdHandle = UINT32_MAX;
+    (void)sl_watchdog_manager_create(&wdHandle, SLI_ZIGBEE_AF_TEST_HARNESS_WD_TRIGGER_SW_UID);
+  }
+
+  volatile bool continueLoop = true;
+  while (continueLoop) {
+    // Intentional infinite loop to trigger watchdog reset.
+  }
+}
+#endif
+
+#if !defined(SL_CATALOG_ZIGBEE_APS_LINK_KEY_AUTHORIZATION_PRESENT) && \
+    !defined(SL_CATALOG_ZIGBEE_DIRECT_ZDD_PRESENT)
 bool sl_zigbee_af_cluster_security_custom_cb(sl_zigbee_af_profile_id_t profileId,
                                              sl_zigbee_af_cluster_id_t clusterId,
                                              bool incoming,
@@ -769,7 +793,7 @@ bool sl_zigbee_af_cluster_security_custom_cb(sl_zigbee_af_profile_id_t profileId
   return (clusterIdRequiringApsSecurity != NULL_CLUSTER_ID
           && clusterId == clusterIdRequiringApsSecurity);
 }
-#endif // SL_CATALOG_ZIGBEE_APS_LINK_KEY_AUTHORIZATION_PRESENT
+#endif // !SL_CATALOG_ZIGBEE_APS_LINK_KEY_AUTHORIZATION_PRESENT && !SL_CATALOG_ZIGBEE_DIRECT_ZDD_PRESENT
 
 void sl_zigbee_af_test_harness_price_send_new_fields_command(sl_cli_command_arg_t *arguments)
 {
@@ -777,7 +801,7 @@ void sl_zigbee_af_test_harness_price_send_new_fields_command(sl_cli_command_arg_
   sli_zigbee_af_test_harness_support_for_new_price_fields = (bool)sl_cli_get_argument_uint32(arguments, 0);
 #else
   UNUSED_VAR(arguments);
-  testHarnessPrintln("No Price server plugin included.");
+  sl_zigbee_af_cli_println("No Price server plugin included.");
 #endif
 }
 
@@ -787,7 +811,7 @@ void sl_zigbee_af_test_harness_tc_keepalive_send_command(sl_cli_command_arg_t *a
 #if defined(SL_CATALOG_ZIGBEE_TRUST_CENTER_KEEPALIVE_PRESENT)
   sli_zigbee_af_send_keepalive_signal();
 #else
-  testHarnessPrintln("No TC keepalive plugin included.");
+  sl_zigbee_af_cli_println("No TC keepalive plugin included.");
 #endif
 }
 
@@ -803,12 +827,12 @@ void sl_zigbee_af_test_harness_tc_keepalive_start_stop_command(sl_cli_command_ar
     sl_zigbee_af_trust_center_keepalive_update_cb(true); // registration complete?
     // assume this is only called when device is done with that
   } else {
-    testHarnessPrintln("Unknown keepalive command.");
+    sl_zigbee_af_cli_println("Unknown keepalive command.");
   }
 
 #else
   UNUSED_VAR(arguments);
-  testHarnessPrintln("No TC keepalive plugin included.");
+  sl_zigbee_af_cli_println("No TC keepalive plugin included.");
 #endif
 }
 
@@ -817,15 +841,15 @@ void sl_zigbee_af_test_harness_ota_image_mangle_command(sl_cli_command_arg_t *ar
 #if defined (SL_CATALOG_ZIGBEE_OTA_STORAGE_SIMPLE_RAM_PRESENT)
   uint16_t index = sl_cli_get_argument_uint16(arguments, 0);
   if (index >= sli_zigbee_af_ota_storage_drive_get_image_size()) {
-    testHarnessPrintln("Error: Index %d > image size of %d",
-                       index,
-                       sli_zigbee_af_ota_storage_drive_get_image_size());
+    sl_zigbee_af_cli_println("Error: Index %d > image size of %d",
+                             index,
+                             sli_zigbee_af_ota_storage_drive_get_image_size());
   } else {
     sli_zigbee_af_ota_storage_driver_corrupt_image(index);
   }
 #else
   UNUSED_VAR(arguments);
-  testHarnessPrintln("No OTA Storage Simple RAM plugin included");
+  sl_zigbee_af_cli_println("No OTA Storage Simple RAM plugin included");
 #endif
 }
 
@@ -837,13 +861,13 @@ void sl_zigbee_af_test_harness_key_update_command(sl_cli_command_arg_t *argument
   uint8_t commandChar0 = sl_cli_get_command_string(arguments, position)[0];
   if (commandChar0 == 'u') {
     unicastKeyUpdate = true;
-    sl_zigbee_app_debug_println("Key update set to unicast");
+    sl_zigbee_af_cli_println("Key update set to unicast");
   } else if (commandChar0 == 'b') {
     unicastKeyUpdate = false;
-    sl_zigbee_app_debug_println("Key update set to broadcast");
+    sl_zigbee_af_cli_println("Key update set to broadcast");
   } else if (commandChar0 == 'n') {
     sl_status_t status = sl_zigbee_af_trust_center_start_network_key_update();
-    sl_zigbee_app_debug_println("Starting NWK Key update, status: 0x%02X", status);
+    sl_zigbee_af_cli_println("Starting NWK Key update, status: 0x%02X", status);
   }
 }
 #ifdef SL_CATALOG_ZIGBEE_TEST_HARNESS_Z3_PRESENT
@@ -855,17 +879,17 @@ void sl_zigbee_af_test_harness_key_update_security_command(sl_cli_command_arg_t 
   uint8_t commandChar1 = sl_cli_get_command_string(arguments, position)[1];
   if (commandChar1 == 'n') {
     sli_zigbee_set_trust_center_aps_encryption(TC_APS_ENCRYPT_ENABLE);
-    sl_zigbee_app_debug_println("Key update security set to enable");
+    sl_zigbee_af_cli_println("Key update security set to enable");
   } else if (commandChar1 == 'f') {
     sli_zigbee_set_trust_center_aps_encryption(TC_APS_ENCRYPT_DISABLE);
-    sl_zigbee_app_debug_println("Key update security set to disable");
+    sl_zigbee_af_cli_println("Key update security set to disable");
   } else if (commandChar1 == 'd') {
     sli_zigbee_set_trust_center_aps_encryption(TC_APS_ENCRYPT_DEFAULT);
-    sl_zigbee_app_debug_println("Key update security set to default");
+    sl_zigbee_af_cli_println("Key update security set to default");
   }
 #else
   (void) arguments;
-  testHarnessPrintln("Not supported on host.");
+  sl_zigbee_af_cli_println("Not supported on host.");
 #endif
 }
 #endif
@@ -874,12 +898,12 @@ void sl_zigbee_af_test_harness_key_update_security_command(sl_cli_command_arg_t 
 void sl_zigbee_af_test_harness_key_update_command(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
-  sl_zigbee_app_debug_println("NWK Key Update Plugin not enabled.");
+  sl_zigbee_af_cli_println("NWK Key Update Plugin not enabled.");
 }
 void sl_zigbee_af_test_harness_key_update_security_command(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
-  sl_zigbee_app_debug_println("NWK Key Update Plugin not enabled.");
+  sl_zigbee_af_cli_println("NWK Key Update Plugin not enabled.");
 }
 
 #endif // SL_CATALOG_ZIGBEE_TRUST_CENTER_NWK_KEY_UPDATE_BROADCAST/UNICAST
@@ -894,7 +918,7 @@ void sl_zigbee_af_test_harness_concentrator_start_stop_command(sl_cli_command_ar
   } else if (commandChar2 == 'a') {
     sl_zigbee_set_source_route_discovery_mode(SL_ZIGBEE_SOURCE_ROUTE_DISCOVERY_ON);
   } else {
-    testHarnessPrintln("Error: Unknown command.");
+    sl_zigbee_af_cli_println("Error: Unknown command.");
   }
 #else
   (void)arguments;
@@ -912,7 +936,7 @@ void sl_zigbee_af_test_harness_limit_beacons_on_off_command(sl_cli_command_arg_t
   } else if (commandChar1 == 'n') {
     sli_zigbee_test_harness_beacon_suppress_set(1);
   } else {
-    testHarnessPrintln("Error: Unknown command.");
+    sl_zigbee_af_cli_println("Error: Unknown command.");
   }
 }
 // TODO: this should be modified once we've upgraded the generated CLI
@@ -933,7 +957,7 @@ void sl_zigbee_af_test_harness_channel_mask_add_or_remove_command(sl_cli_command
   uint8_t channel = sl_cli_get_argument_uint8(arguments, 0);
 
   if (channel < 11 || channel > 26) {
-    testHarnessPrintln("Error: Invalid channel '%d'.", channel);
+    sl_zigbee_af_cli_println("Error: Invalid channel '%d'.", channel);
     return;
   }
   if (commandChar0 == 'a') {
@@ -941,7 +965,7 @@ void sl_zigbee_af_test_harness_channel_mask_add_or_remove_command(sl_cli_command
   } else if (commandChar0 == 'r') {
     testHarnessChannelMask &= ~(1 << channel);
   } else {
-    testHarnessPrintln("Error: Unknown command.");
+    sl_zigbee_af_cli_println("Error: Unknown command.");
   }
 }
 
@@ -957,7 +981,7 @@ void sl_zigbee_af_test_harness_channel_mask_reset_clear_all_command(sl_cli_comma
   } else if (commandChar0 == 'a') {
     testHarnessChannelMask = SL_ZIGBEE_ALL_802_15_4_CHANNELS_MASK;
   } else {
-    testHarnessPrintln("Error: Unknown command.");
+    sl_zigbee_af_cli_println("Error: Unknown command.");
   }
 }
 
@@ -977,7 +1001,7 @@ void sl_zigbee_af_test_harness_enable_disable_endpoint_command(sl_cli_command_ar
                                      : SL_ZIGBEE_EZSP_ENDPOINT_ENABLED));
 #else
   UNUSED_VAR(arguments);
-  testHarnessPrintln("Unsupported on SOC.");
+  sl_zigbee_af_cli_println("Unsupported on SOC.");
 
 #endif
 }
@@ -992,12 +1016,12 @@ void sl_zigbee_af_test_harness_endpoint_status_command(sl_cli_command_arg_t *arg
     uint8_t endpoint = sl_zigbee_af_endpoint_from_index(i);
     sl_zigbee_ezsp_endpoint_flags_t flags;
     sl_zigbee_ezsp_get_endpoint_flags(endpoint, &flags);
-    testHarnessPrintln("EP %d, Flags 0x%04X [%s]",
-                       endpoint,
-                       flags,
-                       ((flags & SL_ZIGBEE_EZSP_ENDPOINT_ENABLED)
-                        ? "Enabled"
-                        : "Disabled"));
+    sl_zigbee_af_cli_println("EP %d, Flags 0x%04X [%s]",
+                             endpoint,
+                             flags,
+                             ((flags & SL_ZIGBEE_EZSP_ENDPOINT_ENABLED)
+                              ? "Enabled"
+                              : "Disabled"));
 #ifdef SL_CATALOG_ZIGBEE_KEY_ESTABLISHMENT_PRESENT
     if (delayedCbkeOperation == CBKE_OPERATION_GENERATE_KEYS) {
       sli_zigbee_af_key_establishment_generate_cbke_keys_handler(SL_STATUS_OK,
@@ -1014,13 +1038,13 @@ void sl_zigbee_af_test_harness_endpoint_status_command(sl_cli_command_arg_t *arg
                                                                    (sl_zigbee_smac_data_t*)delayedData,
                                                                    (sl_zigbee_smac_data_t*)(delayedData + SL_ZIGBEE_SMAC_SIZE));
     } else {
-      testHarnessPrintln("Test Harness Event Handler: Unknown operation 0x%08X", delayedCbkeOperation);
+      sl_zigbee_af_cli_println("Test Harness Event Handler: Unknown operation 0x%08X", delayedCbkeOperation);
     }
 #endif // SL_CATALOG_ZIGBEE_KEY_ESTABLISHMENT_PRESENT
   }
 
 #else
-  testHarnessPrintln("Unsupported on SOC");
+  sl_zigbee_af_cli_println("Unsupported on SOC");
 
 #endif
 }
@@ -1038,13 +1062,13 @@ void sl_zigbee_af_test_harness_cluster_endpoint_index_command(sl_cli_command_arg
                                    ? sl_zigbee_af_find_cluster_client_endpoint_index(endpoint, clusterId)
                                    : sl_zigbee_af_find_cluster_server_endpoint_index(endpoint, clusterId));
 
-  testHarnessPrintln("endpoint: 0x%04X cluster: 0x%04X clusterEndpointIndex: 0x%04X %s",
-                     endpoint,
-                     clusterId,
-                     clusterEndpointIndex,
-                     ((mask == 0)
-                      ? "(client)"
-                      : "(server)"));
+  sl_zigbee_af_cli_println("endpoint: 0x%04X cluster: 0x%04X clusterEndpointIndex: 0x%04X %s",
+                           endpoint,
+                           clusterId,
+                           clusterEndpointIndex,
+                           ((mask == 0)
+                            ? "(client)"
+                            : "(server)"));
 }
 
 void sl_zigbee_af_test_harness_radio_on_off_command(sl_cli_command_arg_t *arguments)
@@ -1070,16 +1094,16 @@ void sl_zigbee_af_test_harness_radio_on_off_command(sl_cli_command_arg_t *argume
     sl_zigbee_zll_set_rx_on_when_idle(0xFFFFFFFF);
 #endif
   }
-  sl_zigbee_app_debug_println("Radio %s status: 0x%02X",
-                              (radioOff ? "OFF" : "ON"),
-                              status);
+  sl_zigbee_af_cli_println("Radio %s status: 0x%02X",
+                           (radioOff ? "OFF" : "ON"),
+                           status);
 }
 
 void sl_zigbee_af_test_harness_set_radio_power(sl_cli_command_arg_t *arguments)
 {
   int8_t val = (int8_t)sl_cli_get_argument_int8(arguments, 0);
   sl_zigbee_set_radio_power(val);
-  sl_zigbee_app_debug_println("radio power %d", val);
+  sl_zigbee_af_cli_println("radio power %d", val);
 }
 
 void sl_zigbee_af_test_harness_get_radio_channel(sl_cli_command_arg_t *arguments)
@@ -1088,9 +1112,9 @@ void sl_zigbee_af_test_harness_get_radio_channel(sl_cli_command_arg_t *arguments
 #ifndef EZSP_HOST
   uint8_t logicalChannel = sl_zigbee_get_radio_channel();
   uint8_t radioChannel = sli_mac_lower_mac_get_radio_channel(PHY_INDEX_NATIVE);
-  sl_zigbee_af_app_println("%s %d %s %d", "Logical channel:", logicalChannel, "Radio channel:", radioChannel);
+  sl_zigbee_af_cli_println("%s %d %s %d", "Logical channel:", logicalChannel, "Radio channel:", radioChannel);
 #else
-  testHarnessPrintln("Not supported on host.");
+  sl_zigbee_af_cli_println("Not supported on host.");
 
 #endif
 }
@@ -1107,7 +1131,7 @@ void sl_zigbee_af_test_harness_add_child_command(sl_cli_command_arg_t *arguments
   nodeType = sl_cli_get_argument_uint16(arguments, 2);
 
   status = sl_zigbee_add_child(shortId, longId, nodeType);
-  sl_zigbee_app_debug_println("status 0x%02X", status);
+  sl_zigbee_af_cli_println("status 0x%02X", status);
 #else
   UNUSED_VAR(arguments);
 #endif
@@ -1123,11 +1147,11 @@ void sl_zigbee_af_test_harness_set_node_descriptor_compliance_revision(SL_CLI_CO
   sl_status_t status;
   status = sl_zigbee_ezsp_set_value(SL_ZIGBEE_EZSP_VALUE_ENABLE_R21_BEHAVIOR, 1, &val);
   if (status == SL_STATUS_OK) {
-    sl_zigbee_app_debug_println("The compliance revision of the device has been changed to R%d (0x%02X)", val, status);
+    sl_zigbee_af_cli_println("The compliance revision of the device has been changed to R%d (0x%02X)", val, status);
   }
 #else
   sli_zigbee_set_stack_compliance_revision(val);
-  sl_zigbee_app_debug_println("The compliance revision of the device has been changed to R%d", val);
+  sl_zigbee_af_cli_println("The compliance revision of the device has been changed to R%d", val);
 #endif
 }
 
@@ -1137,7 +1161,7 @@ void sl_zigbee_af_test_harness_set_max_children(SL_CLI_COMMAND_ARG)
 
   sl_zigbee_set_max_end_device_children(maxChildren);
 
-  sl_zigbee_app_debug_println("Set maximum children to %d", maxChildren);
+  sl_zigbee_af_cli_println("Set maximum children to %d", maxChildren);
 }
 
 void sl_zigbee_af_test_harness_set_neighbor_table_size(SL_CLI_COMMAND_ARG)
@@ -1157,7 +1181,7 @@ void sl_zigbee_af_test_harness_set_neighbor_table_size(SL_CLI_COMMAND_ARG)
 #else
   sli_zigbee_router_neighbor_table_size = neighborTableSize;
 #endif
-  sl_zigbee_app_debug_println("Set neighbor table size to %d", neighborTableSize);
+  sl_zigbee_af_cli_println("Set neighbor table size to %d", neighborTableSize);
 }
 #endif
 
@@ -1172,11 +1196,11 @@ void sl_zigbee_suppress_cluster(sl_cli_command_arg_t *arguments)
 
   char *action = sl_zigbee_af_get_suppress_cluster(clusterId, serverClient) ? "unsuppress" : "suppress";
   sl_zigbee_af_status_t status = sl_zigbee_af_set_suppress_cluster(clusterId, serverClient);
-  sl_zigbee_core_debug_println("%s clstr %d side %d: 0x%02X",
-                               action,
-                               clusterId,
-                               serverClient,
-                               status);
+  sl_zigbee_af_cli_println("%s clstr %d side %d: 0x%02X",
+                           action,
+                           clusterId,
+                           serverClient,
+                           status);
 #else
   UNUSED_VAR(arguments);
 #endif
@@ -1191,12 +1215,12 @@ void sl_zigbee_suppress_command(sl_cli_command_arg_t *arguments)
 
   char *action = sl_zigbee_af_get_suppress_command(clusterId, serverClient, commandId) ? "unsuppress" : "suppress";
   sl_zigbee_af_status_t status = sl_zigbee_af_set_suppress_command(clusterId, serverClient, commandId);
-  sl_zigbee_core_debug_println("%s clstr %d side %d cmd %d: 0x%02X",
-                               action,
-                               clusterId,
-                               serverClient,
-                               commandId,
-                               status);
+  sl_zigbee_af_cli_println("%s clstr %d side %d cmd %d: 0x%02X",
+                           action,
+                           clusterId,
+                           serverClient,
+                           commandId,
+                           status);
 #else
   UNUSED_VAR(arguments);
 #endif

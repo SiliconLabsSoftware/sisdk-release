@@ -23,6 +23,17 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+
+#if defined(BTL_ENFORCE_GLITCH_MITIGATION) && (BTL_ENFORCE_GLITCH_MITIGATION == 1)
+typedef int32_t btl_ret_t;
+#define BTL_TRUE 0xA5C3A5C3
+#define BTL_FALSE 0x5A3C5A3C
+#else
+typedef bool btl_ret_t;
+#define BTL_TRUE 1
+#define BTL_FALSE 0
+#endif
+
 /***************************************************************************//**
  * @addtogroup Core Bootloader Core
  * @{
@@ -109,7 +120,7 @@ bool bootload_checkApplicationPropertiesVersion(void *appProperties);
  *
  * @return True if the image is deemed valid
  ******************************************************************************/
-bool bootload_verifyApplication(uint32_t startAddress);
+btl_ret_t bootload_verifyApplication(uint32_t startAddress);
 
 /***************************************************************************//**
  * Bootloader upgrade callback implementation.
@@ -182,7 +193,7 @@ bool bootload_verifyApplicationVersion(uint32_t appVersion,
  *
  * @return  True if application version is successfully stored.
  ******************************************************************************/
-bool bootload_storeApplicationVersion(uint32_t startAddress);
+btl_ret_t bootload_storeApplicationVersion(uint32_t startAddress);
 
 /***************************************************************************//**
  * Count the total remaining number of application upgrades.

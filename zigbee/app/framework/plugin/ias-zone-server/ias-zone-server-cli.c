@@ -146,19 +146,19 @@ void sl_zigbee_af_ias_zone_server_info_command(sl_cli_command_arg_t *arguments)
                 &zoneType,
                 &zoneState,
                 endpoint);
-  sl_zigbee_af_ias_zone_cluster_print("CIE Address: ");
+  sl_zigbee_af_cli_print("CIE Address: ");
   sl_zigbee_af_print_big_endian_eui64(cieAddress);
-  sl_zigbee_af_ias_zone_cluster_println("");
-  sl_zigbee_af_ias_zone_cluster_println("Zone Type:   0x%04X (%s)",
-                                        zoneType,
-                                        getZoneTypeString(zoneType));
-  sl_zigbee_af_ias_zone_cluster_println("Zone State:  0x%02X   (%s)",
-                                        zoneState,
-                                        getZoneStateString(zoneState));
-  sl_zigbee_af_ias_zone_cluster_println("Zone Status: 0x%04X",
-                                        zoneStatus);
-  sl_zigbee_af_ias_zone_cluster_println("Zone ID:     0x%04X",
-                                        sl_zigbee_af_ias_zone_server_get_zone_id(endpoint));
+  sl_zigbee_af_cli_println("");
+  sl_zigbee_af_cli_println("Zone Type:   0x%04X (%s)",
+                           zoneType,
+                           getZoneTypeString(zoneType));
+  sl_zigbee_af_cli_println("Zone State:  0x%02X   (%s)",
+                           zoneState,
+                           getZoneStateString(zoneState));
+  sl_zigbee_af_cli_println("Zone Status: 0x%04X",
+                           zoneStatus);
+  sl_zigbee_af_cli_println("Zone ID:     0x%04X",
+                           sl_zigbee_af_ias_zone_server_get_zone_id(endpoint));
 }
 
 void sl_zigbee_af_ias_zone_server_change_status_command(sl_cli_command_arg_t *arguments)
@@ -191,7 +191,7 @@ void sl_zigbee_af_ias_zone_server_change_backoff_configuration(sl_cli_command_ar
 
   if (SL_STATUS_INVALID_PARAMETER
       == sl_zigbee_af_ias_zone_server_config_status_queue_retry_params(&retryConfig)) {
-    sl_zigbee_af_ias_zone_cluster_println(
+    sl_zigbee_af_cli_println(
       "Parameter error! Valid parameters: %s, %s, %s %d, %s.",
       "0 < firstBackoff",
       "0 < commonRatio",
@@ -200,7 +200,7 @@ void sl_zigbee_af_ias_zone_server_change_backoff_configuration(sl_cli_command_ar
   }
 #else
   UNUSED_VAR(arguments);
-  sl_zigbee_af_ias_zone_cluster_println("Command error! IAS Zone Server status queue is not enabled");
+  sl_zigbee_af_cli_println("Command error! IAS Zone Server status queue is not enabled");
 #endif
 }
 
@@ -210,7 +210,7 @@ void sl_zigbee_af_ias_zone_server_cli_print_queue(sl_cli_command_arg_t *argument
   sl_zigbee_af_ias_zone_server_print_queue();
 #else
   UNUSED_VAR(arguments);
-  sl_zigbee_af_ias_zone_cluster_println("Command error! IAS Zone Server status queue is not enabled");
+  sl_zigbee_af_cli_println("Command error! IAS Zone Server status queue is not enabled");
 #endif
 }
 
@@ -220,6 +220,6 @@ void sl_zigbee_af_ias_zone_server_cli_print_queue_config(sl_cli_command_arg_t *a
   sl_zigbee_af_ias_zone_server_print_queue_config();
 #else
   UNUSED_VAR(arguments);
-  sl_zigbee_af_ias_zone_cluster_println("Command error! IAS Zone Server status queue is not enabled");
+  sl_zigbee_af_cli_println("Command error! IAS Zone Server status queue is not enabled");
 #endif
 }

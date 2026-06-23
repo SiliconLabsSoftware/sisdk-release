@@ -1,7 +1,7 @@
 id: ot_platform_ext
 label: EFR32 Platform Extension
 package: openthread
-category: OpenThread
+category: OpenThread|Utility|Debug
 quality: production
 description: This component provides extensions to the efr32 OpenThread platform.
 provides:

@@ -1794,6 +1794,18 @@
 
     <table class="outline"><col width="300"><col width="200"><col width="200">
     <tr class="heading">
+    <td><b>Name:</b> radioSetSchedulerPriorities</td><td><b>ID:</b> 0x012B</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Set the current scheduler priorities for radio operations</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b></td></tr>
+
+    <tr><td>sl_802154_radio_priorities_t priorities</td><td colspan="2">The current priorities.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b> None</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
     <td><b>Name:</b> radioGetSchedulerSliptime</td><td><b>ID:</b> 0x012C</td><td></td></tr>
 <tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Get the current multiprotocol sliptime</td></tr>
 
@@ -3161,6 +3173,18 @@ source route at <i>index</i>.</td></tr>
     <tr><td>uint8_t index</td><td colspan="2">The index of a binding table entry.</td></tr>
 
     <tr><td>sl_802154_short_addr_t nodeId</td><td colspan="2">The short ID of the destination node.</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b> None</td></tr>
+</table><br>
+
+    <table class="outline"><col width="300"><col width="200"><col width="200">
+    <tr class="heading">
+    <td><b>Name:</b> clearBindingTableOnLeave</td><td><b>ID:</b> 0x006D</td><td></td></tr>
+<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> When enabled, the stack clears the binding table on definitive leave (not leave-with-rejoin), as required for Zigbee 4.0 security profile (e.g. CN-Reset-TC-01).</td></tr>
+
+    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b></td></tr>
+
+    <tr><td>bool clear</td><td colspan="2">True to clear bindings on leave; false to disable.</td></tr>
 
     <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b> None</td></tr>
 </table><br>
@@ -6195,6 +6219,7 @@ source route at <i>index</i>.</td></tr>
 <tr><td>childJoinHandler</td><td>0x0023</td></tr>
 <tr><td>childPower</td><td>0x0134</td></tr>
 <tr><td>clearBindingTable</td><td>0x002A</td></tr>
+<tr><td>clearBindingTableOnLeave</td><td>0x006D</td></tr>
 <tr><td>clearKeyTable</td><td>0x00B1</td></tr>
 <tr><td>clearMessageFlag</td><td>0x0137</td></tr>
 <tr><td>clearStoredBeacons</td><td>0x003C</td></tr>
@@ -6372,6 +6397,7 @@ source route at <i>index</i>.</td></tr>
 <tr><td>proxyNextBroadcastFromLong</td><td>0x0066</td></tr>
 <tr><td>radioGetSchedulerPriorities</td><td>0x012A</td></tr>
 <tr><td>radioGetSchedulerSliptime</td><td>0x012C</td></tr>
+<tr><td>radioSetSchedulerPriorities</td><td>0x012B</td></tr>
 <tr><td>radioSetSchedulerSliptime</td><td>0x012D</td></tr>
 <tr><td>rawTransmitCompleteHandler</td><td>0x0098</td></tr>
 <tr><td>readAndClearCounters</td><td>0x0065</td></tr>
@@ -6630,7 +6656,7 @@ source route at <i>index</i>.</td></tr>
 <tr><td>0x006A</td><td bgcolor="white">getMaxMacRetries</td></tr>
 <tr><td>0x006B</td><td bgcolor="white">clearTransientLinkKeys</td></tr>
 <tr><td>0x006C</td><td bgcolor="white">updateTcLinkKey</td></tr>
-<tr><td>0x006D</td><td bgcolor="lightgray">-- unassigned --</td></tr>
+<tr><td>0x006D</td><td bgcolor="white">clearBindingTableOnLeave</td></tr>
 <tr><td>0x006E</td><td bgcolor="white">switchNetworkKeyHandler</td></tr>
 <tr><td>0x006F</td><td bgcolor="white">aesMmoHash</td></tr>
 <tr><td>0x0070</td><td bgcolor="white">gpSinkTableInit</td></tr>
@@ -6820,7 +6846,7 @@ source route at <i>index</i>.</td></tr>
 <tr><td>0x0128</td><td bgcolor="white">setIncomingTcLinkKeyFrameCounter</td></tr>
 <tr><td>0x0129</td><td bgcolor="white">apsCryptMessage</td></tr>
 <tr><td>0x012A</td><td bgcolor="white">radioGetSchedulerPriorities</td></tr>
-<tr><td>0x012B</td><td bgcolor="lightgray">-- unassigned --</td></tr>
+<tr><td>0x012B</td><td bgcolor="white">radioSetSchedulerPriorities</td></tr>
 <tr><td>0x012C</td><td bgcolor="white">radioGetSchedulerSliptime</td></tr>
 <tr><td>0x012D</td><td bgcolor="white">radioSetSchedulerSliptime</td></tr>
 <tr><td>0x012E</td><td bgcolor="white">getEndpoint</td></tr>

@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform Security - SoC PSA Crypto DSA
 description: >
-  This example project demonstrates the ECDSA and EdDSA digital signature API for generic and built-in ECC keys.
+  Demonstrates how to sign and verify with the PSA Crypto digital-signature API (ECDSA and EdDSA), using generic and built-in ECC keys.
 category: Example|Platform
 filter:
   - name: "Device Type"

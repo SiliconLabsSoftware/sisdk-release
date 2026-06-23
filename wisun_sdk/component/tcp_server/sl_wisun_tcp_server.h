@@ -40,7 +40,6 @@ extern "C" {
 // -----------------------------------------------------------------------------
 #include <stdint.h>
 
-#include "socket/socket.h"
 #include "sl_wisun_tcp_server_config.h"
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs

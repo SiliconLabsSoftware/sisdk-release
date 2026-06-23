@@ -79,8 +79,14 @@ def concurrent_phy(phy_name,reg_field_list,override_dict=None): #decorator maker
             model = args[1]
             phy = f(*args, **kwargs)
 
+            ## If crystal frequency is defined in wrapped phy model, pass it to conc phy
+            override_dict_updated = override_dict.copy()
+            if model.profile.inputs.xtal_frequency_hz.var_value != None:
+                override_dict_updated['xtal_frequency_hz'] = model.profile.inputs.xtal_frequency_hz.var_value
+
             #Now generate a calculator model for the second (concurrent) PHY
-            concurrent_model = CalcManager(part_family=model.part_family, part_rev=model.part_revision, target=model.target).calculate_phy(phy_name=phy_name,optional_inputs=override_dict)
+            concurrent_model = CalcManager(part_family=model.part_family, part_rev=model.part_revision, target=model.target
+                                           ).calculate_phy(phy_name=phy_name,optional_inputs=override_dict_updated)
 
             #Assign special concurrent PHY variables
             if hasattr(concurrent_model.vars,'min_if_hz'):

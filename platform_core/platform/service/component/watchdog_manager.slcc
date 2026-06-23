@@ -1,0 +1,70 @@
+id: watchdog_manager
+label: Watchdog Manager
+package: platform_core
+description: >
+  Watchdog Manager service provides software watchdog management for monitoring
+  code execution. It manages a hardware watchdog peripheral and provides multiple
+  virtual software watchdogs that can be created, fed, enabled, and disabled
+  independently.
+category: Services|Watch Dog Manager
+quality: evaluation
+metadata:
+  sbom:
+    license: Zlib
+root_path: platform_core/platform/service/watchdog_manager
+config_file:
+- path: config/sl_watchdog_manager_config.h
+source:
+- path: src/sl_watchdog_manager.c
+- path: src/sl_watchdog_manager_hal_wdog.c
+- path: src/sl_watchdog_manager_power.c
+  condition: [power_manager]
+- path: src/sl_watchdog_manager_platform.c
+include:
+- path: inc
+  file_list:
+  - path: sl_watchdog_manager.h
+  - path: sli_watchdog_manager.h
+- path: src
+  file_list:
+  - path: sli_watchdog_manager_hal.h
+provides:
+- name: watchdog_manager
+requires:
+- name: status
+- name: hal_wdog
+- name: hal_emu
+- name: clock_manager_runtime
+- name: sl_core
+- name: device
+- name: device_has_wdog
+template_contribution:
+- name: event_handler
+  value:
+    event: service_init
+    include: sl_watchdog_manager.h
+    handler: sl_watchdog_manager_init
+  priority: -9500
+- name: event_handler
+  value:
+    event: service_init
+    include: sli_watchdog_manager.h
+    handler: sli_watchdog_manager_platform_init
+  priority: -9450
+- name: event_handler
+  value:
+    event: service_init
+    include: sl_watchdog_manager.h
+    handler: sl_watchdog_manager_start
+  priority: -9400
+- name: event_handler
+  value:
+    event: service_process_action
+    include: sli_watchdog_manager.h
+    handler: sli_watchdog_manager_platform_feed
+  condition: ["!kernel"]
+- name: component_catalog
+  value: watchdog_manager
+documentation:
+  docset: gecko-platform
+  document: service/watchdog_manager

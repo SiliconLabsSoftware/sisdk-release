@@ -31,8 +31,8 @@
  *   This file includes definitions for the message buffer pool and message buffers.
  */
 
-#ifndef MESSAGE_HPP_
-#define MESSAGE_HPP_
+#ifndef OT_CORE_COMMON_MESSAGE_HPP_
+#define OT_CORE_COMMON_MESSAGE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -70,6 +70,7 @@ struct otMessage
 
 namespace ot {
 
+class UnitTester;
 template <typename UintType> class CrcCalculator;
 
 namespace Crypto {
@@ -153,6 +154,15 @@ enum LinkSecurityMode : bool
 {
     kNoLinkSecurity   = false, ///< Link security disabled (no link security).
     kWithLinkSecurity = true,  ///< Link security enabled.
+};
+
+/**
+ * Represents the clone mode indicating how the reserved header should be configured on the cloned message.
+ */
+enum CloneMode : uint8_t
+{
+    kNoReservedHeader,  ///< The clone message will have no reserved header.
+    kSameReservedHeader ///< The clone message will have the same reserved header size as the original `Message`.
 };
 
 /**
@@ -286,6 +296,7 @@ class Message : public otMessage, public Buffer, public GetProvider<Message>
     friend class MessagePool;
     friend class MessageQueue;
     friend class PriorityQueue;
+    friend class ot::UnitTester;
 
 public:
     /**
@@ -465,7 +476,7 @@ public:
      * @returns A reference to the `Instance`.
      */
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    Instance &GetInstance(void) const { return *GetMetadata().mInstance; }
+    Instance &GetInstance(void) const { return *UpdateActiveInstance(GetMetadata().mInstance); }
 #else
     Instance &GetInstance(void) const { return GetSingleInstance(); }
 #endif
@@ -500,6 +511,16 @@ public:
     Error SetLength(uint16_t aLength);
 
     /**
+     * Increases the message length by a given number of bytes.
+     *
+     * @param[in]  aSize     The number of bytes to increase the message length by.
+     *
+     * @retval kErrorNone    Successfully increased the length of the message.
+     * @retval kErrorNoBufs  Failed to allocate new buffers to grow the message.
+     */
+    Error IncreaseLength(uint16_t aSize);
+
+    /**
      * Returns the number of buffers in the message.
      */
     uint8_t GetBufferCount(void) const;
@@ -516,7 +537,7 @@ public:
      *
      * @param[in]  aDelta  The number of bytes to move the current offset, which may be positive or negative.
      */
-    void MoveOffset(int aDelta);
+    void MoveOffset(int16_t aDelta);
 
     /**
      * Sets the byte offset within the message.
@@ -524,6 +545,13 @@ public:
      * @param[in]  aOffset  The byte offset within the message.
      */
     void SetOffset(uint16_t aOffset);
+
+    /**
+     * Determines the length (number of bytes) in the message from the current message offset to the end of the message.
+     *
+     * @return Number of bytes in the message starting from the current message offset to the end of the message.
+     */
+    uint16_t DetermineLengthAfterOffset(void) const;
 
     /**
      * Returns the type of the message.
@@ -916,6 +944,34 @@ public:
     }
 
     /**
+     * Reads a given number of bytes from the message at the current message offset and advances the message offset.
+     *
+     * @param[out] aBuf     A pointer to a data buffer to copy the read bytes into.
+     * @param[in]  aLength  Number of bytes to read.
+     *
+     * @retval kErrorNone     Requested bytes were successfully read from message. Message offset is advanced.
+     * @retval kErrorParse    Not enough bytes remaining to read the requested @p aLength. Message offset is unchanged.
+     */
+    Error ReadAtAndAdvanceOffset(void *aBuf, uint16_t aLength);
+
+    /**
+     * Reads an object from the message at the current message offset and advances the message offset.
+     *
+     * @tparam     ObjectType   The object type to read from the message.
+     *
+     * @param[out] aObject      A reference to the object to read into.
+     *
+     * @retval kErrorNone     Object @p aObject was successfully read from message. Message offset is advanced.
+     * @retval kErrorParse    Not enough bytes remaining in message to read the entire object. Offset is unchanged.
+     */
+    template <typename ObjectType> Error ReadAtAndAdvanceOffset(ObjectType &aObject)
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+        return ReadAtAndAdvanceOffset(&aObject, sizeof(ObjectType));
+    }
+
+    /**
      * Compares the bytes in the message at a given offset with a given byte array.
      *
      * If there are fewer bytes available in the message than the requested @p aLength, the comparison is treated as
@@ -1053,28 +1109,42 @@ public:
     }
 
     /**
-     * Creates a copy of the message.
+     * Creates a copy of the message using a given configuration.
      *
-     * It allocates the new message from the same message pool as the original one and copies @p aLength octets
-     * of the payload. The `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the
-     * cloned message are also copied from the original one.
+     * The `Type`, `SubType`, `LinkSecurity`, `Offset`, `Priority`, `LoopbackToHostAllowed`, `Origin`, `Timestamp`,
+     * `MeshDest`, `PanId`, `Channel`, `RssAverager`, `LqiAverager`, and `TimeSync` fields on the cloned message are
+     * also copied from the original one.
      *
-     * @param[in] aLength  Number of payload bytes to copy.
+     * @param[in] aLength         Number of message bytes to copy.
+     * @param[in] aReserveHeader  Number of header bytes to reserve in the new cloned message.
      *
-     * @returns A pointer to the message or nullptr if insufficient message buffers are available.
+     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      */
-    Message *Clone(uint16_t aLength) const;
+    Message *Clone(uint16_t aLength, uint16_t aReserveHeader) const;
 
     /**
      * Creates a copy of the message.
      *
-     * It allocates the new message from the same message pool as the original one and copies the entire payload. The
-     * `Type`, `SubType`, `LinkSecurity`, `Offset`, `InterfaceId`, and `Priority` fields on the cloned message are also
-     * copied from the original one.
+     * @tparam kMode Specifies the clone mode (whether to keep the same reserved header size or have none).
+     *
+     * See the non-templated `Clone()` method for details on which message fields are also copied.
      *
      * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
      */
-    Message *Clone(void) const { return Clone(GetLength()); }
+    template <CloneMode kMode> Message *Clone(void) const;
+
+    /**
+     * Creates a copy of the message.
+     *
+     * @tparam kMode Specifies the clone mode (whether to keep the same reserved header size or have none).
+     *
+     * See the non-templated `Clone()` method for details on which message fields are also copied.
+     *
+     * @param[in] aLength  Number of message bytes to copy.
+     *
+     * @returns A pointer to the message or `nullptr` if insufficient message buffers are available.
+     */
+    template <CloneMode kMode> Message *Clone(uint16_t aLength) const;
 
     /**
      * Returns the datagram tag used for 6LoWPAN fragmentation or the identification used for IPv6
@@ -1662,6 +1732,15 @@ public:
     void DequeueAndFreeAll(void);
 
     /**
+     * Enqueues all messages from another message queue at the end of this queue.
+     *
+     * Upon return, @p aOtherQueue will be empty.
+     *
+     * @param[in,out] aOtherQueue  The other message queue to enqueue from.
+     */
+    void EnqueueAllFrom(MessageQueue &aOtherQueue);
+
+    /**
      * Gets the information about number of messages and buffers in the queue.
      *
      * @param[out] aInfo  A reference to `Info` structure to update.
@@ -1849,6 +1928,13 @@ public:
      */
     explicit MessagePool(Instance &aInstance);
 
+#if OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
+    /**
+     * Tears down the object and releases platform managed resources.
+     */
+    ~MessagePool(void);
+#endif
+
     /**
      * Allocates a new message with specified settings.
      *
@@ -1929,6 +2015,12 @@ private:
     uint16_t mMaxAllocated;
 };
 
+// Declare specializations of `Message::Clone<CloneMode>()` (implemented in `message.cpp`).
+template <> Message *Message::Clone<kNoReservedHeader>(void) const;
+template <> Message *Message::Clone<kSameReservedHeader>(void) const;
+template <> Message *Message::Clone<kNoReservedHeader>(uint16_t aLength) const;
+template <> Message *Message::Clone<kSameReservedHeader>(uint16_t aLength) const;
+
 /**
  * @}
  */
@@ -1942,4 +2034,4 @@ DefineMapEnum(otMessageOrigin, Message::Origin);
 
 } // namespace ot
 
-#endif // MESSAGE_HPP_
+#endif // OT_CORE_COMMON_MESSAGE_HPP_

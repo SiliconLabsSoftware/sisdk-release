@@ -119,7 +119,7 @@ void setNetworkConfiguration(void)
     memset(&aDataset, 0, sizeof(otOperationalDataset));
 
     /*
-     * Fields that can be configured in otOperationDataset to override defaults:
+     * Fields that can be configured in otOperationalDataset to override defaults:
      *     Network Name, Mesh Local Prefix, Extended PAN ID, PAN ID, Delay Timer,
      *     Channel, Channel Mask Page 0, Network Key, PSKc, Security Policy
      */

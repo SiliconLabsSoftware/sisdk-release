@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
-"""
-ESL Library Tester
+"""Integration tests for the ESL host library (``Lib``).
+
+Runs API and multi-connection scenarios in a background thread. The AP /
+external-controller flow (smartphone peer app) runs only when ``--test-external-controller``
+or ``-ec`` is passed on the command line; those tokens are not forwarded to ``Lib``.
+
+Run with ``-h`` / ``--help`` (or no arguments) for a usage summary.
 """
 # Copyright 2023 Silicon Laboratories Inc. www.silabs.com
 #
@@ -26,6 +31,7 @@ ESL Library Tester
 import os
 import queue
 import sys
+import textwrap
 import threading
 import time
 from esl_lib import *
@@ -35,13 +41,130 @@ import datetime
 from ap_constants import ESL_IMAGE_FLAGS_FORMAT_LZJB
 from air_compressor import AirCompressor
 
+_SCRIPT_BASENAME = os.path.basename(__file__)
+# Hyphenated "nickname" derived from the script file name (e.g. esl_lib_test.py -> esl-lib-test).
+APP_DISPLAY_NAME = os.path.splitext(_SCRIPT_BASENAME)[0].replace("_", "-")
+
+# CLI tokens consumed by this script (not passed through to ``Lib``).
+_EXTERNAL_CONTROLLER_CLI_FLAGS = frozenset(
+    ("--test-external-controller", "-ec"),
+)
+_HELP_FLAGS = frozenset(("-h", "--help"))
+
+# Keys accepted by ``esl_lib`` / ``simple_argparse`` (see ``esl_lib_core.c`` ``arg_descriptor``).
+_LIB_FLAGS_NO_VALUE = frozenset(("-secure",))
+_LIB_FLAG_VALUES = {
+    "-connection": frozenset(("ip", "serial")),
+    "-device": None,  # opaque string; must not look like another flag (``-...``)
+    "-baud": frozenset(("115200", "921600")),
+    "-handshake": frozenset(("no", "ctsrts", "hw")),
+}
+
+
+def _parse_cli_argv(argv):
+    """Return ``(lib_argv, run_external_controller_test)``; strip script-only flags."""
+    run_external = any(a in _EXTERNAL_CONTROLLER_CLI_FLAGS for a in argv)
+    lib_argv = [
+        a
+        for a in argv
+        if a not in _EXTERNAL_CONTROLLER_CLI_FLAGS and a not in _HELP_FLAGS
+    ]
+    return lib_argv, run_external
+
+
+def _validate_lib_config_argv(argv):
+    """Return ``(ok, err_msg)`` for tokens passed through to ``Lib`` (``esl_lib_start``)."""
+    if not argv:
+        return (
+            False,
+            "Missing ESL library configuration (need at least -connection and -device).",
+        )
+    i = 0
+    n = len(argv)
+    known = _LIB_FLAG_VALUES.keys() | _LIB_FLAGS_NO_VALUE
+    while i < n:
+        tok = argv[i]
+        if not tok.startswith("-"):
+            return False, f"Expected a library flag starting with '-', got {tok!r}."
+        if tok not in known:
+            return False, f"Unknown library option {tok!r}."
+        if tok in _LIB_FLAGS_NO_VALUE:
+            i += 1
+            continue
+        if i + 1 >= n:
+            return False, f"Missing value after {tok!r}."
+        val = argv[i + 1]
+        if val.startswith("-"):
+            return False, f"Missing value after {tok!r} (next token is {val!r})."
+        allowed = _LIB_FLAG_VALUES[tok]
+        if allowed is not None and val not in allowed:
+            return False, f"Invalid value for {tok!r}: {val!r}."
+        i += 2
+
+    if "-connection" in argv and "-device" in argv:
+        if argv.index("-device") < argv.index("-connection"):
+            return (
+                False,
+                "-device must appear after -connection in the argument list "
+                "(the stack reads options in that order).",
+            )
+    return True, None
+
+
+def _usage_text():
+    """Return the full CLI usage message (multiline)."""
+    return textwrap.dedent(
+        f"""\
+        {APP_DISPLAY_NAME} - ESL host library integration tests (script: {_SCRIPT_BASENAME})
+
+        Usage:
+          python {_SCRIPT_BASENAME} <esl_lib options...> [--test-external-controller | -ec]
+          python {_SCRIPT_BASENAME} -h | --help
+
+        Script-only options (removed before starting ``Lib``; not in ``esl_lib_core``):
+          -ec, --test-external-controller   Also run the smartphone peer / AP controller test.
+          -h, --help                        Print this message and exit successfully.
+
+        ESL library configuration (passed to ``esl_lib_start()`` as one string):
+          All remaining tokens are joined with spaces, in order, and handed to the native
+          parser (``simple_argparse`` in ``esl_lib``). Each entry is ``-name value`` except
+          ``-secure``, which is a flag without a value. Valid names match ``arg_descriptor``
+          in ``esl_lib_core.c``:
+
+          -connection ip | serial
+              NCP transport: TCP/IP or serial UART.
+          -device <string>
+              For serial: COM port (``COM12``) or device path (``/dev/ttyUSB0``).
+              For ip: address and port as required by the NCP host (often ``host:port``).
+          -baud 115200 | 921600
+              UART speed (serial only).
+          -handshake no | ctsrts | hw
+              UART flow control (serial only; only ``no`` is forwarded by current core code).
+          -secure
+              Request encrypted NCP when supported.
+
+          Put ``-connection`` before ``-device`` so the transport type is known when the
+          device string is applied. Avoid spaces inside a single value (the C tokenizer
+          also splits on comma, colon, equals, and space).
+
+        Examples:
+          python {_SCRIPT_BASENAME} -connection serial -device COM5 -baud 115200 -handshake no
+          python {_SCRIPT_BASENAME} -connection ip -device 127.0.0.1:12345 -ec
+        """
+    )
+
 
 class LibTest(threading.Thread):
+    """Background harness that drives ``Lib`` through automated test sequences."""
 
-    """Tester class"""
+    def __init__(self, config, run_external_controller_test=False):
+        """Initialize tester state and open ``Lib`` with *config*.
 
-    def __init__(self, config):
+        If *run_external_controller_test* is true, ``run`` also executes the
+        smartphone peer / AP controller test (long waits).
+        """
         super().__init__(daemon=True)
+        self.run_external_controller_test = run_external_controller_test
         self.event_handlers = []
         self.address_list = []
         self.rssi_threshold = -200
@@ -56,7 +179,7 @@ class LibTest(threading.Thread):
         self.lib = Lib(config)
 
     def wait_event(self, event_type, timeout=10, func=None):
-        """Wait until specific event arrives"""
+        """Block until an event of *event_type* is received (optionally filtered by *func*)."""
         evt_prev = None
         timeout_abs = time.time() + timeout
 
@@ -98,15 +221,20 @@ class LibTest(threading.Thread):
                 raise Exception(f"Error: wait {event_type.__name__} timeout") from err
 
     def run(self):
-        """Auto tester logic"""
+        """Execute API and multi-connection tests; optional external controller test."""
         try:
             self.wait_event(EventSystemBoot)
             print("******************************************** API TEST ********************************************")
             self.test_api()
             print("************************************** MULTICONNECTION TEST **************************************")
             self.test_multiconnection()
-            print("***************************************** AP CONTR. TEST *****************************************")
-            self.test_ap_control()
+            if self.run_external_controller_test:
+                print("***************************************** AP CONTR. TEST *****************************************")
+                self.test_ap_control()
+            else:
+                print(
+                    "****************** AP CONTR. TEST skipped (use --test-external-controller or -ec) ******************"
+                )
             print("**************************************************************************************************")
             self.lib.stop()
             print("Test finished successfully")
@@ -118,12 +246,15 @@ class LibTest(threading.Thread):
             print(err)
 
     def add_event_handler(self, event_handler_func):
+        """Append *event_handler_func* to the per-event dispatch list."""
         self.event_handlers.append(event_handler_func)
 
     def remove_event_handler(self, event_handler_func):
+        """Remove *event_handler_func* from the dispatch list."""
         self.event_handlers.remove(event_handler_func)
 
     def disconnect_handler(self, evt):
+        """Handle ``EventConnectionClosed`` by pruning local connection state."""
         if isinstance(evt, EventConnectionClosed):
             for conn in self.connection_list:
                 if conn.connection_handle == evt.connection_handle:
@@ -134,7 +265,7 @@ class LibTest(threading.Thread):
         return False
 
     def test_multiconnection(self):
-        """Test sequence for multiconnection"""
+        """Run the multi-tag connect, image, PAwR, reconnect, and unassociate flow."""
 
         sync_key = bytes.fromhex("5ba4a65cae2fac6d725888c7795b82608c4bd1a769756482")
         response_key = bytes.fromhex("e3637ad2aab72e59131e0b21e03230edce44a2e93dfecdb1")
@@ -346,7 +477,7 @@ class LibTest(threading.Thread):
             print("Time to set PAwR data")
             self.wait_event(EventPawrResponse, 5)
 
-        # Connect again throug PAwR
+        # Connect again through PAwR
         print(f"Reconnecting to {tag_count} tags.")
         pawr_subevent = PAWRSubevent(pawr_handle, 0)
         for address in self.address_list:
@@ -416,7 +547,7 @@ class LibTest(threading.Thread):
         print("-----------------------------------------")
 
     def test_api(self):
-        """Test sequence for public API"""
+        """Exercise public ``Lib`` APIs on a single discovered tag."""
         pawr_handle = self.lib.pawr_create()
         print(f"{pawr_handle:#x}")
         self.lib.pawr_configure(pawr_handle)
@@ -524,7 +655,7 @@ class LibTest(threading.Thread):
             )
             print("Time to set PAwR data")
             self.wait_event(EventPawrResponse, 5)
-        # Connect again throug PAwR
+        # Connect again through PAwR
         pawr_subevent = PAWRSubevent(pawr_handle, 0)
         print(
             f"Reconnect to {tag_found.address} using {pawr_subevent} and key {bonding_data.ltk}"
@@ -552,7 +683,7 @@ class LibTest(threading.Thread):
         self.lib.pawr_remove(pawr_handle)
 
     def test_ap_control(self):
-        """Test sequence for AP control"""
+        """Drive vendor ``general_command`` paths; requires a smartphone peer (opt-in via CLI)."""
         # Enable advertising
         self.lib.general_command(101, b"\x01")
         print("wait for client to connect")
@@ -572,13 +703,30 @@ class LibTest(threading.Thread):
         self.wait_event(EventGeneral, 120)
 
 
-def test(args):
-    """Test main entry point"""
+def test(args, run_external_controller_test=False):
+    """Configure logging and run ``LibTest`` with *args* as the ``Lib`` config string.
+
+    Set *run_external_controller_test* to run the peer-app controller sequence.
+    """
     ap_logger.level = ap_logger.LEVELS["DEBUG"]
-    lib = LibTest(" ".join(args))
+    lib = LibTest(
+        " ".join(args),
+        run_external_controller_test=run_external_controller_test,
+    )
     lib.run()
 
 
 if __name__ == "__main__":
+    argv = sys.argv[1:]
+    if any(a in _HELP_FLAGS for a in argv):
+        print(_usage_text(), end="")
+        sys.exit(0)
+    lib_argv, run_ec = _parse_cli_argv(argv)
+    ok, err = _validate_lib_config_argv(lib_argv)
+    if not ok:
+        print(err, file=sys.stderr)
+        print(file=sys.stderr)
+        print(_usage_text(), end="", file=sys.stderr)
+        sys.exit(2)
     print("main pid:", os.getpid())
-    test(sys.argv[1:])
+    test(lib_argv, run_external_controller_test=run_ec)

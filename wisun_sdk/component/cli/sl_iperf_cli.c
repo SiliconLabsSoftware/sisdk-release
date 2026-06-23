@@ -37,6 +37,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 #include "sl_string.h"
 #include "sl_cli.h"
@@ -855,7 +856,7 @@ __STATIC_INLINE void _opt_bandwidth_setter(void *val)
 
 __STATIC_INLINE const char *_opt_bandwidth_getter(void)
 {
-  __prepare_getter_buff("%lu", _options.bandwidth);
+  __prepare_getter_buff("%"PRIu32, _options.bandwidth);
 }
 
 // packet number

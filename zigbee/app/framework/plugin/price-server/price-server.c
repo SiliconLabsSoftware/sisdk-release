@@ -285,52 +285,52 @@ bool sl_zigbee_af_get_current_price(uint8_t endpoint, sl_zigbee_af_scheduled_pri
 
 void sl_zigbee_af_price_print(const sl_zigbee_af_scheduled_price_t *price)
 {
-  sl_zigbee_af_price_cluster_print("  label: ");
-  sl_zigbee_af_price_cluster_print_string(price->rateLabel);
+  sl_zigbee_af_cli_print("  label: ");
+  sl_zigbee_af_cli_print_string(price->rateLabel);
 
-  sl_zigbee_af_price_cluster_print("(%02X)\r\n  uom/cur: 0x%02X/0x%04X"
-                                   "\r\n  pid/eid: 0x%08X/0x%08X"
-                                   "\r\n  ct/st/dur: 0x%08X/0x%08X/",
-                                   sl_zigbee_af_string_length(price->rateLabel),
-                                   price->unitOfMeasure,
-                                   price->currency,
-                                   price->providerId,
-                                   price->issuerEventID,
-                                   sl_zigbee_af_get_current_time(),
-                                   price->startTime);
+  sl_zigbee_af_cli_print("(%02X)\r\n  uom/cur: 0x%02X/0x%04X"
+                         "\r\n  pid/eid: 0x%08X/0x%08X"
+                         "\r\n  ct/st/dur: 0x%08X/0x%08X/",
+                         sl_zigbee_af_string_length(price->rateLabel),
+                         price->unitOfMeasure,
+                         price->currency,
+                         price->providerId,
+                         price->issuerEventID,
+                         sl_zigbee_af_get_current_time(),
+                         price->startTime);
   if (price->duration == ZCL_PRICE_CLUSTER_DURATION16_UNTIL_CHANGED) {
-    sl_zigbee_af_price_cluster_print("INF");
+    sl_zigbee_af_cli_print("INF");
   } else {
-    sl_zigbee_af_price_cluster_print("0x%04X", price->duration);
+    sl_zigbee_af_cli_print("0x%04X", price->duration);
   }
-  sl_zigbee_af_price_cluster_flush();
-  sl_zigbee_af_price_cluster_println("\r\n  ptdt/ptrt: 0x%02X/0x%02X"
-                                     "\r\n  p/pr: 0x%08X/0x%02X"
-                                     "\r\n  gp/gpr: 0x%08X/0x%02X"
-                                     "\r\n  acd/acu/actd: 0x%08X/0x%02X/0x%02X",
-                                     price->priceTrailingDigitAndTier,
-                                     price->numberOfPriceTiersAndTier,
-                                     price->price,
-                                     price->priceRatio,
-                                     price->generationPrice,
-                                     price->generationPriceRatio,
-                                     price->alternateCostDelivered,
-                                     price->alternateCostUnit,
-                                     price->alternateCostTrailingDigit);
-  sl_zigbee_af_price_cluster_flush();
-  sl_zigbee_af_price_cluster_println("  nobt: 0x%02X", price->numberOfBlockThresholds);
-  sl_zigbee_af_price_cluster_println("  pc: 0x%02X",
-                                     (price->priceControl
-                                      & ZCL_PRICE_CLUSTER_RESERVED_MASK));
-  sl_zigbee_af_price_cluster_print("  price is valid from time 0x%08X until ",
-                                   price->startTime);
+  sl_zigbee_af_cli_flush();
+  sl_zigbee_af_cli_println("\r\n  ptdt/ptrt: 0x%02X/0x%02X"
+                           "\r\n  p/pr: 0x%08X/0x%02X"
+                           "\r\n  gp/gpr: 0x%08X/0x%02X"
+                           "\r\n  acd/acu/actd: 0x%08X/0x%02X/0x%02X",
+                           price->priceTrailingDigitAndTier,
+                           price->numberOfPriceTiersAndTier,
+                           price->price,
+                           price->priceRatio,
+                           price->generationPrice,
+                           price->generationPriceRatio,
+                           price->alternateCostDelivered,
+                           price->alternateCostUnit,
+                           price->alternateCostTrailingDigit);
+  sl_zigbee_af_cli_flush();
+  sl_zigbee_af_cli_println("  nobt: 0x%02X", price->numberOfBlockThresholds);
+  sl_zigbee_af_cli_println("  pc: 0x%02X",
+                           (price->priceControl
+                            & ZCL_PRICE_CLUSTER_RESERVED_MASK));
+  sl_zigbee_af_cli_print("  price is valid from time 0x%08X until ",
+                         price->startTime);
   if (price->duration == ZCL_PRICE_CLUSTER_DURATION16_UNTIL_CHANGED) {
-    sl_zigbee_af_price_cluster_println("eternity");
+    sl_zigbee_af_cli_println("eternity");
   } else {
-    sl_zigbee_af_price_cluster_println("0x%08X",
-                                       (price->startTime + (price->duration * 60)));
+    sl_zigbee_af_cli_println("0x%08X",
+                             (price->startTime + (price->duration * 60)));
   }
-  sl_zigbee_af_price_cluster_flush();
+  sl_zigbee_af_cli_flush();
 }
 
 void sl_zigbee_af_price_print_price_table(uint8_t endpoint)
@@ -343,20 +343,20 @@ void sl_zigbee_af_price_print_price_table(uint8_t endpoint)
     return;
   }
 
-  sl_zigbee_af_price_cluster_flush();
-  sl_zigbee_af_price_cluster_println("Configured Prices: (total %02X, curr index %02X)",
-                                     scheduledPriceCount(endpoint, 0),
-                                     currPriceIndex);
-  sl_zigbee_af_price_cluster_flush();
-  sl_zigbee_af_price_cluster_println("  Note: ALL values given in HEX\r\n");
-  sl_zigbee_af_price_cluster_flush();
+  sl_zigbee_af_cli_flush();
+  sl_zigbee_af_cli_println("Configured Prices: (total %02X, curr index %02X)",
+                           scheduledPriceCount(endpoint, 0),
+                           currPriceIndex);
+  sl_zigbee_af_cli_flush();
+  sl_zigbee_af_cli_println("  Note: ALL values given in HEX\r\n");
+  sl_zigbee_af_cli_flush();
   for (i = 0; i < SL_ZIGBEE_AF_PLUGIN_PRICE_SERVER_PRICE_TABLE_SIZE; i++) {
     if (!priceIsValid(&priceTable[ep][i])) {
       continue;
     }
-    sl_zigbee_af_price_cluster_println("= PRICE %02X =%s",
-                                       i,
-                                       (i == currPriceIndex ? " (Current Price)" : ""));
+    sl_zigbee_af_cli_println("= PRICE %02X =%s",
+                             i,
+                             (i == currPriceIndex ? " (Current Price)" : ""));
     sl_zigbee_af_price_print(&priceTable[ep][i]);
   }
 }
@@ -368,7 +368,7 @@ void sl_zigbee_af_print_billing_period_table(uint8_t endpoint)
   sl_zigbee_af_price_common_info_t * curInfo = NULL;
   sl_zigbee_af_price_billing_period_t * billingPeriod = NULL;
 
-  sl_zigbee_af_price_cluster_println("= Billing Periods =");
+  sl_zigbee_af_cli_println("= Billing Periods =");
   if (ep == ZCL_PRICE_INVALID_ENDPOINT_INDEX) {
     return;
   }
@@ -376,13 +376,13 @@ void sl_zigbee_af_print_billing_period_table(uint8_t endpoint)
     curInfo = &priceServerInfo.billingPeriodTable.commonInfos[ep][i];
     billingPeriod = &priceServerInfo.billingPeriodTable.billingPeriods[ep][i];
 
-    sl_zigbee_af_price_cluster_println("  [%d]: valid: 0x%02X", i, curInfo->valid);
-    sl_zigbee_af_price_cluster_println("  [%d]: startTime: 0x%08X", i, curInfo->startTime);
-    sl_zigbee_af_price_cluster_println("  [%d]: issuerEventId: 0x%08X", i, curInfo->issuerEventId);
-    sl_zigbee_af_price_cluster_println("  [%d]: providerId: 0x%08X", i, billingPeriod->providerId);
-    sl_zigbee_af_price_cluster_println("  [%d]: billingPeriodDuration: 0x%08X", i, billingPeriod->billingPeriodDuration);
-    sl_zigbee_af_price_cluster_println("  [%d]: billingPeriodDurationType: 0x%02X", i, billingPeriod->billingPeriodDurationType);
-    sl_zigbee_af_price_cluster_println("  [%d]: tariffType: 0x%02X", i, billingPeriod->tariffType);
+    sl_zigbee_af_cli_println("  [%d]: valid: 0x%02X", i, curInfo->valid);
+    sl_zigbee_af_cli_println("  [%d]: startTime: 0x%08X", i, curInfo->startTime);
+    sl_zigbee_af_cli_println("  [%d]: issuerEventId: 0x%08X", i, curInfo->issuerEventId);
+    sl_zigbee_af_cli_println("  [%d]: providerId: 0x%08X", i, billingPeriod->providerId);
+    sl_zigbee_af_cli_println("  [%d]: billingPeriodDuration: 0x%08X", i, billingPeriod->billingPeriodDuration);
+    sl_zigbee_af_cli_println("  [%d]: billingPeriodDurationType: 0x%02X", i, billingPeriod->billingPeriodDurationType);
+    sl_zigbee_af_cli_println("  [%d]: tariffType: 0x%02X", i, billingPeriod->tariffType);
   }
 }
 
@@ -392,21 +392,21 @@ void sl_zigbee_af_print_consolidated_bill_table_entry(uint8_t endpoint, uint8_t 
   if (ep == ZCL_PRICE_INVALID_ENDPOINT_INDEX) {
     return;
   }
-  sl_zigbee_af_price_cluster_println("= Consolidated Bill Table[%d] =", index);
+  sl_zigbee_af_cli_println("= Consolidated Bill Table[%d] =", index);
   //uint8_t i = 0;
   //for ( i=0; i<SL_ZIGBEE_AF_PLUGIN_PRICE_SERVER_BILLING_PERIOD_TABLE_SIZE; i++){
   if ( index < SL_ZIGBEE_AF_PLUGIN_PRICE_SERVER_CONSOLIDATED_BILL_TABLE_SIZE ) {
-    sl_zigbee_af_price_cluster_println("  [%d]: valid: 0x%02X", index, priceServerInfo.consolidatedBillsTable.commonInfos[ep][index].valid);
-    sl_zigbee_af_price_cluster_println("  [%d]: providerId: 0x%08X", index, priceServerInfo.consolidatedBillsTable.consolidatedBills[ep][index].providerId);
-    sl_zigbee_af_price_cluster_println("  [%d]: issuerEventId: 0x%02X", index, priceServerInfo.consolidatedBillsTable.commonInfos[ep][index].issuerEventId);
-    sl_zigbee_af_price_cluster_println("  [%d]: startTime: 0x%08X", index, priceServerInfo.consolidatedBillsTable.commonInfos[ep][index].startTime);
-    sl_zigbee_af_price_cluster_println("  [%d]: duration (sec): 0x%08X", index, priceServerInfo.consolidatedBillsTable.commonInfos[ep][index].durationSec);
-    sl_zigbee_af_price_cluster_println("  [%d]: billingPeriodDuration: 0x%08X", index, priceServerInfo.consolidatedBillsTable.consolidatedBills[ep][index].billingPeriodDuration);
-    sl_zigbee_af_price_cluster_println("  [%d]: billingPeriodType: 0x%02X", index, priceServerInfo.consolidatedBillsTable.consolidatedBills[ep][index].billingPeriodDurationType);
-    sl_zigbee_af_price_cluster_println("  [%d]: tariffType: 0x%02X", index, priceServerInfo.consolidatedBillsTable.consolidatedBills[ep][index].tariffType);
-    sl_zigbee_af_price_cluster_println("  [%d]: consolidatedBill: 0x%02X", index, priceServerInfo.consolidatedBillsTable.consolidatedBills[ep][index].consolidatedBill);
-    sl_zigbee_af_price_cluster_println("  [%d]: currency: 0x%02X", index, priceServerInfo.consolidatedBillsTable.consolidatedBills[ep][index].currency);
-    sl_zigbee_af_price_cluster_println("  [%d]: billTrailingDigit: 0x%02X", index, priceServerInfo.consolidatedBillsTable.consolidatedBills[ep][index].billTrailingDigit);
+    sl_zigbee_af_cli_println("  [%d]: valid: 0x%02X", index, priceServerInfo.consolidatedBillsTable.commonInfos[ep][index].valid);
+    sl_zigbee_af_cli_println("  [%d]: providerId: 0x%08X", index, priceServerInfo.consolidatedBillsTable.consolidatedBills[ep][index].providerId);
+    sl_zigbee_af_cli_println("  [%d]: issuerEventId: 0x%02X", index, priceServerInfo.consolidatedBillsTable.commonInfos[ep][index].issuerEventId);
+    sl_zigbee_af_cli_println("  [%d]: startTime: 0x%08X", index, priceServerInfo.consolidatedBillsTable.commonInfos[ep][index].startTime);
+    sl_zigbee_af_cli_println("  [%d]: duration (sec): 0x%08X", index, priceServerInfo.consolidatedBillsTable.commonInfos[ep][index].durationSec);
+    sl_zigbee_af_cli_println("  [%d]: billingPeriodDuration: 0x%08X", index, priceServerInfo.consolidatedBillsTable.consolidatedBills[ep][index].billingPeriodDuration);
+    sl_zigbee_af_cli_println("  [%d]: billingPeriodType: 0x%02X", index, priceServerInfo.consolidatedBillsTable.consolidatedBills[ep][index].billingPeriodDurationType);
+    sl_zigbee_af_cli_println("  [%d]: tariffType: 0x%02X", index, priceServerInfo.consolidatedBillsTable.consolidatedBills[ep][index].tariffType);
+    sl_zigbee_af_cli_println("  [%d]: consolidatedBill: 0x%02X", index, priceServerInfo.consolidatedBillsTable.consolidatedBills[ep][index].consolidatedBill);
+    sl_zigbee_af_cli_println("  [%d]: currency: 0x%02X", index, priceServerInfo.consolidatedBillsTable.consolidatedBills[ep][index].currency);
+    sl_zigbee_af_cli_println("  [%d]: billTrailingDigit: 0x%02X", index, priceServerInfo.consolidatedBillsTable.consolidatedBills[ep][index].billTrailingDigit);
   }
 }
 
@@ -417,13 +417,13 @@ void sl_zigbee_af_print_conversion_table(uint8_t endpoint)
   if (ep == ZCL_PRICE_INVALID_ENDPOINT_INDEX) {
     return;
   }
-  sl_zigbee_af_price_cluster_println("= Conversion Factors =");
+  sl_zigbee_af_cli_println("= Conversion Factors =");
   for (i = 0; i < SL_ZIGBEE_AF_PLUGIN_PRICE_SERVER_CONVERSION_FACTOR_TABLE_SIZE; i++) {
-    sl_zigbee_af_price_cluster_println("  [%d]: startTime: 0x%08X", i, priceServerInfo.conversionFactorTable.commonInfos[ep][i].startTime);
-    sl_zigbee_af_price_cluster_println("  [%d]: valid: 0x%02X", i, priceServerInfo.conversionFactorTable.commonInfos[ep][i].valid);
-    sl_zigbee_af_price_cluster_println("  [%d]: issuerEventId: 0x%02X", i, priceServerInfo.conversionFactorTable.commonInfos[ep][i].issuerEventId);
-    sl_zigbee_af_price_cluster_println("  [%d]: conversionFactor: 0x%08X", i, priceServerInfo.conversionFactorTable.priceConversionFactors[ep][i].conversionFactor);
-    sl_zigbee_af_price_cluster_println("  [%d]: conversionFactorTrailingDigit: 0x%02X", i, priceServerInfo.conversionFactorTable.priceConversionFactors[ep][i].conversionFactorTrailingDigit);
+    sl_zigbee_af_cli_println("  [%d]: startTime: 0x%08X", i, priceServerInfo.conversionFactorTable.commonInfos[ep][i].startTime);
+    sl_zigbee_af_cli_println("  [%d]: valid: 0x%02X", i, priceServerInfo.conversionFactorTable.commonInfos[ep][i].valid);
+    sl_zigbee_af_cli_println("  [%d]: issuerEventId: 0x%02X", i, priceServerInfo.conversionFactorTable.commonInfos[ep][i].issuerEventId);
+    sl_zigbee_af_cli_println("  [%d]: conversionFactor: 0x%08X", i, priceServerInfo.conversionFactorTable.priceConversionFactors[ep][i].conversionFactor);
+    sl_zigbee_af_cli_println("  [%d]: conversionFactorTrailingDigit: 0x%02X", i, priceServerInfo.conversionFactorTable.priceConversionFactors[ep][i].conversionFactorTrailingDigit);
   }
 }
 
@@ -433,18 +433,18 @@ void sl_zigbee_af_print_co2_values_table(uint8_t endpoint)
   if (ep == ZCL_PRICE_INVALID_ENDPOINT_INDEX) {
     return;
   }
-  sl_zigbee_af_price_cluster_println("= Co2 Values =");
+  sl_zigbee_af_cli_println("= Co2 Values =");
   uint8_t i = 0;
   for ( i = 0; i < SL_ZIGBEE_AF_PLUGIN_PRICE_SERVER_CO2_VALUE_TABLE_SIZE; i++) {
-    sl_zigbee_af_price_cluster_println("  [%d]: valid: 0x%02X", i, priceServerInfo.co2ValueTable.commonInfos[ep][i].valid);
-    sl_zigbee_af_price_cluster_println("  [%d]: providerId: 0x%08X", i, priceServerInfo.co2ValueTable.co2Values[ep][i].providerId);
-    sl_zigbee_af_price_cluster_println("  [%d]: issuerEventId: 0x%08X", i, priceServerInfo.co2ValueTable.commonInfos[ep][i].issuerEventId);
-    sl_zigbee_af_price_cluster_print("  [%d]: startTime: ", i);
+    sl_zigbee_af_cli_println("  [%d]: valid: 0x%02X", i, priceServerInfo.co2ValueTable.commonInfos[ep][i].valid);
+    sl_zigbee_af_cli_println("  [%d]: providerId: 0x%08X", i, priceServerInfo.co2ValueTable.co2Values[ep][i].providerId);
+    sl_zigbee_af_cli_println("  [%d]: issuerEventId: 0x%08X", i, priceServerInfo.co2ValueTable.commonInfos[ep][i].issuerEventId);
+    sl_zigbee_af_cli_print("  [%d]: startTime: ", i);
     sl_zigbee_af_print_time(priceServerInfo.co2ValueTable.commonInfos[ep][i].startTime);
-    sl_zigbee_af_price_cluster_println("  [%d]: tariffType: 0x%02X", i, priceServerInfo.co2ValueTable.co2Values[ep][i].tariffType);
-    sl_zigbee_af_price_cluster_println("  [%d]: co2Value: 0x%08X", i, priceServerInfo.co2ValueTable.co2Values[ep][i].co2Value);
-    sl_zigbee_af_price_cluster_println("  [%d]: co2ValueUnit: 0x%02X", i, priceServerInfo.co2ValueTable.co2Values[ep][i].co2ValueUnit);
-    sl_zigbee_af_price_cluster_println("  [%d]: co2ValueTrailingDigit: 0x%02X", i, priceServerInfo.co2ValueTable.co2Values[ep][i].co2ValueTrailingDigit);
+    sl_zigbee_af_cli_println("  [%d]: tariffType: 0x%02X", i, priceServerInfo.co2ValueTable.co2Values[ep][i].tariffType);
+    sl_zigbee_af_cli_println("  [%d]: co2Value: 0x%08X", i, priceServerInfo.co2ValueTable.co2Values[ep][i].co2Value);
+    sl_zigbee_af_cli_println("  [%d]: co2ValueUnit: 0x%02X", i, priceServerInfo.co2ValueTable.co2Values[ep][i].co2ValueUnit);
+    sl_zigbee_af_cli_println("  [%d]: co2ValueTrailingDigit: 0x%02X", i, priceServerInfo.co2ValueTable.co2Values[ep][i].co2ValueTrailingDigit);
   }
 }
 
@@ -456,17 +456,17 @@ void sl_zigbee_af_print_tier_labels_table(uint8_t endpoint)
   }
   uint8_t i = 0;
   uint8_t j;
-  sl_zigbee_af_price_cluster_println("= Tier Labels =");
+  sl_zigbee_af_cli_println("= Tier Labels =");
   for ( i = 0; i < SL_ZIGBEE_AF_PLUGIN_PRICE_SERVER_TIER_LABELS_TABLE_SIZE; i++) {
-    sl_zigbee_af_price_cluster_println("  [%d]: valid: 0x%02X", i, priceServerInfo.tierLabelTable.entry[ep][i].valid);
-    sl_zigbee_af_price_cluster_println("  [%d]: providerId: 0x%08X", i, priceServerInfo.tierLabelTable.entry[ep][i].providerId);
-    sl_zigbee_af_price_cluster_println("  [%d]: issuerEventId: 0x%08X", i, priceServerInfo.tierLabelTable.entry[ep][i].issuerEventId);
-    sl_zigbee_af_price_cluster_println("  [%d]: issuerTariffId: 0x%08X", i, priceServerInfo.tierLabelTable.entry[ep][i].issuerTariffId);
+    sl_zigbee_af_cli_println("  [%d]: valid: 0x%02X", i, priceServerInfo.tierLabelTable.entry[ep][i].valid);
+    sl_zigbee_af_cli_println("  [%d]: providerId: 0x%08X", i, priceServerInfo.tierLabelTable.entry[ep][i].providerId);
+    sl_zigbee_af_cli_println("  [%d]: issuerEventId: 0x%08X", i, priceServerInfo.tierLabelTable.entry[ep][i].issuerEventId);
+    sl_zigbee_af_cli_println("  [%d]: issuerTariffId: 0x%08X", i, priceServerInfo.tierLabelTable.entry[ep][i].issuerTariffId);
     for ( j = 0; j < priceServerInfo.tierLabelTable.entry[ep][i].numberOfTiers; j++ ) {
-      sl_zigbee_af_price_cluster_println("  [%d]: tierId[%d]: 0x%02X", i, j, priceServerInfo.tierLabelTable.entry[ep][i].tierIds[j]);
-      sl_zigbee_af_price_cluster_print("  [%d]: tierLabel[%d]: ", i, j);
-      sl_zigbee_af_price_cluster_print_string(priceServerInfo.tierLabelTable.entry[ep][i].tierLabels[j]);
-      sl_zigbee_af_price_cluster_println("");
+      sl_zigbee_af_cli_println("  [%d]: tierId[%d]: 0x%02X", i, j, priceServerInfo.tierLabelTable.entry[ep][i].tierIds[j]);
+      sl_zigbee_af_cli_print("  [%d]: tierLabel[%d]: ", i, j);
+      sl_zigbee_af_cli_print_string(priceServerInfo.tierLabelTable.entry[ep][i].tierLabels[j]);
+      sl_zigbee_af_cli_println("");
     }
   }
 }
@@ -664,17 +664,17 @@ void sl_zigbee_af_price_server_publish_price_message(sl_802154_short_addr_t node
   }
 
   if (!sl_zigbee_af_price_get_price_table_entry(srcEndpoint, priceIndex, &price)) {
-    sl_zigbee_af_price_cluster_println("Invalid price table entry at index %02X", priceIndex);
+    sl_zigbee_af_cli_println("Invalid price table entry at index %02X", priceIndex);
     return;
   }
-  sl_zigbee_af_price_cluster_println("Filling cluster");
+  sl_zigbee_af_cli_println("Filling cluster");
   fillPublishPriceCommand(price);
 
   sl_zigbee_af_set_command_endpoints(srcEndpoint, dstEndpoint);
   sl_zigbee_af_get_command_aps_frame()->options |= SL_ZIGBEE_APS_OPTION_SOURCE_EUI64;
   status = sl_zigbee_af_send_command_unicast(SL_ZIGBEE_OUTGOING_DIRECT, nodeId);
   if (status != SL_STATUS_OK) {
-    sl_zigbee_af_price_cluster_println("Error in publish price %02X", status);
+    sl_zigbee_af_cli_println("Error in publish price %02X", status);
   }
 }
 
@@ -695,7 +695,7 @@ void sl_zigbee_af_price_server_publish_tariff_message(sl_802154_short_addr_t nod
 
   if (!sl_zigbee_af_price_get_tariff_table_entry(srcEndpoint, tariffIndex, &priceInfo, &tariff)
       || (!priceInfo.valid)) {
-    sl_zigbee_af_price_cluster_println("Invalid tariff table entry at index %02X", tariffIndex);
+    sl_zigbee_af_cli_println("Invalid tariff table entry at index %02X", tariffIndex);
     return;
   }
 
@@ -719,7 +719,7 @@ void sl_zigbee_af_price_server_publish_tariff_message(sl_802154_short_addr_t nod
   sl_zigbee_af_get_command_aps_frame()->options |= SL_ZIGBEE_APS_OPTION_SOURCE_EUI64;
   status = sl_zigbee_af_send_command_unicast(SL_ZIGBEE_OUTGOING_DIRECT, nodeId);
   if (status != SL_STATUS_OK) {
-    sl_zigbee_af_price_cluster_println("Error in publish tariff %02X", status);
+    sl_zigbee_af_cli_println("Error in publish tariff %02X", status);
   }
 }
 
@@ -1997,18 +1997,18 @@ void sl_zigbee_af_price_server_block_period_print(uint8_t endpoint, uint8_t inde
     return;
   }
   if ( index < SL_ZIGBEE_AF_PLUGIN_PRICE_SERVER_BLOCK_PERIOD_TABLE_SIZE ) {
-    sl_zigbee_af_price_cluster_println("= Block Period [%d]:", index);
-    sl_zigbee_af_price_cluster_println("  valid=%d", priceServerInfo.blockPeriodTable.commonInfos[ep][index].valid);
-    sl_zigbee_af_price_cluster_println("  providerId=0x%08X", priceServerInfo.blockPeriodTable.blockPeriods[ep][index].providerId);
-    sl_zigbee_af_price_cluster_println("  issuerEventId=0x%08X", priceServerInfo.blockPeriodTable.commonInfos[ep][index].issuerEventId);
-    sl_zigbee_af_price_cluster_println("  startTime=0x%08X", priceServerInfo.blockPeriodTable.commonInfos[ep][index].startTime);
-    sl_zigbee_af_price_cluster_println("  duration=0x%08X", priceServerInfo.blockPeriodTable.commonInfos[ep][index].durationSec);
-    sl_zigbee_af_price_cluster_println("  rawBlkPeriodStartTime=0x%08X", priceServerInfo.blockPeriodTable.blockPeriods[ep][index].rawBlockPeriodStartTime);
-    sl_zigbee_af_price_cluster_println("  rawBlkPeriodDuration=0x%08X", priceServerInfo.blockPeriodTable.blockPeriods[ep][index].blockPeriodDuration);
-    sl_zigbee_af_price_cluster_println("  durationType=0x%02X", priceServerInfo.blockPeriodTable.blockPeriods[ep][index].blockPeriodDurationType);
-    sl_zigbee_af_price_cluster_println("  blockPeriodControl=0x%02X", priceServerInfo.blockPeriodTable.blockPeriods[ep][index].blockPeriodControl);
-    sl_zigbee_af_price_cluster_println("  tariffType=0x%02X", priceServerInfo.blockPeriodTable.blockPeriods[ep][index].tariffType);
-    sl_zigbee_af_price_cluster_println("  tariffResolutionPeriod=0x%02X", priceServerInfo.blockPeriodTable.blockPeriods[ep][index].tariffResolutionPeriod);
+    sl_zigbee_af_cli_println("= Block Period [%d]:", index);
+    sl_zigbee_af_cli_println("  valid=%d", priceServerInfo.blockPeriodTable.commonInfos[ep][index].valid);
+    sl_zigbee_af_cli_println("  providerId=0x%08X", priceServerInfo.blockPeriodTable.blockPeriods[ep][index].providerId);
+    sl_zigbee_af_cli_println("  issuerEventId=0x%08X", priceServerInfo.blockPeriodTable.commonInfos[ep][index].issuerEventId);
+    sl_zigbee_af_cli_println("  startTime=0x%08X", priceServerInfo.blockPeriodTable.commonInfos[ep][index].startTime);
+    sl_zigbee_af_cli_println("  duration=0x%08X", priceServerInfo.blockPeriodTable.commonInfos[ep][index].durationSec);
+    sl_zigbee_af_cli_println("  rawBlkPeriodStartTime=0x%08X", priceServerInfo.blockPeriodTable.blockPeriods[ep][index].rawBlockPeriodStartTime);
+    sl_zigbee_af_cli_println("  rawBlkPeriodDuration=0x%08X", priceServerInfo.blockPeriodTable.blockPeriods[ep][index].blockPeriodDuration);
+    sl_zigbee_af_cli_println("  durationType=0x%02X", priceServerInfo.blockPeriodTable.blockPeriods[ep][index].blockPeriodDurationType);
+    sl_zigbee_af_cli_println("  blockPeriodControl=0x%02X", priceServerInfo.blockPeriodTable.blockPeriods[ep][index].blockPeriodControl);
+    sl_zigbee_af_cli_println("  tariffType=0x%02X", priceServerInfo.blockPeriodTable.blockPeriods[ep][index].tariffType);
+    sl_zigbee_af_cli_println("  tariffResolutionPeriod=0x%02X", priceServerInfo.blockPeriodTable.blockPeriods[ep][index].tariffResolutionPeriod);
   }
 }
 

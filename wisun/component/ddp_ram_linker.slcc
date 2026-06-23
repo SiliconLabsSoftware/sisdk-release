@@ -22,5 +22,7 @@ template_file:
 toolchain_settings:
 - option: linkerfile
   value: autogen/linkerfile_ram.ld
+- option: gcc_linker_option
+  value: "-Wl,--no-warn-rwx-segments"
 define:
 - name: SL_RAM_LINKER

@@ -32,7 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <string.h>
-
+#include <inttypes.h>
 #include PLATFORM_HEADER
 #include "sl_component_catalog.h"
 #include "em_system.h"
@@ -97,18 +97,18 @@ void cli_info(sl_cli_command_arg_t *arguments)
   char* is_high_prio = ((tx_options & EMBER_OPTIONS_HIGH_PRIORITY) ? ENABLED : DISABLED);
 
   app_log_info("Info:\n");
-  app_log_info("         MCU Id: 0x%016llX\n", SYSTEM_GetUnique());
-  app_log_info("  Network state: 0x%02X\n", emberNetworkState());
-  app_log_info("      Node type: 0x%02X\n", emberGetNodeType());
-  app_log_info("        Node id: 0x%04X\n", emberGetNodeId());
+  app_log_info("         MCU Id: 0x%016" PRIX64 "\n", SYSTEM_GetUnique());
+  app_log_info("  Network state: 0x%02" PRIX8 "\n", emberNetworkState());
+  app_log_info("      Node type: 0x%02" PRIX8 "\n", emberGetNodeType());
+  app_log_info("        Node id: 0x%04" PRIX16 "\n", emberGetNodeId());
   app_log_info("   Node Long id: 0x");
   for (uint8_t i = 0; i < EUI64_SIZE; i++) {
-    app_log_info("%02X", emberGetEui64()[i]);
+    app_log_info("%02" PRIX8, emberGetEui64()[i]);
   }
   app_log_info("\n");
-  app_log_info("         Pan id: 0x%04X\n", emberGetPanId());
-  app_log_info("        Channel: %d\n", (uint16_t)emberGetRadioChannel());
-  app_log_info("          Power: %d\n", (int16_t)emberGetRadioPower());
+  app_log_info("         Pan id: 0x%04" PRIX16 "\n", emberGetPanId());
+  app_log_info("        Channel: %" PRIu16 "\n", emberGetRadioChannel());
+  app_log_info("          Power: %" PRId16 "\n", emberGetRadioPower());
   app_log_info("     TX options: MAC acks %s, security %s, priority %s\n", is_ack, is_security, is_high_prio);
 }
 
@@ -147,7 +147,7 @@ void cli_commission(sl_cli_command_arg_t *arguments)
   status = emberJoinCommissioned(EMBER_DIRECT_DEVICE, nodeId, &params);
 
   if ( status != EMBER_SUCCESS ) {
-    app_log_error("Commissioning failed, 0x%02X", status);
+    app_log_error("Commissioning failed, 0x%02" PRIX8, status);
   }
 }
 
@@ -170,15 +170,15 @@ void cli_data(sl_cli_command_arg_t *arguments)
                             hex_value,
                             tx_options);
 
-  app_log_info("TX: Data to 0x%04X:{", destination);
+  app_log_info("TX: Data to 0x%04" PRIX16 ":{", destination);
   for (uint8_t i = 0; i < hex_length; i++) {
     if (i == (hex_length - 1)) {
-      app_log_info("%02X", hex_value[i]);
+      app_log_info("%02" PRIX8, hex_value[i]);
     } else {
-      app_log_info("%02X ", hex_value[i]);
+      app_log_info("%02" PRIX8 " ", hex_value[i]);
     }
   }
-  app_log_info("}: status=0x%02X\n", status);
+  app_log_info("}: status=0x%02" PRIX8 "\n", status);
 }
 
 /******************************************************************************
@@ -190,9 +190,9 @@ void cli_set_channel(sl_cli_command_arg_t *arguments)
   uint16_t channel = sl_cli_get_argument_uint16(arguments, 0);
   EmberStatus status = emberSetRadioChannel(channel);
   if (status == EMBER_SUCCESS) {
-    app_log_info("Radio channel set, status=0x%02X\n", status);
+    app_log_info("Radio channel set, status=0x%02" PRIX8 "\n", status);
   } else {
-    app_log_error("Setting radio channel failed, status=0x%02X\n", status);
+    app_log_error("Setting radio channel failed, status=0x%02" PRIX8 "\n", status);
   }
 }
 
@@ -233,7 +233,7 @@ void cli_toggle_radio(sl_cli_command_arg_t *arguments)
   if (status == EMBER_SUCCESS) {
     app_log_info("Radio is turned %s\n", (radio_on) ? "ON" : "OFF");
   } else {
-    app_log_error("Radio toggle is failed, status=0x%02X\n", status);
+    app_log_error("Radio toggle is failed, status=0x%02" PRIX8 "\n", status);
   }
 }
 
@@ -250,9 +250,9 @@ void cli_start_energy_scan(sl_cli_command_arg_t *arguments)
   status = emberStartEnergyScan(channel, sample_num);
 
   if (status == EMBER_SUCCESS) {
-    app_log_info("Start energy scanning: channel %d, samples %d\n", channel, sample_num);
+    app_log_info("Start energy scanning: channel %" PRIu16 ", samples %" PRIu8 "\n", channel, sample_num);
   } else {
-    app_log_error("Start energy scanning failed, status=0x%02X\n", status);
+    app_log_error("Start energy scanning failed, status=0x%02" PRIX8 "\n", status);
   }
 }
 
@@ -276,7 +276,7 @@ void cli_set_security_key(sl_cli_command_arg_t *arguments)
 #else
   (void)arguments;
   app_log_info("Security plugin: CONNECT AES SECURITY is missing\n");
-  app_log_info("Security key set failed 0x%02X\n", EMBER_ERR_FATAL);
+  app_log_info("Security key set failed 0x%02" PRIX8 "\n", EMBER_ERR_FATAL);
 #endif
 }
 
@@ -304,9 +304,9 @@ void cli_counter(sl_cli_command_arg_t *arguments)
   EmberStatus status = emberGetCounter(counter_type, &counter);
 
   if (status == EMBER_SUCCESS) {
-    app_log_info("Counter type=0x%02X: %d\n", counter_type, counter);
+    app_log_info("Counter type=0x%02" PRIX8 ": %" PRIu32 "\n", counter_type, counter);
   } else {
-    app_log_error("Get counter failed, status=0x%02X\n", status);
+    app_log_error("Get counter failed, status=0x%02" PRIX8 "\n", status);
   }
 }
 
@@ -372,7 +372,7 @@ static bool check_channel(uint16_t channel)
   uint16_t default_channel = emberGetDefaultChannel();
 
   if (channel < default_channel) {
-    app_log_info("Channel %d is invalid, the first valid channel is %d!\n", channel, default_channel);
+    app_log_info("Channel %" PRIu16 " is invalid, the first valid channel is %" PRIu16 "!\n", channel, default_channel);
     channel_ok = false;
   }
   return channel_ok;
@@ -414,9 +414,9 @@ static bool set_security_key(const uint8_t* key, size_t key_length)
                           &security_key_id);
 
   if (status == PSA_SUCCESS) {
-    app_log_info("Security key import successful, key id: %lu\n", security_key_id);
+    app_log_info("Security key import successful, key id: %" PRIu32 "\n", security_key_id);
   } else {
-    app_log_info("Security Key import failed: 0x%02lx\n", status);
+    app_log_info("Security Key import failed: %" PRId32 "\n", status);
   }
 
   emstatus = emberSetPsaSecurityKey(security_key_id);
@@ -425,7 +425,7 @@ static bool set_security_key(const uint8_t* key, size_t key_length)
     app_log_info("Security key set successful\n");
     success = true;
   } else {
-    app_log_info("Security key set failed 0x%02X\n", emstatus);
+    app_log_info("Security key set failed 0x%02" PRIX8 "\n", emstatus);
   }
 
   return success;

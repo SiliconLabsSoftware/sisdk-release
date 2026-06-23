@@ -112,10 +112,14 @@ Modules</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:ga7626df3c11d39b180f58b2bf688eff8c"><td class="memItemLeft" align="right" valign="top">sl_status_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__linklayer.html#ga7626df3c11d39b180f58b2bf688eff8c">sl_bt_linklayer_event_info_reporting_enable</a> (uint8_t enable, uint32_t configuration, uint8_t procedure_type, size_t procedure_identifier_len, const uint8_t *procedure_identifier)</td></tr>
 <tr class="separator:ga7626df3c11d39b180f58b2bf688eff8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9a51a04253b62f6b706570b1ef930b8b"><td class="memItemLeft" align="right" valign="top">sl_status_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__linklayer.html#ga9a51a04253b62f6b706570b1ef930b8b">sl_bt_linklayer_get_hci_connection_handle</a> (uint8_t connection, uint16_t *hci_connection_handle)</td></tr>
+<tr class="separator:ga9a51a04253b62f6b706570b1ef930b8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga394c7a511b8095400378e895af4d0238"><td class="memItemLeft" align="right" valign="top">sl_status_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__linklayer.html#ga394c7a511b8095400378e895af4d0238">sl_bt_linklayer_get_bgapi_connection_handle</a> (uint16_t hci_connection_handle, uint8_t *connection)</td></tr>
+<tr class="separator:ga394c7a511b8095400378e895af4d0238"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p >Link Layer. </p>
-<p >Commands and events in this class provide access to low-level Bluetooth link layer functionality that is not available via higher-level APIs of the Bluetooth host stack. </p>
+<p >Commands and events in this class provide access to low-level Bluetooth link layer functionality that is not available via higher-level APIs of the Bluetooth host stack. This class is available when the bluetooth_feature_linklayer_interface component is included in the application. </p>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="ga7626df3c11d39b180f58b2bf688eff8c" name="ga7626df3c11d39b180f58b2bf688eff8c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ga7626df3c11d39b180f58b2bf688eff8c">&#9670;&nbsp;</a></span>sl_bt_linklayer_event_info_reporting_enable()</h2>
@@ -160,7 +164,7 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p >Enable or disable link layer event info reporting. This command passes the parameters directly to the vendor-specific HCI command HCI_VS_Siliconlabs_Event_Info_Reporting_Enable. This command is only available if the bluetooth_feature_event_info_reporting component is included in the application. See the documentation of the HCI command for detailed description of each parameter and the behavior of the command.</p>
+<p >Enable or disable link layer event info reporting. This command passes the parameters directly to the vendor-specific HCI command HCI_VS_Siliconlabs_Event_Info_Reporting_Enable. This command is only available if the bluetooth_feature_linklayer_interface and bluetooth_feature_event_info_reporting components are included in the application. See the documentation of the HCI command for detailed description of each parameter and the behavior of the command.</p>
 <p >Events that have been succesfully enabled will be reported with the <a class="el" href="group__sl__bt__evt__linklayer__event__info__report.html">sl_bt_evt_linklayer_event_info_report</a> event.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -180,6 +184,84 @@ Functions</h2></td></tr>
 <p><b>Events</b> </p><ul>
 <li><a class="el" href="group__sl__bt__evt__linklayer__event__info__report.html">sl_bt_evt_linklayer_event_info_report</a> - Sent for each event info report received from the link layer. </li>
 </ul>
+
+</div>
+</div>
+<a id="ga9a51a04253b62f6b706570b1ef930b8b" name="ga9a51a04253b62f6b706570b1ef930b8b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga9a51a04253b62f6b706570b1ef930b8b">&#9670;&nbsp;</a></span>sl_bt_linklayer_get_hci_connection_handle()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">sl_status_t sl_bt_linklayer_get_hci_connection_handle </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>connection</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t *&#160;</td>
+          <td class="paramname"><em>hci_connection_handle</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Get the HCI connection handle corresponding to a BGAPI connection handle.</p>
+<p >The Bluetooth host BGAPI interface and the link layer HCI interface use their own connection handles. When the application uses the <a class="el" href="group__sl__bt__linklayer.html">Link Layer</a> class to issue link layer commands that need connection handles, use this command to convert the BGAPI connection handle to the corresponding HCI connection handle needed for the link layer command.</p>
+<p >This command is only available when the bluetooth_feature_linklayer_interface and bluetooth_feature_connection components are included in the application.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">connection</td><td>BGAPI connection handle </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">hci_connection_handle</td><td>HCI connection handle corresponding to the given BGAPI connection handle</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>SL_STATUS_OK if successful. Error code otherwise. </dd></dl>
+
+</div>
+</div>
+<a id="ga394c7a511b8095400378e895af4d0238" name="ga394c7a511b8095400378e895af4d0238"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga394c7a511b8095400378e895af4d0238">&#9670;&nbsp;</a></span>sl_bt_linklayer_get_bgapi_connection_handle()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">sl_status_t sl_bt_linklayer_get_bgapi_connection_handle </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>hci_connection_handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t *&#160;</td>
+          <td class="paramname"><em>connection</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p >Get the BGAPI connection handle corresponding to an HCI connection handle.</p>
+<p >The Bluetooth host BGAPI interface and the link layer HCI interface use their own connection handles. When the application receives a link layer connection handle via the <a class="el" href="group__sl__bt__linklayer.html">Link Layer</a> class, use this command to convert the HCI connection handle to the corresponding BGAPI connection handle used in the Bluetooth host stack API.</p>
+<p >This command is only available when the bluetooth_feature_linklayer_interface and bluetooth_feature_connection components are included in the application.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">hci_connection_handle</td><td>HCI connection handle </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">connection</td><td>BGAPI connection handle corresponding to the given HCI connection handle</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>SL_STATUS_OK if successful. Error code otherwise. </dd></dl>
 
 </div>
 </div>

@@ -33,7 +33,7 @@ requires:
   - device_has_eusart
 - name: sleeptimer
 - name: ecode
-- name: dmadrv
+- name: dma_channel
 - name: enum
 - name: slist
 - name: component_catalog

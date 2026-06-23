@@ -1,42 +1,48 @@
-# Segment LCD and Temperature Sensor Example
+# Segment LCD Tempsensor
 
-## Summary
+This project demonstrates using the Si70xx temperature sensor to measure temperature and display values on the segment LCD.
 
-This project demonstrates how to use the on-board relative humidity and
-temperature (RHT) sensor—Si70xx or SHT4x, via the RHT UniDriver—to measure
-and record temperature values and how to use the Segment LCD to display those
-values.
+## Table of Contents
 
-## Connections Required
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-Connect the board via a micro-USB or USB-C cable to your PC to flash the example. 
+## Purpose / Scope
 
-## Setup
+This example uses the Si70xx (or Si7021) relative humidity and temperature sensor to read temperature and display it on the segment LCD. A periodic sleeptimer callback (e.g. every 5 seconds) reads the sensor and updates the LCD. Use it to learn I2C sensor integration and segment LCD display. **Note:** Board self-heating can affect readings; for better accuracy use battery or Mini Simplicity connector so the on-board debugger is in a low-power state.
 
-1. Clone this repository from GitHub onto your local machine.
-2. Open Simplicity Studio IDE and navigate to Project > Import > MCU project.
-3. Click the browse button and navigate to the local repository folder.
-4. Select the .sls file for the board, click Next twice, and then click Finish.
-5. Build the project and download it to the Board.
-6. Reset the board by pressing the Reset button on the board.
-7. Observe the LCD displaying 00000 after the board is reset; 25.000 for PG28
-8. After 5 seconds, the LCD will update with the current temperature reading 
-from the RHT sensor. Every 5 seconds the LCD will update with the new
-temperature reading.
+## Prerequisites / Setup Requirements
 
-## How It Works
+**Hardware**
+- Silicon Labs board with segment LCD and Si70xx/Si7021 sensor (on-board or expansion).
 
-The project uses a periodic sleeptimer that executes a callback function every
-5 seconds. This callback function calls the RHT UniDriver APIs that measure and
-read the temperature and relative humidity values from the sensor. 
-This value is then displayed on the segment LCD using APIs from the Segment LCD
-driver library. 
+**Software**
+- Simplicity Studio 5 (or later).
 
-## Note
+## Steps to Run Demo
 
-Although measures have been taken to thermally isolate the sensor from the 
-board, temperature readings will be influenced when power is dissipated on the
-board. More accurate temperature measurements are achieved when powering the 
-board with a battery or through the Mini Simplicity connector as self-heating 
-from the on-board LDO is eliminated and the on-board debugger is put in a low
-power state.
+1. Open the project in Simplicity Studio and build it.
+2. Connect the board via USB, flash the application, and reset the board.
+3. Observe the LCD showing initial value (e.g. 00000 or 25.000); after about 5 seconds it updates with the current temperature. The display updates every 5 seconds.
+
+## Troubleshooting
+
+- **No temperature reading:** Check I2C wiring and sensor address; verify Si70xx driver and segment LCD are configured for your board.
+- **Stale or wrong values:** Ensure the sensor is connected and powered; consider thermal isolation from the board for more accurate readings.
+- **Build errors:** Verify target part and that Si70xx and segment LCD components are included.
+
+## Resources
+
+- [Simplicity Studio 5 User's Guide](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/)
+- [Gecko Platform Documentation](https://docs.silabs.com/gecko-platform/latest/)
+- [Silicon Labs Community](https://www.silabs.com/community)
+
+## Report Bugs & Get Support
+
+You are encouraged to report issues and get help from the community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

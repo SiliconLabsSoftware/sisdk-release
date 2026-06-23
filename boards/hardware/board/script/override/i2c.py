@@ -16,8 +16,12 @@ def compatible(provides, board):
             # Override Si7021-A20 as Si7021 sensor component
             if sensor.part_number.lower() == "si7021-a20":
                 sensor.part_number = "Si7021"
-            # Check if sensor is supported
-            if not board.has_tag('hardware:has:sensor:{}'.format(sensor.part_number).lower()):
+            # Override SHT4x variants as SHT40-AD1F-R2 for tag lookup
+            if sensor.part_number and sensor.part_number.lower().startswith(('sht40', 'sht41')):
+                sensor.part_number = "SHT40-AD1F-R2"
+            # Check if sensor is supported (tag, or board has sensor connection e.g. radio with tempsensor)
+            sensor_tag = 'hardware:has:sensor:{}'.format(sensor.part_number).lower()
+            if not (board.has_tag(sensor_tag) or board.provides('hardware_board_has_tempsensor')):
                 return []
 
             # Use bus_name in instance name if sensor component has this property

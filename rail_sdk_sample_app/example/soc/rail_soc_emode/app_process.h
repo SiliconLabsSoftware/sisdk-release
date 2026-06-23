@@ -80,9 +80,7 @@ extern volatile bool periodic_rx_ended;
 //                          Public Function Declarations
 // -----------------------------------------------------------------------------
 /*******************************************************************************
- * Application state machine, called infinitely, manages radio settings
- *
- * @param[in] rail_handle: which rail instance to use
+ * Application state machine, called infinitely
  ******************************************************************************/
 void app_process_action(void);
 

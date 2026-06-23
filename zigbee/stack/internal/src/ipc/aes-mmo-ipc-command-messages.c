@@ -3,7 +3,7 @@
  * @brief internal wrappers for 'aes-mmo' ipc commands
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -59,12 +59,14 @@ sl_status_t sl_zigbee_aes_hash_simple(uint8_t totalLength,
 
   if (totalLength > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector data length exceeds expected maximum
+    return msg.data.aes_hash_simple.response.result;
   }
 
   memmove(msg.data.aes_hash_simple.request.data, data, sizeof(uint8_t) * totalLength);
 
   if (SL_ZIGBEE_AES_HASH_BLOCK_SIZE > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector result length exceeds expected maximum
+    return msg.data.aes_hash_simple.response.result;
   }
 
   memmove(msg.data.aes_hash_simple.request.result, result, sizeof(uint8_t) * SL_ZIGBEE_AES_HASH_BLOCK_SIZE);
@@ -72,6 +74,7 @@ sl_status_t sl_zigbee_aes_hash_simple(uint8_t totalLength,
 
   if (SL_ZIGBEE_AES_HASH_BLOCK_SIZE > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector result length exceeds expected maximum
+    return msg.data.aes_hash_simple.response.result;
   }
 
   memmove(result, msg.data.aes_hash_simple.request.result, sizeof(uint8_t) * SL_ZIGBEE_AES_HASH_BLOCK_SIZE);
@@ -92,6 +95,7 @@ sl_status_t sl_zigbee_aes_mmo_hash_final(sl_zigbee_aes_mmo_hash_context_t *conte
 
   if (length > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector finalData length exceeds expected maximum
+    return msg.data.aes_mmo_hash_final.response.result;
   }
 
   memmove(msg.data.aes_mmo_hash_final.request.finalData, finalData, sizeof(uint8_t) * length);
@@ -133,6 +137,7 @@ sl_status_t sl_zigbee_aes_mmo_hash_update(sl_zigbee_aes_mmo_hash_context_t *cont
 
   if (length > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector data length exceeds expected maximum
+    return msg.data.aes_mmo_hash_update.response.result;
   }
 
   memmove(msg.data.aes_mmo_hash_update.request.data, data, sizeof(uint8_t) * length);

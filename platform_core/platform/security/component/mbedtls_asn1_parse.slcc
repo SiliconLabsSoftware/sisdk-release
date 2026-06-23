@@ -1,0 +1,18 @@
+id: mbedtls_asn1_parse
+package: platform_core
+label: ASN.1 Parsing only
+description: >-
+  This component provides support for ASN.1 parsing using Mbed TLS.
+category: Platform|Security|Mbed TLS|Upper Layer
+quality: production
+provides:
+- name: mbedtls_asn1_parse
+requires:
+- name: mbedtls_core
+template_contribution:
+- name: mbedtls_config
+  value: MBEDTLS_ASN1_PARSE_C
+metadata:
+  sbom:
+    reference: mbedtls_sbom
+root_path: platform_core

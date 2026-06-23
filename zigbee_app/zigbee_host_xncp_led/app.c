@@ -89,7 +89,7 @@ void setLedCommand(sl_cli_command_arg_t *arguments)
 {
   uint8_t command = sl_cli_get_argument_uint8(arguments, 0);
   if (command > LED_PROTOCOL_COMMAND_STROBE_LED) {
-    sl_zigbee_app_debug_println("Invalid LED command: 0x%02X", command);
+    sl_zigbee_af_cli_println("Invalid LED command: 0x%02X", command);
   } else {
     sendLedProtocolCommand(command, 0); // no param
   }
@@ -103,7 +103,7 @@ void getInfoCommand(sl_cli_command_arg_t *arguments)
 
   status = sl_zigbee_ezsp_get_xncp_info(&manufacturerId, &version);
 
-  sl_zigbee_app_debug_println("Get XNCP info: status: 0x%02X", status);
-  sl_zigbee_app_debug_println("  manufacturerId: 0x%02X, version: 0x%02X",
-                              manufacturerId, version);
+  sl_zigbee_af_cli_println("Get XNCP info: status: 0x%02X", status);
+  sl_zigbee_af_cli_println("  manufacturerId: 0x%02X, version: 0x%02X",
+                           manufacturerId, version);
 }

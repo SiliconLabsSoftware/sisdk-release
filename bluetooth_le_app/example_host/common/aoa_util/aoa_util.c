@@ -91,7 +91,7 @@ sl_status_t aoa_id_to_address(aoa_id_t id,
 
   do {
     token = strtok_r(id_cache, delimiter, &saveptr);
-    // Look for the "ble" preffix.
+    // Look for the "ble" prefix.
     // If there is no BLE string found in the beginning, abort.
     if (token == NULL || strcasecmp("ble", token) != 0) {
       ret = SL_STATUS_NOT_FOUND;

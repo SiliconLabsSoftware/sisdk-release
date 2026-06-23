@@ -3,7 +3,7 @@
  * @brief User Interface for throughput test peripheral role.
  *******************************************************************************
  * # License
- * <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -93,9 +93,9 @@ sl_status_t throughput_peripheral_set_mode(throughput_mode_t mode,
  * @param[in] not_data notification data size (1-MTU-3)
  * @return status of the operation
  *****************************************************************************/
-sl_status_t throughput_peripheral_set_data_size(uint8_t mtu,
-                                                uint8_t ind_data,
-                                                uint8_t not_data);
+sl_status_t throughput_peripheral_set_data_size(throughput_mtu_size_t mtu,
+                                                throughput_data_size_t ind_data,
+                                                throughput_data_size_t not_data);
 
 /**************************************************************************//**
  * Sets the transmission power.

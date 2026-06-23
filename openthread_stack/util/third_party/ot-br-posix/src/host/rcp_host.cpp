@@ -43,6 +43,7 @@
 #include <openthread/link_metrics.h>
 #include <openthread/logging.h>
 #include <openthread/nat64.h>
+#include <openthread/netdiag.h>
 #include <openthread/srp_server.h>
 #include <openthread/tasklet.h>
 #include <openthread/thread.h>
@@ -128,7 +129,8 @@ RcpHost::RcpHost(const char                      *aInterfaceName,
                  const std::vector<const char *> &aRadioUrls,
                  const char                      *aBackboneInterfaceName,
                  bool                             aDryRun,
-                 bool                             aEnableAutoAttach)
+                 bool                             aEnableAutoAttach,
+                 const char                      *aDataPath)
     : mInstance(nullptr)
     , mEnableAutoAttach(aEnableAutoAttach)
     , mThreadEnabledState(ThreadEnabledState::kStateDisabled)
@@ -140,6 +142,11 @@ RcpHost::RcpHost(const char                      *aInterfaceName,
     mConfig.mInterfaceName         = aInterfaceName;
     mConfig.mBackboneInterfaceName = aBackboneInterfaceName;
     mConfig.mDryRun                = aDryRun;
+
+    if (aDataPath != nullptr && strlen(aDataPath) > 0)
+    {
+        mConfig.mDataPath = aDataPath;
+    }
 
     for (const char *url : aRadioUrls)
     {
@@ -226,8 +233,14 @@ otbrLogLevel ConvertProtoToOtbrLogLevel(ProtoLogLevel aProtoLogLevel)
 otError RcpHost::SetOtbrAndOtLogLevel(otbrLogLevel aLevel)
 {
     otError error = OT_ERROR_NONE;
+
     otbrLogSetLevel(aLevel);
-    error = otLoggingSetLevel(ConvertToOtLogLevel(aLevel));
+
+    if (GetInstance() != nullptr)
+    {
+        error = otSetLogLevel(GetInstance(), ConvertToOtLogLevel(aLevel));
+    }
+
     return error;
 }
 
@@ -240,10 +253,10 @@ void RcpHost::Init(void)
     FeatureFlagList featureFlagList;
 #endif
 
-    VerifyOrExit(otLoggingSetLevel(level) == OT_ERROR_NONE, error = OTBR_ERROR_OPENTHREAD);
-
     mInstance = otSysInit(&mConfig);
     assert(mInstance != nullptr);
+
+    VerifyOrExit(otSetLogLevel(mInstance, level) == OT_ERROR_NONE, error = OTBR_ERROR_OPENTHREAD);
 
     {
         otError result = otSetStateChangedCallback(mInstance, &RcpHost::HandleStateChanged, this);
@@ -909,6 +922,38 @@ void RcpHost::SetBorderAgentVendorTxtData(const std::vector<uint8_t> &aVendorTxt
 exit:
     return;
 }
+
+otError RcpHost::SetBorderAgentMeshCoPServiceBaseName(const char *aBaseName)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(mInstance != nullptr, error = OT_ERROR_INVALID_STATE);
+    error = otBorderAgentSetMeshCoPServiceBaseName(mInstance, aBaseName);
+exit:
+    return error;
+}
+#endif
+
+#ifndef OTBR_VENDOR_NAME
+otError RcpHost::SetVendorName(const char *aVendorName)
+{
+    otError error = OT_ERROR_NONE;
+    VerifyOrExit(mInstance != nullptr, error = OT_ERROR_INVALID_STATE);
+    SuccessOrExit(error = otThreadSetVendorName(mInstance, aVendorName));
+exit:
+    return error;
+}
+#endif
+
+#ifndef OTBR_PRODUCT_NAME
+otError RcpHost::SetVendorModel(const char *aVendorModel)
+{
+    otError error = OT_ERROR_NONE;
+    VerifyOrExit(mInstance != nullptr, error = OT_ERROR_INVALID_STATE);
+    SuccessOrExit(error = otThreadSetVendorModel(mInstance, aVendorModel));
+exit:
+    return error;
+}
 #endif
 
 void RcpHost::SetUdpForwardToHostCallback(UdpForwardToHostCallback aCallback)
@@ -931,10 +976,17 @@ extern "C" void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const ch
     va_end(ap);
 }
 
+extern "C" void otPlatLogHandleLogLevelChanged(otInstance *aInstance, otLogLevel aLogLevel)
+{
+    OTBR_UNUSED_VARIABLE(aInstance);
+
+    otbrLogSetLevel(RcpHost::ConvertToOtbrLogLevel(aLogLevel));
+    otbrLogInfo("OpenThread log level changed to %d", aLogLevel);
+}
+
 extern "C" void otPlatLogHandleLevelChanged(otLogLevel aLogLevel)
 {
     otbrLogSetLevel(RcpHost::ConvertToOtbrLogLevel(aLogLevel));
-    otbrLogInfo("OpenThread log level changed to %d", aLogLevel);
 }
 
 } // namespace Host

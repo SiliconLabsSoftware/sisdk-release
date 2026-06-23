@@ -1169,6 +1169,9 @@ typedef enum EZwaveCommandType{
   EZWAVECOMMANDTYPE_ZW_GET_INCLUDED_NLS_NODES, // 135
 
   EZWAVECOMMANDTYPE_SEND_PROTOCOL_DATA_CB,
+  EZWAVECOMMANDTYPE_SET_KEEP_ALIVE_TRACKING,
+  EZWAVECOMMANDTYPE_SET_SEVERITY_LEVEL,
+  EZWAVECOMMANDTYPE_GET_SEVERITY_LEVEL,
   NUM_EZWAVECOMMANDTYPE
 } EZwaveCommandType;
 
@@ -1214,6 +1217,7 @@ typedef enum EZwaveCommandStatusType{
   EZWAVECOMMANDSTATUS_ZW_INITIATE_SHUTDOWN,                         /**< EZWAVECOMMANDSTATUS_ZW_INITIATE_SHUTDOWN */
   EZWAVECOMMANDSTATUS_ZW_GET_INCLUDED_LR_NODES,                     /**< EZWAVECOMMANDSTATUS_ZW_GET_INCLUDED_LR_NODES */
   EZWAVECOMMANDSTATUS_ZW_GET_LR_CHANNEL,                            /**< EZWAVECOMMANDSTATUS_ZW_GET_LR_CHANNEL */
+  EZWAVECOMMANDSTATUS_KEEP_ALIVE_UPDATE,                            /**< EZWAVECOMMANDSTATUS_KEEP_ALIVE_UPDATE */
   EZWAVECOMMANDSTATUS_UNUSED1,                                      /**< EZWAVECOMMANDSTATUS_UNUSED1 */
   EZWAVECOMMANDSTATUS_UNUSED2,                                      /**< EZWAVECOMMANDSTATUS_UNUSED2 */
   EZWAVECOMMANDSTATUS_ZW_GET_PTI_CONFIG,                            /**< EZWAVECOMMANDSTATUS_ZW_GET_PTI_CONFIG */
@@ -1234,6 +1238,7 @@ typedef enum EZwaveCommandStatusType{
   EZWAVECOMMANDSTATUS_GET_NODE_NLS_STATE,                           /**< EZWAVECOMMANDSTATUS_GET_NODE_NLS_STATE */
   EZWAVECOMMANDSTATUS_ENABLE_NODE_NLS,                              /**< EZWAVECOMMANDSTATUS_ENABLE_NODE_NLS */
   EZWAVECOMMANDSTATUS_ZW_GET_INCLUDED_NLS_NODES,                    /**< EZWAVECOMMANDSTATUS_ZW_GET_INCLUDED_NLS_NODES */
+  EZWAVECOMMANDSTATUS_GET_SEVERITY_LEVEL,                           /**< EZWAVECOMMANDSTATUS_GET_SEVERITY_LEVEL */
   NUM_EZWAVECOMMANDSTATUS,                                          /**< NUM_EZWAVECOMMANDSTATUS */
   EZWAVECOMMANDSTATUS_INVALID = 0xFF
 } EZwaveCommandStatusType;
@@ -1249,6 +1254,7 @@ typedef enum EZwaveReceiveType{
   EZWAVERECEIVETYPE_STAY_AWAKE,                                        /**< EZWAVERECEIVETYPE_STAY_AWAKE */
   EZWAVERECEIVETYPE_SECURE_FRAME_RECEIVED,                             /**< Event received from the SECURE module. */
   EZWAVERECEIVETYPE_REQUEST_ENCRYPTION_FRAME,                          /**< EZWAVERECEIVETYPE_REQUEST_ENCRYPTION_FRAME */
+  EZWAVERECEIVETYPE_SINGLE_URGENT,                                     /**< Urgent/priority frame requiring immediate processing */
   NUM_EZWAVERECEIVETYPE,                                               /**< NUM_EZWAVERECEIVETYPE */
   EZWAVERECEIVETYPE_INVALID = 0xFF
 } EZwaveReceiveType;
@@ -1484,7 +1490,7 @@ typedef struct SCommandSetLBTThreshold {
 SCommandSetLBTThreshold;
 
 typedef struct SCommandSetMaxInclReqInterval {
-  uint32_t inclusionRequestInterval;
+  uint8_t inclusionRequestInterval;
 } SCommandSetMaxInclReqInterval;
 
 typedef struct SCommandNvmBackupRestore {
@@ -1515,6 +1521,15 @@ typedef struct SCommandGetNLSNodes {
   node_id_t nodeID;
   uint8_t bitmaskOffset;
 } SCommandGetNLSNodes;
+
+typedef struct SCommandSetKeepAliveTracking {
+  bool value;
+} SCommandSetKeepAliveTracking;
+
+typedef struct SCommandSetSeverityLevel {
+  node_id_t nodeID;
+  uint8_t severity_level;
+} SCommandSetSeverityLevel;
 
 // Command structures END ---------------------------------------------
 
@@ -1628,6 +1643,7 @@ typedef struct STransmitFrameConfig{
   uint8_t TransmitOptions;
   uint8_t iFrameLength;
   uint8_t aFrame[TX_BUFFER_SIZE];
+  uint8_t app_session_id;
 } STransmitFrameConfig;
 
 typedef struct STransmitProtocolFrameConfig{
@@ -1636,6 +1652,7 @@ typedef struct STransmitProtocolFrameConfig{
   uint8_t protocolMetadata[PROTOCOL_METADATA_LENGTH];
   uint8_t FrameLength;
   uint8_t aFrame[TX_BUFFER_SIZE];
+  uint8_t app_session_id;
 } STransmitProtocolFrameConfig;
 
 // Basis API
@@ -1769,6 +1786,10 @@ typedef struct SZWaveInvalidCommandStatus{
 typedef struct SZWaveGeneric8bStatus{
   uint8_t result;     /* generic value of any API that uses a byte as a return value*/
 } SZWaveGeneric8bStatus;
+
+typedef struct SZWaveKeepAliveStatus{
+  node_id_t nodeId;
+} SZWaveKeepAliveStatus;
 
 typedef struct SZWaveGenericBoolStatus{
   bool result;     /* generic value of any API that uses a boolean as a return value*/
@@ -2030,6 +2051,8 @@ typedef union UCommandStatus{
   SZWaveTxPowerMaxSupported     GetTxPowerMaximumSupported;
   SCommandGetNodeNLSStateStatus GetNodeNlsStateStatus;
   SCommandEnableNodeNLSStatus   EnableNodeNlsStatus;
+  SZWaveKeepAliveStatus         KeepAliveUpdate;
+  SZWaveGeneric8bStatus         GetSeverityLevelStatus;
 } UCommandStatus;
 
 typedef union UReceiveCmdPayload{
@@ -2082,6 +2105,8 @@ typedef union UCommandParameters{
   SCommandGetNodeNLSState             GetNodeNlsState;
   SCommandSendProtocolDataCb            SendProtocolDataCb;
   SCommandGetNLSNodes                 GetNLSNodes;
+  SCommandSetKeepAliveTracking        SetKeepAliveTracking;
+  SCommandSetSeverityLevel            SetSeverityLevel;
 } UCommandParameters;
 
 /**************************************************************************

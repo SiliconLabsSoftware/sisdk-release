@@ -66,7 +66,7 @@
 #define ALIGNMENT_SIZE 4
 #endif
 /// Function to output data from LZ4 decompressor
-typedef int32_t (*Lz4DataWrite_t)(uint8_t *data, size_t length);
+typedef int32_t (*Lz4DataWrite_t)(const uint8_t *data, size_t length);
 /// Function to read data into LZ4 decompressor
 typedef int32_t (*Lz4DataRead_t)(size_t backtrackOffset, uint8_t *data, size_t length);
 
@@ -116,7 +116,7 @@ int32_t lz4_decompress(Lz4Context_t *ctx,
  * @retval ::BOOTLOADER_ERROR_COMPRESSION_STATE if the last block wasn't
  *         completed
  ******************************************************************************/
-int32_t lz4_finish(Lz4Context_t *ctx);
+int32_t lz4_finish(const Lz4Context_t *ctx);
 
 /** @} addtogroup Lz4Decompressor */
 /** @} addtogroup Decompressor */
@@ -182,7 +182,7 @@ int32_t gbl_lz4ParseProgTag(ParserContext_t                   *ctx,
  *
  * @return Error code
  ******************************************************************************/
-int32_t gbl_lz4ExitProgTag(ParserContext_t                   *ctx,
+int32_t gbl_lz4ExitProgTag(ParserContext_t             *ctx,
                            const BootloaderParserCallbacks_t *callbacks);
 
 /***************************************************************************//**
@@ -191,7 +191,7 @@ int32_t gbl_lz4ExitProgTag(ParserContext_t                   *ctx,
  *
  * @return Number of bytes required
  ******************************************************************************/
-size_t gbl_lz4NumBytesRequired(ParserContext_t *ctx);
+size_t gbl_lz4NumBytesRequired(const ParserContext_t *ctx);
 
 /** @} addtogroup Lz4ProgTag */
 /** @} addtogroup CustomTags */

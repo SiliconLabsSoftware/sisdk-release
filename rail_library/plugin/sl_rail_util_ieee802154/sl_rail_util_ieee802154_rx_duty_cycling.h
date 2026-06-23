@@ -38,7 +38,9 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup IEEE802154_RX_DUTY_CYCLING_API IEEE802.15.4 Duty Cycling
+ * @addtogroup IEEE802154_RX_DUTY_CYCLING_API IEEE 802.15.4 Duty Cycling
+ * @ingroup IEEE802_15_4
+ * @brief APIs related to \ref rail_util_ieee802154_duty_cycling component.
  * @{
  */
 

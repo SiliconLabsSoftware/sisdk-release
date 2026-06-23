@@ -242,15 +242,15 @@ void sl_zigbee_af_gbcs_device_log_print_entries(void)
 
   for (i = 0; i < SL_ZIGBEE_AF_PLUGIN_GBCS_DEVICE_LOG_DEVICE_LOG_SIZE; i++) {
     if (deviceLogEntryInUse(&deviceLog[i])) {
-      sl_zigbee_af_gbcs_device_log_print("Device info at index %d. EUI64=", i);
-      sl_zigbee_af_gbcs_device_log_debug_exec(sl_zigbee_af_print_big_endian_eui64(deviceLog[i].deviceId));
-      sl_zigbee_af_gbcs_device_log_println(", type=%d", deviceLog[i].deviceInfo.deviceType);
+      sl_zigbee_af_cli_print("Device info at index %d. EUI64=", i);
+      sl_zigbee_af_cli_exec(sl_zigbee_af_print_big_endian_eui64(deviceLog[i].deviceId));
+      sl_zigbee_af_cli_println(", type=%d", deviceLog[i].deviceInfo.deviceType);
       entryPrinted = true;
     }
   }
 
   if (!entryPrinted) {
-    sl_zigbee_af_gbcs_device_log_println("There are currently no entries in the GBCS Device Log");
+    sl_zigbee_af_cli_println("There are currently no entries in the GBCS Device Log");
   }
 }
 

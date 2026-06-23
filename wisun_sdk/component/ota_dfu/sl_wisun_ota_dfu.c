@@ -87,26 +87,6 @@
 /// OTA DFU firmware set error mask
 #define SL_WISUN_OTA_DFU_EVT_FLAG_FW_SET_ERROR_MSK           (1UL << SL_WISUN_OTA_DFU_STATUS_FW_SET_ERROR)
 
-/// OTA DFU status json format string
-#define SL_WISUN_OTA_DFU_STATUS_JSON_FORMAT_STR         \
-  "{\n"                                                 \
-  "\"ip\": \"%s\",\n"                                   \
-  "\"elapsed_downl_t\": \"%u-%02u:%02u:%02u\",\n"       \
-  "\"elapsed_upd_t\": \"%u-%02u:%02u:%02u\",\n"         \
-  "\"elapsed_since_rst_t\": \"%u-%02u:%02u:%02u\",\n"   \
-  "\"downl_bytes\": %lu,\n"                             \
-  "\"flags\": \"0x%.8lx\",\n"                           \
-  "\"fw_update_started\": %u,\n"                        \
-  "\"fw_downloaded\": %u,\n"                            \
-  "\"fw_verified\": %u,\n"                              \
-  "\"fw_set\": %u,\n"                                   \
-  "\"fw_stopped\": %u,\n"                               \
-  "\"fw_download_error\": %u,\n"                        \
-  "\"fw_verify_error\": %u,\n"                          \
-  "\"fw_set_error\": %u,\n"                             \
-  "\"resent/received\": \"%ld/%ld\"\n"                  \
-  "}\n"
-
 /// OTA DFU status json string max length
 #define SL_WISUN_OTA_DFU_STATUS_JSON_STR_MAX_LEN                512UL
 
@@ -203,18 +183,6 @@
 
 /// OTA DFU firmware started response payload string
 #define SL_WISUN_OTA_DFU_RESPONSE_PAYLOAD_STR_ACK        "[Ack: %s]"
-
-/// Error firmware download format string
-#define SL_WISUN_OTA_DFU_ERROR_FW_DOWNLOAD_FORMAT_STR \
-  "error (%u): write flash (ret_val: %ld, offset: %lu, data_size: %u)\n"
-
-/// Error firmware verify format string
-#define SL_WISUN_OTA_DFU_ERROR_FW_VERIFY_FORMAT_STR \
-  "error (%u): verify fw (ret_val: %ld)\n"
-
-/// Error firmware set format string
-#define SL_WISUN_OTA_DFU_ERROR_FW_SET_FORMAT_STR \
-  "error (%u): set fw (ret_val: %ld)\n"
 
 /// Notification CoAP message ID
 #define SL_WISUN_OTA_DFU_HOST_NOTIFY_COAP_MSG_ID          9001U
@@ -398,12 +366,8 @@ static osThreadId_t _ota_dfu_thr = NULL;
 static const osThreadAttr_t _ota_dfu_thr_attr = {
   .name        = "DfuThread",
   .attr_bits   = osThreadDetached,
-  .cb_mem      = NULL,
-  .cb_size     = 0,
-  .stack_mem   = NULL,
   .stack_size  = app_stack_size_word_to_byte(SL_WISUN_OTA_DFU_STACK_SIZE_WORD),
-  .priority    = osPriorityNormal7,
-  .tz_module   = 0
+  .priority    = osPriorityNormal7
 };
 
 /// OTA DFU event flag
@@ -600,7 +564,7 @@ SL_WEAK void sl_wisun_ota_dfu_error_hnd(const sl_wisun_ota_dfu_error_code_t erro
 {
   switch (error_code) {
     case SL_WISUN_OTA_DFU_ERROR_FW_DOWNLOAD:
-      sl_wisun_ota_dfu_log(SL_WISUN_OTA_DFU_ERROR_FW_DOWNLOAD_FORMAT_STR,
+      sl_wisun_ota_dfu_log("error (%u): write flash (ret_val: %"PRIi32", offset: %"PRIu32", data_size: %u)\n",
                            error_code,
                            error_ctx->download.ret_val,
                            error_ctx->download.offset,
@@ -608,13 +572,13 @@ SL_WEAK void sl_wisun_ota_dfu_error_hnd(const sl_wisun_ota_dfu_error_code_t erro
       break;
 
     case SL_WISUN_OTA_DFU_ERROR_FW_VERIFY:
-      sl_wisun_ota_dfu_log(SL_WISUN_OTA_DFU_ERROR_FW_VERIFY_FORMAT_STR,
+      sl_wisun_ota_dfu_log("error (%u): verify fw (ret_val: %"PRIi32")\n",
                            error_code,
                            error_ctx->verify.ret_val);
       break;
 
     case SL_WISUN_OTA_DFU_ERROR_FW_SET:
-      sl_wisun_ota_dfu_log(SL_WISUN_OTA_DFU_ERROR_FW_SET_FORMAT_STR,
+      sl_wisun_ota_dfu_log("error (%u): set fw (ret_val: %"PRIi32")\n",
                            error_code,
                            error_ctx->set.ret_val);
       break;
@@ -866,6 +830,7 @@ static const char *_get_status_json_string(void)
 
   // Evt flag error
   if (flags & SL_WISUN_OTA_DFU_EVT_FLAG_ERROR_MSK) {
+    sl_free((void *)str);
     return NULL;
   }
 
@@ -878,7 +843,23 @@ static const char *_get_status_json_string(void)
 
   (void) snprintf(str,
                   SL_WISUN_OTA_DFU_STATUS_JSON_STR_MAX_LEN,
-                  SL_WISUN_OTA_DFU_STATUS_JSON_FORMAT_STR,
+                  "{\n"
+                  "\"ip\": \"%s\",\n"
+                  "\"elapsed_downl_t\": \"%u-%02u:%02u:%02u\",\n"
+                  "\"elapsed_upd_t\": \"%u-%02u:%02u:%02u\",\n"
+                  "\"elapsed_since_rst_t\": \"%u-%02u:%02u:%02u\",\n"
+                  "\"downl_bytes\": %"PRIu32",\n"
+                  "\"flags\": \"0x%.8lx\",\n"
+                  "\"fw_update_started\": %u,\n"
+                  "\"fw_downloaded\": %u,\n"
+                  "\"fw_verified\": %u,\n"
+                  "\"fw_set\": %u,\n"
+                  "\"fw_stopped\": %u,\n"
+                  "\"fw_download_error\": %u,\n"
+                  "\"fw_verify_error\": %u,\n"
+                  "\"fw_set_error\": %u,\n"
+                  "\"resent/received\": \"%"PRIu32"/%"PRIu32"\"\n"
+                  "}\n",
                   _stats.global_ip_str,
                   (_stats.fw_downl_time.day_of_year > 0U ? _stats.fw_downl_time.day_of_year - 1U : 0U),
                   _stats.fw_downl_time.hour,
@@ -1244,7 +1225,7 @@ static void _tftp_data_hnd(sl_tftp_clnt_t * const clnt,
   // TFTP Server resent data packet (ack from client has not been received in time)
   if (offset == prev_offset) {
     _stats.resent_cnt++;
-    sl_wisun_ota_dfu_log("download: resent   chunk %u, offset: 0x%.8lx, resent/received: (%lu/%lu) %lu.%02lu %%\n",
+    sl_wisun_ota_dfu_log("download: resent   chunk %u, offset: 0x%.8lx, resent/received: (%"PRIu32"/%"PRIu32") %lu.%02lu %%\n",
                          clnt->packet.content.data.block_num,
                          offset,
                          _stats.resent_cnt,

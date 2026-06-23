@@ -25,6 +25,7 @@ typedef enum zpal_log_level_t_ {
 typedef enum zpal_log_component_t_ {
   ZPAL_LOG_NONE,
   ZPAL_LOG_APP,
+  ZPAL_LOG_APP_JAMMING,
   ZPAL_LOG_HW,
   ZPAL_LOG_CC_ASSOCIATION,
   ZPAL_LOG_CC_BATTERY,

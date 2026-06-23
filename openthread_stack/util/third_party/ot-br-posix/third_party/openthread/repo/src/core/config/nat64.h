@@ -31,8 +31,8 @@
  *   This file includes compile-time configurations for NAT64.
  */
 
-#ifndef CONFIG_NAT64_H_
-#define CONFIG_NAT64_H_
+#ifndef OT_CORE_CONFIG_NAT64_H_
+#define OT_CORE_CONFIG_NAT64_H_
 
 /**
  * @addtogroup config-nat64
@@ -89,6 +89,18 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
+ *
+ * Define to 1 to notify the platform when the favored NAT64 prefix changes (for example
+ * unsolicited Spinel `SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX` on NCP).
+ *
+ * Requires `OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE`.
+ */
+#ifndef OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
+#define OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_NAT64_PORT_TRANSLATION_ENABLE
  *
  * Define to 1 to enable NAT64 support for port translation.
@@ -103,4 +115,4 @@
  * @}
  */
 
-#endif
+#endif // OT_CORE_CONFIG_NAT64_H_

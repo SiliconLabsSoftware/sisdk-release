@@ -1,5 +1,5 @@
 project_name: zigbee_host_mp_z3_tc_custom_tc
-label: Zigbee - Host MpZ3TcCustomTc
+label: Zigbee - Host MP Z3 TC Custom
 package: zigbee
 category: Zigbee Host Application
 quality: production

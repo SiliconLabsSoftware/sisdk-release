@@ -163,7 +163,7 @@ class PhysRAILBaseStandardBluetoothLELynx(PhysRAILBaseStandardBluetoothLEPanther
         phy.profile_outputs.MODEM_CTRL3_TSAMPDEL.override = 2
         phy.profile_outputs.MODEM_CTRL6_RXBRCALCDIS.override = 1
         phy.profile_outputs.MODEM_DIGMIXCTRL_DIGMIXFB.override = 1
-        phy.profile_outputs.MODEM_PRE_BASE.override = 2
+
         phy.profile_outputs.MODEM_TIMING_OFFSUBNUM.override = 0
 
         # Shaping overrides
@@ -300,7 +300,6 @@ class PhysRAILBaseStandardBluetoothLELynx(PhysRAILBaseStandardBluetoothLEPanther
         # : Disable oneshot AFC for Concurrent PHY
         phy.profile_outputs.MODEM_AFC_AFCONESHOT.override = 0
         phy.profile_outputs.MODEM_CTRL0_FRAMEDETDEL.override = 2
-        phy.profile_outputs.MODEM_PRE_BASE.override = 2
 
         # : Copy from Bluetooth 1M Fullrate
         phy.profile_outputs.MODEM_CGCLKSTOP_FORCEOFF.override = 56831 # : copy clock gating settings from BLE 1M

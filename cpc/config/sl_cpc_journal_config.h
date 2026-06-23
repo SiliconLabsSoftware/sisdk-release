@@ -36,7 +36,7 @@
 
 // <h>CPC Journal Configuration
 
-// <o SL_CPC_JOURNAL_MAX_ENTRY_COUNT>Maximum CPC journal entries
+// <o SL_CPC_JOURNAL_MAX_ENTRY_COUNT>Maximum CPC journal entries <1-8192>
 // <i> Default: 128
 // <i> Maximum amount of entries for the CPC Journal
 #define SL_CPC_JOURNAL_MAX_ENTRY_COUNT 128

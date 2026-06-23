@@ -31,8 +31,8 @@
  *   This file includes definitions for Thread URIs.
  */
 
-#ifndef URI_PATHS_HPP_
-#define URI_PATHS_HPP_
+#ifndef OT_CORE_THREAD_URI_PATHS_HPP_
+#define OT_CORE_THREAD_URI_PATHS_HPP_
 
 #include "openthread-core-config.h"
 
@@ -70,6 +70,11 @@ enum Uri : uint8_t
     kUriJoinerFinalize,         ///< Joiner Finalize ("c/jf")
     kUriLeaderKeepAlive,        ///< Leader Keep Alive ("c/la")
     kUriLeaderPetition,         ///< Leader Petition ("c/lp")
+    kUriEnrollerJoinerAccept,   ///< Enroller Joiner Accept ("c/nj")
+    kUriEnrollerKeepAlive,      ///< Enroller KeepAlive ("c/nk")
+    kUriEnrollerJoinerRelease,  ///< Enroller Joiner Release ("c/nl")
+    kUriEnrollerRegister,       ///< Enroller Register ("c/nr")
+    kUriEnrollerReportState,    ///< Report Admitter State (to enroller) ("c/ns")
     kUriPanIdConflict,          ///< PAN ID Conflict ("c/pc")
     kUriPendingGet,             ///< MGMT_PENDING_GET ("c/pg")
     kUriPanIdQuery,             ///< PAN ID Query ("c/pq")
@@ -83,6 +88,8 @@ enum Uri : uint8_t
     kUriDiagnosticGetRequest,   ///< Network Diagnostic Get Request ("d/dg")
     kUriDiagnosticGetQuery,     ///< Network Diagnostic Get Query ("d/dq")
     kUriDiagnosticReset,        ///< Network Diagnostic Reset ("d/dr")
+    kUriHistoryAnswer,          ///< History Answer ("h/an")
+    kUriHistoryQuery,           ///< History Query ("h/qy")
     kUriDuaRegistrationNotify,  ///< DUA Registration Notification ("n/dn")
     kUriDuaRegistrationRequest, ///< DUA Registration Request ("n/dr")
     kUriMlr,                    ///< Multicast Listener Registration ("n/mr")
@@ -142,6 +149,11 @@ template <> const char *UriToString<kUriJoinerEntrust>(void);
 template <> const char *UriToString<kUriJoinerFinalize>(void);
 template <> const char *UriToString<kUriLeaderKeepAlive>(void);
 template <> const char *UriToString<kUriLeaderPetition>(void);
+template <> const char *UriToString<kUriEnrollerJoinerAccept>(void);
+template <> const char *UriToString<kUriEnrollerKeepAlive>(void);
+template <> const char *UriToString<kUriEnrollerJoinerRelease>(void);
+template <> const char *UriToString<kUriEnrollerRegister>(void);
+template <> const char *UriToString<kUriEnrollerReportState>(void);
 template <> const char *UriToString<kUriPanIdConflict>(void);
 template <> const char *UriToString<kUriPendingGet>(void);
 template <> const char *UriToString<kUriPanIdQuery>(void);
@@ -161,4 +173,4 @@ template <> const char *UriToString<kUriMlr>(void);
 
 } // namespace ot
 
-#endif // URI_PATHS_HPP_
+#endif // OT_CORE_THREAD_URI_PATHS_HPP_

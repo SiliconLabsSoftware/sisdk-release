@@ -37,6 +37,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "sl_status.h"
+#include "sl_rail_sdk_wmbus_packet_assembler.h"
 /**
  * \addtogroup rail_sdk_wmbus
  * @{

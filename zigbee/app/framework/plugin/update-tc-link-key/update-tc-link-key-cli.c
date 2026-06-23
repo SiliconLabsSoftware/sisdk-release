@@ -51,7 +51,7 @@ void sl_zigbee_af_set_tc_link_key_update_now_command(sl_cli_command_arg_t *argum
   (void)arguments;
   sl_status_t status = sl_zigbee_af_tc_link_key_update_now();
   if (status != SL_STATUS_OK) {
-    sl_zigbee_af_core_println("Manual TCLK update failed.%s",
-                              status == SL_STATUS_IN_PROGRESS ? " TCLK update already in progress" : "");
+    sl_zigbee_af_cli_println("Manual TCLK update failed.%s",
+                             status == SL_STATUS_IN_PROGRESS ? " TCLK update already in progress" : "");
   }
 }

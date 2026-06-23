@@ -165,10 +165,10 @@ void sli_zigbee_af_test_harness_z3_mgmt_permit_joining_req_command(sl_cli_comman
                                             (options == BIT32(0) ? false : true),
                                             (SL_ZIGBEE_APS_OPTION_RETRY));
 
-  sl_zigbee_af_core_println("%s: %s: 0x%08X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Permit joining request",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%08X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Permit joining request",
+                           status);
 }
 
 // plugin test-harness z3 mgmt leave <dstShort:2> <removeChildren:1>
@@ -208,10 +208,10 @@ void sli_zigbee_af_test_harness_z3_mgmt_leave_command(sl_cli_command_arg_t *argu
   status = sendZdoCommand(destination, LEAVE_REQUEST, frame, finger - &frame[0], 0);
 
   done:
-  sl_zigbee_af_core_println("%s: %s: 0x%08X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Mgmt leave",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%08X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Mgmt leave",
+                           status);
 }
 
 // plugin test-harness z3 mgmt nwk-update-request <scanChannel:2> <scanDuration:2>
@@ -276,10 +276,10 @@ void sli_zigbee_af_test_harness_z3_mgmt_nwk_update_request_command(sl_cli_comman
                           0);
 
   done:
-  sl_zigbee_af_core_println("%s: %s: 0x%08X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Network update request",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%08X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Network update request",
+                           status);
 }
 
 // plugin test-harness z3 zdo zdo-reset
@@ -290,10 +290,10 @@ void sli_zigbee_af_test_harness_z3_zdo_zdo_reset_command(sl_cli_command_arg_t *a
   currentZdoNegativeCommandCluster = NULL_CURRENT_ZDO_NEGATIVE_COMMAND_CLUSTER;
   negativeZdoCommandFlags = 0;
 
-  sl_zigbee_af_core_println("%s: %s: 0x%08X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "ZDO reset",
-                            SL_STATUS_OK);
+  sl_zigbee_af_cli_println("%s: %s: 0x%08X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "ZDO reset",
+                           SL_STATUS_OK);
 }
 
 // plugin test-harness z3 zdo node-desc-req <dstShort:2>
@@ -308,10 +308,10 @@ void sli_zigbee_af_test_harness_z3_zdo_node_desc_req_command(sl_cli_command_arg_
                           frame,
                           1, 0);
 
-  sl_zigbee_af_core_println("%s: %s: 0x%08X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Node descriptor request",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%08X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Node descriptor request",
+                           status);
 }
 
 // plugin test-harness z3 zdo zdo-node-desc-rsp-config <options:4>
@@ -339,10 +339,10 @@ void sli_zigbee_af_test_harness_z3_zdo_zdo_node_desc_rsp_config_command(sl_cli_c
 
 #endif /* EZSP_HOST */
 
-  sl_zigbee_af_core_println("%s: %s: 0x%08X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Node descriptor response config",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%08X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Node descriptor response config",
+                           status);
 }
 
 // plugin test-harness z3 zdo active-endpoint-request <dstShort:2>
@@ -368,10 +368,10 @@ void sli_zigbee_af_test_harness_z3_zdo_active_endpoint_request_command(sl_cli_co
                           frameLength,
                           0);
 
-  sl_zigbee_af_core_println("%s: %s: 0x%08X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Active endpoint request",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%08X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Active endpoint request",
+                           status);
 }
 
 // plugin test-harness z3 zdo match-desc-req <dstShort:2>
@@ -426,10 +426,10 @@ void sli_zigbee_af_test_harness_z3_zdo_match_desc_req_command(sl_cli_command_arg
                           frame,
                           finger - &frame[0], 0);
 
-  sl_zigbee_af_core_println("%s: %s: 0x%08X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Match descriptor request",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%08X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Match descriptor request",
+                           status);
 }
 
 // plugin test-harness z3 zdo match-desc-rsp-config <nwkAddrOfInterest:2>
@@ -476,10 +476,10 @@ void sli_zigbee_af_test_harness_z3_zdo_match_desc_rsp_config_command(sl_cli_comm
       break;
   }
 
-  sl_zigbee_af_core_println("%s: %s: 0x%08X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Match descriptor response config",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%08X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Match descriptor response config",
+                           status);
 }
 
 // plugin test-harness z3 zdo simple-desc-req <dstShort:2> <dstEndpoint:1>
@@ -512,10 +512,10 @@ void sli_zigbee_af_test_harness_z3_zdo_simple_desc_req_command(sl_cli_command_ar
                           finger - &frame[0],
                           0);
 
-  sl_zigbee_af_core_println("%s: %s: 0x%08X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Simple descriptor request",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%08X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Simple descriptor request",
+                           status);
 }
 
 // plugin test-harness z3 simple-desc-rsp-config <nwkAddrOfInterest:2>
@@ -580,10 +580,10 @@ void sli_zigbee_af_test_harness_z3_zdo_simple_desc_rsp_config_command(sl_cli_com
       ; // options of 0x00 is ok
   }
 
-  sl_zigbee_af_core_println("%s: %s: 0x%08X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Simple descriptor response config",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%08X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Simple descriptor response config",
+                           status);
 }
 
 // plugin test-harness z3 zdo bind-group <shortAddress:2> <srcEndpoint:1>
@@ -625,10 +625,10 @@ void sli_zigbee_af_test_harness_z3_zdo_bind_group_command(sl_cli_command_arg_t *
                           finger - &frame[0],
                           0);
 
-  sl_zigbee_af_core_println("%s: %s: 0x%08X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "ZDO bind group",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%08X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "ZDO bind group",
+                           status);
 }
 
 // plugin test-harness z3 zdo nwk-addr-req <ieee:8> <requestType:1>
@@ -662,10 +662,10 @@ void sli_zigbee_af_test_harness_z3_zdo_nwk_addr_req_command(sl_cli_command_arg_t
                           finger - &frame[0],
                           0);
 
-  sl_zigbee_af_core_println("%s: %ss: 0x%08X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Network address request",
-                            status);
+  sl_zigbee_af_cli_println("%s: %ss: 0x%08X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Network address request",
+                           status);
 }
 
 // plugin test-harness z3 zdo ieee-addr-req <nwkAddrOfInterest:2>
@@ -700,10 +700,10 @@ void sli_zigbee_af_test_harness_z3_zdo_ieee_addr_req_command(sl_cli_command_arg_
                           finger - &frame[0],
                           0);
 
-  sl_zigbee_af_core_println("%s: %s: 0x%08X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "IEEE address request",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%08X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "IEEE address request",
+                           status);
 }
 
 // plugin test-harness z3 nwk ieee-addr-rsp-config reset
@@ -740,10 +740,10 @@ void sli_zigbee_af_test_harness_z3_zdo_ieee_addr_rsp_config_command(sl_cli_comma
       status = SL_STATUS_INVALID_PARAMETER;
   }
 
-  sl_zigbee_af_core_println("%s: %s: 0x%08X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "IEEE address response config",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%08X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "IEEE address response config",
+                           status);
 }
 
 // plugin test-harness z3 zdo bc-device-announce <shortAddress:2> <ieeeAddress:8>
@@ -765,10 +765,10 @@ void sli_zigbee_af_test_harness_z3_zdo_bc_device_announce_command(sl_cli_command
                           frame,
                           sizeof(frame), 0);
 
-  sl_zigbee_af_core_println("%s: %s: 0x%08X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Broadcast device announce",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%08X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Broadcast device announce",
+                           status);
 }
 
 #ifndef EZSP_HOST

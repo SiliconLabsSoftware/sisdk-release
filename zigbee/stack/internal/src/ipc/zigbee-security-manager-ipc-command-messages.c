@@ -3,7 +3,7 @@
  * @brief internal wrappers for 'zigbee-security-manager' ipc commands
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -283,6 +283,7 @@ sl_status_t sl_zigbee_sec_man_aes_ccm_extended(uint8_t *nonce,
 
   if ((length + mic_length) > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector input length exceeds expected maximum
+    return msg.data.sec_man_aes_ccm_extended.response.result;
   }
 
   memmove(msg.data.sec_man_aes_ccm_extended.request.input, input, sizeof(uint8_t) * (length + mic_length));
@@ -292,6 +293,7 @@ sl_status_t sl_zigbee_sec_man_aes_ccm_extended(uint8_t *nonce,
 
   if ((length + mic_length) > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector output length exceeds expected maximum
+    return msg.data.sec_man_aes_ccm_extended.response.result;
   }
 
   memmove(msg.data.sec_man_aes_ccm_extended.request.output, output, sizeof(uint8_t) * (length + mic_length));
@@ -303,6 +305,7 @@ sl_status_t sl_zigbee_sec_man_aes_ccm_extended(uint8_t *nonce,
 
   if ((length + mic_length) > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector output length exceeds expected maximum
+    return msg.data.sec_man_aes_ccm_extended.response.result;
   }
 
   memmove(output, msg.data.sec_man_aes_ccm_extended.request.output, sizeof(uint8_t) * (length + mic_length));
@@ -698,6 +701,7 @@ void sl_zigbee_sec_man_hmac_aes_mmo(const uint8_t *input,
 
   if (data_length > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector input length exceeds expected maximum
+    return;
   }
 
   memmove(msg.data.sec_man_hmac_aes_mmo.request.input, input, sizeof(uint8_t) * data_length);
@@ -705,6 +709,7 @@ void sl_zigbee_sec_man_hmac_aes_mmo(const uint8_t *input,
 
   if (16 > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector output length exceeds expected maximum
+    return;
   }
 
   memmove(msg.data.sec_man_hmac_aes_mmo.request.output, output, sizeof(uint8_t) * 16);
@@ -712,6 +717,7 @@ void sl_zigbee_sec_man_hmac_aes_mmo(const uint8_t *input,
 
   if (16 > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector output length exceeds expected maximum
+    return;
   }
 
   memmove(output, msg.data.sec_man_hmac_aes_mmo.request.output, sizeof(uint8_t) * 16);

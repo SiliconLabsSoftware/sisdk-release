@@ -1,0 +1,65 @@
+id: bootloader
+label: Bootloader Extension Component
+package: bootloader
+description: >
+  Extension component providing core bootloader functionality including
+  parsing, storage, flash operations, and security features for
+  bootloader.
+category: Platform|Bootloader|Core
+quality: production
+source:
+- path: "platform/bootloader/driver/btl_driver_util.c"
+- path: "platform/bootloader/storage/btl_storage_library.c"
+- path: "platform/bootloader/core/btl_reset.c"
+- path: "platform/bootloader/core/btl_bootload.c"
+- path: "platform/bootloader/parser/gbl/btl_gbl_custom_tags.c"
+- path: "platform/bootloader/core/btl_parse.c"
+- path: "platform/bootloader/parser/gbl/btl_gbl_parser.c"
+- path: "platform/bootloader/security/btl_crc32.c"
+- path: "platform/bootloader/security/btl_crc16.c"
+- path: "platform/bootloader/core/btl_core.c"
+include:
+- path: platform/bootloader/core
+- path: platform/bootloader
+  file_list:
+  - path: driver/btl_driver_util.h
+  - path: config/btl_config.h
+  - path: core/btl_reset.h
+  - path: core/btl_bootload.h
+  - path: core/btl_core.h
+  - path: parser/gbl/btl_gbl_parser.h
+  - path: parser/gbl/btl_gbl_format.h
+  - path: parser/gbl/btl_gbl_custom_tags.h
+  - path: security/btl_crc32.h
+  - path: core/btl_parse.h
+  - path: debug/btl_debug.h
+  - path: security/btl_security_tokens.h
+  - path: security/btl_security_aes.h
+  - path: security/btl_security_sha256.h
+  - path: security/btl_security_ecdsa.h
+  - path: security/btl_security_types.h
+  - path: security/sha/btl_sha256.h
+  - path: storage/bootloadinfo/btl_storage_bootloadinfo.h
+  - path: storage/btl_storage_internal.h
+  - path: storage/btl_storage.h
+- path: platform/bootloader/parser
+  file_list:
+  - path: gbl/btl_gbl_parser.h
+  - path: gbl/btl_gbl_custom_tags.h
+  - path: gbl/btl_gbl_format.h
+- path: platform/bootloader/security
+  file_list:
+  - path: btl_crc16.h
+  - path: btl_crc32.h
+provides:
+- name: bootloader
+requires:
+- name: bootloader_interface_common
+- name: bootloader_interface_s2
+- name: btl_util_header
+metadata:
+  sbom:
+    license: MSLA
+ui_hints:
+  visibility: never
+root_path: bootloader

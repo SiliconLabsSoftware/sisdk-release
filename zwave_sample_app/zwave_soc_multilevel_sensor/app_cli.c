@@ -36,11 +36,10 @@
 #endif
 
 #ifdef SL_CATALOG_ZW_CLI_COMMON_PRESENT
-
+#include "zw_cli_common.h"
 #include "zaf_event_distributor_soc.h"
 #include <stdint.h>
 #include "sl_cli.h"
-#include "app_log.h"
 #include "ev_man.h"
 #include "events.h"
 // -----------------------------------------------------------------------------
@@ -69,7 +68,7 @@
 void cli_send_reports(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
-  app_log_info("Sending battery and sensor report\r\n");
+  cli_printf("[I] Sending battery and sensor report\r\n");
   zaf_event_distributor_enqueue_app_event(EVENT_APP_SEND_BATTERY_LEVEL_AND_SENSOR_REPORT);
 }
 

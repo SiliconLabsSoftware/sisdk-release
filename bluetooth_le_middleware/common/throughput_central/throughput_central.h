@@ -3,7 +3,7 @@
  * @brief Throughput test application.
  *******************************************************************************
  * # License
- * <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -80,7 +80,7 @@ bool throughput_central_allowlist_add(uint8_t *address);
 
 /**************************************************************************//**
  * Clear the allowlist
- * @return true if adding the clear was succesful
+ * @return true if adding the clear was successful
  *****************************************************************************/
 bool throughput_central_allowlist_clear(void);
 
@@ -111,7 +111,7 @@ sl_status_t throughput_central_set_mode(throughput_mode_t mode,
  * @param[in] mtu MTU size in bytes
  * @return status of the operation
  *****************************************************************************/
-sl_status_t throughput_central_set_mtu_size(uint8_t mtu);
+sl_status_t throughput_central_set_mtu_size(throughput_mtu_size_t mtu);
 
 /**************************************************************************//**
  * Set transmission power.

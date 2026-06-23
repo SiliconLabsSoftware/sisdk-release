@@ -1,0 +1,28 @@
+id: ram_only_execution
+label: 'Support for RAM-Only Execution'
+package: platform_core
+description: >
+  This component is meant to be used only if the intended program must be run from
+  the embedded RAM. It pulls the proper linker script for RAM-only execution.
+category: Platform|Toolchain
+quality: evaluation
+metadata:
+  sbom:
+    license: Zlib
+root_path: platform_core/platform/common
+provides:
+- name: ram_only_execution
+requires:
+- name: toolchain_gcc_ram
+  condition: [toolchain_gcc]
+- name: toolchain_gcc_ram
+  condition: [toolchain_llvm]
+- name: toolchain_iar_ram
+  condition: [toolchain_iar]
+- name: tz_secure_execution
+  condition: [trustzone_unaware, device_series_3]
+conflicts:
+- name: bootloader_core
+- name: btl_core
+define:
+- name: SL_RAM_LINKER

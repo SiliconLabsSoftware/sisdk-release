@@ -6,6 +6,7 @@ description: >
 category: Bluetooth|Bluetooth Host (Stack)|Features with Commands and Events
 quality: "production"
 requires:
+- name: "bluetooth_feature_dtm"
 - name: "bluetooth_stack"
 provides:
 - name: "bluetooth_feature_test"

@@ -117,7 +117,16 @@ void *bitfill(void *dst, bool val, uint32_t start, uint32_t end);
  * @param len Number of bits to copy
  * @return void* Destination bitmask
  */
- void *bitcpy(void *dst, const void *src, size_t len);
+void *bitcpy(void *dst, const void *src, size_t len);
+
+/**
+ * @brief Perform bitwise AND operation on two bitmasks
+ *
+ * @param dst Destination bitmask
+ * @param src Source bitmask
+ * @param len Number of bits to operate on
+ */
+void bitand(uint8_t *dst, const uint8_t *src, size_t len);
 
 /**
  * @brief Generate channel mask from string

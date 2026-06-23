@@ -177,8 +177,25 @@ static void _rail_version_internal_setter(app_project_info_version_t *version);
 /// Versions list
 static app_project_info_version_t _versions[] = {
 #if APP_PROJECT_INFO_COMPILER_VERSION_ENABLED
-// GCC Version
-#if defined(__GNUC__)
+#if defined(__clang__)
+  {
+    .id   = APP_PROJECT_INFO_VERSION_ID_COMPILER,
+    .name = "Compiler (LLVM)",
+    .info = "Full version: major * 10000 + minor * 100 + patch",
+  #if !defined(__clang_major__) || !defined(__clang_minor__) || !defined(__clang_patchlevel__)
+    __reset_version
+  #else
+    .major   = { .available = true, .val = __clang_major__ },
+    .minor   = { .available = true, .val = __clang_minor__ },
+    .patch   = { .available = true, .val = __clang_patchlevel__ },
+    .version = { .available = true, .val = __calc_gcc_full_version(__clang_major__,
+                                                                   __clang_minor__,
+                                                                   __clang_patchlevel__) },
+  #endif
+    .initializer = NULL,
+    .next = NULL
+  },
+#elif defined(__GNUC__)
   {
     .id   = APP_PROJECT_INFO_VERSION_ID_COMPILER,
     .name = "Compiler (GCC)",

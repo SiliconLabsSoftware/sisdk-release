@@ -15,6 +15,7 @@
  *
  ******************************************************************************/
 
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "sl_rail.h"
 #include "sl-connect-assert.h"
@@ -30,7 +31,7 @@ void sl_railcb_assert_failed(sl_rail_handle_t rail_handle,
   (void)error_code;
   (void)line;
 #if defined(SL_CATALOG_IOSTREAM_UART_COMMON_PRESENT)
-  sl_iostream_printf(SL_IOSTREAM_STDOUT, "\r\n[ASSERT:librail.a:%ld at %d]\r\n", error_code, line);
+  sl_iostream_printf(SL_IOSTREAM_STDOUT, "\r\n[ASSERT:librail.a:%" PRIu32 " at %d]\r\n", error_code, line);
 #endif // SL_CATALOG_IOSTREAM_UART_COMMON_PRESENT
   CONNECT_STACK_ASSERT(false);
 }

@@ -615,6 +615,11 @@ sl_status_t sli_ot_energy_scan(otInstance    *aInstance,
 exit:
     if (status != SL_STATUS_OK)
     {
+        if (scan != nullptr && sEnergyScans[index] != scan)
+        {
+            delete scan;
+            scan = nullptr;
+        }
         sli_ot_energy_scan_deinit_instance(aInstance);
     }
 
@@ -641,6 +646,11 @@ sl_status_t sli_ot_energy_scan_async(otInstance *aInstance, uint16_t aChannel, s
 exit:
     if (status != SL_STATUS_OK)
     {
+        if (scan != nullptr && sEnergyScans[index] != scan)
+        {
+            delete scan;
+            scan = nullptr;
+        }
         sli_ot_energy_scan_deinit_instance(aInstance);
     }
 

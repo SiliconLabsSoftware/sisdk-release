@@ -29,6 +29,13 @@
 
 #define MAX_IPC_VEC_ARG_CAPACITY 127
 
+// 127 is max packet size over the air but internally we add a few bytes
+// for the packet handoff data length
+#define MAX_IPC_PACKET_HANDOFF_DATA_LENGTH_ARG_CAPACITY 137
+
+// 148 bytes for the CBKE 283k1 data
+#define MAX_IPC_TOKEN_MANAGER_DATA_LENGTH_ARG_CAPACITY 148
+
 /**
  * @addtogroup ember_types
  *
@@ -1340,6 +1347,7 @@ typedef struct {
   uint16_t groupId;
   /** The sequence number. */
   uint8_t sequence;
+  /** The radius of the message, which determines number of hops. */
   uint8_t radius;
 } sl_zigbee_aps_frame_t;
 
@@ -3375,6 +3383,17 @@ typedef struct {
   /* Timestamp of the moment when Start Frame Delimiter (SFD) was received */
   uint32_t last_hop_timestamp;
 } sl_zigbee_rx_packet_info_t;
+
+/** @brief Lightweight link quality information captured at packet reception.
+ *
+ * Used by ::sl_zigbee_post_incoming_packet_filter_with_lqi_and_rssi_cb to
+ * convey radio-level metrics alongside intercepted packets.
+ */
+typedef struct {
+  int8_t rssi;      /**< Received signal strength indicator. */
+  uint8_t lqi;      /**< Link quality indicator. */
+  uint8_t channel;  /**< Radio channel the packet was received on. */
+} sl_zigbee_packet_link_quality_t;
 
 // Note:
 // For single network case:

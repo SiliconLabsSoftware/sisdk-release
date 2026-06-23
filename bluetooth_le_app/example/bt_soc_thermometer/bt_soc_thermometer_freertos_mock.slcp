@@ -4,7 +4,7 @@ label: Bluetooth - SoC Thermometer (Mock) FreeRTOS
 description: >
   Implements a GATT Server with the Health Thermometer Profile, which enables a
   Client device to connect and get temperature data. Temperature is read from
-  the Si7021 digital relative humidity and temperature sensor of the WSTK or of
+  the digital relative humidity and temperature sensor of the mainboard or of
   the Thunderboard.
 category: Bluetooth Examples
 quality: production

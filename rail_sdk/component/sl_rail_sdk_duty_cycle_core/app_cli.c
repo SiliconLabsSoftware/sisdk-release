@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "em_device.h"
 #if defined _SILICON_LABS_32B_SERIES_2
@@ -84,9 +85,9 @@ void cli_info(sl_cli_command_arg_t *arguments)
 
   app_log_info("Info:\n");
 #if defined(_SILICON_LABS_32B_SERIES_2)
-  app_log_info("  MCU Id:       0x%016llX\n", SYSTEM_GetUnique());
+  app_log_info("  MCU Id:       0x%" PRIX64 "\n", SYSTEM_GetUnique());
 #else
-  app_log_info("  MCU Id:       0x%016llX\n", sl_hal_system_get_unique());
+  app_log_info("  MCU Id:       0x%" PRIX64 "\n", sl_hal_system_get_unique());
 #endif
   app_log_info("  Fw RX Packet: %s\n", (rx_requested == true) ? ON : OFF);
 }
@@ -125,7 +126,7 @@ void cli_receive_packet(sl_cli_command_arg_t *arguments)
     rail_status = sl_rail_start_rx(rail_handle, get_selected_channel(), NULL);
   }
   if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_warning("sl_rail_start_rx() or sl_rail_idle result: %lu",
+    app_log_warning("sl_rail_start_rx() or sl_rail_idle result: 0x%08" PRIX32 "",
                     rail_status);
   }
   app_log_info("Received packets: %s\n", str_rx_fw);

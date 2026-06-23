@@ -39,6 +39,9 @@
 #include <functional>
 #include <vector>
 
+#if OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
+#include <openthread/border_routing.h>
+#endif
 #include <openthread/ip6.h>
 
 #include "common/code_utils.hpp"
@@ -58,8 +61,9 @@ public:
         virtual otbrError Ip6Send(const uint8_t *aData, uint16_t aLength);
         virtual otbrError Ip6MulAddrUpdateSubscription(const otIp6Address &aAddress, bool aIsAdded);
 #if OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
-        virtual otbrError TryProcessIcmp6RaMessage(const uint8_t *aData, uint16_t aLength);
+        virtual otbrError BorderRoutingProcessDhcp6PdPrefix(const otBorderRoutingPrefixTableEntry *aPrefixInfo);
 #endif
+        virtual void HandleThreadInterfaceIp6UnicastAddressesUpdated(const std::vector<Ip6AddressInfo> &aAddrInfos);
     };
 
     Netif(const std::string &aInterfaceName, Dependencies &aDependencies);
@@ -91,6 +95,9 @@ private:
     otbrError ProcessMulticastAddressChange(const Ip6Address &aAddress, bool aIsAdded);
     void      ProcessIp6Send(void);
     void      ProcessMldEvent(void);
+#if OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
+    otbrError TryProcessIcmp6RaMessage(const uint8_t *aData, uint16_t aLength);
+#endif
 
     void Update(MainloopContext &aContext) override;
     void Process(const MainloopContext &aContext) override;

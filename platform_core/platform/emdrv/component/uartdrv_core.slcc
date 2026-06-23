@@ -32,7 +32,7 @@ requires:
 - name: sl_core
 - name: interrupt_manager
 - name: ecode
-- name: dmadrv
+- name: dma_channel
 - name: enum
 - name: sleeptimer
 - name: clock_manager_runtime

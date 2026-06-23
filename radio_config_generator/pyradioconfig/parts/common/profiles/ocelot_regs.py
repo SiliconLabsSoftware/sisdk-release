@@ -476,7 +476,7 @@ def build_modem_regs_ocelot_shared(model, profile):
     profile.outputs.append(ModelOutput(model.vars.MODEM_SQEXT_SQSTG3TIMOUT, '', ModelOutputType.SVD_REG_FIELD,readable_name='MODEM.SQEXT.SQSTG3TIMOUT'))
     profile.outputs.append(ModelOutput(model.vars.MODEM_SQEXT_SQSTG2TIMOUT, '', ModelOutputType.SVD_REG_FIELD,readable_name='MODEM.SQEXT.SQSTG2TIMOUT'))
 
-    if model.part_family.lower() not in["rainier","lpwh72000"]:
+    if model.part_family.lower() not in["rainier"]:
         profile.outputs.append(ModelOutput(model.vars.RAC_SYTRIM0_SYTRIMCHPREGAMPBIAS, '', ModelOutputType.SVD_REG_FIELD, readable_name='RAC.SYTRIM0.SYTRIMCHPREGAMPBIAS'))
         profile.outputs.append(ModelOutput(model.vars.RAC_SYTRIM0_SYTRIMCHPREGAMPBW, '', ModelOutputType.SVD_REG_FIELD, readable_name='RAC.SYTRIM0.SYTRIMCHPREGAMPBW'))
         profile.outputs.append(ModelOutput(model.vars.RAC_SYTRIM1_SYTRIMMMDREGAMPBIAS, '', ModelOutputType.SVD_REG_FIELD, readable_name='RAC.SYTRIM1.SYTRIMMMDREGAMPBIAS'))

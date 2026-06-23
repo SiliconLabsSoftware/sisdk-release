@@ -8,8 +8,6 @@ quality: production
 metadata:
   sbom:
     license: Zlib
-ui_hints:
-  visibility: never
 root_path: platform_core/platform/service/interrupt_manager
 template_file:
 - path: template/sli_interrupt_manager_hooks.h.jinja

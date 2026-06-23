@@ -36,6 +36,8 @@ component:
   - id: trustzone_nonsecure
   - id: nvm3_default
   - id: toolchain_gcc_lto
+    condition:
+      - toolchain_gcc
   - id: tz_secure_key_library
   - id: sl_main
 
@@ -128,6 +130,7 @@ post_build:
 tag:
   - companion:bootloader-apploader-secure
   - hwfilter:device:device_series_2
+  - hwfilter:!device:device_generic_family_efr32xg22
   - hwfilter:device:device_supports_bluetooth
   - hwfilter:!device:device_security_vault
   - hwfilter:ram:32k

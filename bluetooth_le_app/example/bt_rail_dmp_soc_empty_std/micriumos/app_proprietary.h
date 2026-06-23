@@ -1,6 +1,6 @@
 /***************************************************************************//**
  * @file
- * @brief Propriatery application interface.
+ * @brief Proprietary application interface.
  *******************************************************************************
  * # License
  * <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>

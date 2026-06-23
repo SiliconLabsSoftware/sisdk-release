@@ -169,7 +169,7 @@ procedure_counter</td>
 frequency_compensation</td>
 <td class="fielddoc">
 <p >Frequency compensation value. Units: 0.01 ppm (15-bit signed integer).</p><ul>
-<li><b>Range:</b> -100ppm (227680) to +100ppm (10000)</li>
+<li><b>Range:</b> -100ppm (-10000) to +100ppm (10000)</li>
 <li>Value: 0xC000. Frequency compensation value is not available or the role is not initiator. This is reported only in the first subevent in the procedure. For subsequent subevents, this value is set to 0. </li>
 </ul>
 </td></tr>
@@ -188,7 +188,7 @@ reference_power_level</td>
 <td class="fieldname">
 procedure_done_status</td>
 <td class="fielddoc">
-<p >Enum <a class="el" href="group__sl__bt__cs.html#ga7eb16c89a888196a9c82fb85feb8d5a3">sl_bt_cs_done_status_t</a>. Current status of the CS procedure Values:</p><ul>
+<p >Enum <a class="el" href="group__sl__bt__cs.html#ga7eb16c89a888196a9c82fb85feb8d5a3">sl_bt_cs_done_status_t</a>. Current status of the CS procedure. Values:</p><ul>
 <li><b>sl_bt_cs_done_status_complete (0x0):</b> All results complete for the CS procedure or subevent</li>
 <li><b>sl_bt_cs_done_status_partial_results_continue (0x1):</b> Partial results with more to follow</li>
 <li><b>sl_bt_cs_done_status_aborted (0xf):</b> Current procedure and all subsequent subevents in the procedure aborted or current subevent aborted. </li>
@@ -199,7 +199,7 @@ procedure_done_status</td>
 <td class="fieldname">
 subevent_done_status</td>
 <td class="fielddoc">
-<p >Enum <a class="el" href="group__sl__bt__cs.html#ga7eb16c89a888196a9c82fb85feb8d5a3">sl_bt_cs_done_status_t</a>. Current status of the CS subevent Values:</p><ul>
+<p >Enum <a class="el" href="group__sl__bt__cs.html#ga7eb16c89a888196a9c82fb85feb8d5a3">sl_bt_cs_done_status_t</a>. Current status of the CS subevent. Values:</p><ul>
 <li><b>sl_bt_cs_done_status_complete (0x0):</b> All results complete for the CS procedure or subevent</li>
 <li><b>sl_bt_cs_done_status_partial_results_continue (0x1):</b> Partial results with more to follow</li>
 <li><b>sl_bt_cs_done_status_aborted (0xf):</b> Current procedure and all subsequent subevents in the procedure aborted or current subevent aborted. </li>

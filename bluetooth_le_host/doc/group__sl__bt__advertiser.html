@@ -113,6 +113,9 @@ Modules</h2></td></tr>
 <tr class="memitem:group__sl__bt__evt__advertiser__scan__request"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__evt__advertiser__scan__request.html">sl_bt_evt_advertiser_scan_request</a></td></tr>
 <tr class="memdesc:group__sl__bt__evt__advertiser__scan__request"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports a scan request received during the legacy or extended advertising advertising if the scan request notification is enabled. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:group__sl__bt__evt__advertiser__random__address__refresh"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__evt__advertiser__random__address__refresh.html">sl_bt_evt_advertiser_random_address_refresh</a></td></tr>
+<tr class="memdesc:group__sl__bt__evt__advertiser__random__address__refresh"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sent when the controller starts using a new stack-managed random advertiser address on an advertising set. <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
 Enumerations</h2></td></tr>
@@ -562,6 +565,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p >Set the advertiser on an advertising set to use a random address. This overrides the default advertiser address, which is either the public device address programmed at production or the address written into persistent storage using <a class="el" href="group__sl__bt__system.html#ga37077c3856d5b506b9ce38a94fd59bdd">sl_bt_system_set_identity_address</a> command. This setting is stored in RAM only and does not change the identity address in persistent storage. In privacy mode, the stack does not change an advertiser address set by this command. To ensure that the stack can manage the address update periodically in privacy mode, the address setting should be removed with the <a class="el" href="group__sl__bt__advertiser.html#ga6aea15003a316dd7ae2d1d27c0fa84de">sl_bt_advertiser_clear_random_address</a> command.</p>
 <p >When setting a resolvable random address, the address parameter is ignored. The stack generates one and set it as the advertiser address. The generated address is returned in the response. To enhance the privacy, the application should schedule periodic address updates by calling this command periodically. Use different schedules for different advertising sets.</p>
+<p >Setting resolvable random address is supported only when the application has included the Bluetooth component bluetooth_feature_local_privacy.</p>
 <p >To use the default advertiser address, remove this setting using <a class="el" href="group__sl__bt__advertiser.html#ga6aea15003a316dd7ae2d1d27c0fa84de">sl_bt_advertiser_clear_random_address</a> command.</p>
 <p >Wrong state error is returned if advertising has been enabled on the advertising set. Invalid parameter error is returned if the advertising set handle is invalid or the address does not conform to the Bluetooth specification.</p>
 <dl class="params"><dt>Parameters</dt><dd>

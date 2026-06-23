@@ -27,18 +27,25 @@
 
 import("etc/gn/openthread.gni")
 
-config("openthread_config") {
-  defines = []
-  if (openthread_config_file != "") {
-    defines += [ "OPENTHREAD_CONFIG_FILE=${openthread_config_file}" ]
-  }
-
+# Strict warnings for OpenThread sources only. Use private `configs +=` on OT
+# targets, not `public_configs` on shared deps, so embedders (e.g. Matter with
+# Clang) keep their own warning defaults; a late -W* can undo flags such as
+# -Wno-unused-parameter on dependent translation units.
+config("openthread_private_flags") {
   cflags = [
     "-Werror",
     "-Wall",
     "-Wextra",
     "-Wundef",
+    "-Wformat-nonliteral",
   ]
+}
+
+config("openthread_config") {
+  defines = []
+  if (openthread_config_file != "") {
+    defines += [ "OPENTHREAD_CONFIG_FILE=${openthread_config_file}" ]
+  }
 
   include_dirs = openthread_project_include_dirs
 
@@ -106,6 +113,11 @@ group("libopenthread-spinel-ncp") {
 group("libopenthread-spinel-rcp") {
   public_deps = [ "src/lib/spinel:spinel-api" ]
   deps = [ "src/lib/spinel:libopenthread-spinel-rcp" ]
+}
+
+group("libopenthread-radio-spinel") {
+  public_deps = [ "src/lib/spinel:spinel-api" ]
+  deps = [ "src/lib/spinel:libopenthread-radio-spinel" ]
 }
 
 if (current_os == "fuchsia") {

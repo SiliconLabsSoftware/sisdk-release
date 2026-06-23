@@ -8,5 +8,6 @@ var group__sl__bt__resolving__list =
     [ "sl_bt_resolving_list_add_device_by_address", "group__sl__bt__resolving__list.html#ga756f9d30cb9e86853a9c8d02048a61f9", null ],
     [ "sl_bt_resolving_list_remove_device_by_bonding", "group__sl__bt__resolving__list.html#ga9aaeb17573b914a8b60376145be60a06", null ],
     [ "sl_bt_resolving_list_remove_device_by_address", "group__sl__bt__resolving__list.html#gaa53f57df176787845b4d8681aab654d1", null ],
-    [ "sl_bt_resolving_list_remove_all_devices", "group__sl__bt__resolving__list.html#ga5170d52a5a449272d3747b63d5854e98", null ]
+    [ "sl_bt_resolving_list_remove_all_devices", "group__sl__bt__resolving__list.html#ga5170d52a5a449272d3747b63d5854e98", null ],
+    [ "sl_bt_resolving_list_read_peer_resolvable_address", "group__sl__bt__resolving__list.html#ga7f27695892c85b0bc53204d0622cc2ed", null ]
 ];

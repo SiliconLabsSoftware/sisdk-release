@@ -73,15 +73,9 @@ static void start_task_handler(void *argument)
 void sli_main_kernel_start_task_initialize(void)
 {
   const osThreadAttr_t thread_attribute = {
-    .name = "",
-    .attr_bits = 0U,
-    .cb_mem = NULL,
-    .cb_size = 0U,
-    .stack_mem = NULL,
+    .name       = "",
     .stack_size = SL_MAIN_START_TASK_STACK_SIZE_BYTES,
-    .priority = osPriorityRealtime7,
-    .tz_module = 0U,
-    .reserved = 0U,
+    .priority   = osPriorityRealtime7,
   };
 
   start_task_id = osThreadNew(&start_task_handler, NULL, &thread_attribute);

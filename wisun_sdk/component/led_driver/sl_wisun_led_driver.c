@@ -136,12 +136,8 @@ static osMutexId_t _led_mtx = NULL;
 static const osThreadAttr_t _led_task_attr = {
   .name        = "WisunLedTask",
   .attr_bits   = osThreadDetached,
-  .cb_mem      = NULL,
-  .cb_size     = 0,
-  .stack_mem   = NULL,
   .stack_size  = (LED_STACK_SIZE * sizeof(void *)) & 0xFFFFFFF8U,
-  .priority    = osPriorityBelowNormal,
-  .tz_module   = 0
+  .priority    = osPriorityBelowNormal
 };
 
 /// LED message queue attribute

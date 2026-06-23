@@ -40,10 +40,6 @@
 #define RADIO_CONFIG_915MHZ_OQPSK_SUPPORT 0 /// Dev board doesn't support OQPSK modulation in 915MHz band.
 #endif
 
-#ifndef RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
-#define RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT 0 /// Set to 1 to enable debug counters in radio.c
-#endif
-
 #ifndef RADIO_CONFIG_ENABLE_CUSTOM_EUI_SUPPORT
 #define RADIO_CONFIG_ENABLE_CUSTOM_EUI_SUPPORT 1 /// Set to 1 to enable custom EUI support (enabled by default)
 #endif

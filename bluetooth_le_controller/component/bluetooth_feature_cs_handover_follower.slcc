@@ -1,0 +1,27 @@
+id: "bluetooth_feature_cs_handover_follower"
+label: "Channel Sounding Handover Follower"
+package: bluetooth_le_controller
+description: >
+  This component provides the Channel Sounding Handover Follower feature. This feature initializes
+  the CS handover Follower role. This allows receiving CS procedure from a CS handover leader.
+category: Bluetooth|Bluetooth LE Controller (Link Layer)|Features with Commands and Events
+quality: "evaluation"
+requires:
+- name: "bluetooth_controller"
+- name: "bluetooth_feature_connection_analyzer"
+- name: "bluetooth_feature_cs"
+- name: "device_supports_bluetooth_cs"
+provides:
+- name: "bluetooth_feature_cs_handover_follower"
+- name: "bluetooth_feature_cs_link"
+template_contribution:
+- name: component_catalog
+  value: bluetooth_feature_cs_handover_follower
+documentation:
+  docset: bluetooth
+  document: bluetooth-stack-api/sl-bt-cs
+metadata:
+  sbom:
+    license: Zlib AND MSLA
+
+root_path: bluetooth_le_controller

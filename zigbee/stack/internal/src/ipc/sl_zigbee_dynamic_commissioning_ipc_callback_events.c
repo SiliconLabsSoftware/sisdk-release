@@ -3,7 +3,7 @@
  * @brief callback event handlers for sl_zigbee_dynamic_commissioning
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -26,6 +26,10 @@ void sli_zigbee_stack_dynamic_commissioning_alert_callback(sl_zigbee_address_inf
                                                            sl_zigbee_dynamic_commissioning_event_t event)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
 
   if (ids != NULL) {
     cb_event->data.dynamic_commissioning_alert_callback.ids = *ids;

@@ -1,0 +1,17 @@
+id: toolchain_lto
+label: Enable toolchain link time optimization
+package: platform_core
+description: >
+  Enables link time optimization for the active toolchain. Selects the matching
+  LTO toolchain component for GCC, LLVM, or IAR (no-op for IAR).
+category: Platform|Toolchain
+quality: production
+metadata:
+  sbom:
+    license: Zlib
+requires:
+- name: toolchain_gcc_lto
+  condition: [toolchain_gcc]
+- name: toolchain_llvm_lto
+  condition: [toolchain_llvm]
+root_path: platform_core

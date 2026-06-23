@@ -30,7 +30,6 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include "sl_main_init.h"
 #include "sl_main_process_action.h"
 #include "sl_common.h"
@@ -67,8 +66,6 @@ int main(int argc, char *argv[])
   // Set up custom signal handler for user interrupt and termination request
   app_signal(SIGINT, signal_handler);
   app_signal(SIGTERM, signal_handler);
-  // Disable buffering for stdout to ensure immediate output
-  setvbuf(stdout, NULL, _IONBF, 0);
 
   // Initialize components
   sl_main_init();

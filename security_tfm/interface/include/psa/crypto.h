@@ -3506,58 +3506,9 @@ psa_status_t psa_key_derivation_input_key(
     psa_key_derivation_step_t step,
     mbedtls_svc_key_id_t key);
 
-/** Perform a single-shot key derivation operation and output the resulting key.
- *
- * NOTE: this is a Silicon Labs custom API, and is not a part of the official
- * PSA Cryptography specification.
- *
- * This function supports HKDF and PBKDF2.
- *
- * This function obtains its secret input from a key object, and any additional
- * inputs such as buffers and integers. The output of this function is a key
- * object containing the output of the selected key derivation function.
- *
- * \param alg                     The key derivation algorithm to compute
- *                                (\c PSA_ALG_XXX value such that
- *                                #PSA_ALG_IS_KEY_DERIVATION(\p alg) is true).
- * \param key_in                  Identifier of the secret key to input to the
- *                                operation. It must allow the usage
- *                                PSA_KEY_USAGE_DERIVE and be of a symmetric
- *                                type.
- * \param[in] info                A context- and application specific
- *                                information string. Only used for HKDF, but
- *                                can be omitted.
- * \param info_length             The length of the provided info in bytes.
- * \param[in] salt                An optional salt value (a non-secret random value).
- *                                Used for both HKDF and PBKDF2. Recommended for
- *                                PBKDF2.
- * \param salt_length             The length of the provided salt in bytes.
- * \param iterations              The number of iterations to use. Maximum
- *                                supported value is 16384. Only used for PBKDF2.
- * \param[in] key_out_attributes  The attributes for the new key output by the
- *                                derivation operation. The key must be of a
- *                                symmetric type.
- * \param[out] key_out            The identifier of the new key output by the
- *                                derivation operation.
- *
- * \retval #PSA_SUCCESS
- *         Success.
- * \retval #PSA_ERROR_INVALID_HANDLE
- * \retval #PSA_ERROR_NOT_PERMITTED
- *         The input key does not have the required usage policy set.
- * \retval #PSA_ERROR_INVALID_ARGUMENT
- *         The input- or output key is not of a symmetric type.
- * \retval #PSA_ERROR_INVALID_ARGUMENT
- *         The input- or output key is larger than what the SE can handle.
- * \retval #PSA_ERROR_NOT_SUPPORTED
- *         The requested algorithm is not supported.
- * \retval #PSA_ERROR_HARDWARE_FAILURE
- * \retval #PSA_ERROR_INSUFFICIENT_MEMORY
- * \retval #PSA_ERROR_STORAGE_FAILURE
- * \retval #PSA_ERROR_BAD_STATE
- *         The library has not been previously initialized by psa_crypto_init().
- *         It is implementation-dependent whether a failure to initialize
- *         results in this error code.
+/* This forward-declaration is included for reverse-compatibility
+ * the implementation of this function has moved to sl_psa_crypto
+ * See sl_psa_crypto.h for more details
  */
 psa_status_t sl_psa_key_derivation_single_shot(
     psa_algorithm_t alg,

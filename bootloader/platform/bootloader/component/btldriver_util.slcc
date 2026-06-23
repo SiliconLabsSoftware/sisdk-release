@@ -1,0 +1,22 @@
+id: btldriver_util
+label: Bootloader Driver Utility Extension Component
+package: bootloader
+description: >
+  Extension component providing driver utility functionality for
+  bootloader.
+category: Platform|Bootloader|Utils
+quality: production
+source:
+- path: "platform/bootloader/driver/btl_driver_util.c"
+include:
+- path: "platform/bootloader"
+  file_list:
+  - path: "driver/btl_driver_util.h"
+provides:
+- name: btldriver_util
+metadata:
+  sbom:
+    license: MSLA
+ui_hints:
+  visibility: never
+root_path: bootloader

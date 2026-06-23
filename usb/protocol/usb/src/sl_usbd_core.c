@@ -31,7 +31,11 @@
 #include "sl_status.h"
 #include "sl_string.h"
 
+#if __has_include("em_core.h")
 #include "em_core.h"
+#else
+#include "sl_core.h"
+#endif
 
 #include "sl_usbd_device_config.h"
 #include "sl_usbd_core_config.h"
@@ -150,6 +154,11 @@ static sli_usbd_t usb_device;
 
 static uint32_t descriptor_buffer[SLI_USBD_DESC_BUF_LEN / 4u] = { 0 };
 static uint32_t ctrl_status_buffer = 0;
+
+// Set true after a successful sli_usbd_driver_start(); used so auto-start can complete the
+// two-phase sequence when sl_usbd_on_device_event() is the default weak no-op. Cleared on stop
+// and when re-initializing hardware from SL_USBD_DEVICE_STATE_NONE.
+static bool sli_usbd_core_driver_hw_started;
 
 sli_usbd_t *usbd_ptr = NULL;
 
@@ -327,6 +336,7 @@ sl_status_t sl_usbd_core_init(void)
   p_dev->state_prev = SL_USBD_DEVICE_STATE_NONE;
   p_dev->conn_status = false;
   p_dev->speed = SL_USBD_DEVICE_SPEED_INVALID;
+  sli_usbd_core_driver_hw_started = false;
 
 #if (USBD_CFG_OPTIMIZE_SPD == 1)
   // Init HS & FS cfg list
@@ -525,12 +535,20 @@ sl_status_t sl_usbd_core_init(void)
 }
 
 /****************************************************************************************************//**
+ * Default weak implementation of device event hook (no-op).
+ * Applications may override with a strong definition.
+ *******************************************************************************************************/
+__WEAK void sl_usbd_on_device_event(sl_usbd_device_event_t event)
+{
+  (void)event;
+}
+
+/****************************************************************************************************//**
  * Starts the device stack
  *******************************************************************************************************/
 sl_status_t sl_usbd_core_start_device(void)
 {
   sli_usbd_device_t     *p_dev;
-  bool   init;
   sl_status_t     status;
   CORE_DECLARE_IRQ_STATE;
 
@@ -543,26 +561,35 @@ sl_status_t sl_usbd_core_start_device(void)
     return SL_STATUS_INVALID_STATE;
   }
 
-  init = false;
-
   // If dev not initialized, call dev drv 'Init()' function.
   if (p_dev->state == SL_USBD_DEVICE_STATE_NONE) {
+    sli_usbd_core_driver_hw_started = false;
     status = sli_usbd_driver_init();
     if (status != SL_STATUS_OK) {
       return status;
     }
 
-    init = true;
+    CORE_ENTER_ATOMIC();
+    p_dev->state = SL_USBD_DEVICE_STATE_INIT;
+    CORE_EXIT_ATOMIC();
+
+    sl_usbd_on_device_event(SL_USBD_EVENT_DEVICE_INIT);
+    // Return after INIT so that an override calling sl_usbd_core_start_device() from
+    // the INIT handler performs the start once. Otherwise duplicate start and
+    // unstable state occur when the handler reenters start_device().
+    return SL_STATUS_OK;
+  }
+
+  if (sli_usbd_core_driver_hw_started) {
+    return SL_STATUS_OK;
   }
 
   status = sli_usbd_driver_start();
 
-  if (init == true) {
-    CORE_ENTER_ATOMIC();
-    p_dev->state = SL_USBD_DEVICE_STATE_INIT;
-    CORE_EXIT_ATOMIC();
+  if (status == SL_STATUS_OK) {
+    sli_usbd_core_driver_hw_started = true;
+    sl_usbd_on_device_event(SL_USBD_EVENT_DEVICE_START);
   }
-
   return status;
 }
 
@@ -585,6 +612,7 @@ sl_status_t sl_usbd_core_stop_device(void)
   // Close curr cfg.
   usbd_core_unset_configuration(p_dev);
   status = sli_usbd_driver_stop();
+  sli_usbd_core_driver_hw_started = false;
 
   CORE_ENTER_ATOMIC();
   // Re-init dev stack to 'INIT' state.
@@ -592,6 +620,8 @@ sl_status_t sl_usbd_core_stop_device(void)
   p_dev->state_prev = SL_USBD_DEVICE_STATE_INIT;
   p_dev->conn_status = false;
   CORE_EXIT_ATOMIC();
+
+  sl_usbd_on_device_event(SL_USBD_EVENT_DEVICE_STOP);
 
   return status;
 }
@@ -5538,7 +5568,14 @@ void sli_usbd_core_task_handler(void)
   sl_status_t status;
 
 #if SL_USBD_AUTO_START_USB_DEVICE == 1
-  sl_usbd_core_start_device();
+  {
+    sl_status_t auto_start_status;
+
+    auto_start_status = sl_usbd_core_start_device();
+    if ((auto_start_status == SL_STATUS_OK) && !sli_usbd_core_driver_hw_started) {
+      (void)sl_usbd_core_start_device();
+    }
+  }
 #endif
 
   // event loop

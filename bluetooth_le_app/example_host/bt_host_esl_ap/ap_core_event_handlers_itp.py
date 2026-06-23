@@ -44,13 +44,13 @@ import random
 import time
 from collections import deque
 
+from ap_config import ITP_MAX_ATTEMPTS, ITP_MAX_PARALLEL_CONNECTIONS
 from ap_logger import getLogger, log
 import esl_lib
 import esl_lib_wrapper as elw
 from esl_tag import ImageUpdateFailed, TagState, EslState
 
 ITP_LOG_PREFIX = "ITP"
-ITP_MAX_ATTEMPTS = 3
 
 # OTS error statuses that trigger slot skip
 _OTS_ERROR_STATUSES = (
@@ -96,12 +96,16 @@ class ImageThroughputEventHandlersMixin:
     ``itp_esl_event_<event_name>``.
     """
 
-    def _itp_init(self, max_tag_count=None, max_group_id=None):
+    def _itp_init(self, max_tag_count=None, max_group_id=None, parallel_connections=None):
         """Initialise (or reset) image throughput bookkeeping.
 
         Args:
             max_tag_count: if set, at most this many synchronized tags are enrolled.
             max_group_id: if set, only tags whose ESL group id is <= this value are enrolled.
+            parallel_connections: if ``None``, keep an existing ``_itp_max_conn_limit`` (or
+                initialise to ``None`` on first run). If ``0``, clear to ``None`` (dynamic
+                re-discovery). If 1 to ``ITP_MAX_PARALLEL_CONNECTIONS``, set a fixed
+                cap on parallel BLE connections.
         """
         self._itp_log = getLogger(ITP_LOG_PREFIX)
         self._itp_max_tag_count = max_tag_count
@@ -128,8 +132,13 @@ class ImageThroughputEventHandlersMixin:
         self._itp_previous_cmd_mode = self.cmd_mode
         self._itp_queue_fill_slot_request_pending = False
         self._itp_image_cache = {}          # path -> bytes
-        if not hasattr(self, "_itp_max_conn_limit"):
-            self._itp_max_conn_limit = None     # discovered dynamically via resource errors
+        if parallel_connections is None:
+            if not hasattr(self, "_itp_max_conn_limit"):
+                self._itp_max_conn_limit = None  # discovered dynamically via resource errors
+        elif parallel_connections == 0:
+            self._itp_max_conn_limit = None
+        else:
+            self._itp_max_conn_limit = parallel_connections
         self._last_error = None
 
     # ---- transfer-time tracking -------------------------------------------
@@ -273,7 +282,7 @@ class ImageThroughputEventHandlersMixin:
         for gid in available:
             # Check for both hard and dynamic connection limits
             total_busy = len(self._itp_active)
-            
+
             if self.max_conn_count_reached or (self._itp_max_conn_limit is not None and total_busy >= self._itp_max_conn_limit):
                 self._itp_log.debug(
                     "Connection limit reached (%d active, %d initiating, limit: %s).",
@@ -308,7 +317,7 @@ class ImageThroughputEventHandlersMixin:
             )
             self.connect(tag)
             initiated += 1
-            
+
             # Check immediately if the synchronous connect() hited the stack limit
             if self.max_conn_count_reached:
                 break
@@ -651,7 +660,7 @@ class ImageThroughputEventHandlersMixin:
                 self._itp_log.warning("Discovered dynamic connection limit: %d", self._itp_max_conn_limit)
         else:
             self._itp_total_errors += 1
-        
+
         self._itp_initiating.discard(tag)
 
         if evt.lib_status in _OTS_ERROR_STATUSES:
@@ -684,11 +693,11 @@ class ImageThroughputEventHandlersMixin:
             esl_lib.get_sl_status_str(evt.sl_status),
             "deferring" if is_limit_error else "will retry",
         )
-        
+
         if is_limit_error:
             # Resource limit reached: don't count this as a failed attempt
             self._itp_attempts[tag] = max(0, self._itp_attempt_count(tag) - 1)
-        
+
         state = self._itp_active.pop(tag, None)
         if state is not None:
             self._itp_requeue(tag)

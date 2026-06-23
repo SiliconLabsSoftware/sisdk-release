@@ -281,7 +281,7 @@ class AccessPoint(
             elif hasattr(event, "connection_handle"):
                 tag = self.tag_db.find(event.connection_handle)
             else:
-                tag = None  # prevent sending unsolicited / mismatching events to tag found in previous cylcle iteration!
+                tag = None  # prevent sending unsolicited / mismatching events to tag found in previous cycle iteration!
 
             # skip tag events processing if stop is in progress (e.g. due boot timeout)
             if not self.stop_event.is_set() and tag is not None:

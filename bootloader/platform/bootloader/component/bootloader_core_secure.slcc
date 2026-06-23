@@ -2,31 +2,21 @@ id: bootloader_core_secure
 label: Bootloader Core (Secure)
 package: bootloader
 description: >
-  The Bootloader Core (Secure) component provides secure core library for the Gecko bootloader. It provides
-  core functions such as bootloader initialization and de-initialization, setting a reset reason, reset methods,
-  initialization of the image parser, and others.
+  Secure bootloader entry and integration: adds the secure-world main file, secure-entry
+  preprocessor defines, on top of bootloader_core_secure_base. Pulls secure policy and
+  validation via bootloader_core_secure_policy and bootloader_core_validation_helper. Carries
+  TrustZone integration requires, linker templates, and toolchain settings (visible in Studio),
+  matching bootloader_core_nonsecure.
 category: Platform|Bootloader|TrustZone Secure|Core
 quality: production
 source:
-- path: platform/bootloader/driver/btl_driver_util.c
-- path: platform/bootloader/core/btl_bootload.c
-- path: platform/bootloader/core/btl_core.c
 - path: platform/bootloader/core/btl_main_s.c
-- path: platform/bootloader/core/flash/btl_internal_flash.c
-- path: platform/bootloader/core/btl_parse.c
-- path: platform/bootloader/core/btl_reset.c
-
-  # Veneers
-- path: platform/bootloader/core/btl_reset_veneers.c
-- path: platform/bootloader/core/btl_bootload_veneers.c
 
 define:
 - name: BOOTLOADER_ENABLE
   value: 1
 - name: SL_RAMFUNC_DISABLE
   value: 1
-- name: __START
-  value: main
 - name: __STARTUP_CLEAR_BSS
   value: 1
 - name: BOOTLOADER_SECOND_STAGE
@@ -35,11 +25,9 @@ define:
   value: 2048
 - name: SL_HEAP_SIZE
   value: 0
-
   # Non-Secure Memory layout
 - name: NS_FLASH_OFFSET
   value: 0x5000
-
 - name: NS_RAM_OFFSET
   value: 0x2000
   condition:
@@ -48,32 +36,20 @@ define:
   value: 0x6000
   unless:
   - bootloader_apploader
-
-include:
-- path: platform/bootloader
-  file_list:
-  - path: api/btl_interface.h
-  - path: config/btl_config.h
-  - path: core/btl_core.h
-  - path: core/btl_helper.h
-  - path: core/btl_reset.h
-  - path: core/btl_parse.h
-  - path: core/btl_bootload.h
-  - path: core/btl_upgrade.h
-  - path: core/btl_util.h
-  - path: driver/btl_driver_util.h
-  - path: core/flash/btl_internal_flash.h
-  - path: debug/btl_debug.h
+- name: SL_APP_PROPERTIES
 
 provides:
 - name: bootloader_core
 - name: bootloader_core_secure
 
     # Used to force conflict during SLC dependency resolution
-    # if other NonSecure incompatible components are being added.
+    # if other Secure incompatible components are being added.
 - name: bootloader_secure_incompatible
 
 requires:
+- name: bootloader_core_secure_base
+- name: bootloader_core_secure_policy
+- name: bootloader_core_validation_helper
 - name: device_init
   condition: [bootloader_apploader]
 - name: device_init_hfxo
@@ -84,14 +60,10 @@ requires:
   condition: [bootloader_apploader]
 - name: tz_common
   condition: [bootloader_apploader]
-- name: emlib
-- name: se_manager_mailbox
 - name: tz_service_syscfg
 - name: bootloader_tz_secure
 - name: bootloader_tz_utils
-- name: sl_fault_injection_hardening
-- name: bootloader_aes_ctr_stream_block_cfg
-  condition: [device_has_semailbox]
+
 recommends:
 - id: bootloader_delay_driver
   vendor: silabs
@@ -116,33 +88,6 @@ recommends:
 - id: bootloader_bgapi_uartdfu
 
   vendor: silabs
-config_file:
-  # xG22
-- path: platform/bootloader/config/device_sdid_205/btl_core_s_cfg.h
-  file_id: btl_core_config
-  condition:
-  - device_sdid_205
-  unless:
-  - bootloader_apploader
-- path: platform/bootloader/config/device_sdid_205/apploader/btl_core_s_cfg.h
-  file_id: btl_core_config
-  condition:
-  - device_sdid_205
-  - bootloader_apploader
-
-  # Series-2
-- path: platform/bootloader/config/device_series_2/btl_core_s_cfg.h
-  file_id: btl_core_config
-  unless:
-  - device_sdid_205
-  - bootloader_apploader
-- path: platform/bootloader/config/device_series_2/apploader/btl_core_s_cfg.h
-  file_id: btl_core_config
-  condition:
-  - bootloader_apploader
-  unless:
-  - device_sdid_205
-
 template_contribution:
 - name: bootloader_enable
   value: 1
@@ -194,12 +139,15 @@ template_contribution:
 - name: bootloader_flash_addr
   value: 0x08000000
   condition:
-  - device_sdid_240     # XG29
+  - device_sdid_240     # xG29
 - name: bootloader_flash_addr
   value: 0x08000000
   condition:
-  - device_sdid_260     # XG2D
-  # Bootloader size
+  - device_sdid_260     # xG2D
+- name: bootloader_flash_addr
+  value: 0x08000000
+  condition:
+  - device_sdid_250     # XG2B
 - name: bootloader_main_size
   value: 0x5000
 
@@ -212,8 +160,12 @@ toolchain_settings:
   value: size
 - option: trustzone_library
   value: enabled
-validation_helper:
-- path: platform/bootloader/component/scripts/bootloader_core_validation.lua
+
+  # CMSE import-library generation (--cmse-implib) is incompatible with GCC
+  # whole-program LTO: Setting the same SLC option here to 'disabled' aims 
+  # to override toolchain_lto's 'enabled' for the secure project specifically.
+- option: link_time_optimization
+  value: disabled
 metadata:
   sbom:
     license: MSLA

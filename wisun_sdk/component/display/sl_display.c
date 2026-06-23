@@ -148,12 +148,8 @@ static const osMutexAttr_t _display_mtx_attr = {
 static const osThreadAttr_t _display_task_attr = {
   .name        = "DisplayTask",
   .attr_bits   = osThreadDetached,
-  .cb_mem      = NULL,
-  .cb_size     = 0,
-  .stack_mem   = NULL,
   .stack_size  = (SL_DISPLAY_STACK_SIZE_WORD * sizeof(void *)) & 0xFFFFFFF8U,
-  .priority    = osPriorityLow,
-  .tz_module   = 0
+  .priority    = osPriorityLow
 };
 
 /// Display message queue attributes

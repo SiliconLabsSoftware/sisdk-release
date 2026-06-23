@@ -126,6 +126,9 @@ configuration:
     value: 1024
   - name: SL_CLI_INPUT_BUFFER_SIZE
     value: 256
+  - name: SL_CLOCK_MANAGER_EUSART0CLK_SOURCE
+    value: CMU_EUSART0CLKCTRL_CLKSEL_LFXO
+    condition: [iostream_eusart, wisun_low_power]
   - name: SL_MAIN_START_TASK_STACK_SIZE_BYTES
     value: 2048
   - name: SL_RAIL_UTIL_SFM_SEQUENCER_SUN_MODULATIONS_SELECTION
@@ -453,7 +456,7 @@ template_contribution:
         - name: "cd"
       argument:
         - type: uint8
-          help: "enable: 0=disabled, 1=enabled"
+          help: "enable: 0=disabled, greater than 0=enabled"
     condition:
       - "cli"
   - name: "cli_command"
@@ -493,7 +496,7 @@ template_contribution:
       help: "Set Leaf behavior"
       argument:
         - type: uint8
-          help: "is_leaf: 1 to act as RPL leaf"
+          help: "is_leaf: greater than 0 to act as RPL leaf"
   - name: "cli_command"
     value:
       group: "wisun"
@@ -502,7 +505,11 @@ template_contribution:
       help: "Enable/disable Direct Connect"
       argument:
         - type: uint8
-          help: "is_enabled: 1 to enable Direct Connect"
+          help: "is_enabled: greater than 0 to enable Direct Connect"
+        - type: uint8
+          help: "mode: 0=manual (user runs advert/accept commands), 1=auto (advertise DC ID + accept link)"
+        - type: stringopt
+          help: "dc_id: DC ID (String) to advertise in auto mode (optional; default:'DC_ID_DEFAULT')"
   - name: "cli_command"
     value:
       group: "wisun"
@@ -512,6 +519,17 @@ template_contribution:
       argument:
         - type: string
           help: "Client link local address"
+  - name: "cli_command"
+    value:
+      group: "wisun"
+      name: "advert_direct_connect_server_id"
+      handler: "app_advert_direct_connect_server_id"
+      help: "Advertise DC server's DC ID"
+      argument:
+        - type: string
+          help: "Client link local address"
+        - type: string
+          help: "DC ID"
   - name: "cli_command"
     value:
       group: "wisun"
@@ -562,6 +580,64 @@ template_contribution:
       help: "Read the eventlog: w cf"
       shortcuts:
         - name: "cf"
+  - name: "cli_command"
+    value:
+      group: "wisun"
+      name: "set_dhcp_vendor_data"
+      handler: "app_set_dhcpv6_vendor_data"
+      help: "Set the vendor data for the given enterprise number"
+      shortcuts:
+        - name: "sdvd"
+      argument:
+        - type: uint32
+          help: "Enterprise number"
+        - type: hex
+          help: "Vendor data written in hex format (id: uint16, length: uint16, data) (for example {00020001ff})"
+  - name: "cli_command"
+    value:
+      group: "wisun"
+      name: "set_last_gasp"
+      handler: "app_set_last_gasp"
+      help: "Enter or leave Last Gasp mode"
+      shortcuts:
+        - name: "slg"
+      argument:
+        - type: uint8
+          help: "enable: greater than 0 to enter Last Gasp mode, 0 to leave Last Gasp mode"
+  - name: "cli_command"
+    value:
+      group: "wisun"
+      name: "set_first_breath"
+      handler: "app_set_first_breath"
+      help: "Enable or disable First Breath, an indication is received when the device is ready to transmit the First Breath message"
+      shortcuts:
+        - name: "sfb"
+      argument:
+        - type: uint8
+          help: "enable: greater than 0 to enable First Breath, 0 to disable First Breath"
+  - name: "cli_command"
+    value:
+      group: "wisun"
+      name: "set_option"
+      handler: "app_set_option"
+      help: "set Wi-SUN option"
+      shortcuts:
+        - name: "sopt"
+      argument:
+        - type: uint32
+          help: "Wi-SUN option ID"
+        - type: uint32
+          help: "Option value"
+        - type: uint16
+          help: "Option length in bytes"
+  - name: "cli_command"
+    value:
+      group: "wisun"
+      name: "reset_parameters"
+      handler: "app_reset_parameters"
+      help: "reset Wi-SUN parameters"
+      shortcuts:
+        - name: "rstpar"
 
 # -------------------------------
   - name: "cli_group"
@@ -580,7 +656,7 @@ template_contribution:
         - type: uint16
           help: "Channel Id"
         - type: uint8opt
-          help: "phy config type (optional, 1=FAN1.1 by default): 0=FAN1.0, 1=FAN1.1, 2=Explicit PHY, 3=Explicit RAIL (IDS), 4=Custom FSK, 5=Custom OFDM, 6=Custom OQPSK"
+          help: "phy config type (optional, FAN1.1 by default): 0=FAN1.0, 1=FAN1.1, 2=Explicit PHY, 3=Explicit RAIL (IDS), 4=Custom FSK, 5=Custom OFDM, 6=Custom OQPSK"
       shortcuts:
         - name: "[strs] "
   - name: "cli_command"
@@ -601,7 +677,7 @@ template_contribution:
         - type: uint16
           help: "Channel Id"
         - type: uint8opt
-          help: "phy config type (optional, 1=FAN1.1 by default): 0=FAN1.0, 1=FAN1.1, 2=Explicit PHY, 3=Explicit RAIL (IDS), 4=Custom FSK, 5=Custom OFDM, 6=Custom OQPSK"
+          help: "phy config type (optional, FAN1.1 by default): 0=FAN1.0, 1=FAN1.1, 2=Explicit PHY, 3=Explicit RAIL (IDS), 4=Custom FSK, 5=Custom OFDM, 6=Custom OQPSK"
       shortcuts:
         - name: "strt"
   - name: "cli_command"
@@ -630,7 +706,7 @@ template_contribution:
         - type: uint8
           help: "CCA enable (0=off, else=on)"
         - type: uint8opt
-          help: "phy config type (optional, 1=FAN1.1 by default): 0=FAN1.0, 1=FAN1.1, 2=Explicit PHY, 3=Explicit RAIL (IDS), 4=Custom FSK, 5=Custom OFDM, 6=Custom OQPSK"
+          help: "phy config type (optional, FAN1.1 by default): 0=FAN1.0, 1=FAN1.1, 2=Explicit PHY, 3=Explicit RAIL (IDS), 4=Custom FSK, 5=Custom OFDM, 6=Custom OQPSK"
       shortcuts:
         - name: "stx"
   - name: "cli_command"
@@ -645,7 +721,7 @@ template_contribution:
         - type: uint32
           help: "Duration (ms)"
         - type: uint8opt
-          help: "phy config type (optional, 1=FAN1.1 by default): 0=FAN1.0, 1=FAN1.1, 2=Explicit PHY, 3=Explicit RAIL (IDS), 4=Custom FSK, 5=Custom OFDM, 6=Custom OQPSK"
+          help: "phy config type (optional, FAN1.1 by default): 0=FAN1.0, 1=FAN1.1, 2=Explicit PHY, 3=Explicit RAIL (IDS), 4=Custom FSK, 5=Custom OFDM, 6=Custom OQPSK"
       shortcuts:
         - name: "srx"
   - name: "cli_command"
@@ -668,8 +744,35 @@ template_contribution:
       shortcuts:
         - name: "sttx"
 
+# -------------------------------
+  - name: "cli_group"
+    value:
+      name: "util"
+      help: "Utility commands"
+      shortcuts:
+        - name: "u"
+  - name: "cli_command"
+    value:
+      group: "util"
+      name: "fill_heap"
+      handler: "app_util_fill_heap"
+      help: "Fill the heap with fixed-size blocks: u fh <block_size>"
+      argument:
+        - type: uint16
+          help: "block size"
+      shortcuts:
+        - name: "fh"
+  - name: "cli_command"
+    value:
+      group: "util"
+      name: "release_heap"
+      handler: "app_util_release_heap"
+      help: "Release previously filled heap: u rh"
+      shortcuts:
+        - name: "rh"
+
 readme:
-  - path: doc/readme.md
+  - path: readme.md
 
 other_file:
   - path: doc/readme_img0.png
@@ -684,7 +787,7 @@ toolchain_settings:
 
 ui_hints:
   highlight:
-    - path: doc/readme.md
+    - path: readme.md
       focus: true
 
 tag:

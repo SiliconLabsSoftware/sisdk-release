@@ -72,6 +72,20 @@ extern int micriumos_errno;
  *                                            INTERRUPT HANDLING
  *******************************************************************************************************/
 
+#if defined(__clang__)
+// For Clang/LLVM, define OSDisableIRQ/OSEnableIRQ as C functions.
+// The GCC .short/.set trick generates R_ARM_ABS16 relocations that ld.lld
+// does not support. Using C functions mirrors the IAR approach.
+void OSDisableIRQ(void)
+{
+  __set_BASEPRI(CORE_ATOMIC_BASE_PRIORITY_LEVEL << (8 - __NVIC_PRIO_BITS));
+}
+
+void OSEnableIRQ(void)
+{
+  __set_BASEPRI(0);
+}
+#else
 // Stringy Assembler literals.
 #define XSTR(s)            STR(s)
 #define STR(s)             #s
@@ -110,6 +124,7 @@ __asm__ (".set OSDisableIRQ3,  BASEPRI_OP");  // 8811            ...
 __asm__ (".set OSEnableIRQ1,   CLR_R00_OP");  // 2000    MOVS    R0, #0x00
 __asm__ (".set OSEnableIRQ2,   MSR_R00_OP");  // F380    MSR     BASEPRI, R0
 __asm__ (".set OSEnableIRQ3,   BASEPRI_OP");  // 8811            ...
+#endif
                                               //
 /*****************************************************************************************************//**
  *                                         OSIdleContextPowerManagerHook

@@ -36,7 +36,7 @@ class Phy_Internal_Base(object):
         phy.profile_inputs.rssi_period.value = 3
         # phy.profile_outputs.AGC_CTRL1_RSSIPERIOD.override = 3
         phy.profile_outputs.AGC_CTRL1_PWRPERIOD.override = 1
-        if model.part_family.lower() in ["panther", "lynx", "leopard", "lion"]:
+        if model.part_family.lower() in ["panther", "lynx", "leopard", "lion", "curl"]:
             phy.profile_outputs.AGC_CTRL1_SUBPERIOD.override = 0
             phy.profile_outputs.AGC_CTRL1_SUBNUM.override = 0
             phy.profile_outputs.AGC_CTRL1_SUBDEN.override = 0
@@ -62,7 +62,7 @@ class Phy_Internal_Base(object):
         phy.profile_outputs.AGC_CTRL3_IFPKDDEBRST.override = 10
 		
 
-        if model.part_family.lower() in ["panther", "lynx", "leopard", "lion"]:
+        if model.part_family.lower() in ["panther", "lynx", "leopard", "lion", "curl"]:
             phy.profile_outputs.AGC_AGCPERIOD_PERIODHI.override = 14
             phy.profile_outputs.AGC_AGCPERIOD_PERIODLO.override = 45
             phy.profile_outputs.AGC_AGCPERIOD_MAXHICNTTHD.override = 9
@@ -85,7 +85,7 @@ class Phy_Internal_Base(object):
         phy.profile_outputs.AGC_MANGAIN_MANGAINLNA.override = 1
         phy.profile_outputs.AGC_MANGAIN_MANGAINPN.override = 1
 
-        if model.part_family.lower() in ["panther", "lynx", "leopard", "lion"]:
+        if model.part_family.lower() in ["panther", "lynx", "leopard", "lion", "curl"]:
             phy.profile_outputs.AGC_HICNTREGION_HICNTREGION0.override = 4
             phy.profile_outputs.AGC_HICNTREGION_HICNTREGION1.override = 5
             phy.profile_outputs.AGC_HICNTREGION_HICNTREGION2.override = 6
@@ -103,11 +103,11 @@ class Phy_Internal_Base(object):
         phy.profile_outputs.AGC_RSSISTEPTHR_DEMODRESTARTTHR.override = 0
         phy.profile_outputs.AGC_RSSISTEPTHR_POSSTEPTHR.override = 0
 
-        if model.part_family.lower() in ["panther", "lynx", "leopard", "lion"]:
+        if model.part_family.lower() in ["panther", "lynx", "leopard", "lion", "curl"]:
             ##### RF peak detector threshold configuration
             phy.profile_outputs.RAC_PGACTRL_LNAMIXRFPKDTHRESHSEL.override = 2
 
-        if model.part_family.lower() not in ["rainier", "lpwh72000", "lpwh74000"]:
+        if model.part_family.lower() not in ["rainier", "lpwh74000"]:
             ##### IF peak detector configuration
             # enable I/Q latch
             phy.profile_outputs.RAC_PGACTRL_PGAENLATCHI.override = 1

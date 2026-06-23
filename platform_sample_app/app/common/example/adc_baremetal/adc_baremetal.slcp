@@ -1,0 +1,56 @@
+project_name: adc_baremetal
+package: platform
+quality: production
+label: Platform - ADC Bare-metal
+description: >
+  This example project shows how to use the SAR ADC (sl_hal_adc) in a bare-metal
+  configuration: GPIO loopback, immediate single conversion on ADC0, and a
+  periodic LED toggle driven by sleeptimer (see adc_test.c for the reference flow).
+category: Example|Platform
+filter:
+  - name: "Device Type"
+    value: ["SoC"]
+  - name: "MCU"
+    value: ["32-bit MCU"]
+  - name: "Project Difficulty"
+    value: ["Intermediate"]
+source:
+  - path: app.c
+  - path: adc_app.c
+include:
+  - path: .
+    file_list:
+    - path: app.h
+    - path: adc_app.h
+component:
+  - id: sl_main
+  - id: device_init
+  - id: clock_manager
+  - id: sleeptimer
+  - id: simple_led
+    instance: [led0]
+  - id: hal_adc
+  - id: hal_gpio
+  - id: code_classification
+  - id: iostream_stdlib_config
+  - id: iostream_retarget_stdio
+  - id: iostream_recommended_stream
+define:
+  - name: DEBUG_EFM
+  - name: SIMG301_BRD4408A
+    condition: [brd4408a]
+  - name: SIMG301_BRD4407A
+    condition: [brd4407a]
+  - name: EFR32MG2B_BRD4418A
+    condition: [brd4418a]
+  - name: EFR32BG2B_BRD4419A
+    condition: [brd4419a]
+readme:
+  - path: readme.md
+ui_hints:
+  highlight: readme.md
+tag:
+  - hardware:component:led:1+
+configuration:
+  - name: SL_BOARD_ENABLE_VCOM
+    value: 1

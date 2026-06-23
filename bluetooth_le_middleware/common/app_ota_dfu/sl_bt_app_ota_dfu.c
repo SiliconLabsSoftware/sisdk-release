@@ -507,7 +507,7 @@ static void app_ota_dfu_step(void)
 
       if (app_ota.status.current != req_sts) {
         // State change is also necessary because
-        // error occured or verification finished successfully.
+        // error occurred or verification finished successfully.
         set_main_status(req_sts, ota_error, btl_ret_val);
       }
       // Continue execution.

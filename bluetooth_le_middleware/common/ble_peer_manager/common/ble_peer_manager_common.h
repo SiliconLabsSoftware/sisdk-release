@@ -1,9 +1,13 @@
 /***************************************************************************//**
  * @file
- * @brief Bluetooth Peer Manager - common
+ * @brief Bluetooth Peer Manager - common API compatibility header
+ *
+ * This file provides backward-compatible aliases for the old ble_peer_manager_*
+ * API. Include this file only through the ble_peer_manager_common compatibility
+ * SLCC component; do not include it directly in new code.
  *******************************************************************************
  * # License
- * <b>Copyright 2024 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -30,27 +34,21 @@
 #ifndef BLE_PEER_MANAGER_COMMON_H
 #define BLE_PEER_MANAGER_COMMON_H
 
-/***********************************************************************************************//**
- * @addtogroup ble_peer_manager_common
- * @{
- **************************************************************************************************/
+#include "sl_bt_peer_manager_common.h"
 
-#include <stdint.h>
+// ---------------------------------------------------------------------------
+// Type aliases
 
-typedef enum {
-  BLE_PEER_MANAGER_ON_CONN_OPENED_CENTRAL = 0,
-  BLE_PEER_MANAGER_ON_CONN_OPENED_PERIPHERAL,
-  BLE_PEER_MANAGER_ON_CONN_CLOSED,
-  BLE_PEER_MANAGER_ON_ADV_STOPPED,
-  BLE_PEER_MANAGER_ERROR,
-} ble_peer_manager_evt_id;
+typedef sl_bt_peer_manager_evt_id         ble_peer_manager_evt_id;
+typedef sl_bt_peer_manager_evt_type_t     ble_peer_manager_evt_type_t;
 
-typedef struct ble_peer_manager_evt_type_s {
-  ble_peer_manager_evt_id evt_id;
-  uint8_t connection_id;
-} ble_peer_manager_evt_type_t;
+// ---------------------------------------------------------------------------
+// Enum value aliases
 
-void ble_peer_manager_on_event(ble_peer_manager_evt_type_t *event);
+#define BLE_PEER_MANAGER_ON_CONN_OPENED_CENTRAL    SL_BT_PEER_MANAGER_ON_CONN_OPENED_CENTRAL
+#define BLE_PEER_MANAGER_ON_CONN_OPENED_PERIPHERAL SL_BT_PEER_MANAGER_ON_CONN_OPENED_PERIPHERAL
+#define BLE_PEER_MANAGER_ON_CONN_CLOSED            SL_BT_PEER_MANAGER_ON_CONN_CLOSED
+#define BLE_PEER_MANAGER_ON_ADV_STOPPED            SL_BT_PEER_MANAGER_ON_ADV_STOPPED
+#define BLE_PEER_MANAGER_ERROR                     SL_BT_PEER_MANAGER_ERROR
 
-/** @} (end addtogroup ble_peer_manager_common) */
 #endif // BLE_PEER_MANAGER_COMMON_H

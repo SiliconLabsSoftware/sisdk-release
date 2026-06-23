@@ -1,0 +1,22 @@
+id: ot_aarch64_android_ndk_r27d
+label: OpenThread host ARM64 (Android 15, NDK r27d)
+package: openthread
+category: OpenThread|Host Support
+quality: production
+description: This component contains definitions to build supported applications for ARM64 hosts with the Android r27d NDK (Android 15, API 35).
+
+provides:
+- name: ot_aarch64_android_ndk_r27d
+
+requires:
+- name: ot_linux_host
+- name: linux_arch_aarch64
+
+template_contribution:
+- name: component_catalog
+  value: ot_aarch64_android_ndk_r27d
+
+metadata:
+  sbom:
+    license: Zlib
+root_path: openthread

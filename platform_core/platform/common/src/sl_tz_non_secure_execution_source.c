@@ -31,6 +31,10 @@
 #include "em_device.h"
 #include "sl_common.h"
 
+#if defined(SL_APP_PROPERTIES)
+#include "api/application_properties.h"
+#endif
+
 #if !defined(__ARM_FEATURE_CMSE) || (__ARM_FEATURE_CMSE != 3U)
   #error "The TZ Non-Secure execution code requires access to the CMSE toolchain extension to set proper SAU settings."
 #endif // __ARM_FEATURE_CMSE
@@ -41,9 +45,6 @@
 
 #define LINK_TIME_INJECTED_DATA_PATTERN   0x0DF0ADBA /* 0xBAADF00D backwards*/
 #define TOTAL_INTERNAL_INTERRUPTS         (16)
-
-#define THUMB_INSTRUCTION_BIT               0x00000001
-#define VECTOR_TABLE_ENTRY_OFFSET(x)        ((uint32_t)(x) + (uint32_t)(THUMB_INSTRUCTION_BIT))
 
 // Linker section definition.
 #if defined (__GNUC__)
@@ -61,11 +62,12 @@
 #elif defined(__ICCARM__)
 
 #pragma data_alignment=512
-#define __ATTRIBUTE_SECURE_VECTORS        SL_ATTRIBUTE_SECTION("secure_vectors")
-#define __ATTRIBUTE_SECURE_CONFIG_DATA    SL_ATTRIBUTE_SECTION("secure_config_data")
-#define __ATTRIBUTE_SECURE_RESET_HANDLER  SL_ATTRIBUTE_SECTION("secure_reset_handler")
-#define __ATTRIBUTE_SECURE_FAULT_HANDLER  SL_ATTRIBUTE_SECTION("secure_fault_handler")
-#define __ATTRIBUTE_SECURE_VECTORS_COPY   SL_ATTRIBUTE_SECTION("secure_vectors_copy")
+/* IAR: mirror GCC (used): ILINK drops unreferenced secure_* sections unless __root (see sl_tz_non_secure_execution.c). */
+#define __ATTRIBUTE_SECURE_VECTORS        _Pragma("location =\"secure_vectors\"") __root
+#define __ATTRIBUTE_SECURE_CONFIG_DATA    _Pragma("location =\"secure_config_data\"") __root
+#define __ATTRIBUTE_SECURE_RESET_HANDLER  _Pragma("location =\"secure_reset_handler\"") __root
+#define __ATTRIBUTE_SECURE_FAULT_HANDLER  _Pragma("location =\"secure_fault_handler\"") __root
+#define __ATTRIBUTE_SECURE_VECTORS_COPY   _Pragma("location =\"secure_vectors_copy\"") __root
 #define __NO_PROLOGUE                     __naked
 
 #else
@@ -80,7 +82,7 @@ extern uint32_t __INITIAL_SP;
 extern ApplicationProperties_t sl_app_properties;
 #define APP_PROPERTIES_ADDR (void(*)(void)) & sl_app_properties
 #else
-#define APP_PROPERTIES_ADDR (void(*)(void))(VECTOR_TABLE_ENTRY_OFFSET(sli_tz_secure_fault_handler))
+#define APP_PROPERTIES_ADDR sli_tz_secure_fault_handler
 #endif
 
 // This data is injected inline with the secure app's binary blob at link-time.
@@ -95,6 +97,7 @@ typedef struct secure_config_data {
  *---------------------------------------------------------------------------*/
 
 void sli_tz_secure_reset_handler(void);
+void sli_tz_secure_reset_handler_C(void);
 void sli_tz_secure_fault_handler(void);
 
 #if !defined(SL_TZ_NON_SECURE_EXECUTION_USE_SOURCE)
@@ -104,15 +107,32 @@ __ATTRIBUTE_SECURE_CONFIG_DATA secure_config_data_t sl_tz_secure_config_data = {
   .mspu_region_size = LINK_TIME_INJECTED_DATA_PATTERN
 };
 #else
+#if defined(__ICCARM__)
+#pragma language=save
+#pragma language=extended
+#pragma section="secure_vectors"
+#pragma section=".intvec"
+#define SECURE_VECTORS           ((uint32_t)__section_begin("secure_vectors"))
+#define NON_SECURE_VECTORS_START ((uint32_t)__section_begin(".intvec"))
+extern uint32_t __mspu_region_size__;
+#define MSPU_REGION_SIZE         ((uint32_t)&__mspu_region_size__)
+#else
 extern uint32_t __Secure_Vectors;
 extern uint32_t linker_vectors_begin;
 extern uint32_t __mspu_region_size__;
+#define SECURE_VECTORS           ((uint32_t)&__Secure_Vectors)
+#define NON_SECURE_VECTORS_START ((uint32_t)&linker_vectors_begin)
+#define MSPU_REGION_SIZE         ((uint32_t)&__mspu_region_size__)
+#endif
 
 __ATTRIBUTE_SECURE_CONFIG_DATA const secure_config_data_t sl_tz_secure_config_data = {
-  .secure_vector_table = (uint32_t*) (((uint32_t)&__Secure_Vectors) /* + 0x10000000*/),
-  .non_secure_vector_table = (uint32_t*) &linker_vectors_begin,
-  .mspu_region_size = (uint32_t)&__mspu_region_size__
+  .secure_vector_table = (uint32_t *)SECURE_VECTORS,
+  .non_secure_vector_table = (uint32_t *)NON_SECURE_VECTORS_START,
+  .mspu_region_size = MSPU_REGION_SIZE
 };
+#if defined(__ICCARM__)
+#pragma language=restore
+#endif
 #endif
 
 #if defined (__GNUC__)
@@ -123,6 +143,16 @@ __ATTRIBUTE_SECURE_CONFIG_DATA const secure_config_data_t sl_tz_secure_config_da
  * Secure Reset Handler called on controller reset
  *---------------------------------------------------------------------------*/
 __ATTRIBUTE_SECURE_RESET_HANDLER __NO_PROLOGUE void sli_tz_secure_reset_handler(void)
+{
+  __ASM volatile (
+    "b     sli_tz_secure_reset_handler_C \n"
+    );
+}
+
+/*---------------------------------------------------------------------------
+ * Secure Reset Handler called on controller reset in C code
+ *---------------------------------------------------------------------------*/
+__ATTRIBUTE_SECURE_RESET_HANDLER __USED void sli_tz_secure_reset_handler_C(void)
 {
 /*
  * This code is meant to be pre-compiled and used as a binary blob in applications
@@ -211,6 +241,7 @@ __ATTRIBUTE_SECURE_RESET_HANDLER __NO_PROLOGUE void sli_tz_secure_reset_handler(
       SMU->MSPUNVMREGIONSIZE_SET = SMU_MSPUNVMREGIONSIZE_MSPURSIZE_MSPU_16KB;
 #elif defined(SMU_MSPUOSPI0CTRL_SECTORSIZE_MSPU_16KB)
       SMU->MSPUOSPI0CTRL_SET = SMU_MSPUOSPI0CTRL_SECTORSIZE_MSPU_16KB;
+      SMU->MSPUOSPI1CTRL_SET = SMU_MSPUOSPI1CTRL_SECTORSIZE_MSPU_16KB;
 #endif
       break;
     case 0x8000:
@@ -218,6 +249,7 @@ __ATTRIBUTE_SECURE_RESET_HANDLER __NO_PROLOGUE void sli_tz_secure_reset_handler(
       SMU->MSPUNVMREGIONSIZE_SET = SMU_MSPUNVMREGIONSIZE_MSPURSIZE_MSPU_32KB;
 #elif defined(SMU_MSPUOSPI0CTRL_SECTORSIZE_MSPU_32KB)
       SMU->MSPUOSPI0CTRL_SET = SMU_MSPUOSPI0CTRL_SECTORSIZE_MSPU_32KB;
+      SMU->MSPUOSPI1CTRL_SET = SMU_MSPUOSPI1CTRL_SECTORSIZE_MSPU_32KB;
 #endif
       break;
     case 0x10000:
@@ -225,6 +257,7 @@ __ATTRIBUTE_SECURE_RESET_HANDLER __NO_PROLOGUE void sli_tz_secure_reset_handler(
       SMU->MSPUNVMREGIONSIZE_SET = SMU_MSPUNVMREGIONSIZE_MSPURSIZE_MSPU_64KB;
 #elif defined(SMU_MSPUOSPI0CTRL_SECTORSIZE_MSPU_64KB)
       SMU->MSPUOSPI0CTRL_SET = SMU_MSPUOSPI0CTRL_SECTORSIZE_MSPU_64KB;
+      SMU->MSPUOSPI1CTRL_SET = SMU_MSPUOSPI1CTRL_SECTORSIZE_MSPU_64KB;
 #endif
       break;
     case 0x20000:
@@ -232,6 +265,7 @@ __ATTRIBUTE_SECURE_RESET_HANDLER __NO_PROLOGUE void sli_tz_secure_reset_handler(
       SMU->MSPUNVMREGIONSIZE_SET = SMU_MSPUNVMREGIONSIZE_MSPURSIZE_MSPU_128KB;
 #elif defined(SMU_MSPUOSPI0CTRL_SECTORSIZE_MSPU_128KB)
       SMU->MSPUOSPI0CTRL_SET = SMU_MSPUOSPI0CTRL_SECTORSIZE_MSPU_128KB;
+      SMU->MSPUOSPI1CTRL_SET = SMU_MSPUOSPI1CTRL_SECTORSIZE_MSPU_128KB;
 #endif
       break;
     case 0x40000:
@@ -239,6 +273,7 @@ __ATTRIBUTE_SECURE_RESET_HANDLER __NO_PROLOGUE void sli_tz_secure_reset_handler(
       SMU->MSPUNVMREGIONSIZE_SET = SMU_MSPUNVMREGIONSIZE_MSPURSIZE_MSPU_256KB;
 #elif defined(SMU_MSPUOSPI0CTRL_SECTORSIZE_MSPU_256KB)
       SMU->MSPUOSPI0CTRL_SET = SMU_MSPUOSPI0CTRL_SECTORSIZE_MSPU_256KB;
+      SMU->MSPUOSPI1CTRL_SET = SMU_MSPUOSPI1CTRL_SECTORSIZE_MSPU_256KB;
 #endif
       break;
     case 0x80000:
@@ -246,6 +281,7 @@ __ATTRIBUTE_SECURE_RESET_HANDLER __NO_PROLOGUE void sli_tz_secure_reset_handler(
       SMU->MSPUNVMREGIONSIZE_SET = SMU_MSPUNVMREGIONSIZE_MSPURSIZE_MSPU_512KB;
 #elif defined(SMU_MSPUOSPI0CTRL_SECTORSIZE_MSPU_512KB)
       SMU->MSPUOSPI0CTRL_SET = SMU_MSPUOSPI0CTRL_SECTORSIZE_MSPU_512KB;
+      SMU->MSPUOSPI1CTRL_SET = SMU_MSPUOSPI1CTRL_SECTORSIZE_MSPU_512KB;
 #endif
       break;
     default:
@@ -253,19 +289,25 @@ __ATTRIBUTE_SECURE_RESET_HANDLER __NO_PROLOGUE void sli_tz_secure_reset_handler(
       SMU->MSPUNVMREGIONSIZE_SET = SMU_MSPUNVMREGIONSIZE_MSPURSIZE_MSPU_16KB;
 #elif defined(SMU_MSPUOSPI0CTRL_SECTORSIZE_MSPU_16KB)
       SMU->MSPUOSPI0CTRL_SET = SMU_MSPUOSPI0CTRL_SECTORSIZE_MSPU_16KB;
+      SMU->MSPUOSPI1CTRL_SET = SMU_MSPUOSPI1CTRL_SECTORSIZE_MSPU_16KB;
 #endif
   }
+#if defined(SMU_MSPUOSPI0CTRL_SATDN)
+  SMU->MSPUOSPI0CTRL_CLR = _SMU_MSPUOSPI0CTRL_SATDN_MASK;
+#endif
 
   // Set all RAM regions to Non-Secure.
 #if defined(_SMU_MSPUDMEMNSREGIONFLAG0_MASK)
   SMU->MSPUDMEMNSREGIONFLAG0_SET = _SMU_MSPUDMEMNSREGIONFLAG0_MASK;
 #elif defined(_SMU_MSPUDMEMSATD0_MASK)
+  SMU->MSPUDMEMCTRL_CLR = _SMU_MSPUDMEMCTRL_SATDN_MASK;
   SMU->MSPUDMEMSATD0_CLR = _SMU_MSPUDMEMSATD0_MASK;
   SMU->MSPUDMEMSATD1_CLR = _SMU_MSPUDMEMSATD1_MASK;
 #endif
 
   // Set all PSRAM regions to Non-Secure.
 #if defined(_SMU_MSPUOSPI1SATD0_MASK)
+  SMU->MSPUOSPI1CTRL_CLR = _SMU_MSPUOSPI1CTRL_SATDN_MASK;
   SMU->MSPUOSPI1SATD0_CLR = _SMU_MSPUOSPI1SATD0_MASK;
   SMU->MSPUOSPI1SATD1_CLR = _SMU_MSPUOSPI1SATD1_MASK;
   SMU->MSPUOSPI1SATD2_CLR = _SMU_MSPUOSPI1SATD2_MASK;
@@ -294,12 +336,23 @@ __ATTRIBUTE_SECURE_RESET_HANDLER __NO_PROLOGUE void sli_tz_secure_reset_handler(
     );
 
   // Flush both Cache before switching to Non-Secure.
+  // Note: Use device config guards instead of core-based guards because
+  // SMU register locations differ between device families even with the same core.
   __ASM volatile (
-#if defined(_SILICON_LABS_32B_SERIES_3_CONFIG_301) // There seems to be a bug with the L1ICACHE0 invalidation
+#if defined(_SILICON_LABS_32B_SERIES_3_CONFIG_301)
     // L1ICACHE0->CMD = ICACHE_CMD_INVALIDATE;
     "MOVS           R2, %[L1icache_flush] \n"
     "MOV            R3, %[L1icache_cmd]   \n"
     "STR            R2, [R3]              \n"
+#else
+    // SCB->ICIALLU = 0 (ARM I-Cache Invalidate All to PoU)
+    "DSB                                  \n"
+    "ISB                                  \n"
+    "MOVS           R2, #0               \n"
+    "MOV            R3, %[scb_iciallu]   \n"
+    "STR            R2, [R3]              \n"
+    "DSB                                  \n"
+    "ISB                                  \n"
 #endif
 
     // L2ICACHE0->FLUSHCMD = L2CACHE_FLUSHCMD_FLUSHALL;
@@ -319,6 +372,8 @@ __ATTRIBUTE_SECURE_RESET_HANDLER __NO_PROLOGUE void sli_tz_secure_reset_handler(
 #if defined(_SILICON_LABS_32B_SERIES_3_CONFIG_301)
     [L1icache_cmd] "r" (&L1ICACHE0->CMD_SET),
     [L1icache_flush] "r" (ICACHE_CMD_INVALIDATE),
+#else
+    [scb_iciallu] "r" (&SCB->ICIALLU),
 #endif
 #if defined(L2CACHE_FLUSHCMD_FLUSHALL)
     [L2icache_flushcmd] "r" (&L2ICACHE0->FLUSHCMD_SET),
@@ -369,7 +424,7 @@ __ATTRIBUTE_SECURE_RESET_HANDLER __NO_PROLOGUE void sli_tz_secure_reset_handler(
   // Configure all peripherals to Non-Secure except for SMU.
   __ASM volatile (
 
-    // SMU->PPUSATD0_CLR = _SMU_PPUSATD0_MASK;
+    // SMU->PPUSATD0_CLR = _SMU_PPUSATD0_MASK & (~SMU_PPUSATD0_SMU);
     "MOV      R3, %[smu_ppusatd0_clear]   \n"
     "MOV      R2, %[ppusatd0_mask]        \n"
     "STR      R2, [R3]                    \n"
@@ -392,9 +447,17 @@ __ATTRIBUTE_SECURE_RESET_HANDLER __NO_PROLOGUE void sli_tz_secure_reset_handler(
 #endif
     : // No outputs.
     :[smu_ppusatd0_clear] "r" (&SMU->PPUSATD0_CLR),
+#if defined(SMU_PPUSATD0_SMU)
+    [ppusatd0_mask] "r" (_SMU_PPUSATD0_MASK & (~SMU_PPUSATD0_SMU)),
+#else
     [ppusatd0_mask] "r" (_SMU_PPUSATD0_MASK),
+#endif
     [smu_ppusatd1_clear] "r" (&SMU->PPUSATD1_CLR),
+#if defined(SMU_PPUSATD1_SMU)
     [ppusatd1_mask] "r" (_SMU_PPUSATD1_MASK & (~SMU_PPUSATD1_SMU))
+#else
+    [ppusatd1_mask] "r" (_SMU_PPUSATD1_MASK)
+#endif
 #if defined(_SMU_PPUSATD2_MASK)
     ,
     [smu_ppusatd2_clear] "r" (&SMU->PPUSATD2_CLR),
@@ -497,6 +560,7 @@ __ATTRIBUTE_SECURE_RESET_HANDLER __NO_PROLOGUE void sli_tz_secure_reset_handler(
     "MOVS           R11, #0             \n"
     "MOVS           R12, #0             \n"
     "DSB                                \n"
+    "ISB                                \n"
 
     // Jump to Non-Secure Reset Handler (Application).
     "BXNS           R4                  \n"
@@ -515,29 +579,30 @@ __ATTRIBUTE_SECURE_FAULT_HANDLER __NO_PROLOGUE void sli_tz_secure_fault_handler(
   // a SecureFault. Care should be taken to not access Secure ressources.
   // Secure ressources are the SMU, the Secure aliases and the flash
   // MSPU region in charge of switching the core to Non-Secure.
-  while (1) {
-  }
+  __ASM volatile (
+    "b     sli_tz_secure_fault_handler \n"
+    );
 }
 
 #if defined(SL_TZ_NON_SECURE_EXECUTION_USE_SOURCE)
 // Non-Secure Execution Vector Table.
-#define SECURE_VECTOR_TABLE {                                                                                              \
-    { .topOfStack = &__INITIAL_SP },                                             /*      Initial Stack Pointer          */ \
-    { (void(*)(void))(VECTOR_TABLE_ENTRY_OFFSET(sli_tz_secure_reset_handler)) }, /*      sli_tz_secure_reset_handler    */ \
-    { (void(*)(void))(VECTOR_TABLE_ENTRY_OFFSET(sli_tz_secure_fault_handler)) }, /*      sli_tz_secure_fault_handler    */ \
-    { (void(*)(void))(VECTOR_TABLE_ENTRY_OFFSET(sli_tz_secure_fault_handler)) }, /*      sli_tz_secure_fault_handler    */ \
-    { (void(*)(void))(VECTOR_TABLE_ENTRY_OFFSET(sli_tz_secure_fault_handler)) }, /*      sli_tz_secure_fault_handler    */ \
-    { (void(*)(void))(VECTOR_TABLE_ENTRY_OFFSET(sli_tz_secure_fault_handler)) }, /*      sli_tz_secure_fault_handler    */ \
-    { (void(*)(void))(VECTOR_TABLE_ENTRY_OFFSET(sli_tz_secure_fault_handler)) }, /*      sli_tz_secure_fault_handler    */ \
-    { (void(*)(void))(VECTOR_TABLE_ENTRY_OFFSET(sli_tz_secure_fault_handler)) }, /*      sli_tz_secure_fault_handler    */ \
-    { (void(*)(void))(VECTOR_TABLE_ENTRY_OFFSET(sli_tz_secure_fault_handler)) }, /*      sli_tz_secure_fault_handler    */ \
-    { (void(*)(void))(VECTOR_TABLE_ENTRY_OFFSET(sli_tz_secure_fault_handler)) }, /*      sli_tz_secure_fault_handler    */ \
-    { (void(*)(void))(VECTOR_TABLE_ENTRY_OFFSET(sli_tz_secure_fault_handler)) }, /*      sli_tz_secure_fault_handler    */ \
-    { (void(*)(void))(VECTOR_TABLE_ENTRY_OFFSET(sli_tz_secure_fault_handler)) }, /*      sli_tz_secure_fault_handler    */ \
-    { (void(*)(void))(VECTOR_TABLE_ENTRY_OFFSET(sli_tz_secure_fault_handler)) }, /*      sli_tz_secure_fault_handler    */ \
-    { APP_PROPERTIES_ADDR },                                                     /*      Application properties         */ \
-    { (void(*)(void))(VECTOR_TABLE_ENTRY_OFFSET(sli_tz_secure_fault_handler)) }, /*      sli_tz_secure_fault_handler    */ \
-    { (void(*)(void))(VECTOR_TABLE_ENTRY_OFFSET(sli_tz_secure_fault_handler)) }, /*      sli_tz_secure_fault_handler    */ \
+#define SECURE_VECTOR_TABLE {                                                   \
+    { .topOfStack = &__INITIAL_SP },  /*      Initial Stack Pointer         */  \
+    { sli_tz_secure_reset_handler }, /*      sli_tz_secure_reset_handler    */  \
+    { sli_tz_secure_fault_handler }, /*      sli_tz_secure_fault_handler    */  \
+    { sli_tz_secure_fault_handler }, /*      sli_tz_secure_fault_handler    */  \
+    { sli_tz_secure_fault_handler }, /*      sli_tz_secure_fault_handler    */  \
+    { sli_tz_secure_fault_handler }, /*      sli_tz_secure_fault_handler    */  \
+    { sli_tz_secure_fault_handler }, /*      sli_tz_secure_fault_handler    */  \
+    { sli_tz_secure_fault_handler }, /*      sli_tz_secure_fault_handler    */  \
+    { sli_tz_secure_fault_handler }, /*      sli_tz_secure_fault_handler    */  \
+    { sli_tz_secure_fault_handler }, /*      sli_tz_secure_fault_handler    */  \
+    { sli_tz_secure_fault_handler }, /*      sli_tz_secure_fault_handler    */  \
+    { sli_tz_secure_fault_handler }, /*      sli_tz_secure_fault_handler    */  \
+    { sli_tz_secure_fault_handler }, /*      sli_tz_secure_fault_handler    */  \
+    { APP_PROPERTIES_ADDR },         /*      Application properties         */  \
+    { sli_tz_secure_fault_handler }, /*      sli_tz_secure_fault_handler    */  \
+    { sli_tz_secure_fault_handler }, /*      sli_tz_secure_fault_handler    */  \
 }
 
 // Secure Vector Table.

@@ -36,6 +36,13 @@ library:
   - "wisun_stack_debug"
   unless:
   - "wisun_stack_lfn"
+- path: "libwisun_ffn_efr32xg2x_llvm_debug.a"
+  condition:
+  - "toolchain_llvm"
+  - "device_sdid_220"
+  - "wisun_stack_debug"
+  unless:
+  - "wisun_stack_lfn"
 - path: "libwisun_ffn_efr32xg2x_gcc_debug.a"
   condition:
   - "toolchain_gcc"
@@ -50,6 +57,13 @@ library:
   - "wisun_stack_debug"
   unless:
   - "wisun_stack_lfn"
+- path: "libwisun_ffn_efr32xg2x_llvm_debug.a"
+  condition:
+  - "toolchain_llvm"
+  - "device_sdid_235"
+  - "wisun_stack_debug"
+  unless:
+  - "wisun_stack_lfn"
 
 
 - path: "libwisun_ffn_efr32xg2x_gcc_release.a"
@@ -62,6 +76,13 @@ library:
 - path: "libwisun_ffn_efr32xg2x_iar_release.a"
   condition:
   - "toolchain_iar"
+  - "device_sdid_220"
+  unless:
+  - "wisun_stack_lfn"
+  - "wisun_stack_debug"
+- path: "libwisun_ffn_efr32xg2x_llvm_release.a"
+  condition:
+  - "toolchain_llvm"
   - "device_sdid_220"
   unless:
   - "wisun_stack_lfn"
@@ -76,6 +97,13 @@ library:
 - path: "libwisun_ffn_efr32xg2x_iar_release.a"
   condition:
   - "toolchain_iar"
+  - "device_sdid_235"
+  unless:
+  - "wisun_stack_lfn"
+  - "wisun_stack_debug"
+- path: "libwisun_ffn_efr32xg2x_llvm_release.a"
+  condition:
+  - "toolchain_llvm"
   - "device_sdid_235"
   unless:
   - "wisun_stack_lfn"
@@ -99,6 +127,14 @@ library:
   - "wisun_stack_lfn"
   unless:
   - "wisun_stack_ffn"
+- path: "libwisun_lfn_efr32xg2x_llvm_debug.a"
+  condition:
+  - "toolchain_llvm"
+  - "device_sdid_220"
+  - "wisun_stack_debug"
+  - "wisun_stack_lfn"
+  unless:
+  - "wisun_stack_ffn"
 - path: "libwisun_lfn_efr32xg2x_gcc_debug.a"
   condition:
   - "toolchain_gcc"
@@ -115,6 +151,14 @@ library:
   - "wisun_stack_lfn"
   unless:
   - "wisun_stack_ffn"
+- path: "libwisun_lfn_efr32xg2x_llvm_debug.a"
+  condition:
+  - "toolchain_llvm"
+  - "device_sdid_235"
+  - "wisun_stack_debug"
+  - "wisun_stack_lfn"
+  unless:
+  - "wisun_stack_ffn"
 
 
 - path: "libwisun_lfn_efr32xg2x_gcc_release.a"
@@ -128,6 +172,14 @@ library:
 - path: "libwisun_lfn_efr32xg2x_iar_release.a"
   condition:
   - "toolchain_iar"
+  - "device_sdid_220"
+  - "wisun_stack_lfn"
+  unless:
+  - "wisun_stack_ffn"
+  - "wisun_stack_debug"
+- path: "libwisun_lfn_efr32xg2x_llvm_release.a"
+  condition:
+  - "toolchain_llvm"
   - "device_sdid_220"
   - "wisun_stack_lfn"
   unless:
@@ -144,6 +196,14 @@ library:
 - path: "libwisun_lfn_efr32xg2x_iar_release.a"
   condition:
   - "toolchain_iar"
+  - "device_sdid_235"
+  - "wisun_stack_lfn"
+  unless:
+  - "wisun_stack_ffn"
+  - "wisun_stack_debug"
+- path: "libwisun_lfn_efr32xg2x_llvm_release.a"
+  condition:
+  - "toolchain_llvm"
   - "device_sdid_235"
   - "wisun_stack_lfn"
   unless:
@@ -168,6 +228,14 @@ library:
   - "wisun_stack_lfn"
   unless:
   - "wisun_stack_ffn"
+- path: "libwisun_lfn_efr32xg23_llvm_debug.a"
+  condition:
+  - "toolchain_llvm"
+  - "device_sdid_210"
+  - "wisun_stack_debug"
+  - "wisun_stack_lfn"
+  unless:
+  - "wisun_stack_ffn"
 
 
 - path: "libwisun_lfn_efr32xg23_gcc_release.a"
@@ -181,6 +249,14 @@ library:
 - path: "libwisun_lfn_efr32xg23_iar_release.a"
   condition:
   - "toolchain_iar"
+  - "device_sdid_210"
+  - "wisun_stack_lfn"
+  unless:
+  - "wisun_stack_ffn"
+  - "wisun_stack_debug"
+- path: "libwisun_lfn_efr32xg23_llvm_release.a"
+  condition:
+  - "toolchain_llvm"
   - "device_sdid_210"
   - "wisun_stack_lfn"
   unless:
@@ -203,6 +279,13 @@ library:
   - "wisun_stack_debug"
   - "wisun_stack_lfn"
   - "wisun_stack_ffn"
+- path: "libwisun_full_efr32xg2x_llvm_debug.a"
+  condition:
+  - "toolchain_llvm"
+  - "device_sdid_220"
+  - "wisun_stack_debug"
+  - "wisun_stack_lfn"
+  - "wisun_stack_ffn"
 - path: "libwisun_full_efr32xg2x_gcc_debug.a"
   condition:
   - "toolchain_gcc"
@@ -217,6 +300,13 @@ library:
   - "wisun_stack_debug"
   - "wisun_stack_lfn"
   - "wisun_stack_ffn"
+- path: "libwisun_full_efr32xg2x_llvm_debug.a"
+  condition:
+  - "toolchain_llvm"
+  - "device_sdid_235"
+  - "wisun_stack_debug"
+  - "wisun_stack_lfn"
+  - "wisun_stack_ffn"
 
 
 - path: "libwisun_full_efr32xg2x_gcc_release.a"
@@ -230,6 +320,14 @@ library:
 - path: "libwisun_full_efr32xg2x_iar_release.a"
   condition:
   - "toolchain_iar"
+  - "device_sdid_220"
+  - "wisun_stack_lfn"
+  - "wisun_stack_ffn"
+  unless:
+  - "wisun_stack_debug"
+- path: "libwisun_full_efr32xg2x_llvm_release.a"
+  condition:
+  - "toolchain_llvm"
   - "device_sdid_220"
   - "wisun_stack_lfn"
   - "wisun_stack_ffn"
@@ -246,6 +344,14 @@ library:
 - path: "libwisun_full_efr32xg2x_iar_release.a"
   condition:
   - "toolchain_iar"
+  - "device_sdid_235"
+  - "wisun_stack_lfn"
+  - "wisun_stack_ffn"
+  unless:
+  - "wisun_stack_debug"
+- path: "libwisun_full_efr32xg2x_llvm_release.a"
+  condition:
+  - "toolchain_llvm"
   - "device_sdid_235"
   - "wisun_stack_lfn"
   - "wisun_stack_ffn"

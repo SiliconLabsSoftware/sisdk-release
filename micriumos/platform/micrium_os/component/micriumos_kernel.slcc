@@ -63,8 +63,6 @@ requires:
 - name: common_core
 - name: slist
 - name: kernel_port
-conflicts:
-- name: toolchain_llvm
 validation_helper:
 - path: kernel_sleeptimer_enable_validation.lua
 template_contribution:

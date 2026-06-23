@@ -52,5 +52,5 @@ void cbkePartnerCommand(sl_cli_command_arg_t *arguments)
   sl_status_t status = sl_zigbee_af_initiate_partner_link_key_exchange(target,
                                                                        endpoint,
                                                                        NULL); // callback
-  sl_zigbee_af_core_debug_exec(sli_zigbee_af_print_status("partner link key request", status));
+  sl_zigbee_af_cli_exec(sli_zigbee_af_print_status("partner link key request", status));
 }

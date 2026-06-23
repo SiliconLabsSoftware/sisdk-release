@@ -1,5 +1,6 @@
 import copy
 from pyradioconfig.protected_fields.rainier_protected_fields import ProtectedFieldsRainier
+from pyradioconfig.protected_fields.everest_protected_fields import ProtectedFieldsEverest
 
 
 # These are registers that should not be touched by radio configs, as they are handled by the RAIL API
@@ -25,6 +26,7 @@ PROTECTED_FIELDS_BASE = {
         'SHUNTLVLANA'
     ],
     'HFXO0.LOWPWRCTRL': ['SHUNTBIASANA'],
+    'MODEM.CTRL0': ['DETDIS'],
     'MODEM.IRCALCOEF': [
         'CIV',
         'CRV'
@@ -276,7 +278,7 @@ PROTECTED_FIELDS = {
     'serval': mergeDictionaries(PROTECTED_FIELDS_BASE, PROTECTED_FIELDS_OCELOT),
     'rainier': ProtectedFieldsRainier().get_rail_protected_field_dict(),
     'lpwh74000': ProtectedFieldsRainier().get_rail_protected_field_dict(),
-    'everest': ProtectedFieldsRainier().get_rail_protected_field_dict(),
+    'everest': ProtectedFieldsEverest().get_rail_protected_field_dict(),
     'wifi74000': ProtectedFieldsRainier().get_rail_protected_field_dict(),
 }
 

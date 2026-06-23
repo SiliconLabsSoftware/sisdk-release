@@ -23,6 +23,7 @@
 #if !defined(SL_CATALOG_TOKEN_MANAGER_PRESENT)
 #define DEFINETYPES
 #endif
+#include "stack/include/sl_zigbee_token.h"
 #include "stack/config/sl_zigbee_token_defines.h"
 #include "sl_token_manager_api.h"
 #include "stack/platform/micro/aes.h"
@@ -245,7 +246,10 @@ sl_status_t zb_sec_man_fetch_zll_key(sl_zigbee_sec_man_context_t* context,
                                      sl_zigbee_sec_man_key_t* plaintext_key)
 {
   tokTypeStackZllSecurity zllSecurityToken;
-  (void)sl_token_manager_get_data(COMMON_TOKEN_STACK_ZLL_SECURITY, (void *)&zllSecurityToken, sizeof(tokTypeStackZllSecurity));
+  sl_status_t tok_st = slx_zigbee_token_manager_get_data(COMMON_TOKEN_STACK_ZLL_SECURITY, (void *)&zllSecurityToken, sizeof(tokTypeStackZllSecurity));
+  if (tok_st != SL_STATUS_OK) {
+    return tok_st;
+  }
   if (context->core_key_type == SL_ZB_SEC_MAN_KEY_TYPE_ZLL_ENCRYPTION_KEY) {
     memmove(plaintext_key->key,
             zllSecurityToken.encryptionKey,
@@ -262,7 +266,10 @@ sl_status_t zb_sec_man_store_zll_key(sl_zigbee_sec_man_context_t* context,
                                      const sl_zigbee_sec_man_key_t* plaintext_key)
 {
   tokTypeStackZllSecurity zllSecurityToken;
-  (void)sl_token_manager_get_data(COMMON_TOKEN_STACK_ZLL_SECURITY, (void *)&zllSecurityToken, sizeof(tokTypeStackZllSecurity));
+  sl_status_t tok_st = slx_zigbee_token_manager_get_data(COMMON_TOKEN_STACK_ZLL_SECURITY, (void *)&zllSecurityToken, sizeof(tokTypeStackZllSecurity));
+  if (tok_st != SL_STATUS_OK) {
+    return tok_st;
+  }
 
   if (context->core_key_type == SL_ZB_SEC_MAN_KEY_TYPE_ZLL_ENCRYPTION_KEY) {
     memmove(zllSecurityToken.encryptionKey,
@@ -273,9 +280,12 @@ sl_status_t zb_sec_man_store_zll_key(sl_zigbee_sec_man_context_t* context,
             plaintext_key->key,
             SL_ZIGBEE_ENCRYPTION_KEY_SIZE);
   }
-  (void)sl_token_manager_set_data(COMMON_TOKEN_STACK_ZLL_SECURITY,
-                                  (void *)&zllSecurityToken,
-                                  sizeof(tokTypeStackZllSecurity));
+  tok_st = slx_zigbee_token_manager_set_data(COMMON_TOKEN_STACK_ZLL_SECURITY,
+                                                        (void *)&zllSecurityToken,
+                                                        sizeof(tokTypeStackZllSecurity));
+  if (tok_st != SL_STATUS_OK) {
+    return tok_st;
+  }
   return SL_STATUS_OK;
 }
 #endif // defined(SL_CATALOG_ZIGBEE_LIGHT_LINK_PRESENT) || defined(SL_ZIGBEE_TEST)
@@ -288,11 +298,17 @@ sl_status_t zb_sec_man_fetch_gp_key(sl_zigbee_sec_man_context_t* context,
 
   if (context->core_key_type == SL_ZB_SEC_MAN_KEY_TYPE_GREEN_POWER_PROXY_TABLE_KEY) {
     tokTypeStackGpProxyTableEntry tok;
-    (void)sl_token_manager_get_data(COMMON_TOKEN_STACK_GP_PROXY_TABLE + index, (void *)&tok, sizeof(tokTypeStackGpProxyTableEntry));
+    sl_status_t tok_st = slx_zigbee_token_manager_get_data(COMMON_TOKEN_STACK_GP_PROXY_TABLE + index, (void *)&tok, sizeof(tokTypeStackGpProxyTableEntry));
+    if (tok_st != SL_STATUS_OK) {
+      return tok_st;
+    }
     memmove(plaintext_key->key, tok.gpdKey, SL_ZIGBEE_ENCRYPTION_KEY_SIZE);
   } else {
     tokTypeStackGpSinkTableEntry tok;
-    (void)sl_token_manager_get_data(COMMON_TOKEN_STACK_GP_SINK_TABLE + index, (void *)&tok, sizeof(tokTypeStackGpSinkTableEntry));
+    sl_status_t tok_st = slx_zigbee_token_manager_get_data(COMMON_TOKEN_STACK_GP_SINK_TABLE + index, (void *)&tok, sizeof(tokTypeStackGpSinkTableEntry));
+    if (tok_st != SL_STATUS_OK) {
+      return tok_st;
+    }
     memmove(plaintext_key->key, tok.gpdKey, SL_ZIGBEE_ENCRYPTION_KEY_SIZE);
   }
   return SL_STATUS_OK;
@@ -304,14 +320,26 @@ sl_status_t zb_sec_man_store_gp_key(sl_zigbee_sec_man_context_t* context,
   uint8_t index = context->key_index;
   if (context->core_key_type == SL_ZB_SEC_MAN_KEY_TYPE_GREEN_POWER_PROXY_TABLE_KEY) {
     tokTypeStackGpProxyTableEntry tok;
-    (void)sl_token_manager_get_data(COMMON_TOKEN_STACK_GP_PROXY_TABLE + index, (void *)&tok, sizeof(tokTypeStackGpProxyTableEntry));
+    sl_status_t tok_st = slx_zigbee_token_manager_get_data(COMMON_TOKEN_STACK_GP_PROXY_TABLE + index, (void *)&tok, sizeof(tokTypeStackGpProxyTableEntry));
+    if (tok_st != SL_STATUS_OK) {
+      return tok_st;
+    }
     memmove(tok.gpdKey, plaintext_key->key, SL_ZIGBEE_ENCRYPTION_KEY_SIZE);
-    (void)sl_token_manager_set_data(COMMON_TOKEN_STACK_GP_PROXY_TABLE +  index, (void *)&tok, sizeof(tokTypeStackGpProxyTableEntry));
+    tok_st = slx_zigbee_token_manager_set_data(COMMON_TOKEN_STACK_GP_PROXY_TABLE +  index, (void *)&tok, sizeof(tokTypeStackGpProxyTableEntry));
+    if (tok_st != SL_STATUS_OK) {
+      return tok_st;
+    }
   } else {
     tokTypeStackGpSinkTableEntry tok;
-    (void)sl_token_manager_get_data(COMMON_TOKEN_STACK_GP_SINK_TABLE + index, (void *)&tok, sizeof(tokTypeStackGpSinkTableEntry));
+    sl_status_t tok_st = slx_zigbee_token_manager_get_data(COMMON_TOKEN_STACK_GP_SINK_TABLE + index, (void *)&tok, sizeof(tokTypeStackGpSinkTableEntry));
+    if (tok_st != SL_STATUS_OK) {
+      return tok_st;
+    }
     memmove(tok.gpdKey, plaintext_key->key, SL_ZIGBEE_ENCRYPTION_KEY_SIZE);
-    (void)sl_token_manager_set_data(COMMON_TOKEN_STACK_GP_SINK_TABLE + index, (void *)&tok, sizeof(tokTypeStackGpSinkTableEntry));
+    tok_st = slx_zigbee_token_manager_set_data(COMMON_TOKEN_STACK_GP_SINK_TABLE + index, (void *)&tok, sizeof(tokTypeStackGpSinkTableEntry));
+    if (tok_st != SL_STATUS_OK) {
+      return tok_st;
+    }
   }
   return SL_STATUS_OK;
 }

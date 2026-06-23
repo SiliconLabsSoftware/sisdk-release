@@ -1,5 +1,5 @@
 #
-# SPDX-FileCopyrightText: Copyright 2019-2022 Arm Limited and/or its affiliates <open-source-office@arm.com>
+# SPDX-FileCopyrightText: Copyright 2019-2022, 2024 Arm Limited and/or its affiliates <open-source-office@arm.com>
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -18,7 +18,7 @@
 
 SET(ROOT ${CMSIS_PATH})
 
-# Select which parts of the CMSIS-DSP must be compiled.
+# Select which parts of the CMSIS-NN must be compiled.
 # There are some dependencies between the parts but they are not tracked
 # by this cmake. So, enabling some functions may require to enable some
 # other ones.
@@ -32,6 +32,8 @@ option(BASICMATHSNN         "Basic Maths for NN"    ON)
 option(RESHAPE              "Reshape"               ON)
 option(SVDF                 "SVDF"                  ON)
 option(LSTM                 "LSTM"                  ON)
+option(PAD                  "Pad"                   ON)
+option(TRANSPOSE            "Transpose"             ON)
 
 # Always needed if any other module above is on.
 option(NNSUPPORT            "NN Support"            ON)
@@ -79,6 +81,14 @@ endif()
 
 if (RESHAPE)
   add_subdirectory(ReshapeFunctions)
+endif()
+
+if (PAD)
+  add_subdirectory(PadFunctions)
+endif()
+
+if (TRANSPOSE)
+  add_subdirectory(TransposeFunctions)
 endif()
 
 # Keep NNSUPPORT at the end

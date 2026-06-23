@@ -3,10 +3,7 @@ package: platform
 quality: production
 label: Platform - NVM3 Bare-metal
 description: >
-  This example project demonstrates use of the NVM3 interface.
-  Using the command line interface, the user can write, read and delete
-  NVM3 data objects through the serial connection. The number of
-  writes and deletes are tracked in counter objects.
+  Demonstrates the NVM3 non-volatile storage API. Use the serial CLI to write, read, and delete data objects; write and delete counts are tracked.
 category: Example|Platform
 filter:
   - name: "Device Type"
@@ -84,3 +81,6 @@ readme:
   - path: readme.md
 ui_hints:
   highlight: readme.md
+tag:
+  - hwfilter:board:simple_led:led0
+  - hwfilter:device:device_series_2

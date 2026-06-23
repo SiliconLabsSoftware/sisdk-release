@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "em_device.h"
 #if defined _SILICON_LABS_32B_SERIES_2
@@ -48,24 +49,8 @@
 #endif
 
 // -----------------------------------------------------------------------------
-//                              Macros and Typedefs
-// -----------------------------------------------------------------------------
-/// Used for indicates the current status of forwarding rx packets on UART
-#define ON   "ON"
-/// Used for indicates the current status of forwarding rx packets on UART
-#define OFF  "OFF"
-
-// -----------------------------------------------------------------------------
 //                          Static Function Declarations
 // -----------------------------------------------------------------------------
-
-// -----------------------------------------------------------------------------
-//                                Global Variables
-// -----------------------------------------------------------------------------
-//indicates if light bulb toggle is required
-extern bool cli_toggle_light_required;
-//indicates if state change is required
-extern bool cli_change_state_required;
 // -----------------------------------------------------------------------------
 //                                Static Variables
 // -----------------------------------------------------------------------------
@@ -82,9 +67,9 @@ void cli_info(sl_cli_command_arg_t *arguments)
 
   app_log_info("Info:\n");
 #if defined(_SILICON_LABS_32B_SERIES_2)
-  app_log_info("  MCU Id:       0x%016llX\n", SYSTEM_GetUnique());
+  app_log_info("  MCU Id:       0x%" PRIX64 "\n", SYSTEM_GetUnique());
 #else
-  app_log_info("  MCU Id:       0x%016llX\n", sl_hal_system_get_unique());
+  app_log_info("  MCU Id:       0x%" PRIX64 "\n", sl_hal_system_get_unique());
 #endif
 }
 
@@ -94,7 +79,7 @@ void cli_info(sl_cli_command_arg_t *arguments)
 void cli_toggle_light(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
-  cli_toggle_light_required = true;
+  light_bulb_toggle_required = true;
 
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   app_task_notify();
@@ -107,7 +92,7 @@ void cli_toggle_light(sl_cli_command_arg_t *arguments)
 void cli_change_status(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
-  cli_change_state_required = true;
+  state_change_required = true;
 
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   app_task_notify();

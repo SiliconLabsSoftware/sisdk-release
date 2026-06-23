@@ -1,14 +1,10 @@
 project_name: zigbee_z3_gateway_cpc
-label: Zigbee - Z3GatewayCpc
+label: Zigbee - Host Z3 Gateway CPC
 package: zigbee
 category: Zigbee Host Application
 quality: experimental
 
-description: >
-  This is a Zigbee 3.0 gateway application for a Unix host. As opposed to the
-  standard zigbee_z3_gateway application, this application here uses the Co-Processor
-  Communication (CPC) feature to communicate to a NCP that is also configured
-  with the CPC feature.
+description: Zigbee 3.0 gateway for Unix host using Co-Processor Communication (CPC) to communicate with an NCP configured with CPC.
 author: Silicon Laboratories, Inc.
 
 component:

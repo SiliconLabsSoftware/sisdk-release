@@ -48,13 +48,13 @@
 
 /** Mode switch states */
 typedef enum mode_switch_state {
-  MS_IDLE,
-  MS_REQUESTED,
-  MS_INITIATED,
-  MS_SENDING_MS_START_PACKET,
-  MS_ON_NEW_PHY,
-  MS_RETURN_TO_BASE_PHY,
-  MS_SENDING_MS_END_PACKET
+  MS_IDLE = 0,
+  MS_REQUESTED = 1,
+  MS_INITIATED = 2,
+  MS_SENDING_MS_START_PACKET = 3,
+  MS_ON_NEW_PHY = 4,
+  MS_RETURN_TO_BASE_PHY = 5,
+  MS_SENDING_MS_END_PACKET = 6
 } mode_switch_state_t;
 
 /** PHY modulation scheme */

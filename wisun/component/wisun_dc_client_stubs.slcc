@@ -1,0 +1,27 @@
+id: "wisun_dc_client_stubs"
+label: "Wi-SUN Direct Connect Client stubs"
+description: "Provides stub implementations for Wi-SUN Direct Connect Client when the DC client library is not used"
+package: "wisun"
+category: "Wi-SUN"
+quality: "production"
+root_path: "wisun/./stack"
+
+ui_hints:
+  visibility: never
+
+provides:
+- name: "wisun_dc_client_implementation"
+- name: "wisun_dc_client_stubs"
+
+source:
+- path: "src/sli_wisun_task_direct_connect_client_stubs.c"
+- path: "src/sli_wisun_direct_connect_client_stubs.c"
+- path: "nanostack-stack/source/6lowpan/ws/dc/dc_bootstrap_stubs.c"
+- path: "nanostack-stack/source/security/authenticator/authenticator_stubs.c"
+  unless: [wisun_br_stack]
+- path: nanostack-stack/source/6lowpan/ws/ws_ie_lib_stubs.c
+  unless: [wisun_stack_ffn]
+
+metadata:
+  sbom:
+    license: MSLA

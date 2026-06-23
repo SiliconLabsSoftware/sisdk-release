@@ -6,7 +6,7 @@ description: >
   (i.e. the Link Layer only) and provides access to it using the standard HCI
   (Host-Controller Interface) over a UART connection.
 category: Bluetooth Examples
-quality: experimental
+quality: production
 
 filter:
   - name: "Wireless Technology"
@@ -115,7 +115,7 @@ tag:
   - hwfilter:device:device_series_2
   - hwfilter:!device:device_generic_family_efr32xg22
   - hwfilter:+device:efr32mr21a020f512im32
-  - hwfilter:!board:hardware:vcom:no:rts:cts
+  - hwfilter:board:hardware_board_has_vcom_hardware_flowcontrol
 
 ui_hints:
   highlight:

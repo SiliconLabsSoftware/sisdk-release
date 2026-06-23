@@ -1,0 +1,15 @@
+id: ot_default_dataset_values
+label: Default Dataset Values
+package: openthread
+category: OpenThread|Application|Test
+quality: production
+description: This component provides default values to be used in an OpenThread dataset. Having a hard-coded default dataset can be a security risk, and thus this component should only be used in test and sample applications.
+
+requires:
+- name: ot_stack
+provides:
+- name: ot_default_dataset_values
+
+config_file:
+- path: "config/sl_openthread_default_dataset_values_config.h"
+root_path: openthread

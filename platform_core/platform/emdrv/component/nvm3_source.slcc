@@ -52,11 +52,7 @@ include:
   - path: nvm3_lock.h
   - path: nvm3_object.h
   - path: nvm3_page.h
-  - path: nvm3_trace.h
   - path: nvm3_utils.h
-- path: platform/emdrv/nvm3/config
-  file_list:
-  - path: nvm3_config.h
 provides:
 - name: nvm3
 - name: nvm3_source
@@ -65,6 +61,7 @@ template_contribution:
 - name: component_catalog
   value: nvm3
 requires:
+- name: nvm3_trace_config
 - name: nvm3_default
 - name: ecode
 - name: status

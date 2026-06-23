@@ -20,7 +20,7 @@ requires:
 - name: "power_manager"
   condition:
   - "hardware_board"
-- name: "token_manager"
+- name: "common_token_manager"
 - name: "rail_lib"
 - name: "sl_rail_util_compatible_pa"
 - name: "a_radio_config"
@@ -47,6 +47,7 @@ include:
   file_list:
   - path: "config/config.h"
   - path: "config/token-stack.h"
+  - path: "config/sl_connect_token_defines.h"
   - path: "config/ember-configuration-defaults.h"
   - path: "config/ember-configuration.h"
   - path: "config/sl_connect_radio_priority_config.h"
@@ -84,17 +85,13 @@ source:
 - path: "stack/config/stack-callback-stubs.c"
 - path: "stack/framework/sl-connect-info.c"
 - path: "stack/framework/sli-connect-random.c"
+- path: "stack/core/sli-connect-token-legacy.c"
 - path: "stack/framework/sl-connect-power-manager.c"
   condition:
   - "power_manager"
 - path: "stack/core/sl-connect-watchdog.c"
   condition:
   - device_has_wdog
-  unless:
-  - legacy_hal
-- path: "stack/core/sli-connect-token.c"
-  condition:
-  - emlib_msc
   unless:
   - legacy_hal
 - path: "stack/core/sli-connect-api.c"

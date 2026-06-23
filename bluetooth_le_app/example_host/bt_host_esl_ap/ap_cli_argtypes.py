@@ -76,7 +76,7 @@ def esl_id_type(arg_value):
 
 
 def esl_group_id_type(arg_value):
-    re_str = VALID_GROUP_ID_NUMBER_REGEX if not IOP_TEST else VALID_ESL_ID_NUMBER_REGEX # IOP_TEST mode allows full <u8> range for RFU bit tests 
+    re_str = VALID_GROUP_ID_NUMBER_REGEX if not IOP_TEST else VALID_ESL_ID_NUMBER_REGEX # IOP_TEST mode allows full <u8> range for RFU bit tests
     pat = re.compile(r"(" + re_str + ")")
     if not pat.match(arg_value):
         raise argparse.ArgumentTypeError("Invalid ESL Group ID. Please select from the allowed range of 0 to 127!")

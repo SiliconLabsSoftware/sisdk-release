@@ -1,12 +1,9 @@
 project_name: nvm3_kernel_freertos
 package: platform
 quality: production
-label: Platform - NVM3 Kernel FreeRtos
+label: Platform - NVM3 Kernel FreeRTOS
 description: >
-  This example project demonstrates use of the NVM3 interface.
-  Using the command line interface, the user can write, read, delete and
-  repack NVM3 data objects through the serial connection. The number of
-  writes and deletes are tracked in counter objects.
+  Demonstrates the NVM3 non-volatile storage API with FreeRTOS. Use the serial CLI to write, read, delete, and repack objects; counts are tracked.
 category: Example|Platform
 filter:
   - name: "Device Type"
@@ -101,3 +98,6 @@ readme:
   - path: readme.md
 ui_hints:
   highlight: readme.md
+tag:
+  - hwfilter:board:simple_led:led0
+  - hwfilter:ram:20k

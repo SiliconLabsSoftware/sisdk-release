@@ -126,11 +126,15 @@ void sl_zigbee_gpd_af_cli_node_set_addr(sl_cli_command_arg_t *arguments)
                            + ((uint32_t)str[2] << 16) \
                            + ((uint32_t)str[3] << 8)  \
                            + str[4];
+      sl_zigbee_gpd_security_init(&(gpd->addr), gpd->securityKey, gpd->securityFrameCounter);
     } else if (gpd->addr.appId == SL_ZIGBEE_GPD_APP_ID_IEEE_ID) {
       // Endpoint
       gpd->addr.gpdEndpoint = str[1];
       // A simple way to use the command for testing
       memcpy(gpd->addr.id.ieee, &str[2], SL_ZIGBEE_GPD_EUI64_SIZE);
+      // Update RAIL's long address filter so the radio accepts frames addressed to this IEEE
+      sl_zigbee_gpd_rail_set_long_address_wrapper(gpd->addr.id.ieee);
+      sl_zigbee_gpd_security_init(&(gpd->addr), gpd->securityKey, gpd->securityFrameCounter);
     } else {
       // Error in the input argument
       gpdDebugPrintf("Must be exactly %d or %d bytes hex\n", \
@@ -201,6 +205,28 @@ void sl_zigbee_gpd_af_cli_send_gpdf(sl_cli_command_arg_t *arguments)
   unsigned int cmdPayloadLength;
   uint8_t *cmdPayload = sl_cli_get_argument_hex(arguments, 1, &cmdPayloadLength);
   sl_zigbee_af_gpdf_send(frameType, gpd, cmdPayload, cmdPayloadLength, 1);
+}
+
+#define SL_ZIGBEE_GPD_CHANNEL_MIN 11
+#define SL_ZIGBEE_GPD_CHANNEL_MAX 26
+
+// Set the next RX channel on that GPD node will send out bi-directional channel request gpdf, auto-commissioning off
+void sl_zigbee_gpd_af_cli_set_next_channel(sl_cli_command_arg_t *arguments)
+{
+  uint8_t nextRxChannel = sl_cli_get_argument_uint8(arguments, 0);
+  uint8_t secondNextRxChannel = 11;
+  if (sl_cli_get_argument_count(arguments) > 1) {
+    secondNextRxChannel = sl_cli_get_argument_uint8(arguments, 1);
+  }
+
+  if (nextRxChannel < SL_ZIGBEE_GPD_CHANNEL_MIN || nextRxChannel > SL_ZIGBEE_GPD_CHANNEL_MAX
+      || secondNextRxChannel < SL_ZIGBEE_GPD_CHANNEL_MIN || secondNextRxChannel > SL_ZIGBEE_GPD_CHANNEL_MAX) {
+    gpdDebugPrintf("Invalid channel: must be between %d and %d inclusive\n", SL_ZIGBEE_GPD_CHANNEL_MIN, SL_ZIGBEE_GPD_CHANNEL_MAX);
+    return;
+  }
+
+  sl_zigbee_gpd_af_plugin_set_next_channel(nextRxChannel, secondNextRxChannel);
+  gpdDebugPrintf("Next RX channel set to %d, second next RX channel set to %d\n", nextRxChannel, secondNextRxChannel);
 }
 
 // -----------------------------------------------------------------------------

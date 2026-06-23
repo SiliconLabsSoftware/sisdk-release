@@ -183,7 +183,7 @@ class CLICommandsMixin:
                 else:
                     tag = next(item for item in tags if item is not None)
                     address_type = tag.ble_address.address_type
-            
+
             bt_address = esl_lib.Address.from_str(bt_addr, address_type)
             tag = self.tag_db.find(bt_address)
             if tag is None or (
@@ -255,16 +255,46 @@ class CLICommandsMixin:
             self.log.warning("There's no advertising tag to connect to!")
             return
 
+        # Tags this user command selected (distinct Tag rows). Other code paths may call connect()
+        # asynchronously for ESL-profile behaviour; they must not affect this command's summary.
+        user_connect_scope: dict[int, Tag] = {tag.id: tag for tag in connecting_to}
+        advertising_esl_in_scope = len(connecting_to)
+        initiated_from_user_command = 0
+        skipped_already_busy_in_scope = 0
+        not_started_due_to_ap_limit_in_scope = 0
+        # CONNECT attempts that returned CONN_FAILED with limit/no-resource (subset of initiated_from_user_command)
+        scope_conn_limit_fail_tag_ids: set[int] = set()
+
         # Simple lambda subscription to wait for bonded or error event to avoid flooding the stack
         finished_event = threading.Event()
-        on_finished = lambda evt: finished_event.set()
-        self.evt_dispatcher.subscribe("bonding_finished", on_finished)
-        self.evt_dispatcher.subscribe("error", on_finished)
+
+        def on_user_connect_waitable(evt):
+            if isinstance(evt, esl_lib.EventError):
+                if (
+                    evt.lib_status == elw.ESL_LIB_STATUS_CONN_FAILED
+                    and evt.sl_status
+                    in (
+                        elw.SL_STATUS_NO_MORE_RESOURCE,
+                        elw.SL_STATUS_BT_CTRL_CONNECTION_LIMIT_EXCEEDED,
+                        elw.SL_STATUS_BT_CTRL_SYNCHRONOUS_CONNECTION_LIMIT_EXCEEDED,
+                    )
+                ):
+                    tag = self.tag_db.find(evt.node_id)
+                    if tag is not None and tag.id in user_connect_scope:
+                        scope_conn_limit_fail_tag_ids.add(tag.id)
+            finished_event.set()
+
+        self.evt_dispatcher.subscribe("bonding_finished", on_user_connect_waitable)
+        self.evt_dispatcher.subscribe("error", on_user_connect_waitable)
 
         requested_connect_count = 0
         initial_parallel_request_limit = 3
+        self.log.debug(
+            "User connect command internal scope (tag.id keys): %s",
+            sorted(user_connect_scope),
+        )
         try:
-            for tag in connecting_to:
+            for idx, tag in enumerate(connecting_to):
                 if tag.state in (TagState.CONNECTED, TagState.CONNECTING):
                     if (
                         self.controller_command == CCMD_CONNECT
@@ -278,6 +308,7 @@ class CLICommandsMixin:
                     self.log.warning(
                         "%s already to %s, request ignored.", tag.state, tag.ble_address
                     )
+                    skipped_already_busy_in_scope += 1
                     continue
 
                 if not self.cmd_mode and not self.auto_override:
@@ -286,6 +317,7 @@ class CLICommandsMixin:
                 if not self.max_conn_count_reached:
                     self.bonding_finished = False
                     self.connect(tag)
+                    initiated_from_user_command += 1
                     requested_connect_count += 1
 
                     # If we reached the parallel limit, wait for at least one to finish before starting the next
@@ -298,8 +330,9 @@ class CLICommandsMixin:
                     self.log.warning(
                         "Maximum number of available connections reached, connecting to 'all' halted!"
                     )
+                    not_started_due_to_ap_limit_in_scope = len(connecting_to) - idx
                     break
-            
+
             # Wait for remaining in-flight connections if there were more than one tag
             if len(connecting_to) > 1:
                 while requested_connect_count > 0:
@@ -309,12 +342,23 @@ class CLICommandsMixin:
                     finished_event.clear()
                     requested_connect_count -= 1
         finally:
-            self.evt_dispatcher.unsubscribe("bonding_finished", on_finished)
-            self.evt_dispatcher.unsubscribe("error", on_finished)
+            self.evt_dispatcher.unsubscribe("bonding_finished", on_user_connect_waitable)
+            self.evt_dispatcher.unsubscribe("error", on_user_connect_waitable)
+            stack_limit_denied = len(scope_conn_limit_fail_tag_ids)
             self.log.info(
-                "Initiated connection to %d ESLs out of %d advertising.",
-                len(self.tag_db.list_state((TagState.CONNECTING, TagState.CONNECTED))),
-                len(connecting_to),
+                "'connect all' summary: %d adv. ESL%s in scope; "
+                "%d skipped due already connecting or connected; "
+                "%d stack connect attempt%s, of which %d failed due resource limit; "
+                "%d in-scope ESL%s %s not attempted after resource limit reached.",
+                advertising_esl_in_scope,
+                "s" if advertising_esl_in_scope != 1 else "",
+                skipped_already_busy_in_scope,
+                initiated_from_user_command,
+                "s" if initiated_from_user_command != 1 else "",
+                stack_limit_denied,
+                not_started_due_to_ap_limit_in_scope,
+                "s" if not_started_due_to_ap_limit_in_scope != 1 else "",
+                "was" if not_started_due_to_ap_limit_in_scope == 1 else "were",
             )
 
     def ap_disconnect(self, esl_id, bt_addr: str, group_id):
@@ -1105,7 +1149,9 @@ class CLICommandsMixin:
             if self.scan_runs and (not self.cmd_mode or self.auto_override):
                 self.start_scan(clear_lists=True)
 
-    def ap_image_throughput(self, start=False, max_tag_count=None, max_group_id=None):
+    def ap_image_throughput(
+        self, start=False, max_tag_count=None, max_group_id=None, parallel_connections=None
+    ):
         """
         Start or stop the image throughput stress test (not an AP operating mode).
 
@@ -1116,6 +1162,8 @@ class CLICommandsMixin:
             start: Boolean indicating whether the request is to start or stop the operation.
             max_tag_count: optional cap on how many synchronized tags are enrolled (start only).
             max_group_id: optional maximum ESL group id (inclusive) for tags to enroll (start only).
+            parallel_connections: optional; start only. Sets how ``_itp_init`` initialises
+                ``_itp_max_conn_limit`` (omit to preserve prior value, 0 to clear, 1..32 for a cap).
         """
         if not start:
             if not self.image_throughput_test:
@@ -1152,7 +1200,11 @@ class CLICommandsMixin:
             )
             return
 
-        self._itp_init(max_tag_count=max_tag_count, max_group_id=max_group_id)
+        self._itp_init(
+            max_tag_count=max_tag_count,
+            max_group_id=max_group_id,
+            parallel_connections=parallel_connections,
+        )
         self.cmd_mode = True
         self.auto_override = False
         self.image_throughput_test = True

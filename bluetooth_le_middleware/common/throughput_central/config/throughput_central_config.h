@@ -7,6 +7,7 @@
  **************************************************************************************************/
 
 #include "throughput_types.h"
+#include "throughput_common.h"
 
 // <<< Use Configuration Wizard in Context Menu >>>
 
@@ -37,9 +38,9 @@
 
 // <h> Data and PHY settings
 
-// <o THROUGHPUT_CENTRAL_MTU_SIZE> Default MTU size <23-250>
-// <i> Default: 247
-#define THROUGHPUT_CENTRAL_MTU_SIZE                   247
+// <o THROUGHPUT_CENTRAL_MTU_SIZE> Default MTU size
+// <i> Default: THROUGHPUT_MAXIMUM_MTU_SIZE
+#define THROUGHPUT_CENTRAL_MTU_SIZE                   THROUGHPUT_MAXIMUM_MTU_SIZE
 
 // <o THROUGHPUT_DEFAULT_SCAN_PHY> Default PHY for scanning
 //   <sl_bt_scanner_scan_phy_1m=> 1M PHY
@@ -53,19 +54,19 @@
 //   <sl_bt_gap_phy_coding_125k_coded=> 125k Coded PHY (S=8)
 //   <sl_bt_gap_phy_coding_500k_coded=> 500k Coded PHY (S=2)
 // <i> Default: sl_bt_gap_phy_coding_1m_uncoded
-#define THROUGHPUT_DEFAULT_PHY                   sl_bt_gap_phy_coding_1m_uncoded
+#define THROUGHPUT_DEFAULT_PHY                   sl_bt_gap_phy_coding_2m_uncoded
 
 // </h>
 
 // <h> Connection settings
 
 // <o THROUGHPUT_CENTRAL_CONNECTION_INTERVAL_MIN> Minimum connection interval (in 1.25 ms steps) <6-3200>
-// <i> Default: 80
-#define THROUGHPUT_CENTRAL_CONNECTION_INTERVAL_MIN                   32
+// <i> Default: 6
+#define THROUGHPUT_CENTRAL_CONNECTION_INTERVAL_MIN                   6
 
 // <o THROUGHPUT_CENTRAL_CONNECTION_INTERVAL_MAX> Maximum connection interval (in 1.25 ms steps) <6-3200>
-// <i> Default: 80
-#define THROUGHPUT_CENTRAL_CONNECTION_INTERVAL_MAX                   32
+// <i> Default: 6
+#define THROUGHPUT_CENTRAL_CONNECTION_INTERVAL_MAX                   6
 
 // <o THROUGHPUT_CENTRAL_CONNECTION_RESPONDER_LATENCY> Responder latency (in connection intervals) <0-500>
 // <i> Default: 0

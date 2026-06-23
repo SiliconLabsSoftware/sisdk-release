@@ -31,12 +31,24 @@
 #ifndef _SLI_MPA_MANAGER_DEVICE_H
 #define _SLI_MPA_MANAGER_DEVICE_H
 
+#include "em_device.h"
 #include "sl_slist.h"
 #include "sl_status.h"
 #include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+/*******************************************************************************
+ *******************************   DEFINES   ***********************************
+ ******************************************************************************/
+
+// Detect whether the device has a unified L2 cache (instructions and data
+// share a single L2 cache memory), detected via L2ICACHE_PRESENT /
+// L2DCACHE_PRESENT from em_device.h.
+#if defined(L2ICACHE_PRESENT) && !defined(L2DCACHE_PRESENT)
+#define SL_DEVICE_HAS_UNIFIED_CACHE
 #endif
 
 /*******************************************************************************

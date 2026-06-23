@@ -3,7 +3,7 @@
  * @brief callback struct and event handlers for message
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -77,18 +77,28 @@ typedef struct {
 
 typedef struct {
   sl_zigbee_zigbee_packet_type_t packetType;
-  uint8_t packetData[MAX_IPC_VEC_ARG_CAPACITY];
+  uint8_t packetData[MAX_IPC_PACKET_HANDOFF_DATA_LENGTH_ARG_CAPACITY];
   uint8_t size_p;
-  uint8_t data[MAX_IPC_VEC_ARG_CAPACITY];
+  uint8_t data[MAX_IPC_PACKET_HANDOFF_DATA_LENGTH_ARG_CAPACITY];
   uint8_t size_d;
   sl_zigbee_packet_action_t action;
 } sli_zigbee_stack_post_incoming_packet_filter_cb_ipc_event_t;
 
 typedef struct {
   sl_zigbee_zigbee_packet_type_t packetType;
-  uint8_t packetData[MAX_IPC_VEC_ARG_CAPACITY];
+  sl_zigbee_packet_link_quality_t linkQuality;
+  uint8_t packetData[MAX_IPC_PACKET_HANDOFF_DATA_LENGTH_ARG_CAPACITY];
   uint8_t size_p;
-  uint8_t data[MAX_IPC_VEC_ARG_CAPACITY];
+  uint8_t data[MAX_IPC_PACKET_HANDOFF_DATA_LENGTH_ARG_CAPACITY];
+  uint8_t size_d;
+  sl_zigbee_packet_action_t action;
+} sli_zigbee_stack_post_incoming_packet_filter_with_lqi_and_rssi_cb_ipc_event_t;
+
+typedef struct {
+  sl_zigbee_zigbee_packet_type_t packetType;
+  uint8_t packetData[MAX_IPC_PACKET_HANDOFF_DATA_LENGTH_ARG_CAPACITY];
+  uint8_t size_p;
+  uint8_t data[MAX_IPC_PACKET_HANDOFF_DATA_LENGTH_ARG_CAPACITY];
   uint8_t size_d;
   sl_zigbee_packet_action_t action;
 } sli_zigbee_stack_post_outgoing_packet_filter_cb_ipc_event_t;

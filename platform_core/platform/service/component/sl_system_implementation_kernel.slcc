@@ -4,7 +4,7 @@ package: platform_core
 category: Services|System Setup
 ui_hints:
   visibility: never
-quality: production
+quality: deprecated
 metadata:
   sbom:
     license: Zlib

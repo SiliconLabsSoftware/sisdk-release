@@ -178,8 +178,10 @@ uint32_t sl_zigbee_global_tlv_next_channel_change_get_bitmask(sl_zigbee_global_t
 /// Helpers
 /**
  * @brief returns a Symmetric Passphrase TLV with the given passphrase
- * @param passphrase a pointer to the passphrase to be used
+ * @param passphrase a pointer to the passphrase to be used (16 bytes)
  * @return a TLV data struct
+ * @internal SL_ZIGBEE_IPC_ARGS
+ * {# passphrase | length: ZB_GLOBAL_TLV_SYMMETRIC_PASSPHRASE_MAX_LEN | max: ZB_GLOBAL_TLV_SYMMETRIC_PASSPHRASE_MAX_LEN #}
  */
 sl_zigbee_global_tlv_symmetric_passphrase_t sl_zigbee_global_tlv_symmetric_passphrase(const uint8_t *passphrase);
 

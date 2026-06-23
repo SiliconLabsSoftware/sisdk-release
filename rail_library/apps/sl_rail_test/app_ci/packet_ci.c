@@ -477,16 +477,25 @@ void rxFifoManualRead(sl_cli_command_arg_t *args)
             &sl_rail_get_rx_time_frame_end,
           };
           #define NUM_POSITIONS (sizeof(positionFuncs) / sizeof(positionFuncs[0]))
-          sl_rail_time_t times[NUM_POSITIONS];
+          sl_rail_time_t times[2 * NUM_POSITIONS];
           for (uint8_t i = 0; i < NUM_POSITIONS; i++) {
             sl_rail_rx_packet_details_t detailsCopy = *appendedInfo;
             (void) positionFuncs[i](railHandle, &detailsCopy);
             times[i] = detailsCopy.time_received.packet_time;
           }
+#if (_SILICON_LABS_32B_SERIES_2_CONFIG > 1)
+          // packet_duration_us not available on efr32xg21
+          appendedInfo->time_received.total_packet_bytes = SL_RAIL_RX_STARTED_BYTES;
+#endif
+          for (uint8_t i = 0; i < NUM_POSITIONS; i++) {
+            sl_rail_rx_packet_details_t detailsCopy = *appendedInfo;
+            (void) positionFuncs[i](railHandle, &detailsCopy);
+            times[i + NUM_POSITIONS] = detailsCopy.time_received.packet_time;
+          }
           responsePrint(sl_cli_get_command_string(args, 0),
                         "Pre:%u,Sync:%u,End:%u,PreAlt:%u,SyncAlt:%u,EndAlt:%u",
                         times[0], times[1], times[2],
-                        times[0], times[1], times[2]);
+                        times[3], times[4], times[5]);
         }
         (void) sl_rail_get_rx_time_sync_word_end(railHandle, appendedInfo);
       } else {

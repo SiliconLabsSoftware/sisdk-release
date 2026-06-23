@@ -1,6 +1,6 @@
 /***************************************************************************//**
  * @file
- * @brief On-the-fly LZRW1-derivative stream compressor configuretion
+ * @brief On-the-fly LZRW1-derivative stream compressor configuration
  *******************************************************************************
  * # License
  * <b>Copyright 2024 Silicon Laboratories Inc. www.silabs.com</b>

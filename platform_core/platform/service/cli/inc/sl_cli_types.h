@@ -137,8 +137,12 @@ typedef struct {
 // Distinguishing different input types
 typedef uint8_t sl_cli_input_type_t;               ///< sl cli input type t
 
+/// A CLI instance handle data structure.
+/// Allocated by the application or the CLI. The application must
+/// not modify the contents of this handle and should not depend on its values.
 /// @brief Struct representing an instance of the CLI.
 typedef struct sl_cli {
+  /// @cond DO_NOT_INCLUDE_WITH_DOXYGEN
   char input_buffer[SL_CLI_INPUT_BUFFER_SIZE]; ///< The input buffer.
   bool tick_in_progress;                       ///< True when a tick is in progress.
   const char *prompt_string;                   ///< The current command prompt.
@@ -169,6 +173,8 @@ typedef struct sl_cli {
   cli_delay_t cli_delay;                       ///< Instance data for the CLI delay function.
 #endif
 #endif
+  bool buffer_full_shown;                       ///< Track if buffer full message has been shown
+  /// @endcond
 } sl_cli_t;
 
 typedef sl_cli_t *sl_cli_handle_t;             ///< sl cli handle t

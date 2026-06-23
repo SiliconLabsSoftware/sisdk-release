@@ -250,7 +250,6 @@ typedef struct {
   uint8_t preamble_length;               ///< Length of the preamble. Minimum preamble length is specified in ITU G.9959-2015.
   uint8_t start_of_frame;                ///< The start of frame byte used to indicate the end of preamble and the start of frame.
   uint8_t repeats;                       ///< Number of repetitions for the frame. This is used for wakeup beams where the beam is to be repeated for 250 or 1000 ms.
-  uint8_t use_lbt;                       ///< 1 to transmit frame with LBT, 0 without LBT
   union {
     zpal_radio_tx_power_t tx_power_index;  ///< The RF tx power to use for transmitting.
     zpal_tx_power_decidbm_t lr_tx_power;   ///< The RF tx power to use for transmitting on Long Range channels in deci-dBm.
@@ -263,6 +262,7 @@ typedef struct {
                                               - TxQueue delay is 1ms base time which is not enough (Rx-to-Tx turnaround time is 1ms)
                                               - Ack is high priority and should "lock" the TxQueue without any delay (TxQueue
                                               delay is handled before adding the frame to the TxQueue). */
+  uint16_t lbt_timeout_ms;                ///< LBT timeout in milliseconds (corresponds to aMacMinCCARetryDuration in ITU-T-REC-G.9959). 0 = no retries, >0 = retry for this duration
 } zpal_radio_transmit_parameter_t;
 
 /**
@@ -450,10 +450,11 @@ zpal_status_t zpal_radio_transmit(zpal_radio_transmit_parameter_t const *const t
 /**
  * @brief Function for transmitting a Z-Wave Beam frame though the radio.
  *
- * @param[in] tx_parameters Parameter setting specifying speed, channel, wakeup.
+ * @param[in] tx_parameters Parameter setting specifying speed, channel, wakeup. \p repeats must be at least 1 (beam fragment count).
  * @param[in] beam_data_len Length of the Beam data to transmit.
  * @param[in] beam_data     Pointer to data array containing the BEAM data.
- * @return @ref ZPAL_STATUS_OK if the data was successfully transmit, @ref ZPAL_STATUS_BUFFER_FULL when queue is full.
+ * @return @ref ZPAL_STATUS_OK if the data was successfully transmit, @ref ZPAL_STATUS_BUFFER_FULL when queue is full,
+ *         @ref ZPAL_STATUS_INVALID_ARGUMENT if \p beam_data_len is too large or \p repeats is 0.
  */
 zpal_status_t zpal_radio_transmit_beam(zpal_radio_transmit_parameter_t const *const tx_parameters,
                                        uint8_t beam_data_len,
@@ -541,7 +542,9 @@ void zpal_radio_clear_network_stats(void);
  * @param[in]   channel   uint8_t channel Id for measurement.
  * @param[out]  rssi      pointer where to store the background RSSI value.
  * @return @ref ZPAL_STATUS_OK if a valid RSSI value is available and read.
- *         @ref ZPAL_STATUS_BUSY if radio is busy. In this case rssi is set to SL_RAIL_RSSI_INVALID_DBM.
+ *         @ref ZPAL_STATUS_BUSY if the radio is busy (TX/RX active), or if the
+ *         underlying RAIL channel-hopping RSSI read is invalid. In those cases @a rssi is set to
+ *         @ref SL_RAIL_RSSI_INVALID_DBM.
  *         @ref ZPAL_STATUS_INVALID_ARGUMENT if rssi pointer is null.
  */
 zpal_status_t zpal_radio_get_background_rssi(uint8_t channel, int8_t *rssi);

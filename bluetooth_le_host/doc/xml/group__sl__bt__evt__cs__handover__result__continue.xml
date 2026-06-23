@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.4" xml:lang="en-US">
+  <compounddef id="group__sl__bt__evt__cs__handover__result__continue" kind="group">
+    <compoundname>sl_bt_evt_cs_handover_result_continue</compoundname>
+    <title>sl_bt_evt_cs_handover_result_continue</title>
+    <innerclass refid="structsl__bt__evt__cs__handover__result__continue__s" prot="public">sl_bt_evt_cs_handover_result_continue_s</innerclass>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="group__sl__bt__evt__cs__handover__result__continue_1gac40e08516d8ac542673543b5f7d80784" prot="public" static="no">
+        <type>struct <ref refid="structsl__bt__evt__cs__handover__result__continue__s" kindref="compound">sl_bt_evt_cs_handover_result_continue_s</ref></type>
+        <definition>typedef struct sl_bt_evt_cs_handover_result_continue_s sl_bt_evt_cs_handover_result_continue_t</definition>
+        <argsstring></argsstring>
+        <name>sl_bt_evt_cs_handover_result_continue_t</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="14861" column="54" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="14861" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="group__sl__bt__evt__cs__handover__result__continue_1ga7822846f17c2b9e9c82b53437db543f0" prot="public" static="no">
+        <name>sl_bt_evt_cs_handover_result_continue_id</name>
+        <initializer>0x095900a0</initializer>
+        <briefdescription>
+<para>Identifier of the handover_result_continue event. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="14763" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="14763" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Reports continuation results when the number of steps exceeds the maximum HCI event size, of every CS handover subevent within the CS procedure. </para>
+    </briefdescription>
+    <detaileddescription>
+<para>This event is triggered after the <ref refid="group__sl__bt__evt__cs__handover__result" kindref="compound">sl_bt_evt_cs_handover_result</ref> event. This event is intended for the CS Follower role. </para>
+    </detaileddescription>
+  </compounddef>
+</doxygen>

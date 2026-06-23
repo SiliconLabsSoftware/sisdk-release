@@ -32,10 +32,11 @@ provides:
 requires:
 - name: cpc_primary
 - name: status
-- name: dmadrv
-- name: emlib_gpio
+- name: hal_gpio
+- name: hal_ldma
+- name: hal_usart
+- name: dma_manager
 - name: emlib_cmu
-- name: emlib_usart
 - name: slist
 - name: udelay
 template_file:

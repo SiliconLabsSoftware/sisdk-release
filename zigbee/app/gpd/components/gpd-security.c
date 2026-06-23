@@ -141,19 +141,17 @@ int8_t sl_zigbee_gpd_security_encrypt_key(sl_zigbee_gpd_addr_t_t * addr,
   uint8_t data[20];
   uint32_t frameCounter;
 
-#if defined(SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID) && (SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID == SL_ZIGBEE_GPD_APP_ID_SRC_ID)
-  // Copy SrcID address in work buffer
-  (void) memcpy(data, (uint8_t *)(&(addr->id.srcId)), 4);
-  // set Security Frame Counter = SrcID
-  frameCounter = addr->id.srcId;
-#elif defined(SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID) && (SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID == SL_ZIGBEE_GPD_APP_ID_IEEE_ID)
-  // Copy IEEE address in work buffer
-  (void) memcpy(data, addr->id.ieee, 4);
-  // set Security Frame Counter = 4 LSB IEEE
-  frameCounter = (uint32_t)(*((uint32_t*)addr->id.ieee));
-#else
-#error "Application Id Not supported"
-#endif
+  if (addr->appId == SL_ZIGBEE_GPD_APP_ID_IEEE_ID) {
+    // Copy IEEE address in work buffer
+    (void) memcpy(data, addr->id.ieee, 4);
+    // set Security Frame Counter = 4 LSB IEEE
+    frameCounter = (uint32_t)(*((uint32_t*)addr->id.ieee));
+  } else {
+    // Copy SrcID address in work buffer
+    (void) memcpy(data, (uint8_t *)(&(addr->id.srcId)), 4);
+    // set Security Frame Counter = SrcID
+    frameCounter = addr->id.srcId;
+  }
   // Copy OOb Key to be secured in the input buffer
   (void) memcpy(&data[4], oobKey, 16);
 
@@ -180,14 +178,12 @@ int8_t sl_zigbee_gpd_security_decrypt_key(sl_zigbee_gpd_addr_t_t * addr,
   uint8_t inData[24];
   uint32_t frameCounter = *((uint32_t *)pSecCounter);
 
-  // Copy SrcID + OOb Key in work buffer
-#if defined(SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID) && (SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID == SL_ZIGBEE_GPD_APP_ID_SRC_ID)
-  (void) memcpy(&inData[0], &(addr->id.srcId), 4);
-#elif defined(SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID) && (SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID == SL_ZIGBEE_GPD_APP_ID_IEEE_ID)
-  (void) memcpy(inData, &(addr->id.ieee), 4);
-#else
-#error "Application Id Not supported"
-#endif
+  // Copy SrcID / IEEE + OOB Key in work buffer
+  if (addr->appId == SL_ZIGBEE_GPD_APP_ID_IEEE_ID) {
+    (void) memcpy(inData, addr->id.ieee, 4);
+  } else {
+    (void) memcpy(&inData[0], &(addr->id.srcId), 4);
+  }
 
   (void) memcpy(&inData[4], pKeyEncrypted, 16);
   (void) memcpy(&inData[20], pKeyMic, 4);
@@ -234,30 +230,21 @@ void sl_zigbee_gpd_security_init(sl_zigbee_gpd_addr_t_t * addr,
     nonceTx[i] = 0;
   }
   // Tx Nonce set up
-#if defined(SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID) && (SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID == SL_ZIGBEE_GPD_APP_ID_SRC_ID)
-  sl_zigbee_gpd_utility_copy_4_bytes(&nonceTx[0], addr->id.srcId);
-  sl_zigbee_gpd_utility_copy_4_bytes(&nonceTx[4], addr->id.srcId);
-#elif defined(SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID) && (SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID == SL_ZIGBEE_GPD_APP_ID_IEEE_ID)
-  //TODO : check LSB first
-  (void) memcpy(&nonceTx[0], addr->id.ieee, 8);
-#else
-#error "Unsupported GPD Application Id"
-#endif
-  nonceTx[12] = ZIGBEE_SECURITY_CONTROL;
-
-  // Rx Nonce set up
-#if defined(SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID) && (SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID == SL_ZIGBEE_GPD_APP_ID_SRC_ID)
-  sl_zigbee_gpd_utility_copy_4_bytes(&nonceRx[0], 0);
-  sl_zigbee_gpd_utility_copy_4_bytes(&nonceRx[4], addr->id.srcId);
-
-  nonceRx[12] = ZIGBEE_SECURITY_CONTROL;
-#elif defined(SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID) && (SL_ZIGBEE_AF_PLUGIN_APPS_APPLICATION_ID == SL_ZIGBEE_GPD_APP_ID_IEEE_ID)
-  //TODO : check LSB first
-  (void) memcpy(&nonceRx[0], addr->id.ieee, 8);
-  nonceRx[12] = ZIGBEE_SECURITY_CONTROL_IEEE_RX;
-#else
-#error "Unsupported GPD Application Id"
-#endif
+  if (addr->appId == SL_ZIGBEE_GPD_APP_ID_IEEE_ID) {
+    (void) memcpy(&nonceTx[0], addr->id.ieee, 8);
+    nonceTx[12] = ZIGBEE_SECURITY_CONTROL;
+    // Rx Nonce for IEEE (outgoing from proxy uses IEEE address)
+    (void) memcpy(&nonceRx[0], addr->id.ieee, 8);
+    nonceRx[12] = ZIGBEE_SECURITY_CONTROL_IEEE_RX;
+  } else {
+    sl_zigbee_gpd_utility_copy_4_bytes(&nonceTx[0], addr->id.srcId);
+    sl_zigbee_gpd_utility_copy_4_bytes(&nonceTx[4], addr->id.srcId);
+    nonceTx[12] = ZIGBEE_SECURITY_CONTROL;
+    // Rx Nonce for SrcId
+    sl_zigbee_gpd_utility_copy_4_bytes(&nonceRx[0], 0);
+    sl_zigbee_gpd_utility_copy_4_bytes(&nonceRx[4], addr->id.srcId);
+    nonceRx[12] = ZIGBEE_SECURITY_CONTROL;
+  }
 
   // Set the Frane counters in the Nonce
   sl_zigbee_gpd_set_fc_into_tx_nonce(frameCounter);

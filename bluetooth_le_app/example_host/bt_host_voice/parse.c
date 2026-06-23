@@ -189,7 +189,7 @@ static void add_extension_to_file(void)
 /***************************************************************************//**
  *  \brief  Parse application parameters.
  *  \param[in] argc Argument count.
- *  \param[in] argv Buffer contaning application parameters.
+ *  \param[in] argv Buffer containing application parameters.
  ******************************************************************************/
 void parse_arguments(int argc, char **argv)
 {

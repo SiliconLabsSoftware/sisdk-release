@@ -38,6 +38,16 @@ library:
   - "toolchain_iar"
   - "device_sdid_235"
   - "wisun_stack_debug"
+- path: "libwisun_border_router_efr32xg2x_llvm_debug.a"
+  condition:
+  - "toolchain_llvm"
+  - "device_sdid_220"
+  - "wisun_stack_debug"
+- path: "libwisun_border_router_efr32xg2x_llvm_debug.a"
+  condition:
+  - "toolchain_llvm"
+  - "device_sdid_235"
+  - "wisun_stack_debug"
 
 - path: "libwisun_border_router_efr32xg2x_gcc_release.a"
   condition:
@@ -60,6 +70,18 @@ library:
 - path: "libwisun_border_router_efr32xg2x_iar_release.a"
   condition:
   - "toolchain_iar"
+  - "device_sdid_235"
+  unless:
+  - "wisun_stack_debug"
+- path: "libwisun_border_router_efr32xg2x_llvm_release.a"
+  condition:
+  - "toolchain_llvm"
+  - "device_sdid_220"
+  unless:
+  - "wisun_stack_debug"
+- path: "libwisun_border_router_efr32xg2x_llvm_release.a"
+  condition:
+  - "toolchain_llvm"
   - "device_sdid_235"
   unless:
   - "wisun_stack_debug"

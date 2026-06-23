@@ -35,6 +35,9 @@
 #if defined(SL_COMPONENT_CATALOG_PRESENT)
 #include "sl_component_catalog.h"
 #endif
+#include "sl_hal_gpio.h"
+#include "sl_hal_ldma.h"
+#include "sl_hal_prs.h"
 #include "sl_status.h"
 #include "sl_atomic.h"
 #include "sl_slist.h"
@@ -48,7 +51,6 @@
 #if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT)
 #include "sl_cpc_drv_secondary_spi_hw_crc_config.h"
 #endif
-#include "dmadrv.h"
 
 #include "sli_cpc.h"
 #include "sli_cpc_assert.h"
@@ -60,6 +62,16 @@
 #include "sl_cpc_drv_secondary_spi_config.h"
 
 #include "sl_cpc_instance_handles.h"
+
+#include "sl_dma_manager.h"
+
+#if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT)
+#include "sl_hal_gpcrc.h"
+#endif
+
+#if defined(SL_CPC_DRV_SPI_IS_HSPI)
+#include "sl_hal_hspi.h"
+#endif
 
 /*******************************************************************************
  *********************************   DEFINES   *********************************
@@ -81,23 +93,18 @@
 #error  Invalid configuration SL_CPC_DRV_SPI_RX_BUFFER_MAX_COUNT must be at least 3
 #endif
 
-// Series 2 compatibility layer
+// LDMA (Series 2: LDMA, Series 3: LDMA(0))
 #if defined(_SILICON_LABS_32B_SERIES_2)
-#include "em_ldma.h"
-#include "em_gpio.h"
-#include "em_prs.h"
-#if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT)
-#include "em_gpcrc.h"
+#define LDMA_PERIPH                         LDMA
+#else
+#define LDMA_PERIPH                         LDMA(0)
 #endif
 
+// Peripheral-specific: EUSART (shared by Series 2 & 3)
 #if defined(SL_CPC_DRV_SPI_IS_EUSART)
-
-#define PRS_SIGNAL_EXTI(cs_pin_no)          SL_CONCAT_PASTER_2(prsSignalGPIO_PIN, cs_pin_no)
-#define PRS_SIGNAL_SPI(periph_no, signal) \
-  SL_CONCAT_PASTER_4(prsSignalEUSART, periph_no, _, signal)
 #define SPI_PERIPHERAL(periph_no)           SL_CONCAT_PASTER_2(SL_PERIPHERAL_EUSART, periph_no)
-#define LDMA_SIGNAL_TX(periph_no)           SL_CONCAT_PASTER_3(dmadrvPeripheralSignal_EUSART, periph_no, _TXBL)
-#define LDMA_SIGNAL_RX(periph_no)           SL_CONCAT_PASTER_3(dmadrvPeripheralSignal_EUSART, periph_no, _RXDATAV)
+#define LDMA_SIGNAL_TX(periph_no)           SL_CONCAT_PASTER_3(SL_HAL_LDMA_PERIPHERAL_SIGNAL_EUSART, periph_no, _TXFL)
+#define LDMA_SIGNAL_RX(periph_no)           SL_CONCAT_PASTER_3(SL_HAL_LDMA_PERIPHERAL_SIGNAL_EUSART, periph_no, _RXFL)
 #define GPIO_PORT_SHIFT(route)              SL_CONCAT_PASTER_3(_GPIO_EUSART_, route, _PORT_SHIFT)
 #define GPIO_PIN_SHIFT(route)               SL_CONCAT_PASTER_3(_GPIO_EUSART_, route, _PIN_SHIFT)
 #define GPIO_ROUTEEN                        (GPIO_EUSART_ROUTEEN_TXPEN | GPIO_EUSART_ROUTEEN_RXPEN | GPIO_EUSART_ROUTEEN_SCLKPEN | GPIO_EUSART_ROUTEEN_CSPEN)
@@ -105,141 +112,49 @@
 #define EUSART_TX_IRQHandler(periph_no)     SL_CONCAT_PASTER_3(EUSART, periph_no, _TX_IRQHandler)
 #define EUSART_TX_IRQn(periph_no)           SL_CONCAT_PASTER_3(EUSART, periph_no, _TX_IRQn)
 
-#elif defined(SL_CPC_DRV_SPI_IS_USART) // EUSART
-
-#define PRS_SIGNAL_SPI(periph, signal) \
-  SL_CONCAT_PASTER_4(prsSignalUSART, periph, _, signal)
+// Peripheral-specific: USART (Series 2 only)
+#elif defined(SL_CPC_DRV_SPI_IS_USART)
 #define SPI_PERIPHERAL(periph_no)           SL_CONCAT_PASTER_2(SL_PERIPHERAL_USART, periph_no)
-#define LDMA_SIGNAL_TX(periph_no)           SL_CONCAT_PASTER_3(dmadrvPeripheralSignal_USART, periph_no, _TXBL)
-#define LDMA_SIGNAL_RX(periph_no)           SL_CONCAT_PASTER_3(dmadrvPeripheralSignal_USART, periph_no, _RXDATAV)
+#define LDMA_SIGNAL_TX(periph_no)           SL_CONCAT_PASTER_3(SL_HAL_LDMA_PERIPHERAL_SIGNAL_USART, periph_no, _TXBL)
+#define LDMA_SIGNAL_RX(periph_no)           SL_CONCAT_PASTER_3(SL_HAL_LDMA_PERIPHERAL_SIGNAL_USART, periph_no, _RXDATAV)
 #define GPIO_PORT_SHIFT(route)              SL_CONCAT_PASTER_3(_GPIO_USART_, route, _PORT_SHIFT)
 #define GPIO_PIN_SHIFT(route)               SL_CONCAT_PASTER_3(_GPIO_USART_, route, _PIN_SHIFT)
 #define GPIO_ROUTEEN                        (GPIO_USART_ROUTEEN_TXPEN | GPIO_USART_ROUTEEN_RXPEN | GPIO_USART_ROUTEEN_CLKPEN | GPIO_USART_ROUTEEN_CSPEN)
 #define SPI_ROUTE                           USARTROUTE
 
-#endif // USART
-
-// PRS
-typedef PRS_Signal_t prs_signal_t;
-#define PRS_ASYNC_CONNECT_PRODUCER(ch, sig) PRS_ConnectSignal(ch, prsTypeAsync, sig)
-#define PRS_SIGNAL_NONE                     prsSignalNone
-
-// LDMA
-#define LDMA_PERIPH                         LDMA
-typedef LDMA_TransferCfg_t ldma_transfert_cfg_t;
-#define LDMA_TRANSFER_CFG_DBGHALT           ldmaDbgHalt
-#define LDMA_TRANSFER_CFG_LOOP_COUNT        ldmaLoopCnt
-typedef LDMA_Descriptor_t ldma_descriptor_t;
-#define LDMA_DESCRIPTOR_XFER_CNT            xferCnt
-#define LDMA_DESCRIPTOR_DONE_IFS            doneIfs
-#define LDMA_DESCRIPTOR_SRC_ADDR            srcAddr
-#define LDMA_DESCRIPTOR_DST_ADDR            dstAddr
-#define LDMA_DESCRIPTOR_LINK_ADDR           linkAddr
-#define LDMA_DESCRIPTOR_LINK_MODE           linkMode
-#define LDMA_DESCRIPTOR_LINK_MODE_ABS       ldmaLinkModeAbs
-#define LDMA_DESCRIPTOR_DEC_LOOP_CNT        decLoopCnt
-void LDMA_CLEAR_CH_IRQ(uint8_t channel)
-{
-  /* Clear the interrupt flag. */
-#if defined (LDMA_HAS_SET_CLEAR)
-  LDMA->IF_CLR = (1 << channel);
-#else
-  LDMA->IFC = (1 << channel);
-#endif
-}
-
-// GPIO
-#define GPIO_MODE_PUSH_PULL                 gpioModePushPull
-#define GPIO_MODE_INPUT                     gpioModeInput
-#define GPIO_MODE_INPUT_PULL                gpioModeInputPull
-#define GPIO_SET_PIN_MODE                   GPIO_PinModeSet
-#define GPIO_CLR_OUT_PIN                    GPIO_PinOutClear
-#define GPIO_SET_OUT_PIN                    GPIO_PinOutSet
-#define GPIO_CONFIGURE_EXT_INT(port,        \
-                               pin,         \
-                               intNo,       \
-                               risingEdge,  \
-                               fallingEdge) \
-  GPIO_ExtIntConfig(port, pin, intNo, risingEdge, fallingEdge, false)
-
-#endif // Series 2
-
-// Series 3 compatibility layer
-#if defined(_SILICON_LABS_32B_SERIES_3)
-#include "sl_hal_ldma.h"
-#include "sl_hal_gpio.h"
-#include "sl_hal_prs.h"
-#if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT)
-#include "sl_hal_gpcrc.h"
-#endif
-#if defined(SL_CPC_DRV_SPI_IS_HSPI)
-#include "sl_hal_hspi.h"
+// Peripheral-specific: HSPI (Series 3 only)
+#elif defined(SL_CPC_DRV_SPI_IS_HSPI)
 #define SPI_PERIPHERAL(periph_no)           SL_CONCAT_PASTER_2(SL_PERIPHERAL_HSPI, periph_no)
-#else
-#define SPI_PERIPHERAL(periph_no)           SL_CONCAT_PASTER_2(SL_PERIPHERAL_EUSART, periph_no)
-#endif
-
+#define LDMA_SIGNAL_TX(periph_no)           (LDMAXBAR0_CH_REQSEL_SIGSEL_HSPI0TXFL | LDMAXBAR0_CH_REQSEL_SOURCESEL_HSPI0)
+#define LDMA_SIGNAL_RX(periph_no)           (LDMAXBAR0_CH_REQSEL_SIGSEL_HSPI0RXFL | LDMAXBAR0_CH_REQSEL_SOURCESEL_HSPI0)
+#define GPIO_PORT_SHIFT(route)              SL_CONCAT_PASTER_3(_GPIO_EUSART_, route, _PORT_SHIFT)
+#define GPIO_PIN_SHIFT(route)               SL_CONCAT_PASTER_3(_GPIO_EUSART_, route, _PIN_SHIFT)
+#define GPIO_ROUTEEN                        (GPIO_EUSART_ROUTEEN_TXPEN | GPIO_EUSART_ROUTEEN_RXPEN | GPIO_EUSART_ROUTEEN_SCLKPEN | GPIO_EUSART_ROUTEEN_CSPEN)
 #define SPI_ROUTE                           EUSARTROUTE
 #define EUSART_TX_IRQHandler(periph_no)     SL_CONCAT_PASTER_3(EUSART, periph_no, _TX_IRQHandler)
 #define EUSART_TX_IRQn(periph_no)           SL_CONCAT_PASTER_3(EUSART, periph_no, _TX_IRQn)
+#endif
 
-// PRS
 typedef sl_hal_prs_sync_producer_signal_t prs_signal_t;
 #define PRS_ASYNC_CONNECT_PRODUCER          sl_hal_prs_async_connect_channel_producer
 #define PRS_SIGNAL_NONE                     SL_HAL_PRS_ASYNC_NONE
 #define PRS_SIGNAL_EXTI(cs_pin_no)          SL_CONCAT_PASTER_2(SL_HAL_PRS_ASYNC_GPIO_PIN, cs_pin_no)
 #if defined(SL_CPC_DRV_SPI_IS_HSPI)
 #define PRS_SIGNAL_SPI(periph_no, signal)   SL_CONCAT_PASTER_4(SL_HAL_PRS_ASYNC_HSPI, periph_no, L_, signal)
-#else
+#elif defined(SL_CPC_DRV_SPI_IS_EUSART)
 #define PRS_SIGNAL_SPI(periph_no, signal)   SL_CONCAT_PASTER_4(SL_HAL_PRS_ASYNC_EUSART, periph_no, L_, signal)
+#elif defined(SL_CPC_DRV_SPI_IS_USART)
+#define PRS_SIGNAL_SPI(periph_no, signal)   SL_CONCAT_PASTER_4(SL_HAL_PRS_ASYNC_USART, periph_no, _, signal)
 #endif
 #define PRS_TYPE_ASYNC                      SL_HAL_PRS_TYPE_ASYNC
-
-// LDMA
-#define LDMA_PERIPH                         LDMA(0)
-#if defined(SL_CPC_DRV_SPI_IS_HSPI)
-#define LDMA_SIGNAL_TX(periph_no)           SL_CONCAT_PASTER_3(dmadrvPeripheralSignal_HSPI, periph_no, _TX)
-#define LDMA_SIGNAL_RX(periph_no)           SL_CONCAT_PASTER_3(dmadrvPeripheralSignal_HSPI, periph_no, _RX)
-#else
-#define LDMA_SIGNAL_TX(periph_no)           SL_CONCAT_PASTER_3(dmadrvPeripheralSignal_EUSART, periph_no, _TXBL)
-#define LDMA_SIGNAL_RX(periph_no)           SL_CONCAT_PASTER_3(dmadrvPeripheralSignal_EUSART, periph_no, _RXDATAV)
-#endif
-typedef sl_hal_ldma_transfer_config_t ldma_transfert_cfg_t;
-#define LDMA_TRANSFER_CFG_PERIPHERAL        SL_HAL_LDMA_TRANSFER_CFG_PERIPHERAL
-#define LDMA_TRANSFER_CFG_MEMORY            SL_HAL_LDMA_TRANSFER_CFG_MEMORY
-typedef sl_hal_ldma_descriptor_t ldma_descriptor_t;
-#define LDMA_TRANSFER_CFG_DBGHALT           debug_halt_en
-#define LDMA_TRANSFER_CFG_LOOP_COUNT        loop_count
-#define LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR  SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR
-#define LDMA_DESCRIPTOR_LINKABS_SYNC        SL_HAL_LDMA_DESCRIPTOR_LINKABS_SYNC
-#define LDMA_DESCRIPTOR_LINKABS_WRITE       SL_HAL_LDMA_DESCRIPTOR_LINKABS_WRITE
-#define LDMA_DESCRIPTOR_LINKREL_M2P_BYTE(src, dest, cnt, link_jmp)  SL_HAL_LDMA_DESCRIPTOR_LINKREL_M2P(SL_HAL_LDMA_CTRL_SIZE_BYTE, src, dest, cnt, link_jmp)
-#define LDMA_DESCRIPTOR_LINKREL_P2M_BYTE(src, dest, cnt, link_jmp)  SL_HAL_LDMA_DESCRIPTOR_LINKREL_P2M(SL_HAL_LDMA_CTRL_SIZE_BYTE, src, dest, cnt, link_jmp)
-#define LDMA_DESCRIPTOR_SINGLE_M2P_BYTE(src, dest, cnt)             SL_HAL_LDMA_DESCRIPTOR_SINGLE_M2P(SL_HAL_LDMA_CTRL_SIZE_BYTE, src, dest, cnt)
-#define LDMA_DESCRIPTOR_SINGLE_P2M_BYTE(src, dest, cnt)             SL_HAL_LDMA_DESCRIPTOR_SINGLE_P2M(SL_HAL_LDMA_CTRL_SIZE_BYTE, src, dest, cnt)
-#define LDMA_DESCRIPTOR_LINKABS_M2M_BYTE(src, dest, cnt)            SL_HAL_LDMA_DESCRIPTOR_LINKABS_M2M(SL_HAL_LDMA_CTRL_SIZE_BYTE, src, dest, cnt)
-#define LDMA_DESCRIPTOR_MAX_XFER_SIZE       SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE
-#define LDMA_DESCRIPTOR_XFER_CNT            xfer_count
-#define LDMA_DESCRIPTOR_DONE_IFS            done_ifs
-#define LDMA_DESCRIPTOR_SRC_ADDR            src_addr
-#define LDMA_DESCRIPTOR_DST_ADDR            dst_addr
-#define LDMA_DESCRIPTOR_LINK_ADDR           link_addr
-#define LDMA_DESCRIPTOR_LINK_MODE           link_mode
-#define LDMA_DESCRIPTOR_LINK_MODE_ABS       SL_HAL_LDMA_LINK_MODE_ABS
-#define LDMA_DESCRIPTOR_DEC_LOOP_CNT        dec_loop_count
 #define LDMA_CLEAR_CH_IRQ(ch)               sl_hal_ldma_clear_interrupts(LDMA_PERIPH, (1 << ch))
 
-// GPIO
-#define GPIO_PORT_SHIFT(route)              SL_CONCAT_PASTER_3(_GPIO_EUSART_, route, _PORT_SHIFT)
-#define GPIO_PIN_SHIFT(route)               SL_CONCAT_PASTER_3(_GPIO_EUSART_, route, _PIN_SHIFT)
-#define GPIO_ROUTEEN                        (GPIO_EUSART_ROUTEEN_TXPEN     \
-                                             | GPIO_EUSART_ROUTEEN_RXPEN   \
-                                             | GPIO_EUSART_ROUTEEN_SCLKPEN \
-                                             | GPIO_EUSART_ROUTEEN_CSPEN)
+// GPIO (Series 2 & 3 — uses sl_hal_gpio per platform HAL)
+#if defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define GPIO_MODE_PUSH_PULL                 SL_GPIO_MODE_PUSH_PULL
 #define GPIO_MODE_INPUT                     SL_GPIO_MODE_INPUT
 #define GPIO_MODE_INPUT_PULL                SL_GPIO_MODE_INPUT_PULL
-static inline void GPIO_SET_PIN_MODE(uint8_t port, uint8_t pin, uint8_t mode, bool val)
+static inline void cpc_spi_gpio_set_pin_mode(uint8_t port, uint8_t pin, uint8_t mode, bool val)
 {
   sl_gpio_t gpio = {
     .port = port,
@@ -247,7 +162,7 @@ static inline void GPIO_SET_PIN_MODE(uint8_t port, uint8_t pin, uint8_t mode, bo
   };
   sl_hal_gpio_set_pin_mode(&gpio, (sl_gpio_mode_t)mode, val);
 }
-static inline void GPIO_SET_OUT_PIN(uint8_t port, uint8_t pin)
+static inline void cpc_spi_gpio_set_out_pin(uint8_t port, uint8_t pin)
 {
   sl_gpio_t gpio = {
     .port = port,
@@ -255,7 +170,7 @@ static inline void GPIO_SET_OUT_PIN(uint8_t port, uint8_t pin)
   };
   sl_hal_gpio_set_pin(&gpio);
 }
-static inline void GPIO_CLR_OUT_PIN(uint8_t port, uint8_t pin)
+static inline void cpc_spi_gpio_clr_out_pin(uint8_t port, uint8_t pin)
 {
   sl_gpio_t gpio = {
     .port = port,
@@ -263,12 +178,11 @@ static inline void GPIO_CLR_OUT_PIN(uint8_t port, uint8_t pin)
   };
   sl_hal_gpio_clear_pin(&gpio);
 }
-
-static inline void GPIO_CONFIGURE_EXT_INT(uint8_t port,
-                                          uint8_t pin,
-                                          int intNo,
-                                          bool risingEdge,
-                                          bool fallingEdge)
+static inline void cpc_spi_gpio_configure_ext_int(uint8_t port,
+                                                   uint8_t pin,
+                                                   int intNo,
+                                                   bool risingEdge,
+                                                   bool fallingEdge)
 {
   sl_gpio_t gpio = {
     .pin = pin,
@@ -288,8 +202,8 @@ static inline void GPIO_CONFIGURE_EXT_INT(uint8_t port,
                                            intNo,
                                            flags);
 }
-
-#endif // Series 3
+#define GPIO_CONFIGURE_EXT_INT              cpc_spi_gpio_configure_ext_int
+#endif
 #define IRQ_PIN_SET_MASK              (1 << SL_CPC_DRV_SPI_IRQ_PIN)
 #define TX_READY_WINDOW_TRIG_BIT_MASK (1 << SL_CPC_DRV_SPI_TX_AVAILABILITY_SYNCTRIG_CH)
 #if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT)
@@ -310,56 +224,56 @@ static inline void GPIO_CONFIGURE_EXT_INT(uint8_t port,
 #ifdef LOGIC_ANALYZER_TRACES
 
 #define LOGIC_ANALYZER_TRACE_HEADER_TRANSFER_ISR_START                \
-  GPIO_SET_OUT_PIN(LOGIC_ANALYZER_TRACE_HEADER_TRANSFER_ISR_PIN_PORT, \
+  cpc_spi_gpio_set_out_pin(LOGIC_ANALYZER_TRACE_HEADER_TRANSFER_ISR_PIN_PORT, \
                    LOGIC_ANALYZER_TRACE_HEADER_TRANSFER_ISR_PIN_PIN)
 
 #define LOGIC_ANALYZER_TRACE_HEADER_TRANSFER_ISR_END                  \
-  GPIO_CLR_OUT_PIN(LOGIC_ANALYZER_TRACE_HEADER_TRANSFER_ISR_PIN_PORT, \
+  cpc_spi_gpio_clr_out_pin(LOGIC_ANALYZER_TRACE_HEADER_TRANSFER_ISR_PIN_PORT, \
                    LOGIC_ANALYZER_TRACE_HEADER_TRANSFER_ISR_PIN_PIN)
 
 #define LOGIC_ANALYZER_TRACE_PAYLOAD_TRANSFER_ISR_START                \
-  GPIO_SET_OUT_PIN(LOGIC_ANALYZER_TRACE_PAYLOAD_TRANSFER_ISR_PIN_PORT, \
+  cpc_spi_gpio_set_out_pin(LOGIC_ANALYZER_TRACE_PAYLOAD_TRANSFER_ISR_PIN_PORT, \
                    LOGIC_ANALYZER_TRACE_PAYLOAD_TRANSFER_ISR_PIN_PIN)
 
 #define LOGIC_ANALYZER_TRACE_PAYLOAD_TRANSFER_ISR_END                  \
-  GPIO_CLR_OUT_PIN(LOGIC_ANALYZER_TRACE_PAYLOAD_TRANSFER_ISR_PIN_PORT, \
+  cpc_spi_gpio_clr_out_pin(LOGIC_ANALYZER_TRACE_PAYLOAD_TRANSFER_ISR_PIN_PORT, \
                    LOGIC_ANALYZER_TRACE_PAYLOAD_TRANSFER_ISR_PIN_PIN)
 
 #define LOGIC_ANALYZER_TRACE_TX_DMA_ARMED                        \
   do {                                                           \
-    GPIO_SET_OUT_PIN(LOGIC_ANALYZER_TRACE_TX_DMA_ARMED_PIN_PORT, \
+    cpc_spi_gpio_set_out_pin(LOGIC_ANALYZER_TRACE_TX_DMA_ARMED_PIN_PORT, \
                      LOGIC_ANALYZER_TRACE_TX_DMA_ARMED_PIN_PIN); \
     __NOP();                                                     \
     __NOP();                                                     \
     __NOP();                                                     \
     __NOP();                                                     \
-    GPIO_CLR_OUT_PIN(LOGIC_ANALYZER_TRACE_TX_DMA_ARMED_PIN_PORT, \
+    cpc_spi_gpio_clr_out_pin(LOGIC_ANALYZER_TRACE_TX_DMA_ARMED_PIN_PORT, \
                      LOGIC_ANALYZER_TRACE_TX_DMA_ARMED_PIN_PIN); \
   } while (0)
 
 #define LOGIC_ANALYZER_TRACE_TX_FLUSHED                        \
   do {                                                         \
-    GPIO_SET_OUT_PIN(LOGIC_ANALYZER_TRACE_TX_FLUSHED_PIN_PORT, \
+    cpc_spi_gpio_set_out_pin(LOGIC_ANALYZER_TRACE_TX_FLUSHED_PIN_PORT, \
                      LOGIC_ANALYZER_TRACE_TX_FLUSHED_PIN_PIN); \
     __NOP();                                                   \
     __NOP();                                                   \
     __NOP();                                                   \
     __NOP();                                                   \
-    GPIO_CLR_OUT_PIN(LOGIC_ANALYZER_TRACE_TX_FLUSHED_PIN_PORT, \
+    cpc_spi_gpio_clr_out_pin(LOGIC_ANALYZER_TRACE_TX_FLUSHED_PIN_PORT, \
                      LOGIC_ANALYZER_TRACE_TX_FLUSHED_PIN_PIN); \
   } while (0)
 
 #define LOGIC_ANALYZER_TRACE_PIN_INIT                                   \
-  GPIO_SET_PIN_MODE(LOGIC_ANALYZER_TRACE_HEADER_TRANSFER_ISR_PIN_PORT,  \
+  cpc_spi_gpio_set_pin_mode(LOGIC_ANALYZER_TRACE_HEADER_TRANSFER_ISR_PIN_PORT,  \
                     LOGIC_ANALYZER_TRACE_HEADER_TRANSFER_ISR_PIN_PIN,   \
                     GPIO_MODE_PUSH_PULL, 0);                            \
-  GPIO_SET_PIN_MODE(LOGIC_ANALYZER_TRACE_PAYLOAD_TRANSFER_ISR_PIN_PORT, \
+  cpc_spi_gpio_set_pin_mode(LOGIC_ANALYZER_TRACE_PAYLOAD_TRANSFER_ISR_PIN_PORT, \
                     LOGIC_ANALYZER_TRACE_PAYLOAD_TRANSFER_ISR_PIN_PIN,  \
                     GPIO_MODE_PUSH_PULL, 0);                            \
-  GPIO_SET_PIN_MODE(LOGIC_ANALYZER_TRACE_TX_DMA_ARMED_PIN_PORT,         \
+  cpc_spi_gpio_set_pin_mode(LOGIC_ANALYZER_TRACE_TX_DMA_ARMED_PIN_PORT,         \
                     LOGIC_ANALYZER_TRACE_TX_DMA_ARMED_PIN_PIN,          \
                     GPIO_MODE_PUSH_PULL, 0);                            \
-  GPIO_SET_PIN_MODE(LOGIC_ANALYZER_TRACE_TX_FLUSHED_PIN_PORT,           \
+  cpc_spi_gpio_set_pin_mode(LOGIC_ANALYZER_TRACE_TX_FLUSHED_PIN_PORT,           \
                     LOGIC_ANALYZER_TRACE_TX_FLUSHED_PIN_PIN,            \
                     GPIO_MODE_PUSH_PULL, 0);
 
@@ -387,10 +301,10 @@ static unsigned int tx_dma_channel;
 static unsigned int gpcrc_dma_channel;
 #endif
 
-static ldma_transfert_cfg_t rx_dma_config;
-static ldma_transfert_cfg_t tx_dma_config;
+static sl_hal_ldma_transfer_config_t rx_dma_config;
+static sl_hal_ldma_transfer_config_t tx_dma_config;
 #if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT)
-static ldma_transfert_cfg_t gpcrc_dma_config;
+static sl_hal_ldma_transfer_config_t gpcrc_dma_config;
 #endif
 
 // List of "sli_buf_entry_t" which have an EMPTY "sl_cpc_buffer_handle_t" attached to them.
@@ -427,67 +341,69 @@ static volatile uint32_t tx_frame_complete = 0;
 
 static volatile bool need_rx_buffer_handle = false;
 
-// Debug variable to help keep track of the DMA IRQ state machine
-static volatile int dma_irq_seq_no = 0;
+// True when the next RX DMA IRQ should be treated as a header interrupt.
+// Set to true for the initial arm (chain starts mid-way, so first IRQ is the header);
+// set to false for all subsequent arms via prime_dma_for_reception (first IRQ is payload).
+static volatile bool rx_next_irq_is_header = false;
 
 /***************************************************************************//**
  * DMA descriptors
  ******************************************************************************/
 
 // Reception descriptors
-static ldma_descriptor_t rx_desc_wait_cs_high_after_header;
-static ldma_descriptor_t rx_desc_wait_cs_low_before_payload;
-static ldma_descriptor_t rx_desc_set_irq_high;
-static ldma_descriptor_t rx_desc_recv_payload;
-#if (SLI_CPC_DRV_SPI_RX_DATA_MAX_LENGTH > LDMA_DESCRIPTOR_MAX_XFER_SIZE)
-static ldma_descriptor_t rx_desc_recv_payload_large_buf;
+static sl_hal_ldma_descriptor_t rx_desc_wait_cs_high_after_header;
+static sl_hal_ldma_descriptor_t rx_desc_wait_cs_low_before_payload;
+static sl_hal_ldma_descriptor_t rx_desc_set_irq_high;
+static sl_hal_ldma_descriptor_t rx_desc_recv_payload;
+#if (SLI_CPC_DRV_SPI_RX_DATA_MAX_LENGTH > SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE)
+static sl_hal_ldma_descriptor_t rx_desc_recv_payload_large_buf;
 #endif
-static ldma_descriptor_t rx_desc_rxblocken;
-static ldma_descriptor_t rx_desc_wait_cs_high_after_payload; // Generates the end-of-payload interrupt
+static sl_hal_ldma_descriptor_t rx_desc_rxblocken;
+static sl_hal_ldma_descriptor_t rx_desc_wait_cs_high_after_payload; // Generates the end-of-payload interrupt
 
 // rx_desc_throw_away_extra_bytes is a loop descriptor. This kind of descriptor
 // jumps to the next descriptor in memory when loopcnt == 0. In order to
 // guarantee that the order between these two is correct, put them in a struct.
 static struct {
-  ldma_descriptor_t rx_desc_throw_away_extra_bytes;
-  ldma_descriptor_t rx_desc_set_availability_sync_bit; // When HWCRC enabled, also sets the GPCRC launch bit
+  sl_hal_ldma_descriptor_t rx_desc_throw_away_extra_bytes;
+  sl_hal_ldma_descriptor_t rx_desc_set_availability_sync_bit; // When HWCRC enabled, also sets the GPCRC launch bit
 } rx_desc_group;
 
-static ldma_descriptor_t rx_desc_rxblockdis;
-static ldma_descriptor_t rx_desc_wait_cs_low_before_header;
-static ldma_descriptor_t rx_desc_clear_availability_sync_bit;
-static ldma_descriptor_t rx_desc_set_irq_high_after_header_cs_low;
-static ldma_descriptor_t rx_desc_recv_header;
+static sl_hal_ldma_descriptor_t rx_desc_rxblockdis;
+static sl_hal_ldma_descriptor_t rx_desc_wait_cs_low_before_header;
+static sl_hal_ldma_descriptor_t rx_desc_clear_availability_sync_bit;
+static sl_hal_ldma_descriptor_t rx_desc_set_irq_high_after_header_cs_low;
+static sl_hal_ldma_descriptor_t rx_desc_recv_header;
 #if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT)
-static ldma_descriptor_t rx_desc_wait_gpcrc_sync_bit;
-static ldma_descriptor_t rx_desc_throw_header_in_gpcrc;
-static ldma_descriptor_t rx_desc_recv_header_crc;
+static sl_hal_ldma_descriptor_t rx_desc_wait_gpcrc_sync_bit;
+static sl_hal_ldma_descriptor_t rx_desc_throw_header_in_gpcrc;
+static sl_hal_ldma_descriptor_t rx_desc_recv_header_crc;
 #endif
 
 #if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT)
-static ldma_descriptor_t gpcrc_desc_wait_for_gpcrc_sync_bit;
-static ldma_descriptor_t gpcrc_desc_clear_gpcrc_sync_bit;
-static ldma_descriptor_t gpcrc_desc_write_rx_payload_words_in_gpcrc;
-static ldma_descriptor_t gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc;
-static ldma_descriptor_t gpcrc_desc_save_rx_gpcrc_computed_crc;
-static ldma_descriptor_t gpcrc_desc_set_rxchain_ien_bit;
-static ldma_descriptor_t gpcrc_desc_set_gpcrc_sync_bit;
+static sl_hal_ldma_descriptor_t gpcrc_desc_wait_for_gpcrc_sync_bit;
+static sl_hal_ldma_descriptor_t gpcrc_desc_clear_gpcrc_sync_bit;
+static sl_hal_ldma_descriptor_t gpcrc_desc_write_rx_payload_words_in_gpcrc;
+static sl_hal_ldma_descriptor_t gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc;
+static sl_hal_ldma_descriptor_t gpcrc_desc_save_rx_gpcrc_computed_crc;
+static sl_hal_ldma_descriptor_t gpcrc_desc_set_rxchain_ien_bit;
+static sl_hal_ldma_descriptor_t gpcrc_desc_set_gpcrc_sync_bit;
 #endif
 
 // Transmission descriptors
-static ldma_descriptor_t tx_desc_wait_availability_sync_bit;
-static ldma_descriptor_t tx_desc_set_irq_low;
-static ldma_descriptor_t tx_desc_xfer_header;
-static ldma_descriptor_t tx_desc_wait_header_tranfered;
-static ldma_descriptor_t tx_desc_set_tx_frame_complete_variable_after_header;
-static ldma_descriptor_t tx_desc_xfer_payload;
-#if (SLI_CPC_DRV_SPI_RX_DATA_MAX_LENGTH > LDMA_DESCRIPTOR_MAX_XFER_SIZE)
-static ldma_descriptor_t tx_desc_xfer_payload_large_buf;
+static sl_hal_ldma_descriptor_t tx_desc_wait_availability_sync_bit;
+static sl_hal_ldma_descriptor_t tx_desc_set_irq_low;
+static sl_hal_ldma_descriptor_t tx_desc_xfer_header;
+static sl_hal_ldma_descriptor_t tx_desc_wait_header_tranferred;
+static sl_hal_ldma_descriptor_t tx_desc_set_tx_frame_complete_variable_after_header;
+static sl_hal_ldma_descriptor_t tx_desc_xfer_payload;
+#if (SLI_CPC_DRV_SPI_RX_DATA_MAX_LENGTH > SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE)
+static sl_hal_ldma_descriptor_t tx_desc_xfer_payload_large_buf;
 #endif
 #if (SL_CPC_ENDPOINT_SECURITY_ENABLED == 1)
-static ldma_descriptor_t tx_desc_xfer_tag;
+static sl_hal_ldma_descriptor_t tx_desc_xfer_tag;
 #endif
-static ldma_descriptor_t tx_desc_xfer_checksum;
+static sl_hal_ldma_descriptor_t tx_desc_xfer_checksum;
 
 /*******************************************************************************
  **************************   LOCAL FUNCTIONS   ********************************
@@ -497,7 +413,7 @@ static void init_clocks(void);
 static void flush_rx(void);
 static void flush_tx(void);
 
-static bool rx_dma_callback(unsigned int channel, unsigned int sequenceNo, void *userParam);
+static void spi_ldma_rx_irq_callback(void);
 
 static void end_of_header_xfer(void);
 static bool end_of_payload_xfer(void);
@@ -551,11 +467,11 @@ static sl_status_t spi_drv_hw_init(sli_cpc_drv_t *drv)
   init_clocks();
 
   // Set pin modes and drive characteristics for the SPI mode 0
-  GPIO_SET_PIN_MODE(SL_CPC_DRV_SPI_COPI_PORT, SL_CPC_DRV_SPI_COPI_PIN, GPIO_MODE_INPUT, 0);       // The E/USART's TX labeled pin becomes the input when configured as a slave
-  GPIO_SET_PIN_MODE(SL_CPC_DRV_SPI_CIPO_PORT, SL_CPC_DRV_SPI_CIPO_PIN, GPIO_MODE_PUSH_PULL, 0);    // The E/USART's RX labeled pin becomes the output when configured as a slave
-  GPIO_SET_PIN_MODE(SL_CPC_DRV_SPI_CLK_PORT, SL_CPC_DRV_SPI_CLK_PIN, GPIO_MODE_INPUT, 0);
-  GPIO_SET_PIN_MODE(SL_CPC_DRV_SPI_CS_PORT, SL_CPC_DRV_SPI_CS_PIN, GPIO_MODE_INPUT_PULL, 1);   // Pull up to give a idle high state to the input Chip Select signal
-  GPIO_SET_PIN_MODE(SL_CPC_DRV_SPI_IRQ_PORT, SL_CPC_DRV_SPI_IRQ_PIN, GPIO_MODE_PUSH_PULL, 1);  // Initial value of IRQ signal is HIGH (no frame to send)
+  cpc_spi_gpio_set_pin_mode(SL_CPC_DRV_SPI_COPI_PORT, SL_CPC_DRV_SPI_COPI_PIN, GPIO_MODE_INPUT, 0);       // The E/USART's TX labeled pin becomes the input when configured as a slave
+  cpc_spi_gpio_set_pin_mode(SL_CPC_DRV_SPI_CIPO_PORT, SL_CPC_DRV_SPI_CIPO_PIN, GPIO_MODE_PUSH_PULL, 0);    // The E/USART's RX labeled pin becomes the output when configured as a slave
+  cpc_spi_gpio_set_pin_mode(SL_CPC_DRV_SPI_CLK_PORT, SL_CPC_DRV_SPI_CLK_PIN, GPIO_MODE_INPUT, 0);
+  cpc_spi_gpio_set_pin_mode(SL_CPC_DRV_SPI_CS_PORT, SL_CPC_DRV_SPI_CS_PIN, GPIO_MODE_INPUT_PULL, 1);   // Pull up to give a idle high state to the input Chip Select signal
+  cpc_spi_gpio_set_pin_mode(SL_CPC_DRV_SPI_IRQ_PORT, SL_CPC_DRV_SPI_IRQ_PIN, GPIO_MODE_PUSH_PULL, 1);  // Initial value of IRQ signal is HIGH (no frame to send)
 
   sli_cpc_drv_wake_gpio_init();
 
@@ -708,42 +624,35 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
     tx_buf_available_count = SL_CPC_DRV_SPI_TX_QUEUE_SIZE;
   }
 
-  // Init the DMA and allocate two channels
+  // Init the LDMA and obtain DMA channels via DMA manager.
   {
-    Ecode_t ret;
-    ret = DMADRV_Init();
-    if (SL_BRANCH_UNLIKELY(ret != ECODE_EMDRV_DMADRV_OK && ret != ECODE_EMDRV_DMADRV_ALREADY_INITIALIZED)) {
-      SLI_CPC_ASSERT(0);
-      return SL_STATUS_INITIALIZATION;
-    }
+    // Allocate channels: RX first (highest priority), then TX, then GPCRC so RX gets lowest channel number.
+    sl_status_t status;
+    uint8_t ch;
 
-    ret = DMADRV_AllocateChannel(&rx_dma_channel, NULL);
-    if (SL_BRANCH_UNLIKELY(ret != ECODE_EMDRV_DMADRV_OK)) {
-      SLI_CPC_ASSERT(0);
-      return SL_STATUS_ALLOCATION_FAILED;
+    status = sl_dma_manager_allocate_channel(NULL, &ch);
+    if (status != SL_STATUS_OK) {
+      return status;
     }
+    rx_dma_channel = (unsigned int)ch;
 
-    ret = DMADRV_AllocateChannel(&tx_dma_channel, NULL);
-    if (SL_BRANCH_UNLIKELY(ret != ECODE_EMDRV_DMADRV_OK)) {
-      SLI_CPC_ASSERT(0);
-      return SL_STATUS_ALLOCATION_FAILED;
+    status = sl_dma_manager_allocate_channel(NULL, &ch);
+    if (status != SL_STATUS_OK) {
+      return status;
     }
+    tx_dma_channel = (unsigned int)ch;
 
 #if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT)
-    ret = DMADRV_AllocateChannel(&gpcrc_dma_channel, NULL);
-    if (SL_BRANCH_UNLIKELY(ret != ECODE_EMDRV_DMADRV_OK)) {
-      SLI_CPC_ASSERT(0);
-      return SL_STATUS_ALLOCATION_FAILED;
+    status = sl_dma_manager_allocate_channel(NULL, &ch);
+    if (status != SL_STATUS_OK) {
+      return status;
     }
+    gpcrc_dma_channel = (unsigned int)ch;
 #endif
 
-    //The DMA channel that serves receive buffer should have higher priority than the DMA channel that serves transmit buffer.
-    if (SL_BRANCH_UNLIKELY(rx_dma_channel > tx_dma_channel)) {
-      // A lower number DMA channel is higher priority. If the allocated DMA channels from SPIDRV init gave us
-      // a inverted priority, switch those channels. They have been allocated, its safe to just switch them.
-      unsigned int tmp = rx_dma_channel;
-      rx_dma_channel = tx_dma_channel;
-      tx_dma_channel = tmp;
+    status = sl_dma_manager_register_channel_irq_callback(NULL, (uint8_t)rx_dma_channel, spi_ldma_rx_irq_callback);
+    if (status != SL_STATUS_OK) {
+      return status;
     }
   }
 
@@ -872,16 +781,16 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
   // SPI DMA configuration
   {
     // Create DMA configs for TX/RX from the DMA-REQ signals of the E/USART
-    rx_dma_config = (ldma_transfert_cfg_t)LDMA_TRANSFER_CFG_PERIPHERAL(LDMA_SIGNAL_RX(SL_CPC_DRV_SPI_PERIPHERAL_NO));
-    tx_dma_config = (ldma_transfert_cfg_t)LDMA_TRANSFER_CFG_PERIPHERAL(LDMA_SIGNAL_TX(SL_CPC_DRV_SPI_PERIPHERAL_NO));
+    rx_dma_config = (sl_hal_ldma_transfer_config_t)SL_HAL_LDMA_TRANSFER_CFG_PERIPHERAL(LDMA_SIGNAL_RX(SL_CPC_DRV_SPI_PERIPHERAL_NO));
+    tx_dma_config = (sl_hal_ldma_transfer_config_t)SL_HAL_LDMA_TRANSFER_CFG_PERIPHERAL(LDMA_SIGNAL_TX(SL_CPC_DRV_SPI_PERIPHERAL_NO));
     #if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT)
-    gpcrc_dma_config = (ldma_transfert_cfg_t)LDMA_TRANSFER_CFG_MEMORY();
+    gpcrc_dma_config = (sl_hal_ldma_transfer_config_t)SL_HAL_LDMA_TRANSFER_CFG_MEMORY();
     #endif
 
-    rx_dma_config.LDMA_TRANSFER_CFG_DBGHALT = true;
-    tx_dma_config.LDMA_TRANSFER_CFG_DBGHALT = true;
+    rx_dma_config.debug_halt_en = true;
+    tx_dma_config.debug_halt_en = true;
     #if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT)
-    gpcrc_dma_config.LDMA_TRANSFER_CFG_DBGHALT = true;
+    gpcrc_dma_config.debug_halt_en = true;
     #endif
 
     // This loop count is used by the rx_desc_throw_away_extra_bytes to loop
@@ -889,7 +798,7 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
     // iterations. As this structure is passed as argument when starting
     // transfers, that means the loop count will be reinitialized to one every
     // time a new transfer is started, which is the expect behavior.
-    rx_dma_config.LDMA_TRANSFER_CFG_LOOP_COUNT = 1;
+    rx_dma_config.loop_count = 1;
   }
 
   // Prepare the reception DMA descriptor chain.
@@ -901,30 +810,30 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
 
     // Sync descriptor to wait for the CS high between the header and the payload
     {
-      rx_desc_wait_cs_high_after_header = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKABS_SYNC(
+      rx_desc_wait_cs_high_after_header = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKABS_SYNC(
         0x0,
         0x0,
         SYNC_ON_CS_PRS_CHANNEL_EQUAL_ONE,
         ENABLE_SYNC_ON_CS_PRS_CHANNEL);
 
       // Fixed branching skipping the 3 following descriptors used for the SERIES_2_CONFIG_5 hack
-      rx_desc_wait_cs_high_after_header.sync.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_wait_cs_low_before_payload);
+      rx_desc_wait_cs_high_after_header.sync.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_wait_cs_low_before_payload);
     }
 
     // Sync descriptor to wait for the CS low before payload clocking
     {
-      rx_desc_wait_cs_low_before_payload = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKABS_SYNC(
+      rx_desc_wait_cs_low_before_payload = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKABS_SYNC(
         0x0,
         0x0,
         SYNC_ON_CS_PRS_CHANNEL_EQUAL_ZERO,
         ENABLE_SYNC_ON_CS_PRS_CHANNEL);
 
-      rx_desc_wait_cs_low_before_payload.sync.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_set_irq_high);
+      rx_desc_wait_cs_low_before_payload.sync.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_set_irq_high);
     }
 
     // WRITE descriptor to set the IRQ pin high after the falling edge of CS of payload
     {
-      rx_desc_set_irq_high = (ldma_descriptor_t)LDMA_DESCRIPTOR_LINKABS_WRITE(
+      rx_desc_set_irq_high = (sl_hal_ldma_descriptor_t)SL_HAL_LDMA_DESCRIPTOR_LINKABS_WRITE(
         IRQ_PIN_SET_MASK,
         IRQ_GPIO_SET_REG_ADDR);
 
@@ -935,40 +844,40 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
 
     // Transfer descriptor to receive the payload
     {
-      rx_desc_recv_payload = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKREL_P2M_BYTE(
+      rx_desc_recv_payload = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKREL_P2M(SL_HAL_LDMA_CTRL_SIZE_BYTE,
         &(SL_CPC_DRV_SPI_PERIPHERAL->RXDATA),
         0, // place holder for data pointer
         0, // place holder for length
         1); // Will be overridden below
 
       // The macro LDMA_DESCRIPTOR_LINKABS_P2M_BYTE does not exist, force this descriptor to use absolute linking
-      rx_desc_recv_payload.xfer.LDMA_DESCRIPTOR_LINK_MODE = LDMA_DESCRIPTOR_LINK_MODE_ABS;
+      rx_desc_recv_payload.xfer.link_mode = SL_HAL_LDMA_LINK_MODE_ABS;
 
-      // Override .LDMA_DESCRIPTOR_DONE_IFS; the interrupts are generated somewhere else
-      rx_desc_recv_payload.xfer.LDMA_DESCRIPTOR_DONE_IFS = 0;
+      // Override .done_ifs; the interrupts are generated somewhere else
+      rx_desc_recv_payload.xfer.done_ifs = 0;
 
       // When NOT large buffer, this descriptor's branching remains fixed
-      rx_desc_recv_payload.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_rxblocken);
+      rx_desc_recv_payload.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_rxblocken);
 
       // When large buffer, the branching is computed before each arming
     }
 
-    #if (SLI_CPC_DRV_SPI_RX_DATA_MAX_LENGTH > LDMA_DESCRIPTOR_MAX_XFER_SIZE)
+    #if (SLI_CPC_DRV_SPI_RX_DATA_MAX_LENGTH > SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE)
     // Transfer descriptor to receive the large buffer payload
     {
-      rx_desc_recv_payload_large_buf = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKREL_P2M_BYTE(
+      rx_desc_recv_payload_large_buf = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKREL_P2M(SL_HAL_LDMA_CTRL_SIZE_BYTE,
         &(SL_CPC_DRV_SPI_PERIPHERAL->RXDATA),
         0, // place holder for payload pointer
         0, // place holder for length
         1); // Will be overridden below
 
       // The macro LDMA_DESCRIPTOR_LINKABS_P2M_BYTE does not exist, force this descriptor to use absolute linking
-      rx_desc_recv_payload_large_buf.xfer.LDMA_DESCRIPTOR_LINK_MODE = LDMA_DESCRIPTOR_LINK_MODE_ABS;
+      rx_desc_recv_payload_large_buf.xfer.link_mode = SL_HAL_LDMA_LINK_MODE_ABS;
 
-      // Override .LDMA_DESCRIPTOR_DONE_IFS; the interrupts are generated somewhere else
-      rx_desc_recv_payload_large_buf.xfer.LDMA_DESCRIPTOR_DONE_IFS = 0;
+      // Override .done_ifs; the interrupts are generated somewhere else
+      rx_desc_recv_payload_large_buf.xfer.done_ifs = 0;
 
-      rx_desc_recv_payload_large_buf.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_rxblocken);
+      rx_desc_recv_payload_large_buf.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_rxblocken);
     }
     #endif
 
@@ -982,18 +891,18 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
         #define RXBLOCKEN_CMD  HSPI_CMD_RXBLOCKEN
       #endif
 
-      rx_desc_rxblocken = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKABS_WRITE(
+      rx_desc_rxblocken = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKABS_WRITE(
         RXBLOCKEN_CMD,
         &SL_CPC_DRV_SPI_PERIPHERAL->CMD_SET);
 
 
       // Fixed branching
-      rx_desc_rxblocken.wri.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_wait_cs_high_after_payload);
+      rx_desc_rxblocken.wri.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_wait_cs_high_after_payload);
     }
 
     // Sync descriptor to wait for the rising edge of the UART CS following the payload.
     {
-      rx_desc_wait_cs_high_after_payload = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKABS_SYNC(
+      rx_desc_wait_cs_high_after_payload = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKABS_SYNC(
         0x0,
         0x0,
         SYNC_ON_CS_PRS_CHANNEL_EQUAL_ONE,
@@ -1002,10 +911,10 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
       // The payload interrupt is generated when this descriptor unblocks.
       // With HWCRC, since the IEN bit of this channel is voluntarily cleared, the IF bit might be pending
       // for a bit until the GPCRC DMA chain sets the IEN bit
-      rx_desc_wait_cs_high_after_payload.sync.LDMA_DESCRIPTOR_DONE_IFS = 1;
+      rx_desc_wait_cs_high_after_payload.sync.done_ifs = 1;
 
       // Fixed branching to the descriptor following
-      rx_desc_wait_cs_high_after_payload.sync.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_group.rx_desc_throw_away_extra_bytes);
+      rx_desc_wait_cs_high_after_payload.sync.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_group.rx_desc_throw_away_extra_bytes);
     }
 
     // Transfer descriptor to throw away two bytes of data away. This is needed
@@ -1015,15 +924,15 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
       // Dummy byte to throw away the bytes from the RX FIFO
       static uint8_t dummy_byte;
 
-      rx_desc_group.rx_desc_throw_away_extra_bytes = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKABS_M2M_BYTE(
+      rx_desc_group.rx_desc_throw_away_extra_bytes = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKABS_M2M(SL_HAL_LDMA_CTRL_SIZE_BYTE,
         &(SL_CPC_DRV_SPI_PERIPHERAL->RXDATA),
         &dummy_byte,
         1);
 
       // Fixed branching
-      rx_desc_group.rx_desc_throw_away_extra_bytes.xfer.LDMA_DESCRIPTOR_DEC_LOOP_CNT = 1;
-      rx_desc_group.rx_desc_throw_away_extra_bytes.xfer.LDMA_DESCRIPTOR_LINK_ADDR =
-        LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_group.rx_desc_throw_away_extra_bytes);
+      rx_desc_group.rx_desc_throw_away_extra_bytes.xfer.dec_loop_count = 1;
+      rx_desc_group.rx_desc_throw_away_extra_bytes.xfer.link_addr =
+        SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_group.rx_desc_throw_away_extra_bytes);
     }
 
     // Sync descriptor to set the TX availability bit
@@ -1036,14 +945,14 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
       const uint8_t sync_trig_bits_to_set = TX_READY_WINDOW_TRIG_BIT_MASK;
       #endif
 
-      rx_desc_group.rx_desc_set_availability_sync_bit = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKABS_SYNC(
+      rx_desc_group.rx_desc_set_availability_sync_bit = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKABS_SYNC(
         sync_trig_bits_to_set,
         0,
         0,
         0);
 
       // Fixed branching
-      rx_desc_group.rx_desc_set_availability_sync_bit.sync.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_rxblockdis);
+      rx_desc_group.rx_desc_set_availability_sync_bit.sync.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_rxblockdis);
     }
 
     // Write descriptor to disable the RXBLOCK of the E/USART to accept incoming bytes
@@ -1057,55 +966,55 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
       #endif
 
       #if defined(SL_CPC_DRV_SPI_IS_HSPI)
-      rx_desc_rxblockdis = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKABS_WRITE(
+      rx_desc_rxblockdis = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKABS_WRITE(
         RXBLOCKDIS_CMD,
         &SL_CPC_DRV_SPI_PERIPHERAL->CMD_SET);
       #else
-      rx_desc_rxblockdis = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKABS_WRITE(
+      rx_desc_rxblockdis = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKABS_WRITE(
         RXBLOCKDIS_CMD,
         &SL_CPC_DRV_SPI_PERIPHERAL->CMD);
       #endif
 
-      rx_desc_rxblockdis.wri.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_wait_cs_low_before_header);
+      rx_desc_rxblockdis.wri.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_wait_cs_low_before_header);
     }
 
     // Sync descriptor to wait for the falling edge of the UART CS of the next header.
     {
-      rx_desc_wait_cs_low_before_header = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKABS_SYNC(
+      rx_desc_wait_cs_low_before_header = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKABS_SYNC(
         0,
         0x0,
         SYNC_ON_CS_PRS_CHANNEL_EQUAL_ZERO,
         ENABLE_SYNC_ON_CS_PRS_CHANNEL);
 
-      rx_desc_wait_cs_low_before_header.sync.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_clear_availability_sync_bit);
+      rx_desc_wait_cs_low_before_header.sync.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_clear_availability_sync_bit);
     }
 
     // Sync descriptor to clear the SYNCTRIG[7] bit
     {
-      rx_desc_clear_availability_sync_bit = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKABS_SYNC(
+      rx_desc_clear_availability_sync_bit = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKABS_SYNC(
         0x0,
         TX_READY_WINDOW_TRIG_BIT_MASK, // Clears TX READY WINDOW trig bit when loaded
         0x0,
         0x0);
 
       // Fixed branching to the descriptor following
-      rx_desc_clear_availability_sync_bit.sync.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_set_irq_high_after_header_cs_low);
+      rx_desc_clear_availability_sync_bit.sync.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_set_irq_high_after_header_cs_low);
     }
 
     // Immediate write to set the IRQ pin high.
     {
-      rx_desc_set_irq_high_after_header_cs_low = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKABS_WRITE(
+      rx_desc_set_irq_high_after_header_cs_low = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKABS_WRITE(
         IRQ_PIN_SET_MASK,
         IRQ_GPIO_SET_REG_ADDR);
 
       // Fixed branching to the descriptor following
-      rx_desc_set_irq_high_after_header_cs_low.wri.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_recv_header);
+      rx_desc_set_irq_high_after_header_cs_low.wri.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_recv_header);
     }
 
     // Transfer the received header. Because its a _SINGLE_ descriptor, the
-    // .LDMA_DESCRIPTOR_DONE_IFS bit is set and an interrupt will fire after it gets executed
+    // .done_ifs bit is set and an interrupt will fire after it gets executed
     {
-      rx_desc_recv_header = (ldma_descriptor_t)LDMA_DESCRIPTOR_SINGLE_P2M_BYTE(
+      rx_desc_recv_header = (sl_hal_ldma_descriptor_t)SL_HAL_LDMA_DESCRIPTOR_SINGLE_P2M(SL_HAL_LDMA_CTRL_SIZE_BYTE,
         &(SL_CPC_DRV_SPI_PERIPHERAL->RXDATA),
         &header_buffer,
       #if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT)
@@ -1127,28 +1036,28 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
 
       // The macro LDMA_DESCRIPTOR_LINKABS_P2M_BYTE does not exist for whatever reason.
       // Force this descriptor to use absolute linking
-      rx_desc_recv_header.xfer.LDMA_DESCRIPTOR_LINK_MODE = LDMA_DESCRIPTOR_LINK_MODE_ABS;
+      rx_desc_recv_header.xfer.link_mode = SL_HAL_LDMA_LINK_MODE_ABS;
 
-      // Override .LDMA_DESCRIPTOR_DONE_IFS : Don't trigger an interrupt at the end of this descriptor
-      rx_desc_recv_header.xfer.LDMA_DESCRIPTOR_DONE_IFS = 0;
+      // Override .done_ifs : Don't trigger an interrupt at the end of this descriptor
+      rx_desc_recv_header.xfer.done_ifs = 0;
       #endif
 
       #if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT)
       // Fixed branching to the descriptor following
-      rx_desc_recv_header.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_wait_gpcrc_sync_bit);
+      rx_desc_recv_header.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_wait_gpcrc_sync_bit);
       #endif
     }
 
     #if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT)
     // Sync descriptor to wait until the payload GPCRC calculation is done
     {
-      rx_desc_wait_gpcrc_sync_bit = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKABS_SYNC(
+      rx_desc_wait_gpcrc_sync_bit = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKABS_SYNC(
         0,
         0,
         GPCRC_SYNC_BIT_MASK,  // Wait for the GPCRC launch bit to be 1
         GPCRC_SYNC_BIT_MASK); // Wait for the GPCRC launch bit
 
-      rx_desc_wait_gpcrc_sync_bit.sync.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_throw_header_in_gpcrc);
+      rx_desc_wait_gpcrc_sync_bit.sync.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_throw_header_in_gpcrc);
     }
 
     // Memory-to-Memory descriptor to throw the 5 header byte into the GPCRC
@@ -1157,7 +1066,7 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
       // here since its only 5 bytes its okay. The alternative would've been 1 1-word descriptor
       // chaining to 1 1-byte descriptor. The act of fetching a second 4-word descriptor for the
       // remaining byte should be about the same extra bus usage in the end.
-      rx_desc_throw_header_in_gpcrc = (ldma_descriptor_t)LDMA_DESCRIPTOR_LINKABS_M2M_BYTE(
+      rx_desc_throw_header_in_gpcrc = (sl_hal_ldma_descriptor_t)SL_HAL_LDMA_DESCRIPTOR_LINKABS_M2M(SL_HAL_LDMA_CTRL_SIZE_BYTE,
         &header_buffer,
         &GPCRC->INPUTDATABYTE,
         SLI_CPC_HDLC_HEADER_SIZE);
@@ -1165,14 +1074,14 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
       // Because this is a M2M descriptor, the source increments (which is what we want) but the
       // destination as well. Here we send the header bytes to the same register, so override the
       // source increment to stay the same.
-      rx_desc_throw_header_in_gpcrc.xfer.dstInc = ldmaCtrlSrcIncNone;
+      rx_desc_throw_header_in_gpcrc.xfer.dst_inc = SL_HAL_LDMA_CTRL_DST_INC_NONE;
 
-      rx_desc_throw_header_in_gpcrc.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_recv_header_crc);
+      rx_desc_throw_header_in_gpcrc.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_recv_header_crc);
     }
 
     // P2M descriptor to receive the remaining 2 CRC bytes of the header from the E/USART
     {
-      rx_desc_recv_header_crc = (ldma_descriptor_t)LDMA_DESCRIPTOR_SINGLE_P2M_BYTE(
+      rx_desc_recv_header_crc = (sl_hal_ldma_descriptor_t)SL_HAL_LDMA_DESCRIPTOR_SINGLE_P2M(SL_HAL_LDMA_CTRL_SIZE_BYTE,
         &(SL_CPC_DRV_SPI_PERIPHERAL->RXDATA),
         &((uint8_t*)&header_buffer)[SLI_CPC_HDLC_HEADER_SIZE], // Append to the already received 5 bytes of header
         SLI_CPC_HDLC_FCS_SIZE);
@@ -1185,19 +1094,19 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
   {
     // Sync descriptor to wait until the payload was received to start computing the CRC, which is set by the RX DMA chain
     {
-      gpcrc_desc_wait_for_gpcrc_sync_bit = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKABS_SYNC(
+      gpcrc_desc_wait_for_gpcrc_sync_bit = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKABS_SYNC(
         0,
         0,
         GPCRC_SYNC_BIT_MASK,  // Wait for the GPCRC sync bit to be 1
         GPCRC_SYNC_BIT_MASK); // Wait for the GPCRC sync bit
 
       // Fixed branching
-      gpcrc_desc_wait_for_gpcrc_sync_bit.sync.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_clear_gpcrc_sync_bit);
+      gpcrc_desc_wait_for_gpcrc_sync_bit.sync.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_clear_gpcrc_sync_bit);
     }
 
     // Sync descriptor to clear the launch sync bit
     {
-      gpcrc_desc_clear_gpcrc_sync_bit = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKABS_SYNC(
+      gpcrc_desc_clear_gpcrc_sync_bit = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKABS_SYNC(
         0,
         GPCRC_SYNC_BIT_MASK, // Immediately clear the GPCRC sync bit
         0,
@@ -1213,7 +1122,7 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
     // If the payload length is not divisible by 4, the remaining 1,2 or 3 bytes will be handled by
     // the descriptors that follow
     {
-      gpcrc_desc_write_rx_payload_words_in_gpcrc = (ldma_descriptor_t)LDMA_DESCRIPTOR_LINKABS_M2M_WORD(
+      gpcrc_desc_write_rx_payload_words_in_gpcrc = (sl_hal_ldma_descriptor_t)SL_HAL_LDMA_DESCRIPTOR_LINKABS_M2M(SL_HAL_LDMA_CTRL_SIZE_WORD,
         NULL,              // Placeholder for the payload pointer
         &GPCRC->INPUTDATA, // The WORD input register
         0);                // Placeholder for the length
@@ -1221,14 +1130,14 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
       // Because this is a M2M descriptor, the source increments (which is what we want) but the
       // destination as well. Here we send the payload bytes to the same register, so override the
       // source increment to stay the same.
-      gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.dstInc = ldmaCtrlSrcIncNone;
+      gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.dst_inc = SL_HAL_LDMA_CTRL_DST_INC_NONE;
 
       // The branching will be computed each time the header interrupt happens in function of the payload_len % 4 result
     }
 
     // M2M descriptor to potentially transfer remaining 1-to-3 bytes of payload into the GPCRC engine (modulo 4 of payload length)
     {
-      gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc = (ldma_descriptor_t)LDMA_DESCRIPTOR_LINKABS_M2M_BYTE(
+      gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc = (sl_hal_ldma_descriptor_t)SL_HAL_LDMA_DESCRIPTOR_LINKABS_M2M(SL_HAL_LDMA_CTRL_SIZE_BYTE,
         NULL,                  // Placeholder for the payload pointer
         &GPCRC->INPUTDATABYTE, // The BYTE input register
         0);                    // Placeholder, will be 1-to-3
@@ -1236,41 +1145,41 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
       // Because this is a M2M descriptor, the source increments (which is what we want) but the
       // destination as well. Here we send the payload bytes to the same register, so override the
       // source increment to stay the same.
-      gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.dstInc = ldmaCtrlSrcIncNone;
+      gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.dst_inc = SL_HAL_LDMA_CTRL_DST_INC_NONE;
 
       // Fixed to the descriptor below
-      gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_save_rx_gpcrc_computed_crc);
+      gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_save_rx_gpcrc_computed_crc);
     }
 
     // M2M descriptor to transfer the single half-word GPCRC result in the buffer_handle .fcs field
     {
-      gpcrc_desc_save_rx_gpcrc_computed_crc = (ldma_descriptor_t)LDMA_DESCRIPTOR_LINKABS_M2M_HALF(
+      gpcrc_desc_save_rx_gpcrc_computed_crc = (sl_hal_ldma_descriptor_t)SL_HAL_LDMA_DESCRIPTOR_LINKABS_M2M(SL_HAL_LDMA_CTRL_SIZE_HALF,
         &GPCRC->DATAREV,  // Read the CRC from the engine
         NULL,             // Placeholder for the buffer_handle .fcs pointer
         1);               // Only one half-word
 
-      gpcrc_desc_save_rx_gpcrc_computed_crc.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_set_rxchain_ien_bit);
+      gpcrc_desc_save_rx_gpcrc_computed_crc.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_set_rxchain_ien_bit);
     }
 
     // Write descriptor to set RX DMA chain IEN bit to trigger an interrupt
     {
-      gpcrc_desc_set_rxchain_ien_bit = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKABS_WRITE(
+      gpcrc_desc_set_rxchain_ien_bit = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKABS_WRITE(
         (1 << rx_dma_channel),
         LDMA_IEN_SET_REG_ADDR);
 
-      gpcrc_desc_set_rxchain_ien_bit.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_set_gpcrc_sync_bit);
+      gpcrc_desc_set_rxchain_ien_bit.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_set_gpcrc_sync_bit);
     }
 
     // Sync descriptor to set the launch sync bit
     {
-      gpcrc_desc_set_gpcrc_sync_bit = (ldma_descriptor_t) LDMA_DESCRIPTOR_SINGLE_SYNC(
+      gpcrc_desc_set_gpcrc_sync_bit = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_SINGLE_SYNC(
         GPCRC_SYNC_BIT_MASK, // Immediately set the GPCRC bit
         0,
         0,
         0);
 
-      // Override .LDMA_DESCRIPTOR_DONE_IFS, do not generate interrupt
-      gpcrc_desc_set_gpcrc_sync_bit.sync.LDMA_DESCRIPTOR_DONE_IFS = 0;
+      // Override .done_ifs, do not generate interrupt
+      gpcrc_desc_set_gpcrc_sync_bit.sync.done_ifs = 0;
     }
   }
   #endif
@@ -1282,28 +1191,28 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
 
     // Sync descriptor to wait to be in the TX_AVAILABLE region
     {
-      tx_desc_wait_availability_sync_bit = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKABS_SYNC(
+      tx_desc_wait_availability_sync_bit = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKABS_SYNC(
         0x0,
         0x0,
         SYNC_ON_TX_READY_WINDOW_EQUAL_ONE,
         ENABLE_SYNC_ON_TX_READY_WINDOW);
 
       // Fixed branching
-      tx_desc_wait_availability_sync_bit.sync.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_set_irq_low);
+      tx_desc_wait_availability_sync_bit.sync.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_set_irq_low);
     }
 
     // Set the IRQ pin LOW
     {
-      tx_desc_set_irq_low = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKABS_WRITE(
+      tx_desc_set_irq_low = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKABS_WRITE(
         IRQ_PIN_SET_MASK,
         IRQ_GPIO_CLR_REG_ADDR);
 
-      tx_desc_set_irq_low.wri.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_header);
+      tx_desc_set_irq_low.wri.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_header);
     }
 
     // Send header
     {
-      tx_desc_xfer_header = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKREL_M2P_BYTE(
+      tx_desc_xfer_header = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKREL_M2P(SL_HAL_LDMA_CTRL_SIZE_BYTE,
         NULL, //Place holder for header buffer address
         &(SL_CPC_DRV_SPI_PERIPHERAL->TXDATA),
         SLI_CPC_HDLC_HEADER_RAW_SIZE,
@@ -1311,12 +1220,12 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
 
       // The macro LDMA_DESCRIPTOR_LINKABS_M2P_BYTE does not exist for whatever reason.
       // Force this descriptor to use absolute linking
-      tx_desc_xfer_header.xfer.LDMA_DESCRIPTOR_LINK_MODE = LDMA_DESCRIPTOR_LINK_MODE_ABS;
+      tx_desc_xfer_header.xfer.link_mode = SL_HAL_LDMA_LINK_MODE_ABS;
 
-      // Override .LDMA_DESCRIPTOR_DONE_IFS : Don't trigger an interrupt at the end of this descriptor
-      tx_desc_xfer_header.xfer.LDMA_DESCRIPTOR_DONE_IFS = 0;
+      // Override .done_ifs : Don't trigger an interrupt at the end of this descriptor
+      tx_desc_xfer_header.xfer.done_ifs = 0;
 
-      tx_desc_xfer_header.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_wait_header_tranfered);
+      tx_desc_xfer_header.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_wait_header_tranferred);
     }
 
     // Wait until the header has been sent on the wire
@@ -1325,32 +1234,32 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
       #define SYNC_ON_TXC_PRS_CHANNEL_EQUAL_ONE  (1 << SL_CPC_DRV_SPI_TXC_SYNCTRIG_PRS_CH)
       #define CLEAR_TXC_PRS_CHANNEL_UPON_LOAD    (1 << SL_CPC_DRV_SPI_TXC_SYNCTRIG_PRS_CH)
 
-      tx_desc_wait_header_tranfered = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKABS_SYNC(
+      tx_desc_wait_header_tranferred = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKABS_SYNC(
         0x0,
         CLEAR_TXC_PRS_CHANNEL_UPON_LOAD,
         SYNC_ON_TXC_PRS_CHANNEL_EQUAL_ONE,
         ENABLE_SYNC_ON_TXC_PRS_CHANNEL);
 
       // Fixed branching
-      tx_desc_wait_header_tranfered.sync.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_set_tx_frame_complete_variable_after_header);
+      tx_desc_wait_header_tranferred.sync.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_set_tx_frame_complete_variable_after_header);
     }
 
     // Write descriptor to set the "tx_frame_complete" variable to 1.
     {
-      tx_desc_set_tx_frame_complete_variable_after_header = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKABS_WRITE(
+      tx_desc_set_tx_frame_complete_variable_after_header = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKABS_WRITE(
         1,
         &tx_frame_complete);
 
       // The link bit will be set or cleared depending on whether there is a payload to send
 
-      tx_desc_set_tx_frame_complete_variable_after_header.wri.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_payload);
+      tx_desc_set_tx_frame_complete_variable_after_header.wri.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_payload);
     }
 
     // Branch if there is a payload
 
     // Transfer descriptor for the payload
     {
-      tx_desc_xfer_payload = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKREL_M2P_BYTE(
+      tx_desc_xfer_payload = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKREL_M2P(SL_HAL_LDMA_CTRL_SIZE_BYTE,
         NULL, // Place holder for the payload address
         &(SL_CPC_DRV_SPI_PERIPHERAL->TXDATA),
         0, // Place holder for the payload length
@@ -1358,68 +1267,68 @@ static sl_status_t spi_drv_init(sli_cpc_drv_t *drv, sli_cpc_instance_t *inst)
 
       // The macro LDMA_DESCRIPTOR_LINKABS_M2P_BYTE does not exist for whatever reason.
       // Force this descriptor to use absolute linking
-      tx_desc_xfer_payload.xfer.LDMA_DESCRIPTOR_LINK_MODE = LDMA_DESCRIPTOR_LINK_MODE_ABS;
+      tx_desc_xfer_payload.xfer.link_mode = SL_HAL_LDMA_LINK_MODE_ABS;
 
-      // Override .LDMA_DESCRIPTOR_DONE_IFS : Don't trigger an interrupt at the end of this descriptor
-      tx_desc_xfer_payload.xfer.LDMA_DESCRIPTOR_DONE_IFS = 0;
+      // Override .done_ifs : Don't trigger an interrupt at the end of this descriptor
+      tx_desc_xfer_payload.xfer.done_ifs = 0;
 
       // In the case of NO large buffer and NO security, this descriptor branches  to the
       // send checksum descriptor no matter what, else its link address is computed each
       // time the chain is arms. In the case it never changes, set it right now
-      tx_desc_xfer_payload.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_checksum);
+      tx_desc_xfer_payload.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_checksum);
     }
 
-    #if (SLI_CPC_DRV_SPI_RX_DATA_MAX_LENGTH > LDMA_DESCRIPTOR_MAX_XFER_SIZE)
+    #if (SLI_CPC_DRV_SPI_RX_DATA_MAX_LENGTH > SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE)
     // Transfer descriptor for the large buffer payload
     {
-      tx_desc_xfer_payload_large_buf = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKREL_M2P_BYTE(
+      tx_desc_xfer_payload_large_buf = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKREL_M2P(SL_HAL_LDMA_CTRL_SIZE_BYTE,
         NULL, // Place holder for the payload address
         &(SL_CPC_DRV_SPI_PERIPHERAL->TXDATA),
         0, // Place holder for the payload length
         1);
 
       // The macro LDMA_DESCRIPTOR_LINKABS_P2M_BYTE does not exist, force this descriptor to use absolute linking
-      tx_desc_xfer_payload_large_buf.xfer.LDMA_DESCRIPTOR_LINK_MODE = LDMA_DESCRIPTOR_LINK_MODE_ABS;
+      tx_desc_xfer_payload_large_buf.xfer.link_mode = SL_HAL_LDMA_LINK_MODE_ABS;
 
-      // Override .LDMA_DESCRIPTOR_DONE_IFS : Don't trigger an interrupt at the end of this descriptor
-      tx_desc_xfer_payload_large_buf.xfer.LDMA_DESCRIPTOR_DONE_IFS = 0;
+      // Override .done_ifs : Don't trigger an interrupt at the end of this descriptor
+      tx_desc_xfer_payload_large_buf.xfer.done_ifs = 0;
 
       // In the case of large buffer and NO security, this descriptor branches  to the
       // send checksum descriptor no matter what, else its link address is computed each
       // time the chain is arms. In the case it never changes, set it right now
-      tx_desc_xfer_payload_large_buf.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_checksum);
+      tx_desc_xfer_payload_large_buf.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_checksum);
     }
     #endif
 
     #if (SL_CPC_ENDPOINT_SECURITY_ENABLED == 1)
     // If the security is enabled and there is a security tag to send, send it before the payload checksum.
     {
-      tx_desc_xfer_tag = (ldma_descriptor_t) LDMA_DESCRIPTOR_LINKREL_M2P_BYTE(
+      tx_desc_xfer_tag = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_LINKREL_M2P(SL_HAL_LDMA_CTRL_SIZE_BYTE,
         NULL,                                /* Place holder for the tag address */
         &(SL_CPC_DRV_SPI_PERIPHERAL->TXDATA),
         SLI_SECURITY_TAG_LENGTH_BYTES,
         1u);
 
       // The macro LDMA_DESCRIPTOR_LINKABS_P2M_BYTE does not exist, force this descriptor to use absolute linking
-      tx_desc_xfer_tag.xfer.LDMA_DESCRIPTOR_LINK_MODE = LDMA_DESCRIPTOR_LINK_MODE_ABS;
+      tx_desc_xfer_tag.xfer.link_mode = SL_HAL_LDMA_LINK_MODE_ABS;
 
-      // Override .LDMA_DESCRIPTOR_DONE_IFS : Don't trigger an interrupt at the end of this descriptor
-      tx_desc_xfer_tag.xfer.LDMA_DESCRIPTOR_DONE_IFS = 0;
+      // Override .done_ifs : Don't trigger an interrupt at the end of this descriptor
+      tx_desc_xfer_tag.xfer.done_ifs = 0;
 
       // Fixed branching
-      tx_desc_xfer_tag.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_checksum);
+      tx_desc_xfer_tag.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_checksum);
     }
     #endif
 
     // Send the checksum
     {
-      tx_desc_xfer_checksum = (ldma_descriptor_t) LDMA_DESCRIPTOR_SINGLE_M2P_BYTE(
+      tx_desc_xfer_checksum = (sl_hal_ldma_descriptor_t) SL_HAL_LDMA_DESCRIPTOR_SINGLE_M2P(SL_HAL_LDMA_CTRL_SIZE_BYTE,
         NULL, // Placeholder for the checksum
         &(SL_CPC_DRV_SPI_PERIPHERAL->TXDATA),
         SLI_CPC_HDLC_FCS_SIZE);
 
-      // Override .LDMA_DESCRIPTOR_DONE_IFS : TX DMA chain doesn't trigger interrupts
-      tx_desc_xfer_checksum.xfer.LDMA_DESCRIPTOR_DONE_IFS = 0;
+      // Override .done_ifs : TX DMA chain doesn't trigger interrupts
+      tx_desc_xfer_checksum.xfer.done_ifs = 0;
     }
   }
 
@@ -1463,7 +1372,7 @@ static sl_status_t spi_drv_start_rx(sli_cpc_drv_t *drv)
   // Due to the nature of the DMA chain, the start descriptor for the initial
   // DMA priming is in the middle of the chain, as opposed to when the DMA
   // is armed in the header interrupt
-  ldma_descriptor_t *start_descriptor = &rx_desc_wait_cs_low_before_header;
+  sl_hal_ldma_descriptor_t *start_descriptor = &rx_desc_wait_cs_low_before_header;
 
   // The initial reception priming is special because we prime the RX DMA channel from
   // a descriptor in the middle of the chain.
@@ -1474,12 +1383,10 @@ static sl_status_t spi_drv_start_rx(sli_cpc_drv_t *drv)
   *((__IOM uint32_t*) LDMA_SYNCSW_SET_REG_ADDR) = GPCRC_SYNC_BIT_MASK;
   #endif
 
-  Ecode_t ecode = DMADRV_LdmaStartTransfer(rx_dma_channel,
-                                           &rx_dma_config,
-                                           start_descriptor,
-                                           rx_dma_callback,
-                                           (void*)true); // Give a special "initial_pass" = true parameter.
-  SLI_CPC_ASSERT(ecode == ECODE_EMDRV_DMADRV_OK);
+  rx_next_irq_is_header = true;
+  sl_hal_ldma_init_transfer(LDMA_PERIPH, rx_dma_channel, &rx_dma_config, start_descriptor);
+  sl_hal_ldma_enable_interrupts(LDMA_PERIPH, (1 << rx_dma_channel));
+  sl_hal_ldma_start_transfer(LDMA_PERIPH, rx_dma_channel);
 
   return SL_STATUS_OK;
 }
@@ -1658,6 +1565,8 @@ static void init_clocks(void)
   sl_bus_clock_t spi_bus_clock = sl_device_peripheral_get_bus_clock(SPI_PERIPHERAL(SL_CPC_DRV_SPI_PERIPHERAL_NO));
   status = sl_clock_manager_enable_bus_clock(spi_bus_clock);
   SLI_CPC_ASSERT(status == SL_STATUS_OK);
+  status = sl_clock_manager_enable_bus_clock(SL_BUS_CLOCK_LDMAXBAR0);
+  SLI_CPC_ASSERT(status == SL_STATUS_OK);
 #if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT)
   status = sl_clock_manager_enable_bus_clock(SL_BUS_CLOCK_GPCRC0);
   SLI_CPC_ASSERT(status == SL_STATUS_OK);
@@ -1671,7 +1580,6 @@ static void init_clocks(void)
  ******************************************************************************/
 static bool prime_dma_for_reception(size_t payload_size, bool received_valid_header)
 {
-  Ecode_t ecode;
   #if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT) // With HW CRC
   const uint16_t effective_payload_size = payload_size - SLI_CPC_HDLC_FCS_SIZE;
   const uint16_t remaining_bytes = effective_payload_size % 4;
@@ -1680,7 +1588,7 @@ static bool prime_dma_for_reception(size_t payload_size, bool received_valid_hea
 
   if (received_valid_header == false) {
     // We received a header full of 0s or a corrupted header, skip the payload(s) descriptors
-    rx_desc_set_irq_high.wri.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_rxblocken);
+    rx_desc_set_irq_high.wri.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_rxblocken);
 
     #if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT)
     skip_gpcrc = true;
@@ -1715,7 +1623,7 @@ static bool prime_dma_for_reception(size_t payload_size, bool received_valid_hea
       SL_CPC_JOURNAL_RECORD_DEBUG("[DRV] Invalid RX buffer length, discarding payload. Length:", payload_size);
     }
 
-    rx_desc_set_irq_high.wri.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_rxblocken);
+    rx_desc_set_irq_high.wri.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_rxblocken);
 
     #if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT)
     skip_gpcrc = true;
@@ -1725,49 +1633,49 @@ static bool prime_dma_for_reception(size_t payload_size, bool received_valid_hea
   }
 
   // Now that we expect to receive a payload, configure the reception descriptor chain to include the payload reception descriptor
-  rx_desc_set_irq_high.wri.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_recv_payload);
+  rx_desc_set_irq_high.wri.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_recv_payload);
 
   // Set the RX buffer address in the payload descriptor
-  rx_desc_recv_payload.xfer.LDMA_DESCRIPTOR_DST_ADDR = (uint32_t) currently_receiving_rx_buffer_handle->data;
+  rx_desc_recv_payload.xfer.dst_addr = (uint32_t) currently_receiving_rx_buffer_handle->data;
 
-  #if (SLI_CPC_DRV_SPI_RX_DATA_MAX_LENGTH <= LDMA_DESCRIPTOR_MAX_XFER_SIZE) // Non-large-buffer
+  #if (SLI_CPC_DRV_SPI_RX_DATA_MAX_LENGTH <= SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE) // Non-large-buffer
   {
     // Receive the payload + CRC in memory
-    rx_desc_recv_payload.xfer.LDMA_DESCRIPTOR_XFER_CNT = payload_size - 1;
+    rx_desc_recv_payload.xfer.xfer_count = payload_size - 1;
 
     #if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT) // With HW CRC
     {
       if (SL_BRANCH_UNLIKELY(effective_payload_size <= 3)) { // In the real world, it will be unlikely that payloads will be that small
         // Since the payload is not even one word long, skip the GPCRC full-word transfer descriptor and branch to the one that transfers single bytes
-        gpcrc_desc_clear_gpcrc_sync_bit.sync.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc);
+        gpcrc_desc_clear_gpcrc_sync_bit.sync.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc);
 
         // The "rx_desc_recv_payload" took the payload from the E/USART and wrote it to memory
         // Now take what has been written to memory and write it to the GPCRC;
-        gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.LDMA_DESCRIPTOR_SRC_ADDR = (uint32_t) currently_receiving_rx_buffer_handle->data;
+        gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.src_addr = (uint32_t) currently_receiving_rx_buffer_handle->data;
 
-        gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.LDMA_DESCRIPTOR_XFER_CNT = effective_payload_size - 1;
+        gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.xfer_count = effective_payload_size - 1;
       } else { // payload length of one full word or more
         // Branch the payload descriptor to the descriptor that transfers full words to the GPCRC
-        gpcrc_desc_clear_gpcrc_sync_bit.sync.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_write_rx_payload_words_in_gpcrc);
+        gpcrc_desc_clear_gpcrc_sync_bit.sync.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_write_rx_payload_words_in_gpcrc);
 
         // The "rx_desc_recv_payload" took the payload from the E/USART and wrote it to memory
         // Now take what has been written to memory and write it to the GPCRC;
-        gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.LDMA_DESCRIPTOR_SRC_ADDR = (uint32_t) currently_receiving_rx_buffer_handle->data;
+        gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.src_addr = (uint32_t) currently_receiving_rx_buffer_handle->data;
 
         // Unlike the "rx_desc_recv_payload" descriptor who's length was in bytes, this descriptor moves full words around
         // in order to be as efficient and fast as possible.
-        gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.LDMA_DESCRIPTOR_XFER_CNT = (effective_payload_size / 4) - 1;
+        gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.xfer_count = (effective_payload_size / 4) - 1;
 
         if (SL_BRANCH_UNLIKELY(remaining_bytes == 0)) { // With random payload size distribution, having a payload size % 4 == 0 is 1/4
           // The effective payload length was an integer multiple of word-size, skip the descriptor that transfer the remainder
-          gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_save_rx_gpcrc_computed_crc);
+          gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_save_rx_gpcrc_computed_crc);
         } else {
           // If 3,2 or 1 bytes of payload remain after full word transfers, link to the byte-transfer descriptor
-          gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc);
+          gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc);
 
-          gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.LDMA_DESCRIPTOR_SRC_ADDR = (uint32_t) ((uintptr_t)currently_receiving_rx_buffer_handle->data + effective_payload_size - remaining_bytes);
+          gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.src_addr = (uint32_t) ((uintptr_t)currently_receiving_rx_buffer_handle->data + effective_payload_size - remaining_bytes);
 
-          gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.LDMA_DESCRIPTOR_XFER_CNT = remaining_bytes - 1;
+          gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.xfer_count = remaining_bytes - 1;
         }
       }
     }
@@ -1777,87 +1685,87 @@ static bool prime_dma_for_reception(size_t payload_size, bool received_valid_hea
   {
     #if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT) // With HW CRC
     {
-      if (SL_BRANCH_LIKELY(payload_size <= LDMA_DESCRIPTOR_MAX_XFER_SIZE)) { // Using only one payload descriptor
-        rx_desc_recv_payload.xfer.LDMA_DESCRIPTOR_XFER_CNT = payload_size - 1;
+      if (SL_BRANCH_LIKELY(payload_size <= SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE)) { // Using only one payload descriptor
+        rx_desc_recv_payload.xfer.xfer_count = payload_size - 1;
 
         // Skip over the large buffer descriptor
-        rx_desc_recv_payload.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_rxblocken);
+        rx_desc_recv_payload.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_rxblocken);
 
         if (SL_BRANCH_UNLIKELY(effective_payload_size <= 3)) { // In the real world, it will be unlikely that payloads will be that small
           // Since the payload is not even one word long, skip the GPCRC full-word transfer descriptor and branch to the one that transfers single bytes
-          gpcrc_desc_clear_gpcrc_sync_bit.sync.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc);
+          gpcrc_desc_clear_gpcrc_sync_bit.sync.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc);
 
           // The "rx_desc_recv_payload" took the payload from the E/USART and wrote it to memory
           // Now take what has been written to memory and write it to the GPCRC;
-          gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.LDMA_DESCRIPTOR_SRC_ADDR = (uint32_t) currently_receiving_rx_buffer_handle->data;
+          gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.src_addr = (uint32_t) currently_receiving_rx_buffer_handle->data;
 
-          gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.LDMA_DESCRIPTOR_XFER_CNT = effective_payload_size - 1;
+          gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.xfer_count = effective_payload_size - 1;
 
           goto start_transfer;
         } else { // payload length of one full word or more
           // Branch the payload descriptor to the descriptor that transfers full words to the GPCRC
-          gpcrc_desc_clear_gpcrc_sync_bit.sync.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_write_rx_payload_words_in_gpcrc);
+          gpcrc_desc_clear_gpcrc_sync_bit.sync.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_write_rx_payload_words_in_gpcrc);
 
           // The "rx_desc_recv_payload" took the payload from the E/USART and wrote it to memory
           // Now take what has been written to memory and write it to the GPCRC;
-          gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.LDMA_DESCRIPTOR_SRC_ADDR = (uint32_t) currently_receiving_rx_buffer_handle->data;
+          gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.src_addr = (uint32_t) currently_receiving_rx_buffer_handle->data;
 
           // Unlike the "rx_desc_recv_payload" descriptor who's length was in bytes, this descriptor moves full words around
           // in order to be as efficient and fast as possible.
-          gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.LDMA_DESCRIPTOR_XFER_CNT = (effective_payload_size / 4) - 1;
+          gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.xfer_count = (effective_payload_size / 4) - 1;
         }
       } else { // Using second payload descriptor
         // We have large buffer compiled, and the payload spans the two payload descriptors
         // load the first descriptor to the max, and link to the one right under it
-        rx_desc_recv_payload.xfer.LDMA_DESCRIPTOR_XFER_CNT = LDMA_DESCRIPTOR_MAX_XFER_SIZE - 1;
-        rx_desc_recv_payload.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_recv_payload_large_buf);
+        rx_desc_recv_payload.xfer.xfer_count = SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE - 1;
+        rx_desc_recv_payload.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_recv_payload_large_buf);
 
         // Fill the second payload descriptor with the remaining data
-        rx_desc_recv_payload_large_buf.xfer.LDMA_DESCRIPTOR_DST_ADDR = (uint32_t) &((uint8_t*)currently_receiving_rx_buffer_handle->data)[LDMA_DESCRIPTOR_MAX_XFER_SIZE];
-        rx_desc_recv_payload_large_buf.xfer.LDMA_DESCRIPTOR_XFER_CNT = (payload_size - LDMA_DESCRIPTOR_MAX_XFER_SIZE) - 1;
+        rx_desc_recv_payload_large_buf.xfer.dst_addr = (uint32_t) &((uint8_t*)currently_receiving_rx_buffer_handle->data)[SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE];
+        rx_desc_recv_payload_large_buf.xfer.xfer_count = (payload_size - SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE) - 1;
 
         // Branch the payload descriptor to the descriptor that transfers full words to the GPCRC
-        gpcrc_desc_clear_gpcrc_sync_bit.sync.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_write_rx_payload_words_in_gpcrc);
+        gpcrc_desc_clear_gpcrc_sync_bit.sync.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_write_rx_payload_words_in_gpcrc);
 
         // The "rx_desc_recv_payload" and "rx_desc_recv_payload_large_buf" took the payload from the E/USART and
         // wrote it to memory. Now take what has been written to memory and write it to the GPCRC;
-        gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.LDMA_DESCRIPTOR_SRC_ADDR = (uint32_t) currently_receiving_rx_buffer_handle->data;
+        gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.src_addr = (uint32_t) currently_receiving_rx_buffer_handle->data;
 
         // Unlike the "rx_desc_recv_payload" descriptor who's length was in bytes, this descriptor moves full words around
         // in order to be as efficient and fast as possible.
-        gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.LDMA_DESCRIPTOR_XFER_CNT = (effective_payload_size / 4) - 1;
+        gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.xfer_count = (effective_payload_size / 4) - 1;
       }
 
       // Take care of the remaining %4 bytes
       if (SL_BRANCH_UNLIKELY(remaining_bytes == 0)) { // With random payload size distribution, having a payload size % 4 == 0 is 1/4
         // The effective payload length was an integer multiple of word-size, skip the descriptor that transfer the remainder
-        gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_save_rx_gpcrc_computed_crc);
+        gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_save_rx_gpcrc_computed_crc);
       } else {
         // If 3,2 or 1 bytes of payload remain after full word transfers, link to the byte-transfer descriptor
-        gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc);
+        gpcrc_desc_write_rx_payload_words_in_gpcrc.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc);
 
-        gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.LDMA_DESCRIPTOR_SRC_ADDR = (uint32_t) ((uintptr_t)currently_receiving_rx_buffer_handle->data + effective_payload_size - remaining_bytes);
+        gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.src_addr = (uint32_t) ((uintptr_t)currently_receiving_rx_buffer_handle->data + effective_payload_size - remaining_bytes);
 
-        gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.LDMA_DESCRIPTOR_XFER_CNT = remaining_bytes - 1;
+        gpcrc_desc_write_rx_remaining_payload_bytes_in_gpcrc.xfer.xfer_count = remaining_bytes - 1;
       }
     }
     #else // Without HW CRC
     {
-      if (SL_BRANCH_LIKELY(payload_size <= LDMA_DESCRIPTOR_MAX_XFER_SIZE)) {
+      if (SL_BRANCH_LIKELY(payload_size <= SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE)) {
         // We have large buffer compiled, but this payload doesn't span 2 descriptors.
         // load the first descriptor, and jump over the large-buffer reception descriptor.
-        rx_desc_recv_payload.xfer.LDMA_DESCRIPTOR_XFER_CNT = payload_size - 1;
-        rx_desc_recv_payload.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_rxblocken);
+        rx_desc_recv_payload.xfer.xfer_count = payload_size - 1;
+        rx_desc_recv_payload.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_rxblocken);
       } else {
         // We have large buffer compiled, and the payload spans the two payload descriptors
         // load the first descriptor to the max, and link to the one right under it
-        rx_desc_recv_payload.xfer.LDMA_DESCRIPTOR_XFER_CNT = LDMA_DESCRIPTOR_MAX_XFER_SIZE - 1;
-        rx_desc_recv_payload.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_recv_payload_large_buf);
+        rx_desc_recv_payload.xfer.xfer_count = SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE - 1;
+        rx_desc_recv_payload.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&rx_desc_recv_payload_large_buf);
 
         // We have large buffer compiled, and the payload spans the two payload descriptors
         // load the first descriptor to the max, and link to the one right under it
-        rx_desc_recv_payload_large_buf.xfer.LDMA_DESCRIPTOR_DST_ADDR = (uint32_t) &((uint8_t*)currently_receiving_rx_buffer_handle->data)[LDMA_DESCRIPTOR_MAX_XFER_SIZE];
-        rx_desc_recv_payload_large_buf.xfer.LDMA_DESCRIPTOR_XFER_CNT = (payload_size - LDMA_DESCRIPTOR_MAX_XFER_SIZE) - 1;
+        rx_desc_recv_payload_large_buf.xfer.dst_addr = (uint32_t) &((uint8_t*)currently_receiving_rx_buffer_handle->data)[SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE];
+        rx_desc_recv_payload_large_buf.xfer.xfer_count = (payload_size - SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE) - 1;
       }
     }
     #endif
@@ -1869,16 +1777,14 @@ static bool prime_dma_for_reception(size_t payload_size, bool received_valid_hea
   #if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT)
   {
     // Store the GPCRC's computed CRC in the buffer_handle when it is done computing
-    gpcrc_desc_save_rx_gpcrc_computed_crc.xfer.LDMA_DESCRIPTOR_DST_ADDR = (uint32_t) &currently_receiving_rx_buffer_handle->fcs;
+    gpcrc_desc_save_rx_gpcrc_computed_crc.xfer.dst_addr = (uint32_t) &currently_receiving_rx_buffer_handle->fcs;
   }
   #endif
 
-  ecode = DMADRV_LdmaStartTransfer(rx_dma_channel,
-                                   &rx_dma_config,
-                                   &rx_desc_wait_cs_high_after_header,
-                                   rx_dma_callback,
-                                   NULL);
-  SLI_CPC_ASSERT(ecode == ECODE_EMDRV_DMADRV_OK);
+  rx_next_irq_is_header = false;
+  sl_hal_ldma_init_transfer(LDMA_PERIPH, rx_dma_channel, &rx_dma_config, &rx_desc_wait_cs_high_after_header);
+  sl_hal_ldma_enable_interrupts(LDMA_PERIPH, (1 << rx_dma_channel));
+  sl_hal_ldma_start_transfer(LDMA_PERIPH, rx_dma_channel);
 
   #if defined(SL_CATALOG_CPC_DRIVER_HW_CRC_PRESENT)
   {
@@ -1886,18 +1792,14 @@ static bool prime_dma_for_reception(size_t payload_size, bool received_valid_hea
       // By clearing the IEN bit, the RX DMA chain will still set its interrupt flag then the payload is done
       // receiving, but it ensures the interrupt is not triggered until the GPCRC chain sets back the RX chain IEN bit.
       // This is to ensure the RX DMA chain interrupt bit set is not lost to the header interrupt.
-      *((volatile uint32_t*) LDMA_IEN_CLR_REG_ADDR) = (1 << rx_dma_channel);
+      sl_hal_ldma_disable_interrupts(LDMA_PERIPH, (1 << rx_dma_channel));
 
       // Ensures that the launch SYNC bit that was set at the end of the last transaction is clear so that the GPCRC chain
       // starts by waiting against the RX chain
       *((volatile uint32_t*) LDMA_SYNCSW_CLR_REG_ADDR) = GPCRC_SYNC_BIT_MASK;
 
-      ecode = DMADRV_LdmaStartTransfer(gpcrc_dma_channel,
-                                       &gpcrc_dma_config,
-                                       &gpcrc_desc_wait_for_gpcrc_sync_bit,
-                                       NULL,
-                                       NULL);
-      SLI_CPC_ASSERT(ecode == ECODE_EMDRV_DMADRV_OK);
+      sl_hal_ldma_init_transfer(LDMA_PERIPH, gpcrc_dma_channel, &gpcrc_dma_config, &gpcrc_desc_wait_for_gpcrc_sync_bit);
+      sl_hal_ldma_start_transfer(LDMA_PERIPH, gpcrc_dma_channel);
     }
   }
   #endif
@@ -1948,14 +1850,14 @@ static void prime_dma_for_transmission(void)
       ((uint8_t*)&bad_crc_header)[4] = ~((uint8_t*)&bad_crc_header)[4];
 
       // set header source address to the bad header
-      tx_desc_xfer_header.xfer.LDMA_DESCRIPTOR_SRC_ADDR = (uint32_t) &bad_crc_header;
+      tx_desc_xfer_header.xfer.src_addr = (uint32_t) &bad_crc_header;
     } else {
-      tx_desc_xfer_header.xfer.LDMA_DESCRIPTOR_SRC_ADDR = (uint32_t) currently_transmiting_buffer_handle->hdlc_header;
+      tx_desc_xfer_header.xfer.src_addr = (uint32_t) currently_transmiting_buffer_handle->hdlc_header;
     }
   }
   #else
   // set header source address
-  tx_desc_xfer_header.xfer.LDMA_DESCRIPTOR_SRC_ADDR = (uint32_t) currently_transmiting_buffer_handle->hdlc_header;
+  tx_desc_xfer_header.xfer.src_addr = (uint32_t) currently_transmiting_buffer_handle->hdlc_header;
   #endif
 
   if (currently_transmiting_buffer_handle->data_length == 0) {
@@ -1969,62 +1871,62 @@ static void prime_dma_for_transmission(void)
   tx_desc_set_tx_frame_complete_variable_after_header.wri.link = 1;
 
   // Set the payload source address
-  tx_desc_xfer_payload.xfer.LDMA_DESCRIPTOR_SRC_ADDR = (uint32_t) currently_transmiting_buffer_handle->data;
+  tx_desc_xfer_payload.xfer.src_addr = (uint32_t) currently_transmiting_buffer_handle->data;
 
-  #if (SLI_CPC_DRV_SPI_RX_DATA_MAX_LENGTH <= LDMA_DESCRIPTOR_MAX_XFER_SIZE) //Non-large-buffer
+  #if (SLI_CPC_DRV_SPI_RX_DATA_MAX_LENGTH <= SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE) //Non-large-buffer
   {
-    tx_desc_xfer_payload.xfer.LDMA_DESCRIPTOR_XFER_CNT = currently_transmiting_buffer_handle->data_length - 1;
+    tx_desc_xfer_payload.xfer.xfer_count = currently_transmiting_buffer_handle->data_length - 1;
 
     #if (SL_CPC_ENDPOINT_SECURITY_ENABLED == 1)
     {
       if (SL_BRANCH_LIKELY(currently_transmiting_buffer_handle->security_tag)) {
-        tx_desc_xfer_payload.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_tag);
-        tx_desc_xfer_tag.xfer.LDMA_DESCRIPTOR_SRC_ADDR = (uint32_t) currently_transmiting_buffer_handle->security_tag;
+        tx_desc_xfer_payload.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_tag);
+        tx_desc_xfer_tag.xfer.src_addr = (uint32_t) currently_transmiting_buffer_handle->security_tag;
       } else {
-        tx_desc_xfer_payload.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_checksum);
+        tx_desc_xfer_payload.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_checksum);
       }
-      tx_desc_xfer_checksum.xfer.LDMA_DESCRIPTOR_SRC_ADDR = (uint32_t) &currently_transmiting_buffer_handle->fcs;
+      tx_desc_xfer_checksum.xfer.src_addr = (uint32_t) &currently_transmiting_buffer_handle->fcs;
     }
     #endif
   }
   #else // Large-buffer
   {
-    if (SL_BRANCH_LIKELY(currently_transmiting_buffer_handle->data_length <= LDMA_DESCRIPTOR_MAX_XFER_SIZE)) {
+    if (SL_BRANCH_LIKELY(currently_transmiting_buffer_handle->data_length <= SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE)) {
       // We have large buffer compiled, but this payload doesn't span 2 descriptors.
       // load the first descriptor, and jump over the one that follows.
-      tx_desc_xfer_payload.xfer.LDMA_DESCRIPTOR_XFER_CNT = currently_transmiting_buffer_handle->data_length - 1;
+      tx_desc_xfer_payload.xfer.xfer_count = currently_transmiting_buffer_handle->data_length - 1;
 
       #if (SL_CPC_ENDPOINT_SECURITY_ENABLED == 1)
       {
         if (currently_transmiting_buffer_handle->security_tag) {
-          tx_desc_xfer_payload.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_tag);
-          tx_desc_xfer_tag.xfer.LDMA_DESCRIPTOR_SRC_ADDR = (uint32_t) currently_transmiting_buffer_handle->security_tag;
+          tx_desc_xfer_payload.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_tag);
+          tx_desc_xfer_tag.xfer.src_addr = (uint32_t) currently_transmiting_buffer_handle->security_tag;
         } else {
-          tx_desc_xfer_payload.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_checksum);
+          tx_desc_xfer_payload.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_checksum);
         }
       }
       #else
       {
-        tx_desc_xfer_payload.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_checksum);
+        tx_desc_xfer_payload.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_checksum);
       }
       #endif
     } else {
       // We have large buffer compiled, and the payload spans the two payload descriptors
       // load the first payload descriptor to the max, and link it to the large buffer payload descriptor
-      tx_desc_xfer_payload.xfer.LDMA_DESCRIPTOR_XFER_CNT = LDMA_DESCRIPTOR_MAX_XFER_SIZE - 1;
-      tx_desc_xfer_payload.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_payload_large_buf);
+      tx_desc_xfer_payload.xfer.xfer_count = SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE - 1;
+      tx_desc_xfer_payload.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_payload_large_buf);
 
       // Load the large buffer payload descriptor with the remaining data
-      tx_desc_xfer_payload_large_buf.xfer.LDMA_DESCRIPTOR_SRC_ADDR = (uint32_t) &((uint8_t*)currently_transmiting_buffer_handle->data)[LDMA_DESCRIPTOR_MAX_XFER_SIZE];
-      tx_desc_xfer_payload_large_buf.xfer.LDMA_DESCRIPTOR_XFER_CNT = (currently_transmiting_buffer_handle->data_length - LDMA_DESCRIPTOR_MAX_XFER_SIZE) - 1;
+      tx_desc_xfer_payload_large_buf.xfer.src_addr = (uint32_t) &((uint8_t*)currently_transmiting_buffer_handle->data)[SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE];
+      tx_desc_xfer_payload_large_buf.xfer.xfer_count = (currently_transmiting_buffer_handle->data_length - SL_HAL_LDMA_DESCRIPTOR_MAX_XFER_SIZE) - 1;
 
       #if (SL_CPC_ENDPOINT_SECURITY_ENABLED == 1)
       {
         if (currently_transmiting_buffer_handle->security_tag) {
-          tx_desc_xfer_payload_large_buf.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_tag);
-          tx_desc_xfer_tag.xfer.LDMA_DESCRIPTOR_SRC_ADDR = (uint32_t) currently_transmiting_buffer_handle->security_tag;
+          tx_desc_xfer_payload_large_buf.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_tag);
+          tx_desc_xfer_tag.xfer.src_addr = (uint32_t) currently_transmiting_buffer_handle->security_tag;
         } else {
-          tx_desc_xfer_payload_large_buf.xfer.LDMA_DESCRIPTOR_LINK_ADDR = LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_checksum);
+          tx_desc_xfer_payload_large_buf.xfer.link_addr = SL_HAL_LDMA_DESCRIPTOR_LINKABS_ADDR_TO_LINKADDR(&tx_desc_xfer_checksum);
         }
       }
       #endif
@@ -2033,77 +1935,52 @@ static void prime_dma_for_transmission(void)
   #endif
 
   // Finally load the checksum descriptor
-  tx_desc_xfer_checksum.xfer.LDMA_DESCRIPTOR_SRC_ADDR = (uint32_t) &currently_transmiting_buffer_handle->fcs;
-
-  Ecode_t ecode;
+  tx_desc_xfer_checksum.xfer.src_addr = (uint32_t) &currently_transmiting_buffer_handle->fcs;
 
   start_transfer:
 
-  ecode = DMADRV_LdmaStartTransfer(tx_dma_channel,
-                                   &tx_dma_config,
-                                   &tx_desc_wait_availability_sync_bit,
-                                   NULL,
-                                   NULL);
-  SLI_CPC_ASSERT(ecode == ECODE_EMDRV_DMADRV_OK);
+  sl_hal_ldma_init_transfer(LDMA_PERIPH, tx_dma_channel, &tx_dma_config, &tx_desc_wait_availability_sync_bit);
+  sl_hal_ldma_start_transfer(LDMA_PERIPH, tx_dma_channel);
 
   LOGIC_ANALYZER_TRACE_TX_DMA_ARMED;
 }
 
 /***************************************************************************//**
- * This is the callback called by the DMADRV IRQ handler when the RX DMA channel
- * fires an interrupt. Note that thanks to the synchronization between TX and RX
- * channels, only the RX channel triggers interrupts, not the TX channel; it
- * silently finishes its descriptor chain
+ * @brief LDMA IRQ callback — invoked by the DMA manager for the RX channel.
+ *
+ * The RX DMA descriptor chain raises two interrupts per arming:
+ *   - First IRQ:  payload transfer complete  (done_ifs in payload descriptor)
+ *   - Second IRQ: header transfer complete   (done_ifs in header descriptor)
+ *
+ * Counter-intuitively the payload fires first because the chain is armed from
+ * inside the header interrupt handler, so it starts mid-chain (payload first,
+ * then the header of the next frame). The initial arming from spi_drv_start_rx
+ * is the exception: the chain starts at the header portion, so the very first
+ * IRQ is a header interrupt.
+ *
+ * rx_next_irq_is_header captures which event to expect next and is set at
+ * every arm site: true for the initial arm, false for normal re-arms via
+ * prime_dma_for_reception.
  ******************************************************************************/
-static bool rx_dma_callback(unsigned int channel, unsigned int sequenceNo, void *userParam)
-{
-  SLI_CPC_ASSERT(channel == rx_dma_channel);
-  SLI_CPC_ASSERT(sequenceNo < 3);
-  dma_irq_seq_no = sequenceNo;
+ static void spi_ldma_rx_irq_callback(void)
+ {
+   if (rx_next_irq_is_header) {
+     rx_next_irq_is_header = false;
+     end_of_header_xfer();
+   } else {
+     // Payload IRQ: the next IRQ in this same chain will be the header.
+     rx_next_irq_is_header = true;
+     bool piggy_back = end_of_payload_xfer();
 
-  // A full frame transmission is the transmission of a header, then a payload.
-  // But when it comes to the RX DMA descriptor chain, it is not "in phase" with
-  // the flow of a transmission. The DMA descriptor chain is armed during the header
-  // interrupt, so the beginning of the chain is actually dealing with the payload, then
-  // the header of the NEXT frame.
-  // For this one RX DMA chain, the interrupt bit is set in two places, hence generating
-  // two interrupts : one for the header, and one for the payload.
-  // The way the DMADRV addresses the possibility of a channel raising multiple time an interrupt
-  // during one DMA chain is with the "sequenceNo". When a channel is armed, the driver resets the
-  // sequence to 0, and each time this callback is called, it is increased.
-  // Whether the "sequenceNo" is 1 or 2 determines if this callback services the first or second
-  // interrupt bit set event. In this case, whether the interrupt is for the header or payload.
-  // Counter intuitively (because header is transfered before payload) :
-  // sequenceNo == 1 -> payload interrupt
-  // sequenceNo == 2 -> header interrupt
-
-  // Because the very first time the RX DMA chain is armed during the init and not during the header interrupt,
-  // the chain is not armed from the start, but rather from the middle, resulting in  the "sequenceNo"  swapped.
-  // Unlike during normal operation, the initial arming of the RX DMA chain passed "true" as the user parameter.
-  bool initial_pass = (bool) userParam;
-  if (SL_BRANCH_UNLIKELY(initial_pass)) {
-    sequenceNo = 2;
-  }
-
-  if (sequenceNo == 2) {
-    end_of_header_xfer();
-  } else { // sequenceNo == 1
-    bool piggy_back = end_of_payload_xfer();
-
-    if (SL_BRANCH_UNLIKELY(piggy_back)) {
-      // There must have been a lot of interrupt latency and "end_of_payload_xfer" was delayed so long
-      // that it was detected at the end of the servicing of the payload that the header of a next frame
-      // was already fully received and ready to be serviced. This resulted in the LDMA interrupt bit for
-      // this channel to be set while it was already set and not yet serviced, effectively "loosing" the
-      // second interrupt bit set event. If we do not piggy-back the servicing of the header, that event
-      // would be lost. Luckily we were able to logically detect that in the "end_of_payload_xfer" routine
-      end_of_header_xfer();
-    }
-  }
-
-  // The return value has no effect since the channel is not configured as "ping-pong"
-  return false;
-}
+     if (SL_BRANCH_UNLIKELY(piggy_back)) {
+       // end_of_payload_xfer detected that the header of the next frame was
+       // already fully received while this IRQ was pending, so the header IRQ
+       // flag was set but never delivered (lost). Handle it now; the
+       // prime_dma_for_reception call inside will reset rx_next_irq_is_header.
+       end_of_header_xfer();
+     }
+   }
+ }
 
 static void end_of_header_xfer(void)
 {
@@ -2167,7 +2044,7 @@ static void end_of_header_xfer(void)
     // Clear the IRQ line to send the signal to the primary that we are done with
     // this interrupt critical section. The primary is now free to start clocking
     // us data.
-    GPIO_CLR_OUT_PIN(SL_CPC_DRV_SPI_IRQ_PORT, SL_CPC_DRV_SPI_IRQ_PIN);
+    cpc_spi_gpio_clr_out_pin(SL_CPC_DRV_SPI_IRQ_PORT, SL_CPC_DRV_SPI_IRQ_PIN);
   } else {
     // Out of RX buffer handles. IRQ will be held until
     // spi_drv_on_rx_buffer_free is called.
@@ -2190,7 +2067,6 @@ static void end_of_header_xfer(void)
 static bool end_of_payload_xfer(void)
 {
   bool tfer_done;
-  Ecode_t ecode;
   // Used to keep track of whether the buffer held in "currently_transmiting_buffer_handle" did go out on the wire
   // after the last transaction completion or not.
   bool pending_late_header = false;
@@ -2202,8 +2078,7 @@ static bool end_of_payload_xfer(void)
     // At this point, a header have been exchanged and we realize a TX entry is registered for transmission
     // We need to know if this "currently_transmiting_buffer_handle" had the chance to have its header clocked in the header
     // exchange that just happened
-    ecode = DMADRV_TransferDone(tx_dma_channel, &tfer_done);
-    SLI_CPC_ASSERT(ecode == ECODE_EMDRV_DMADRV_OK);
+    tfer_done = sl_hal_ldma_transfer_is_done(LDMA_PERIPH, tx_dma_channel);
 
     if (SL_BRANCH_UNLIKELY(tx_frame_complete == 0 || !tfer_done)) {
       // This "currently_transmiting_buffer_handle" has arrived lated. Yes it is at this point the current active TX frame, but
@@ -2228,8 +2103,7 @@ static bool end_of_payload_xfer(void)
   }
 
   LOGIC_ANALYZER_TRACE_PAYLOAD_TRANSFER_ISR_END;
-  ecode = DMADRV_TransferDone(rx_dma_channel, &tfer_done);
-  SLI_CPC_ASSERT(ecode == ECODE_EMDRV_DMADRV_OK);
+  tfer_done = sl_hal_ldma_transfer_is_done(LDMA_PERIPH, rx_dma_channel);
   if (SL_BRANCH_UNLIKELY(tfer_done)) {
     // If the RX DMA channel is already done here, it means as we just finished dealing with this frame,
     // the header of the next frame was received. This happens when this interrupt suffered a high interrupt

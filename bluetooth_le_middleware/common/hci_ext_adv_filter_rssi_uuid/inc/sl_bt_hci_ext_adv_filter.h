@@ -1,7 +1,7 @@
 /***************************************************************************//**
  * @file
  * @brief Provides API to create and configure HCI event filter for filtering
- * Extended Advertisment Reports using RSSI and UUID.
+ * Extended Advertisement Reports using RSSI and UUID.
  *
  *******************************************************************************
  * # License
@@ -51,7 +51,7 @@
 /// Maximum RSSI threshold value for RSSI filtering
 #define SL_BT_HCI_FILTER_RSSI_MAX -30
 
-/// Minumum RSSI threshold value for RSSI filtering
+/// Minimum RSSI threshold value for RSSI filtering
 #define SL_BT_HCI_FILTER_RSSI_MIN -120
 
 /// The bit position in the filter bitmap to enable 16-bit Service Data UUIDs

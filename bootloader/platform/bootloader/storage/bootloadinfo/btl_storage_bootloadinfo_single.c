@@ -27,7 +27,7 @@ int32_t storage_getBootloadList(int32_t slotIds[], size_t length)
   return BOOTLOADER_OK;
 }
 
-int32_t storage_setBootloadList(int32_t slotIds[], size_t length)
+int32_t storage_setBootloadList(const int32_t slotIds[], size_t length)
 {
   (void) length;
   // Allow setting slot 0, ignore setting -1

@@ -232,3 +232,15 @@ class Profile_Long_Range_Ocelot(Profile_Long_Range_Nixi):
         elif longrange_mode == model.vars.longrange_mode.var_enum.LR_76p8k:
             model.vars.bitrate.value_forced = 76800//fec_factor
             model.vars.deviation.value_forced = 76800*2
+
+        # Owner:  Mark Gorday
+        # Testing TG4a proposal for 12.5Kbps/100Kcps PHY
+        elif longrange_mode == model.vars.longrange_mode.var_enum.LR_12p5k:
+            model.vars.bitrate.value_forced = 12500//fec_factor
+            model.vars.deviation.value_forced = 12500*2
+
+        # Owner:  Mark Gorday
+        # Testing TG4a proposal for 12.5Kbps/100Kcps PHY
+        elif longrange_mode == model.vars.longrange_mode.var_enum.LR_6p25k:
+            model.vars.bitrate.value_forced = 6250//fec_factor
+            model.vars.deviation.value_forced = 6250*2

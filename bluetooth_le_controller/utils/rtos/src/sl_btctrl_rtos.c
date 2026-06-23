@@ -27,15 +27,16 @@
  *
  ******************************************************************************/
 
+#include <cmsis_os2.h>
+#include <sl_btctrl_linklayer.h>
+#include <sl_btctrl_rtos.h>
+#include <sl_btctrl_rtos_config.h>
+#include <sl_cmsis_os2_common.h>
+#include <sl_core.h>
+#include <sl_status.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <cmsis_os2.h>
-#include "sl_status.h"
-#include "sl_core.h"
-#include "sl_cmsis_os2_common.h"
-#include "sl_btctrl_rtos_config.h"
-#include "sl_btctrl_rtos.h"
 
 #ifdef CONFIGURATION_HEADER
 #include CONFIGURATION_HEADER
@@ -110,8 +111,6 @@ sl_status_t sl_btctrl_rtos_init()
   return SL_STATUS_FAIL;
 }
 
-void BTLE_LL_Process(uint32_t events);
-
 static void linklayer_thread(void *p_arg)
 {
   (void)p_arg;
@@ -127,16 +126,11 @@ static void linklayer_thread(void *p_arg)
     sli_btctrl_events = 0;
     CORE_EXIT_ATOMIC();
 
-    BTLE_LL_Process(events);
+    sl_btctrl_process_events(events);
   }
 }
 
-bool sli_pending_btctrl_events(void)
-{
-  return sli_btctrl_events != 0;
-}
-
-void BTLE_LL_EventRaise(uint32_t events)
+void sl_btctrl_raise_events(uint32_t events)
 {
   if ((sli_btctrl_events & events) == events) {//Events already pending
     return;

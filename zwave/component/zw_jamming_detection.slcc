@@ -1,0 +1,38 @@
+id: zw_jamming_detection
+label: Z-Wave Jamming Detection
+category: Z-Wave|NCP
+description: >
+  This component provides jamming detection for Z-Wave (NCP) Serial API controller
+  applications. It periodically samples background RSSI on the configured channels and evaluates whether the
+  RF environment suggests sustained interference. The logic is exposed through Serial API command handlers so the
+  host can start and stop collection, set thresholds and reporting behavior, and read jamming status using the
+  documented subcommands. Add this component when the product must monitor the RF environment for interference
+  while the controller continues normal Z-Wave stack operation.
+
+  Compile-time defaults are in zw_jamming_detection_config.h (buffer window size and default report interval).
+
+package: zwave
+quality: evaluation
+metadata:
+  sbom:
+    reference: zw_sbom_license
+config_file:
+- path: sample_apps/zwave_ncp_serial_api/config/zw_jamming_detection_config.h
+  file_id: zw_jamming_detection_config
+source:
+- path: "sample_apps/zwave_ncp_serial_api/silabs/sl_jamming_detection.c"
+- path: "sample_apps/zwave_ncp_serial_api/silabs/sl_jamming_cmd_handlers.c"
+
+include:
+- path: "sample_apps/zwave_ncp_serial_api/silabs"
+  file_list:
+  - path: "sl_jamming_detection.h"
+  - path: "sl_jamming_cmd_handlers.h"
+
+provides:
+- name: zw_jamming_detection
+
+template_contribution:
+- name: component_catalog
+  value: zw_jamming_detection
+root_path: zwave

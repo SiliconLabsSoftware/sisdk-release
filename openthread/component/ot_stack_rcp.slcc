@@ -1,7 +1,7 @@
 id: ot_stack_rcp
 label: Stack (RCP)
 package: openthread
-category: OpenThread
+category: OpenThread|Stack
 quality: production
 description: This component provides OpenThread Radio Co-Processor support
 provides:
@@ -16,6 +16,9 @@ recommends:
 - id: ot_platform_abstraction
   vendor: silabs
 config_file:
+- path: config/sl_openthread_log_config.h
+  file_id: openthread_log
+  unless: [ot_sl_log]
 - path: config/sl_openthread_features_config.h
 include:
 - path: include
@@ -31,8 +34,6 @@ define:
 - name: OPENTHREAD_RADIO
   value: 1
 - name: OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE
-  value: 0
-- name: OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
   value: 0
 template_contribution:
 - name: component_catalog

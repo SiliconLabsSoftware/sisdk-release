@@ -374,8 +374,7 @@ void sli_zigbee_af_network_steering_stack_status_callback(sl_status_t status)
     }
   } else if (status == SL_STATUS_NETWORK_UP) {
     sl_zigbee_af_core_println("%s network joined.", PLUGIN_NAME);
-    if (!sli_zigbee_af_network_steering_state_uses_distributed_key()
-        && !(sli_zigbee_af_network_steering_options_mask
+    if (!(sli_zigbee_af_network_steering_options_mask
              & SL_ZIGBEE_AF_PLUGIN_NETWORK_STEERING_OPTIONS_NO_TCLK_UPDATE)
         && !joinedToDistributedNetwork()) {
 #ifdef SL_CATALOG_ZIGBEE_DYNAMIC_COMMISSIONING_PRESENT
@@ -645,11 +644,23 @@ static sl_status_t setupSecurity(void)
             sl_zigbee_key_contents(&distributedTestKey),
             SL_ZIGBEE_ENCRYPTION_KEY_SIZE);
   }
+
+  const sl_zigbee_key_data_t *keyToUse;
+  if (sli_zigbee_af_network_steering_state_uses_distributed_key()) {
+    keyToUse = &sl_zigbee_plugin_network_steering_distributed_key;
+  } else if (sli_zigbee_af_network_steering_state_uses_centralized_key()) {
+    keyToUse = &defaultLinkKey;
+  } else if (gUseConfiguredKey
+             && (sli_zigbee_af_network_steering_state
+                 == SL_ZIGBEE_AF_PLUGIN_NETWORK_STEERING_STATE_SCAN_PRIMARY_CONFIGURED
+                 || sli_zigbee_af_network_steering_state
+                 == SL_ZIGBEE_AF_PLUGIN_NETWORK_STEERING_STATE_SCAN_SECONDARY_CONFIGURED)) {
+    keyToUse = &gConfiguredKey;
+  } else {
+    keyToUse = &defaultLinkKey;
+  }
   memmove(sl_zigbee_key_contents(&(state.preconfiguredKey)),
-          gUseConfiguredKey ? sl_zigbee_key_contents(&(gConfiguredKey))
-          : (sli_zigbee_af_network_steering_state_uses_distributed_key()
-             ? sl_zigbee_key_contents(&sl_zigbee_plugin_network_steering_distributed_key)
-             : sl_zigbee_key_contents(&defaultLinkKey)),
+          sl_zigbee_key_contents(keyToUse),
           SL_ZIGBEE_ENCRYPTION_KEY_SIZE);
 
   status = sl_zigbee_set_initial_security_state(&state);
@@ -882,6 +893,7 @@ void sl_zigbee_af_network_steering_autostart(void)
 #ifdef ENABLE_STEERING_AUTOSTART
   sl_status_t status = sl_zigbee_af_network_steering_start();
   sl_zigbee_af_core_println("%s network %s: 0x%02X", "Join", "start", status);
+  UNUSED_VAR(status);
 #else
   sl_zigbee_af_core_println("Network steering: auto-start disabled by configuration");
 #endif

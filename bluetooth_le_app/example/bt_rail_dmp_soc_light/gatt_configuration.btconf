@@ -52,14 +52,14 @@
         <value length="1" type="user" variable_length="false">0x00</value>
             <properties indicate="true" indicate_requirement="optional" notify="false" notify_requirement="mandatory" read="true" read_requirement="optional" write="true" write_requirement="optional"/>
       </characteristic>
-      
+
           <!--Trigger Source-->
       <characteristic id="trigger_source_rail" name="Trigger Source" sourceId="custom.type" uuid="2f16ee52-0bfd-4597-85d4-a5141fdbae15">
         <informativeText/>
         <value length="1" type="user" variable_length="false">0x00</value>
         <properties indicate="true" indicate_requirement="optional" notify="false" notify_requirement="mandatory" read="true" read_requirement="optional" write="false" write_requirement="optional"/>
       </characteristic>
-      
+
           <!--Source Address-->
       <characteristic id="source_address_rail" name="Source Address" sourceId="custom.type" uuid="82a1cb54-3921-4c9c-ba34-34f78bab9a1b">
         <informativeText>Custom characteristic</informativeText>

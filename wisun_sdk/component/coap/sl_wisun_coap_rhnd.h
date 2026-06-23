@@ -44,7 +44,7 @@ extern "C" {
 #include "sl_status.h"
 #include "sl_wisun_coap.h"
 #include "sl_wisun_coap_config.h"
-#include "socket/socket.h"
+#include "netinet/in.h"
 
 /**************************************************************************//**
  * @addtogroup SL_WISUN_COAP_RHND_API CoAP Resource Handler API

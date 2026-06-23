@@ -36,7 +36,9 @@
 #include "sl_assert.h"
 #include "sl_component_catalog.h"
 #include "cmsis_os2.h"
-#include "socket/socket.h"
+#include "sys/socket.h"
+#include "arpa/inet.h"
+#include "netinet/in.h"
 #include "sl_status.h"
 #include "sl_wisun_trace_util.h"
 #include "sl_wisun_app_core_util.h"
@@ -117,7 +119,7 @@ void sl_wisun_collector_loop(void)
 
 static void _print_packet(const char *ip_str, const sl_wisun_meter_packet_packed_t *pkt)
 {
-  printf("[%s: {id: %u}{temp: %lu.%.2lu}{hum: %lu.%.2lu}{lx: %u}]\n",
+  printf("[%s: {id: %u}{temp: %"PRIi32".%.2"PRIi32"}{hum: %"PRIu32".%.2"PRIu32"}{lx: %u}]\n",
          ip_str,
          pkt->id,
          pkt->temperature / 1000,

@@ -68,11 +68,29 @@ bool enableAppModeSync(AppMode_t mode, bool enable, char *command)
   return inAppMode(enable ? mode : NONE, NULL);
 }
 
+bool railtest_CheckTxWaitForAck(sl_rail_handle_t railHandle)
+{
+  if (txWaitForAck == TX_WAIT_FOR_ACK_ENABLED_ON) {
+    if (sl_rail_is_auto_ack_enabled(railHandle)
+        && (!sl_rail_is_tx_auto_ack_paused(railHandle))) {
+      return true;
+    }
+    txWaitForAck = TX_WAIT_FOR_ACK_ENABLED_OFF;
+  }
+  return false;
+}
+
 void scheduleNextTx(void)
 {
   // Schedule the next tx if there are more coming
   if ((txCount > 0 && currentAppMode() != TX_SCHEDULED_N_PACKETS)
       || currentAppMode() == TX_CONTINUOUS) {
+    if (railtest_CheckTxWaitForAck(railHandle)) {
+      // Defer scheduleNextTx() to ACK reception or timeout.
+      // This avoids potentially trying to transmit during the
+      // ACK timeout period thwarting both ACK reception and timeout.
+      return;
+    }
     if (enableRandomTxDelay) {
       float randBetween0and1 = ((float) rand()) / (((uint32_t) RAND_MAX) + 1);
       float fTxDelay = continuousTransferPeriod * 1000 * randBetween0and1;
@@ -91,6 +109,12 @@ void scheduleNextTx(void)
 #ifdef SL_CATALOG_SL_RAIL_TEST_CORE_PRESENT
   } else if (currentAppMode() == TX_SCHEDULED_N_PACKETS) {
     if (txCount) {
+      if (railtest_CheckTxWaitForAck(railHandle)) {
+        // Defer scheduleNextTx() to ACK reception or timeout.
+        // This avoids potentially trying to transmit during the
+        // ACK timeout period thwarting both ACK reception and timeout.
+        return;
+      }
       // Schedule the next transmit after this transmit
       sl_rail_scheduled_tx_config_t scheduledTxOptions = {
         // Use txScheduledTime as anchor if available, otherwise use reported txStartTime
@@ -102,6 +126,9 @@ void scheduleNextTx(void)
       setNextPacketTime(&scheduledTxOptions);
       pendPacketTx();
     } else {
+      if (txWaitForAck == TX_WAIT_FOR_ACK_ENABLED_ON) {
+        txWaitForAck = TX_WAIT_FOR_ACK_ENABLED_OFF; // No transmits to schedule
+      }
       setNextAppMode(NONE, NULL);
     }
 #endif

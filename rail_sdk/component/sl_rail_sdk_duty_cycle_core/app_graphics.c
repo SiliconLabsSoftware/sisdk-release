@@ -31,6 +31,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 #include "dmd.h"
@@ -141,11 +142,11 @@ void update_display(const char *app_type, uint16_t packet_transmitted, uint16_t 
   GLIB_drawStringOnLine(&glib_context, app_type, 3, GLIB_ALIGN_CENTER, 0, 0, 0);
 
   GLIB_drawStringOnLine(&glib_context, "----- RX -----", 5, GLIB_ALIGN_CENTER, 0, 0, 0);
-  snprintf(textBuf, sizeof(textBuf), "Packet Rx: %d", packet_received);
+  snprintf(textBuf, sizeof(textBuf), "Packet Rx: %" PRIu16, packet_received);
   GLIB_drawStringOnLine(&glib_context, textBuf, 6, GLIB_ALIGN_CENTER, 0, 0, 0);
 
   GLIB_drawStringOnLine(&glib_context, "----- TX -----", 8, GLIB_ALIGN_CENTER, 0, 0, 0);
-  snprintf(textBuf, sizeof(textBuf), "Packet Tx: %d", packet_transmitted);
+  snprintf(textBuf, sizeof(textBuf), "Packet Tx: %" PRIu16, packet_transmitted);
   GLIB_drawStringOnLine(&glib_context, textBuf, 9, GLIB_ALIGN_CENTER, 0, 0, 0);
 
   // Force a redraw

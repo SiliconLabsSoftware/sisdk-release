@@ -52,7 +52,7 @@ void sli_zigbee_af_prepayment_client_cli_change_payment_mode(SL_CLI_COMMAND_ARG)
   cutOffValue = sl_cli_get_argument_uint32(arguments, 7);
 
   //sl_zigbee_af_app_println("RX Publish Prepay Snapshot Cmd, varLen=%d", i );
-  sl_zigbee_af_app_println("Change Payment Mode, srcEp=%d, dstEp=%d, addr=%04X", srcEndpoint, dstEndpoint, nodeId);
+  sl_zigbee_af_cli_println("Change Payment Mode, srcEp=%d, dstEp=%d, addr=%04X", srcEndpoint, dstEndpoint, nodeId);
   sl_zigbee_af_prepayment_client_change_payment_mode(nodeId, srcEndpoint, dstEndpoint, providerId, issuerEventId,
                                                      implementationDateTime, proposedPaymentControlConfiguration,
                                                      cutOffValue);

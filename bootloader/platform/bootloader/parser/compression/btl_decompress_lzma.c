@@ -421,7 +421,7 @@ int32_t gbl_lzmaParseProgTag(ParserContext_t *ctx,
   return BOOTLOADER_OK;
 }
 
-size_t gbl_lzmaNumBytesRequired(ParserContext_t *ctx)
+size_t gbl_lzmaNumBytesRequired(const ParserContext_t *ctx)
 {
   if (ctx->offsetInTag == 0) {
     if (ctx->customTagId == GBL_TAG_ID_DELTA_LZMA) {

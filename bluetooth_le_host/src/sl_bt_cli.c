@@ -21,6 +21,7 @@
 #include "sl_bt_api.h"
 #include "sl_cli.h"
 #include "sl_bt_cli.h"
+#include <inttypes.h>
 #include "printf.h"
 #define MAX_P_SIZE (255)
 static void print_hex(uint8_t * addr,size_t len)
@@ -111,8 +112,8 @@ void sli_bt_cli_system_get_version(sl_cli_command_arg_t *arguments)
     printf("0x%x ",minor);
     printf("0x%x ",patch);
     printf("0x%x ",build);
-    printf("0x%x ",bootloader);
-    printf("0x%x ",hash);
+    printf("0x%" PRIx32 " ",(uint32_t)bootloader);
+    printf("0x%" PRIx32 " ",(uint32_t)hash);
     printf("\n");
 }
 void sli_bt_cli_system_reboot(sl_cli_command_arg_t *arguments)
@@ -372,6 +373,42 @@ void sli_bt_cli_linklayer_event_info_reporting_enable(sl_cli_command_arg_t *argu
     printf("rsp_linklayer_event_info_reporting_enable 0x%lx ",status);
     printf("\n");
 }
+void sli_bt_cli_linklayer_get_hci_connection_handle(sl_cli_command_arg_t *arguments)
+{
+
+  sl_status_t status;
+  (void)(arguments);
+  // parameters
+  uint8_t connection=sl_cli_get_argument_uint8(arguments,0);
+  //return values
+  uint16_t hci_connection_handle;
+  status=sl_bt_linklayer_get_hci_connection_handle(
+  connection,
+  &hci_connection_handle
+  );
+
+    printf("rsp_linklayer_get_hci_connection_handle 0x%lx ",status);
+    printf("0x%x ",hci_connection_handle);
+    printf("\n");
+}
+void sli_bt_cli_linklayer_get_bgapi_connection_handle(sl_cli_command_arg_t *arguments)
+{
+
+  sl_status_t status;
+  (void)(arguments);
+  // parameters
+  uint16_t hci_connection_handle=sl_cli_get_argument_uint16(arguments,0);
+  //return values
+  uint8_t connection;
+  status=sl_bt_linklayer_get_bgapi_connection_handle(
+  hci_connection_handle,
+  &connection
+  );
+
+    printf("rsp_linklayer_get_bgapi_connection_handle 0x%lx ",status);
+    printf("0x%x ",connection);
+    printf("\n");
+}
 #endif // SL_CATALOG_BLUETOOTH_FEATURE_LINKLAYER_INTERFACE_PRESENT
 void sli_bt_cli_resource_get_status(sl_cli_command_arg_t *arguments)
 {
@@ -388,8 +425,8 @@ void sli_bt_cli_resource_get_status(sl_cli_command_arg_t *arguments)
   );
 
     printf("rsp_resource_get_status 0x%lx ",status);
-    printf("0x%x ",total_bytes);
-    printf("0x%x ",free_bytes);
+    printf("0x%" PRIx32 " ",(uint32_t)total_bytes);
+    printf("0x%" PRIx32 " ",(uint32_t)free_bytes);
     printf("\n");
 }
 void sli_bt_cli_resource_set_report_threshold(sl_cli_command_arg_t *arguments)
@@ -445,7 +482,7 @@ void sli_bt_cli_resource_get_connection_tx_status(sl_cli_command_arg_t *argument
     printf("rsp_resource_get_connection_tx_status 0x%lx ",status);
     printf("0x%x ",flags);
     printf("0x%x ",packet_count);
-    printf("0x%x ",data_len);
+    printf("0x%" PRIx32 " ",(uint32_t)data_len);
     printf("\n");
 }
 void sli_bt_cli_resource_disable_connection_tx_report(sl_cli_command_arg_t *arguments)
@@ -476,6 +513,25 @@ void sli_bt_cli_gap_set_privacy_mode(sl_cli_command_arg_t *arguments)
   );
 
     printf("rsp_gap_set_privacy_mode 0x%lx ",status);
+    printf("\n");
+}
+void sli_bt_cli_gap_set_privacy_mode_with_rpa_randomization(sl_cli_command_arg_t *arguments)
+{
+
+  sl_status_t status;
+  (void)(arguments);
+  // parameters
+  uint8_t privacy=sl_cli_get_argument_uint8(arguments,0);
+  uint8_t interval_min_minutes=sl_cli_get_argument_uint8(arguments,1);
+  uint8_t interval_max_minutes=sl_cli_get_argument_uint8(arguments,2);
+  //return values
+  status=sl_bt_gap_set_privacy_mode_with_rpa_randomization(
+  privacy,
+  interval_min_minutes,
+  interval_max_minutes
+  );
+
+    printf("rsp_gap_set_privacy_mode_with_rpa_randomization 0x%lx ",status);
     printf("\n");
 }
 void sli_bt_cli_gap_set_data_channel_classification(sl_cli_command_arg_t *arguments)
@@ -924,6 +980,7 @@ void sli_bt_cli_extended_advertiser_start_directed(sl_cli_command_arg_t *argumen
     printf("rsp_extended_advertiser_start_directed 0x%lx ",status);
     printf("\n");
 }
+#ifdef SL_CATALOG_BLUETOOTH_FEATURE_PERIODIC_ADVERTISER_PRESENT
 void sli_bt_cli_periodic_advertiser_set_data(sl_cli_command_arg_t *arguments)
 {
 
@@ -956,6 +1013,21 @@ void sli_bt_cli_periodic_advertiser_set_long_data(sl_cli_command_arg_t *argument
   );
 
     printf("rsp_periodic_advertiser_set_long_data 0x%lx ",status);
+    printf("\n");
+}
+void sli_bt_cli_periodic_advertiser_refresh_data_id(sl_cli_command_arg_t *arguments)
+{
+
+  sl_status_t status;
+  (void)(arguments);
+  // parameters
+  uint8_t advertising_set=sl_cli_get_argument_uint8(arguments,0);
+  //return values
+  status=sl_bt_periodic_advertiser_refresh_data_id(
+  advertising_set
+  );
+
+    printf("rsp_periodic_advertiser_refresh_data_id 0x%lx ",status);
     printf("\n");
 }
 void sli_bt_cli_periodic_advertiser_start(sl_cli_command_arg_t *arguments)
@@ -994,6 +1066,7 @@ void sli_bt_cli_periodic_advertiser_stop(sl_cli_command_arg_t *arguments)
     printf("rsp_periodic_advertiser_stop 0x%lx ",status);
     printf("\n");
 }
+#endif // SL_CATALOG_BLUETOOTH_FEATURE_PERIODIC_ADVERTISER_PRESENT
 void sli_bt_cli_scanner_set_parameters(sl_cli_command_arg_t *arguments)
 {
 
@@ -1358,6 +1431,7 @@ void sli_bt_cli_pawr_sync_set_response_data(sl_cli_command_arg_t *arguments)
     printf("rsp_pawr_sync_set_response_data 0x%lx ",status);
     printf("\n");
 }
+#ifdef SL_CATALOG_BLUETOOTH_FEATURE_PAWR_ADVERTISER_PRESENT
 void sli_bt_cli_pawr_advertiser_start(sl_cli_command_arg_t *arguments)
 {
 
@@ -1491,6 +1565,7 @@ void sli_bt_cli_pawr_advertiser_stop(sl_cli_command_arg_t *arguments)
     printf("rsp_pawr_advertiser_stop 0x%lx ",status);
     printf("\n");
 }
+#endif // SL_CATALOG_BLUETOOTH_FEATURE_PAWR_ADVERTISER_PRESENT
 void sli_bt_cli_connection_set_default_parameters(sl_cli_command_arg_t *arguments)
 {
 
@@ -1926,9 +2001,9 @@ void sli_bt_cli_connection_get_scheduling_details(sl_cli_command_arg_t *argument
   );
 
     printf("rsp_connection_get_scheduling_details 0x%lx ",status);
-    printf("0x%x ",access_address);
+    printf("0x%" PRIx32 " ",(uint32_t)access_address);
     printf("0x%x ",role);
-    printf("0x%x ",crc_init);
+    printf("0x%" PRIx32 " ",(uint32_t)crc_init);
     printf("0x%x ",interval);
     printf("0x%x ",supervision_timeout);
     printf("0x%x ",central_clock_accuracy);
@@ -1939,7 +2014,7 @@ void sli_bt_cli_connection_get_scheduling_details(sl_cli_command_arg_t *argument
     print_hex(channel_map.data,sizeof(channel_map.data));
     printf("0x%x ",channel);
     printf("0x%x ",event_counter);
-    printf("0x%x ",start_time_us);
+    printf("0x%" PRIx32 " ",(uint32_t)start_time_us);
     printf("\n");
 }
 void sli_bt_cli_connection_get_remote_address(sl_cli_command_arg_t *arguments)
@@ -3320,7 +3395,7 @@ void sli_bt_cli_gatt_server_get_enabled_capabilities(sl_cli_command_arg_t *argum
   );
 
     printf("rsp_gatt_server_get_enabled_capabilities 0x%lx ",status);
-    printf("0x%x ",caps);
+    printf("0x%" PRIx32 " ",(uint32_t)caps);
     printf("\n");
 }
 void sli_bt_cli_gatt_server_read_client_supported_features(sl_cli_command_arg_t *arguments)
@@ -3689,7 +3764,7 @@ void sli_bt_cli_sm_get_bonding_handles(sl_cli_command_arg_t *arguments)
   );
 
     printf("rsp_sm_get_bonding_handles 0x%lx ",status);
-    printf("0x%x ",num_bondings);
+    printf("0x%" PRIx32 " ",(uint32_t)num_bondings);
     print_hex(bondings,bondings_len);
     printf("\n");
 }
@@ -3742,7 +3817,7 @@ void sli_bt_cli_sm_find_bonding_by_address(sl_cli_command_arg_t *arguments)
   );
 
     printf("rsp_sm_find_bonding_by_address 0x%lx ",status);
-    printf("0x%x ",bonding);
+    printf("0x%" PRIx32 " ",(uint32_t)bonding);
     printf("0x%x ",security_mode);
     printf("0x%x ",key_size);
     printf("\n");
@@ -3771,7 +3846,7 @@ void sli_bt_cli_sm_resolve_rpa(sl_cli_command_arg_t *arguments)
     printf("rsp_sm_resolve_rpa 0x%lx ",status);
     print_hex(address.addr,sizeof(address.addr));
     printf("0x%x ",address_type);
-    printf("0x%x ",bonding);
+    printf("0x%" PRIx32 " ",(uint32_t)bonding);
     printf("\n");
 }
 void sli_bt_cli_sm_set_legacy_oob(sl_cli_command_arg_t *arguments)
@@ -3878,6 +3953,7 @@ void sli_bt_cli_external_bondingdb_set_local_irk(sl_cli_command_arg_t *arguments
     printf("rsp_external_bondingdb_set_local_irk 0x%lx ",status);
     printf("\n");
 }
+#ifdef SL_CATALOG_BLUETOOTH_FEATURE_RESOLVING_LIST_PRESENT
 void sli_bt_cli_resolving_list_add_device_by_bonding(sl_cli_command_arg_t *arguments)
 {
 
@@ -3970,6 +4046,30 @@ void sli_bt_cli_resolving_list_remove_all_devices(sl_cli_command_arg_t *argument
     printf("rsp_resolving_list_remove_all_devices 0x%lx ",status);
     printf("\n");
 }
+void sli_bt_cli_resolving_list_read_peer_resolvable_address(sl_cli_command_arg_t *arguments)
+{
+
+  sl_status_t status;
+  (void)(arguments);
+  // parameters
+  size_t _address_len;
+  uint8_t *_address=sl_cli_get_argument_hex(arguments,0,&_address_len);
+  bd_addr address;
+  memcpy(&address,_address,sizeof(address));
+  uint8_t address_type=sl_cli_get_argument_uint8(arguments,1);
+  //return values
+  bd_addr address_out;
+  status=sl_bt_resolving_list_read_peer_resolvable_address(
+  address,
+  address_type,
+  &address_out
+  );
+
+    printf("rsp_resolving_list_read_peer_resolvable_address 0x%lx ",status);
+    print_hex(address_out.addr,sizeof(address_out.addr));
+    printf("\n");
+}
+#endif // SL_CATALOG_BLUETOOTH_FEATURE_RESOLVING_LIST_PRESENT
 #ifdef SL_CATALOG_BLUETOOTH_FEATURE_ACCEPT_LIST_PRESENT
 void sli_bt_cli_accept_list_add_device_by_bonding(sl_cli_command_arg_t *arguments)
 {
@@ -4154,7 +4254,7 @@ void sli_bt_cli_coex_get_counters(sl_cli_command_arg_t *arguments)
     print_hex(counters,counters_len);
     printf("\n");
 }
-#ifdef SL_CATALOG_BLUETOOTH_CS_SUPPORT_PRESENT
+#ifdef SL_CATALOG_BLUETOOTH_FEATURE_CS_PRESENT
 void sli_bt_cli_cs_security_enable(sl_cli_command_arg_t *arguments)
 {
 
@@ -4445,8 +4545,115 @@ void sli_bt_cli_cs_read_remote_supported_capabilities(sl_cli_command_arg_t *argu
     printf("rsp_cs_read_remote_supported_capabilities 0x%lx ",status);
     printf("\n");
 }
-#endif // SL_CATALOG_BLUETOOTH_CS_SUPPORT_PRESENT
-#ifdef SL_CATALOG_BLUETOOTH_CS_SUPPORT_PRESENT
+void sli_bt_cli_cs_handover_get_procedure_parameters(sl_cli_command_arg_t *arguments)
+{
+
+  sl_status_t status;
+  (void)(arguments);
+  // parameters
+  uint8_t connection=sl_cli_get_argument_uint8(arguments,0);
+  uint8_t config_id=sl_cli_get_argument_uint8(arguments,1);
+  //return values
+  size_t cs_parameters_len;
+  uint8_t cs_parameters[MAX_P_SIZE];
+  status=sl_bt_cs_handover_get_procedure_parameters(
+  connection,
+  config_id,
+  MAX_P_SIZE,
+  &cs_parameters_len,
+  cs_parameters
+  );
+
+    printf("rsp_cs_handover_get_procedure_parameters 0x%lx ",status);
+    print_hex(cs_parameters,cs_parameters_len);
+    printf("\n");
+}
+void sli_bt_cli_cs_handover_set_procedure_parameters(sl_cli_command_arg_t *arguments)
+{
+
+  sl_status_t status;
+  (void)(arguments);
+  // parameters
+  size_t cs_parameters_len;
+  uint8_t *cs_parameters=sl_cli_get_argument_hex(arguments,0,&cs_parameters_len);
+  //return values
+  uint8_t analyzer;
+  uint8_t config_id;
+  status=sl_bt_cs_handover_set_procedure_parameters(
+  cs_parameters_len,
+  cs_parameters,
+  &analyzer,
+  &config_id
+  );
+
+    printf("rsp_cs_handover_set_procedure_parameters 0x%lx ",status);
+    printf("0x%x ",analyzer);
+    printf("0x%x ",config_id);
+    printf("\n");
+}
+void sli_bt_cli_cs_handover_create_sync(sl_cli_command_arg_t *arguments)
+{
+
+  sl_status_t status;
+  (void)(arguments);
+  // parameters
+  uint8_t analyzer=sl_cli_get_argument_uint8(arguments,0);
+  uint8_t config_id=sl_cli_get_argument_uint8(arguments,1);
+  uint16_t procedure_counter=sl_cli_get_argument_uint16(arguments,2);
+  //return values
+  status=sl_bt_cs_handover_create_sync(
+  analyzer,
+  config_id,
+  procedure_counter
+  );
+
+    printf("rsp_cs_handover_create_sync 0x%lx ",status);
+    printf("\n");
+}
+void sli_bt_cli_cs_handover_enable_procedure(sl_cli_command_arg_t *arguments)
+{
+
+  sl_status_t status;
+  (void)(arguments);
+  // parameters
+  uint8_t enable=sl_cli_get_argument_uint8(arguments,0);
+  uint16_t start_procedure_counter=sl_cli_get_argument_uint16(arguments,1);
+  uint16_t procedure_skip=sl_cli_get_argument_uint16(arguments,2);
+  uint8_t handle_type=sl_cli_get_argument_uint8(arguments,3);
+  uint8_t handle=sl_cli_get_argument_uint8(arguments,4);
+  uint8_t config_id=sl_cli_get_argument_uint8(arguments,5);
+  //return values
+  status=sl_bt_cs_handover_enable_procedure(
+  enable,
+  start_procedure_counter,
+  procedure_skip,
+  handle_type,
+  handle,
+  config_id
+  );
+
+    printf("rsp_cs_handover_enable_procedure 0x%lx ",status);
+    printf("\n");
+}
+void sli_bt_cli_cs_handover_remove_procedure(sl_cli_command_arg_t *arguments)
+{
+
+  sl_status_t status;
+  (void)(arguments);
+  // parameters
+  uint8_t analyzer=sl_cli_get_argument_uint8(arguments,0);
+  uint8_t config_id=sl_cli_get_argument_uint8(arguments,1);
+  //return values
+  status=sl_bt_cs_handover_remove_procedure(
+  analyzer,
+  config_id
+  );
+
+    printf("rsp_cs_handover_remove_procedure 0x%lx ",status);
+    printf("\n");
+}
+#endif // SL_CATALOG_BLUETOOTH_FEATURE_CS_PRESENT
+#ifdef SL_CATALOG_BLUETOOTH_FEATURE_CS_TEST_PRESENT
 void sli_bt_cli_cs_test_start(sl_cli_command_arg_t *arguments)
 {
 
@@ -4528,7 +4735,7 @@ void sli_bt_cli_cs_test_end(sl_cli_command_arg_t *arguments)
     printf("rsp_cs_test_end 0x%lx ",status);
     printf("\n");
 }
-#endif // SL_CATALOG_BLUETOOTH_CS_SUPPORT_PRESENT
+#endif // SL_CATALOG_BLUETOOTH_FEATURE_CS_TEST_PRESENT
 void sli_bt_cli_l2cap_open_le_channel(sl_cli_command_arg_t *arguments)
 {
 
@@ -5019,6 +5226,7 @@ void sli_bt_cli_cte_receiver_disable_silabs_cte(sl_cli_command_arg_t *arguments)
     printf("\n");
 }
 #endif // SL_CATALOG_BLUETOOTH_FEATURE_CTE_RECEIVER_PRESENT
+#ifdef SL_CATALOG_BLUETOOTH_FEATURE_CONNECTION_ANALYZER_PRESENT
 void sli_bt_cli_connection_analyzer_start(sl_cli_command_arg_t *arguments)
 {
 
@@ -5066,6 +5274,25 @@ void sli_bt_cli_connection_analyzer_start(sl_cli_command_arg_t *arguments)
     printf("0x%x ",analyzer);
     printf("\n");
 }
+void sli_bt_cli_connection_analyzer_process_llcp_event(sl_cli_command_arg_t *arguments)
+{
+
+  sl_status_t status;
+  (void)(arguments);
+  // parameters
+  uint8_t analyzer=sl_cli_get_argument_uint8(arguments,0);
+  size_t llcp_event_info_len;
+  uint8_t *llcp_event_info=sl_cli_get_argument_hex(arguments,1,&llcp_event_info_len);
+  //return values
+  status=sl_bt_connection_analyzer_process_llcp_event(
+  analyzer,
+  llcp_event_info_len,
+  llcp_event_info
+  );
+
+    printf("rsp_connection_analyzer_process_llcp_event 0x%lx ",status);
+    printf("\n");
+}
 void sli_bt_cli_connection_analyzer_stop(sl_cli_command_arg_t *arguments)
 {
 
@@ -5081,6 +5308,7 @@ void sli_bt_cli_connection_analyzer_stop(sl_cli_command_arg_t *arguments)
     printf("rsp_connection_analyzer_stop 0x%lx ",status);
     printf("\n");
 }
+#endif // SL_CATALOG_BLUETOOTH_FEATURE_CONNECTION_ANALYZER_PRESENT
 
 
 void sl_bt_cli_on_event(sl_bt_msg_t* evt)
@@ -5092,9 +5320,9 @@ void sl_bt_cli_on_event(sl_bt_msg_t* evt)
       printf("0x%x ",evt->data.evt_system_boot.minor);
       printf("0x%x ",evt->data.evt_system_boot.patch);
       printf("0x%x ",evt->data.evt_system_boot.build);
-      printf("0x%x ",evt->data.evt_system_boot.bootloader);
+      printf("0x%" PRIx32 " ",(uint32_t)evt->data.evt_system_boot.bootloader);
       printf("0x%x ",evt->data.evt_system_boot.hw);
-      printf("0x%x ",evt->data.evt_system_boot.hash);
+      printf("0x%" PRIx32 " ",(uint32_t)evt->data.evt_system_boot.hash);
       printf("\n");
     break;
     case sl_bt_evt_system_stopped_id:
@@ -5117,7 +5345,7 @@ void sl_bt_cli_on_event(sl_bt_msg_t* evt)
     break;
     case sl_bt_evt_system_external_signal_id:
       printf("sl_bt_evt_system_external_signal ");
-      printf("0x%x ",evt->data.evt_system_external_signal.extsignals);
+      printf("0x%" PRIx32 " ",(uint32_t)evt->data.evt_system_external_signal.extsignals);
       printf("\n");
     break;
     case sl_bt_evt_system_awake_id:
@@ -5131,14 +5359,20 @@ void sl_bt_cli_on_event(sl_bt_msg_t* evt)
     break;
     case sl_bt_evt_linklayer_event_info_report_id:
       printf("sl_bt_evt_linklayer_event_info_report ");
-      printf("0x%x ",evt->data.evt_linklayer_event_info_report.configuration);
+      printf("0x%" PRIx32 " ",(uint32_t)evt->data.evt_linklayer_event_info_report.configuration);
       printf("0x%x ",evt->data.evt_linklayer_event_info_report.procedure_type);
       print_hex(evt->data.evt_linklayer_event_info_report.data.data,evt->data.evt_linklayer_event_info_report.data.len);
       printf("\n");
     break;
     case sl_bt_evt_resource_status_id:
       printf("sl_bt_evt_resource_status ");
-      printf("0x%x ",evt->data.evt_resource_status.free_bytes);
+      printf("0x%" PRIx32 " ",(uint32_t)evt->data.evt_resource_status.free_bytes);
+      printf("\n");
+    break;
+    case sl_bt_evt_gap_random_address_refresh_id:
+      printf("sl_bt_evt_gap_random_address_refresh ");
+      print_hex(evt->data.evt_gap_random_address_refresh.address.addr,sizeof(evt->data.evt_gap_random_address_refresh.address.addr));
+      printf("0x%x ",evt->data.evt_gap_random_address_refresh.address_type);
       printf("\n");
     break;
     case sl_bt_evt_advertiser_timeout_id:
@@ -5154,10 +5388,17 @@ void sl_bt_cli_on_event(sl_bt_msg_t* evt)
       printf("0x%x ",evt->data.evt_advertiser_scan_request.bonding);
       printf("\n");
     break;
+    case sl_bt_evt_advertiser_random_address_refresh_id:
+      printf("sl_bt_evt_advertiser_random_address_refresh ");
+      printf("0x%x ",evt->data.evt_advertiser_random_address_refresh.advertising_set);
+      print_hex(evt->data.evt_advertiser_random_address_refresh.address.addr,sizeof(evt->data.evt_advertiser_random_address_refresh.address.addr));
+      printf("0x%x ",evt->data.evt_advertiser_random_address_refresh.address_type);
+      printf("\n");
+    break;
     case sl_bt_evt_periodic_advertiser_status_id:
       printf("sl_bt_evt_periodic_advertiser_status ");
       printf("0x%x ",evt->data.evt_periodic_advertiser_status.advertising_set);
-      printf("0x%x ",evt->data.evt_periodic_advertiser_status.status);
+      printf("0x%" PRIx32 " ",(uint32_t)evt->data.evt_periodic_advertiser_status.status);
       printf("0x%x ",evt->data.evt_periodic_advertiser_status.event_counter);
       printf("\n");
     break;
@@ -5392,10 +5633,10 @@ void sl_bt_cli_on_event(sl_bt_msg_t* evt)
       printf("0x%x ",evt->data.evt_connection_statistics.connection);
       printf("%d ",evt->data.evt_connection_statistics.rssi_min);
       printf("%d ",evt->data.evt_connection_statistics.rssi_max);
-      printf("0x%x ",evt->data.evt_connection_statistics.num_total_connection_events);
-      printf("0x%x ",evt->data.evt_connection_statistics.num_missed_connection_events);
-      printf("0x%x ",evt->data.evt_connection_statistics.num_successful_connection_events);
-      printf("0x%x ",evt->data.evt_connection_statistics.num_crc_errors);
+      printf("0x%" PRIx32 " ",(uint32_t)evt->data.evt_connection_statistics.num_total_connection_events);
+      printf("0x%" PRIx32 " ",(uint32_t)evt->data.evt_connection_statistics.num_missed_connection_events);
+      printf("0x%" PRIx32 " ",(uint32_t)evt->data.evt_connection_statistics.num_successful_connection_events);
+      printf("0x%" PRIx32 " ",(uint32_t)evt->data.evt_connection_statistics.num_crc_errors);
       printf("\n");
     break;
     case sl_bt_evt_connection_request_subrate_failed_id:
@@ -5434,7 +5675,7 @@ void sl_bt_cli_on_event(sl_bt_msg_t* evt)
     case sl_bt_evt_gatt_service_id:
       printf("sl_bt_evt_gatt_service ");
       printf("0x%x ",evt->data.evt_gatt_service.connection);
-      printf("0x%x ",evt->data.evt_gatt_service.service);
+      printf("0x%" PRIx32 " ",(uint32_t)evt->data.evt_gatt_service.service);
       print_hex(evt->data.evt_gatt_service.uuid.data,evt->data.evt_gatt_service.uuid.len);
       printf("\n");
     break;
@@ -5537,7 +5778,7 @@ void sl_bt_cli_on_event(sl_bt_msg_t* evt)
     case sl_bt_evt_sm_passkey_display_id:
       printf("sl_bt_evt_sm_passkey_display ");
       printf("0x%x ",evt->data.evt_sm_passkey_display.connection);
-      printf("0x%x ",evt->data.evt_sm_passkey_display.passkey);
+      printf("0x%" PRIx32 " ",(uint32_t)evt->data.evt_sm_passkey_display.passkey);
       printf("\n");
     break;
     case sl_bt_evt_sm_passkey_request_id:
@@ -5548,7 +5789,7 @@ void sl_bt_cli_on_event(sl_bt_msg_t* evt)
     case sl_bt_evt_sm_confirm_passkey_id:
       printf("sl_bt_evt_sm_confirm_passkey ");
       printf("0x%x ",evt->data.evt_sm_confirm_passkey.connection);
-      printf("0x%x ",evt->data.evt_sm_confirm_passkey.passkey);
+      printf("0x%" PRIx32 " ",(uint32_t)evt->data.evt_sm_confirm_passkey.passkey);
       printf("\n");
     break;
     case sl_bt_evt_sm_bonded_id:
@@ -5637,7 +5878,7 @@ void sl_bt_cli_on_event(sl_bt_msg_t* evt)
       printf("0x%x ",evt->data.evt_cs_procedure_enable_complete.state);
       printf("0x%x ",evt->data.evt_cs_procedure_enable_complete.antenna_config);
       printf("%d ",evt->data.evt_cs_procedure_enable_complete.tx_power);
-      printf("0x%x ",evt->data.evt_cs_procedure_enable_complete.subevent_len);
+      printf("0x%" PRIx32 " ",(uint32_t)evt->data.evt_cs_procedure_enable_complete.subevent_len);
       printf("0x%x ",evt->data.evt_cs_procedure_enable_complete.subevents_per_event);
       printf("0x%x ",evt->data.evt_cs_procedure_enable_complete.subevent_interval);
       printf("0x%x ",evt->data.evt_cs_procedure_enable_complete.event_interval);
@@ -5698,6 +5939,49 @@ void sl_bt_cli_on_event(sl_bt_msg_t* evt)
       printf("0x%x ",evt->data.evt_cs_read_remote_supported_capabilities_complete.t_pm_times);
       printf("0x%x ",evt->data.evt_cs_read_remote_supported_capabilities_complete.t_sw_times);
       printf("0x%x ",evt->data.evt_cs_read_remote_supported_capabilities_complete.tx_snr_capability);
+      printf("\n");
+    break;
+    case sl_bt_evt_cs_handover_sync_established_id:
+      printf("sl_bt_evt_cs_handover_sync_established ");
+      printf("0x%x ",evt->data.evt_cs_handover_sync_established.status);
+      printf("0x%x ",evt->data.evt_cs_handover_sync_established.analyzer);
+      printf("0x%x ",evt->data.evt_cs_handover_sync_established.config_id);
+      printf("0x%x ",evt->data.evt_cs_handover_sync_established.procedure_counter);
+      printf("\n");
+    break;
+    case sl_bt_evt_cs_handover_complete_id:
+      printf("sl_bt_evt_cs_handover_complete ");
+      printf("0x%x ",evt->data.evt_cs_handover_complete.reason);
+      printf("0x%x ",evt->data.evt_cs_handover_complete.analyzer);
+      printf("0x%x ",evt->data.evt_cs_handover_complete.config_id);
+      printf("\n");
+    break;
+    case sl_bt_evt_cs_handover_result_id:
+      printf("sl_bt_evt_cs_handover_result ");
+      printf("0x%x ",evt->data.evt_cs_handover_result.analyzer);
+      printf("0x%x ",evt->data.evt_cs_handover_result.config_id);
+      printf("0x%x ",evt->data.evt_cs_handover_result.start_acl_conn_event);
+      printf("0x%x ",evt->data.evt_cs_handover_result.procedure_counter);
+      printf("%d ",evt->data.evt_cs_handover_result.frequency_compensation);
+      printf("%d ",evt->data.evt_cs_handover_result.reference_power_level);
+      printf("0x%x ",evt->data.evt_cs_handover_result.procedure_done_status);
+      printf("0x%x ",evt->data.evt_cs_handover_result.subevent_done_status);
+      printf("0x%x ",evt->data.evt_cs_handover_result.abort_reason);
+      printf("0x%x ",evt->data.evt_cs_handover_result.num_antenna_paths);
+      printf("0x%x ",evt->data.evt_cs_handover_result.num_steps);
+      print_hex(evt->data.evt_cs_handover_result.data.data,evt->data.evt_cs_handover_result.data.len);
+      printf("\n");
+    break;
+    case sl_bt_evt_cs_handover_result_continue_id:
+      printf("sl_bt_evt_cs_handover_result_continue ");
+      printf("0x%x ",evt->data.evt_cs_handover_result_continue.analyzer);
+      printf("0x%x ",evt->data.evt_cs_handover_result_continue.config_id);
+      printf("0x%x ",evt->data.evt_cs_handover_result_continue.procedure_done_status);
+      printf("0x%x ",evt->data.evt_cs_handover_result_continue.subevent_done_status);
+      printf("0x%x ",evt->data.evt_cs_handover_result_continue.abort_reason);
+      printf("0x%x ",evt->data.evt_cs_handover_result_continue.num_antenna_paths);
+      printf("0x%x ",evt->data.evt_cs_handover_result_continue.num_steps);
+      print_hex(evt->data.evt_cs_handover_result_continue.data.data,evt->data.evt_cs_handover_result_continue.data.len);
       printf("\n");
     break;
     case sl_bt_evt_cs_test_end_completed_id:

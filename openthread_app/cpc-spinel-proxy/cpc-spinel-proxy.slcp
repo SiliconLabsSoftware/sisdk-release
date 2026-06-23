@@ -1,0 +1,43 @@
+project_name: cpc-spinel-proxy
+label: OpenThread - Host CPC Spinel Proxy
+package: openthread
+category: OpenThread Host Tools
+quality: production
+description: >
+  Host daemon that bridges a Unix-domain Spinel socket to a CPCd instance. Intended for
+  host environments which support socket based spinel interfaces, such as the default
+  Android Thread HAL.
+
+component:
+  - id: ot_cpc_transport_posix
+
+include:
+  - path: .
+    file_list:
+      - path: spinel_iid_policy.hpp
+
+source:
+  - path: main.cpp
+  - path: spinel_iid_policy.cpp
+
+readme:
+  - path: README.md
+
+tag:
+  - hwfilter:device:device_family_host
+  - toolchain:gcc
+
+filter:
+  - name: "Wireless Technology"
+    value: ["Thread"]
+  - name: "Device Type"
+    value: ["Host"]
+  - name: "Capability"
+    value: ["Multiprotocol"]
+  - name: "Project Difficulty"
+    value: ["Advanced"]
+
+ui_hints:
+  highlight:
+    - path: README.md
+      focus: true

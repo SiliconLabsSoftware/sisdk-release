@@ -8,4 +8,3 @@ steps:
   - task: create_gbl
     app: "{{build_dir}}/{{project_name}}.out"
     output: "{{build_dir}}/{{project_name}}.gbl"
-  

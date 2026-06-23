@@ -15,20 +15,14 @@ metadata:
   sbom:
     license: Zlib
 root_path: platform_core/platform/service/memory_manager
-include:
-- path: inc
-  file_list:
-  - path: sl_memory_manager.h
-- path: src
-  file_list:
-  - path: sli_memory_manager.h
 source:
-- path: src/sl_memory_manager_pool_common.c
 - path: src/sl_memory_manager_pool.c
 provides:
 - name: memory_manager_pool_implementation
 - name: memory_manager_pool
 requires:
+- name: bit
 - name: sl_assert
 - name: sl_core
 - name: memory_manager
+- name: memory_manager_pool_common

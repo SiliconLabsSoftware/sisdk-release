@@ -134,88 +134,120 @@ sl_led_state_t sl_simple_led_get_state(void *led_handle);
 ///
 ///   @details
 ///
+///   The Simple LED Driver can be used to execute basic LED functionalities such as on,
+///   off, toggle, or retrieve the on/off state on Silicon Labs devices. Subsequent
+///   sections provide more insight into this module.
 ///
 ///   @n @section simple_led_intro Introduction
 ///
 ///   The Simple LED driver is a module of the LED driver that provides the functionality
 ///   to control simple on/off LEDs.
 ///
+///   @n @section simple_led_apis Instance pointer vs context pointer
+///
+///   - **Common LED API** (@c sl_led_init, @c sl_led_turn_on, @c sl_led_turn_off,
+///     @c sl_led_toggle, @c sl_led_get_state): pass @c &sl_led_<instance> (e.g.
+///     @c &sl_led_led0). Recommended for most application code.
+///   - **Simple LED API** (@c sl_simple_led_*): expects a pointer to
+///     @ref sl_simple_led_context_t (as @c void *), **not** @c &sl_led_led0. Obtain it from
+///     the exported instance: @code (void *)sl_led_led0.context @endcode Replace @c led0
+///     with your instance name if different. Do **not** use @c &simple_led0_context in
+///     application code — that symbol is not declared in @c sl_simple_led_instances.h
+///     (see configuration notes below).
+///
 ///   @n @section simple_led_config Simple LED Configuration
 ///
 ///   Simple LEDs use the @ref sl_led_t struct and their @ref sl_simple_led_context_t
 ///   struct. These are automatically generated into the following files, as well as
 ///   instance specific headers with macro definitions in them. The samples below
-///   are for a single instance called "inst0".
+///   are for a single instance called "led0".
 ///
 ///   @code{.c}
 ///// sl_simple_led_instances.c
 ///
-///#include "sl_simple_led.h"
-///#include "sl_gpio.h"
-///#include "sl_simple_led_inst0_config.h"
+/// #include "sl_simple_led.h"
+/// #include "sl_gpio.h"
+/// #include "sl_simple_led_led0_config.h"
 ///
-///sl_simple_led_context_t simple_inst0_context = {
-///  .port = SL_SIMPLE_LED_INST0_PORT,
-///  .pin = SL_SIMPLE_LED_INST0_PIN,
-///  .polarity = SL_SIMPLE_LED_INST0_POLARITY,
-///};
+/// sl_simple_led_context_t simple_led0_context = {
+///   .port = SL_SIMPLE_LED_LED0_PORT,
+///   .pin = SL_SIMPLE_LED_LED0_PIN,
+///   .polarity = SL_SIMPLE_LED_LED0_POLARITY,
+/// };
 ///
-///const sl_led_t sl_led_inst0 = {
-///  .context = &simple_inst0_context,
-///  .init = sl_simple_led_init,
-///  .turn_on = sl_simple_led_turn_on,
-///  .turn_off = sl_simple_led_turn_off,
-///  .toggle = sl_simple_led_toggle,
-///  .get_state = sl_simple_led_get_state,
-///};
+/// const sl_led_t sl_led_led0 = {
+///   .context = &simple_led0_context,
+///   .init = sl_simple_led_init,
+///   .turn_on = sl_simple_led_turn_on,
+///   .turn_off = sl_simple_led_turn_off,
+///   .toggle = sl_simple_led_toggle,
+///   .get_state = sl_simple_led_get_state,
+/// };
 ///
-///void sl_simple_led_init_instances(void)
-///{
-///  sl_led_init(&sl_led_inst0);
-///}
-///   @endcode
+/// void sl_simple_led_init_instances(void)
+/// {
+///   sl_led_init(&sl_led_led0);
+/// }
+/// @endcode
 ///
 ///   @note The sl_simple_led_instances.c file is shown with only one instance, but if more
 ///         were in use they would all appear in this .c file.
 ///
 ///   @code{.c}
-///// sl_simple_led_instances.h
+/// // sl_simple_led_instances.h
 ///
-///#ifndef SL_SIMPLE_LED_INSTANCES_H
-///#define SL_SIMPLE_LED_INSTANCES_H
+/// #ifndef SL_SIMPLE_LED_INSTANCES_H
+/// #define SL_SIMPLE_LED_INSTANCES_H
 ///
-///#include "sl_simple_led.h"
+/// #include "sl_simple_led.h"
 ///
-///extern const sl_led_t sl_led_inst0;
+/// extern const sl_led_t sl_led_led0;
 ///
-///void sl_simple_led_init_instances(void);
+/// void sl_simple_led_init_instances(void);
 ///
-///#endif // SL_SIMPLE_LED_INIT_H
+/// #endif // SL_SIMPLE_LED_INSTANCES_H
+///
 ///   @endcode
 ///
-///   @note The sl_simple_led_instances.h file is shown with only one instance, but if more
-///         were in use they would all appear in this .h file.
+///   @note The @c .h file exports only the LED instance (@c sl_led_led0), not the underlying
+///         context struct. User code must not reference @c simple_led0_context by name.
 ///
 ///   @n @section simple_led_usage Simple LED Usage
 ///
-///   The simple LED driver is for LEDs with basic on off functionality, and there
-///   are no additional functions beyond those in the common driver. The LEDs can be
-///   turned on and off, toggled, and their on/off state can be retrieved. The following
-///   code shows how to control these LEDs. An LED should always be initialized before
-///   calling any other functions with it.
+///   The simple LED driver is for LEDs with basic on/off functionality. There are no
+///   additional functions beyond those in the common driver. Include
+///   @c sl_simple_led_instances.h in application code that uses the generated instances.
+///   When the Simple LED component is present, startup typically calls
+///   @c sl_simple_led_init_instances(); you may omit extra @c sl_led_init unless needed.
+///
+///   **Recommended — common LED API** (uses @c sl_led_t *, not context):
 ///
 ///   @code{.c}
-///// initialize simple LED
-///sl_simple_led_init(&simple_led_inst0);
+///#include "sl_simple_led_instances.h"
 ///
-///// turn on simple LED, turn off simple LED, and toggle the simple LED
-///sl_simple_led_turn_on(&simple_led_inst0);
-///sl_simple_led_turn_off(&simple_led_inst0);
-///sl_simple_led_toggle(&simple_led_inst0);
+///sl_led_turn_on(&sl_led_led0);
+///sl_led_turn_off(&sl_led_led0);
+///sl_led_toggle(&sl_led_led0);
 ///
-///// get the state of the simple LED
-///sl_led_state_t state = sl_simple_led_get_state(&simple_led_instance0);
+///sl_led_state_t state_led = sl_led_get_state(&sl_led_led0);
 ///   @endcode
+///
+///   **Alternative — @c sl_simple_led_* directly** (must pass context via @c .context; cast
+///   to @c void * matches the API prototype and avoids toolchain warnings):
+///
+///   @code{.c}
+///#include "sl_simple_led_instances.h"
+///
+///sl_simple_led_init((void *)sl_led_led0.context);
+///sl_simple_led_turn_on((void *)sl_led_led0.context);
+///sl_simple_led_turn_off((void *)sl_led_led0.context);
+///sl_simple_led_toggle((void *)sl_led_led0.context);
+///
+///sl_led_state_t state_simple = sl_simple_led_get_state((void *)sl_led_led0.context);
+///   @endcode
+///
+///   Do **not** pass @c &sl_led_led0 to @c sl_simple_led_turn_on (or similar), and do **not**
+///   use @c &simple_led0_context from application code.
 ///
 /// @} end group simple_led ********************************************************/
 

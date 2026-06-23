@@ -1,0 +1,19 @@
+id: mbedtls_pem_write
+package: platform_core
+label: PEM Writing
+description: >-
+  This component provides support for writing PEM formatted keys and certificates in Mbed TLS.
+category: Platform|Security|Mbed TLS|Upper Layer
+quality: production
+provides:
+- name: mbedtls_pem_write
+requires:
+- name: mbedtls_base64
+- name: mbedtls_core
+template_contribution:
+- name: mbedtls_config
+  value: MBEDTLS_PEM_WRITE_C
+metadata:
+  sbom:
+    reference: mbedtls_sbom
+root_path: platform_core

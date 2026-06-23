@@ -9,6 +9,8 @@ metadata:
   sbom:
     license: Zlib
 root_path: platform_core/platform/service/power_manager
+requires:
+- name: sl_common
 provides:
 - name: power_manager_handler_implementation
 - name: power_manager_handler

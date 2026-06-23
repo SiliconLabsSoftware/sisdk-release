@@ -34,30 +34,13 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <stdbool.h>
 
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
 
-/// State machine of Switch
-typedef enum {
-  S_ADVERTISE_STATE,
-  S_READY_STATE,
-} state_t;
-
-/// Shows the light bulb's state
-typedef enum {
-  LIGHT_STATE_OFF,
-  LIGHT_STATE_ON,
-} light_state_t;
-
-/// The state of the Switch's state machine
-typedef enum {
-  SWITCH_MODE_SCAN,
-  SWITCH_MODE_LINKED,
-} switch_states_t;
-
-///Indicates the control role of the device
+/// Indicates the control role of the device
 typedef enum {
   DEMO_CONTROL_ROLE_LIGHT,
   DEMO_CONTROL_ROLE_SWITCH,
@@ -65,31 +48,29 @@ typedef enum {
 
 /// The state of the Light's state machine
 typedef enum {
-  LIGHT_MODE_ADVERTISE,
-  LIGHT_MODE_READY,
-} light_mode_t;
+  LIGHT_STATE_ADVERTISE,
+  LIGHT_STATE_READY,
+} light_app_state_t;
 
 /// Indicates the command
 typedef enum {
-  LIGHT_ADVERTISE = 0,
-  LIGHT_TOGGLE = 1,
-  LIGHT_STATE_REPORT = 2,
-  LIGHT_STATE_GET = 3,
+  CMD_TYPE_LIGHT_ADVERTISE = 0,
+  CMD_TYPE_LIGHT_TOGGLE = 1,
+  CMD_TYPE_LIGHT_BULB_STATE_REPORT = 2,
+  CMD_TYPE_LIGHT_BULB_STATE_GET = 3,
 } demo_control_command_type_t;
 // -----------------------------------------------------------------------------
 //                                Global Variables
 // -----------------------------------------------------------------------------
-
+extern bool light_bulb_toggle_required;
+extern bool state_change_required;
 // -----------------------------------------------------------------------------
 //                          Public Function Declarations
 // -----------------------------------------------------------------------------
 
-/**************************************************************************//**
- * The function is used for Application logic.
- *
- * The function is used for Application logic.
- * It is called infinitely.
- *****************************************************************************/
+/*******************************************************************************
+ * Application state machine, called infinitely
+ ******************************************************************************/
 void app_process_action(void);
 
 /**************************************************************************//**

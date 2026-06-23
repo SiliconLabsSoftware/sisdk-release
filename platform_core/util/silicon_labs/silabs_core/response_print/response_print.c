@@ -173,7 +173,7 @@ static int32_t appendToFormatString(char *dest,
  * @return
  */
 
-static char buffer[RESPONSE_PRINT_FORMAT_STR_SIZE_MAX];
+static char format_buffer[RESPONSE_PRINT_FORMAT_STR_SIZE_MAX];
 
 static int responsePrintInternal(StripMode_t stripMode,
                                  char *formatString,
@@ -199,7 +199,7 @@ static int responsePrintInternal(StripMode_t stripMode,
     }
 
     // Convert and validate the given format string
-    rval = appendToFormatString(buffer + offset,
+    rval = appendToFormatString(format_buffer + offset,
                                 start,
                                 size,
                                 (RESPONSE_PRINT_FORMAT_STR_SIZE_MAX - offset),
@@ -214,7 +214,7 @@ static int responsePrintInternal(StripMode_t stripMode,
     start = end + 1;
   }
   // Print out the parsed format buffer
-  vprintf(buffer, args);
+  vprintf(format_buffer, args);
 
   // Print out the error code if there is one
   if (rval < 0) {

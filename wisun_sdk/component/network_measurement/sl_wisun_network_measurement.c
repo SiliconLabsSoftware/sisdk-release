@@ -39,7 +39,7 @@
 #include "sl_wisun_app_core.h"
 #include "sl_wisun_ping.h"
 #include "sl_wisun_ping_config.h"
-#include "socket/socket.h"
+#include "netinet/in.h"
 #include "sl_wisun_trace_util.h"
 
 #if defined(SL_CATALOG_GUI_PRESENT)

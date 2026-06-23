@@ -248,7 +248,7 @@ static fih_int __attribute__ ((noinline)) vse_get_reply_ptr(uint32_t **vse_reply
     #define ROOT_MAILBOX_OUTPUT_BASE_EXPECTED ROOT_MAILBOX_OUTPUT_S_BASE
   #else
     #define RDMEM_FRCRAM_MEM_BASE RDMEM_FRCRAM_NS_MEM_BASE
-  // VSE will always output the secure address, if NS is desired, caculate the NS address.
+  // VSE will always output the secure address, if NS is desired, calculate the NS address.
     #define ROOT_MAILBOX_OUTPUT_BASE (SYSCFG->ROOTDATA1 - RDMEM_FRCRAM_S_MEM_BASE + RDMEM_FRCRAM_NS_MEM_BASE)
     #define ROOT_MAILBOX_OUTPUT_BASE_EXPECTED (RDMEM_FRCRAM_NS_MEM_END + 1 - ROOT_MAILBOX_SIZE)
   #endif

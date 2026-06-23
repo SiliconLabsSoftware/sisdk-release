@@ -28,85 +28,24 @@
 *
 ******************************************************************************/
 
+// <<< Use Configuration Wizard in Context Menu >>>
+
 #ifndef SL_LOG_PROPRIETARY_CONFIG_H
 #define SL_LOG_PROPRIETARY_CONFIG_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/** @addtogroup sl_log_proprietary_config SL Log Proprietary Configuration
- * @{
- */
-
-/**
- * @defgroup sl_log_uc_proprietary_config Proprietary Log UC Configuration Settings
- * @brief Silicon Labs Universal Configurator settings for the logging system
- * @{
- */
-
-// <<< Use Configuration Wizard in Context Menu >>>
-//  <e>DEBUG LOGGER Proprietary UC Configuration
-/**
- * @brief Enable Universal Configurator support for SL Log
- *
- * When enabled, allows configuration of the logging system through
- * Silicon Labs' Universal Configurator interface.
- *
- * @note Default value is 1 (enabled)
- */
-#ifndef SL_LOG_ENABLE_UC_PROPRIETARY_CONFIG
-#define SL_LOG_ENABLE_UC_PROPRIETARY_CONFIG 1
-#endif
-
-/**
- * @defgroup sl_log_modes Proprietary Backend Modes
- * @brief Configuration modes for the proprietary log backend
- * @{
- */
 
 /** @brief Buffer mode - log messages are stored in internal buffer */
 #define SL_LOG_CONFIG_MODE_BUFFER 0
 /** @brief Console mode - log messages are sent directly to console/UART */
 #define SL_LOG_CONFIG_MODE_CONSOLE 1
-/** @brief Host mode - log messages are sent to host interface */
+/** @brief Host mode - log messages are stored in internal buffer and sent to console when log_flush() is called. */
 #define SL_LOG_CONFIG_MODE_HOST 2
-
-/** @} (end addtogroup sl_log_modes) */
 
 // <o SL_LOG_CONFIG_MODE> PROPRIETARY_CONFIG_MODE
 // <SL_LOG_CONFIG_MODE_BUFFER => Buffer Mode
 // <SL_LOG_CONFIG_MODE_CONSOLE => Console Mode
 // <SL_LOG_CONFIG_MODE_HOST => Host Mode
-/**
- * @brief Proprietary backend configuration mode
- *
- *
- * Valid values:
- * - SL_LOG_CONFIG_MODE_BUFFER: Store messages in internal buffer
- * - SL_LOG_CONFIG_MODE_CONSOLE: Send messages directly to console/UART
- * - SL_LOG_CONFIG_MODE_HOST: Send messages to host interface
- *
- * @note Default: SL_LOG_CONFIG_MODE_HOST
- */
 #define SL_LOG_CONFIG_MODE SL_LOG_CONFIG_MODE_HOST
 
-// <o SL_LOG_IOSTREAM_HANDLE> The iostream handle used by the logger instance
-// <i> Specifies the iostream handle used by the logger.
-// <i> The available iostream handles can be found in the "sl_iostream_handles.h"
-// <i> file in the autogen/ folder in the project.
-// <i> It is also possible to update the global variable
-// <i> "sl_iostream_recommended_console_stream" in "sl_iostream_handles.c"
-// <i> Default: sl_iostream_recommended_console_stream
-  #define SL_LOG_IOSTREAM_HANDLE    sl_iostream_recommended_console_stream
+#endif /* SL_LOG_PROPRIETARY_CONFIG_H */
 
-/** @} (end addtogroup sl_log_uc_proprietary_config) */
-
-/** @} (end addtogroup sl_log_proprietary_config) */
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-//  </e>
+// <<< end of configuration section >>>

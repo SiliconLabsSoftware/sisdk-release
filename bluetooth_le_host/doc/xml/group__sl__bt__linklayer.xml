@@ -33,7 +33,7 @@
         <briefdescription>
         </briefdescription>
         <detaileddescription>
-<para>Enable or disable link layer event info reporting. This command passes the parameters directly to the vendor-specific HCI command HCI_VS_Siliconlabs_Event_Info_Reporting_Enable. This command is only available if the bluetooth_feature_event_info_reporting component is included in the application. See the documentation of the HCI command for detailed description of each parameter and the behavior of the command.</para>
+<para>Enable or disable link layer event info reporting. This command passes the parameters directly to the vendor-specific HCI command HCI_VS_Siliconlabs_Event_Info_Reporting_Enable. This command is only available if the bluetooth_feature_linklayer_interface and bluetooth_feature_event_info_reporting components are included in the application. See the documentation of the HCI command for detailed description of each parameter and the behavior of the command.</para>
 <para>Events that have been succesfully enabled will be reported with the <ref refid="group__sl__bt__evt__linklayer__event__info__report" kindref="compound">sl_bt_evt_linklayer_event_info_report</ref> event.</para>
 <para><parameterlist kind="param"><parameteritem>
 <parameternamelist>
@@ -89,7 +89,95 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1822" column="13" declfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" declline="1822" declcolumn="13"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1829" column="13" declfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" declline="1829" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__sl__bt__linklayer_1ga9a51a04253b62f6b706570b1ef930b8b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>sl_status_t</type>
+        <definition>sl_status_t sl_bt_linklayer_get_hci_connection_handle</definition>
+        <argsstring>(uint8_t connection, uint16_t *hci_connection_handle)</argsstring>
+        <name>sl_bt_linklayer_get_hci_connection_handle</name>
+        <param>
+          <type>uint8_t</type>
+          <declname>connection</declname>
+        </param>
+        <param>
+          <type>uint16_t *</type>
+          <declname>hci_connection_handle</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Get the HCI connection handle corresponding to a BGAPI connection handle.</para>
+<para>The Bluetooth host BGAPI interface and the link layer HCI interface use their own connection handles. When the application uses the <ref refid="group__sl__bt__linklayer" kindref="compound">Link Layer</ref> class to issue link layer commands that need connection handles, use this command to convert the BGAPI connection handle to the corresponding HCI connection handle needed for the link layer command.</para>
+<para>This command is only available when the bluetooth_feature_linklayer_interface and bluetooth_feature_connection components are included in the application.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">connection</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>BGAPI connection handle </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="out">hci_connection_handle</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>HCI connection handle corresponding to the given BGAPI connection handle</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>SL_STATUS_OK if successful. Error code otherwise. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1855" column="13" declfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" declline="1855" declcolumn="13"/>
+      </memberdef>
+      <memberdef kind="function" id="group__sl__bt__linklayer_1ga394c7a511b8095400378e895af4d0238" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>sl_status_t</type>
+        <definition>sl_status_t sl_bt_linklayer_get_bgapi_connection_handle</definition>
+        <argsstring>(uint16_t hci_connection_handle, uint8_t *connection)</argsstring>
+        <name>sl_bt_linklayer_get_bgapi_connection_handle</name>
+        <param>
+          <type>uint16_t</type>
+          <declname>hci_connection_handle</declname>
+        </param>
+        <param>
+          <type>uint8_t *</type>
+          <declname>connection</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Get the BGAPI connection handle corresponding to an HCI connection handle.</para>
+<para>The Bluetooth host BGAPI interface and the link layer HCI interface use their own connection handles. When the application receives a link layer connection handle via the <ref refid="group__sl__bt__linklayer" kindref="compound">Link Layer</ref> class, use this command to convert the HCI connection handle to the corresponding BGAPI connection handle used in the Bluetooth host stack API.</para>
+<para>This command is only available when the bluetooth_feature_linklayer_interface and bluetooth_feature_connection components are included in the application.</para>
+<para><parameterlist kind="param"><parameteritem>
+<parameternamelist>
+<parametername direction="in">hci_connection_handle</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>HCI connection handle </para>
+</parameterdescription>
+</parameteritem>
+<parameteritem>
+<parameternamelist>
+<parametername direction="out">connection</parametername>
+</parameternamelist>
+<parameterdescription>
+<para>BGAPI connection handle corresponding to the given HCI connection handle</para>
+</parameterdescription>
+</parameteritem>
+</parameterlist>
+<simplesect kind="return"><para>SL_STATUS_OK if successful. Error code otherwise. </para>
+</simplesect>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1878" column="13" declfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" declline="1878" declcolumn="13"/>
       </memberdef>
       </sectiondef>
       <sectiondef kind="define">
@@ -102,7 +190,29 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1735" column="9" bodyfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="1735" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1737" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="1737" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="group__sl__bt__linklayer_1gae3d8ef7983991458904d5c39eb44e126" prot="public" static="no">
+        <name>sl_bt_cmd_linklayer_get_hci_connection_handle_id</name>
+        <initializer>0x01600020</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1738" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="1738" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="group__sl__bt__linklayer_1ga5a4dc649a2c75d5e0a21c074b9d35208" prot="public" static="no">
+        <name>sl_bt_cmd_linklayer_get_bgapi_connection_handle_id</name>
+        <initializer>0x02600020</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1739" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="1739" bodyend="-1"/>
       </memberdef>
       <memberdef kind="define" id="group__sl__bt__linklayer_1ga732050aea39b247cd6b54d16d86363e3" prot="public" static="no">
         <name>sl_bt_rsp_linklayer_event_info_reporting_enable_id</name>
@@ -113,14 +223,36 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1736" column="9" bodyfile="/var/lib/jenkins/github@2/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="1736" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1740" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="1740" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="group__sl__bt__linklayer_1ga684d55f5d05adddf47eedbefa284fb69" prot="public" static="no">
+        <name>sl_bt_rsp_linklayer_get_hci_connection_handle_id</name>
+        <initializer>0x01600020</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1741" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="1741" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="define" id="group__sl__bt__linklayer_1ga67756b3e1b07e4307f7077b29208971e" prot="public" static="no">
+        <name>sl_bt_rsp_linklayer_get_bgapi_connection_handle_id</name>
+        <initializer>0x02600020</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="1742" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="1742" bodyend="-1"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
 <para>Link Layer. </para>
     </briefdescription>
     <detaileddescription>
-<para>Commands and events in this class provide access to low-level Bluetooth link layer functionality that is not available via higher-level APIs of the Bluetooth host stack. </para>
+<para>Commands and events in this class provide access to low-level Bluetooth link layer functionality that is not available via higher-level APIs of the Bluetooth host stack. This class is available when the bluetooth_feature_linklayer_interface component is included in the application. </para>
     </detaileddescription>
   </compounddef>
 </doxygen>

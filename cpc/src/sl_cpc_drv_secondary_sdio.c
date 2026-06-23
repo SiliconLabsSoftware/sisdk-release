@@ -163,7 +163,7 @@ const osThreadAttr_t cpc_app_thread_attributes = {
   .stack_size = CPC_TASK_STACK_SIZE,                  // Stack size of cpc_sdio_driver task
   .priority   = osPriorityAboveNormal2, // Priority of cpc_sdio_driver task
   .tz_module  = 0,
-  .reserved   = 0,
+  .affinity_mask = 0,
 };
 #endif
 

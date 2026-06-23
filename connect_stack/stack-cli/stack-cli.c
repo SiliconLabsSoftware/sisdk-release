@@ -26,6 +26,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  *
  ******************************************************************************/
+#include <inttypes.h>
 
 #include "stack/include/ember.h"
 #include "sl_cli.h"
@@ -39,7 +40,7 @@ void stack_set_fh_channel_mask_command(sl_cli_command_arg_t *arguments)
   EmberStatus status = emberFrequencyHoppingSetChannelMask((uint8_t)channelMaskLength, channelMask);
 
   if (status != EMBER_SUCCESS) {
-    connect_app_debug_print("FH Channel Mask Failed, 0x%x\n", status);
+    connect_app_debug_print("FH Channel Mask Failed, 0x%02" PRIX8 "\n", status);
   } else {
     connect_app_debug_print("FH Channel Mask Success\n");
   }
@@ -51,7 +52,7 @@ void stack_start_fh_server_command(sl_cli_command_arg_t *arguments)
   EmberStatus status = emberFrequencyHoppingStartServer();
 
   if (status != EMBER_SUCCESS) {
-    connect_app_debug_print("FH Server Failed, 0x%x\n", status);
+    connect_app_debug_print("FH Server Failed, 0x%02" PRIX8 "\n", status);
   } else {
     connect_app_debug_print("FH Server Success\n");
   }
@@ -69,7 +70,7 @@ void stack_start_fh_client_command(sl_cli_command_arg_t *arguments)
   status = emberFrequencyHoppingStartClient(nodeId, panId);
 
   if (status != EMBER_SUCCESS) {
-    connect_app_debug_print("FH Client Failed, 0x%x\n", status);
+    connect_app_debug_print("FH Client Failed, 0x%02" PRIX8 "\n", status);
   } else {
     connect_app_debug_print("FH Client Success\n");
   }
@@ -81,7 +82,7 @@ void stack_stop_fh_command(sl_cli_command_arg_t *arguments)
   EmberStatus status = emberFrequencyHoppingStop();
 
   if (status != EMBER_SUCCESS) {
-    connect_app_debug_print("FH Stop Failed, 0x%x\n", status);
+    connect_app_debug_print("FH Stop Failed, 0x%02" PRIX8 "\n", status);
   } else {
     connect_app_debug_print("FH Stopped\n");
   }

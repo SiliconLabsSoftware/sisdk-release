@@ -41,7 +41,7 @@ extern "C" {
 #include <stdint.h>
 
 #include "sl_status.h"
-#include "socket/socket.h"
+#include "netinet/in.h"
 #include "sli_wisun_meter_collector.h"
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs

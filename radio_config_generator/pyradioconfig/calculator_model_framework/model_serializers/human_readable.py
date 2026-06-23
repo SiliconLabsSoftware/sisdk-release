@@ -130,34 +130,22 @@ class Human_Readable(object):
                 except ModelVariableEmptyValue:
                     pass
 
+        # Sort once and reuse across all three output files
+        sorted_lines = sorted(output_lines)
+
         # Sort the lines and write them to a file
         outputfile = open(outputfilename, 'w')
-        for line in sorted(output_lines):
-            outputfile.write('%s\n' % line)
+        outputfile.write('\n'.join(sorted_lines) + '\n')
         outputfile.close()
 
         # For easier diffing of values only between part families, output same data without [access_write] data to a second file
         outputfile = open(outputfilename.replace('.cfg','.cfg_values_only'), 'w')
-        for line in sorted(output_lines):
-            if (line.find('[')) > 0:
-                idx = (line.find('['))
-            else:
-                idx = len(line)
-            outputfile.write('%s\n' % line[0:idx].strip())
+        outputfile.write('\n'.join(
+            line[:line.find('[')].strip() if line.find('[') > 0 else line
+            for line in sorted_lines
+        ) + '\n')
         outputfile.close()
 
-        # For easier diffing of values only between part families, output same data but with _jumbo, _dumbo, etc, remapped to _FAMILY
-        outputfile = open(outputfilename.replace('.cfg', '.cfg_scrub_fam'), 'w')
-        for line in sorted(output_lines):
-            line_scrub_fam = line
-            for fam in ["dumbo", "jumbo", "nerio", "nixi", "panther", "lynx", "ocelot", "Dumbo", "Jumbo", "Nerio", "Nixi", "Panther", "Lynx", "Ocelot"]:
-                line_scrub_fam = line_scrub_fam.replace("_"+fam,"_FAMILY")
-            outputfile.write('%s\n' % line_scrub_fam)
-        outputfile.close()
-
-    #
-    #
-    #
     @staticmethod
     def compare_forced_to_calculated(modem_model):
         output_lines = list()

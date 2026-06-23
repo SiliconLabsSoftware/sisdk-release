@@ -184,6 +184,7 @@ static int32_t installImageFromSlot(int32_t slotId)
       }
     } else {
       BTL_DEBUG_PRINTLN("SE upgrade parse fail");
+      return BOOTLOADER_ERROR_STORAGE_BOOTLOAD;
     }
   }
 #endif // SEMAILBOX_PRESENT || CRYPTOACC_PRESENT
@@ -207,10 +208,12 @@ static int32_t installImageFromSlot(int32_t slotId)
       if (!bootload_commitBootloaderUpgrade(BTL_UPGRADE_LOCATION, parseContext.imageProperties.bootloaderUpgradeSize)) {
         // Bootloader upgrade failed; not a valid image
         BTL_DEBUG_PRINTLN("Btl upgrade commit fail");
+        return BOOTLOADER_ERROR_STORAGE_BOOTLOAD;
       }
     } else {
       // Bootloader upgrade failed; not a valid image
       BTL_DEBUG_PRINTLN("Btl upgrade fail");
+      return BOOTLOADER_ERROR_STORAGE_BOOTLOAD;
     }
     return BOOTLOADER_ERROR_STORAGE_BOOTLOAD;
   } else {

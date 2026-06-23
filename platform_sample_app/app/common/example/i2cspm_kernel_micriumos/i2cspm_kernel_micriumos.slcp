@@ -41,6 +41,9 @@ ui_hints:
 tag:
   - hardware:component:sensor:si7021
   - hardware:device:ram:10
+  - hwfilter:board:hardware_board_has_tempsensor
+  - hwfilter:ram:10k
+  - hwfilter:device:device_series_2
 configuration:
   - name: SL_BOARD_ENABLE_VCOM
     value: 1

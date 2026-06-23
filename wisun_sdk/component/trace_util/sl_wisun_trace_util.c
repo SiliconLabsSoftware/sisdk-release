@@ -86,15 +86,6 @@
 #define MAC_ADDR_STR_LEN \
   ((SL_WISUN_MAC_ADDRESS_SIZE * 2) + SL_WISUN_MAC_ADDRESS_SIZE - 1)
 
-/// Allocate phy list element and return on error macro function
-#define __alloc_phy_list_element_and_check(__dst_ptr, __phy_cfg_ptr) \
-  do {                                                               \
-    (__dst_ptr) = _alloc_phy_list_element(__phy_cfg_ptr);            \
-    if (__dst_ptr == NULL) {                                         \
-      return NULL;                                                   \
-    }                                                                \
-  } while (0)
-
 /// Length of the timestamp buffer
 #define TIMESTAMP_BUF_LEN     32U
 
@@ -317,6 +308,7 @@ const app_enum_t app_wisun_lfn_profile_enum[] =
   { "test", SL_WISUN_LFN_PROFILE_TEST },
   { "balanced", SL_WISUN_LFN_PROFILE_BALANCED },
   { "eco", SL_WISUN_LFN_PROFILE_ECO },
+  { "automatic", SL_WISUN_LFN_PROFILE_AUTOMATIC },
   { NULL, 0 }
 };
 
@@ -504,7 +496,10 @@ app_wisun_phy_list_t *app_wisun_get_phy_list(app_wisun_phy_filter_t filter)
 
         // first element in the list
         if (head == NULL) {
-          __alloc_phy_list_element_and_check(head, &phy_cfg);
+          head = _alloc_phy_list_element(&phy_cfg);
+          if (head == NULL) {
+            return NULL;
+          }
           // increment PHY mode id for first FAN11 OFDM PHY
           if (phy_cfg.type == SL_WISUN_PHY_CONFIG_FAN11) {
             ++phy_cfg.config.fan11.phy_mode_id;
@@ -513,7 +508,11 @@ app_wisun_phy_list_t *app_wisun_get_phy_list(app_wisun_phy_filter_t filter)
         }
 
         // allocate new element
-        __alloc_phy_list_element_and_check(p, &phy_cfg);
+        p = _alloc_phy_list_element(&phy_cfg);
+        if (p == NULL) {
+          app_wisun_destroy_phy_list(head);
+          return NULL;
+        }
 
         // move tail to end of the list
         tail = head;
@@ -551,12 +550,19 @@ app_wisun_phy_list_t *app_wisun_filter_phy_list(app_wisun_phy_list_t *list,
 
     // first element in the list
     if (head == NULL) {
-      __alloc_phy_list_element_and_check(head, &iter->phy_cfg);
+      head = _alloc_phy_list_element(&iter->phy_cfg);
+      if (head == NULL) {
+        return NULL;
+      }
       continue;
     }
 
     // allocate new element
-    __alloc_phy_list_element_and_check(p, &iter->phy_cfg);
+    p = _alloc_phy_list_element(&iter->phy_cfg);
+    if (p == NULL) {
+      app_wisun_destroy_phy_list(head);
+      return NULL;
+    }
 
     // move tail to end of the list
     tail = head;
@@ -604,6 +610,7 @@ const char *app_wisun_phy_to_str(sl_wisun_phy_config_t *phy_cfg)
              FAN_1_1_STR);
   } else {
     sl_free(str);
+    return NULL;
   }
 
   return (const char *) str;

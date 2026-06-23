@@ -288,7 +288,7 @@ void sli_zigbee_af_comms_hub_function_tunnel_close(sl_802154_long_addr_t remoteD
 {
   uint8_t tunnelId;
   tunnelId = findTunnelByDeviceId(remoteDeviceId);
-  sl_zigbee_af_debug_println("CHF: TunnelClosed:0x%02X", tunnelId);
+  sl_zigbee_af_cli_println("CHF: TunnelClosed:0x%02X", tunnelId);
 
   if (tunnelId != EM_AF_PLUGIN_COMMS_HUB_FUNCTION_NULL_TUNNEL_INDEX) {
     tunnels[tunnelId].state = CLOSED_TUNNEL;
@@ -298,37 +298,37 @@ void sli_zigbee_af_comms_hub_function_tunnel_close(sl_802154_long_addr_t remoteD
 void sli_zigbee_af_comms_hub_function_print(void)
 {
   uint8_t i;
-  sl_zigbee_af_comms_hub_function_println("");
-  sl_zigbee_af_comms_hub_function_println("#   remNodeId remEp  remDevId             type     tId   timeout      state");
+  sl_zigbee_af_cli_println("");
+  sl_zigbee_af_cli_println("#   remNodeId remEp  remDevId             type     tId   timeout      state");
   for (i = 0; i < SL_ZIGBEE_AF_PLUGIN_COMMS_HUB_FUNCTION_TUNNEL_LIMIT; i++) {
-    sl_zigbee_af_comms_hub_function_print("%02X: ", i);
+    sl_zigbee_af_cli_print("%02X: ", i);
     if (tunnels[i].state != UNUSED_TUNNEL) {
-      sl_zigbee_af_comms_hub_function_print("0x%04X    0x%02X   ",
-                                            tunnels[i].remoteNodeId,
-                                            tunnels[i].remoteEndpoint);
-      sl_zigbee_af_comms_hub_function_debug_exec(sl_zigbee_af_print_big_endian_eui64(tunnels[i].remoteDeviceId));
-      sl_zigbee_af_comms_hub_function_print("  %s  ", (tunnels[i].type == CLIENT_TUNNEL ? "client" : "server"));
-      sl_zigbee_af_comms_hub_function_print(" 0x%02X  0x%08X   ",
-                                            tunnels[i].tunnelId,
-                                            tunnels[i].timeoutMSec);
+      sl_zigbee_af_cli_print("0x%04X    0x%02X   ",
+                             tunnels[i].remoteNodeId,
+                             tunnels[i].remoteEndpoint);
+      sl_zigbee_af_cli_exec(sl_zigbee_af_print_big_endian_eui64(tunnels[i].remoteDeviceId));
+      sl_zigbee_af_cli_print("  %s  ", (tunnels[i].type == CLIENT_TUNNEL ? "client" : "server"));
+      sl_zigbee_af_cli_print(" 0x%02X  0x%08X   ",
+                             tunnels[i].tunnelId,
+                             tunnels[i].timeoutMSec);
       switch (tunnels[i].state) {
         case REQUEST_PENDING_TUNNEL:
-          sl_zigbee_af_comms_hub_function_print("request-pending");
+          sl_zigbee_af_cli_print("request-pending");
           break;
         case RESPONSE_PENDING_TUNNEL:
-          sl_zigbee_af_comms_hub_function_print("response-pending");
+          sl_zigbee_af_cli_print("response-pending");
           break;
         case ACTIVE_TUNNEL:
-          sl_zigbee_af_comms_hub_function_print("active");
+          sl_zigbee_af_cli_print("active");
           break;
         case CLOSED_TUNNEL:
-          sl_zigbee_af_comms_hub_function_print("closed");
+          sl_zigbee_af_cli_print("closed");
           break;
         default:
-          sl_zigbee_af_comms_hub_function_print("unknown");
+          sl_zigbee_af_cli_print("unknown");
       }
     }
-    sl_zigbee_af_comms_hub_function_println("");
+    sl_zigbee_af_cli_println("");
   }
 }
 

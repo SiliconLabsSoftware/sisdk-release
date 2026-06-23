@@ -1,0 +1,27 @@
+id: hal_ledsink
+label: LEDSINK
+package: platform_core
+description: >
+  LEDSINK peripheral API
+category: Platform|Peripheral|HAL
+quality: evaluation
+metadata:
+  sbom:
+    license: Zlib
+source:
+- path: src/sl_hal_ledsink.c
+include:
+- path: inc
+  file_list:
+  - path: sl_hal_ledsink.h
+provides:
+- name: hal_ledsink
+requires:
+- name: device
+- name: device_has_ledsink
+- name: hal_common
+- name: cmsis_core
+- name: enum
+
+
+root_path: platform_core/platform/peripheral

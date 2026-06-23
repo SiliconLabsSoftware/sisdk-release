@@ -13,27 +13,17 @@ source:
 - path: source/iar/armv8m_os_cpu_a.asm
   condition:
   - toolchain_iar
-- path: source/iar/armv8m_os_cpu_c.c
-  condition:
-  - toolchain_iar
 - path: source/gnu/armv8m_os_cpu_a.S
   condition:
   - toolchain_gcc
-- path: source/gnu/armv8m_os_cpu_c.c
+- path: source/gnu/armv8m_os_cpu_a.S
   condition:
-  - toolchain_gcc
-include:
-- path: source
-  file_list:
-    # iar
-  - path: iar/armv8m_os_cpu.h
-    condition:
-    - toolchain_iar
-    # gcc
-  - path: gnu/armv8m_os_cpu.h
-    condition:
-    - toolchain_gcc
+  - toolchain_llvm
 provides:
+- name: kernel_port_armv8m_impl
+  condition: [cortexm33]
+- name: kernel_port_armv8m_impl
+  condition: [cortexm55]
 - name: kernel_port_armv8m
 - name: kernel_port
   condition: [cortexm33]
@@ -42,4 +32,5 @@ provides:
 requires:
 - name: kernel_port_generic
 - name: component_catalog
+- name: kernel_port_armv8m_common
 root_path: micriumos/platform/micrium_os/ports

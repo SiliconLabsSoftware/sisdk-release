@@ -15,6 +15,9 @@
  *
  ******************************************************************************/
 
+#ifndef SLI_ZIGBEE_APP_FRAMEWORK_UTIL_ZCL_DEBUG_PRINT_H
+#define SLI_ZIGBEE_APP_FRAMEWORK_UTIL_ZCL_DEBUG_PRINT_H
+
 #ifdef SL_COMPONENT_CATALOG_PRESENT
 #include "sl_component_catalog.h"
 #endif
@@ -29,30 +32,62 @@
 // still some code outside of these macros that explicitly references these contants. TODO: This should be
 // cleaned up at some point.
 #define SL_ZIGBEE_AF_PRINT_CORE 0x0001
+#define SL_ZIGBEE_AF_PRINT_CLI  0x0002
 
 // Debug print macros for the application framework and ZCL clusters.
 // We are using area 0x00 in the sl_zigbee_af_print* calls below because with UC we don't (yet) have
 // the per-cluster print granularity, sl_zigbee_af_print_enabled() always returns TRUE.
+
+#if defined(SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT)
+#define sl_zigbee_af_cli_print(...) sl_zigbee_af_print(SL_ZIGBEE_AF_PRINT_CLI, __VA_ARGS__)
+#define sl_zigbee_af_cli_println(...) sl_zigbee_af_println(SL_ZIGBEE_AF_PRINT_CLI, __VA_ARGS__)
+#define sl_zigbee_af_cli_warn(...) sl_zigbee_af_print_with_log(SL_ZIGBEE_AF_PRINT_CLI, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_cli_warnln(...) sl_zigbee_af_print_with_log(SL_ZIGBEE_AF_PRINT_CLI, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_cli_error(...) sl_zigbee_af_print_with_log(SL_ZIGBEE_AF_PRINT_CLI, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_cli_errorln(...) sl_zigbee_af_print_with_log(SL_ZIGBEE_AF_PRINT_CLI, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_cli_flush()
+#define sl_zigbee_af_cli_exec(x) if ( sl_zigbee_af_print_enabled(SL_ZIGBEE_AF_PRINT_CLI) ) { x; }
+#define sl_zigbee_af_cli_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(SL_ZIGBEE_AF_PRINT_CLI, (buffer), (len), (withSpace))
+#define sl_zigbee_af_cli_print_string(buffer) sl_zigbee_af_print_string(SL_ZIGBEE_AF_PRINT_CLI, (buffer))
+#define sl_zigbee_af_cli_print_long_string(buffer) sl_zigbee_af_cli_print_buffer((buffer + 2), (LIMIT_ATTR_STR_LENGTH(sl_zigbee_af_long_string_length(buffer))), false)
+#else
+#define sl_zigbee_af_cli_print(...)
+#define sl_zigbee_af_cli_println(...)
+#define sl_zigbee_af_cli_warn(...)
+#define sl_zigbee_af_cli_warnln(...)
+#define sl_zigbee_af_cli_error(...)
+#define sl_zigbee_af_cli_errorln(...)
+#define sl_zigbee_af_cli_flush()
+#define sl_zigbee_af_cli_exec(x)
+#define sl_zigbee_af_cli_print_buffer(buffer, len, withSpace)
+#define sl_zigbee_af_cli_print_string(buffer)
+#define sl_zigbee_af_cli_print_long_string(buffer)
+#endif
 
 // We have a separate config switch (ZIGBEE_DEBUG_PRINTS_AF_DEBUG) for AF Debug because we want it off by default
 #if (defined(SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT) && (SL_ZIGBEE_DEBUG_ZCL_GROUP_ENABLED == 1) && (SL_ZIGBEE_DEBUG_PRINTS_ZCL_LEGACY_AF_DEBUG_ENABLED == 1))
 // Prints messages for random debugging
 #define sl_zigbee_af_debug_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_debug_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_debug_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_debug_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_debug_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_debug_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_debug_flush()
 #define sl_zigbee_af_debug_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_debug_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
 #define sl_zigbee_af_debug_print_string(buffer) sl_zigbee_af_print_string(0x00, (buffer))
-
 #else
-
 #define sl_zigbee_af_debug_print(...)
 #define sl_zigbee_af_debug_println(...)
+#define sl_zigbee_af_debug_warn(...)
+#define sl_zigbee_af_debug_warnln(...)
+#define sl_zigbee_af_debug_error(...)
+#define sl_zigbee_af_debug_errorln(...)
 #define sl_zigbee_af_debug_flush()
 #define sl_zigbee_af_debug_debug_exec(x)
 #define sl_zigbee_af_debug_print_buffer(buffer, len, withSpace)
 #define sl_zigbee_af_debug_print_string(buffer)
-
 #endif // (defined(SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT) && (SL_ZIGBEE_DEBUG_ZCL_GROUP_ENABLED == 1) && (SL_ZIGBEE_DEBUG_PRINTS_ZCL_LEGACY_AF_DEBUG_ENABLED == 1))
 
 #if (defined(SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT) && (SL_ZIGBEE_DEBUG_ZCL_GROUP_ENABLED == 1))
@@ -60,6 +95,10 @@
 // Prints messages for application part
 #define sl_zigbee_af_app_print(...)    sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_app_println(...)  sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_app_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_app_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_app_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_app_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_app_flush()
 #define sl_zigbee_af_app_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_app_print_buffer(buffer, len, withSpace)   sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -68,7 +107,19 @@
 // Printing macros for Core
 // Prints messages for global flow of the receive/send
 #define sl_zigbee_af_core_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
+#if defined(SLI_ZIGBEE_AF_PRINT_USE_SL_LOG)
+/** With sl_log, core println uses ERROR severity so UART-style "println + ERROR: text" call sites
+ *  match @ref sl_zigbee_af_core_errorln without per-file #if. Legacy UART still uses @ref sl_zigbee_af_println. */
+#define sl_zigbee_af_core_println(...) \
+  sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#else
 #define sl_zigbee_af_core_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#endif
+#define sl_zigbee_af_core_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_core_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_core_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#undef sl_zigbee_af_core_errorln
+#define sl_zigbee_af_core_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 // Blocking IO is enabled for all serial ports, therefore flush calls are unnecessary.
 #define sl_zigbee_af_core_flush()
 #define sl_zigbee_af_core_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
@@ -79,6 +130,10 @@
 // Prints messages related to reporting
 #define sl_zigbee_af_reporting_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_reporting_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_reporting_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_reporting_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_reporting_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_reporting_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 // Blocking IO is enabled for all serial ports, therefore flush calls are unnecessary.
 #define sl_zigbee_af_reporting_flush()
 #define sl_zigbee_af_reporting_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
@@ -89,6 +144,10 @@
 // Prints messages related to service discovery
 #define sl_zigbee_af_service_discovery_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_service_discovery_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_service_discovery_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_service_discovery_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_service_discovery_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_service_discovery_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 // Blocking IO is enabled for all serial ports, therefore flush calls are unnecessary.
 #define sl_zigbee_af_service_discovery_flush()
 #define sl_zigbee_af_service_discovery_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
@@ -99,6 +158,10 @@
 // Prints messages related to attributes
 #define sl_zigbee_af_attributes_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_attributes_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_attributes_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_attributes_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_attributes_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_attributes_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 // Blocking IO is enabled for all serial ports, therefore flush calls are unnecessary.
 #define sl_zigbee_af_attributes_flush()
 #define sl_zigbee_af_attributes_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
@@ -109,6 +172,10 @@
 // Prints messages related to security
 #define sl_zigbee_af_security_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_security_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_security_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_security_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_security_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_security_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 // Blocking IO is enabled for all serial ports, therefore flush calls are unnecessary.
 #define sl_zigbee_af_security_flush()
 #define sl_zigbee_af_security_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
@@ -119,6 +186,10 @@
 // Prints messages related to ZDO functionality
 #define sl_zigbee_af_zdo_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_zdo_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_zdo_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_zdo_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_zdo_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_zdo_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 // Blocking IO is enabled for all serial ports, therefore flush calls are unnecessary.
 #define sl_zigbee_af_zdo_flush()
 #define sl_zigbee_af_zdo_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
@@ -128,6 +199,10 @@
 // Printing macros for Registration
 #define sl_zigbee_af_registration_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_registration_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_registration_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_registration_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_registration_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_registration_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 // Blocking IO is enabled for all serial ports, therefore flush calls are unnecessary.
 #define sl_zigbee_af_registration_flush()
 #define sl_zigbee_af_registration_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
@@ -138,6 +213,10 @@
 
 #define sl_zigbee_af_basic_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_basic_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_basic_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_basic_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_basic_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_basic_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_basic_cluster_flush()
 #define sl_zigbee_af_basic_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_basic_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -145,6 +224,10 @@
 
 #define sl_zigbee_af_power_config_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_power_config_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_power_config_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_power_config_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_power_config_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_power_config_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_power_config_cluster_flush()
 #define sl_zigbee_af_power_config_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_power_config_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -152,6 +235,10 @@
 
 #define sl_zigbee_af_device_temp_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_device_temp_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_device_temp_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_device_temp_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_device_temp_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_device_temp_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_device_temp_cluster_flush()
 #define sl_zigbee_af_device_temp_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_device_temp_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -159,6 +246,10 @@
 
 #define sl_zigbee_af_identify_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_identify_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_identify_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_identify_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_identify_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_identify_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_identify_cluster_flush()
 #define sl_zigbee_af_identify_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_identify_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -166,6 +257,10 @@
 
 #define sl_zigbee_af_groups_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_groups_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_groups_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_groups_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_groups_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_groups_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_groups_cluster_flush()
 #define sl_zigbee_af_groups_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_groups_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -173,6 +268,10 @@
 
 #define sl_zigbee_af_scenes_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_scenes_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_scenes_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_scenes_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_scenes_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_scenes_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_scenes_cluster_flush()
 #define sl_zigbee_af_scenes_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_scenes_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -180,6 +279,10 @@
 
 #define sl_zigbee_af_on_off_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_on_off_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_on_off_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_on_off_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_on_off_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_on_off_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_on_off_cluster_flush()
 #define sl_zigbee_af_on_off_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_on_off_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -187,6 +290,10 @@
 
 #define sl_zigbee_af_on_off_switch_config_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_on_off_switch_config_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_on_off_switch_config_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_on_off_switch_config_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_on_off_switch_config_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_on_off_switch_config_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_on_off_switch_config_cluster_flush()
 #define sl_zigbee_af_on_off_switch_config_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_on_off_switch_config_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -194,6 +301,10 @@
 
 #define sl_zigbee_af_level_control_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_level_control_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_level_control_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_level_control_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_level_control_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_level_control_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_level_control_cluster_flush()
 #define sl_zigbee_af_level_control_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_level_control_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -201,6 +312,10 @@
 
 #define sl_zigbee_af_alarm_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_alarm_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_alarm_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_alarm_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_alarm_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_alarm_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_alarm_cluster_flush()
 #define sl_zigbee_af_alarm_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_alarm_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -208,6 +323,10 @@
 
 #define sl_zigbee_af_time_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_time_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_time_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_time_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_time_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_time_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_time_cluster_flush()
 #define sl_zigbee_af_time_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_time_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -215,6 +334,10 @@
 
 #define sl_zigbee_af_rssi_location_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_rssi_location_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_rssi_location_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_rssi_location_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_rssi_location_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_rssi_location_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_rssi_location_cluster_flush()
 #define sl_zigbee_af_rssi_location_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_rssi_location_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -222,6 +345,10 @@
 
 #define sl_zigbee_af_binary_input_basic_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_binary_input_basic_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_binary_input_basic_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_binary_input_basic_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_binary_input_basic_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_binary_input_basic_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_binary_input_basic_cluster_flush()
 #define sl_zigbee_af_binary_input_basic_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_binary_input_basic_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -229,6 +356,10 @@
 
 #define sl_zigbee_af_commissioning_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_commissioning_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_commissioning_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_commissioning_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_commissioning_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_commissioning_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_commissioning_cluster_flush()
 #define sl_zigbee_af_commissioning_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_commissioning_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -236,6 +367,10 @@
 
 #define sl_zigbee_af_partition_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_partition_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_partition_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_partition_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_partition_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_partition_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_partition_cluster_flush()
 #define sl_zigbee_af_partition_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_partition_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -243,6 +378,10 @@
 
 #define sl_zigbee_af_ota_bootload_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_ota_bootload_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_ota_bootload_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_ota_bootload_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_ota_bootload_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_ota_bootload_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_ota_bootload_cluster_flush()
 #define sl_zigbee_af_ota_bootload_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_ota_bootload_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -250,6 +389,10 @@
 
 #define sl_zigbee_af_power_profile_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_power_profile_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_power_profile_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_power_profile_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_power_profile_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_power_profile_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_power_profile_cluster_flush()
 #define sl_zigbee_af_power_profile_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_power_profile_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -257,6 +400,10 @@
 
 #define sl_zigbee_af_appliance_control_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_appliance_control_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_appliance_control_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_appliance_control_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_appliance_control_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_appliance_control_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_appliance_control_cluster_flush()
 #define sl_zigbee_af_appliance_control_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_appliance_control_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -264,6 +411,10 @@
 
 #define sl_zigbee_af_poll_control_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_poll_control_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_poll_control_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_poll_control_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_poll_control_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_poll_control_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_poll_control_cluster_flush()
 #define sl_zigbee_af_poll_control_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_poll_control_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -271,12 +422,20 @@
 
 #define sl_zigbee_af_gas_proxy_function_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_gas_proxy_function_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_gas_proxy_function_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_gas_proxy_function_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_gas_proxy_function_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_gas_proxy_function_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_gas_proxy_function_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_gas_proxy_function_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
 #define sl_zigbee_af_gas_proxy_function_print_string(buffer)  sl_zigbee_af_print_string(0x00, (buffer))
 
 #define sl_zigbee_af_green_power_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_green_power_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_green_power_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_green_power_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_green_power_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_green_power_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_green_power_cluster_flush()
 #define sl_zigbee_af_green_power_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_green_power_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -284,6 +443,10 @@
 
 #define sl_zigbee_af_keepalive_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_keepalive_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_keepalive_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_keepalive_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_keepalive_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_keepalive_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_keepalive_cluster_flush()
 #define sl_zigbee_af_keepalive_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_keepalive_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -291,6 +454,10 @@
 
 #define sl_zigbee_af_shade_config_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_shade_config_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_shade_config_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_shade_config_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_shade_config_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_shade_config_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_shade_config_cluster_flush()
 #define sl_zigbee_af_shade_config_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_shade_config_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -298,6 +465,10 @@
 
 #define sl_zigbee_af_door_lock_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_door_lock_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_door_lock_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_door_lock_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_door_lock_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_door_lock_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_door_lock_cluster_flush()
 #define sl_zigbee_af_door_lock_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_door_lock_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -305,6 +476,10 @@
 
 #define sl_zigbee_af_window_covering_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_window_covering_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_window_covering_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_window_covering_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_window_covering_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_window_covering_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_window_covering_cluster_flush()
 #define sl_zigbee_af_window_covering_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_window_covering_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -312,6 +487,10 @@
 
 #define sl_zigbee_af_barrier_control_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_barrier_control_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_barrier_control_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_barrier_control_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_barrier_control_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_barrier_control_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_barrier_control_cluster_flush()
 #define sl_zigbee_af_barrier_control_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_barrier_control_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -319,6 +498,10 @@
 
 #define sl_zigbee_af_pump_config_control_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_pump_config_control_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_pump_config_control_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_pump_config_control_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_pump_config_control_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_pump_config_control_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_pump_config_control_cluster_flush()
 #define sl_zigbee_af_pump_config_control_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_pump_config_control_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -326,6 +509,10 @@
 
 #define sl_zigbee_af_thermostat_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_thermostat_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_thermostat_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_thermostat_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_thermostat_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_thermostat_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_thermostat_cluster_flush()
 #define sl_zigbee_af_thermostat_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_thermostat_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -333,6 +520,10 @@
 
 #define sl_zigbee_af_fan_control_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_fan_control_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_fan_control_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_fan_control_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_fan_control_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_fan_control_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_fan_control_cluster_flush()
 #define sl_zigbee_af_fan_control_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_fan_control_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -340,6 +531,10 @@
 
 #define sl_zigbee_af_dehumid_control_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_dehumid_control_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_dehumid_control_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_dehumid_control_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_dehumid_control_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_dehumid_control_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_dehumid_control_cluster_flush()
 #define sl_zigbee_af_dehumid_control_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_dehumid_control_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -347,6 +542,10 @@
 
 #define sl_zigbee_af_thermostat_ui_config_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_thermostat_ui_config_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_thermostat_ui_config_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_thermostat_ui_config_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_thermostat_ui_config_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_thermostat_ui_config_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_thermostat_ui_config_cluster_flush()
 #define sl_zigbee_af_thermostat_ui_config_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_thermostat_ui_config_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -354,6 +553,10 @@
 
 #define sl_zigbee_af_color_control_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_color_control_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_color_control_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_color_control_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_color_control_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_color_control_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_color_control_cluster_flush()
 #define sl_zigbee_af_color_control_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_color_control_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -361,6 +564,10 @@
 
 #define sl_zigbee_af_ballast_configuration_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_ballast_configuration_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_ballast_configuration_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_ballast_configuration_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_ballast_configuration_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_ballast_configuration_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_ballast_configuration_cluster_flush()
 #define sl_zigbee_af_ballast_configuration_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_ballast_configuration_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -368,6 +575,10 @@
 
 #define sl_zigbee_af_illum_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_illum_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_illum_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_illum_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_illum_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_illum_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_illum_measurement_cluster_flush()
 #define sl_zigbee_af_illum_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_illum_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -375,6 +586,10 @@
 
 #define sl_zigbee_af_illum_level_sensing_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_illum_level_sensing_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_illum_level_sensing_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_illum_level_sensing_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_illum_level_sensing_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_illum_level_sensing_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_illum_level_sensing_cluster_flush()
 #define sl_zigbee_af_illum_level_sensing_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_illum_level_sensing_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -382,6 +597,10 @@
 
 #define sl_zigbee_af_temp_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_temp_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_temp_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_temp_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_temp_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_temp_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_temp_measurement_cluster_flush()
 #define sl_zigbee_af_temp_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_temp_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -389,6 +608,10 @@
 
 #define sl_zigbee_af_pressure_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_pressure_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_pressure_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_pressure_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_pressure_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_pressure_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_pressure_measurement_cluster_flush()
 #define sl_zigbee_af_pressure_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_pressure_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -396,6 +619,10 @@
 
 #define sl_zigbee_af_flow_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_flow_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_flow_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_flow_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_flow_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_flow_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_flow_measurement_cluster_flush()
 #define sl_zigbee_af_flow_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_flow_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -403,6 +630,10 @@
 
 #define sl_zigbee_af_relative_humidity_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_relative_humidity_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_relative_humidity_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_relative_humidity_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_relative_humidity_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_relative_humidity_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_relative_humidity_measurement_cluster_flush()
 #define sl_zigbee_af_relative_humidity_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_relative_humidity_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -410,6 +641,10 @@
 
 #define sl_zigbee_af_occupancy_sensing_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_occupancy_sensing_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_occupancy_sensing_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_occupancy_sensing_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_occupancy_sensing_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_occupancy_sensing_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_occupancy_sensing_cluster_flush()
 #define sl_zigbee_af_occupancy_sensing_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_occupancy_sensing_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -417,6 +652,10 @@
 
 #define sl_zigbee_af_carbon_monoxide_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_carbon_monoxide_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_carbon_monoxide_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_carbon_monoxide_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_carbon_monoxide_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_carbon_monoxide_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_carbon_monoxide_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_carbon_monoxide_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_carbon_monoxide_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -424,6 +663,10 @@
 
 #define sl_zigbee_af_carbon_dioxide_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_carbon_dioxide_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_carbon_dioxide_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_carbon_dioxide_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_carbon_dioxide_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_carbon_dioxide_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_carbon_dioxide_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_carbon_dioxide_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_carbon_dioxide_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -431,6 +674,10 @@
 
 #define sl_zigbee_af_ethylene_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_ethylene_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_ethylene_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_ethylene_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_ethylene_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_ethylene_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_ethylene_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_ethylene_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_ethylene_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -438,6 +685,10 @@
 
 #define sl_zigbee_af_ethylene_oxide_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_ethylene_oxide_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_ethylene_oxide_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_ethylene_oxide_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_ethylene_oxide_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_ethylene_oxide_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_ethylene_oxide_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_ethylene_oxide_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_ethylene_oxide_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -445,6 +696,10 @@
 
 #define sl_zigbee_af_hydrogen_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_hydrogen_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_hydrogen_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_hydrogen_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_hydrogen_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_hydrogen_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_hydrogen_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_hydrogen_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_hydrogen_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -452,6 +707,10 @@
 
 #define sl_zigbee_af_hydrogen_sulphide_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_hydrogen_sulphide_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_hydrogen_sulphide_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_hydrogen_sulphide_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_hydrogen_sulphide_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_hydrogen_sulphide_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_hydrogen_sulphide_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_hydrogen_sulphide_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_hydrogen_sulphide_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -459,6 +718,10 @@
 
 #define sl_zigbee_af_nitric_oxide_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_nitric_oxide_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_nitric_oxide_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_nitric_oxide_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_nitric_oxide_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_nitric_oxide_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_nitric_oxide_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_nitric_oxide_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_nitric_oxide_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -466,6 +729,10 @@
 
 #define sl_zigbee_af_nitrogen_dioxide_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_nitrogen_dioxide_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_nitrogen_dioxide_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_nitrogen_dioxide_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_nitrogen_dioxide_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_nitrogen_dioxide_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_nitrogen_dioxide_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_nitrogen_dioxide_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_nitrogen_dioxide_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -473,6 +740,10 @@
 
 #define sl_zigbee_af_oxygen_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_oxygen_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_oxygen_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_oxygen_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_oxygen_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_oxygen_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_oxygen_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_oxygen_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_oxygen_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -480,6 +751,10 @@
 
 #define sl_zigbee_af_ozone_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_ozone_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_ozone_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_ozone_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_ozone_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_ozone_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_ozone_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_ozone_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_ozone_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -487,6 +762,10 @@
 
 #define sl_zigbee_af_sulfur_dioxide_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_sulfur_dioxide_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_sulfur_dioxide_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_sulfur_dioxide_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_sulfur_dioxide_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_sulfur_dioxide_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_sulfur_dioxide_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_sulfur_dioxide_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_sulfur_dioxide_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -494,6 +773,10 @@
 
 #define sl_zigbee_af_dissolved_oxygen_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_dissolved_oxygen_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_dissolved_oxygen_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_dissolved_oxygen_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_dissolved_oxygen_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_dissolved_oxygen_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_dissolved_oxygen_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_dissolved_oxygen_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_dissolved_oxygen_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -501,6 +784,10 @@
 
 #define sl_zigbee_af_bromate_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_bromate_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_bromate_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_bromate_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_bromate_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_bromate_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_bromate_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_bromate_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_bromate_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -508,6 +795,10 @@
 
 #define sl_zigbee_af_chloramines_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_chloramines_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_chloramines_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_chloramines_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_chloramines_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_chloramines_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_chloramines_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_chloramines_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_chloramines_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -515,6 +806,10 @@
 
 #define sl_zigbee_af_chlorine_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_chlorine_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_chlorine_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_chlorine_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_chlorine_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_chlorine_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_chlorine_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_chlorine_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_chlorine_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -522,6 +817,10 @@
 
 #define sl_zigbee_af_fecal_coliform_and_e_coli_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_fecal_coliform_and_e_coli_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_fecal_coliform_and_e_coli_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_fecal_coliform_and_e_coli_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_fecal_coliform_and_e_coli_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_fecal_coliform_and_e_coli_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_fecal_coliform_and_e_coli_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_fecal_coliform_and_e_coli_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_fecal_coliform_and_e_coli_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -529,6 +828,10 @@
 
 #define sl_zigbee_af_fluoride_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_fluoride_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_fluoride_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_fluoride_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_fluoride_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_fluoride_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_fluoride_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_fluoride_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_fluoride_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -536,6 +839,10 @@
 
 #define sl_zigbee_af_haloacetic_acids_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_haloacetic_acids_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_haloacetic_acids_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_haloacetic_acids_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_haloacetic_acids_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_haloacetic_acids_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_haloacetic_acids_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_haloacetic_acids_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_haloacetic_acids_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -543,6 +850,10 @@
 
 #define sl_zigbee_af_total_trihalomethanes_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_total_trihalomethanes_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_total_trihalomethanes_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_total_trihalomethanes_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_total_trihalomethanes_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_total_trihalomethanes_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_total_trihalomethanes_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_total_trihalomethanes_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_total_trihalomethanes_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -550,6 +861,10 @@
 
 #define sl_zigbee_af_total_coliform_bacteria_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_total_coliform_bacteria_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_total_coliform_bacteria_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_total_coliform_bacteria_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_total_coliform_bacteria_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_total_coliform_bacteria_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_total_coliform_bacteria_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_total_coliform_bacteria_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_total_coliform_bacteria_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -557,6 +872,10 @@
 
 #define sl_zigbee_af_turbidity_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_turbidity_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_turbidity_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_turbidity_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_turbidity_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_turbidity_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_turbidity_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_turbidity_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_turbidity_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -564,6 +883,10 @@
 
 #define sl_zigbee_af_copper_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_copper_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_copper_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_copper_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_copper_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_copper_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_copper_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_copper_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_copper_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -571,6 +894,10 @@
 
 #define sl_zigbee_af_lead_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_lead_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_lead_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_lead_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_lead_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_lead_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_lead_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_lead_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_lead_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -578,6 +905,10 @@
 
 #define sl_zigbee_af_manganese_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_manganese_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_manganese_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_manganese_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_manganese_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_manganese_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_manganese_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_manganese_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_manganese_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -585,6 +916,10 @@
 
 #define sl_zigbee_af_sulfate_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_sulfate_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_sulfate_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_sulfate_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_sulfate_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_sulfate_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_sulfate_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_sulfate_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_sulfate_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -592,6 +927,10 @@
 
 #define sl_zigbee_af_bromodichloromethane_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_bromodichloromethane_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_bromodichloromethane_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_bromodichloromethane_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_bromodichloromethane_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_bromodichloromethane_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_bromodichloromethane_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_bromodichloromethane_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_bromodichloromethane_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -599,6 +938,10 @@
 
 #define sl_zigbee_af_bromoform_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_bromoform_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_bromoform_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_bromoform_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_bromoform_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_bromoform_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_bromoform_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_bromoform_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_bromoform_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -606,6 +949,10 @@
 
 #define sl_zigbee_af_chlorodibromomethane_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_chlorodibromomethane_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_chlorodibromomethane_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_chlorodibromomethane_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_chlorodibromomethane_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_chlorodibromomethane_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_chlorodibromomethane_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_chlorodibromomethane_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_chlorodibromomethane_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -613,6 +960,10 @@
 
 #define sl_zigbee_af_chloroform_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_chloroform_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_chloroform_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_chloroform_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_chloroform_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_chloroform_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_chloroform_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_chloroform_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_chloroform_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -620,6 +971,10 @@
 
 #define sl_zigbee_af_sodium_concentration_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_sodium_concentration_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_sodium_concentration_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_sodium_concentration_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_sodium_concentration_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_sodium_concentration_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_sodium_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_sodium_concentration_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_sodium_concentration_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -627,6 +982,10 @@
 
 #define sl_zigbee_af_ias_zone_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_ias_zone_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_ias_zone_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_ias_zone_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_ias_zone_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_ias_zone_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_ias_zone_cluster_flush()
 #define sl_zigbee_af_ias_zone_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_ias_zone_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -634,6 +993,10 @@
 
 #define sl_zigbee_af_ias_ace_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_ias_ace_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_ias_ace_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_ias_ace_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_ias_ace_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_ias_ace_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_ias_ace_cluster_flush()
 #define sl_zigbee_af_ias_ace_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_ias_ace_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -641,6 +1004,10 @@
 
 #define sl_zigbee_af_ias_wd_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_ias_wd_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_ias_wd_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_ias_wd_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_ias_wd_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_ias_wd_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_ias_wd_cluster_flush()
 #define sl_zigbee_af_ias_wd_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_ias_wd_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -648,6 +1015,10 @@
 
 #define sl_zigbee_af_generic_tunnel_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_generic_tunnel_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_generic_tunnel_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_generic_tunnel_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_generic_tunnel_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_generic_tunnel_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_generic_tunnel_cluster_flush()
 #define sl_zigbee_af_generic_tunnel_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_generic_tunnel_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -655,6 +1026,10 @@
 
 #define sl_zigbee_af_bacnet_protocol_tunnel_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_bacnet_protocol_tunnel_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_bacnet_protocol_tunnel_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_bacnet_protocol_tunnel_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_bacnet_protocol_tunnel_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_bacnet_protocol_tunnel_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_bacnet_protocol_tunnel_cluster_flush()
 #define sl_zigbee_af_bacnet_protocol_tunnel_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_bacnet_protocol_tunnel_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -662,6 +1037,10 @@
 
 #define sl_zigbee_af_11073_protocol_tunnel_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_11073_protocol_tunnel_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_11073_protocol_tunnel_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_11073_protocol_tunnel_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_11073_protocol_tunnel_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_11073_protocol_tunnel_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_11073_protocol_tunnel_cluster_flush()
 #define sl_zigbee_af_11073_protocol_tunnel_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_11073_protocol_tunnel_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -669,6 +1048,10 @@
 
 #define sl_zigbee_af_iso7816_protocol_tunnel_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_iso7816_protocol_tunnel_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_iso7816_protocol_tunnel_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_iso7816_protocol_tunnel_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_iso7816_protocol_tunnel_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_iso7816_protocol_tunnel_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_iso7816_protocol_tunnel_cluster_flush()
 #define sl_zigbee_af_iso7816_protocol_tunnel_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_iso7816_protocol_tunnel_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -676,6 +1059,10 @@
 
 #define sl_zigbee_af_price_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_price_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_price_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_price_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_price_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_price_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_price_cluster_flush()
 #define sl_zigbee_af_price_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_price_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -683,6 +1070,10 @@
 
 #define sl_zigbee_af_demand_response_load_control_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_demand_response_load_control_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_demand_response_load_control_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_demand_response_load_control_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_demand_response_load_control_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_demand_response_load_control_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_demand_response_load_control_cluster_flush()
 #define sl_zigbee_af_demand_response_load_control_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_demand_response_load_control_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -690,6 +1081,10 @@
 
 #define sl_zigbee_af_simple_metering_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_simple_metering_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_simple_metering_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_simple_metering_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_simple_metering_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_simple_metering_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_simple_metering_cluster_flush()
 #define sl_zigbee_af_simple_metering_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_simple_metering_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -697,6 +1092,10 @@
 
 #define sl_zigbee_af_messaging_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_messaging_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_messaging_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_messaging_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_messaging_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_messaging_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_messaging_cluster_flush()
 #define sl_zigbee_af_messaging_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_messaging_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -704,6 +1103,10 @@
 
 #define sl_zigbee_af_tunneling_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_tunneling_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_tunneling_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_tunneling_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_tunneling_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_tunneling_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_tunneling_cluster_flush()
 #define sl_zigbee_af_tunneling_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_tunneling_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -711,6 +1114,10 @@
 
 #define sl_zigbee_af_prepayment_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_prepayment_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_prepayment_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_prepayment_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_prepayment_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_prepayment_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_prepayment_cluster_flush()
 #define sl_zigbee_af_prepayment_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_prepayment_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -718,6 +1125,10 @@
 
 #define sl_zigbee_af_energy_management_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_energy_management_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_energy_management_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_energy_management_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_energy_management_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_energy_management_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_energy_management_cluster_flush()
 #define sl_zigbee_af_energy_management_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_energy_management_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -725,6 +1136,10 @@
 
 #define sl_zigbee_af_calendar_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_calendar_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_calendar_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_calendar_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_calendar_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_calendar_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_calendar_cluster_flush()
 #define sl_zigbee_af_calendar_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_calendar_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -732,6 +1147,10 @@
 
 #define sl_zigbee_af_device_management_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_device_management_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_device_management_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_device_management_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_device_management_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_device_management_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_device_management_cluster_flush()
 #define sl_zigbee_af_device_management_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_device_management_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -739,6 +1158,10 @@
 
 #define sl_zigbee_af_events_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_events_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_events_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_events_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_events_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_events_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_events_cluster_flush()
 #define sl_zigbee_af_events_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_events_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -746,6 +1169,10 @@
 
 #define sl_zigbee_af_mdu_pairing_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_mdu_pairing_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_mdu_pairing_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_mdu_pairing_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_mdu_pairing_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_mdu_pairing_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_mdu_pairing_cluster_flush()
 #define sl_zigbee_af_mdu_pairing_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_mdu_pairing_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -753,6 +1180,10 @@
 
 #define sl_zigbee_af_sub_ghz_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_sub_ghz_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_sub_ghz_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_sub_ghz_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_sub_ghz_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_sub_ghz_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_sub_ghz_cluster_flush()
 #define sl_zigbee_af_sub_ghz_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_sub_ghz_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -760,6 +1191,10 @@
 
 #define sl_zigbee_af_key_establishment_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_key_establishment_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_key_establishment_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_key_establishment_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_key_establishment_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_key_establishment_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_key_establishment_cluster_flush()
 #define sl_zigbee_af_key_establishment_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_key_establishment_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -767,6 +1202,10 @@
 
 #define sl_zigbee_af_information_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_information_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_information_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_information_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_information_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_information_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_information_cluster_flush()
 #define sl_zigbee_af_information_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_information_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -774,6 +1213,10 @@
 
 #define sl_zigbee_af_data_sharing_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_data_sharing_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_data_sharing_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_data_sharing_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_data_sharing_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_data_sharing_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_data_sharing_cluster_flush()
 #define sl_zigbee_af_data_sharing_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_data_sharing_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -781,6 +1224,10 @@
 
 #define sl_zigbee_af_gaming_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_gaming_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_gaming_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_gaming_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_gaming_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_gaming_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_gaming_cluster_flush()
 #define sl_zigbee_af_gaming_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_gaming_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -788,6 +1235,10 @@
 
 #define sl_zigbee_af_data_rate_control_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_data_rate_control_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_data_rate_control_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_data_rate_control_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_data_rate_control_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_data_rate_control_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_data_rate_control_cluster_flush()
 #define sl_zigbee_af_data_rate_control_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_data_rate_control_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -795,6 +1246,10 @@
 
 #define sl_zigbee_af_voice_over_zigbee_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_voice_over_zigbee_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_voice_over_zigbee_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_voice_over_zigbee_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_voice_over_zigbee_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_voice_over_zigbee_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_voice_over_zigbee_cluster_flush()
 #define sl_zigbee_af_voice_over_zigbee_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_voice_over_zigbee_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -802,6 +1257,10 @@
 
 #define sl_zigbee_af_chatting_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_chatting_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_chatting_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_chatting_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_chatting_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_chatting_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_chatting_cluster_flush()
 #define sl_zigbee_af_chatting_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_chatting_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -809,6 +1268,10 @@
 
 #define sl_zigbee_af_payment_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_payment_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_payment_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_payment_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_payment_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_payment_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_payment_cluster_flush()
 #define sl_zigbee_af_payment_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_payment_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -816,6 +1279,10 @@
 
 #define sl_zigbee_af_billing_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_billing_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_billing_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_billing_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_billing_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_billing_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_billing_cluster_flush()
 #define sl_zigbee_af_billing_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_billing_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -823,6 +1290,10 @@
 
 #define sl_zigbee_af_appliance_identification_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_appliance_identification_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_appliance_identification_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_appliance_identification_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_appliance_identification_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_appliance_identification_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_appliance_identification_cluster_flush()
 #define sl_zigbee_af_appliance_identification_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_appliance_identification_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -830,6 +1301,10 @@
 
 #define sl_zigbee_af_meter_identification_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_meter_identification_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_meter_identification_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_meter_identification_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_meter_identification_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_meter_identification_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_meter_identification_cluster_flush()
 #define sl_zigbee_af_meter_identification_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_meter_identification_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -837,6 +1312,10 @@
 
 #define sl_zigbee_af_appliance_events_and_alert_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_appliance_events_and_alert_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_appliance_events_and_alert_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_appliance_events_and_alert_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_appliance_events_and_alert_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_appliance_events_and_alert_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_appliance_events_and_alert_cluster_flush()
 #define sl_zigbee_af_appliance_events_and_alert_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_appliance_events_and_alert_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -844,6 +1323,10 @@
 
 #define sl_zigbee_af_appliance_statistics_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_appliance_statistics_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_appliance_statistics_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_appliance_statistics_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_appliance_statistics_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_appliance_statistics_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_appliance_statistics_cluster_flush()
 #define sl_zigbee_af_appliance_statistics_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_appliance_statistics_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -851,6 +1334,10 @@
 
 #define sl_zigbee_af_electrical_measurement_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_electrical_measurement_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_electrical_measurement_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_electrical_measurement_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_electrical_measurement_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_electrical_measurement_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_electrical_measurement_cluster_flush()
 #define sl_zigbee_af_electrical_measurement_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_electrical_measurement_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -858,6 +1345,10 @@
 
 #define sl_zigbee_af_diagnostics_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_diagnostics_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_diagnostics_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_diagnostics_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_diagnostics_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_diagnostics_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_diagnostics_cluster_flush()
 #define sl_zigbee_af_diagnostics_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_diagnostics_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -865,6 +1356,10 @@
 
 #define sl_zigbee_af_zll_commissioning_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_zll_commissioning_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_zll_commissioning_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_zll_commissioning_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_zll_commissioning_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_zll_commissioning_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_zll_commissioning_cluster_flush()
 #define sl_zigbee_af_zll_commissioning_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_zll_commissioning_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -872,6 +1367,10 @@
 
 #define sl_zigbee_af_sample_mfg_specific_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_sample_mfg_specific_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_sample_mfg_specific_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_sample_mfg_specific_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_sample_mfg_specific_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_sample_mfg_specific_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_sample_mfg_specific_cluster_flush()
 #define sl_zigbee_af_sample_mfg_specific_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_sample_mfg_specific_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -879,6 +1378,10 @@
 
 #define sl_zigbee_af_ota_configuration_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_ota_configuration_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_ota_configuration_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_ota_configuration_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_ota_configuration_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_ota_configuration_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_ota_configuration_cluster_flush()
 #define sl_zigbee_af_ota_configuration_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_ota_configuration_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -886,6 +1389,10 @@
 
 #define sl_zigbee_af_mfglib_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_mfglib_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_mfglib_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_mfglib_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_mfglib_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_mfglib_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_mfglib_cluster_flush()
 #define sl_zigbee_af_mfglib_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_mfglib_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -893,6 +1400,10 @@
 
 #define sl_zigbee_af_sl_wwah_cluster_print(...) sl_zigbee_af_print(0x00, __VA_ARGS__)
 #define sl_zigbee_af_sl_wwah_cluster_println(...) sl_zigbee_af_println(0x00, __VA_ARGS__)
+#define sl_zigbee_af_sl_wwah_cluster_warn(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_sl_wwah_cluster_warnln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN, __VA_ARGS__)
+#define sl_zigbee_af_sl_wwah_cluster_error(...) sl_zigbee_af_print_with_log(0x00, false, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
+#define sl_zigbee_af_sl_wwah_cluster_errorln(...) sl_zigbee_af_print_with_log(0x00, true, SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR, __VA_ARGS__)
 #define sl_zigbee_af_sl_wwah_cluster_flush()
 #define sl_zigbee_af_sl_wwah_cluster_debug_exec(x) if ( sl_zigbee_af_print_enabled(0x00) ) { x; }
 #define sl_zigbee_af_sl_wwah_cluster_print_buffer(buffer, len, withSpace) sl_zigbee_af_print_buffer(0x00, (buffer), (len), (withSpace))
@@ -902,6 +1413,10 @@
 
 #define sl_zigbee_af_app_print(...)
 #define sl_zigbee_af_app_println(...)
+#define sl_zigbee_af_app_warn(...)
+#define sl_zigbee_af_app_warnln(...)
+#define sl_zigbee_af_app_error(...)
+#define sl_zigbee_af_app_errorln(...)
 #define sl_zigbee_af_app_flush()
 #define sl_zigbee_af_app_debug_exec(x)
 #define sl_zigbee_af_app_print_buffer(buffer, len, withSpace)
@@ -909,6 +1424,10 @@
 
 #define sl_zigbee_af_core_print(...)
 #define sl_zigbee_af_core_println(...)
+#define sl_zigbee_af_core_warn(...)
+#define sl_zigbee_af_core_warnln(...)
+#define sl_zigbee_af_core_error(...)
+#define sl_zigbee_af_core_errorln(...)
 #define sl_zigbee_af_core_flush()
 #define sl_zigbee_af_core_debug_exec(x)
 #define sl_zigbee_af_core_print_buffer(buffer, len, withSpace)
@@ -916,6 +1435,10 @@
 
 #define sl_zigbee_af_reporting_print(...)
 #define sl_zigbee_af_reporting_println(...)
+#define sl_zigbee_af_reporting_warn(...)
+#define sl_zigbee_af_reporting_warnln(...)
+#define sl_zigbee_af_reporting_error(...)
+#define sl_zigbee_af_reporting_errorln(...)
 #define sl_zigbee_af_reporting_flush()
 #define sl_zigbee_af_reporting_debug_exec(x)
 #define sl_zigbee_af_reporting_print_buffer(buffer, len, withSpace)
@@ -923,6 +1446,10 @@
 
 #define sl_zigbee_af_service_discovery_print(...)
 #define sl_zigbee_af_service_discovery_println(...)
+#define sl_zigbee_af_service_discovery_warn(...)
+#define sl_zigbee_af_service_discovery_warnln(...)
+#define sl_zigbee_af_service_discovery_error(...)
+#define sl_zigbee_af_service_discovery_errorln(...)
 #define sl_zigbee_af_service_discovery_flush()
 #define sl_zigbee_af_service_discovery_debug_exec(x)
 #define sl_zigbee_af_service_discovery_print_buffer(buffer, len, withSpace)
@@ -930,6 +1457,10 @@
 
 #define sl_zigbee_af_attributes_print(...)
 #define sl_zigbee_af_attributes_println(...)
+#define sl_zigbee_af_attributes_warn(...)
+#define sl_zigbee_af_attributes_warnln(...)
+#define sl_zigbee_af_attributes_error(...)
+#define sl_zigbee_af_attributes_errorln(...)
 #define sl_zigbee_af_attributes_flush()
 #define sl_zigbee_af_attributes_debug_exec(x)
 #define sl_zigbee_af_attributes_print_buffer(buffer, len, withSpace)
@@ -937,6 +1468,10 @@
 
 #define sl_zigbee_af_security_print(...)
 #define sl_zigbee_af_security_println(...)
+#define sl_zigbee_af_security_warn(...)
+#define sl_zigbee_af_security_warnln(...)
+#define sl_zigbee_af_security_error(...)
+#define sl_zigbee_af_security_errorln(...)
 #define sl_zigbee_af_security_flush()
 #define sl_zigbee_af_security_debug_exec(x)
 #define sl_zigbee_af_security_print_buffer(buffer, len, withSpace)
@@ -944,6 +1479,10 @@
 
 #define sl_zigbee_af_zdo_print(...)
 #define sl_zigbee_af_zdo_println(...)
+#define sl_zigbee_af_zdo_warn(...)
+#define sl_zigbee_af_zdo_warnln(...)
+#define sl_zigbee_af_zdo_error(...)
+#define sl_zigbee_af_zdo_errorln(...)
 #define sl_zigbee_af_zdo_flush()
 #define sl_zigbee_af_zdo_debug_exec(x)
 #define sl_zigbee_af_zdo_print_buffer(buffer, len, withSpace)
@@ -952,6 +1491,10 @@
 // Printing macros for Registration
 #define sl_zigbee_af_registration_print(...)
 #define sl_zigbee_af_registration_println(...)
+#define sl_zigbee_af_registration_warn(...)
+#define sl_zigbee_af_registration_warnln(...)
+#define sl_zigbee_af_registration_error(...)
+#define sl_zigbee_af_registration_errorln(...)
 #define sl_zigbee_af_registration_flush()
 #define sl_zigbee_af_registration_debug_exec(x)
 #define sl_zigbee_af_registration_print_buffer(buffer, len, withSpace)
@@ -961,6 +1504,10 @@
 
 #define sl_zigbee_af_basic_cluster_print(...)
 #define sl_zigbee_af_basic_cluster_println(...)
+#define sl_zigbee_af_basic_cluster_warn(...)
+#define sl_zigbee_af_basic_cluster_warnln(...)
+#define sl_zigbee_af_basic_cluster_error(...)
+#define sl_zigbee_af_basic_cluster_errorln(...)
 #define sl_zigbee_af_basic_cluster_flush()
 #define sl_zigbee_af_basic_cluster_debug_exec(x)
 #define sl_zigbee_af_basic_cluster_print_buffer(buffer, len, withSpace)
@@ -968,6 +1515,10 @@
 
 #define sl_zigbee_af_power_config_cluster_print(...)
 #define sl_zigbee_af_power_config_cluster_println(...)
+#define sl_zigbee_af_power_config_cluster_warn(...)
+#define sl_zigbee_af_power_config_cluster_warnln(...)
+#define sl_zigbee_af_power_config_cluster_error(...)
+#define sl_zigbee_af_power_config_cluster_errorln(...)
 #define sl_zigbee_af_power_config_cluster_flush()
 #define sl_zigbee_af_power_config_cluster_debug_exec(x)
 #define sl_zigbee_af_power_config_cluster_print_buffer(buffer, len, withSpace)
@@ -975,6 +1526,10 @@
 
 #define sl_zigbee_af_device_temp_cluster_print(...)
 #define sl_zigbee_af_device_temp_cluster_println(...)
+#define sl_zigbee_af_device_temp_cluster_warn(...)
+#define sl_zigbee_af_device_temp_cluster_warnln(...)
+#define sl_zigbee_af_device_temp_cluster_error(...)
+#define sl_zigbee_af_device_temp_cluster_errorln(...)
 #define sl_zigbee_af_device_temp_cluster_flush()
 #define sl_zigbee_af_device_temp_cluster_debug_exec(x)
 #define sl_zigbee_af_device_temp_cluster_print_buffer(buffer, len, withSpace)
@@ -982,6 +1537,10 @@
 
 #define sl_zigbee_af_identify_cluster_print(...)
 #define sl_zigbee_af_identify_cluster_println(...)
+#define sl_zigbee_af_identify_cluster_warn(...)
+#define sl_zigbee_af_identify_cluster_warnln(...)
+#define sl_zigbee_af_identify_cluster_error(...)
+#define sl_zigbee_af_identify_cluster_errorln(...)
 #define sl_zigbee_af_identify_cluster_flush()
 #define sl_zigbee_af_identify_cluster_debug_exec(x)
 #define sl_zigbee_af_identify_cluster_print_buffer(buffer, len, withSpace)
@@ -989,6 +1548,10 @@
 
 #define sl_zigbee_af_groups_cluster_print(...)
 #define sl_zigbee_af_groups_cluster_println(...)
+#define sl_zigbee_af_groups_cluster_warn(...)
+#define sl_zigbee_af_groups_cluster_warnln(...)
+#define sl_zigbee_af_groups_cluster_error(...)
+#define sl_zigbee_af_groups_cluster_errorln(...)
 #define sl_zigbee_af_groups_cluster_flush()
 #define sl_zigbee_af_groups_cluster_debug_exec(x)
 #define sl_zigbee_af_groups_cluster_print_buffer(buffer, len, withSpace)
@@ -996,6 +1559,10 @@
 
 #define sl_zigbee_af_scenes_cluster_print(...)
 #define sl_zigbee_af_scenes_cluster_println(...)
+#define sl_zigbee_af_scenes_cluster_warn(...)
+#define sl_zigbee_af_scenes_cluster_warnln(...)
+#define sl_zigbee_af_scenes_cluster_error(...)
+#define sl_zigbee_af_scenes_cluster_errorln(...)
 #define sl_zigbee_af_scenes_cluster_flush()
 #define sl_zigbee_af_scenes_cluster_debug_exec(x)
 #define sl_zigbee_af_scenes_cluster_print_buffer(buffer, len, withSpace)
@@ -1003,6 +1570,10 @@
 
 #define sl_zigbee_af_on_off_cluster_print(...)
 #define sl_zigbee_af_on_off_cluster_println(...)
+#define sl_zigbee_af_on_off_cluster_warn(...)
+#define sl_zigbee_af_on_off_cluster_warnln(...)
+#define sl_zigbee_af_on_off_cluster_error(...)
+#define sl_zigbee_af_on_off_cluster_errorln(...)
 #define sl_zigbee_af_on_off_cluster_flush()
 #define sl_zigbee_af_on_off_cluster_debug_exec(x)
 #define sl_zigbee_af_on_off_cluster_print_buffer(buffer, len, withSpace)
@@ -1010,6 +1581,10 @@
 
 #define sl_zigbee_af_on_off_switch_config_cluster_print(...)
 #define sl_zigbee_af_on_off_switch_config_cluster_println(...)
+#define sl_zigbee_af_on_off_switch_config_cluster_warn(...)
+#define sl_zigbee_af_on_off_switch_config_cluster_warnln(...)
+#define sl_zigbee_af_on_off_switch_config_cluster_error(...)
+#define sl_zigbee_af_on_off_switch_config_cluster_errorln(...)
 #define sl_zigbee_af_on_off_switch_config_cluster_flush()
 #define sl_zigbee_af_on_off_switch_config_cluster_debug_exec(x)
 #define sl_zigbee_af_on_off_switch_config_cluster_print_buffer(buffer, len, withSpace)
@@ -1017,6 +1592,10 @@
 
 #define sl_zigbee_af_level_control_cluster_print(...)
 #define sl_zigbee_af_level_control_cluster_println(...)
+#define sl_zigbee_af_level_control_cluster_warn(...)
+#define sl_zigbee_af_level_control_cluster_warnln(...)
+#define sl_zigbee_af_level_control_cluster_error(...)
+#define sl_zigbee_af_level_control_cluster_errorln(...)
 #define sl_zigbee_af_level_control_cluster_flush()
 #define sl_zigbee_af_level_control_cluster_debug_exec(x)
 #define sl_zigbee_af_level_control_cluster_print_buffer(buffer, len, withSpace)
@@ -1024,6 +1603,10 @@
 
 #define sl_zigbee_af_alarm_cluster_print(...)
 #define sl_zigbee_af_alarm_cluster_println(...)
+#define sl_zigbee_af_alarm_cluster_warn(...)
+#define sl_zigbee_af_alarm_cluster_warnln(...)
+#define sl_zigbee_af_alarm_cluster_error(...)
+#define sl_zigbee_af_alarm_cluster_errorln(...)
 #define sl_zigbee_af_alarm_cluster_flush()
 #define sl_zigbee_af_alarm_cluster_debug_exec(x)
 #define sl_zigbee_af_alarm_cluster_print_buffer(buffer, len, withSpace)
@@ -1031,6 +1614,10 @@
 
 #define sl_zigbee_af_time_cluster_print(...)
 #define sl_zigbee_af_time_cluster_println(...)
+#define sl_zigbee_af_time_cluster_warn(...)
+#define sl_zigbee_af_time_cluster_warnln(...)
+#define sl_zigbee_af_time_cluster_error(...)
+#define sl_zigbee_af_time_cluster_errorln(...)
 #define sl_zigbee_af_time_cluster_flush()
 #define sl_zigbee_af_time_cluster_debug_exec(x)
 #define sl_zigbee_af_time_cluster_print_buffer(buffer, len, withSpace)
@@ -1038,6 +1625,10 @@
 
 #define sl_zigbee_af_rssi_location_cluster_print(...)
 #define sl_zigbee_af_rssi_location_cluster_println(...)
+#define sl_zigbee_af_rssi_location_cluster_warn(...)
+#define sl_zigbee_af_rssi_location_cluster_warnln(...)
+#define sl_zigbee_af_rssi_location_cluster_error(...)
+#define sl_zigbee_af_rssi_location_cluster_errorln(...)
 #define sl_zigbee_af_rssi_location_cluster_flush()
 #define sl_zigbee_af_rssi_location_cluster_debug_exec(x)
 #define sl_zigbee_af_rssi_location_cluster_print_buffer(buffer, len, withSpace)
@@ -1045,6 +1636,10 @@
 
 #define sl_zigbee_af_binary_input_basic_cluster_print(...)
 #define sl_zigbee_af_binary_input_basic_cluster_println(...)
+#define sl_zigbee_af_binary_input_basic_cluster_warn(...)
+#define sl_zigbee_af_binary_input_basic_cluster_warnln(...)
+#define sl_zigbee_af_binary_input_basic_cluster_error(...)
+#define sl_zigbee_af_binary_input_basic_cluster_errorln(...)
 #define sl_zigbee_af_binary_input_basic_cluster_flush()
 #define sl_zigbee_af_binary_input_basic_cluster_debug_exec(x)
 #define sl_zigbee_af_binary_input_basic_cluster_print_buffer(buffer, len, withSpace)
@@ -1052,6 +1647,10 @@
 
 #define sl_zigbee_af_commissioning_cluster_print(...)
 #define sl_zigbee_af_commissioning_cluster_println(...)
+#define sl_zigbee_af_commissioning_cluster_warn(...)
+#define sl_zigbee_af_commissioning_cluster_warnln(...)
+#define sl_zigbee_af_commissioning_cluster_error(...)
+#define sl_zigbee_af_commissioning_cluster_errorln(...)
 #define sl_zigbee_af_commissioning_cluster_flush()
 #define sl_zigbee_af_commissioning_cluster_debug_exec(x)
 #define sl_zigbee_af_commissioning_cluster_print_buffer(buffer, len, withSpace)
@@ -1059,6 +1658,10 @@
 
 #define sl_zigbee_af_partition_cluster_print(...)
 #define sl_zigbee_af_partition_cluster_println(...)
+#define sl_zigbee_af_partition_cluster_warn(...)
+#define sl_zigbee_af_partition_cluster_warnln(...)
+#define sl_zigbee_af_partition_cluster_error(...)
+#define sl_zigbee_af_partition_cluster_errorln(...)
 #define sl_zigbee_af_partition_cluster_flush()
 #define sl_zigbee_af_partition_cluster_debug_exec(x)
 #define sl_zigbee_af_partition_cluster_print_buffer(buffer, len, withSpace)
@@ -1066,6 +1669,10 @@
 
 #define sl_zigbee_af_ota_bootload_cluster_print(...)
 #define sl_zigbee_af_ota_bootload_cluster_println(...)
+#define sl_zigbee_af_ota_bootload_cluster_warn(...)
+#define sl_zigbee_af_ota_bootload_cluster_warnln(...)
+#define sl_zigbee_af_ota_bootload_cluster_error(...)
+#define sl_zigbee_af_ota_bootload_cluster_errorln(...)
 #define sl_zigbee_af_ota_bootload_cluster_flush()
 #define sl_zigbee_af_ota_bootload_cluster_debug_exec(x)
 #define sl_zigbee_af_ota_bootload_cluster_print_buffer(buffer, len, withSpace)
@@ -1073,6 +1680,10 @@
 
 #define sl_zigbee_af_power_profile_cluster_print(...)
 #define sl_zigbee_af_power_profile_cluster_println(...)
+#define sl_zigbee_af_power_profile_cluster_warn(...)
+#define sl_zigbee_af_power_profile_cluster_warnln(...)
+#define sl_zigbee_af_power_profile_cluster_error(...)
+#define sl_zigbee_af_power_profile_cluster_errorln(...)
 #define sl_zigbee_af_power_profile_cluster_flush()
 #define sl_zigbee_af_power_profile_cluster_debug_exec(x)
 #define sl_zigbee_af_power_profile_cluster_print_buffer(buffer, len, withSpace)
@@ -1080,6 +1691,10 @@
 
 #define sl_zigbee_af_appliance_control_cluster_print(...)
 #define sl_zigbee_af_appliance_control_cluster_println(...)
+#define sl_zigbee_af_appliance_control_cluster_warn(...)
+#define sl_zigbee_af_appliance_control_cluster_warnln(...)
+#define sl_zigbee_af_appliance_control_cluster_error(...)
+#define sl_zigbee_af_appliance_control_cluster_errorln(...)
 #define sl_zigbee_af_appliance_control_cluster_flush()
 #define sl_zigbee_af_appliance_control_cluster_debug_exec(x)
 #define sl_zigbee_af_appliance_control_cluster_print_buffer(buffer, len, withSpace)
@@ -1087,6 +1702,10 @@
 
 #define sl_zigbee_af_poll_control_cluster_print(...)
 #define sl_zigbee_af_poll_control_cluster_println(...)
+#define sl_zigbee_af_poll_control_cluster_warn(...)
+#define sl_zigbee_af_poll_control_cluster_warnln(...)
+#define sl_zigbee_af_poll_control_cluster_error(...)
+#define sl_zigbee_af_poll_control_cluster_errorln(...)
 #define sl_zigbee_af_poll_control_cluster_flush()
 #define sl_zigbee_af_poll_control_cluster_debug_exec(x)
 #define sl_zigbee_af_poll_control_cluster_print_buffer(buffer, len, withSpace)
@@ -1094,12 +1713,20 @@
 
 #define sl_zigbee_af_gas_proxy_function_print(...)
 #define sl_zigbee_af_gas_proxy_function_println(...)
+#define sl_zigbee_af_gas_proxy_function_warn(...)
+#define sl_zigbee_af_gas_proxy_function_warnln(...)
+#define sl_zigbee_af_gas_proxy_function_error(...)
+#define sl_zigbee_af_gas_proxy_function_errorln(...)
 #define sl_zigbee_af_gas_proxy_function_debug_exec(x)
 #define sl_zigbee_af_gas_proxy_function_print_buffer(buffer, len, withSpace)
 #define sl_zigbee_af_gas_proxy_function_print_string(buffer)
 
 #define sl_zigbee_af_green_power_cluster_print(...)
 #define sl_zigbee_af_green_power_cluster_println(...)
+#define sl_zigbee_af_green_power_cluster_warn(...)
+#define sl_zigbee_af_green_power_cluster_warnln(...)
+#define sl_zigbee_af_green_power_cluster_error(...)
+#define sl_zigbee_af_green_power_cluster_errorln(...)
 #define sl_zigbee_af_green_power_cluster_flush()
 #define sl_zigbee_af_green_power_cluster_debug_exec(x)
 #define sl_zigbee_af_green_power_cluster_print_buffer(buffer, len, withSpace)
@@ -1107,6 +1734,10 @@
 
 #define sl_zigbee_af_keepalive_cluster_print(...)
 #define sl_zigbee_af_keepalive_cluster_println(...)
+#define sl_zigbee_af_keepalive_cluster_warn(...)
+#define sl_zigbee_af_keepalive_cluster_warnln(...)
+#define sl_zigbee_af_keepalive_cluster_error(...)
+#define sl_zigbee_af_keepalive_cluster_errorln(...)
 #define sl_zigbee_af_keepalive_cluster_flush()
 #define sl_zigbee_af_keepalive_cluster_debug_exec(x)
 #define sl_zigbee_af_keepalive_cluster_print_buffer(buffer, len, withSpace)
@@ -1114,6 +1745,10 @@
 
 #define sl_zigbee_af_shade_config_cluster_print(...)
 #define sl_zigbee_af_shade_config_cluster_println(...)
+#define sl_zigbee_af_shade_config_cluster_warn(...)
+#define sl_zigbee_af_shade_config_cluster_warnln(...)
+#define sl_zigbee_af_shade_config_cluster_error(...)
+#define sl_zigbee_af_shade_config_cluster_errorln(...)
 #define sl_zigbee_af_shade_config_cluster_flush()
 #define sl_zigbee_af_shade_config_cluster_debug_exec(x)
 #define sl_zigbee_af_shade_config_cluster_print_buffer(buffer, len, withSpace)
@@ -1121,6 +1756,10 @@
 
 #define sl_zigbee_af_door_lock_cluster_print(...)
 #define sl_zigbee_af_door_lock_cluster_println(...)
+#define sl_zigbee_af_door_lock_cluster_warn(...)
+#define sl_zigbee_af_door_lock_cluster_warnln(...)
+#define sl_zigbee_af_door_lock_cluster_error(...)
+#define sl_zigbee_af_door_lock_cluster_errorln(...)
 #define sl_zigbee_af_door_lock_cluster_flush()
 #define sl_zigbee_af_door_lock_cluster_debug_exec(x)
 #define sl_zigbee_af_door_lock_cluster_print_buffer(buffer, len, withSpace)
@@ -1128,6 +1767,10 @@
 
 #define sl_zigbee_af_window_covering_cluster_print(...)
 #define sl_zigbee_af_window_covering_cluster_println(...)
+#define sl_zigbee_af_window_covering_cluster_warn(...)
+#define sl_zigbee_af_window_covering_cluster_warnln(...)
+#define sl_zigbee_af_window_covering_cluster_error(...)
+#define sl_zigbee_af_window_covering_cluster_errorln(...)
 #define sl_zigbee_af_window_covering_cluster_flush()
 #define sl_zigbee_af_window_covering_cluster_debug_exec(x)
 #define sl_zigbee_af_window_covering_cluster_print_buffer(buffer, len, withSpace)
@@ -1135,6 +1778,10 @@
 
 #define sl_zigbee_af_barrier_control_cluster_print(...)
 #define sl_zigbee_af_barrier_control_cluster_println(...)
+#define sl_zigbee_af_barrier_control_cluster_warn(...)
+#define sl_zigbee_af_barrier_control_cluster_warnln(...)
+#define sl_zigbee_af_barrier_control_cluster_error(...)
+#define sl_zigbee_af_barrier_control_cluster_errorln(...)
 #define sl_zigbee_af_barrier_control_cluster_flush()
 #define sl_zigbee_af_barrier_control_cluster_debug_exec(x)
 #define sl_zigbee_af_barrier_control_cluster_print_buffer(buffer, len, withSpace)
@@ -1142,6 +1789,10 @@
 
 #define sl_zigbee_af_pump_config_control_cluster_print(...)
 #define sl_zigbee_af_pump_config_control_cluster_println(...)
+#define sl_zigbee_af_pump_config_control_cluster_warn(...)
+#define sl_zigbee_af_pump_config_control_cluster_warnln(...)
+#define sl_zigbee_af_pump_config_control_cluster_error(...)
+#define sl_zigbee_af_pump_config_control_cluster_errorln(...)
 #define sl_zigbee_af_pump_config_control_cluster_flush()
 #define sl_zigbee_af_pump_config_control_cluster_debug_exec(x)
 #define sl_zigbee_af_pump_config_control_cluster_print_buffer(buffer, len, withSpace)
@@ -1149,6 +1800,10 @@
 
 #define sl_zigbee_af_thermostat_cluster_print(...)
 #define sl_zigbee_af_thermostat_cluster_println(...)
+#define sl_zigbee_af_thermostat_cluster_warn(...)
+#define sl_zigbee_af_thermostat_cluster_warnln(...)
+#define sl_zigbee_af_thermostat_cluster_error(...)
+#define sl_zigbee_af_thermostat_cluster_errorln(...)
 #define sl_zigbee_af_thermostat_cluster_flush()
 #define sl_zigbee_af_thermostat_cluster_debug_exec(x)
 #define sl_zigbee_af_thermostat_cluster_print_buffer(buffer, len, withSpace)
@@ -1156,6 +1811,10 @@
 
 #define sl_zigbee_af_fan_control_cluster_print(...)
 #define sl_zigbee_af_fan_control_cluster_println(...)
+#define sl_zigbee_af_fan_control_cluster_warn(...)
+#define sl_zigbee_af_fan_control_cluster_warnln(...)
+#define sl_zigbee_af_fan_control_cluster_error(...)
+#define sl_zigbee_af_fan_control_cluster_errorln(...)
 #define sl_zigbee_af_fan_control_cluster_flush()
 #define sl_zigbee_af_fan_control_cluster_debug_exec(x)
 #define sl_zigbee_af_fan_control_cluster_print_buffer(buffer, len, withSpace)
@@ -1163,6 +1822,10 @@
 
 #define sl_zigbee_af_dehumid_control_cluster_print(...)
 #define sl_zigbee_af_dehumid_control_cluster_println(...)
+#define sl_zigbee_af_dehumid_control_cluster_warn(...)
+#define sl_zigbee_af_dehumid_control_cluster_warnln(...)
+#define sl_zigbee_af_dehumid_control_cluster_error(...)
+#define sl_zigbee_af_dehumid_control_cluster_errorln(...)
 #define sl_zigbee_af_dehumid_control_cluster_flush()
 #define sl_zigbee_af_dehumid_control_cluster_debug_exec(x)
 #define sl_zigbee_af_dehumid_control_cluster_print_buffer(buffer, len, withSpace)
@@ -1170,6 +1833,10 @@
 
 #define sl_zigbee_af_thermostat_ui_config_cluster_print(...)
 #define sl_zigbee_af_thermostat_ui_config_cluster_println(...)
+#define sl_zigbee_af_thermostat_ui_config_cluster_warn(...)
+#define sl_zigbee_af_thermostat_ui_config_cluster_warnln(...)
+#define sl_zigbee_af_thermostat_ui_config_cluster_error(...)
+#define sl_zigbee_af_thermostat_ui_config_cluster_errorln(...)
 #define sl_zigbee_af_thermostat_ui_config_cluster_flush()
 #define sl_zigbee_af_thermostat_ui_config_cluster_debug_exec(x)
 #define sl_zigbee_af_thermostat_ui_config_cluster_print_buffer(buffer, len, withSpace)
@@ -1177,6 +1844,10 @@
 
 #define sl_zigbee_af_color_control_cluster_print(...)
 #define sl_zigbee_af_color_control_cluster_println(...)
+#define sl_zigbee_af_color_control_cluster_warn(...)
+#define sl_zigbee_af_color_control_cluster_warnln(...)
+#define sl_zigbee_af_color_control_cluster_error(...)
+#define sl_zigbee_af_color_control_cluster_errorln(...)
 #define sl_zigbee_af_color_control_cluster_flush()
 #define sl_zigbee_af_color_control_cluster_debug_exec(x)
 #define sl_zigbee_af_color_control_cluster_print_buffer(buffer, len, withSpace)
@@ -1184,6 +1855,10 @@
 
 #define sl_zigbee_af_ballast_configuration_cluster_print(...)
 #define sl_zigbee_af_ballast_configuration_cluster_println(...)
+#define sl_zigbee_af_ballast_configuration_cluster_warn(...)
+#define sl_zigbee_af_ballast_configuration_cluster_warnln(...)
+#define sl_zigbee_af_ballast_configuration_cluster_error(...)
+#define sl_zigbee_af_ballast_configuration_cluster_errorln(...)
 #define sl_zigbee_af_ballast_configuration_cluster_flush()
 #define sl_zigbee_af_ballast_configuration_cluster_debug_exec(x)
 #define sl_zigbee_af_ballast_configuration_cluster_print_buffer(buffer, len, withSpace)
@@ -1191,6 +1866,10 @@
 
 #define sl_zigbee_af_illum_measurement_cluster_print(...)
 #define sl_zigbee_af_illum_measurement_cluster_println(...)
+#define sl_zigbee_af_illum_measurement_cluster_warn(...)
+#define sl_zigbee_af_illum_measurement_cluster_warnln(...)
+#define sl_zigbee_af_illum_measurement_cluster_error(...)
+#define sl_zigbee_af_illum_measurement_cluster_errorln(...)
 #define sl_zigbee_af_illum_measurement_cluster_flush()
 #define sl_zigbee_af_illum_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_illum_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1198,6 +1877,10 @@
 
 #define sl_zigbee_af_illum_level_sensing_cluster_print(...)
 #define sl_zigbee_af_illum_level_sensing_cluster_println(...)
+#define sl_zigbee_af_illum_level_sensing_cluster_warn(...)
+#define sl_zigbee_af_illum_level_sensing_cluster_warnln(...)
+#define sl_zigbee_af_illum_level_sensing_cluster_error(...)
+#define sl_zigbee_af_illum_level_sensing_cluster_errorln(...)
 #define sl_zigbee_af_illum_level_sensing_cluster_flush()
 #define sl_zigbee_af_illum_level_sensing_cluster_debug_exec(x)
 #define sl_zigbee_af_illum_level_sensing_cluster_print_buffer(buffer, len, withSpace)
@@ -1205,6 +1888,10 @@
 
 #define sl_zigbee_af_temp_measurement_cluster_print(...)
 #define sl_zigbee_af_temp_measurement_cluster_println(...)
+#define sl_zigbee_af_temp_measurement_cluster_warn(...)
+#define sl_zigbee_af_temp_measurement_cluster_warnln(...)
+#define sl_zigbee_af_temp_measurement_cluster_error(...)
+#define sl_zigbee_af_temp_measurement_cluster_errorln(...)
 #define sl_zigbee_af_temp_measurement_cluster_flush()
 #define sl_zigbee_af_temp_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_temp_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1212,6 +1899,10 @@
 
 #define sl_zigbee_af_pressure_measurement_cluster_print(...)
 #define sl_zigbee_af_pressure_measurement_cluster_println(...)
+#define sl_zigbee_af_pressure_measurement_cluster_warn(...)
+#define sl_zigbee_af_pressure_measurement_cluster_warnln(...)
+#define sl_zigbee_af_pressure_measurement_cluster_error(...)
+#define sl_zigbee_af_pressure_measurement_cluster_errorln(...)
 #define sl_zigbee_af_pressure_measurement_cluster_flush()
 #define sl_zigbee_af_pressure_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_pressure_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1219,6 +1910,10 @@
 
 #define sl_zigbee_af_flow_measurement_cluster_print(...)
 #define sl_zigbee_af_flow_measurement_cluster_println(...)
+#define sl_zigbee_af_flow_measurement_cluster_warn(...)
+#define sl_zigbee_af_flow_measurement_cluster_warnln(...)
+#define sl_zigbee_af_flow_measurement_cluster_error(...)
+#define sl_zigbee_af_flow_measurement_cluster_errorln(...)
 #define sl_zigbee_af_flow_measurement_cluster_flush()
 #define sl_zigbee_af_flow_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_flow_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1226,6 +1921,10 @@
 
 #define sl_zigbee_af_relative_humidity_measurement_cluster_print(...)
 #define sl_zigbee_af_relative_humidity_measurement_cluster_println(...)
+#define sl_zigbee_af_relative_humidity_measurement_cluster_warn(...)
+#define sl_zigbee_af_relative_humidity_measurement_cluster_warnln(...)
+#define sl_zigbee_af_relative_humidity_measurement_cluster_error(...)
+#define sl_zigbee_af_relative_humidity_measurement_cluster_errorln(...)
 #define sl_zigbee_af_relative_humidity_measurement_cluster_flush()
 #define sl_zigbee_af_relative_humidity_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_relative_humidity_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1233,6 +1932,10 @@
 
 #define sl_zigbee_af_occupancy_sensing_cluster_print(...)
 #define sl_zigbee_af_occupancy_sensing_cluster_println(...)
+#define sl_zigbee_af_occupancy_sensing_cluster_warn(...)
+#define sl_zigbee_af_occupancy_sensing_cluster_warnln(...)
+#define sl_zigbee_af_occupancy_sensing_cluster_error(...)
+#define sl_zigbee_af_occupancy_sensing_cluster_errorln(...)
 #define sl_zigbee_af_occupancy_sensing_cluster_flush()
 #define sl_zigbee_af_occupancy_sensing_cluster_debug_exec(x)
 #define sl_zigbee_af_occupancy_sensing_cluster_print_buffer(buffer, len, withSpace)
@@ -1240,6 +1943,10 @@
 
 #define sl_zigbee_af_carbon_monoxide_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_carbon_monoxide_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_carbon_monoxide_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_carbon_monoxide_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_carbon_monoxide_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_carbon_monoxide_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_carbon_monoxide_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_carbon_monoxide_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_carbon_monoxide_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1247,6 +1954,10 @@
 
 #define sl_zigbee_af_carbon_dioxide_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_carbon_dioxide_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_carbon_dioxide_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_carbon_dioxide_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_carbon_dioxide_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_carbon_dioxide_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_carbon_dioxide_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_carbon_dioxide_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_carbon_dioxide_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1254,6 +1965,10 @@
 
 #define sl_zigbee_af_ethylene_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_ethylene_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_ethylene_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_ethylene_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_ethylene_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_ethylene_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_ethylene_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_ethylene_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_ethylene_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1261,6 +1976,10 @@
 
 #define sl_zigbee_af_ethylene_oxide_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_ethylene_oxide_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_ethylene_oxide_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_ethylene_oxide_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_ethylene_oxide_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_ethylene_oxide_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_ethylene_oxide_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_ethylene_oxide_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_ethylene_oxide_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1268,6 +1987,10 @@
 
 #define sl_zigbee_af_hydrogen_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_hydrogen_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_hydrogen_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_hydrogen_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_hydrogen_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_hydrogen_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_hydrogen_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_hydrogen_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_hydrogen_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1275,6 +1998,10 @@
 
 #define sl_zigbee_af_hydrogen_sulphide_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_hydrogen_sulphide_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_hydrogen_sulphide_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_hydrogen_sulphide_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_hydrogen_sulphide_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_hydrogen_sulphide_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_hydrogen_sulphide_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_hydrogen_sulphide_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_hydrogen_sulphide_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1282,6 +2009,10 @@
 
 #define sl_zigbee_af_nitric_oxide_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_nitric_oxide_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_nitric_oxide_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_nitric_oxide_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_nitric_oxide_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_nitric_oxide_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_nitric_oxide_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_nitric_oxide_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_nitric_oxide_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1289,6 +2020,10 @@
 
 #define sl_zigbee_af_nitrogen_dioxide_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_nitrogen_dioxide_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_nitrogen_dioxide_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_nitrogen_dioxide_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_nitrogen_dioxide_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_nitrogen_dioxide_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_nitrogen_dioxide_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_nitrogen_dioxide_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_nitrogen_dioxide_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1296,6 +2031,10 @@
 
 #define sl_zigbee_af_oxygen_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_oxygen_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_oxygen_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_oxygen_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_oxygen_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_oxygen_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_oxygen_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_oxygen_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_oxygen_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1303,6 +2042,10 @@
 
 #define sl_zigbee_af_ozone_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_ozone_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_ozone_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_ozone_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_ozone_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_ozone_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_ozone_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_ozone_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_ozone_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1310,6 +2053,10 @@
 
 #define sl_zigbee_af_sulfur_dioxide_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_sulfur_dioxide_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_sulfur_dioxide_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_sulfur_dioxide_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_sulfur_dioxide_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_sulfur_dioxide_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_sulfur_dioxide_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_sulfur_dioxide_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_sulfur_dioxide_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1317,6 +2064,10 @@
 
 #define sl_zigbee_af_dissolved_oxygen_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_dissolved_oxygen_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_dissolved_oxygen_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_dissolved_oxygen_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_dissolved_oxygen_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_dissolved_oxygen_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_dissolved_oxygen_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_dissolved_oxygen_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_dissolved_oxygen_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1324,6 +2075,10 @@
 
 #define sl_zigbee_af_bromate_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_bromate_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_bromate_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_bromate_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_bromate_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_bromate_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_bromate_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_bromate_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_bromate_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1331,6 +2086,10 @@
 
 #define sl_zigbee_af_chloramines_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_chloramines_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_chloramines_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_chloramines_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_chloramines_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_chloramines_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_chloramines_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_chloramines_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_chloramines_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1338,6 +2097,10 @@
 
 #define sl_zigbee_af_chlorine_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_chlorine_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_chlorine_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_chlorine_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_chlorine_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_chlorine_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_chlorine_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_chlorine_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_chlorine_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1345,6 +2108,10 @@
 
 #define sl_zigbee_af_fecal_coliform_and_e_coli_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_fecal_coliform_and_e_coli_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_fecal_coliform_and_e_coli_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_fecal_coliform_and_e_coli_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_fecal_coliform_and_e_coli_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_fecal_coliform_and_e_coli_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_fecal_coliform_and_e_coli_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_fecal_coliform_and_e_coli_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_fecal_coliform_and_e_coli_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1352,6 +2119,10 @@
 
 #define sl_zigbee_af_fluoride_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_fluoride_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_fluoride_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_fluoride_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_fluoride_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_fluoride_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_fluoride_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_fluoride_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_fluoride_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1359,6 +2130,10 @@
 
 #define sl_zigbee_af_haloacetic_acids_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_haloacetic_acids_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_haloacetic_acids_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_haloacetic_acids_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_haloacetic_acids_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_haloacetic_acids_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_haloacetic_acids_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_haloacetic_acids_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_haloacetic_acids_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1366,6 +2141,10 @@
 
 #define sl_zigbee_af_total_trihalomethanes_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_total_trihalomethanes_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_total_trihalomethanes_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_total_trihalomethanes_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_total_trihalomethanes_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_total_trihalomethanes_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_total_trihalomethanes_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_total_trihalomethanes_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_total_trihalomethanes_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1373,6 +2152,10 @@
 
 #define sl_zigbee_af_total_coliform_bacteria_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_total_coliform_bacteria_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_total_coliform_bacteria_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_total_coliform_bacteria_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_total_coliform_bacteria_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_total_coliform_bacteria_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_total_coliform_bacteria_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_total_coliform_bacteria_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_total_coliform_bacteria_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1380,6 +2163,10 @@
 
 #define sl_zigbee_af_turbidity_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_turbidity_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_turbidity_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_turbidity_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_turbidity_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_turbidity_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_turbidity_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_turbidity_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_turbidity_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1387,6 +2174,10 @@
 
 #define sl_zigbee_af_copper_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_copper_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_copper_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_copper_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_copper_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_copper_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_copper_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_copper_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_copper_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1394,6 +2185,10 @@
 
 #define sl_zigbee_af_lead_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_lead_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_lead_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_lead_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_lead_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_lead_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_lead_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_lead_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_lead_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1401,6 +2196,10 @@
 
 #define sl_zigbee_af_manganese_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_manganese_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_manganese_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_manganese_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_manganese_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_manganese_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_manganese_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_manganese_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_manganese_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1408,6 +2207,10 @@
 
 #define sl_zigbee_af_sulfate_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_sulfate_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_sulfate_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_sulfate_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_sulfate_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_sulfate_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_sulfate_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_sulfate_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_sulfate_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1415,6 +2218,10 @@
 
 #define sl_zigbee_af_bromodichloromethane_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_bromodichloromethane_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_bromodichloromethane_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_bromodichloromethane_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_bromodichloromethane_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_bromodichloromethane_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_bromodichloromethane_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_bromodichloromethane_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_bromodichloromethane_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1422,6 +2229,10 @@
 
 #define sl_zigbee_af_bromoform_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_bromoform_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_bromoform_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_bromoform_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_bromoform_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_bromoform_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_bromoform_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_bromoform_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_bromoform_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1429,6 +2240,10 @@
 
 #define sl_zigbee_af_chlorodibromomethane_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_chlorodibromomethane_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_chlorodibromomethane_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_chlorodibromomethane_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_chlorodibromomethane_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_chlorodibromomethane_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_chlorodibromomethane_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_chlorodibromomethane_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_chlorodibromomethane_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1436,6 +2251,10 @@
 
 #define sl_zigbee_af_chloroform_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_chloroform_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_chloroform_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_chloroform_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_chloroform_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_chloroform_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_chloroform_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_chloroform_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_chloroform_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1443,6 +2262,10 @@
 
 #define sl_zigbee_af_sodium_concentration_measurement_cluster_print(...)
 #define sl_zigbee_af_sodium_concentration_measurement_cluster_println(...)
+#define sl_zigbee_af_sodium_concentration_measurement_cluster_warn(...)
+#define sl_zigbee_af_sodium_concentration_measurement_cluster_warnln(...)
+#define sl_zigbee_af_sodium_concentration_measurement_cluster_error(...)
+#define sl_zigbee_af_sodium_concentration_measurement_cluster_errorln(...)
 #define sl_zigbee_af_sodium_concentration_measurement_cluster_flush()
 #define sl_zigbee_af_sodium_concentration_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_sodium_concentration_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1450,6 +2273,10 @@
 
 #define sl_zigbee_af_ias_zone_cluster_print(...)
 #define sl_zigbee_af_ias_zone_cluster_println(...)
+#define sl_zigbee_af_ias_zone_cluster_warn(...)
+#define sl_zigbee_af_ias_zone_cluster_warnln(...)
+#define sl_zigbee_af_ias_zone_cluster_error(...)
+#define sl_zigbee_af_ias_zone_cluster_errorln(...)
 #define sl_zigbee_af_ias_zone_cluster_flush()
 #define sl_zigbee_af_ias_zone_cluster_debug_exec(x)
 #define sl_zigbee_af_ias_zone_cluster_print_buffer(buffer, len, withSpace)
@@ -1457,6 +2284,10 @@
 
 #define sl_zigbee_af_ias_ace_cluster_print(...)
 #define sl_zigbee_af_ias_ace_cluster_println(...)
+#define sl_zigbee_af_ias_ace_cluster_warn(...)
+#define sl_zigbee_af_ias_ace_cluster_warnln(...)
+#define sl_zigbee_af_ias_ace_cluster_error(...)
+#define sl_zigbee_af_ias_ace_cluster_errorln(...)
 #define sl_zigbee_af_ias_ace_cluster_flush()
 #define sl_zigbee_af_ias_ace_cluster_debug_exec(x)
 #define sl_zigbee_af_ias_ace_cluster_print_buffer(buffer, len, withSpace)
@@ -1464,6 +2295,10 @@
 
 #define sl_zigbee_af_ias_wd_cluster_print(...)
 #define sl_zigbee_af_ias_wd_cluster_println(...)
+#define sl_zigbee_af_ias_wd_cluster_warn(...)
+#define sl_zigbee_af_ias_wd_cluster_warnln(...)
+#define sl_zigbee_af_ias_wd_cluster_error(...)
+#define sl_zigbee_af_ias_wd_cluster_errorln(...)
 #define sl_zigbee_af_ias_wd_cluster_flush()
 #define sl_zigbee_af_ias_wd_cluster_debug_exec(x)
 #define sl_zigbee_af_ias_wd_cluster_print_buffer(buffer, len, withSpace)
@@ -1471,6 +2306,10 @@
 
 #define sl_zigbee_af_generic_tunnel_cluster_print(...)
 #define sl_zigbee_af_generic_tunnel_cluster_println(...)
+#define sl_zigbee_af_generic_tunnel_cluster_warn(...)
+#define sl_zigbee_af_generic_tunnel_cluster_warnln(...)
+#define sl_zigbee_af_generic_tunnel_cluster_error(...)
+#define sl_zigbee_af_generic_tunnel_cluster_errorln(...)
 #define sl_zigbee_af_generic_tunnel_cluster_flush()
 #define sl_zigbee_af_generic_tunnel_cluster_debug_exec(x)
 #define sl_zigbee_af_generic_tunnel_cluster_print_buffer(buffer, len, withSpace)
@@ -1478,6 +2317,10 @@
 
 #define sl_zigbee_af_bacnet_protocol_tunnel_cluster_print(...)
 #define sl_zigbee_af_bacnet_protocol_tunnel_cluster_println(...)
+#define sl_zigbee_af_bacnet_protocol_tunnel_cluster_warn(...)
+#define sl_zigbee_af_bacnet_protocol_tunnel_cluster_warnln(...)
+#define sl_zigbee_af_bacnet_protocol_tunnel_cluster_error(...)
+#define sl_zigbee_af_bacnet_protocol_tunnel_cluster_errorln(...)
 #define sl_zigbee_af_bacnet_protocol_tunnel_cluster_flush()
 #define sl_zigbee_af_bacnet_protocol_tunnel_cluster_debug_exec(x)
 #define sl_zigbee_af_bacnet_protocol_tunnel_cluster_print_buffer(buffer, len, withSpace)
@@ -1485,6 +2328,10 @@
 
 #define sl_zigbee_af_11073_protocol_tunnel_cluster_print(...)
 #define sl_zigbee_af_11073_protocol_tunnel_cluster_println(...)
+#define sl_zigbee_af_11073_protocol_tunnel_cluster_warn(...)
+#define sl_zigbee_af_11073_protocol_tunnel_cluster_warnln(...)
+#define sl_zigbee_af_11073_protocol_tunnel_cluster_error(...)
+#define sl_zigbee_af_11073_protocol_tunnel_cluster_errorln(...)
 #define sl_zigbee_af_11073_protocol_tunnel_cluster_flush()
 #define sl_zigbee_af_11073_protocol_tunnel_cluster_debug_exec(x)
 #define sl_zigbee_af_11073_protocol_tunnel_cluster_print_buffer(buffer, len, withSpace)
@@ -1492,6 +2339,10 @@
 
 #define sl_zigbee_af_iso7816_protocol_tunnel_cluster_print(...)
 #define sl_zigbee_af_iso7816_protocol_tunnel_cluster_println(...)
+#define sl_zigbee_af_iso7816_protocol_tunnel_cluster_warn(...)
+#define sl_zigbee_af_iso7816_protocol_tunnel_cluster_warnln(...)
+#define sl_zigbee_af_iso7816_protocol_tunnel_cluster_error(...)
+#define sl_zigbee_af_iso7816_protocol_tunnel_cluster_errorln(...)
 #define sl_zigbee_af_iso7816_protocol_tunnel_cluster_flush()
 #define sl_zigbee_af_iso7816_protocol_tunnel_cluster_debug_exec(x)
 #define sl_zigbee_af_iso7816_protocol_tunnel_cluster_print_buffer(buffer, len, withSpace)
@@ -1499,6 +2350,10 @@
 
 #define sl_zigbee_af_price_cluster_print(...)
 #define sl_zigbee_af_price_cluster_println(...)
+#define sl_zigbee_af_price_cluster_warn(...)
+#define sl_zigbee_af_price_cluster_warnln(...)
+#define sl_zigbee_af_price_cluster_error(...)
+#define sl_zigbee_af_price_cluster_errorln(...)
 #define sl_zigbee_af_price_cluster_flush()
 #define sl_zigbee_af_price_cluster_debug_exec(x)
 #define sl_zigbee_af_price_cluster_print_buffer(buffer, len, withSpace)
@@ -1506,6 +2361,10 @@
 
 #define sl_zigbee_af_demand_response_load_control_cluster_print(...)
 #define sl_zigbee_af_demand_response_load_control_cluster_println(...)
+#define sl_zigbee_af_demand_response_load_control_cluster_warn(...)
+#define sl_zigbee_af_demand_response_load_control_cluster_warnln(...)
+#define sl_zigbee_af_demand_response_load_control_cluster_error(...)
+#define sl_zigbee_af_demand_response_load_control_cluster_errorln(...)
 #define sl_zigbee_af_demand_response_load_control_cluster_flush()
 #define sl_zigbee_af_demand_response_load_control_cluster_debug_exec(x)
 #define sl_zigbee_af_demand_response_load_control_cluster_print_buffer(buffer, len, withSpace)
@@ -1513,6 +2372,10 @@
 
 #define sl_zigbee_af_simple_metering_cluster_print(...)
 #define sl_zigbee_af_simple_metering_cluster_println(...)
+#define sl_zigbee_af_simple_metering_cluster_warn(...)
+#define sl_zigbee_af_simple_metering_cluster_warnln(...)
+#define sl_zigbee_af_simple_metering_cluster_error(...)
+#define sl_zigbee_af_simple_metering_cluster_errorln(...)
 #define sl_zigbee_af_simple_metering_cluster_flush()
 #define sl_zigbee_af_simple_metering_cluster_debug_exec(x)
 #define sl_zigbee_af_simple_metering_cluster_print_buffer(buffer, len, withSpace)
@@ -1520,6 +2383,10 @@
 
 #define sl_zigbee_af_messaging_cluster_print(...)
 #define sl_zigbee_af_messaging_cluster_println(...)
+#define sl_zigbee_af_messaging_cluster_warn(...)
+#define sl_zigbee_af_messaging_cluster_warnln(...)
+#define sl_zigbee_af_messaging_cluster_error(...)
+#define sl_zigbee_af_messaging_cluster_errorln(...)
 #define sl_zigbee_af_messaging_cluster_flush()
 #define sl_zigbee_af_messaging_cluster_debug_exec(x)
 #define sl_zigbee_af_messaging_cluster_print_buffer(buffer, len, withSpace)
@@ -1527,6 +2394,10 @@
 
 #define sl_zigbee_af_tunneling_cluster_print(...)
 #define sl_zigbee_af_tunneling_cluster_println(...)
+#define sl_zigbee_af_tunneling_cluster_warn(...)
+#define sl_zigbee_af_tunneling_cluster_warnln(...)
+#define sl_zigbee_af_tunneling_cluster_error(...)
+#define sl_zigbee_af_tunneling_cluster_errorln(...)
 #define sl_zigbee_af_tunneling_cluster_flush()
 #define sl_zigbee_af_tunneling_cluster_debug_exec(x)
 #define sl_zigbee_af_tunneling_cluster_print_buffer(buffer, len, withSpace)
@@ -1534,6 +2405,10 @@
 
 #define sl_zigbee_af_prepayment_cluster_print(...)
 #define sl_zigbee_af_prepayment_cluster_println(...)
+#define sl_zigbee_af_prepayment_cluster_warn(...)
+#define sl_zigbee_af_prepayment_cluster_warnln(...)
+#define sl_zigbee_af_prepayment_cluster_error(...)
+#define sl_zigbee_af_prepayment_cluster_errorln(...)
 #define sl_zigbee_af_prepayment_cluster_flush()
 #define sl_zigbee_af_prepayment_cluster_debug_exec(x)
 #define sl_zigbee_af_prepayment_cluster_print_buffer(buffer, len, withSpace)
@@ -1541,6 +2416,10 @@
 
 #define sl_zigbee_af_energy_management_cluster_print(...)
 #define sl_zigbee_af_energy_management_cluster_println(...)
+#define sl_zigbee_af_energy_management_cluster_warn(...)
+#define sl_zigbee_af_energy_management_cluster_warnln(...)
+#define sl_zigbee_af_energy_management_cluster_error(...)
+#define sl_zigbee_af_energy_management_cluster_errorln(...)
 #define sl_zigbee_af_energy_management_cluster_flush()
 #define sl_zigbee_af_energy_management_cluster_debug_exec(x)
 #define sl_zigbee_af_energy_management_cluster_print_buffer(buffer, len, withSpace)
@@ -1548,6 +2427,10 @@
 
 #define sl_zigbee_af_calendar_cluster_print(...)
 #define sl_zigbee_af_calendar_cluster_println(...)
+#define sl_zigbee_af_calendar_cluster_warn(...)
+#define sl_zigbee_af_calendar_cluster_warnln(...)
+#define sl_zigbee_af_calendar_cluster_error(...)
+#define sl_zigbee_af_calendar_cluster_errorln(...)
 #define sl_zigbee_af_calendar_cluster_flush()
 #define sl_zigbee_af_calendar_cluster_debug_exec(x)
 #define sl_zigbee_af_calendar_cluster_print_buffer(buffer, len, withSpace)
@@ -1555,6 +2438,10 @@
 
 #define sl_zigbee_af_device_management_cluster_print(...)
 #define sl_zigbee_af_device_management_cluster_println(...)
+#define sl_zigbee_af_device_management_cluster_warn(...)
+#define sl_zigbee_af_device_management_cluster_warnln(...)
+#define sl_zigbee_af_device_management_cluster_error(...)
+#define sl_zigbee_af_device_management_cluster_errorln(...)
 #define sl_zigbee_af_device_management_cluster_flush()
 #define sl_zigbee_af_device_management_cluster_debug_exec(x)
 #define sl_zigbee_af_device_management_cluster_print_buffer(buffer, len, withSpace)
@@ -1562,6 +2449,10 @@
 
 #define sl_zigbee_af_events_cluster_print(...)
 #define sl_zigbee_af_events_cluster_println(...)
+#define sl_zigbee_af_events_cluster_warn(...)
+#define sl_zigbee_af_events_cluster_warnln(...)
+#define sl_zigbee_af_events_cluster_error(...)
+#define sl_zigbee_af_events_cluster_errorln(...)
 #define sl_zigbee_af_events_cluster_flush()
 #define sl_zigbee_af_events_cluster_debug_exec(x)
 #define sl_zigbee_af_events_cluster_print_buffer(buffer, len, withSpace)
@@ -1569,6 +2460,10 @@
 
 #define sl_zigbee_af_mdu_pairing_cluster_print(...)
 #define sl_zigbee_af_mdu_pairing_cluster_println(...)
+#define sl_zigbee_af_mdu_pairing_cluster_warn(...)
+#define sl_zigbee_af_mdu_pairing_cluster_warnln(...)
+#define sl_zigbee_af_mdu_pairing_cluster_error(...)
+#define sl_zigbee_af_mdu_pairing_cluster_errorln(...)
 #define sl_zigbee_af_mdu_pairing_cluster_flush()
 #define sl_zigbee_af_mdu_pairing_cluster_debug_exec(x)
 #define sl_zigbee_af_mdu_pairing_cluster_print_buffer(buffer, len, withSpace)
@@ -1576,6 +2471,10 @@
 
 #define sl_zigbee_af_sub_ghz_cluster_print(...)
 #define sl_zigbee_af_sub_ghz_cluster_println(...)
+#define sl_zigbee_af_sub_ghz_cluster_warn(...)
+#define sl_zigbee_af_sub_ghz_cluster_warnln(...)
+#define sl_zigbee_af_sub_ghz_cluster_error(...)
+#define sl_zigbee_af_sub_ghz_cluster_errorln(...)
 #define sl_zigbee_af_sub_ghz_cluster_flush()
 #define sl_zigbee_af_sub_ghz_cluster_debug_exec(x)
 #define sl_zigbee_af_sub_ghz_cluster_print_buffer(buffer, len, withSpace)
@@ -1583,6 +2482,10 @@
 
 #define sl_zigbee_af_key_establishment_cluster_print(...)
 #define sl_zigbee_af_key_establishment_cluster_println(...)
+#define sl_zigbee_af_key_establishment_cluster_warn(...)
+#define sl_zigbee_af_key_establishment_cluster_warnln(...)
+#define sl_zigbee_af_key_establishment_cluster_error(...)
+#define sl_zigbee_af_key_establishment_cluster_errorln(...)
 #define sl_zigbee_af_key_establishment_cluster_flush()
 #define sl_zigbee_af_key_establishment_cluster_debug_exec(x)
 #define sl_zigbee_af_key_establishment_cluster_print_buffer(buffer, len, withSpace)
@@ -1590,6 +2493,10 @@
 
 #define sl_zigbee_af_information_cluster_print(...)
 #define sl_zigbee_af_information_cluster_println(...)
+#define sl_zigbee_af_information_cluster_warn(...)
+#define sl_zigbee_af_information_cluster_warnln(...)
+#define sl_zigbee_af_information_cluster_error(...)
+#define sl_zigbee_af_information_cluster_errorln(...)
 #define sl_zigbee_af_information_cluster_flush()
 #define sl_zigbee_af_information_cluster_debug_exec(x)
 #define sl_zigbee_af_information_cluster_print_buffer(buffer, len, withSpace)
@@ -1597,6 +2504,10 @@
 
 #define sl_zigbee_af_data_sharing_cluster_print(...)
 #define sl_zigbee_af_data_sharing_cluster_println(...)
+#define sl_zigbee_af_data_sharing_cluster_warn(...)
+#define sl_zigbee_af_data_sharing_cluster_warnln(...)
+#define sl_zigbee_af_data_sharing_cluster_error(...)
+#define sl_zigbee_af_data_sharing_cluster_errorln(...)
 #define sl_zigbee_af_data_sharing_cluster_flush()
 #define sl_zigbee_af_data_sharing_cluster_debug_exec(x)
 #define sl_zigbee_af_data_sharing_cluster_print_buffer(buffer, len, withSpace)
@@ -1604,6 +2515,10 @@
 
 #define sl_zigbee_af_gaming_cluster_print(...)
 #define sl_zigbee_af_gaming_cluster_println(...)
+#define sl_zigbee_af_gaming_cluster_warn(...)
+#define sl_zigbee_af_gaming_cluster_warnln(...)
+#define sl_zigbee_af_gaming_cluster_error(...)
+#define sl_zigbee_af_gaming_cluster_errorln(...)
 #define sl_zigbee_af_gaming_cluster_flush()
 #define sl_zigbee_af_gaming_cluster_debug_exec(x)
 #define sl_zigbee_af_gaming_cluster_print_buffer(buffer, len, withSpace)
@@ -1611,6 +2526,10 @@
 
 #define sl_zigbee_af_data_rate_control_cluster_print(...)
 #define sl_zigbee_af_data_rate_control_cluster_println(...)
+#define sl_zigbee_af_data_rate_control_cluster_warn(...)
+#define sl_zigbee_af_data_rate_control_cluster_warnln(...)
+#define sl_zigbee_af_data_rate_control_cluster_error(...)
+#define sl_zigbee_af_data_rate_control_cluster_errorln(...)
 #define sl_zigbee_af_data_rate_control_cluster_flush()
 #define sl_zigbee_af_data_rate_control_cluster_debug_exec(x)
 #define sl_zigbee_af_data_rate_control_cluster_print_buffer(buffer, len, withSpace)
@@ -1618,6 +2537,10 @@
 
 #define sl_zigbee_af_voice_over_zigbee_cluster_print(...)
 #define sl_zigbee_af_voice_over_zigbee_cluster_println(...)
+#define sl_zigbee_af_voice_over_zigbee_cluster_warn(...)
+#define sl_zigbee_af_voice_over_zigbee_cluster_warnln(...)
+#define sl_zigbee_af_voice_over_zigbee_cluster_error(...)
+#define sl_zigbee_af_voice_over_zigbee_cluster_errorln(...)
 #define sl_zigbee_af_voice_over_zigbee_cluster_flush()
 #define sl_zigbee_af_voice_over_zigbee_cluster_debug_exec(x)
 #define sl_zigbee_af_voice_over_zigbee_cluster_print_buffer(buffer, len, withSpace)
@@ -1625,6 +2548,10 @@
 
 #define sl_zigbee_af_chatting_cluster_print(...)
 #define sl_zigbee_af_chatting_cluster_println(...)
+#define sl_zigbee_af_chatting_cluster_warn(...)
+#define sl_zigbee_af_chatting_cluster_warnln(...)
+#define sl_zigbee_af_chatting_cluster_error(...)
+#define sl_zigbee_af_chatting_cluster_errorln(...)
 #define sl_zigbee_af_chatting_cluster_flush()
 #define sl_zigbee_af_chatting_cluster_debug_exec(x)
 #define sl_zigbee_af_chatting_cluster_print_buffer(buffer, len, withSpace)
@@ -1632,6 +2559,10 @@
 
 #define sl_zigbee_af_payment_cluster_print(...)
 #define sl_zigbee_af_payment_cluster_println(...)
+#define sl_zigbee_af_payment_cluster_warn(...)
+#define sl_zigbee_af_payment_cluster_warnln(...)
+#define sl_zigbee_af_payment_cluster_error(...)
+#define sl_zigbee_af_payment_cluster_errorln(...)
 #define sl_zigbee_af_payment_cluster_flush()
 #define sl_zigbee_af_payment_cluster_debug_exec(x)
 #define sl_zigbee_af_payment_cluster_print_buffer(buffer, len, withSpace)
@@ -1639,6 +2570,10 @@
 
 #define sl_zigbee_af_billing_cluster_print(...)
 #define sl_zigbee_af_billing_cluster_println(...)
+#define sl_zigbee_af_billing_cluster_warn(...)
+#define sl_zigbee_af_billing_cluster_warnln(...)
+#define sl_zigbee_af_billing_cluster_error(...)
+#define sl_zigbee_af_billing_cluster_errorln(...)
 #define sl_zigbee_af_billing_cluster_flush()
 #define sl_zigbee_af_billing_cluster_debug_exec(x)
 #define sl_zigbee_af_billing_cluster_print_buffer(buffer, len, withSpace)
@@ -1646,6 +2581,10 @@
 
 #define sl_zigbee_af_appliance_identification_cluster_print(...)
 #define sl_zigbee_af_appliance_identification_cluster_println(...)
+#define sl_zigbee_af_appliance_identification_cluster_warn(...)
+#define sl_zigbee_af_appliance_identification_cluster_warnln(...)
+#define sl_zigbee_af_appliance_identification_cluster_error(...)
+#define sl_zigbee_af_appliance_identification_cluster_errorln(...)
 #define sl_zigbee_af_appliance_identification_cluster_flush()
 #define sl_zigbee_af_appliance_identification_cluster_debug_exec(x)
 #define sl_zigbee_af_appliance_identification_cluster_print_buffer(buffer, len, withSpace)
@@ -1653,6 +2592,10 @@
 
 #define sl_zigbee_af_meter_identification_cluster_print(...)
 #define sl_zigbee_af_meter_identification_cluster_println(...)
+#define sl_zigbee_af_meter_identification_cluster_warn(...)
+#define sl_zigbee_af_meter_identification_cluster_warnln(...)
+#define sl_zigbee_af_meter_identification_cluster_error(...)
+#define sl_zigbee_af_meter_identification_cluster_errorln(...)
 #define sl_zigbee_af_meter_identification_cluster_flush()
 #define sl_zigbee_af_meter_identification_cluster_debug_exec(x)
 #define sl_zigbee_af_meter_identification_cluster_print_buffer(buffer, len, withSpace)
@@ -1660,6 +2603,10 @@
 
 #define sl_zigbee_af_appliance_events_and_alert_cluster_print(...)
 #define sl_zigbee_af_appliance_events_and_alert_cluster_println(...)
+#define sl_zigbee_af_appliance_events_and_alert_cluster_warn(...)
+#define sl_zigbee_af_appliance_events_and_alert_cluster_warnln(...)
+#define sl_zigbee_af_appliance_events_and_alert_cluster_error(...)
+#define sl_zigbee_af_appliance_events_and_alert_cluster_errorln(...)
 #define sl_zigbee_af_appliance_events_and_alert_cluster_flush()
 #define sl_zigbee_af_appliance_events_and_alert_cluster_debug_exec(x)
 #define sl_zigbee_af_appliance_events_and_alert_cluster_print_buffer(buffer, len, withSpace)
@@ -1667,6 +2614,10 @@
 
 #define sl_zigbee_af_appliance_statistics_cluster_print(...)
 #define sl_zigbee_af_appliance_statistics_cluster_println(...)
+#define sl_zigbee_af_appliance_statistics_cluster_warn(...)
+#define sl_zigbee_af_appliance_statistics_cluster_warnln(...)
+#define sl_zigbee_af_appliance_statistics_cluster_error(...)
+#define sl_zigbee_af_appliance_statistics_cluster_errorln(...)
 #define sl_zigbee_af_appliance_statistics_cluster_flush()
 #define sl_zigbee_af_appliance_statistics_cluster_debug_exec(x)
 #define sl_zigbee_af_appliance_statistics_cluster_print_buffer(buffer, len, withSpace)
@@ -1674,6 +2625,10 @@
 
 #define sl_zigbee_af_electrical_measurement_cluster_print(...)
 #define sl_zigbee_af_electrical_measurement_cluster_println(...)
+#define sl_zigbee_af_electrical_measurement_cluster_warn(...)
+#define sl_zigbee_af_electrical_measurement_cluster_warnln(...)
+#define sl_zigbee_af_electrical_measurement_cluster_error(...)
+#define sl_zigbee_af_electrical_measurement_cluster_errorln(...)
 #define sl_zigbee_af_electrical_measurement_cluster_flush()
 #define sl_zigbee_af_electrical_measurement_cluster_debug_exec(x)
 #define sl_zigbee_af_electrical_measurement_cluster_print_buffer(buffer, len, withSpace)
@@ -1681,6 +2636,10 @@
 
 #define sl_zigbee_af_diagnostics_cluster_print(...)
 #define sl_zigbee_af_diagnostics_cluster_println(...)
+#define sl_zigbee_af_diagnostics_cluster_warn(...)
+#define sl_zigbee_af_diagnostics_cluster_warnln(...)
+#define sl_zigbee_af_diagnostics_cluster_error(...)
+#define sl_zigbee_af_diagnostics_cluster_errorln(...)
 #define sl_zigbee_af_diagnostics_cluster_flush()
 #define sl_zigbee_af_diagnostics_cluster_debug_exec(x)
 #define sl_zigbee_af_diagnostics_cluster_print_buffer(buffer, len, withSpace)
@@ -1688,6 +2647,10 @@
 
 #define sl_zigbee_af_zll_commissioning_cluster_print(...)
 #define sl_zigbee_af_zll_commissioning_cluster_println(...)
+#define sl_zigbee_af_zll_commissioning_cluster_warn(...)
+#define sl_zigbee_af_zll_commissioning_cluster_warnln(...)
+#define sl_zigbee_af_zll_commissioning_cluster_error(...)
+#define sl_zigbee_af_zll_commissioning_cluster_errorln(...)
 #define sl_zigbee_af_zll_commissioning_cluster_flush()
 #define sl_zigbee_af_zll_commissioning_cluster_debug_exec(x)
 #define sl_zigbee_af_zll_commissioning_cluster_print_buffer(buffer, len, withSpace)
@@ -1695,6 +2658,10 @@
 
 #define sl_zigbee_af_sample_mfg_specific_cluster_print(...)
 #define sl_zigbee_af_sample_mfg_specific_cluster_println(...)
+#define sl_zigbee_af_sample_mfg_specific_cluster_warn(...)
+#define sl_zigbee_af_sample_mfg_specific_cluster_warnln(...)
+#define sl_zigbee_af_sample_mfg_specific_cluster_error(...)
+#define sl_zigbee_af_sample_mfg_specific_cluster_errorln(...)
 #define sl_zigbee_af_sample_mfg_specific_cluster_flush()
 #define sl_zigbee_af_sample_mfg_specific_cluster_debug_exec(x)
 #define sl_zigbee_af_sample_mfg_specific_cluster_print_buffer(buffer, len, withSpace)
@@ -1702,6 +2669,10 @@
 
 #define sl_zigbee_af_ota_configuration_cluster_print(...)
 #define sl_zigbee_af_ota_configuration_cluster_println(...)
+#define sl_zigbee_af_ota_configuration_cluster_warn(...)
+#define sl_zigbee_af_ota_configuration_cluster_warnln(...)
+#define sl_zigbee_af_ota_configuration_cluster_error(...)
+#define sl_zigbee_af_ota_configuration_cluster_errorln(...)
 #define sl_zigbee_af_ota_configuration_cluster_flush()
 #define sl_zigbee_af_ota_configuration_cluster_debug_exec(x)
 #define sl_zigbee_af_ota_configuration_cluster_print_buffer(buffer, len, withSpace)
@@ -1709,6 +2680,10 @@
 
 #define sl_zigbee_af_mfglib_cluster_print(...)
 #define sl_zigbee_af_mfglib_cluster_println(...)
+#define sl_zigbee_af_mfglib_cluster_warn(...)
+#define sl_zigbee_af_mfglib_cluster_warnln(...)
+#define sl_zigbee_af_mfglib_cluster_error(...)
+#define sl_zigbee_af_mfglib_cluster_errorln(...)
 #define sl_zigbee_af_mfglib_cluster_flush()
 #define sl_zigbee_af_mfglib_cluster_debug_exec(x)
 #define sl_zigbee_af_mfglib_cluster_print_buffer(buffer, len, withSpace)
@@ -1716,9 +2691,21 @@
 
 #define sl_zigbee_af_sl_wwah_cluster_print(...)
 #define sl_zigbee_af_sl_wwah_cluster_println(...)
+#define sl_zigbee_af_sl_wwah_cluster_warn(...)
+#define sl_zigbee_af_sl_wwah_cluster_warnln(...)
+#define sl_zigbee_af_sl_wwah_cluster_error(...)
+#define sl_zigbee_af_sl_wwah_cluster_errorln(...)
 #define sl_zigbee_af_sl_wwah_cluster_flush()
 #define sl_zigbee_af_sl_wwah_cluster_debug_exec(x)
 #define sl_zigbee_af_sl_wwah_cluster_print_buffer(buffer, len, withSpace)
 #define sl_zigbee_af_sl_wwah_cluster_print_string(buffer)
 
 #endif // (defined(SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT) && (SL_ZIGBEE_DEBUG_ZCL_GROUP_ENABLED == 1))
+
+// green-power-print-wrapper.h maps the same sl_zigbee_af_* names; if it is included
+// after this file, skip redefining those macros there when this TU already used af.h/print.h.
+#ifndef SLI_ZIGBEE_AF_PRINT_MACROS_DEFINED_BY_ZCL_DEBUG_PRINT_H
+#define SLI_ZIGBEE_AF_PRINT_MACROS_DEFINED_BY_ZCL_DEBUG_PRINT_H
+#endif
+
+#endif // SLI_ZIGBEE_APP_FRAMEWORK_UTIL_ZCL_DEBUG_PRINT_H

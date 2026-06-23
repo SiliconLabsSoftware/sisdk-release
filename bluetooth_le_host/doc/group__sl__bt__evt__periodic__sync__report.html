@@ -175,10 +175,10 @@ cte_type</td>
 <td class="fieldname">
 data_status</td>
 <td class="fielddoc">
-<p >Data completeness:</p><ul>
-<li><b>0:</b> Complete</li>
-<li><b>1:</b> Incomplete, more data to come in new events</li>
-<li><b>2:</b> Incomplete, data truncated, no more to come </li>
+<p >Enum <a class="el" href="group__sl__bt__periodic__sync.html#gaa1f741a2a7b46593e4f3f5b5fa40fc8e">sl_bt_periodic_sync_data_status_t</a>. The data completeness status. Values:</p><ul>
+<li><b>sl_bt_periodic_sync_data_status_complete (0x0):</b> All data of the periodic advertisement has been reported.</li>
+<li><b>sl_bt_periodic_sync_data_status_incomplete_more (0x1):</b> Data of the periodic advertisement is incomplete in this event, and more data will come in new events.</li>
+<li><b>sl_bt_periodic_sync_data_status_incomplete_nomore (0x2):</b> Data of the periodic advertisement is incomplete in this event, but no more data will come, i.e., the data of the periodic advertisement is truncated. </li>
 </ul>
 </td></tr>
 <tr><td class="fieldtype">

@@ -61,24 +61,9 @@
 /// Ping transaction finished mask
 #define SL_WISUN_PING_STATUS_TRANSACTION_END        (1LU << 5LU)
 
-/// Ping Start format string
-#define SL_WISUN_PING_START_FORMAT_STR \
-  "PING %s: %u data bytes\n"
-
 /// Ping Destination unreachable format string
 #define SL_WISUN_PING_DEST_UNREACHABLE_STR \
   "[Destination is unreachable]\n"
-
-/// Ping one line statistic format string
-#define SL_WISUN_PING_ONE_LINE_STAT_FORMAT_STR \
-  "[%u bytes from %s: seq=%u time=%lu ms]\n"
-
-/// Ping full statistic format string
-#define SL_WISUN_PING_FULL_STAT_FORMAT_STR                           \
-  "\nPing statistics for %s:\n"                                      \
-  "  Packets: Sent = %lu, Received = %lu, Lost = %u, (%lu%% loss)\n" \
-  "Approximate round trip times in milli-seconds:\n"                 \
-  "  Minimum = %lums, Maximum = %lums, Average = %lums\n\n"
 
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
@@ -142,12 +127,8 @@ __STATIC_INLINE bool _is_ping_evt_error(const uint32_t flags);
 static const osThreadAttr_t _ping_task_attr = {
   .name       = "Ping",
   .attr_bits  = osThreadDetached,
-  .cb_mem     = NULL,
-  .cb_size    = 0,
-  .stack_mem  = NULL,
   .stack_size = app_stack_size_word_to_byte(SL_WISUN_PING_STACK_SIZE_WORD),
-  .priority   = osPriorityNormal2,
-  .tz_module  = 0
+  .priority   = osPriorityNormal2
 };
 
 /// Ping request message queue
@@ -258,8 +239,20 @@ sl_status_t sl_wisun_ping(const sockaddr_in6_t *const remote_addr,
   (void) osMessageQueueReset(_ping_resp_msg_queue);
 
   req = (sl_wisun_ping_info_t *) sl_malloc(sizeof(sl_wisun_ping_info_t));
+  if (!req) {
+    res = SL_STATUS_FAIL;
+    goto error_handler;
+  }
   resp = (sl_wisun_ping_info_t *) sl_malloc(sizeof(sl_wisun_ping_info_t));
+  if (!resp) {
+    res = SL_STATUS_FAIL;
+    goto error_handler;
+  }
   stat = (sl_wisun_ping_stat_t *) sl_malloc(sizeof(sl_wisun_ping_stat_t));
+  if (!stat) {
+    res = SL_STATUS_FAIL;
+    goto error_handler;
+  }
 
   // fill statistic
   stat->packet_count  = packet_count;
@@ -284,7 +277,7 @@ sl_status_t sl_wisun_ping(const sockaddr_in6_t *const remote_addr,
 
   rem_ip_str = app_wisun_trace_util_get_ip_str(&req->remote_addr.sin6_addr);
 
-  printf(SL_WISUN_PING_START_FORMAT_STR,
+  printf("PING %s: %u data bytes\n",
          rem_ip_str, req->packet_length);
   app_wisun_trace_util_destroy_ip_str(rem_ip_str);
 
@@ -299,7 +292,8 @@ sl_status_t sl_wisun_ping(const sockaddr_in6_t *const remote_addr,
 
     if ((!_is_ping_evt_error(flags))
         && (flags & SL_WISUN_PING_STATUS_ABORT_REQUESTED)) {
-      return SL_STATUS_ABORT;
+      res = SL_STATUS_ABORT;
+      goto error_handler;
     }
 
     // Get count of queued messages
@@ -319,7 +313,7 @@ sl_status_t sl_wisun_ping(const sockaddr_in6_t *const remote_addr,
       if (resp->lost) {
         printf(SL_WISUN_PING_DEST_UNREACHABLE_STR);
       } else {
-        printf(SL_WISUN_PING_ONE_LINE_STAT_FORMAT_STR,
+        printf("[%u bytes from %s: seq=%u time=%"PRIu32" ms]\n",
                resp->packet_length,
                rem_ip_str,
                htons(resp->sequence_number),
@@ -365,7 +359,10 @@ sl_status_t sl_wisun_ping(const sockaddr_in6_t *const remote_addr,
 
   rem_ip_str = app_wisun_trace_util_get_ip_str(&req->remote_addr.sin6_addr);
   if (stat_hnd == NULL) {
-    printf(SL_WISUN_PING_FULL_STAT_FORMAT_STR,
+    printf(  "\nPing statistics for %s:\n"
+           "  Packets: Sent = %"PRIu32", Received = %"PRIu32", Lost = %u, (%"PRIu32"%% loss)\n"
+           "Approximate round trip times in milli-seconds:\n"
+           "  Minimum = %"PRIu32"ms, Maximum = %"PRIu32"ms, Average = %"PRIu32"ms\n\n",
            rem_ip_str,
            sum_resp_pkt, sum_resp_pkt - stat->lost,
            stat->lost,
@@ -378,6 +375,7 @@ sl_status_t sl_wisun_ping(const sockaddr_in6_t *const remote_addr,
   }
   app_wisun_trace_util_destroy_ip_str(rem_ip_str);
 
+error_handler:
   // free memory
   sl_free(stat);
   sl_free(req);

@@ -205,8 +205,8 @@ sl_status_t cs_ras_server_database_store_result(sl_bt_msg_t *cs_res,
 
   if (sc == SL_STATUS_HAS_OVERFLOWED) {
     if (mode == CS_RAS_MODE_ON_DEMAND_RANGING_DATA) {
-      cs_ras_send_overwritten(local_connection->conn_handle,
-                              local_connection->cs_procedures[dst_slot].ranging_counter);
+      (void)cs_ras_send_overwritten_internal(local_connection->conn_handle,
+                                             local_connection->cs_procedures[dst_slot].ranging_counter);
     }
     cs_ras_server_log_warning(CONN_PREFIX "Overwriting slot %u" LOG_NL,
                               conn_handle,
@@ -370,8 +370,8 @@ sl_status_t cs_ras_server_database_store_result(sl_bt_msg_t *cs_res,
       cs_ras_server_log_append_debug(LOG_NL "--------" LOG_NL);
       #endif // defined(CS_RAS_SERVER_CONFIG_LOG_DATA) && (CS_RAS_SERVER_CONFIG_LOG_DATA == 1)
       if (mode == CS_RAS_MODE_ON_DEMAND_RANGING_DATA) {
-        cs_ras_send_data_ready(local_connection->conn_handle,
-                               local_connection->cs_procedures[dst_slot].ranging_counter);
+        (void)cs_ras_send_data_ready_internal(local_connection->conn_handle,
+                                              local_connection->cs_procedures[dst_slot].ranging_counter);
       }
       break;
     case sl_bt_cs_done_status_partial_results_continue:
@@ -575,8 +575,8 @@ static sl_status_t add_data(cs_ras_conn_t *connection, uint8_t slot,
 
   for (uint8_t i = 0; i < CS_RAS_PROCEDURE_PER_CONNECTION; i++) {
     if (connection->cs_procedures[i].overwritten) {
-      cs_ras_send_overwritten(connection->conn_handle,
-                              connection->cs_procedures[i].ranging_counter);
+      (void)cs_ras_send_overwritten_internal(connection->conn_handle,
+                                             connection->cs_procedures[i].ranging_counter);
       connection->cs_procedures[i].overwritten = false;
     }
   }

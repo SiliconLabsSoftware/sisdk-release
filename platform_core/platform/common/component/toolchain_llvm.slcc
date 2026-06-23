@@ -3,7 +3,7 @@ label: LLVM Toolchain
 package: platform_core
 description: Toolchain profile for building with LLVM instead of GCC
 category: Platform|Toolchain
-quality: experimental
+quality: production
 tag:
 - toolchain:id:llvm
 metadata:
@@ -35,7 +35,7 @@ library:
 toolchain_settings:
 - option: link_time_optimization
   value: disabled
-  unless: [toolchain_lto]
+  unless: [toolchain_lto, toolchain_gcc_lto, toolchain_llvm_lto]
 - option: linker_option
   value: -nostartfiles
   # As long as LLVM support requires custom GCC templates, trigger an error if not

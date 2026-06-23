@@ -56,6 +56,7 @@ local is_efr32xg28 = slc.is_provided("device_generic_family_efr32xg28")
 local is_efr32xg29 = slc.is_provided("device_generic_family_efr32xg29")
 local is_efr32xg2b = slc.is_provided("device_generic_family_efr32xg2b")
 local is_efr32xg2d = slc.is_provided("device_generic_family_efr32xg2d")
+local is_efr32xg2e = slc.is_provided("device_generic_family_efr32xg2e")
 local is_sixx301 = slc.is_provided("device_generic_family_sixx301")
 
 -- HELPER FUNCTIONS --
@@ -73,7 +74,7 @@ end
 
 -- OSCILLATORS VALIDATION --
 -- HFXO related
-if hfxo_enable.value == "0" and dpll_enable.value == "1" and dpll_refclk.value == "CMU_DPLLREFCLKCTRL_CLKSEL_HFXO" then
+if (hfxo_enable.value == "0" or hfxo_enable.value == "SL_CLOCK_MANAGER_HFXO_EN_DISABLE") and dpll_enable.value == "1" and dpll_refclk.value == "CMU_DPLLREFCLKCTRL_CLKSEL_HFXO" then
     validation.error(
     "DPLL module needs HFXO but SL_CLOCK_MANAGER_HFXO_EN is disabled",
     validation.target_for_defines({"SL_CLOCK_MANAGER_DPLL_REFCLK"}),
@@ -81,7 +82,7 @@ if hfxo_enable.value == "0" and dpll_enable.value == "1" and dpll_refclk.value =
     nil)
 end
 if lfrco_precision_enable ~= nil then
-  if hfxo_enable.value == "0" and (lfrco_precision_enable.value == "1" or lfrco_precision_enable.value == "cmuPrecisionHigh") then
+  if (hfxo_enable.value == "0" or hfxo_enable.value == "SL_CLOCK_MANAGER_HFXO_EN_DISABLE") and (lfrco_precision_enable.value == "1" or lfrco_precision_enable.value == "cmuPrecisionHigh") then
     validation.error(
     "LFRCO High Precision Mode is enabled and requires HFXO, but SL_CLOCK_MANAGER_HFXO_EN is disabled",
     validation.target_for_defines({"SL_CLOCK_MANAGER_LFRCO_PRECISION"}),
@@ -228,7 +229,7 @@ end
  if socpll_refclk ~= nil and socpll_enable ~= nil and socpll_enable.value == "1" then
   local socpll_refclk_freq
   if socpll_refclk.value == "SOCPLL_CTRL_REFCLKSEL_REF_HFXO" then
-    if hfxo_enable.value == "0" then
+    if (hfxo_enable.value == "0" or hfxo_enable.value == "SL_CLOCK_MANAGER_HFXO_EN_DISABLE") then
       validation.error(
       "SOCPLL module needs HFXO but SL_CLOCK_MANAGER_HFXO_EN is disabled",
       validation.target_for_defines({"SL_CLOCK_MANAGER_SOCPLL_REFCLK"}),
@@ -285,22 +286,31 @@ if ext_flash_max_freq ~= nil and ext_flash_max_freq.value == "0" then
 end
 
 -- CLOCK BRANCHES VALIDATION --
+
+if hf_default_clock_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE_AUTO" then
+  if (hfxo_enable.value == "0" or hfxo_enable.value == "SL_CLOCK_MANAGER_HFXO_EN_DISABLE") then
+    hf_default_clock_source.value = "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE_HFRCODPLL"
+  else
+    hf_default_clock_source.value = "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE_HFXO"
+  end
+end
+
 -- SYSCLK
-if sysclk_source.value == "CMU_SYSCLKCTRL_CLKSEL_HFXO" and hfxo_enable.value == "0" then
+if sysclk_source.value == "CMU_SYSCLKCTRL_CLKSEL_HFXO" and (hfxo_enable.value == "0" or hfxo_enable.value == "SL_CLOCK_MANAGER_HFXO_EN_DISABLE") then
   validation.error(
     "SYSCLK source branch is configured on HFXO, but SL_CLOCK_MANAGER_HFXO_EN is disabled",
     validation.target_for_defines({"SL_CLOCK_MANAGER_SYSCLK_SOURCE"}),
     nil,
     nil)
 end
-if sysclk_source.value == "CMU_SYSCLKCTRL_CLKSEL_RFFPLL0SYS" and hfxo_enable.value == "0" then
+if sysclk_source.value == "CMU_SYSCLKCTRL_CLKSEL_RFFPLL0SYS" and (hfxo_enable.value == "0" or hfxo_enable.value == "SL_CLOCK_MANAGER_HFXO_EN_DISABLE") then
   validation.error(
     "SYSCLK source branch is configured on RFFPLL, but SL_CLOCK_MANAGER_HFXO_EN is disabled",
     validation.target_for_defines({"SL_CLOCK_MANAGER_SYSCLK_SOURCE"}),
     nil,
     nil)
 end
-if sysclk_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE" and hf_default_clock_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE_HFXO" and hfxo_enable.value == "0" then
+if sysclk_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE" and hf_default_clock_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE_HFXO" and (hfxo_enable.value == "0" or hfxo_enable.value == "SL_CLOCK_MANAGER_HFXO_EN_DISABLE") then
   validation.error(
     "SYSCLK source branch is configured on HFXO, but SL_CLOCK_MANAGER_HFXO_EN is disabled",
     validation.target_for_defines({"SL_CLOCK_MANAGER_SYSCLK_SOURCE"}),
@@ -316,14 +326,14 @@ if sysclk_source.value == "CMU_SYSCLKCTRL_CLKSEL_SOCPLL" and socpll_enable ~= ni
 end
 
 -- EM01GRACLK
-if em01grpaclk_source.value == "CMU_EM01GRPACLKCTRL_CLKSEL_HFXO" and hfxo_enable.value == "0" then
+if em01grpaclk_source.value == "CMU_EM01GRPACLKCTRL_CLKSEL_HFXO" and (hfxo_enable.value == "0" or hfxo_enable.value == "SL_CLOCK_MANAGER_HFXO_EN_DISABLE") then
   validation.error(
     "EM01GRPACLK source branch is configured on HFXO, but SL_CLOCK_MANAGER_HFXO_EN is disabled",
     validation.target_for_defines({"SL_CLOCK_MANAGER_EM01GRPACLK_SOURCE"}),
     nil,
     nil)
 end
-if em01grpaclk_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE" and hf_default_clock_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE_HFXO" and hfxo_enable.value == "0" then
+if em01grpaclk_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE" and hf_default_clock_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE_HFXO" and (hfxo_enable.value == "0" or hfxo_enable.value == "SL_CLOCK_MANAGER_HFXO_EN_DISABLE") then
   validation.error(
     "EM01GRPACLK source branch is configured on HFXO, but SL_CLOCK_MANAGER_HFXO_EN is disabled",
     validation.target_for_defines({"SL_CLOCK_MANAGER_EM01GRPACLK_SOURCE"}),
@@ -333,14 +343,14 @@ end
 
 -- EM01GRPBCLK
 if em01grpbclk_source ~= nil then
-if em01grpbclk_source.value == "CMU_EM01GRPBCLKCTRL_CLKSEL_HFXO" and hfxo_enable.value == "0" then
+if em01grpbclk_source.value == "CMU_EM01GRPBCLKCTRL_CLKSEL_HFXO" and (hfxo_enable.value == "0" or hfxo_enable.value == "SL_CLOCK_MANAGER_HFXO_EN_DISABLE") then
   validation.error(
     "EM01GRPBCLK source branch is configured on HFXO, but SL_CLOCK_MANAGER_HFXO_EN is disabled",
     validation.target_for_defines({"SL_CLOCK_MANAGER_EM01GRPBCLK_SOURCE"}),
     nil,
     nil)
 end
-if em01grpbclk_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE" and hf_default_clock_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE_HFXO" and hfxo_enable.value == "0" then
+if em01grpbclk_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE" and hf_default_clock_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE_HFXO" and (hfxo_enable.value == "0" or hfxo_enable.value == "SL_CLOCK_MANAGER_HFXO_EN_DISABLE") then
   validation.error(
     "EM01GRPBCLK source branch is configured on HFXO, but SL_CLOCK_MANAGER_HFXO_EN is disabled",
     validation.target_for_defines({"SL_CLOCK_MANAGER_EM01GRPBCLK_SOURCE"}),
@@ -351,14 +361,14 @@ end
 
 -- EM01GRPCCLK
 if em01grpcclk_source ~= nil then
-if em01grpcclk_source.value == "CMU_EM01GRPCCLKCTRL_CLKSEL_HFXO" and hfxo_enable.value == "0" then
+if em01grpcclk_source.value == "CMU_EM01GRPCCLKCTRL_CLKSEL_HFXO" and (hfxo_enable.value == "0" or hfxo_enable.value == "SL_CLOCK_MANAGER_HFXO_EN_DISABLE") then
   validation.error(
     "EM01GRPCCLK source branch is configured on HFXO, but SL_CLOCK_MANAGER_HFXO_EN is disabled",
     validation.target_for_defines({"SL_CLOCK_MANAGER_EM01GRPCCLK_SOURCE"}),
     nil,
     nil)
 end
-if em01grpcclk_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE" and hf_default_clock_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE_HFXO" and hfxo_enable.value == "0" then
+if em01grpcclk_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE" and hf_default_clock_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE_HFXO" and (hfxo_enable.value == "0" or hfxo_enable.value == "SL_CLOCK_MANAGER_HFXO_EN_DISABLE") then
   validation.error(
     "EM01GRPCCLK source branch is configured on HFXO, but SL_CLOCK_MANAGER_HFXO_EN is disabled",
     validation.target_for_defines({"SL_CLOCK_MANAGER_EM01GRPCCLK_SOURCE"}),
@@ -369,14 +379,14 @@ end
 
 -- EM01GRPDCLK
 if em01grpdclk_source ~= nil then
-if em01grpdclk_source.value == "CMU_EM01GRPDCLKCTRL_CLKSEL_HFXO" and hfxo_enable.value == "0" then
+if em01grpdclk_source.value == "CMU_EM01GRPDCLKCTRL_CLKSEL_HFXO" and (hfxo_enable.value == "0" or hfxo_enable.value == "SL_CLOCK_MANAGER_HFXO_EN_DISABLE") then
   validation.error(
     "EM01GRPDCLK source branch is configured on HFXO, but SL_CLOCK_MANAGER_HFXO_EN is disabled",
     validation.target_for_defines({"SL_CLOCK_MANAGER_EM01GRPDCLK_SOURCE"}),
     nil,
     nil)
 end
-if em01grpdclk_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE" and hf_default_clock_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE_HFXO" and hfxo_enable.value == "0" then
+if em01grpdclk_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE" and hf_default_clock_source.value == "SL_CLOCK_MANAGER_DEFAULT_HF_CLOCK_SOURCE_HFXO" and (hfxo_enable.value == "0" or hfxo_enable.value == "SL_CLOCK_MANAGER_HFXO_EN_DISABLE") then
   validation.error(
     "EM01GRPDCLK source branch is configured on HFXO, but SL_CLOCK_MANAGER_HFXO_EN is disabled",
     validation.target_for_defines({"SL_CLOCK_MANAGER_EM01GRPDCLK_SOURCE"}),
@@ -387,7 +397,7 @@ end
 
 -- PIXELRZCLK
 if pixelrzclk_source ~= nil then
-if pixelrzclk_source.value == "CMU_PIXELRZCLKCTRL_CLKSEL_HFXO" and hfxo_enable.value == "0" then
+if pixelrzclk_source.value == "CMU_PIXELRZCLKCTRL_CLKSEL_HFXO" and (hfxo_enable.value == "0" or hfxo_enable.value == "SL_CLOCK_MANAGER_HFXO_EN_DISABLE") then
   validation.error(
     "PIXELRZCLK source branch is configured on HFXO, but SL_CLOCK_MANAGER_HFXO_EN is disabled",
     validation.target_for_defines({"SL_CLOCK_MANAGER_PIXELRZCLK_SOURCE"}),
@@ -620,7 +630,7 @@ elseif max_freq_is_38m then
 elseif is_efr32xg21 or is_efr32xg22 then
   device_thresholds = series2_thresholds(80, 50)  -- HCLK < 80MHz, PCLK < 50MHz
 
-elseif is_efr32xg23 or is_efr32xg24 or is_efr32xg26 or is_efr32xg27 or is_efr32xg28 or is_efr32xg29 or is_efr32xg2d then
+elseif is_efr32xg23 or is_efr32xg24 or is_efr32xg26 or is_efr32xg27 or is_efr32xg28 or is_efr32xg29 or is_efr32xg2d or is_efr32xg2e then
   device_thresholds = series2_thresholds(80, 40)  -- HCLK < 80MHz, PCLK < 40MHz
 
 elseif is_efr32xg25 then

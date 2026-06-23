@@ -1,7 +1,8 @@
 id=com.silabs.sdk.bluetooth_le_app
-version=11.0.2
+version=11.1.0
 label=Bluetooth LE SDK
 description=Bluetooth LE Software Development Kit
+prop.subLabel=Bluetooth\\ 11.1.0
 
 prop.file.docsFile=documentation/slBluetooth_docContent.xml
 prop.file.templatesFile=bluetooth_le_app_templates.xml

@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "em_device.h"
 #if defined _SILICON_LABS_32B_SERIES_2
@@ -80,19 +81,19 @@ void cli_info(sl_cli_command_arg_t *arguments)
 
   app_log_info("Info:\n");
 #if defined(_SILICON_LABS_32B_SERIES_2)
-  app_log_info("  MCU Id:          0x%016llX\n", SYSTEM_GetUnique());
+  app_log_info("  MCU Id:          0x%" PRIX64 "\n", SYSTEM_GetUnique());
 #else
-  app_log_info("  MCU Id:          0x%016llX\n", sl_hal_system_get_unique());
+  app_log_info("  MCU Id:          0x%" PRIX64 "\n", sl_hal_system_get_unique());
 #endif
   if (mode == M_ENDPOINT) {
     active_channel = get_active_channel();
     app_log_info("  Device mode:     endpoint\n");
-    app_log_info("  Active channel:  %d\n", active_channel);
+    app_log_info("  Active channel:  %" PRIu16 "\n", active_channel);
   } else {
     src = get_rx_channel();
     dest = get_tx_channel();
     app_log_info("  Device mode:     relay\n");
-    app_log_info("  Direction:       ch%d -> ch%d\n", src, dest);
+    app_log_info("  Direction:       ch%" PRIu16 " -> ch%" PRIu16 "\n", src, dest);
   }
 }
 
@@ -144,7 +145,7 @@ void cli_send(sl_cli_command_arg_t *arguments)
   if (mode == M_ENDPOINT) {
     request_tx();
     set_next_state(S_IDLE);
-    app_log_info("Send packet request on channel %d\n", active_channel);
+    app_log_info("Send packet request on channel %" PRIu16 "\n", active_channel);
   } else {
     app_log_info("This command has no effect on relay devices\n");
     return;

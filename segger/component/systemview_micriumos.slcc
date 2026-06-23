@@ -6,7 +6,7 @@ category: Third Party|Segger|System View
 quality: production
 metadata:
   sbom:
-    license: Segger
+    license: zlib
 ui_hints:
   visibility: never
 config_file:

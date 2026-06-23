@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform Security - SoC PSA Crypto MAC
 description: >
-  This example project demonstrates the Message Authentication Code (MAC) API.
+  Demonstrates how to compute and verify MACs (HMAC, CMAC) with the PSA Crypto API, in single-part and multi-part modes.
 category: Example|Platform
 filter:
   - name: "Device Type"

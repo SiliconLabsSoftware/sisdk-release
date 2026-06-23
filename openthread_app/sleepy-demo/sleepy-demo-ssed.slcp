@@ -1,8 +1,8 @@
 project_name: sleepy-demo-ssed
-label: OpenThread - SoC Sleepy Demo (SSED)
+label: OpenThread - SoC Sleepy Demo SSED
 package: openthread
 description: >
-  This is a sample application to demonstrate Synchronous Sleepy End Device (SSED) behaviour with CSL, using the EFR32's low power EM2 mode.
+  Demonstrates Synchronous Sleepy End Device (SSED) behaviour with CSL using EFR32's low power EM2 mode.
 category: OpenThread Examples
 quality: production
 
@@ -20,8 +20,11 @@ component:
   - id: power_manager
   - id: bootloader_interface
   - id: clock_manager
-  # Platform - Enable LTO for gcc by installing the following component
+  # Platform - Enable LTO for gcc and llvm by installing the following component
   - id: toolchain_gcc_lto
+    condition: [toolchain_gcc]
+  - id: toolchain_llvm_lto
+    condition: [toolchain_llvm]
 
 include:
   - path: .
@@ -112,6 +115,7 @@ tag:
   - hwfilter:board:simple_button:btn0
   - hwfilter:board:simple_button:btn1
   - toolchain:gcc
+  - toolchain:llvm
 readme:
   - path: ./README.md
 

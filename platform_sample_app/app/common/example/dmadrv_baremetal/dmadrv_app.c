@@ -1,6 +1,6 @@
 /***************************************************************************//**
  * @file
- * @brief DMADRV examples functions
+ * @brief DMA examples functions
  *******************************************************************************
  * # License
  * <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
@@ -19,14 +19,16 @@
 #include <string.h>
 #include <stdarg.h>
 #include "sl_sleeptimer.h"
-#include "dmadrv.h"
+#include "em_device.h"
+#include "sl_dma_manager.h"
+#include "sl_dma_channel.h"
 #include "sl_assert.h"
 
 /*******************************************************************************
  *******************************   DEFINES   ***********************************
  ******************************************************************************/
 
-// Max length of one DMA transfer is defined by DMADRV_MAX_XFER_COUNT
+// Max length of one DMA transfer is defined by the DMA channel driver.
 #define RX_BUFFER_SIZE (8)
 //
 #define TX_BUFFER_SIZE (RX_BUFFER_SIZE + 64)
@@ -34,8 +36,9 @@
 /*******************************************************************************
  ***************************  LOCAL VARIABLES   ********************************
  ******************************************************************************/
-//
-static unsigned int tx_channel, rx_channel;
+
+static uint8_t tx_channel, rx_channel;
+static sl_dma_channel_handle_t tx_handle, rx_handle;
 
 // Transfer and reception buffers
 static char tx_buffer[TX_BUFFER_SIZE + 1]; // An extra character for the NULL character
@@ -47,43 +50,53 @@ static volatile bool rx_transfer_complete;
 /*******************************************************************************
  *********************   LOCAL FUNCTION PROTOTYPES   ***************************
  ******************************************************************************/
-// Callback triggered when DMA transfer on reception channel is complete
-static bool rx_callback(unsigned int channel,
-                        unsigned int sequence_no,
-                        void *user_param)
+
+static void rx_callback(sl_dma_channel_handle_t *handle,
+                        void *user_data,
+                        bool error,
+                        bool aborted);
+static void transmit_data(void);
+
+/*******************************************************************************
+ ***************************  LOCAL FUNCTIONS   ********************************
+ ******************************************************************************/
+
+// Callback triggered when DMA transfer on reception channel is complete.
+static void rx_callback(sl_dma_channel_handle_t *handle,
+                        void *user_data,
+                        bool error,
+                        bool aborted)
 {
-  (void)channel;
-  (void)sequence_no;
-  (void)&user_param;
+  (void)handle;
+  (void)user_data;
+  if (error || aborted) {
+    return;
+  }
   rx_transfer_complete = true;
-  // return value is not used for simple (non ping-pong) transfers
-  return true;
 }
 
-// Function to transfer transmission buffer to USART via DMA
+// Function to transfer transmission buffer to USART via DMA.
 static void transmit_data(void)
 {
-  bool active;
+  sl_dma_channel_status_t status;
 
-  DMADRV_TransferActive(tx_channel, &active);
+  sl_dma_channel_get_status(&tx_handle, &status);
 
-  // wait for any active transfers to finish
-  while (active) {
+  // Wait for any active transfers to finish.
+  while (status.active) {
     sl_sleeptimer_delay_millisecond(1);
-    DMADRV_TransferActive(tx_channel, &active);
+    sl_dma_channel_get_status(&tx_handle, &status);
   }
 
-  // Transfer data from tx buffer to USART peripheral
-  DMADRV_MemoryPeripheral(tx_channel,
-                          dmadrvPeripheralSignal_USART0_TXBL,
-                          (void*)&(USART0->TXDATA),
-                          tx_buffer,
-                          true,
-                          strlen(tx_buffer),
-                          dmadrvDataSize1,
-                          NULL,
-                          NULL);
+  // Transfer data from tx buffer to USART peripheral.
+  sl_dma_channel_submit_transfer_m2p(&tx_handle,
+                                     tx_buffer,
+                                     (void *)&(USART0->TXDATA),
+                                     strlen(tx_buffer),
+                                     SL_DMA_CTRL_SIZE_BYTE,
+                                     NULL);
 }
+
 /*******************************************************************************
  **************************   GLOBAL FUNCTIONS   *******************************
  ******************************************************************************/
@@ -93,28 +106,41 @@ static void transmit_data(void)
  ******************************************************************************/
 void dmadrv_app_init(void)
 {
-  DMADRV_Init();
-  uint32_t status;
+  // DMA Manager is auto-initialized via SL Main — no manual init call needed.
+  sl_status_t status;
 
-  // Allocate channels for transmission and reception
-  status = DMADRV_AllocateChannel(&tx_channel, NULL);
-  EFM_ASSERT(status == ECODE_EMDRV_DMADRV_OK);
-  status = DMADRV_AllocateChannel(&rx_channel, NULL);
-  EFM_ASSERT(status == ECODE_EMDRV_DMADRV_OK);
+  // Allocate channels for transmission and reception.
+  status = sl_dma_manager_allocate_channel(NULL, &tx_channel);
+  EFM_ASSERT(status == SL_STATUS_OK);
+  status = sl_dma_manager_allocate_channel(NULL, &rx_channel);
+  EFM_ASSERT(status == SL_STATUS_OK);
 
-  // Initialise transfer complete flag
+  // Initialize per-channel driver instances.
+  // Signature: sl_dma_channel_init(handle*, peripheral, channel_number, callback, user_data)
+  // TX channel: no callback — transfer completion is polled via sl_dma_channel_get_status.
+  status = sl_dma_channel_init(&tx_handle, SL_PERIPHERAL_LDMA0, tx_channel, NULL, NULL);
+  EFM_ASSERT(status == SL_STATUS_OK);
+  status = sl_dma_channel_init(&rx_handle, SL_PERIPHERAL_LDMA0, rx_channel, rx_callback, NULL);
+  EFM_ASSERT(status == SL_STATUS_OK);
+
+  // Set peripheral signals once; these do not change between transfers.
+  // Verify exact signal names against sl_dma_signals.h for the target device.
+  sl_dma_channel_set_peripheral_signal(&tx_handle, SL_DMA_SIGNAL_USART0_TXBL);
+  sl_dma_channel_set_peripheral_signal(&rx_handle, SL_DMA_SIGNAL_USART0_RXDATAV);
+
+  // Initialise transfer complete flag.
   rx_transfer_complete = false;
 
-  snprintf(tx_buffer, sizeof(tx_buffer), "Welcome to the DMADRV sample application\r\nEnter data\r\n");
+  snprintf(tx_buffer, sizeof(tx_buffer), "Welcome to the DMA sample application\r\nEnter data\r\n");
   transmit_data();
 }
 
 /***************************************************************************//**
  * Ticking function.
  ******************************************************************************/
-void  dmadrv_app_process_action(void)
+void dmadrv_app_process_action(void)
 {
-  bool active;
+  sl_dma_channel_status_t status;
 
   if (rx_transfer_complete) {
     rx_transfer_complete = false;
@@ -122,18 +148,15 @@ void  dmadrv_app_process_action(void)
     transmit_data();
   }
 
-  DMADRV_TransferActive(rx_channel, &active);
+  sl_dma_channel_get_status(&rx_handle, &status);
 
-  if (!active) {
-    // Start data transfer from USART peripheral to rx buffer
-    DMADRV_PeripheralMemory(rx_channel,
-                            dmadrvPeripheralSignal_USART0_RXDATAV,
-                            rx_buffer,
-                            (void*)&(USART0->RXDATA),
-                            true,
-                            RX_BUFFER_SIZE,
-                            dmadrvDataSize1,
-                            rx_callback,
-                            NULL);
+  if (!status.active) {
+    // Start data transfer from USART peripheral to rx buffer.
+    sl_dma_channel_submit_transfer_p2m(&rx_handle,
+                                       (void *)&(USART0->RXDATA),
+                                       rx_buffer,
+                                       RX_BUFFER_SIZE,
+                                       SL_DMA_CTRL_SIZE_BYTE,
+                                       NULL);
   }
 }

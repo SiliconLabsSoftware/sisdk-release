@@ -82,7 +82,7 @@
 <title>BGAPI message summary</title>
 <para>The following table summarizes the class and message IDs of commands and events in the BGAPI protocol. A response message has the same class and message ID as the command it responds to.</para>
 <para>The table also shows the minimum payload length for each message. Messages that have an array parameter can have longer payload length depending on the length of the array.</para>
-<para><para><table rows="436" cols="5"><caption>BGAPI message header summary</caption>
+<para><para><table rows="454" cols="5"><caption>BGAPI message header summary</caption>
 <row>
 <entry thead="yes"><para>Message Name </para>
 </entry><entry thead="yes"><para>Class ID </para>
@@ -294,6 +294,18 @@
 </entry><entry thead="no"><para>7  </para>
 </entry></row>
 <row>
+<entry thead="no" class="message-name"><para><ref refid="group__sl__bt__linklayer_1ga9a51a04253b62f6b706570b1ef930b8b" kindref="member">cmd_linklayer_get_hci_connection_handle</ref> </para>
+</entry><entry thead="no"><para>0x60 </para>
+</entry><entry thead="no"><para>0x01 </para>
+</entry><entry thead="no"><para>1  </para>
+</entry></row>
+<row>
+<entry thead="no" class="message-name"><para><ref refid="group__sl__bt__linklayer_1ga394c7a511b8095400378e895af4d0238" kindref="member">cmd_linklayer_get_bgapi_connection_handle</ref> </para>
+</entry><entry thead="no"><para>0x60 </para>
+</entry><entry thead="no"><para>0x02 </para>
+</entry><entry thead="no"><para>2  </para>
+</entry></row>
+<row>
 <entry thead="no" colspan="5" class="msg-type-header"><para>Events  </para>
 </entry></row>
 <row>
@@ -360,6 +372,12 @@
 </entry><entry thead="no"><para>2  </para>
 </entry></row>
 <row>
+<entry thead="no" class="message-name"><para><ref refid="group__sl__bt__gap_1ga3c379e284417946314ba65eeae5c9bd3" kindref="member">cmd_gap_set_privacy_mode_with_rpa_randomization</ref> </para>
+</entry><entry thead="no"><para>0x02 </para>
+</entry><entry thead="no"><para>0x07 </para>
+</entry><entry thead="no"><para>3  </para>
+</entry></row>
+<row>
 <entry thead="no" class="message-name"><para><ref refid="group__sl__bt__gap_1gae1ee4d45283563a12394f5261e45f952" kindref="member">cmd_gap_set_data_channel_classification</ref> </para>
 </entry><entry thead="no"><para>0x02 </para>
 </entry><entry thead="no"><para>0x02 </para>
@@ -382,6 +400,15 @@
 </entry><entry thead="no"><para>0x02 </para>
 </entry><entry thead="no"><para>0x06 </para>
 </entry><entry thead="no"><para>0  </para>
+</entry></row>
+<row>
+<entry thead="no" colspan="5" class="msg-type-header"><para>Events  </para>
+</entry></row>
+<row>
+<entry thead="no" class="message-name"><para><ref refid="group__sl__bt__evt__gap__random__address__refresh" kindref="compound">evt_gap_random_address_refresh</ref> </para>
+</entry><entry thead="no"><para>0x02 </para>
+</entry><entry thead="no"><para>0x00 </para>
+</entry><entry thead="no"><para>7  </para>
 </entry></row>
 <row>
 <entry thead="no" colspan="4" class="msg-summary-header"><para><ref refid="group__sl__bt__advertiser" kindref="compound">Advertiser</ref>  </para>
@@ -463,6 +490,12 @@
 </entry><entry thead="no"><para>0x04 </para>
 </entry><entry thead="no"><para>0x02 </para>
 </entry><entry thead="no"><para>9  </para>
+</entry></row>
+<row>
+<entry thead="no" class="message-name"><para><ref refid="group__sl__bt__evt__advertiser__random__address__refresh" kindref="compound">evt_advertiser_random_address_refresh</ref> </para>
+</entry><entry thead="no"><para>0x04 </para>
+</entry><entry thead="no"><para>0x03 </para>
+</entry><entry thead="no"><para>8  </para>
 </entry></row>
 <row>
 <entry thead="no" colspan="4" class="msg-summary-header"><para><ref refid="group__sl__bt__legacy__advertiser" kindref="compound">Legacy Advertiser</ref>  </para>
@@ -552,6 +585,12 @@
 <entry thead="no" class="message-name"><para><ref refid="group__sl__bt__periodic__advertiser_1gad70b3fd35ebf8e87f78d5ecab0117d4c" kindref="member">cmd_periodic_advertiser_set_long_data</ref> </para>
 </entry><entry thead="no"><para>0x58 </para>
 </entry><entry thead="no"><para>0x01 </para>
+</entry><entry thead="no"><para>1  </para>
+</entry></row>
+<row>
+<entry thead="no" class="message-name"><para><ref refid="group__sl__bt__periodic__advertiser_1gad0487b1e80033fd1ba4ee393a1f1e9fa" kindref="member">cmd_periodic_advertiser_refresh_data_id</ref> </para>
+</entry><entry thead="no"><para>0x58 </para>
+</entry><entry thead="no"><para>0x04 </para>
 </entry><entry thead="no"><para>1  </para>
 </entry></row>
 <row>
@@ -1905,6 +1944,12 @@
 </entry><entry thead="no"><para>0  </para>
 </entry></row>
 <row>
+<entry thead="no" class="message-name"><para><ref refid="group__sl__bt__resolving__list_1ga7f27695892c85b0bc53204d0622cc2ed" kindref="member">cmd_resolving_list_read_peer_resolvable_address</ref> </para>
+</entry><entry thead="no"><para>0x5d </para>
+</entry><entry thead="no"><para>0x05 </para>
+</entry><entry thead="no"><para>7  </para>
+</entry></row>
+<row>
 <entry thead="no" colspan="4" class="msg-summary-header"><para><ref refid="group__sl__bt__accept__list" kindref="compound">Filter Accept List</ref>  </para>
 </entry></row>
 <row>
@@ -2043,6 +2088,36 @@
 </entry><entry thead="no"><para>1  </para>
 </entry></row>
 <row>
+<entry thead="no" class="message-name"><para><ref refid="group__sl__bt__cs_1ga2ba75f26352698b6c8cb752c16b342f7" kindref="member">cmd_cs_handover_get_procedure_parameters</ref> </para>
+</entry><entry thead="no"><para>0x59 </para>
+</entry><entry thead="no"><para>0x0a </para>
+</entry><entry thead="no"><para>2  </para>
+</entry></row>
+<row>
+<entry thead="no" class="message-name"><para><ref refid="group__sl__bt__cs_1ga7be074a19c9a267769c4325feeb4b720" kindref="member">cmd_cs_handover_set_procedure_parameters</ref> </para>
+</entry><entry thead="no"><para>0x59 </para>
+</entry><entry thead="no"><para>0x0b </para>
+</entry><entry thead="no"><para>1  </para>
+</entry></row>
+<row>
+<entry thead="no" class="message-name"><para><ref refid="group__sl__bt__cs_1ga980aaeacdecec62c35335dd2ceb39727" kindref="member">cmd_cs_handover_create_sync</ref> </para>
+</entry><entry thead="no"><para>0x59 </para>
+</entry><entry thead="no"><para>0x0c </para>
+</entry><entry thead="no"><para>4  </para>
+</entry></row>
+<row>
+<entry thead="no" class="message-name"><para><ref refid="group__sl__bt__cs_1ga3757cf65977fcfec697aa5229ec953ed" kindref="member">cmd_cs_handover_enable_procedure</ref> </para>
+</entry><entry thead="no"><para>0x59 </para>
+</entry><entry thead="no"><para>0x0d </para>
+</entry><entry thead="no"><para>8  </para>
+</entry></row>
+<row>
+<entry thead="no" class="message-name"><para><ref refid="group__sl__bt__cs_1ga8166fe81e523a4fa446c954a87a548bc" kindref="member">cmd_cs_handover_remove_procedure</ref> </para>
+</entry><entry thead="no"><para>0x59 </para>
+</entry><entry thead="no"><para>0x0e </para>
+</entry><entry thead="no"><para>2  </para>
+</entry></row>
+<row>
 <entry thead="no" colspan="5" class="msg-type-header"><para>Events  </para>
 </entry></row>
 <row>
@@ -2080,6 +2155,30 @@
 </entry><entry thead="no"><para>0x59 </para>
 </entry><entry thead="no"><para>0x04 </para>
 </entry><entry thead="no"><para>31  </para>
+</entry></row>
+<row>
+<entry thead="no" class="message-name"><para><ref refid="group__sl__bt__evt__cs__handover__sync__established" kindref="compound">evt_cs_handover_sync_established</ref> </para>
+</entry><entry thead="no"><para>0x59 </para>
+</entry><entry thead="no"><para>0x06 </para>
+</entry><entry thead="no"><para>6  </para>
+</entry></row>
+<row>
+<entry thead="no" class="message-name"><para><ref refid="group__sl__bt__evt__cs__handover__complete" kindref="compound">evt_cs_handover_complete</ref> </para>
+</entry><entry thead="no"><para>0x59 </para>
+</entry><entry thead="no"><para>0x07 </para>
+</entry><entry thead="no"><para>3  </para>
+</entry></row>
+<row>
+<entry thead="no" class="message-name"><para><ref refid="group__sl__bt__evt__cs__handover__result" kindref="compound">evt_cs_handover_result</ref> </para>
+</entry><entry thead="no"><para>0x59 </para>
+</entry><entry thead="no"><para>0x08 </para>
+</entry><entry thead="no"><para>15  </para>
+</entry></row>
+<row>
+<entry thead="no" class="message-name"><para><ref refid="group__sl__bt__evt__cs__handover__result__continue" kindref="compound">evt_cs_handover_result_continue</ref> </para>
+</entry><entry thead="no"><para>0x59 </para>
+</entry><entry thead="no"><para>0x09 </para>
+</entry><entry thead="no"><para>8  </para>
 </entry></row>
 <row>
 <entry thead="no" colspan="4" class="msg-summary-header"><para><ref refid="group__sl__bt__cs__test" kindref="compound">Channel Sounding Test</ref>  </para>
@@ -2347,6 +2446,12 @@
 </entry><entry thead="no"><para>0x48 </para>
 </entry><entry thead="no"><para>0x00 </para>
 </entry><entry thead="no"><para>33  </para>
+</entry></row>
+<row>
+<entry thead="no" class="message-name"><para><ref refid="group__sl__bt__connection__analyzer_1ga5d5990b00a62ef42f034e58c89e0c451" kindref="member">cmd_connection_analyzer_process_llcp_event</ref> </para>
+</entry><entry thead="no"><para>0x48 </para>
+</entry><entry thead="no"><para>0x02 </para>
+</entry><entry thead="no"><para>2  </para>
 </entry></row>
 <row>
 <entry thead="no" class="message-name"><para><ref refid="group__sl__bt__connection__analyzer_1gadf538d051a2f17718bbe1ca1d6941f20" kindref="member">cmd_connection_analyzer_stop</ref> </para>

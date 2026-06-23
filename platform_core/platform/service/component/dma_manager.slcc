@@ -1,0 +1,46 @@
+id: dma_manager
+label: DMA Manager
+package: platform_core
+description: >
+  The DMA Manager service is in charge of initializing and enabling the DMA peripheral, managing the DMA interrupts,
+  configuring channel prioritization, dynamically allocating channels and sync bits.
+category: Services|DMA Manager
+quality: production
+metadata:
+  sbom:
+    license: Zlib
+provides:
+- name: dma_manager
+requires:
+- name: dma_manager_init
+- name: device_peripheral
+- name: memory_manager
+- name: dma_manager_hal
+- name: status
+- name: sl_core
+- name: sl_common
+- name: bit
+- name: slist
+- name: code_classification
+- name: component_catalog
+root_path: platform_core/platform/service/dma_manager
+source:
+- path: src/sl_dma_manager.c
+include:
+- path: inc
+  file_list:
+  - path: sl_dma_manager.h
+- path: src
+  file_list:
+  - path: sli_dma_manager_internal.h
+template_contribution:
+- name: component_catalog
+  value: dma_manager
+- name: code_classification_components
+  value: dma_manager
+define:
+- name: SL_CODE_COMPONENT_DMA_MANAGER
+  value: dma_manager
+documentation:
+  docset: gecko-platform
+  document: platform-service/dma-manager

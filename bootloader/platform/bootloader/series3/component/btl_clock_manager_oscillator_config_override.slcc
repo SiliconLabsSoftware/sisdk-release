@@ -1,0 +1,29 @@
+id: clock_manager_oscillator_config_override
+label: Clock Manager Oscillator Configuration (Bootloader Override)
+package: bootloader
+description: >
+  Bootloader-oriented Clock Manager oscillator CMSIS configuration for SiWx301 (Series 3).
+  Contributes an override of the Clock Manager oscillator config slot (same mechanism as
+  board packages): the generated sl_clock_manager_oscillator_config.h replaces the default
+  Clock Manager template when this component is installed, without changing clock_manager.slcc.
+  Board packages that list unless clock_manager_oscillator_config_override on their Clock
+  Manager oscillator entries will skip their board file when this component is present.
+  Required by Bootloader Core (Series-3) for SiWx301 devices; also requires Clock Manager.
+  In Simplicity Studio the settings
+  are edited under the Clock Manager component (override target), not as a separate file
+  entry on this component.
+category: Platform|Bootloader|Core
+quality: production
+root_path: bootloader/platform/bootloader/series3/config/device_series_3/
+config_file:
+# Series-3
+- path: sl_clock_manager_oscillator_config.h
+  override:
+    component: clock_manager
+    file_id: clock_manager_oscillator_config
+    vendor: silabs
+metadata:
+  sbom:
+    license: Zlib
+provides:
+- name: clock_manager_oscillator_config_override

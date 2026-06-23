@@ -7,7 +7,7 @@ description: >
   (Host-Controller Interface) over CPC (Co-Processor Communication) protocol
   through UART connection.
 category: Bluetooth Examples
-quality: experimental
+quality: production
 
 filter:
   - name: "Wireless Technology"

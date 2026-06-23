@@ -2,7 +2,7 @@
  * @brief RAIL Configuration
  * @details
  *   WARNING: Auto-Generated Radio Config Header  -  DO NOT EDIT
- *   Radio Configurator Version: 2502.4.8
+ *   Radio Configurator Version: 2602.5.0
  *   RAIL Adapter Version: 2.4.33
  *   RAIL Compatibility: 2.x
  *******************************************************************************
@@ -32,15 +32,17 @@
  *
  ******************************************************************************/
 
-#ifndef __SL_RAIL_UTIL_RX_DUTY_CYCLING_RADIO_CONFIG_H__
-#define __SL_RAIL_UTIL_RX_DUTY_CYCLING_RADIO_CONFIG_H__
+#ifndef __SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_RADIO_CONFIG_H__
+#define __SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_RADIO_CONFIG_H__
 
 #include <stdint.h>
 #include "rail_types.h"
-#include "sl_code_classification.h"
 
-const uint32_t RAIL_IEEE802154_PhyRxDC_modemConfigBase[];
+extern const uint32_t RAIL_IEEE802154_PhyRxDC_modemConfigBase[];
+
+#define RAIL0_RAIL_IEEE802154_PHYRXDC_PHY_HDRMODESWITCH_DUTYCYCLE_DUALSYNC
+#define RAIL0_RAIL_IEEE802154_PHYRXDC_PROFILE_BASE
 extern const RAIL_ChannelConfig_t RAIL_IEEE802154_PhyRxDC_channelConfig;
 extern const RAIL_ChannelConfigEntry_t RAIL_IEEE802154_PhyRxDC_channels[];
 
-#endif // __SL_RAIL_UTIL_RX_DUTY_CYCLING_RADIO_CONFIG_H__
+#endif // __SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_RADIO_CONFIG_H__

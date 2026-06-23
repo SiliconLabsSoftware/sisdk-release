@@ -3,7 +3,7 @@
  * @brief callback event handlers for cbke-crypto-engine
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -27,6 +27,10 @@ void sli_zigbee_stack_calculate_smacs_283k1_handler(sl_status_t status,
                                                     sl_zigbee_smac_data_t *responderSmac)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.calculate_smacs_283k1_handler.status = status;
 
   if (initiatorSmac != NULL) {
@@ -50,6 +54,10 @@ void sli_zigbee_stack_calculate_smacs_handler(sl_status_t status,
                                               sl_zigbee_smac_data_t *responderSmac)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.calculate_smacs_handler.status = status;
 
   if (initiatorSmac != NULL) {
@@ -73,8 +81,17 @@ void sli_zigbee_stack_dsa_sign_handler(sl_status_t status,
                                        uint8_t *messageContents)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.dsa_sign_handler.status = status;
   cb_event->data.dsa_sign_handler.messageLength = messageLength;
+
+  if (messageLength > MAX_IPC_VEC_ARG_CAPACITY) {
+    assert(false); // "vector messageContents length exceeds expected maximum
+    messageLength = MAX_IPC_VEC_ARG_CAPACITY;
+  }
 
   if (messageContents != NULL) {
     memmove(cb_event->data.dsa_sign_handler.messageContents, messageContents, sizeof(uint8_t) * messageLength);
@@ -91,6 +108,10 @@ void sli_zigbee_stack_dsa_sign_handler(sl_status_t status,
 void sli_zigbee_stack_dsa_verify_handler(sl_status_t status)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.dsa_verify_handler.status = status;
   cb_event->tag = SLI_ZIGBEE_STACK_DSA_VERIFY_HANDLER_IPC_EVENT_TYPE;
   #ifndef SL_ZIGBEE_MULTI_NETWORK_STRIPPED
@@ -104,6 +125,10 @@ void sli_zigbee_stack_generate_cbke_keys_283k1_handler(sl_status_t status,
                                                        sl_zigbee_public_key_283k1_data_t *ephemeralPublicKey)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.generate_cbke_keys_283k1_handler.status = status;
 
   if (ephemeralPublicKey != NULL) {
@@ -122,6 +147,10 @@ void sli_zigbee_stack_generate_cbke_keys_handler(sl_status_t status,
                                                  sl_zigbee_public_key_data_t *ephemeralPublicKey)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.generate_cbke_keys_handler.status = status;
 
   if (ephemeralPublicKey != NULL) {

@@ -131,7 +131,7 @@ void sl_zigbee_af_button_joining_press_button(uint8_t button)
   bool result = buttonPress(button, BUTTON_PRESSED);
   buttonPress(button, BUTTON_RELEASED);
   if (!result) {
-    sl_zigbee_af_core_println("Invalid button %d", button);
+    sl_zigbee_af_cli_println("Invalid button %d", button);
   }
 }
 

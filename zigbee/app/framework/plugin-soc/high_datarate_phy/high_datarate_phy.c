@@ -58,7 +58,6 @@ void sl_high_datarate_phy_print_stats_command(sl_cli_command_arg_t *arguments);
 void sl_high_datarate_phy_tx_command(sl_cli_command_arg_t *arguments);
 void sl_high_datarate_phy_tx_sched_command(sl_cli_command_arg_t *arguments);
 void sl_high_datarate_phy_set_phy_command(sl_cli_command_arg_t *arguments);
-void sl_high_datarate_phy_get_phy_command(sl_cli_command_arg_t *arguments);
 void sl_high_datarate_phy_force_tx_after_failed_hdr_phy_cca_command(sl_cli_command_arg_t *arguments);
 
 void (*sl_high_datarate_phy_rx_callback)(uint8_t *packet, uint8_t linkQuality, int8_t rssi, uint32_t pkt_rx_timestamp) = NULL;
@@ -377,29 +376,6 @@ sl_status_t sl_high_datarate_phy_transmit_scheduled(uint8_t *payload, sl_rail_ti
 
 static sl_rail_ieee802154_phy_features_t desired_phy_features = SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_2_MBPS;
 
-// Function to get human-readable name for sl_rail_util_radio_config_t values
-static const char* get_phy_name(sl_rail_util_radio_config_t phy_id)
-{
-  switch (phy_id) {
-    case SL_RAIL_IEEE802154_PHY_2P4_GHZ:                    return "2P4_GHZ";
-    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_ANT_DIV:            return "2P4_GHZ_ANT_DIV";
-    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_COEX:               return "2P4_GHZ_COEX";
-    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_ANT_DIV_COEX:       return "2P4_GHZ_ANT_DIV_COEX";
-    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_FEM:                return "2P4_GHZ_FEM";
-    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_FEM_ANT_DIV:        return "2P4_GHZ_FEM_ANT_DIV";
-    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_FEM_COEX:           return "2P4_GHZ_FEM_COEX";
-    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_FEM_ANT_DIV_COEX:   return "2P4_GHZ_FEM_ANT_DIV_COEX";
-    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_2_MBPS:             return "2P4_GHZ_2_MBPS";
-    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_RX_CH_SWITCHING:    return "2P4_GHZ_RX_CH_SWITCHING";
-    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_1_MBPS_FEC:         return "2P4_GHZ_1_MBPS_FEC";
-    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_FCS_2_MBPS:         return "2P4_GHZ_FCS_2_MBPS";
-    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_FCS_1_MBPS_FEC:     return "2P4_GHZ_FCS_1_MBPS_FEC";
-    case SL_RAIL_IEEE802154_PHY_863_MHZ_GB868:              return "863_MHZ_GB868";
-    case SL_RAIL_IEEE802154_PHY_915_MHZ_GB868:              return "915_MHZ_GB868";
-    default:                                                return NULL;
-  }
-}
-
 sl_rail_ieee802154_phy_features_t sl_rail_util_ieee802154_get_high_speed_phy_features(void)
 {
   return desired_phy_features;
@@ -409,7 +385,7 @@ void sl_high_datarate_phy_set_phy_command(sl_cli_command_arg_t *arguments)
 {
   uint8_t switch_rate = sl_cli_get_argument_uint8(arguments, 0);
   if ( switch_rate == 0) {
-    #ifdef SL_CATALOG_SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT
+    #if defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT) && !defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
     desired_phy_features = SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_DUTY_CYCLING;
     #else
     desired_phy_features = SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ;
@@ -420,20 +396,6 @@ void sl_high_datarate_phy_set_phy_command(sl_cli_command_arg_t *arguments)
     desired_phy_features = SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_2_MBPS;
   } else {
     sl_zigbee_app_debug_println("No HDR phy switch to the invalid value of %d Mps.", switch_rate);
-  }
-}
-
-void sl_high_datarate_phy_get_phy_command(sl_cli_command_arg_t *arguments)
-{
-  UNUSED_VAR(arguments);
-
-  sl_rail_util_radio_config_t active_phy = sl_rail_util_ieee802154_get_active_radio_config();
-  const char* phy_name = get_phy_name(active_phy);
-
-  if (phy_name != NULL) {
-    sl_zigbee_app_debug_println("Active Radio PHY: %s", phy_name);
-  } else {
-    sl_zigbee_app_debug_println("Active Radio PHY: unknown PHY combination of (0x%02X)", active_phy);
   }
 }
 

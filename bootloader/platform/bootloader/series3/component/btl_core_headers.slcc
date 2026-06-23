@@ -1,0 +1,26 @@
+id: btl_core_headers
+label: Series-3 bootloader core headers
+package: bootloader
+description: >
+  Narrow helper component for Series-3 leaf tests that need core header access
+  without directly requiring the full bootloader_interface_s3 bundle. Uses
+  existing header owners for Series-3 interface/core utility headers and
+  bootloader_interface_headers, and only owns the shared reset header needed by these tests.
+  Series-3 btl_config.h remains on visible components such as btl_core.
+category: Platform|Bootloader|Core
+quality: production
+ui_hints:
+  visibility: never
+include:
+- path: platform/bootloader
+  file_list:
+  - path: core/btl_reset.h
+provides:
+- name: btl_core_headers
+requires:
+- name: bootloader_interface_s3_bootload_headers
+- name: bootloader_interface_headers
+metadata:
+  sbom:
+    license: MSLA
+root_path: bootloader

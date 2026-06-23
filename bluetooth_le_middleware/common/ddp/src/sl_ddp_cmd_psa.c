@@ -39,9 +39,9 @@
 // -----------------------------------------------------------------------------
 // Definitions
 
-#define PSA_KEY_LIFETIME                                              \
-  PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION(                     \
-    PSA_KEY_LIFETIME_PERSISTENT,                                      \
+#define PSA_KEY_LIFETIME                          \
+  PSA_KEY_LIFETIME_FROM_PERSISTENCE_AND_LOCATION( \
+    PSA_KEY_LIFETIME_PERSISTENT,                  \
     KEY_LOCATION)
 
 // Input structure of DDP PSA ITS set command

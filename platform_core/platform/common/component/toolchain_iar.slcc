@@ -14,6 +14,11 @@ provides:
 - name: toolchain
 - name: toolchain_iar
 - name: toolchain_supports_arm
+  # IAR does not support LTO. This provider is intentionally a no-op and only
+  # exists to avoid generation failures when an application requires
+  # toolchain_lto while being generated with the IAR toolchain.
+- name: toolchain_lto
+  allow_multiple: true
 requires:
 - name: toolchain_linker_type
 - name: toolchain_variant

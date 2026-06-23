@@ -4,12 +4,11 @@
  *
  * @copyright 2022 Silicon Laboratories Inc.
  */
-#include <SerialAPI_hw.h>
-#include <app_hw.h>
-#include <zw_region_config.h>
-#include <utils.h>
-#include <zpal_uart_config_ext.h>
-#include <serial_api_config.h>
+#include "SerialAPI_hw.h"
+#include "app_hw.h"
+#include "zpal_uart_config_ext.h"
+#include "zpal_radio.h"
+#include "serial_api_config.h"
 #include "serialapi_file.h"
 #include "em_emu.h"
 #include "em_cmu.h"
@@ -37,7 +36,7 @@ static const zpal_uart_config_ext_t zpal_uart_config_ext = {
 
 void app_hw_init(void)
 {
-  uint8_t region;
+  zpal_radio_region_t region;
 
   /* Unlatch EM4 GPIO pin states after wakeup (OK to call even if not EM4 wakeup) */
   /*If a device waked up from EM4 then all GPIO pins are isolated and we need to connected them to the GPIO registers.*/

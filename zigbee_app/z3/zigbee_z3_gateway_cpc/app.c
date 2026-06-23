@@ -176,48 +176,52 @@ void mfgappTokenDump(sl_cli_command_arg_t *arguments)
   uint8_t index, i, tokenLength;
 
   // first go through the tokens accessed using sl_zigbee_ezsp_get_token
-  sl_zigbee_app_debug_print("(data shown little endian)\n");
-  sl_zigbee_app_debug_print("Tokens:\n");
-  sl_zigbee_app_debug_print("idx  value:\n");
+  sl_zigbee_af_cli_print("(data shown little endian)\n");
+  sl_zigbee_af_cli_print("Tokens:\n");
+  sl_zigbee_af_cli_print("idx  value:\n");
   for (index = 0; index < MFGSAMP_NUM_EZSP_TOKENS; index++) {
     // get the token data here
     status = sl_zigbee_ezsp_get_token(index, tokenData);
-    sl_zigbee_app_debug_print("[%d]", index);
+    sl_zigbee_af_cli_print("[%d]", index);
     if (status == SL_STATUS_OK) {
       // Print out the token data
       for (i = 0; i < MFGSAMP_EZSP_TOKEN_SIZE; i++) {
-        sl_zigbee_app_debug_print(" %02X", tokenData[i]);
+        sl_zigbee_af_cli_print(" %02X", tokenData[i]);
       }
-      sl_zigbee_app_debug_print("\n");
+      sl_zigbee_af_cli_print("\n");
     } else {
       // handle when sl_zigbee_ezsp_get_token returns an error
-      sl_zigbee_app_debug_print(" ... error 0x%02X ...\n", status);
+      sl_zigbee_af_cli_print(" ... error 0x%02X ...\n", status);
     }
   }
 
   // now go through the tokens accessed using sl_zigbee_ezsp_get_mfg_token
   // the manufacturing tokens are enumerated in app/util/ezsp/ezsp-protocol.h
   // this file contains an array (ezspMfgTokenNames) representing the names.
-  sl_zigbee_app_debug_print("Manufacturing Tokens:\n");
-  sl_zigbee_app_debug_print("idx  token name                 len   value\n");
+  sl_zigbee_af_cli_print("Manufacturing Tokens:\n");
+  sl_zigbee_af_cli_print("idx  token name                 len   value\n");
   for (index = 0; index < MFGSAMP_NUM_EZSP_MFG_TOKENS; index++) {
     // sl_zigbee_ezsp_get_mfg_token returns a length, be careful to only access
     // valid token indices.
     tokenLength = sl_zigbee_ezsp_get_mfg_token(index, tokenData);
-    sl_zigbee_app_debug_print("[%02X] %s: 0x%02X:\n",
-                              index, ezspMfgTokenNames[index], tokenLength);
+    sl_zigbee_af_cli_print("[%02X] %s: 0x%02X:\n",
+                           index, ezspMfgTokenNames[index], tokenLength);
 
-    // Print out the token data
-    for (i = 0; i < tokenLength; i++) {
-      if ((i != 0) && ((i % 8) == 0)) {
-        sl_zigbee_app_debug_println("");
-        sl_zigbee_app_debug_print("                                    :");
+    // Print out the token data (255 = error/deprecated, do not use as length)
+    if (tokenLength != 255) {
+      for (i = 0; i < tokenLength; i++) {
+        if ((i != 0) && ((i % 8) == 0)) {
+          sl_zigbee_af_cli_println("");
+          sl_zigbee_af_cli_print("                                    :");
+        }
+        sl_zigbee_af_cli_print(" %02X", tokenData[i]);
       }
-      sl_zigbee_app_debug_print(" %02X", tokenData[i]);
+    } else {
+      sl_zigbee_af_cli_print(" (deprecated/error)");
     }
-    sl_zigbee_app_debug_print("\n");
+    sl_zigbee_af_cli_print("\n");
   }
-  sl_zigbee_app_debug_print("\n");
+  sl_zigbee_af_cli_print("\n");
 }
 
 void changeNwkKeyCommand(sl_cli_command_arg_t *arguments)
@@ -227,20 +231,20 @@ void changeNwkKeyCommand(sl_cli_command_arg_t *arguments)
   sl_status_t status = sl_zigbee_af_trust_center_start_network_key_update();
 
   if (status != SL_STATUS_OK) {
-    sl_zigbee_app_debug_print("Change Key Error %02X\n", status);
+    sl_zigbee_af_cli_print("Change Key Error %02X\n", status);
   } else {
-    sl_zigbee_app_debug_print("Change Key Success\n");
+    sl_zigbee_af_cli_print("Change Key Success\n");
   }
 }
 
 static void dcPrintKey(uint8_t label, uint8_t *key)
 {
   uint8_t i;
-  sl_zigbee_app_debug_print("key %02X: \n", label);
+  sl_zigbee_af_cli_print("key %02X: \n", label);
   for (i = 0; i < SL_ZIGBEE_ENCRYPTION_KEY_SIZE; i++) {
-    sl_zigbee_app_debug_print("%02X", key[i]);
+    sl_zigbee_af_cli_print("%02X", key[i]);
   }
-  sl_zigbee_app_debug_print("\n");
+  sl_zigbee_af_cli_print("\n");
 }
 
 void printNextKeyCommand(sl_cli_command_arg_t *arguments)
@@ -259,7 +263,7 @@ void printNextKeyCommand(sl_cli_command_arg_t *arguments)
   status = sl_zigbee_sec_man_export_key(&context, &plaintext_key);
 
   if (status != SL_STATUS_OK) {
-    sl_zigbee_app_debug_print("Error getting key\n");
+    sl_zigbee_af_cli_print("Error getting key\n");
   } else {
     dcPrintKey(1, plaintext_key.key);
   }
@@ -269,13 +273,13 @@ void versionCommand(sl_cli_command_arg_t *arguments)
 {
   (void)arguments;
 
-  sl_zigbee_app_debug_print("Version:  0.1 Alpha\n");
-  sl_zigbee_app_debug_print(" %s\n", __DATE__);
-  sl_zigbee_app_debug_print(" %s\n", __TIME__);
-  sl_zigbee_app_debug_print("\n");
+  sl_zigbee_af_cli_print("Version:  0.1 Alpha\n");
+  sl_zigbee_af_cli_print(" %s\n", __DATE__);
+  sl_zigbee_af_cli_print(" %s\n", __TIME__);
+  sl_zigbee_af_cli_print("\n");
 #ifdef SL_ZIGBEE_TEST
-  sl_zigbee_app_debug_print("Print formatter test : 0x%02X=0x12, 0x%02x=0x1234 0x%04x=0x12345678\n",
-                            0x12, 0x1234, 0x12345678);
+  sl_zigbee_af_cli_print("Print formatter test : 0x%02X=0x12, 0x%02x=0x1234 0x%04x=0x12345678\n",
+                         0x12, 0x1234, 0x12345678);
 #endif
 }
 

@@ -80,7 +80,7 @@ void optionBindingTablePrintCommand(sl_cli_command_arg_t *arguments)
   };
   uint8_t bindings = 0;
 
-  sl_zigbee_core_debug_println("#  type   nwk  loc   rem   clus   node   eui");
+  sl_zigbee_af_cli_println("#  type   nwk  loc   rem   clus   node   eui");
   for (i = 0; i < sl_zigbee_af_get_binding_table_size(); i++) {
     sl_status_t status = sl_zigbee_get_binding(i, &result);
     if (status == SL_STATUS_OK) {
@@ -89,26 +89,26 @@ void optionBindingTablePrintCommand(sl_cli_command_arg_t *arguments)
       }
       if (result.type != SL_ZIGBEE_UNUSED_BINDING) {
         bindings++;
-        sl_zigbee_core_debug_print("%d: ", i);
-        sl_zigbee_core_debug_print("%s", typeStrings[result.type]);
-        sl_zigbee_core_debug_print("  %d    0x%04X  0x%04X  0x%04X 0x%04X ",
-                                   result.networkIndex,
-                                   result.local,
-                                   result.remote,
-                                   result.clusterId,
-                                   sl_zigbee_get_binding_remote_node_id(i));
-        sl_zigbee_af_app_debug_exec(sl_zigbee_af_print_big_endian_eui64(result.identifier));
-        sl_zigbee_core_debug_print("\n");
+        sl_zigbee_af_cli_print("%d: ", i);
+        sl_zigbee_af_cli_print("%s", typeStrings[result.type]);
+        sl_zigbee_af_cli_print("  %d    0x%04X  0x%04X  0x%04X 0x%04X ",
+                               result.networkIndex,
+                               result.local,
+                               result.remote,
+                               result.clusterId,
+                               sl_zigbee_get_binding_remote_node_id(i));
+        sl_zigbee_af_cli_exec(sl_zigbee_af_print_big_endian_eui64(result.identifier));
+        sl_zigbee_af_cli_print("\n");
       }
     } else {
-      sl_zigbee_core_debug_print("sl_zigbee_get_binding Error: 0x%08X\n", status);
-      sl_zigbee_af_app_flush();
+      sl_zigbee_af_cli_print("sl_zigbee_get_binding Error: 0x%08X\n", status);
+      sl_zigbee_af_cli_flush();
     }
-    sl_zigbee_af_app_flush();
+    sl_zigbee_af_cli_flush();
   }
-  sl_zigbee_core_debug_println("%d of %d bindings used",
-                               bindings,
-                               sl_zigbee_af_get_binding_table_size());
+  sl_zigbee_af_cli_println("%d of %d bindings used",
+                           bindings,
+                           sl_zigbee_af_get_binding_table_size());
 }
 
 // option binding-table clear
@@ -126,10 +126,10 @@ void optionPrintRxCommand(sl_cli_command_arg_t *arguments)
   uint8_t command_first_character = sl_cli_get_command_string(arguments, position)[0];
   if (command_first_character == 'e') {
     sl_zigbee_af_print_received_messages = true;
-    sl_zigbee_core_debug_println("enabled print");
+    sl_zigbee_af_cli_println("enabled print");
   } else {
     sl_zigbee_af_print_received_messages = false;
-    sl_zigbee_core_debug_println("disabled print");
+    sl_zigbee_af_cli_println("disabled print");
   }
 }
 
@@ -200,9 +200,9 @@ void optionLinkCommand(sl_cli_command_arg_t *arguments)
                                              partnerEUI64,
                                              (sl_zigbee_sec_man_key_t*)&newKey);
   UNUSED_VAR(status);
-  sl_zigbee_af_app_debug_exec(sli_zigbee_af_print_status("add link key", status));
-  sl_zigbee_af_app_println("");
-  sl_zigbee_af_core_flush();
+  sl_zigbee_af_cli_exec(sli_zigbee_af_print_status("add link key", status));
+  sl_zigbee_af_cli_println("");
+  sl_zigbee_af_cli_flush();
 }
 
 // option install-code <index> <eui64> <install code>
@@ -226,12 +226,12 @@ void optionInstallCodeCommand(sl_cli_command_arg_t *arguments)
 
   if (SL_STATUS_OK != status) {
     if (SL_STATUS_INVALID_CONFIGURATION == status) {
-      sl_zigbee_app_debug_println("ERR: Calculated CRC does not match");
+      sl_zigbee_af_cli_println("ERR: Calculated CRC does not match");
     } else if (SL_STATUS_INVALID_PARAMETER == status) {
-      sl_zigbee_app_debug_println("ERR: Install Code must be 8, 10, 14, or 18 bytes in "
-                                  "length");
+      sl_zigbee_af_cli_println("ERR: Install Code must be 8, 10, 14, or 18 bytes in "
+                               "length");
     } else {
-      sl_zigbee_app_debug_println("ERR: AES-MMO hash failed: 0x%02X", status);
+      sl_zigbee_af_cli_println("ERR: AES-MMO hash failed: 0x%02X", status);
     }
     return;
   }
@@ -246,24 +246,24 @@ void optionInstallCodeCommand(sl_cli_command_arg_t *arguments)
   status = sl_zigbee_sec_man_import_link_key(sl_cli_get_argument_uint8(arguments, 0),     // index
                                              eui64,
                                              (sl_zigbee_sec_man_key_t*) &key);
-  sl_zigbee_af_app_debug_exec(sli_zigbee_af_print_status("add link key", status));
+  sl_zigbee_af_cli_exec(sli_zigbee_af_print_status("add link key", status));
 
-  sl_zigbee_app_debug_println("");
-  sl_zigbee_af_app_flush();
+  sl_zigbee_af_cli_println("");
+  sl_zigbee_af_cli_flush();
 #else // SL_ZIGBEE_AF_HAS_SECURITY_PROFILE_SE_TEST || SL_ZIGBEE_AF_HAS_SECURITY_PROFILE_SE_FULL
   // Add the key to the transient key table.
   // This will be used while the DUT joins.
   if (SL_STATUS_OK == status) {
     status = sl_zigbee_sec_man_import_transient_key(eui64, (sl_zigbee_sec_man_key_t*)&key);
-    sl_zigbee_af_app_debug_exec(sli_zigbee_af_print_status("Set joining link key", status));
-    sl_zigbee_app_debug_println("");
-    sl_zigbee_af_app_flush();
+    sl_zigbee_af_cli_exec(sli_zigbee_af_print_status("Set joining link key", status));
+    sl_zigbee_af_cli_println("");
+    sl_zigbee_af_cli_flush();
   }
 #endif // SL_ZIGBEE_AF_HAS_SECURITY_PROFILE_SE_TEST || SL_ZIGBEE_AF_HAS_SECURITY_PROFILE_SE_FULL
 
 #else
   UNUSED_VAR(arguments);
-  sl_zigbee_app_debug_println("This command only supports the Z3, Z4, or SE application profile.");
+  sl_zigbee_af_cli_println("This command only supports the Z3, Z4, or SE application profile.");
 #endif
 }
 
@@ -284,5 +284,5 @@ void optionBindingTableSetCommand(sl_cli_command_arg_t *arguments)
     status = sl_zigbee_set_binding(index, &entry);
     (void) sl_zigbee_af_pop_network_index();
   }
-  sl_zigbee_app_debug_println("set bind %d: 0x%02x", index, status);
+  sl_zigbee_af_cli_println("set bind %d: 0x%02x", index, status);
 }

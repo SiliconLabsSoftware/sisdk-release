@@ -47,6 +47,12 @@
 #include <openthread/dataset_ftd.h>
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+#include <openthread/border_routing.h>
+#endif
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE || OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#include <openthread/nat64.h>
+#endif
 #include <openthread/ncp.h>
 #include <openthread/thread_ftd.h>
 #include <openthread/platform/misc.h>
@@ -483,7 +489,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_BORDER_AGENT_EPHEMERA
         break;
     case OT_BORDER_AGENT_STATE_DISABLED:
         error = OT_ERROR_NOT_CAPABLE;
-        // Fall through
+        OT_FALL_THROUGH;
     case OT_BORDER_AGENT_STATE_STOPPED:
         ExitNow();
     }
@@ -1218,6 +1224,8 @@ exit:
 }
 #endif // #if OPENTHREAD_CONFIG_MLE_STEERING_DATA_SET_OOB_ENABLE
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_PREFERRED_ROUTER_ID>(void)
 {
     return mEncoder.WriteUint8(mPreferredRouteId);
@@ -1234,6 +1242,8 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_PREFERRED_ROUT
 exit:
     return error;
 }
+
+#endif
 
 template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_THREAD_ACTIVE_ROUTER_IDS>(void)
 {
@@ -1686,6 +1696,46 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && \
+    (OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE || OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE)
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_BORDER_ROUTER_NAT64_ENABLE>(void)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enabled;
+
+    SuccessOrExit(error = mDecoder.ReadBool(enabled));
+    otNat64SetEnabled(mInstance, enabled);
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && (OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE ||
+       // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE)
+
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
+void NcpBase::HandleNat64FavoredPrefixChanged(void)
+{
+    mChangedPropsSet.AddProperty(SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX);
+    mUpdateChangedPropsTask.Post();
+}
+#endif
+
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX>(void)
+{
+    otError           error = OT_ERROR_NONE;
+    otIp6Prefix       prefix;
+    otRoutePreference preference;
+
+    SuccessOrExit(error = otBorderRoutingGetFavoredNat64Prefix(mInstance, &prefix, &preference));
+    SuccessOrExit(error = mEncoder.WriteIp6Address(prefix.mPrefix));
+    SuccessOrExit(error = mEncoder.WriteUint8(prefix.mLength));
+
+exit:
+    return error;
+}
+#endif
+
 #if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 
 void NcpBase::DnssdRegisterHost(const otPlatDnssdHost      *aHost,
@@ -1740,6 +1790,58 @@ void NcpBase::DnssdStopBrowser(const otPlatDnssdBrowser *aBrowser)
     DnssdUpdateDiscovery(aBrowser, /* aStart */ false);
 }
 
+void NcpBase::DnssdStartSrvResolver(const otPlatDnssdSrvResolver *aResolver)
+{
+    DnssdUpdateDiscovery(aResolver, /* aStart */ true);
+}
+
+void NcpBase::DnssdStopSrvResolver(const otPlatDnssdSrvResolver *aResolver)
+{
+    DnssdUpdateDiscovery(aResolver, /* aStart */ false);
+}
+
+void NcpBase::DnssdStartTxtResolver(const otPlatDnssdTxtResolver *aResolver) { DnssdUpdateDiscovery(aResolver, true); }
+
+void NcpBase::DnssdStopTxtResolver(const otPlatDnssdTxtResolver *aResolver) { DnssdUpdateDiscovery(aResolver, false); }
+
+void NcpBase::DnssdUpdateAddressResolverDiscovery(const otPlatDnssdAddressResolver *aDiscovery,
+                                                  bool                              aStart,
+                                                  spinel_prop_key_t                 aPropKey)
+{
+    uint8_t          header = SPINEL_HEADER_FLAG | SPINEL_HEADER_TX_NOTIFICATION_IID;
+    spinel_command_t cmd    = aStart ? SPINEL_CMD_PROP_VALUE_INSERTED : SPINEL_CMD_PROP_VALUE_REMOVED;
+
+    VerifyOrExit(aDiscovery != nullptr);
+    VerifyOrExit(mDnssdState == OT_PLAT_DNSSD_READY);
+
+    SuccessOrExit(mEncoder.BeginFrame(header, cmd, aPropKey));
+    SuccessOrExit(Spinel::EncodeDnssdDiscovery(mEncoder, *aDiscovery));
+    SuccessOrExit(mEncoder.EndFrame());
+
+exit:
+    return;
+}
+
+void NcpBase::DnssdStartIp6AddressResolver(const otPlatDnssdAddressResolver *aResolver)
+{
+    DnssdUpdateAddressResolverDiscovery(aResolver, true, SPINEL_PROP_DNSSD_IP6_ADDRESS_RESOLVER);
+}
+
+void NcpBase::DnssdStopIp6AddressResolver(const otPlatDnssdAddressResolver *aResolver)
+{
+    DnssdUpdateAddressResolverDiscovery(aResolver, false, SPINEL_PROP_DNSSD_IP6_ADDRESS_RESOLVER);
+}
+
+void NcpBase::DnssdStartIp4AddressResolver(const otPlatDnssdAddressResolver *aResolver)
+{
+    DnssdUpdateAddressResolverDiscovery(aResolver, true, SPINEL_PROP_DNSSD_IP4_ADDRESS_RESOLVER);
+}
+
+void NcpBase::DnssdStopIp4AddressResolver(const otPlatDnssdAddressResolver *aResolver)
+{
+    DnssdUpdateAddressResolverDiscovery(aResolver, false, SPINEL_PROP_DNSSD_IP4_ADDRESS_RESOLVER);
+}
+
 otPlatDnssdState NcpBase::DnssdGetState(void) { return mDnssdState; }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_STATE>(void)
@@ -1773,7 +1875,10 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_REQUEST_RESULT>
     SuccessOrExit(error = mDecoder.ReadData(context, contextLen));
     VerifyOrExit(contextLen == sizeof(otPlatDnssdRegisterCallback), error = OT_ERROR_PARSE);
     callback = *reinterpret_cast<const otPlatDnssdRegisterCallback *>(context);
-    callback(mInstance, requestId, static_cast<otError>(result));
+    if (callback != nullptr)
+    {
+        callback(mInstance, requestId, static_cast<otError>(result));
+    }
 
 exit:
     return error;
@@ -1790,12 +1895,98 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_BROWSE_RESULT>(
     SuccessOrExit(error = DecodeDnssdBrowseResult(mDecoder, browseResult, context, contextLen));
     VerifyOrExit(contextLen == sizeof(otPlatDnssdBrowseCallback), error = OT_ERROR_PARSE);
     callback = *reinterpret_cast<const otPlatDnssdBrowseCallback *>(context);
-    callback(mInstance, &browseResult);
+    if (callback != nullptr)
+    {
+        callback(mInstance, &browseResult);
+    }
 
 exit:
     return error;
 }
 
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_SRV_RESULT>(void)
+{
+    otError                error = OT_ERROR_NONE;
+    otPlatDnssdSrvResult   srvResult;
+    otPlatDnssdSrvCallback callback = nullptr;
+    const uint8_t         *context;
+    uint16_t               contextLen;
+
+    SuccessOrExit(error = DecodeDnssdSrvResult(mDecoder, srvResult, context, contextLen));
+    VerifyOrExit(contextLen == sizeof(otPlatDnssdSrvCallback), error = OT_ERROR_PARSE);
+    callback = *reinterpret_cast<const otPlatDnssdSrvCallback *>(context);
+    if (callback != nullptr)
+    {
+        callback(mInstance, &srvResult);
+    }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_TXT_RESULT>(void)
+{
+    otError                error = OT_ERROR_NONE;
+    otPlatDnssdTxtResult   txtResult;
+    otPlatDnssdTxtCallback callback = nullptr;
+    const uint8_t         *context;
+    uint16_t               contextLen;
+
+    SuccessOrExit(error = DecodeDnssdTxtResult(mDecoder, txtResult, context, contextLen));
+    VerifyOrExit(contextLen == sizeof(otPlatDnssdTxtCallback), error = OT_ERROR_PARSE);
+    callback = *reinterpret_cast<const otPlatDnssdTxtCallback *>(context);
+    if (callback != nullptr)
+    {
+        callback(mInstance, &txtResult);
+    }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT>(void)
+{
+    otError                    error = OT_ERROR_NONE;
+    otPlatDnssdAddressResult   addrResult;
+    otPlatDnssdAddressAndTtl   addrArray[kDnssdMaxAddressResultEntries];
+    otPlatDnssdAddressCallback callback = nullptr;
+    const uint8_t             *context;
+    uint16_t                   contextLen;
+
+    SuccessOrExit(error = DecodeDnssdAddressResult(mDecoder, addrResult, addrArray, kDnssdMaxAddressResultEntries,
+                                                   context, contextLen));
+    VerifyOrExit(contextLen == sizeof(otPlatDnssdAddressCallback), error = OT_ERROR_PARSE);
+    callback = *reinterpret_cast<const otPlatDnssdAddressCallback *>(context);
+    if (callback != nullptr)
+    {
+        callback(mInstance, &addrResult);
+    }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_IP4_ADDRESS_RESULT>(void)
+{
+    otError                    error = OT_ERROR_NONE;
+    otPlatDnssdAddressResult   addrResult;
+    otPlatDnssdAddressAndTtl   addrArray[kDnssdMaxAddressResultEntries];
+    otPlatDnssdAddressCallback callback = nullptr;
+    const uint8_t             *context;
+    uint16_t                   contextLen;
+
+    SuccessOrExit(error = DecodeDnssdAddressResult(mDecoder, addrResult, addrArray, kDnssdMaxAddressResultEntries,
+                                                   context, contextLen));
+    VerifyOrExit(contextLen == sizeof(otPlatDnssdAddressCallback), error = OT_ERROR_PARSE);
+    callback = *reinterpret_cast<const otPlatDnssdAddressCallback *>(context);
+    if (callback != nullptr)
+    {
+        callback(mInstance, &addrResult);
+    }
+
+exit:
+    return error;
+}
 #endif // OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE

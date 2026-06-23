@@ -215,7 +215,7 @@ typedef struct {
 } sli_zigbee_stack_global_tlv_supp_key_negotiation_ipc_msg_t;
 
 typedef struct {
-  uint8_t passphrase;
+  uint8_t passphrase[ZB_GLOBAL_TLV_SYMMETRIC_PASSPHRASE_MAX_LEN];
 } sli_zigbee_stack_global_tlv_symmetric_passphrase_ipc_req_t;
 
 typedef struct {

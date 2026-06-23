@@ -58,7 +58,7 @@ class TagCommandsMixin:
         ap_identity: esl_lib.Address = esl_lib.Address.from_str("3425B4A91C8A"),
     ):
         """Establish connection with a tag normally or via PAwR"""
-        # group ID shouldn't be None if the tag is in sychronized state, but better to doublecheck
+        # group ID shouldn't be None if the tag is in synchronized state, but better to doublecheck
         if tag.esl_state == EslState.SYNCHRONIZED and tag.group_id is not None:
             pawr = esl_lib.PAWRSubevent(self.pawr_handle, tag.group_id)
         else:

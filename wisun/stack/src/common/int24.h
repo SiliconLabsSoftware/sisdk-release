@@ -29,15 +29,6 @@ typedef int32_t        int24_t;
 /* All macros MIN and MAX are obviously not very well defined, so we
  * intentionally don't define them.
  */
-// #define INT24_MIN        (-8388607-1)
-// #define INT24_MAX        (8388607)
-// #define UINT24_MAX       (16777215U)
-// #define UINT_LEAST24_MAX (16777215U)
-// #define INT_LEAST24_MIN  (-8388607-1)
-// #define INT_LEAST24_MAX  (8388607)
-// #define UINT_FAST24_MAX  UINT_FAST32_MAX
-// #define INT_FAST24_MIN   INT_FAST32_MIN
-// #define INT_FAST24_MAX   INT_FAST32_MAX
 
 #define PRId24 PRId32
 #define PRIi24 PRIi32

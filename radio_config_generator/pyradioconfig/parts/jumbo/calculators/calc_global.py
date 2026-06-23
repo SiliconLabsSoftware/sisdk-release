@@ -39,7 +39,8 @@ class CALC_Global_jumbo(CALC_Global):
         var = self._addModelVariable(model, 'src_disable',    Enum, ModelVariableFormat.DECIMAL, 'Sample rate converters may be disabled for diagnostic purposes')
         member_data = [
             ['ENABLED', 0, 'Enable sample rate converter for normal operation'],
-            ['DISABLED', 1, 'Disable sample rate converter for diagnostic purposes']
+            ['DISABLED', 1, 'Disable sample rate converter for diagnostic purposes'],
+            ['SRC2_ONLY', 2, 'Disable SRC1, enable SRC2']
 
         ]
         var.var_enum = CreateModelVariableEnum(

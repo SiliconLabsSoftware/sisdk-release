@@ -42,7 +42,7 @@ extern "C" {
 #define WISUN_CONFIG_NETWORK_NAME               "Wi-SUN Network"
 
 //! Wi-SUN network size
-#define WISUN_CONFIG_NETWORK_SIZE               SL_WISUN_NETWORK_SIZE_SMALL
+#define WISUN_CONFIG_NETWORK_SIZE               SL_WISUN_NETWORK_SIZE_AUTOMATIC
 
 //! Wi-SUN allowed channels
 #define WISUN_CONFIG_ALLOWED_CHANNELS           "0-255"

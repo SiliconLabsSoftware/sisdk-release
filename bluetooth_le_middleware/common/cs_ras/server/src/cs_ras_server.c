@@ -39,9 +39,6 @@
 #include "cs_ras_server_config.h"
 #include "cs_ras_server_log.h"
 #include "sl_component_catalog.h"
-#ifdef SL_CATALOG_POWER_MANAGER_PRESENT
-#include "sl_power_manager.h"
-#endif // SL_CATALOG_POWER_MANAGER_PRESENT
 #include "cs_ras_server_messaging.h"
 #include "cs_ras_server_messaging_internal.h"
 #include "cs_ras_server_control_point.h"
@@ -49,6 +46,7 @@
 #include "app_queue.h"
 #include "cs_ras_server_database.h"
 #include "cs_ras_format_converter.h"
+#include "app_rta.h"
 
 // -----------------------------------------------------------------------------
 // Definitions
@@ -65,7 +63,7 @@
 #define INVALID_POWER_LEVEL_DBM 0x07F
 
 // -----------------------------------------------------------------------------
-// Forward declaration of privare functions
+// Forward declaration of private functions
 
 static uint32_t get_features(void);
 static bool handle_read(cs_ras_server_t *server,
@@ -91,6 +89,7 @@ static void retention_timer_raised(app_timer_t *timer, void *data);
 static sl_status_t cs_ras_server_ranging_data_arrived(uint8_t connection,
                                                       sl_bt_msg_t *evt);
 static bool gattdb_init(void);
+static void on_runtime_error(app_rta_error_t error, sl_status_t result);
 
 // -----------------------------------------------------------------------------
 // Private variables
@@ -107,6 +106,7 @@ static cs_ras_gattdb_handles_t ras_gattdb_handles;
 static cs_ras_gattdb_handles_t ras_gattdb_cccd_handles;
 static cs_ras_server_t storage[SL_BT_CONFIG_MAX_CONNECTIONS];
 static bool gattdb_initialized = false;
+static app_rta_context_t cs_ras_server_rta_context;
 
 // -----------------------------------------------------------------------------
 // Internal functions
@@ -165,23 +165,65 @@ void cs_ras_server_init(void)
   cs_ras_server_database_init();
 }
 
+void cs_ras_server_rta_init(void)
+{
+  sl_status_t sc;
+  app_rta_config_t config = { .requirement.runtime = true,
+                              .requirement.guard = true,
+                              .requirement.signal = false,
+                              .step = cs_ras_server_step,
+                              .priority = CS_RAS_SERVER_TASK_PRIO,
+                              .stack_size = CS_RAS_SERVER_TASK_STACK,
+                              .error = on_runtime_error,
+                              .wait_for_guard = CS_RAS_SERVER_WAIT_FOR_GUARD };
+  sc = app_rta_create_context(&config, &cs_ras_server_rta_context);
+  if (sc != SL_STATUS_OK) {
+    cs_ras_server_log_error("Failed to create rta context, sc=0x%lx" LOG_NL, sc);
+  }
+}
+
+void cs_ras_server_rta_ready(void)
+{
+  (void)app_rta_proceed(cs_ras_server_rta_context);
+}
+
 void cs_ras_server_step(void)
 {
+  sl_status_t sc = app_rta_acquire(cs_ras_server_rta_context);
+  if (sc != SL_STATUS_OK) {
+    cs_ras_server_log_error("L%d: Failed to acquire RTA context, sc=0x%lx" LOG_NL,
+                            (int)__LINE__,
+                            (unsigned long)sc);
+    return;
+  }
   tx_queue_step();
   real_time_transmit_step();
   cs_ras_server_messaging_step();
+  if (cs_ras_server_messaging_has_data_to_process()) {
+    (void)app_rta_proceed(cs_ras_server_rta_context);
+  }
+  (void)app_rta_release(cs_ras_server_rta_context);
 }
 
 bool cs_ras_server_on_bt_event(sl_bt_msg_t *evt)
 {
   cs_ras_server_t *server;
   bool handled = false;
+  sl_status_t sc = app_rta_acquire(cs_ras_server_rta_context);
+  if (sc != SL_STATUS_OK) {
+    cs_ras_server_log_error("L%d: Failed to acquire RTA context, sc=0x%lx" LOG_NL,
+                            (int)__LINE__,
+                            (unsigned long)sc);
+    return !handled;
+  }
   handled |= !cs_ras_server_messaging_on_bt_event(evt);
   handled |= !cs_ras_server_control_point_on_bt_event(evt);
   bool handled_internal = false;
+  bool requires_step_function = false;
 
   switch (SL_BT_MSG_ID(evt->header)) {
-    case sl_bt_evt_gatt_server_user_read_request_id:
+    case sl_bt_evt_gatt_server_user_read_request_id: {
+      requires_step_function = true;
       server = cs_ras_server_find(evt->data.evt_gatt_server_user_read_request.connection);
       if (server == NULL) {
         break;
@@ -195,16 +237,20 @@ bool cs_ras_server_on_bt_event(sl_bt_msg_t *evt)
       handled_internal = handle_user_cccd_read(server,
                                                &evt->data.evt_gatt_server_user_read_request);
       handled |= handled_internal;
-      break;
-    case sl_bt_evt_gatt_server_user_write_request_id:
+    } break;
+
+    case sl_bt_evt_gatt_server_user_write_request_id: {
+      requires_step_function = true;
       server = cs_ras_server_find(evt->data.evt_gatt_server_user_write_request.connection);
       if (server == NULL) {
         break;
       }
       handled |= handle_user_cccd_write(server,
                                         &evt->data.evt_gatt_server_user_write_request);
-      break;
-    case sl_bt_evt_gatt_mtu_exchanged_id:
+    } break;
+
+    case sl_bt_evt_gatt_mtu_exchanged_id: {
+      requires_step_function = true;
       server = cs_ras_server_find(evt->data.evt_gatt_mtu_exchanged.connection);
       if (server == NULL) {
         break;
@@ -216,8 +262,10 @@ bool cs_ras_server_on_bt_event(sl_bt_msg_t *evt)
                               server->att_mtu);
       // Send event in NCP case
       handled = false;
-      break;
-    case sl_bt_evt_connection_opened_id:
+    } break;
+
+    case sl_bt_evt_connection_opened_id: {
+      requires_step_function = true;
       if (!gattdb_initialized) {
         gattdb_initialized = gattdb_init();
         if (!gattdb_initialized) {
@@ -248,8 +296,10 @@ bool cs_ras_server_on_bt_event(sl_bt_msg_t *evt)
 
       // Send event in NCP case
       handled = false;
-      break;
-    case sl_bt_evt_connection_closed_id:
+    } break;
+
+    case sl_bt_evt_connection_closed_id: {
+      requires_step_function = true;
       server = cs_ras_server_find(evt->data.evt_connection_closed.connection);
       if (server == NULL) {
         break;
@@ -266,24 +316,30 @@ bool cs_ras_server_on_bt_event(sl_bt_msg_t *evt)
       cs_ras_server_database_clear_connection(evt->data.evt_connection_closed.connection);
       // Send event in NCP case
       handled = false;
-      break;
-    case sl_bt_evt_cs_result_id:
+    } break;
+
+    case sl_bt_evt_cs_result_id: {
+      requires_step_function = true;
       server = cs_ras_server_find(evt->data.evt_cs_result.connection);
       if (server == NULL) {
         break;
       }
       cs_ras_server_ranging_data_arrived(evt->data.evt_cs_result.connection, evt);
       handled = true;
-      break;
-    case sl_bt_evt_cs_result_continue_id:
+    } break;
+
+    case sl_bt_evt_cs_result_continue_id: {
+      requires_step_function = true;
       server = cs_ras_server_find(evt->data.evt_cs_result_continue.connection);
       if (server == NULL) {
         break;
       }
       cs_ras_server_ranging_data_arrived(evt->data.evt_cs_result_continue.connection, evt);
       handled = true;
-      break;
-    case sl_bt_evt_cs_procedure_enable_complete_id:
+    } break;
+
+    case sl_bt_evt_cs_procedure_enable_complete_id: {
+      requires_step_function = true;
       server = cs_ras_server_find(evt->data.evt_cs_procedure_enable_complete.connection);
       if (server == NULL) {
         break;
@@ -294,10 +350,14 @@ bool cs_ras_server_on_bt_event(sl_bt_msg_t *evt)
                              server->connection,
                              server->tx_power_dbm);
       handled = false;
-      break;
+    } break;
     default:
       break;
   }
+  if (requires_step_function) {
+    (void)app_rta_proceed(cs_ras_server_rta_context);
+  }
+  (void)app_rta_release(cs_ras_server_rta_context);
   return !handled;
 }
 
@@ -483,26 +543,6 @@ sl_status_t cs_ras_server_send(cs_ras_server_t *server,
   }
   return sc;
 }
-
-#ifdef SL_CATALOG_POWER_MANAGER_PRESENT
-
-bool cs_ras_server_is_ok_to_sleep(void)
-{
-  if (!cs_ras_server_messaging_is_ok_to_sleep()) {
-    return false;
-  }
-  return true;
-}
-
-sl_power_manager_on_isr_exit_t cs_ras_server_sleep_on_isr_exit(void)
-{
-  if (!cs_ras_server_messaging_is_ok_to_sleep()) {
-    return SL_POWER_MANAGER_WAKEUP;
-  }
-  return SL_POWER_MANAGER_IGNORE;
-}
-
-#endif // SL_CATALOG_POWER_MANAGER_PRESENT
 
 // -----------------------------------------------------------------------------
 // Private functions
@@ -906,11 +946,10 @@ bool cs_ras_server_delete_ranging_data(cs_ras_server_t           *server,
   return true;
 }
 
-sl_status_t cs_ras_send_data_ready(uint8_t connection,
-                                   cs_ras_ranging_counter_t ranging_counter)
+sl_status_t cs_ras_send_data_ready_internal(uint8_t connection,
+                                            cs_ras_ranging_counter_t ranging_counter)
 {
   cs_ras_server_t *server = cs_ras_server_find(connection);
-  sl_status_t sc;
   if (server == NULL) {
     return SL_STATUS_NULL_POINTER;
   }
@@ -919,19 +958,32 @@ sl_status_t cs_ras_send_data_ready(uint8_t connection,
     return SL_STATUS_INVALID_STATE;
   }
   server->data_ready_counter = ranging_counter;
-  sc = cs_ras_server_send(server,
-                          server->cccd.data_ready_indication,
-                          cs_ras_server_get_handle(CS_RAS_CHARACTERISTIC_INDEX_RANGING_DATA_READY),
-                          sizeof(ranging_counter),
-                          (uint8_t *)&ranging_counter);
+  return cs_ras_server_send(server,
+                            server->cccd.data_ready_indication,
+                            cs_ras_server_get_handle(CS_RAS_CHARACTERISTIC_INDEX_RANGING_DATA_READY),
+                            sizeof(ranging_counter),
+                            (uint8_t *)&ranging_counter);
+}
+
+sl_status_t cs_ras_send_data_ready(uint8_t connection,
+                                   cs_ras_ranging_counter_t ranging_counter)
+{
+  sl_status_t sc = app_rta_acquire(cs_ras_server_rta_context);
+  if (sc != SL_STATUS_OK) {
+    cs_ras_server_log_error("L%d: Failed to acquire RTA context, sc=0x%lx" LOG_NL,
+                            (int)__LINE__,
+                            (unsigned long)sc);
+    return sc;
+  }
+  sc = cs_ras_send_data_ready_internal(connection, ranging_counter);
+  (void)app_rta_release(cs_ras_server_rta_context);
   return sc;
 }
 
-sl_status_t cs_ras_send_overwritten(uint8_t connection,
-                                    cs_ras_ranging_counter_t ranging_counter)
+sl_status_t cs_ras_send_overwritten_internal(uint8_t connection,
+                                             cs_ras_ranging_counter_t ranging_counter)
 {
   cs_ras_server_t *server = cs_ras_server_find(connection);
-  sl_status_t sc;
   if (server == NULL) {
     return SL_STATUS_NULL_POINTER;
   }
@@ -940,11 +992,25 @@ sl_status_t cs_ras_send_overwritten(uint8_t connection,
     return SL_STATUS_INVALID_STATE;
   }
   server->data_overwritten_counter = ranging_counter;
-  sc = cs_ras_server_send(server,
-                          server->cccd.overwritten_indication,
-                          cs_ras_server_get_handle(CS_RAS_CHARACTERISTIC_INDEX_RANGING_DATA_OVERWRITTEN),
-                          sizeof(ranging_counter),
-                          (uint8_t *)&ranging_counter);
+  return cs_ras_server_send(server,
+                            server->cccd.overwritten_indication,
+                            cs_ras_server_get_handle(CS_RAS_CHARACTERISTIC_INDEX_RANGING_DATA_OVERWRITTEN),
+                            sizeof(ranging_counter),
+                            (uint8_t *)&ranging_counter);
+}
+
+sl_status_t cs_ras_send_overwritten(uint8_t connection,
+                                    cs_ras_ranging_counter_t ranging_counter)
+{
+  sl_status_t sc = app_rta_acquire(cs_ras_server_rta_context);
+  if (sc != SL_STATUS_OK) {
+    cs_ras_server_log_error("L%d: Failed to acquire RTA context, sc=0x%lx" LOG_NL,
+                            (int)__LINE__,
+                            (unsigned long)sc);
+    return sc;
+  }
+  sc = cs_ras_send_overwritten_internal(connection, ranging_counter);
+  (void)app_rta_release(cs_ras_server_rta_context);
   return sc;
 }
 
@@ -1058,24 +1124,39 @@ static void tx_queue_step(void)
 static void retention_timer_raised(app_timer_t *timer, void *data)
 {
   (void)timer;
+  sl_status_t sc = app_rta_acquire(cs_ras_server_rta_context);
+  if (sc != SL_STATUS_OK) {
+    cs_ras_server_log_error("L%d: Failed to acquire RTA context, sc=0x%lx" LOG_NL,
+                            (int)__LINE__,
+                            (unsigned long)sc);
+    return;
+  }
   cs_ras_server_t *server = (cs_ras_server_t *)data;
   cs_ras_server_log_warning(CONN_PREFIX "Procedure %u - retention timeout. Deleting data." LOG_NL,
                             server->connection,
                             server->ranging_counter);
-  // Delete ranging data
   cs_ras_server_delete_ranging_data(server,
                                     server->ranging_counter);
   server->ranging_counter = CS_RAS_INVALID_RANGING_COUNTER;
+  (void)app_rta_release(cs_ras_server_rta_context);
 }
 
 static void response_timer_raised(app_timer_t *timer, void *data)
 {
   (void)timer;
+  sl_status_t sc = app_rta_acquire(cs_ras_server_rta_context);
+  if (sc != SL_STATUS_OK) {
+    cs_ras_server_log_error("L%d: Failed to acquire RTA context, sc=0x%lx" LOG_NL,
+                            (int)__LINE__,
+                            (unsigned long)sc);
+    return;
+  }
   cs_ras_server_t *server = (cs_ras_server_t *)data;
   (void)server;
   cs_ras_server_log_warning(CONN_PREFIX "Procedure %u - transfer procedure timed out." LOG_NL,
                             server->connection,
                             server->ranging_counter);
+  (void)app_rta_release(cs_ras_server_rta_context);
 }
 
 static bool gattdb_init(void)
@@ -1106,6 +1187,25 @@ static bool gattdb_init(void)
     }
   }
   return ret;
+}
+
+static void on_runtime_error(app_rta_error_t error, sl_status_t result)
+{
+  (void)result;
+  switch (error) {
+    case APP_RTA_ERROR_RUNTIME_INIT_FAILED:
+      cs_ras_server_log_error("RTA runtime init failed, sc=0x%lx" LOG_NL, result);
+      break;
+    case APP_RTA_ERROR_ACQUIRE_FAILED:
+      cs_ras_server_log_error("RTA acquire failed, sc=0x%lx" LOG_NL, result);
+      break;
+    case APP_RTA_ERROR_RELEASE_FAILED:
+      cs_ras_server_log_error("RTA release failed, sc=0x%lx" LOG_NL, result);
+      break;
+    default:
+      cs_ras_server_log_error("RTA generic error, sc=0x%lx" LOG_NL, result);
+      break;
+  }
 }
 
 // -----------------------------------------------------------------------------

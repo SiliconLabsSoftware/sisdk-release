@@ -1,18 +1,15 @@
----
-template:
-  rail_toolchains: &rail_toolchains
-    - gcc
-    - iar
-    - segger
-  rail_ides: &rail_ides
-    - generic-template
-    - iar-embedded-workbench
-    - makefile-ide
-    - simplicity-ide
-    - visual-studio-code
-    - visual-studio-code-cmake
+toolchains:
+  - gcc
+  - iar
+  - llvm
 
 hwfilter:
+   device_includes:
+    - device_supports_rail
+   device_excludes:
+    - device_no_rail_api
+    - device_family_bgm22
+    - device_family_bgm27
    board_excludes:
     - brd1019a
     - brd1021a
@@ -22,8 +19,3 @@ hwfilter:
     - brd2505a
     - brd2506a
     - brd2606a
-   device_includes:
-    - device_supports_rail
-   device_excludes:
-    - device_family_bgm22
-    - device_family_bgm27

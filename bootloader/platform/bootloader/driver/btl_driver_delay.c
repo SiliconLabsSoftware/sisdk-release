@@ -80,12 +80,12 @@ void delay_init(void)
 
 void delay_milliseconds(uint32_t msecs, bool blocking)
 {
-  uint16_t count = TIMER0->CNT;
-  delayTarget = count + (msecs * ticksPerMillisecond);
+  uint16_t count = (uint16_t)TIMER0->CNT;
+  delayTarget = (uint16_t)(count + (msecs * ticksPerMillisecond));
   expectOverflow = (delayTarget < count);
 
   if (blocking) {
-    while (TIMER0->CNT != delayTarget) {
+    while ((uint16_t)TIMER0->CNT != delayTarget) {
       // Do nothing
     }
   }
@@ -110,6 +110,6 @@ bool delay_expired(void)
     return true;
   }
 
-  // Return true if CNT has passed the target
-  return TIMER0->CNT >= delayTarget;
+  // Return true if CNT has passed the target (compare 16-bit values for wrap semantics)
+  return (uint16_t)TIMER0->CNT >= delayTarget;
 }

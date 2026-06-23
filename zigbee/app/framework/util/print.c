@@ -16,10 +16,23 @@
  *
  ******************************************************************************/
 
+#include <stdint.h>
+#include <stddef.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include "app/framework/include/af.h"
 #include "app/framework/plugin/debug-print/sl_zigbee_debug_print.h"
 #ifdef SL_COMPONENT_CATALOG_PRESENT
 #include "sl_component_catalog.h"
+#endif
+#if defined(SL_COMPONENT_CATALOG_PRESENT) && defined(SL_CATALOG_LOG_COMPONENT_PRESENT)
+#include "sl_log_helper.h"
+#include <stdio.h>
+#endif
+
+#ifndef SLI_ZIGBEE_AF_PRINT_SL_LOG_BUFFER_SIZE
+/** Max formatted length for one AF print line before sending to the debug logger. */
+#define SLI_ZIGBEE_AF_PRINT_SL_LOG_BUFFER_SIZE 256
 #endif
 //------------------------------------------------------------------------------
 // Globals
@@ -51,7 +64,7 @@ uint16_t sl_zigbee_af_print_active_area = 0;
 // debug prints
 bool sl_zigbee_af_print_enabled(uint16_t area)
 {
-  (void) area;
+  sl_zigbee_af_print_active_area = area;
   return true;
 }
 
@@ -107,16 +120,54 @@ static void reallyPrintAreaName(uint16_t area)
 }
 #endif //SL_ZIGBEE_AF_PRINT_AREA_NAME
 
+#if defined(SLI_ZIGBEE_AF_PRINT_USE_SL_LOG)
+static void sli_zigbee_af_print_sl_log_string(uint32_t log_level, const char *str)
+{
+  uint32_t addr = (uint32_t)(uintptr_t)str;
+  if (log_level == SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_DEBUG) {
+    SL_PRINT_STRING_DEBUG("%s", addr);
+  } else if (log_level == SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_WARN) {
+    SL_PRINT_STRING_WARN("%s", addr);
+  } else if (log_level == SLI_ZIGBEE_AF_PRINT_LOG_LEVEL_ERROR) {
+    SL_PRINT_STRING_ERROR("%s", addr);
+  } else {
+    SL_PRINT_STRING_INFO("%s", addr);
+  }
+}
+#endif
+
 // Prints the trace if trace is enabled
-static void sli_zigbee_af_print_internal_var_arg(uint16_t area,
-                                                 bool newLine,
-                                                 const char * formatString,
-                                                 va_list ap)
+SL_WEAK void sli_zigbee_af_print_internal_var_arg(uint16_t area,
+                                                  uint32_t log_level,
+                                                  bool newLine,
+                                                  const char * formatString,
+                                                  va_list ap)
 {
   if ( !sl_zigbee_af_print_enabled(area) ) {
     return;
   }
   printAreaName(area);
+#if defined(SLI_ZIGBEE_AF_PRINT_USE_SL_LOG)
+  {
+    char buf[SLI_ZIGBEE_AF_PRINT_SL_LOG_BUFFER_SIZE];
+    int n = vsnprintf(buf, sizeof(buf), formatString, ap);
+    buf[sizeof(buf) - 1U] = '\0';
+    if (n < 0) {
+      n = 0;
+    }
+    size_t len = (size_t)n;
+    if (len >= sizeof(buf)) {
+      len = sizeof(buf) - 1U;
+    }
+    if (len > 0U) {
+      sli_zigbee_af_print_sl_log_string(log_level, buf);
+    }
+    if (newLine) {
+      sli_zigbee_af_print_sl_log_string(log_level, "\n");
+      }
+  }
+#else
+  (void)log_level;
 #ifdef SL_CATALOG_ZIGBEE_SIMULATION_PRESENT
   (void) local_vprintf(formatString, ap);
 #else
@@ -125,14 +176,40 @@ static void sli_zigbee_af_print_internal_var_arg(uint16_t area,
   if (newLine) {
     sl_zigbee_core_debug_println("");
   }
+#endif // SLI_ZIGBEE_AF_PRINT_USE_SL_LOG
+}
+
+static void sli_zigbee_af_finish_print_var_arg(uint16_t area,
+                                               uint32_t log_level,
+                                               bool newLine,
+                                               const char *formatString,
+                                               va_list ap)
+{
+  sli_zigbee_af_print_internal_var_arg(area, log_level, newLine, formatString, ap);
   sl_zigbee_af_print_active_area = area;
+}
+
+void sl_zigbee_af_print_with_log(uint16_t area,
+                                 bool print_new_line,
+                                 uint32_t log_level,
+                                 const char *formatString,
+                                 ...)
+{
+  va_list ap;
+  va_start(ap, formatString);
+  sli_zigbee_af_finish_print_var_arg(area, log_level, print_new_line, formatString, ap);
+  va_end(ap);
 }
 
 void sl_zigbee_af_println(uint16_t area, const char * formatString, ...)
 {
   va_list ap = { 0 };
   va_start(ap, formatString);
-  sli_zigbee_af_print_internal_var_arg(area, true, formatString, ap);
+  sli_zigbee_af_finish_print_var_arg(area,
+                                     SLI_ZIGBEE_AF_PRINT_DEFAULT_LOG_LEVEL,
+                                     true,
+                                     formatString,
+                                     ap);
   va_end(ap);
 }
 
@@ -140,7 +217,11 @@ void sl_zigbee_af_print(uint16_t area, const char * formatString, ...)
 {
   va_list ap = { 0 };
   va_start(ap, formatString);
-  sli_zigbee_af_print_internal_var_arg(area, false, formatString, ap);
+  sli_zigbee_af_finish_print_var_arg(area,
+                                     SLI_ZIGBEE_AF_PRINT_DEFAULT_LOG_LEVEL,
+                                     false,
+                                     formatString,
+                                     ap);
   va_end(ap);
 }
 

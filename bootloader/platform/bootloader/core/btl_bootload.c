@@ -18,7 +18,7 @@
 
 #include "btl_bootload.h"
 #include "btl_reset.h"
-#include "btl_util.h"
+#include "core/btl_util.h"
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
@@ -92,7 +92,7 @@ MISRAC_ENABLE
 
 // --------------------------------
 // Local type declarations
-static bool bootload_verifySecureBoot(uint32_t startAddress);
+static btl_ret_t bootload_verifySecureBoot(uint32_t startAddress);
 
 static void flashData(uint32_t address,
                       const uint8_t  data[],
@@ -203,7 +203,7 @@ static bool getSignatureX(ApplicationProperties_t *appProperties, uint32_t *appS
   return true;
 }
 
-static bool bootload_verifySecureBoot(uint32_t startAddress)
+static btl_ret_t bootload_verifySecureBoot(uint32_t startAddress)
 {
   int32_t retVal = BOOTLOADER_ERROR_SECURITY_REJECTED;
   Sha256Context_t shaState;
@@ -216,15 +216,15 @@ static bool bootload_verifySecureBoot(uint32_t startAddress)
     (ApplicationProperties_t *)(appProps);
 
   if (!bootload_checkApplicationPropertiesMagic(appProperties)) {
-    return false;
+    return BTL_FALSE;
   }
   if (!bootload_checkApplicationPropertiesVersion(appProperties)) {
-    return false;
+    return BTL_FALSE;
   }
 
 #if !defined(_SILICON_LABS_GECKO_INTERNAL_SDID_80)
   if (PARSER_REQUIRE_ANTI_ROLLBACK_PROTECTION && !bootload_verifyApplicationVersion(appProperties->app.version, true)) {
-    return false;
+    return BTL_FALSE;
   }
 #endif
 
@@ -233,23 +233,23 @@ static bool bootload_verifySecureBoot(uint32_t startAddress)
   ApplicationProperties_t *blProperties =
     (ApplicationProperties_t *)(*(uint32_t *)(BTL_MAIN_STAGE_BASE + 52UL));
   if (!bootload_checkApplicationPropertiesMagic(blProperties)) {
-    return false;
+    return BTL_FALSE;
   }
 #if !defined(MAIN_BOOTLOADER_TEST)
   if ((uint32_t)blProperties > ((uint32_t)mainBootloaderTable->startOfAppSpace - sizeof(ApplicationProperties_t))) {
     // Make sure that this pointer is within the bootloader space.
-    return false;
+    return BTL_FALSE;
   }
 #endif
 
   bool gotCert = false;
   if (!bootload_verifyApplicationCertificate(appProperties, &gotCert)) {
-    return false;
+    return BTL_FALSE;
   }
 #endif
 
   if (!getSignatureX(appProperties, &appSignatureX)) {
-    return false;
+    return BTL_FALSE;
   }
 
   // Check that signature is in application flash
@@ -257,7 +257,7 @@ static bool bootload_verifySecureBoot(uint32_t startAddress)
       || (appSignatureX < startAddress)
       || (appSignatureX > (FLASH_BASE + FLASH_SIZE))) {
     BTL_DEBUG_PRINTLN("No sign");
-    return false;
+    return BTL_FALSE;
   }
 
 #if defined(BOOTLOADER_SUPPORT_INTERNAL_STORAGE) && (BOOTLOADER_SUPPORT_INTERNAL_STORAGE)
@@ -269,7 +269,7 @@ static bool bootload_verifySecureBoot(uint32_t startAddress)
     // Check if the storage slot's address overlaps with the application's signature address
     if (appSignatureX > slot[i].address) {
       BTL_DEBUG_PRINTLN("Application and storage slot overlap detected");
-      return false;
+      return BTL_FALSE;
     }
   }
 #endif
@@ -317,10 +317,10 @@ static bool bootload_verifySecureBoot(uint32_t startAddress)
                                  btl_getSignedBootloaderKeyYPtr());
 #endif
   if (retVal == BOOTLOADER_OK) {
-    return true;
+    return BTL_TRUE;
   } else {
     BTL_DEBUG_PRINTLN("Inv sign");
-    return false;
+    return BTL_FALSE;
   }
 }
 
@@ -446,7 +446,15 @@ SL_WEAK void bootload_bootloaderCallback(uint32_t offset,
 
 bool bootload_checkApplicationPropertiesMagic(void *appProperties)
 {
-  if ((appProperties == NULL) || ((uint32_t) appProperties == 0xFFFFFFFFUL)) {
+  uint32_t flashEnd  = FLASH_BASE + FLASH_SIZE; // Physical limit for endOfAppsSpace
+  uint32_t appEndCfg = (uint32_t)mainBootloaderTable->endOfAppSpace; //endOfAppSpace as configured by the user
+
+  // Taking minimum value of appEndCfg and flashEnd, to avoid errors when
+  // user configured endOfAppSpace exceeds the flash limit.
+  uint32_t appEnd = (appEndCfg <= flashEnd) ? appEndCfg : flashEnd;
+
+  if ((appProperties == NULL) || ((uint32_t) appProperties == 0xFFFFFFFFUL)
+      || ((uint32_t)appProperties + sizeof(appProperties) > appEnd)) {
     return false;
   }
 
@@ -479,8 +487,7 @@ bool bootload_checkApplicationPropertiesVersion(void *appProperties)
   }
   return true;
 }
-
-bool bootload_verifyApplication(uint32_t startAddress)
+btl_ret_t bootload_verifyApplication(uint32_t startAddress)
 {
   BareBootTable_t *appStart = (BareBootTable_t *)startAddress;
   uint32_t appSp = (uint32_t)appStart->stackTop;
@@ -490,14 +497,14 @@ bool bootload_verifyApplication(uint32_t startAddress)
   // Check that SP points to RAM
   if ((appSp < SRAM_BASE) || (appSp > (SRAM_BASE + SRAM_SIZE))) {
     BTL_DEBUG_PRINTLN("SP n/i RAM");
-    return false;
+    return BTL_FALSE;
   }
 
   // Check that PC points to application flash
   if ((appPc < (uint32_t)mainBootloaderTable->startOfAppSpace)
       || (appPc > (FLASH_BASE + FLASH_SIZE))) {
     BTL_DEBUG_PRINTLN("PC n/i flash");
-    return false;
+    return BTL_FALSE;
   }
 
   ApplicationProperties_t *appProperties =
@@ -519,11 +526,11 @@ bool bootload_verifyApplication(uint32_t startAddress)
       // pointer to the signature is required. An address outside main flash
       // is not valid for either case.
       BTL_DEBUG_PRINTLN("AP n/i flash");
-      return false;
+      return BTL_FALSE;
     } else {
       // Secure boot is not enforced, we have to assume app is valid
       BTL_DEBUG_PRINTLN("No SB, assume valid");
-      return true;
+      return BTL_TRUE;
     }
   } else if (BOOTLOADER_ENFORCE_SECURE_BOOT) {
     // Secure boot is enforced, attempt to verify secure boot signature
@@ -531,19 +538,19 @@ bool bootload_verifyApplication(uint32_t startAddress)
     return bootload_verifySecureBoot(startAddress);
   } else if (bootload_checkApplicationPropertiesMagic(appProperties)) {
     if (!bootload_checkApplicationPropertiesVersion(appProperties)) {
-      return false;
+      return BTL_FALSE;
     }
     // Application properties pointer is valid, decide what action to take
     // based on signature type
     if (appProperties->signatureType == APPLICATION_SIGNATURE_NONE) {
       // No signature, app has to be assumed valid
       BTL_DEBUG_PRINTLN("No signature, assume valid");
-      return true;
+      return BTL_TRUE;
     } else if (appProperties->signatureType == APPLICATION_SIGNATURE_CRC32) {
 #ifdef BTL_LIB_NO_SUPPORT_CRC32_SIGNATURE
       // Don't support CRC32, app has to be assumed valid
       BTL_DEBUG_PRINTLN("CRC not supported, assume valid");
-      return true;
+      return BTL_TRUE;
 #else
       uint32_t crc = btl_crc32Stream(
         (void *)startAddress,
@@ -551,9 +558,9 @@ bool bootload_verifyApplication(uint32_t startAddress)
         BTL_CRC32_START);
       if (crc == BTL_CRC32_END) {
         BTL_DEBUG_PRINTLN("CRC success");
-        return true;
+        return BTL_TRUE;
       } else {
-        return false;
+        return BTL_FALSE;
       }
 #endif
     } else {
@@ -567,7 +574,7 @@ bool bootload_verifyApplication(uint32_t startAddress)
     // Secure boot is not enforced (checked above), assume that this is a
     // pointer to the Reset_Handler and that the app is valid
     BTL_DEBUG_PRINTLN("No AP, assume valid");
-    return true;
+    return BTL_TRUE;
   }
 }
 
@@ -591,8 +598,7 @@ uint32_t* bootload_getApplicationVersionStoragePtr(uint32_t index)
   return NULL;
 #endif
 }
-
-bool bootload_storeApplicationVersion(uint32_t startAddress)
+btl_ret_t bootload_storeApplicationVersion(uint32_t startAddress)
 {
 #if defined(BOOTLOADER_ROLLBACK_PROTECTION) && (BOOTLOADER_ROLLBACK_PROTECTION == 1)
   BareBootTable_t *appStart = (BareBootTable_t *)startAddress;
@@ -603,30 +609,30 @@ bool bootload_storeApplicationVersion(uint32_t startAddress)
   uint32_t *appVersionStoragePtr = bootload_getApplicationVersionStoragePtr(BOOTLOADER_APPLICATION_VERSION_STORAGE_CAPACITY);
 
   if (!bootload_checkApplicationPropertiesMagic(appProperties)) {
-    return false;
+    return BTL_FALSE;
   }
   if (!bootload_checkApplicationPropertiesVersion(appProperties)) {
-    return false;
+    return BTL_FALSE;
   }
 
   if (checkMaxVersionMagic()) {
     // The highest allowed version is seen, which is the maximum version allowed
     // so we do not need to remember any new application versions.
-    return true;
+    return BTL_TRUE;
   }
   if (*appVersionStoragePtr != SL_GBL_UINT32_MAX_NUMBER) {
-    return false;
+    return BTL_FALSE;
   }
   if (highestVersionSeen == appVersion) {
     // Do not need to store a new version.
-    return true;
+    return BTL_TRUE;
   }
 
   if (appVersion == SL_GBL_UINT32_MAX_NUMBER) {
     appVersion = SL_GBL_APPLICATION_VERSION_MAX_MAGIC;
     // Return true eventhough the flash pages are locked to avoid bricking devices.
     (void)flash_writeBuffer_dma((uint32_t)appVersionStoragePtr, &appVersion, 4UL, SL_GBL_MSC_LDMA_CHANNEL);
-    return true;
+    return BTL_TRUE;
   }
 
   // The application that is about to boot has a higher version than the highest seen version.
@@ -634,15 +640,15 @@ bool bootload_storeApplicationVersion(uint32_t startAddress)
   // downgrade later. This will "never" happen as the number of empty slots is checked before getting to this point.
   // Unless the slots are already filled for some unexpected reason.
   if (emptySlots == 0UL) {
-    return false;
+    return BTL_FALSE;
   }
 
   appVersionStoragePtr = bootload_getApplicationVersionStoragePtr(BOOTLOADER_APPLICATION_VERSION_STORAGE_CAPACITY - emptySlots);
   (void)flash_writeBuffer_dma((uint32_t)appVersionStoragePtr, &appVersion, 4UL, SL_GBL_MSC_LDMA_CHANNEL);
-  return true;
+  return BTL_TRUE;
 #else
   (void)startAddress;
-  return false;
+  return BTL_FALSE;
 #endif
 }
 

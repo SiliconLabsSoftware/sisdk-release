@@ -3,7 +3,7 @@
  * @brief internal wrappers for 'sl_zigbee_security_manager_dlk_ecc' ipc commands
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -125,6 +125,7 @@ sl_status_t sl_zigbee_sec_man_ecc_extract_shared_secret(sl_zigbee_sec_man_dlk_ec
 
   if (peer_key_len > DLK_ECC_MAX_PUBLIC_KEY_SIZE) {
     assert(false); // "vector peer_public_key length exceeds expected maximum
+    return msg.data.sec_man_ecc_extract_shared_secret.response.result;
   }
 
   memmove(msg.data.sec_man_ecc_extract_shared_secret.request.peer_public_key, peer_public_key, sizeof(uint8_t) * peer_key_len);

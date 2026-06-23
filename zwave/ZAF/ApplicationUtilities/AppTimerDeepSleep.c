@@ -166,8 +166,8 @@ void AppTimerDeepSleepPersistentSaveAll(void)
   if (false == g_deepSleepTimersLoaded) {
     return;
   }
-  uint32_t taskTickCount = xTaskGetTickCount();
 
+  uint32_t taskTickCount = xTaskGetTickCount();
   ZPAL_LOG_DEBUG(ZPAL_LOG_ZAF_APP_TIMER, "AppTimerDeepSleepPersistentSaveAll tick: %u\n", taskTickCount);
 
   for (uint32_t timerId = 0; timerId < MAX_NUM_APP_TIMERS; timerId++) {

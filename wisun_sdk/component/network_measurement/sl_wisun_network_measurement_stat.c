@@ -202,9 +202,9 @@ void sl_wisun_nwm_stat_handler(sl_wisun_ping_stat_t *stat)
   printf("Meas. packet length | %u\n", stat->packet_length);
   printf("Lost packets        | %u\n", stat->lost);
   printf("Packet loss         | %u%%\n", (stat->lost * 100) / stat->packet_count);
-  printf("Min. Time           | %lums\n", stat->min_time_ms);
-  printf("Max. Time           | %lums\n", stat->max_time_ms);
-  printf("Avg. Time           | %lums\n\n", stat->avg_time_ms);
+  printf("Min. Time           | %"PRIu32"ms\n", stat->min_time_ms);
+  printf("Max. Time           | %"PRIu32"ms\n", stat->max_time_ms);
+  printf("Avg. Time           | %"PRIu32"ms\n\n", stat->avg_time_ms);
 
   _nwm_stat_mutex_release();
 }
@@ -372,11 +372,11 @@ static void _print_node_info(const sl_wisun_nwm_node_stat_t * const info)
   printf("[Node: %s]\n", ip_str);
   printf("  type: %s\n", info->name);
   printf("  statistic:\n");
-  printf("    lifetime:               %lu\n", info->stat.lifetime);
-  printf("    mac_tx_count:           %lu\n", info->stat.mac_tx_count);
-  printf("    mac_tx_failed_count:    %lu\n", info->stat.mac_tx_failed_count);
-  printf("    mac_tx_ms_count:        %lu\n", info->stat.mac_tx_ms_count);
-  printf("    mac_tx_ms_failed_count: %lu\n", info->stat.mac_tx_ms_failed_count);
+  printf("    lifetime:               %"PRIu32"\n", info->stat.lifetime);
+  printf("    mac_tx_count:           %"PRIu32"\n", info->stat.mac_tx_count);
+  printf("    mac_tx_failed_count:    %"PRIu32"\n", info->stat.mac_tx_failed_count);
+  printf("    mac_tx_ms_count:        %"PRIu32"\n", info->stat.mac_tx_ms_count);
+  printf("    mac_tx_ms_failed_count: %"PRIu32"\n", info->stat.mac_tx_ms_failed_count);
   printf("    rpl_rank:               %u\n", info->stat.rpl_rank);
   printf("    etx:                    %u\n", info->stat.etx);
   printf("    rsl_out:                %u\n", info->stat.rsl_out);

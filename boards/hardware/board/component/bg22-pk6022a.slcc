@@ -17,10 +17,10 @@
   - name: SL_KIT_NAME
     value: '"BG22-PK6022A"'
   - name: SL_KIT_REV
-    value: '"A02"'
+    value: '"A01"'
 - tag:
   - kit:opn:BG22-PK6022A
   - kit:pn:PK6022
   - kit:variant:A
-  - kit:revision:A02
+  - kit:revision:A01
 - root_path: boards

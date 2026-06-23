@@ -32,6 +32,17 @@
 
 #include "sl_rail_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @addtogroup Multiprotocol_Transition_Time Multiprotocol Transition Time
+ * @ingroup Multiprotocol
+ * @brief APIs related to \ref sl_rail_util_mp_transition_time component.
+ * @{
+ */
+
 /**
  * @brief Represents an entry in the multi-protocol transition time table.
  *
@@ -47,8 +58,10 @@
  * more details, refer to the `sl_rail_util_mp_transition_time.md` file.
  */
 typedef struct {
-  uint32_t minimum_frequency_hz; // Minimum frequency in Hz for this entry
-  sl_rail_time_t transition_time_us; // Transition time in microseconds
+  /** Minimum frequency in Hz for this entry. */
+  uint32_t minimum_frequency_hz;
+  /** Transition time in microseconds. */
+  sl_rail_time_t transition_time_us;
 } sl_rail_util_mp_transition_time_entry_t;
 
 /**
@@ -88,5 +101,14 @@ sl_status_t sl_rail_util_mp_transition_time_get(const sl_rail_util_mp_transition
  * the RAIL library.
  */
 void sl_rail_util_mp_transition_time_init(void);
+
+/**
+ * @}
+ * end of Multiprotocol_Transition_Time
+ */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

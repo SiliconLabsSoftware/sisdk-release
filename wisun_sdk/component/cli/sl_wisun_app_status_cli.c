@@ -92,7 +92,7 @@ void sl_app_status_cli_get_schedule(const sl_cli_command_arg_t *arguments)
 {
   (void)arguments;
 
-  printf("schedule_time_m=%ld\n", sl_wisun_app_status_get_schedule_time_ms());
+  printf("schedule_time_m=%"PRIu32"\n", sl_wisun_app_status_get_schedule_time_ms());
 }
 
 /**************************************************************************//**

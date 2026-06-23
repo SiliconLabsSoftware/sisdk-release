@@ -52,7 +52,10 @@
 #define DEMO_CONTROL_PAYLOAD_CMD_DATA           (0x0FU)
 /// The incoming message's 2. bit contains the length of the packet
 #define PACKET_HEADER_LEN                       (2U)
+
 #define DEVICE_STATUS_PAYLOAD_BYTE              (14U)
+#define DEVICE_STATUS_LIGHT_STATE_BIT           (0x01U)
+#define DEVICE_STATUS_SWITCH_STATE_BIT          (0x02U)
 
 // -----------------------------------------------------------------------------
 //                                Global Variables

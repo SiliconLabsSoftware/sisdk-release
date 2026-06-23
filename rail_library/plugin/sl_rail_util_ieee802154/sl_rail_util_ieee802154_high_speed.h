@@ -38,7 +38,9 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup IEEE802154_HIGH_SPEED_API IEEE802.15.4 High Speed
+ * @addtogroup IEEE802154_HIGH_SPEED_API IEEE 802.15.4 High Speed
+ * @ingroup IEEE802_15_4
+ * @brief APIs related to \ref rail_util_ieee802154_high_speed component.
  * @{
  */
 

@@ -93,7 +93,8 @@ $(document).ready(function(){initNavTree('group__sl__bt__periodic__sync.html',''
 
 <div class="header">
   <div class="summary">
-<a href="#groups">Modules</a>  </div>
+<a href="#groups">Modules</a> &#124;
+<a href="#enum-members">Enumerations</a>  </div>
   <div class="headertitle"><div class="title">Periodic Advertising without responses Synchronization</div></div>
 </div><!--header-->
 <div class="contents">
@@ -112,10 +113,44 @@ Modules</h2></td></tr>
 <tr class="memitem:group__sl__bt__evt__periodic__sync__report"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__evt__periodic__sync__report.html">sl_bt_evt_periodic_sync_report</a></td></tr>
 <tr class="memdesc:group__sl__bt__evt__periodic__sync__report"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports a periodic advertising packet for periodic advertising train that does not have subevents or response slots. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:gaa1f741a2a7b46593e4f3f5b5fa40fc8e"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__periodic__sync.html#gaa1f741a2a7b46593e4f3f5b5fa40fc8e">sl_bt_periodic_sync_data_status_t</a> { <a class="el" href="group__sl__bt__periodic__sync.html#ggaa1f741a2a7b46593e4f3f5b5fa40fc8ea7ed1b0a919198530ded6bec6f3357b94">sl_bt_periodic_sync_data_status_complete</a> = 0x0
+, <a class="el" href="group__sl__bt__periodic__sync.html#ggaa1f741a2a7b46593e4f3f5b5fa40fc8eac7b8f000ada4e7cf5ffc85fdd4952cf9">sl_bt_periodic_sync_data_status_incomplete_more</a> = 0x1
+, <a class="el" href="group__sl__bt__periodic__sync.html#ggaa1f741a2a7b46593e4f3f5b5fa40fc8ea42d110945bf35b364a6d6c2918893163">sl_bt_periodic_sync_data_status_incomplete_nomore</a> = 0x2
+ }</td></tr>
+<tr class="memdesc:gaa1f741a2a7b46593e4f3f5b5fa40fc8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Defines the data completeness status types of periodic advertisements.  <a href="group__sl__bt__periodic__sync.html#gaa1f741a2a7b46593e4f3f5b5fa40fc8e">More...</a><br /></td></tr>
+<tr class="separator:gaa1f741a2a7b46593e4f3f5b5fa40fc8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p >Periodic Advertising without responses Synchronization. </p>
 <p >Provides events and control for synchronized periodic advertising trains that do not have subevents or response slots. Synchronization is achieved by scanning (see <a class="el" href="group__sl__bt__sync__scanner.html">Periodic Advertising Sync Scanner</a>) or by receiving Periodic Advertising Synchronization Transfer (see <a class="el" href="group__sl__bt__past__receiver.html">PAST Receiver</a>). </p>
+<h2 class="groupheader">Enumeration Type Documentation</h2>
+<a id="gaa1f741a2a7b46593e4f3f5b5fa40fc8e" name="gaa1f741a2a7b46593e4f3f5b5fa40fc8e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaa1f741a2a7b46593e4f3f5b5fa40fc8e">&#9670;&nbsp;</a></span>sl_bt_periodic_sync_data_status_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="group__sl__bt__periodic__sync.html#gaa1f741a2a7b46593e4f3f5b5fa40fc8e">sl_bt_periodic_sync_data_status_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Defines the data completeness status types of periodic advertisements. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ggaa1f741a2a7b46593e4f3f5b5fa40fc8ea7ed1b0a919198530ded6bec6f3357b94" name="ggaa1f741a2a7b46593e4f3f5b5fa40fc8ea7ed1b0a919198530ded6bec6f3357b94"></a>sl_bt_periodic_sync_data_status_complete&#160;</td><td class="fielddoc"><p >(0x0) All data of the periodic advertisement has been reported. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ggaa1f741a2a7b46593e4f3f5b5fa40fc8eac7b8f000ada4e7cf5ffc85fdd4952cf9" name="ggaa1f741a2a7b46593e4f3f5b5fa40fc8eac7b8f000ada4e7cf5ffc85fdd4952cf9"></a>sl_bt_periodic_sync_data_status_incomplete_more&#160;</td><td class="fielddoc"><p >(0x1) Data of the periodic advertisement is incomplete in this event, and more data will come in new events. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="ggaa1f741a2a7b46593e4f3f5b5fa40fc8ea42d110945bf35b364a6d6c2918893163" name="ggaa1f741a2a7b46593e4f3f5b5fa40fc8ea42d110945bf35b364a6d6c2918893163"></a>sl_bt_periodic_sync_data_status_incomplete_nomore&#160;</td><td class="fielddoc"><p >(0x2) Data of the periodic advertisement is incomplete in this event, but no more data will come, i.e., the data of the periodic advertisement is truncated. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

@@ -29,6 +29,8 @@ ui_hints:
    highlight: readme.md
 tag:
   - hardware:device:ram:10
+  - hwfilter:ram:10k
+  - hwfilter:device:device_series_2
 component:
    - id: mbedtls_random
    - id: mbedtls_ecdh

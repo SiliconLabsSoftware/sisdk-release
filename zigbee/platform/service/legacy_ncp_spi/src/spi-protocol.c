@@ -15,7 +15,6 @@
  *
  ******************************************************************************/
 #include PLATFORM_HEADER
-#include "sl_component_catalog.h"
 #include "stack/include/sl_zigbee.h"
 #include "hal/hal.h"
 #include "serial/serial.h"
@@ -129,6 +128,27 @@ void halHostSerialPowerup(void)
   //---- Configure SPI ----//
   SPIDRV_Init_t initData = SPI_NCP_USART_INIT;
   SPIDRV_Init(spiHandle, &initData);
+#if defined(_SILICON_LABS_32B_SERIES_3)
+  /* Use the public initData copy on the handle; do not reach into
+   * handle->peripheral.eusartPort (that field is documented opaque). */
+  EUSART_TypeDef *eusart = (EUSART_TypeDef *)spiHandle->initData.port;
+  /* EUSART_NUM() returns -1 for non-EUSART peripherals, so this is also
+  * safe when SPI_NCP_USART_INIT happens to bind to a USART instance. */
+  if (EUSART_NUM(eusart) >= 0) {
+    uint32_t spi_ncp_idle_byte = 0xFFFFU;
+    /* DTXDATCFG is in the EN-must-be-zero (CONFIG-type) register group,
+     * so cycle the peripheral through disable/write/enable. */
+    sl_hal_eusart_disable(eusart);
+    sl_hal_eusart_wait_ready(eusart);
+    eusart->DTXDATCFG = (spi_ncp_idle_byte << _EUSART_DTXDATCFG_DTXDAT_SHIFT) & _EUSART_DTXDATCFG_DTXDAT_MASK;
+    /* sl_hal_eusart_enable() only sets EN; RX/TX are separate CMD ops
+     * and a full disable cycle clears them, so re-enable explicitly. */
+    sl_hal_eusart_enable(eusart);
+    sl_hal_eusart_enable_rx(eusart);
+    sl_hal_eusart_enable_tx(eusart);
+    sl_hal_eusart_wait_sync(eusart, _EUSART_SYNCBUSY_MASK);
+  }
+#endif // _SILICON_LABS_32B_SERIES_3
 
 #if defined(_SILICON_LABS_32B_SERIES_3)
   // Series 3 GPIO initialization
@@ -162,10 +182,10 @@ void halHostSerialPowerup(void)
 
   int32_t interrupt_ext = BSP_SPINCP_NWAKE_PIN;
   (void)sl_gpio_configure_external_interrupt(&n_wake_int_gpio,
-                                       &interrupt_ext,
-                                       SL_GPIO_INTERRUPT_FALLING_EDGE,
-                                       nWAKE_ISR,
-                                       NULL);
+                                             &interrupt_ext,
+                                             SL_GPIO_INTERRUPT_FALLING_EDGE,
+                                             nWAKE_ISR,
+                                             NULL);
   #else
   GPIO_IntDisable(1 << BSP_SPINCP_NWAKE_PIN);
   GPIO_PinModeSet(BSP_SPINCP_NWAKE_PORT,
@@ -357,11 +377,11 @@ static bool findHostCommand(void)
         // command). See the comment when the SPIDRV transfer is started in the
         // spipNcpWait case of halInternalHostSerialTick's switch statement for
         // the rationale.
-#if defined(SL_CATALOG_IOSTREAM_EUSART_PRESENT)
+#if defined(_SILICON_LABS_32B_SERIES_3)
         spiHandle->peripheral.eusartPort->CMD = EUSART_CMD_RXBLOCKEN;
-#elif defined(SL_CATALOG_IOSTREAM_USART_PRESENT)
+#elif defined(_SILICON_LABS_32B_SERIES_2)
         spiHandle->peripheral.usartPort->CMD = USART_CMD_RXBLOCKEN;
-#endif // SL_CATALOG_IOSTREAM_EUSART_PRESENT
+#endif // _SILICON_LABS_32B_SERIES_3
 
         // Transition state to wait for TX buffer ready
         spipNcpState.state = spipNcpWait;
@@ -436,11 +456,11 @@ static bool halInternalHostSerialTick(bool responseReady)
 
       if (spiHandle->state == spidrvStateIdle) {
         // Clear out anything remaining in the USART's FIFOs
-#if defined(SL_CATALOG_IOSTREAM_EUSART_PRESENT)
+#if defined(_SILICON_LABS_32B_SERIES_3)
         spiHandle->peripheral.eusartPort->CMD = EUSART_CMD_CLEARRX | EUSART_CMD_CLEARTX;
-#elif defined(SL_CATALOG_IOSTREAM_USART_PRESENT)
+#elif defined(_SILICON_LABS_32B_SERIES_2)
         spiHandle->peripheral.usartPort->CMD = USART_CMD_CLEARRX | USART_CMD_CLEARTX;
-#endif // SL_CATALOG_IOSTREAM_EUSART_PRESENT
+#endif // _SILICON_LABS_32B_SERIES_3
         SPIDRV_SReceive(spiHandle,
                         commandBuffer,
                         SPIP_BUFFER_SIZE,
@@ -449,11 +469,11 @@ static bool halInternalHostSerialTick(bool responseReady)
         // Disable RX blocking so we can receive the next command. See the
         // comment when the SPIDRV transfer is started in the spipNcpWait case
         // of halInternalHostSerialTick's switch statement for the rationale.
-#if defined(SL_CATALOG_IOSTREAM_EUSART_PRESENT)
+#if defined(_SILICON_LABS_32B_SERIES_3)
         spiHandle->peripheral.eusartPort->CMD = EUSART_CMD_RXBLOCKDIS;
-#elif defined(SL_CATALOG_IOSTREAM_USART_PRESENT)
+#elif defined(_SILICON_LABS_32B_SERIES_2)
         spiHandle->peripheral.usartPort->CMD = USART_CMD_RXBLOCKDIS;
-#endif // SL_CATALOG_IOSTREAM_EUSART_PRESENT
+#endif // _SILICON_LABS_32B_SERIES_3
         break;
       } else if (nSSEL_IS_ASSERTED()) {
         SET_nHOST_INT();
@@ -518,11 +538,11 @@ static bool halInternalHostSerialTick(bool responseReady)
         // respective FIFOs (although apparently not the shift register, so
         // there is an extra 0xFF byte sent when switching from receiving the
         // command to sending the response).
-#if defined(SL_CATALOG_IOSTREAM_EUSART_PRESENT)
+#if defined(_SILICON_LABS_32B_SERIES_3)
         spiHandle->peripheral.eusartPort->CMD = EUSART_CMD_CLEARRX | EUSART_CMD_CLEARTX;
-#elif defined(SL_CATALOG_IOSTREAM_USART_PRESENT)
+#elif defined(_SILICON_LABS_32B_SERIES_2)
         spiHandle->peripheral.usartPort->CMD = USART_CMD_CLEARRX | USART_CMD_CLEARTX;
-#endif // SL_CATALOG_IOSTREAM_EUSART_PRESENT
+#endif // _SILICON_LABS_32B_SERIES_3
 
         // Start a new transfer to send the response and also double as a
         // backstop receive for the next command (in case the nSSEL ISR can't
@@ -554,11 +574,11 @@ static bool halInternalHostSerialTick(bool responseReady)
         // because either the transfer would eventually be aborted anyway due to
         // the rising edge of the chip select line or we'd capture the next
         // command as part of the backstop receive set up above.
-#if defined(SL_CATALOG_IOSTREAM_EUSART_PRESENT)
+#if defined(_SILICON_LABS_32B_SERIES_3)
         spiHandle->peripheral.eusartPort->CMD = EUSART_CMD_RXBLOCKDIS;
-#elif defined(SL_CATALOG_IOSTREAM_USART_PRESENT)
+#elif defined(_SILICON_LABS_32B_SERIES_2)
         spiHandle->peripheral.usartPort->CMD = USART_CMD_RXBLOCKDIS;
-#endif // SL_CATALOG_IOSTREAM_EUSART_PRESENT
+#endif // _SILICON_LABS_32B_SERIES_3
         spipNcpState.state = spipNcpResponse;
         // Indicate to the host that it should start clocking out the response
         CLR_nHOST_INT();
@@ -627,11 +647,11 @@ static void nSSEL_ISR(uint8_t interrupt_no, void *ctx)
       SPIDRV_GetTransferStatus(spiHandle, &itemsTransferred, &itemsRemaining);
 
       // Clear out anything remaining in the USART's FIFOs
-#if defined(SL_CATALOG_IOSTREAM_EUSART_PRESENT)
+#if defined(_SILICON_LABS_32B_SERIES_3)
       spiHandle->peripheral.eusartPort->CMD = EUSART_CMD_CLEARRX | EUSART_CMD_CLEARTX;
-#elif defined(SL_CATALOG_IOSTREAM_USART_PRESENT)
+#elif defined(_SILICON_LABS_32B_SERIES_2)
       spiHandle->peripheral.usartPort->CMD = USART_CMD_CLEARRX | USART_CMD_CLEARTX;
-#endif // SL_CATALOG_IOSTREAM_EUSART_PRESENT
+#endif // _SILICON_LABS_32B_SERIES_3
       SPIDRV_SReceive(spiHandle,
                       commandBuffer,
                       SPIP_BUFFER_SIZE,
@@ -641,11 +661,11 @@ static void nSSEL_ISR(uint8_t interrupt_no, void *ctx)
       // Disable RX blocking so we can receive the next command. See the comment
       // when the SPIDRV transfer is started in the spipNcpWait case of
       // halInternalHostSerialTick's switch statement for the rationale.
-#if defined(SL_CATALOG_IOSTREAM_EUSART_PRESENT)
+#if defined(_SILICON_LABS_32B_SERIES_3)
       spiHandle->peripheral.eusartPort->CMD = EUSART_CMD_RXBLOCKDIS;
-#elif defined(SL_CATALOG_IOSTREAM_USART_PRESENT)
+#elif defined(_SILICON_LABS_32B_SERIES_2)
       spiHandle->peripheral.usartPort->CMD = USART_CMD_RXBLOCKDIS;
-#endif // SL_CATALOG_IOSTREAM_EUSART_PRESENT
+#endif // _SILICON_LABS_32B_SERIES_3
 
       if ((spipNcpState.state >= spipNcpResponse)
           && (itemsTransferred < spipNcpState.responseLength)) {
@@ -691,11 +711,11 @@ static void processSpipCommandAndRespond(uint8_t spipResponse)
   // that point, when we start the receive for the next command). See the
   // comment when the SPIDRV transfer is started in the spipNcpWait case of
   // halInternalHostSerialTick's switch statement for the rationale.
-#if defined(SL_CATALOG_IOSTREAM_EUSART_PRESENT)
+#if defined(_SILICON_LABS_32B_SERIES_3)
   spiHandle->peripheral.eusartPort->CMD = EUSART_CMD_RXBLOCKEN;
-#elif defined(SL_CATALOG_IOSTREAM_USART_PRESENT)
+#elif defined(_SILICON_LABS_32B_SERIES_2)
   spiHandle->peripheral.usartPort->CMD = USART_CMD_RXBLOCKEN;
-#endif // SL_CATALOG_IOSTREAM_EUSART_PRESENT
+#endif // _SILICON_LABS_32B_SERIES_3
 
   //check for Frame Terminator, it must be there!
   if (getHostByte(1) == SPIP_FRAME_TERMINATOR) {

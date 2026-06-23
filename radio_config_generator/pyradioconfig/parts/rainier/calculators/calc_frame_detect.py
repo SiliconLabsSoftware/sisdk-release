@@ -13,8 +13,6 @@ class CalcFrameDetectRainier(Calc_Frame_Detect_Bobcat):
         """
         super().buildVariables(model)
         self._addModelVariable(model, 'syncword_trisync', bool, ModelVariableFormat.ASCII, desc='Enable tri syncword detection')
-        self._addModelActual(model, 'preamble_string', str, ModelVariableFormat.ASCII,
-                               desc='Output string representing the actual preamble pattern in binary')
 
     def calc_preerrors_val(self, model):
         demod_select = model.vars.demod_select.value

@@ -31,6 +31,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <inttypes.h>
 #include "em_device.h"
 #if defined _SILICON_LABS_32B_SERIES_2
 #include "em_system.h"
@@ -115,9 +116,9 @@ void cli_info(sl_cli_command_arg_t *arguments)
 
   app_log_info("Info:\n");
 #if defined(_SILICON_LABS_32B_SERIES_2)
-  app_log_info("  MCU Id:       0x%016llX\n", SYSTEM_GetUnique());
+  app_log_info("  MCU Id:       0x%" PRIX64 "\n", SYSTEM_GetUnique());
 #else
-  app_log_info("  MCU Id:       0x%016llX\n", sl_hal_system_get_unique());
+  app_log_info("  MCU Id:       0x%" PRIX64 "\n", sl_hal_system_get_unique());
 #endif
   app_log_info("  Fw RX Packet: %s\n", (rx_requested == true) ? ON : OFF);
 
@@ -138,21 +139,21 @@ void cli_info(sl_cli_command_arg_t *arguments)
 #ifdef SL_CATALOG_RAIL_SDK_IEEE802154_SUPPORT_PRESENT
   app_log_info("Status:\n");
   app_log_info("  Std:          %s\n", std[comm_status.std]);
-  app_log_info("  Channel:      %d\n", comm_status.channel);
+  app_log_info("  Channel:      %" PRIu16 "\n", comm_status.channel);
   app_log_info("  Auto ACK:     %s\n",
                (comm_status.auto_ack == true) ? ENABLED : DISABLED);
   app_log_info("  ACK:          %s\n",
                (comm_status.ack == true) ? ENABLED : DISABLED);
-  app_log_info("  PAN ID:       0x%04X\n", comm_status.destination_pan_id);
-  app_log_info("  Dest. addr.:  0x%04X\n", comm_status.destination_address);
-  app_log_info("  Src. addr.:   0x%04X\n", comm_status.source_address);
+  app_log_info("  PAN ID:       0x%04" PRIX16 "\n", comm_status.destination_pan_id);
+  app_log_info("  Dest. addr.:  0x%04" PRIX16 "\n", comm_status.destination_address);
+  app_log_info("  Src. addr.:   0x%04" PRIX16 "\n", comm_status.source_address);
 
   if ((comm_status.std == SL_RAIL_SDK_IEEE802154_STD_IEEE802154G_863MHZ)
       || (comm_status.std == SL_RAIL_SDK_IEEE802154_STD_IEEE802154G_915MHZ)) {
     app_log_info("802.15.4g specific:\n");
     app_log_info("  Data wh:      %s\n",
                  (comm_status.data_whitening == true) ? ON : OFF);
-    app_log_info("  CRC length:   %dBytes\n", comm_status.crc_length);
+    app_log_info("  CRC length:   %" PRIu8 "Bytes\n", comm_status.crc_length);
   }
 #endif
 }
@@ -200,7 +201,7 @@ void cli_receive_packet(sl_cli_command_arg_t *arguments)
     app_log_info("Wrong parameter\n");
   }
   if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_warning("sl_rail_start_rx() or sl_rail_idle result: %lu\n",
+    app_log_warning("sl_rail_start_rx() or sl_rail_idle result: 0x%08" PRIX32 "\n",
                     rail_status);
   }
 #if defined(SL_CATALOG_KERNEL_PRESENT)
@@ -305,7 +306,7 @@ void cli_pan_id(sl_cli_command_arg_t *arguments)
   // 0x0000 - 0xFFFF
   cli_requests.panid_requested = true;
   cli_desired_settings.desired_panid = arg;
-  app_log_info("PAN ID: %d\n", arg);
+  app_log_info("PAN ID: %" PRIu16 "\n", arg);
 
 #elif defined SL_CATALOG_RAIL_SDK_BLE_SUPPORT_PRESENT
   (void)arguments;
@@ -332,7 +333,7 @@ void cli_src_addr(sl_cli_command_arg_t *arguments)
   // 0x0000 - 0xFFFF
   cli_requests.srcaddr_requested = true;
   cli_desired_settings.desired_srcaddr = arg;
-  app_log_info("Source Address: %d\n", arg);
+  app_log_info("Source Address: %" PRIu16 "\n", arg);
 
 #elif defined SL_CATALOG_RAIL_SDK_BLE_SUPPORT_PRESENT
   (void)arguments;
@@ -359,7 +360,7 @@ void cli_dest_addr(sl_cli_command_arg_t *arguments)
   // 0x0000 - 0xFFFF
   cli_requests.destaddr_requested = true;
   cli_desired_settings.desired_destaddr = arg;
-  app_log_info("Destination Address: %d\n", arg);
+  app_log_info("Destination Address: %" PRIu16 "\n", arg);
 
 #elif defined SL_CATALOG_RAIL_SDK_BLE_SUPPORT_PRESENT
   (void)arguments;
@@ -466,7 +467,7 @@ void cli_cfg_crc(sl_cli_command_arg_t *arguments)
       } else {
         cli_desired_settings.desired_crc = SL_RAIL_SDK_IEEE802154G_CRC_LENGTH_4BYTE;
       }
-      app_log_info("Config - CRC size: %d\n", arg_crc);
+      app_log_info("Config - CRC size: %" PRIu8 "\n", arg_crc);
     } else {
       app_log_info("Wrong parameter\n");
     }

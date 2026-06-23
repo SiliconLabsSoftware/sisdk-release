@@ -72,6 +72,9 @@
 #define HIGH_PRIORITY                   0
 /// Values greater than max 37200000 are treated as unknown remaining time
 #define UNKNOWN_REMAINING_TIME          40000000
+// Lazy load means that the LC state is loaded from PS only when it is needed
+// for the first time
+#define LC_STATE_LAZY_LOAD              true
 /**
  * @brief Binary state that determines the mode of operation of the controller
  *
@@ -201,6 +204,9 @@ static PACKSTRUCT(struct lc_property_state {
 /// copy of transition delay parameter, needed for delayed lc on/off request
 static uint32_t delayed_lc_onoff_trans = 0;
 
+/// flag to indicate if lc_state has been loaded from PS
+static bool lc_state_loaded = false;
+
 static void lc_onoff_transition_complete(void);
 
 static void delayed_lc_onoff_request(void);
@@ -214,20 +220,38 @@ static void init_models(void);
 /*******************************************************************************
  * This function loads the saved light controller state from Persistent Storage
  * and copies the data in the global variable lc_state.
- * If PS key with ID 0x4005 does not exist or loading failed,
- * lc_state is set to zero and some default values are written to it.
+ * If PS key with ID 0x4005 does not exist or loading failed, lc_state is set to
+ * zero and some default values are written to it.
+ *
+ * @param lazy_load If true, the function will return immediately if the LC state
+ *                  has already been loaded from Persistent Storage.
+ *
+ * @note LC state load isn't repeated in lazy mode if the previous load attempt
+ *       failed because such failure is not expected to be transient and retrying
+ *       won't help. In this case, further calls return SL_STATUS_OK and LC state
+ *       remains unchanged.
  *
  * @return Returns SL_STATUS_OK (0) if succeeds, non-zero otherwise.
  ******************************************************************************/
-static sl_status_t lc_state_load(void)
+static sl_status_t lc_state_load(bool lazy_load)
 {
   sl_status_t sc;
   struct lc_state ps_data;
   size_t ps_len = sizeof(ps_data);
 
+  if (lazy_load && lc_state_loaded) {
+    // LC state has already been loaded from PS, no need to load it again
+    return SL_STATUS_OK;
+  }
+
   sc = app_btmesh_nvm_read(SL_BTMESH_LC_SERVER_PS_KEY_CFG_VAL,
                            (void *)&ps_data,
                            &ps_len);
+
+  // Set lc_state_loaded to true even if loading failed to avoid repeated load
+  // attempts (missing PS key, modified LC state size, etc.) because these are
+  // not expected to be transient errors that could be resolved by retrying
+  lc_state_loaded = true;
 
   // Set default values if app_btmesh_nvm_read failed or size of lc_state has changed
   if ((sc != SL_STATUS_OK) || (ps_len != sizeof(lc_state))) {
@@ -295,8 +319,12 @@ static void lc_state_changed(void)
  *
  * @return  current light controller mode
  ******************************************************************************/
-uint8_t lc_get_mode(void)
+uint8_t sl_btmesh_lc_get_mode(void)
 {
+  // Ensure lc_state is loaded from persistent storage if it hasn't been loaded yet.
+  // This is important to guarantee that lc_state.mode has the correct value
+  // during the power-up sequence.
+  lc_state_load(LC_STATE_LAZY_LOAD);
   return lc_state.mode;
 }
 
@@ -808,8 +836,10 @@ sl_status_t sl_btmesh_lc_init(void)
                "sl_btmesh_lc_server_init failed (elem=%d)" NL,
                element);
 
-  memset(&lc_state, 0, sizeof(lc_state));
-  lc_state_load();
+  // Load LC state if it has not been loaded yet, which can happen if the
+  // sl_btmesh_lc_get_mode function is called before the sl_btmesh_lc_init
+  // function during the initialization sequence.
+  lc_state_load(LC_STATE_LAZY_LOAD);
 
   memset(&lc_property_state, 0, sizeof(lc_property_state));
   lc_property_state_load();

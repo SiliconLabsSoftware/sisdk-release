@@ -31,6 +31,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include "sl_rail_sdk_wmbus_sensor_core.h"
 #include "sl_rail_sdk_wmbus_sensor_virtual_water_meter.h"
 #include "sl_rail_sdk_wmbus_sensor_virtual_water_meter_config.h"
@@ -116,8 +117,8 @@ sl_status_t sl_rail_sdk_wmbus_sensor_virtual_water_meter_init(void)
                                                  SL_RAIL_SDK_WMBUS_SENSOR_VIRTUAL_WATER_METER_SLEEPTIMER_PRIORITY,
                                                  0);
   app_assert_status_f(status,
-                      "[E: 0x%04x]: Failed to start periodic sleeptimer\n",
-                      (int)status);
+                      "[E: 0x%08" PRIX32 "]: Failed to start periodic sleeptimer\n",
+                      status);
 
   return status;
 };

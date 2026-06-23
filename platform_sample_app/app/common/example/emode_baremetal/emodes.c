@@ -17,8 +17,10 @@
 
 #include "emodes.h"
 #include "em_cmu.h"
-#include "em_emu.h"
+#include "sl_hal_emu.h"
+#include "sl_power_manager.h"
 #include "core_main.h"
+#include "sl_hal_gpio.h"
 #ifdef RTCC_PRESENT
 #include "sl_hal_rtcc.h"
 #endif // RTCC_PRESENT
@@ -28,6 +30,15 @@
 #ifdef SYSRTC_PRESENT
 #include "sl_hal_sysrtc.h"
 #endif // SYSRTC_PRESENT
+
+/*******************************************************************************
+ ***************************  LOCAL VARIABLES   ********************************
+ ******************************************************************************/
+
+// Flag to indicate to power manager if application can sleep
+static bool ok_to_sleep = false;
+// Flag for ISR exit behavior
+static sl_power_manager_on_isr_exit_t isr_ok_to_sleep = SL_POWER_MANAGER_IGNORE;
 
 /*******************************************************************************
  *********************   LOCAL FUNCTION PROTOTYPES   ***************************
@@ -131,9 +142,6 @@ static void em_EM0_Hfrco(CMU_HFRCODPLLFreq_TypeDef band)
  ******************************************************************************/
 static void em_EM1_Hfxo(void)
 {
-  // Make sure clocks are disabled.
-  disable_clocks();
-
   // Set HFXO for as system clock.
 #if (_SILICON_LABS_32B_SERIES_2_CONFIG > 1)
   CMU_ClockEnable(cmuClock_HFXO, true);
@@ -142,8 +150,12 @@ static void em_EM1_Hfxo(void)
 #else
   CMU_ClockSelectSet(cmuClock_SYSCLK, cmuSelect_HFXO);
 #endif
-  // Enter EM1.
-  EMU_EnterEM1();
+  // Set EM1 requirement and allow sleep - sl_power_manager_sleep() is called in main loop
+  // NOTE: If wake-up logic is added, call sl_power_manager_remove_em_requirement(SL_POWER_MANAGER_EM1)
+  //       to release this requirement when no longer needed.
+  sl_power_manager_add_em_requirement(SL_POWER_MANAGER_EM1);
+  ok_to_sleep = true;
+  isr_ok_to_sleep = SL_POWER_MANAGER_SLEEP;
 }
 
 /***************************************************************************//**
@@ -154,14 +166,15 @@ static void em_EM1_Hfxo(void)
  ******************************************************************************/
 static void em_EM1_Fsrco(void)
 {
-  // Make sure clocks are disabled.
-  disable_clocks();
-
-  // Set HFXO for as system clock.
+  // Set FSRCO as system clock.
   CMU_ClockSelectSet(cmuClock_SYSCLK, cmuSelect_FSRCO);
 
-  // Enter EM1.
-  EMU_EnterEM1();
+  // Set EM1 requirement and allow sleep - sl_power_manager_sleep() is called in main loop
+  // NOTE: If wake-up logic is added, call sl_power_manager_remove_em_requirement(SL_POWER_MANAGER_EM1)
+  //       to release this requirement when no longer needed.
+  sl_power_manager_add_em_requirement(SL_POWER_MANAGER_EM1);
+  ok_to_sleep = true;
+  isr_ok_to_sleep = SL_POWER_MANAGER_SLEEP;
 }
 
 /***************************************************************************//**
@@ -173,17 +186,18 @@ static void em_EM1_Fsrco(void)
  ******************************************************************************/
 static void em_EM1_Hfrco(CMU_HFRCODPLLFreq_TypeDef band)
 {
-  // Make sure clocks are disabled.
-  disable_clocks();
-
   // Set HFRCODPLL as system clock.
   CMU_ClockSelectSet(cmuClock_SYSCLK, cmuSelect_HFRCODPLL);
 
   // Set HFRCO frequency.
   CMU_HFRCODPLLBandSet(band);
 
-  // Enter EM1.
-  EMU_EnterEM1();
+  // Set EM1 requirement and allow sleep - sl_power_manager_sleep() is called in main loop
+  // NOTE: If wake-up logic is added, call sl_power_manager_remove_em_requirement(SL_POWER_MANAGER_EM1)
+  //       to release this requirement when no longer needed.
+  sl_power_manager_add_em_requirement(SL_POWER_MANAGER_EM1);
+  ok_to_sleep = true;
+  isr_ok_to_sleep = SL_POWER_MANAGER_SLEEP;
 }
 
 #if defined(RTCC_PRESENT)
@@ -196,9 +210,6 @@ static void em_EM1_Hfrco(CMU_HFRCODPLLFreq_TypeDef band)
  ******************************************************************************/
 static void em_EM2_RTCC(CMU_Select_TypeDef osc, bool powerdown_ram)
 {
-  // Make sure clocks are disabled.
-  disable_clocks();
-
   // Route desired oscillator to RTCC clock tree.
   CMU_ClockSelectSet(cmuClock_RTCCCLK, osc);
 
@@ -213,11 +224,12 @@ static void em_EM2_RTCC(CMU_Select_TypeDef osc, bool powerdown_ram)
   sl_hal_rtcc_enable();
   // Power down all RAM blocks except block 0
   if (powerdown_ram) {
-    EMU_RamPowerDown(SRAM_BASE, 0);
+    sl_hal_emu_ram_power_down(SRAM_BASE, 0);
   }
 
-  // Enter EM2.
-  EMU_EnterEM2(false);
+  // Allow sleep - sl_power_manager_sleep() is called in main loop
+  ok_to_sleep = true;
+  isr_ok_to_sleep = SL_POWER_MANAGER_SLEEP;
 }
 #endif // RTCC_PRESENT
 
@@ -231,9 +243,6 @@ static void em_EM2_RTCC(CMU_Select_TypeDef osc, bool powerdown_ram)
  ******************************************************************************/
 static void em_EM2_LfrcoSYSRTC(bool powerdown_ram)
 {
-  // Make sure clocks are disabled.
-  disable_clocks();
-
   // Route the LFRCO clock to SYSRTC.
   CMU_ClockSelectSet(cmuClock_SYSRTC, cmuSelect_LFRCO);
   CMU_ClockEnable(cmuClock_SYSRTC, true);
@@ -246,14 +255,15 @@ static void em_EM2_LfrcoSYSRTC(bool powerdown_ram)
 
   // Power down all RAM blocks except block 1
   if (powerdown_ram) {
-    EMU_RamPowerDown(SRAM_BASE, 0);
+    sl_hal_emu_ram_power_down(SRAM_BASE, 0);
   }
 
   // Make sure unwanted oscillators are disabled specifically for EM2 and LFRCO.
   CMU_OscillatorEnable(cmuOsc_LFXO, false, true);
 
-  // Enter EM2.
-  EMU_EnterEM2(false);
+  // Allow sleep - sl_power_manager_sleep() is called in main loop
+  ok_to_sleep = true;
+  isr_ok_to_sleep = SL_POWER_MANAGER_SLEEP;
 }
 
 #if !(defined(ZGM230SB27HGN) && ZGM230SB27HGN == 1)
@@ -266,10 +276,7 @@ static void em_EM2_LfrcoSYSRTC(bool powerdown_ram)
  ******************************************************************************/
 static void em_EM2_LfxoSYSRTC(bool powerdown_ram)
 {
-  // Make sure clocks are disabled.
-  disable_clocks();
-
-  // Route the LFRCO clock to SYSRTC.
+  // Route the LFXO clock to SYSRTC.
   CMU_ClockSelectSet(cmuClock_SYSRTC, cmuSelect_LFXO);
   CMU_ClockEnable(cmuClock_SYSRTC, true);
 
@@ -281,14 +288,15 @@ static void em_EM2_LfxoSYSRTC(bool powerdown_ram)
 
   // Power down all RAM blocks except block 1
   if (powerdown_ram) {
-    EMU_RamPowerDown(SRAM_BASE, 0);
+    sl_hal_emu_ram_power_down(SRAM_BASE, 0);
   }
 
   // Make sure unwanted oscillators are disabled specifically for EM2 and LFXO.
   CMU_OscillatorEnable(cmuOsc_LFRCO, false, true);
 
-  // Enter EM2.
-  EMU_EnterEM2(false);
+  // Allow sleep - sl_power_manager_sleep() is called in main loop
+  ok_to_sleep = true;
+  isr_ok_to_sleep = SL_POWER_MANAGER_SLEEP;
 }
 #endif //!(defined(ZGM230SB27HGN) && ZGM230SB27HGN == 1)
 #endif // SYSRTC_PRESENT
@@ -302,9 +310,6 @@ static void em_EM2_LfxoSYSRTC(bool powerdown_ram)
  ******************************************************************************/
 static void em_EM3_UlfrcoBURTC(bool powerdown_ram)
 {
-  // Make sure clocks are disabled.
-  disable_clocks();
-
   // Select ULFRCO as the BURTC clock source.
   CMU_ClockSelectSet(cmuClock_EM4GRPACLK, cmuSelect_ULFRCO);
 
@@ -312,17 +317,20 @@ static void em_EM3_UlfrcoBURTC(bool powerdown_ram)
   sl_hal_burtc_init_t burtc_init = SL_HAL_BURTC_INIT_DEFAULT;
   CMU_ClockEnable(cmuClock_BURTC, true);
 
+  slx_power_manager_update_clock_info();
+
   sl_hal_burtc_init(&burtc_init);
   sl_hal_burtc_enable();
   sl_hal_burtc_start();
 
   // Power down all RAM blocks except block 1
   if (powerdown_ram) {
-    EMU_RamPowerDown(SRAM_BASE, 0);
+    sl_hal_emu_ram_power_down(SRAM_BASE, 0);
   }
 
-  // Enter EM3.
-  EMU_EnterEM3(false);
+  // Allow sleep - sl_power_manager_sleep() is called in main loop
+  ok_to_sleep = true;
+  isr_ok_to_sleep = SL_POWER_MANAGER_SLEEP;
 }
 
 /***************************************************************************//**
@@ -347,12 +355,8 @@ static void em_EM4_LfrcoBURTC(void)
   sl_hal_burtc_enable();
   sl_hal_burtc_start();
 
-  // Enter EM4.
-  EMU_EM4Init_TypeDef em4Init = EMU_EM4INIT_DEFAULT;
-  em4Init.retainLfxo = true;
-  em4Init.pinRetentionMode = emuPinRetentionLatch;
-  EMU_EM4Init(&em4Init);
-  EMU_EnterEM4Wait();
+  // Explicitly enter EM4 mode
+  sl_power_manager_enter_em4();
 }
 
 /***************************************************************************//**
@@ -377,12 +381,8 @@ static void em_EM4_UlfrcoBURTC(void)
   sl_hal_burtc_enable();
   sl_hal_burtc_start();
 
-  // Enter EM4H.
-  EMU_EM4Init_TypeDef em4Init = EMU_EM4INIT_DEFAULT;
-  em4Init.em4State = emuEM4Hibernate;
-  em4Init.pinRetentionMode = emuPinRetentionLatch;
-  EMU_EM4Init(&em4Init);
-  EMU_EnterEM4Wait();
+  // Explicitly enter EM4 mode
+  sl_power_manager_enter_em4();
 }
 
 /***************************************************************************//**
@@ -396,18 +396,8 @@ static void em_EM4_none(void)
   // Make sure clocks are disabled.
   disable_clocks();
 
-  // Make sure unwanted oscillators are disabled specifically for EM4.
-  CMU_OscillatorEnable(cmuOsc_LFXO, false, true);
-  CMU_OscillatorEnable(cmuOsc_LFRCO, false, true);
-
-  // EM4H retains 128 byte RAM through RTCC by default.
-  EMU_EM4Init_TypeDef em4Init = EMU_EM4INIT_DEFAULT;
-
-  //Gpio pins must be retained to avoid kit power issues - applies for kit v8.
-  em4Init.pinRetentionMode = emuPinRetentionLatch;
-  EMU_EM4Init(&em4Init);
-  // Enter EM4.
-  EMU_EnterEM4Wait();
+  // Explicitly enter EM4 mode
+  sl_power_manager_enter_em4();
 }
 
 /***************************************************************************//**
@@ -565,6 +555,7 @@ static void em_EM0(energy_mode_t *mode)
       EFM_ASSERT(false);
       break;
   }
+  slx_power_manager_update_clock_info();
   switch (mode->op) {
     case WHILE:
       while (1) {
@@ -612,6 +603,7 @@ static void em_EM1(energy_mode_t *mode)
       EFM_ASSERT(false);
       break;
   }
+  slx_power_manager_update_clock_info();
 }
 
 /***************************************************************************//**
@@ -658,6 +650,7 @@ static void em_EM2(energy_mode_t *mode)
       EFM_ASSERT(false);
       break;
   }
+  slx_power_manager_update_clock_info();
 }
 
 /***************************************************************************//**
@@ -667,19 +660,15 @@ static void em_EM3(energy_mode_t *mode)
 {
   switch ((em3_oscillator_enum_t)mode->osc) {
     case EM3_ULFRCO:
-      // High and low frequency clocks are disabled in EM3
-      // All unwanted oscillators are disabled in EM3
-      disable_clocks();
-      // Enter EM3
-      EMU_EnterEM3(false);
+      // Allow sleep - sl_power_manager_sleep() is called in main loop
+      ok_to_sleep = true;
+      isr_ok_to_sleep = SL_POWER_MANAGER_SLEEP;
       break;
     case EM3_ULFRCO_RAM_POWERDOWN:
-      // High and low frequency clocks are disabled in EM3
-      // All unwanted oscillators are disabled in EM3
-      disable_clocks();
-      EMU_RamPowerDown(SRAM_BASE, 0); // Power down all RAM blocks except block 1
-      // Enter EM3
-      EMU_EnterEM3(false);
+      sl_hal_emu_ram_power_down(SRAM_BASE, 0); // Power down all RAM blocks except block 1
+      // Allow sleep - sl_power_manager_sleep() is called in main loop
+      ok_to_sleep = true;
+      isr_ok_to_sleep = SL_POWER_MANAGER_SLEEP;
       break;
     case EM3_ULFRCO_BURTC:
       em_EM3_UlfrcoBURTC(false);            // disable RAM powerdown
@@ -726,21 +715,40 @@ static void em_EM4(energy_mode_t *mode)
  ******************************************************************************/
 
 /***************************************************************************//**
- * Initialize Emodes.
+ * Hook for power manager - indicates if application can sleep.
  ******************************************************************************/
-void em_init(void)
+bool app_is_ok_to_sleep(void)
 {
-#if defined(EMU_VSCALE_EM01_PRESENT)
-  /* Use default settings for energy modes */
-  /* Enable voltage downscaling in EM modes. */
-  EMU_EM01Init_TypeDef em01Init = EMU_EM01INIT_DEFAULT;
-  em01Init.vScaleEM01LowPowerVoltageEnable = true;
-  EMU_EM01Init(&em01Init);
+  return ok_to_sleep;
+}
+
+/***************************************************************************//**
+ * Hook for power manager - indicates if application should return to sleep
+ * after an interrupt.
+ ******************************************************************************/
+sl_power_manager_on_isr_exit_t app_sleep_on_isr_exit(void)
+{
+  return isr_ok_to_sleep;
+}
+
+/***************************************************************************//**
+ * Hook for power manager - called before entering EM4.
+ * This overrides the weak implementation in sl_power_manager.
+ * Clears GPIO EM4 wakeup interrupts to prevent immediate wake.
+ ******************************************************************************/
+void sl_power_manager_em4_presleep_hook(void)
+{
+#if defined(_GPIO_IF_EM4WU_MASK)
+  // Check if GPIO clock is enabled before accessing GPIO registers
+#if defined(_CMU_CLKEN0_GPIO_SHIFT)
+  if (CMU->CLKEN0 & CMU_CLKEN0_GPIO) {
 #endif
-#if defined(EMU_VSCALE_PRESENT)
-  EMU_EM23Init_TypeDef em23Init = EMU_EM23INIT_DEFAULT;
-  em23Init.vScaleEM23Voltage = emuVScaleEM23_LowPower;
-  EMU_EM23Init(&em23Init);
+    // Clear all EM4 wakeup interrupts before entering EM4
+    // This prevents immediate wake from pending GPIO interrupts
+    sl_hal_gpio_clear_interrupts(_GPIO_IF_EM4WU_MASK);
+#if defined(_CMU_CLKEN0_GPIO_SHIFT)
+  }
+#endif
 #endif
 }
 
@@ -751,11 +759,15 @@ void start_emode_test(energy_mode_t *mode)
 {
 #if defined(DCDC_PRESENT)
   if (!mode->dcdc) {
-    EMU_DCDCModeSet(emuDcdcMode_Bypass);
+    CMU_ClockEnable(cmuClock_DCDC, true);
+    sl_status_t status = sl_hal_emu_set_dcdc_mode(SL_HAL_EMU_DCDC_MODE_BYPASS);
+    EFM_ASSERT(status == SL_STATUS_OK);
   }
 #if defined(_EMU_DCDCLPEM01CFG_MASK)
   else if (mode->em == 1) {
-    EMU_DCDCModeSet(emuDcdcMode_LowPower);
+    CMU_ClockEnable(cmuClock_DCDC, true);
+    sl_status_t status = sl_hal_emu_set_dcdc_mode(SL_HAL_EMU_DCDC_MODE_LOWPOWER);
+    EFM_ASSERT(status == SL_STATUS_OK);
   }
 #endif
 #endif
@@ -780,3 +792,4 @@ void start_emode_test(energy_mode_t *mode)
       break;
   }
 }
+

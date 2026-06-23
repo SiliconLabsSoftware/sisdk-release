@@ -625,7 +625,6 @@ static sl_status_t create_new_initiator_instance(uint8_t conn_handle)
   memset(&cs_initiator_instances[i].measurement_mainmode, 0u, sizeof(cs_measurement_data_t));
   memset(&cs_initiator_instances[i].measurement_submode, 0u, sizeof(cs_measurement_data_t));
   memset(&cs_initiator_instances[i].measurement_progress, 0u, sizeof(measurement_progress));
-  num_reflector_connections++;
 
   sc = cs_initiator_create(conn_handle,
                            &initiator_config,
@@ -640,6 +639,8 @@ static sl_status_t create_new_initiator_instance(uint8_t conn_handle)
               conn_handle,
               sc);
     (void)ble_peer_manager_central_close_connection(conn_handle);
+  } else {
+    num_reflector_connections++;
   }
   return sc;
 }
@@ -732,62 +733,61 @@ static void check_supported_capabilities(const sl_bt_msg_t *evt)
 /******************************************************************************
  * Write measurement results to the display and to the iostream
  *****************************************************************************/
-
 static void print_head_and_data(cs_initiator_instances_t *initiator)
 {
-      const bd_addr *bt_address = ble_peer_manager_get_bt_address(initiator->conn_handle);
-      for (uint8_t is_data = ((measurement_counter % CS_INITIATOR_HEADER_LOG) > 0); is_data <= 1; is_data++) {
-        log_info(APP_INSTANCE_PREFIX, initiator->conn_handle);
-        cs_initiator_print_bt_address(!is_data, bt_address);
+  const bd_addr *bt_address = ble_peer_manager_get_bt_address(initiator->conn_handle);
+  for (uint8_t is_data = ((measurement_counter % CS_INITIATOR_HEADER_LOG) > 0); is_data <= 1; is_data++) {
+    log_info(APP_INSTANCE_PREFIX, initiator->conn_handle);
+    cs_initiator_print_bt_address(!is_data, bt_address);
 
-        cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_MAINMODE,
-                                  !is_data,
-                                  &(initiator->measurement_mainmode.distance_filtered));
-        // Distance submode
-        if (initiator_config.cs_sub_mode != sl_bt_cs_submode_disabled) {
-          cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_SUBMODE,
-                                    !is_data,
-                                    &(initiator->measurement_submode.distance_filtered));
-        }
-        // Distance RAW
-        cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_RAW_MAINMODE,
-                                  !is_data,
-                                  &(initiator->measurement_mainmode.distance_raw));
-        // Distance submode RAW
-        if (initiator_config.cs_sub_mode != sl_bt_cs_submode_disabled) {
-          cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_RAW_SUBMODE,
-                                    !is_data,
-                                    &(initiator->measurement_submode.distance_raw));
-        }
-        // Likeliness
-        cs_initiator_print_result(CS_RESULT_FIELD_LIKELINESS_MAINMODE,
-                                  !is_data,
-                                  &(initiator->measurement_mainmode.likeliness));
-        // Likeliness submode
-        if (initiator_config.cs_sub_mode != sl_bt_cs_submode_disabled) {
-          cs_initiator_print_result(CS_RESULT_FIELD_LIKELINESS_SUBMODE,
-                                    !is_data,
-                                    &(initiator->measurement_submode.likeliness));
-        }
-        // RSSI distance
-        cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_RSSI,
-                                  !is_data,
-                                  &(initiator->measurement_mainmode.distance_estimate_rssi));
-        // Velocity
-        cs_initiator_print_result(CS_RESULT_FIELD_VELOCITY_MAINMODE,
-                                  !is_data,
-                                  &(initiator->measurement_mainmode.velocity));
+    cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_MAINMODE,
+                              !is_data,
+                              &(initiator->measurement_mainmode.distance_filtered));
+    // Distance submode
+    if (initiator_config.cs_sub_mode != sl_bt_cs_submode_disabled) {
+      cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_SUBMODE,
+                                !is_data,
+                                &(initiator->measurement_submode.distance_filtered));
+    }
+    // Distance RAW
+    cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_RAW_MAINMODE,
+                              !is_data,
+                              &(initiator->measurement_mainmode.distance_raw));
+    // Distance submode RAW
+    if (initiator_config.cs_sub_mode != sl_bt_cs_submode_disabled) {
+      cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_RAW_SUBMODE,
+                                !is_data,
+                                &(initiator->measurement_submode.distance_raw));
+    }
+    // Likeliness
+    cs_initiator_print_result(CS_RESULT_FIELD_LIKELINESS_MAINMODE,
+                              !is_data,
+                              &(initiator->measurement_mainmode.likeliness));
+    // Likeliness submode
+    if (initiator_config.cs_sub_mode != sl_bt_cs_submode_disabled) {
+      cs_initiator_print_result(CS_RESULT_FIELD_LIKELINESS_SUBMODE,
+                                !is_data,
+                                &(initiator->measurement_submode.likeliness));
+    }
+    // RSSI distance
+    cs_initiator_print_result(CS_RESULT_FIELD_DISTANCE_RSSI,
+                              !is_data,
+                              &(initiator->measurement_mainmode.distance_estimate_rssi));
+    // Velocity
+    cs_initiator_print_result(CS_RESULT_FIELD_VELOCITY_MAINMODE,
+                              !is_data,
+                              &(initiator->measurement_mainmode.velocity));
 
-        // BER
-        cs_initiator_print_result(CS_RESULT_FIELD_BIT_ERROR_RATE,
-                                  !is_data,
-                                  &(initiator->measurement_mainmode.bit_error_rate));
-        log_append(APP_LOG_NL);
-      }
+    // BER
+    cs_initiator_print_result(CS_RESULT_FIELD_BIT_ERROR_RATE,
+                              !is_data,
+                              &(initiator->measurement_mainmode.bit_error_rate));
+    log_append(APP_LOG_NL);
+  }
 }
 
 /******************************************************************************
- * Delete initiator instance
+ * Delete initiator instance.
  *****************************************************************************/
 static void delete_initiator_instance(uint8_t conn_handle)
 {
@@ -802,7 +802,6 @@ static void delete_initiator_instance(uint8_t conn_handle)
       cs_initiator_instances[i].measurement_progress_changed = false;
       cs_initiator_instances[i].read_remote_capabilities = false;
       cs_initiator_instances[i].security_increased = false;
-      num_reflector_connections--;
       break;
     }
   }
@@ -1038,15 +1037,33 @@ void sl_bt_on_event(sl_bt_msg_t * evt)
       uint8_t connection = evt->data.evt_cs_read_remote_supported_capabilities_complete.connection;
       check_supported_capabilities(evt);
       if (initiator_config.max_procedure_count == 0) {
-        sc = cs_initiator_get_intervals(initiator_config.cs_main_mode,
-                                        initiator_config.cs_sub_mode,
-                                        initiator_config.procedure_scheduling,
-                                        initiator_config.channel_map_preset,
-                                        rtl_config.algo_mode,
-                                        initiator_config.cs_tone_antenna_config_idx,
-                                        initiator_config.use_real_time_ras_mode,
-                                        &conn_interval,
-                                        &proc_interval);
+        cs_initiator_config_t effective_config = initiator_config;
+        // Apply antenna selection based on local/remote antenna counts before
+        // computing the optimized intervals so that the antenna configuration
+        // index used for the lookup reflects any applied fallback.
+        sc = cs_initiator_select_antennas(&effective_config,
+                                          effective_config.num_antennas,
+                                          evt->data.evt_cs_read_remote_supported_capabilities_complete.num_antennas,
+                                          NULL);
+        if (sc == SL_STATUS_NOT_SUPPORTED) {
+          log_info(APP_INSTANCE_PREFIX "Requested antenna usage not supported, "
+                                       "fallback configuration applied." NL,
+                   connection);
+        } else if (sc != SL_STATUS_OK) {
+          log_error(APP_INSTANCE_PREFIX "Antenna selection failed: 0x%lx" NL,
+                    connection,
+                    (unsigned long)sc);
+        }
+        sc = cs_initiator_get_multiple_intervals(effective_config.cs_main_mode,
+                                                 effective_config.cs_sub_mode,
+                                                 effective_config.procedure_scheduling,
+                                                 effective_config.channel_map_preset,
+                                                 rtl_config.algo_mode,
+                                                 effective_config.cs_tone_antenna_config_idx,
+                                                 effective_config.use_real_time_ras_mode,
+                                                 1,
+                                                 &conn_interval,
+                                                 &proc_interval);
         if (sc == SL_STATUS_NOT_SUPPORTED) {
           log_info(APP_INSTANCE_PREFIX "Parameter optimization is not supported with the given input parameters" NL, connection);
         } else if (sc == SL_STATUS_IDLE) {
@@ -1097,6 +1114,7 @@ void sl_bt_on_event(sl_bt_msg_t * evt)
       }
       break;
     }
+
     // -------------------------------
     // This event indicates that the BT stack buffer resources were exhausted
     case sl_bt_evt_system_resource_exhausted_id:
@@ -1165,6 +1183,7 @@ void ble_peer_manager_on_event_initiator(ble_peer_manager_evt_type_t * event)
         log_info(APP_INSTANCE_PREFIX "Initiator instance not found" NL, event->connection_id);
       } else {
         app_assert_status(sc);
+        num_reflector_connections--;
         log_info(APP_INSTANCE_PREFIX "Initiator instance removed" NL, event->connection_id);
       }
       delete_initiator_instance(event->connection_id);

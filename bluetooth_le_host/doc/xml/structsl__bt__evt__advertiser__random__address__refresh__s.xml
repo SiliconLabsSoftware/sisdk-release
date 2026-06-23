@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.4" xml:lang="en-US">
+  <compounddef id="structsl__bt__evt__advertiser__random__address__refresh__s" kind="struct" language="C++" prot="public">
+    <compoundname>sl_bt_evt_advertiser_random_address_refresh_s</compoundname>
+    <includes refid="sl__bt__api_8h" local="no">sl_bt_api.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structsl__bt__evt__advertiser__random__address__refresh__s_1acdd418e1b2abf73e14a0132cde907dc8" prot="public" static="no" mutable="no">
+        <type>uint8_t</type>
+        <definition>uint8_t sl_bt_evt_advertiser_random_address_refresh_s::advertising_set</definition>
+        <argsstring></argsstring>
+        <name>advertising_set</name>
+        <qualifiedname>sl_bt_evt_advertiser_random_address_refresh_s::advertising_set</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>The advertising set handle </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="2646" column="11" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="2646" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structsl__bt__evt__advertiser__random__address__refresh__s_1aaf9a7aeca64d7c0e77a733c2f89ad25a" prot="public" static="no" mutable="no">
+        <type><ref refid="structbd__addr" kindref="compound">bd_addr</ref></type>
+        <definition>bd_addr sl_bt_evt_advertiser_random_address_refresh_s::address</definition>
+        <argsstring></argsstring>
+        <name>address</name>
+        <qualifiedname>sl_bt_evt_advertiser_random_address_refresh_s::address</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>The new advertiser address </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="2647" column="11" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="2647" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structsl__bt__evt__advertiser__random__address__refresh__s_1aab42d0adac5ddc416a09772fb474437e" prot="public" static="no" mutable="no">
+        <type>uint8_t</type>
+        <definition>uint8_t sl_bt_evt_advertiser_random_address_refresh_s::address_type</definition>
+        <argsstring></argsstring>
+        <name>address_type</name>
+        <qualifiedname>sl_bt_evt_advertiser_random_address_refresh_s::address_type</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Enum <ref refid="group__sl__bt__gap_1gac8d5431d3062e47c5d51b9fb9f36c104" kindref="member">sl_bt_gap_address_type_t</ref>. The type of the new advertiser address. Values:<itemizedlist>
+<listitem><para><bold>sl_bt_gap_random_resolvable_address (0x2):</bold> Resolvable private random address</para>
+</listitem><listitem><para><bold>sl_bt_gap_random_nonresolvable_address (0x3):</bold> Non-resolvable private random address </para>
+</listitem></itemizedlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="2648" column="11" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="2648" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Data structure of the random_address_refresh event. </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="2">
+        <label>bd_addr</label>
+        <link refid="structbd__addr"/>
+      </node>
+      <node id="1">
+        <label>sl_bt_evt_advertiser_random_address_refresh_s</label>
+        <link refid="structsl__bt__evt__advertiser__random__address__refresh__s"/>
+        <childnode refid="2" relation="usage">
+          <edgelabel>address</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="2644" column="1" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="2645" bodyend="2655"/>
+    <listofallmembers>
+      <member refid="structsl__bt__evt__advertiser__random__address__refresh__s_1aaf9a7aeca64d7c0e77a733c2f89ad25a" prot="public" virt="non-virtual"><scope>sl_bt_evt_advertiser_random_address_refresh_s</scope><name>address</name></member>
+      <member refid="structsl__bt__evt__advertiser__random__address__refresh__s_1aab42d0adac5ddc416a09772fb474437e" prot="public" virt="non-virtual"><scope>sl_bt_evt_advertiser_random_address_refresh_s</scope><name>address_type</name></member>
+      <member refid="structsl__bt__evt__advertiser__random__address__refresh__s_1acdd418e1b2abf73e14a0132cde907dc8" prot="public" virt="non-virtual"><scope>sl_bt_evt_advertiser_random_address_refresh_s</scope><name>advertising_set</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

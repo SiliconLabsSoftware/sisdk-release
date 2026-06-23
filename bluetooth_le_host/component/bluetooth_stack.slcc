@@ -84,6 +84,7 @@ requires:
 - name: "bgapi_protocol"
 - name: "hal_system"
 - name: "sleeptimer"
+- name: "slist"
 - name: "rail_lib"
 - name: "device_supports_bluetooth"
 - name: "component_catalog"

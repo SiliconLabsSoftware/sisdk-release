@@ -40,17 +40,17 @@
 // <i> Enabling this features speeds up the CRC computation at the cost of using an additional 512 (256 x sizeof uint16_t) bytes or memory for the LUT
 #define SL_CPC_USE_PRE_HASHED_CRC_TABLE  0
 
-// <o SL_CPC_RX_PAYLOAD_MAX_LENGTH>Max Rx Payload Length<1-4087>
+// <o SL_CPC_RX_PAYLOAD_MAX_LENGTH>Max Rx Payload Length <1-4087>
 // <i> Default: 256
 // <i> Maximum size of the payload in bytes of each RX buffer
 #define SL_CPC_RX_PAYLOAD_MAX_LENGTH      (256)
 
-// <o SL_CPC_TX_QUEUE_ITEM_MAX_COUNT> Tx Queue Size
+// <o SL_CPC_TX_QUEUE_ITEM_MAX_COUNT> Tx Queue Size <1-1024>
 // <i> Default: 20
 // <i> The maximum number of outgoing messages capable of being queued for transmission.
 #define SL_CPC_TX_QUEUE_ITEM_MAX_COUNT    (20)
 
-// <o SL_CPC_RX_BUFFER_MAX_COUNT> Total Number of Rx Buffers
+// <o SL_CPC_RX_BUFFER_MAX_COUNT> Total Number of Rx Buffers <1-1024>
 // <i> Default: 20
 // <i> Total number of CPC RX buffers available across all endpoints
 // <i> Multiple RX buffers can be associated with a single endpoint

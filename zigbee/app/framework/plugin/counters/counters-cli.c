@@ -48,12 +48,12 @@ void sl_zigbee_af_counters_print_counters_type_command(sl_cli_command_arg_t *arg
 #if !defined(EZSP_HOST)
   uint8_t counterType = sl_cli_get_argument_uint8(args, 0);
   if (counterType < SL_ZIGBEE_COUNTER_TYPE_COUNT) {
-    sl_zigbee_af_core_println("%u) %s: %u",
-                              counterType,
-                              (titleStrings[counterType] == NULL
-                               ? unknownCounter
-                               : titleStrings[counterType]),
-                              sl_zigbee_counters[counterType]);
+    sl_zigbee_af_cli_println("%u) %s: %u",
+                             counterType,
+                             (titleStrings[counterType] == NULL
+                              ? unknownCounter
+                              : titleStrings[counterType]),
+                             sl_zigbee_counters[counterType]);
   }
 #else
   UNUSED_VAR(args);
@@ -86,7 +86,7 @@ void sl_zigbee_af_counters_set_threshold_command(sl_cli_command_arg_t *args)
 {
   sl_zigbee_counter_type_t type = sl_cli_get_argument_uint8(args, 0);
   uint16_t threshold = sl_cli_get_argument_uint16(args, 1);
-  sl_zigbee_af_core_println("Setting Threshold command");
+  sl_zigbee_af_cli_println("Setting Threshold command");
   sl_zigbee_af_counters_set_threshold(type, threshold);
 }
 
@@ -95,12 +95,12 @@ void sl_zigbee_af_counters_print_thresholds_command(sl_cli_command_arg_t *args)
   UNUSED_VAR(args);
   uint8_t i;
   for (i = 0; i < SL_ZIGBEE_COUNTER_TYPE_COUNT; i++) {
-    sl_zigbee_af_core_println("%u) %s: %u",
-                              i,
-                              (titleStrings[i] == NULL
-                               ? unknownCounter
-                               : titleStrings[i]),
-                              sl_zigbee_counters_thresholds[i]);
+    sl_zigbee_af_cli_println("%u) %s: %u",
+                             i,
+                             (titleStrings[i] == NULL
+                              ? unknownCounter
+                              : titleStrings[i]),
+                             sl_zigbee_counters_thresholds[i]);
   }
 }
 
@@ -108,12 +108,12 @@ static void sl_zigbee_af_counters_print(void)
 {
   uint8_t i;
   for (i = 0; i < SL_ZIGBEE_COUNTER_TYPE_COUNT; i++) {
-    sl_zigbee_af_core_println("%u) %s: %u",
-                              i,
-                              (titleStrings[i] == NULL
-                               ? unknownCounter
-                               : titleStrings[i]),
-                              sl_zigbee_counters[i]);
+    sl_zigbee_af_cli_println("%u) %s: %u",
+                             i,
+                             (titleStrings[i] == NULL
+                              ? unknownCounter
+                              : titleStrings[i]),
+                             sl_zigbee_counters[i]);
   }
 }
 

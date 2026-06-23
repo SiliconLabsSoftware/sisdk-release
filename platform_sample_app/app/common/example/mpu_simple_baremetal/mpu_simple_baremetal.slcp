@@ -3,10 +3,7 @@ package: platform
 quality: production
 label: Platform - MPU Simple
 description: >
-  This example project demonstrates the use of the Simple MPU module. Its purpose is to block
-  the execution of code from RAM in order to prevent code injection attacks. In this example,
-  some fake malicious executable code is copied to RAM and executed with the MPU disabled and
-  re-enabled to demonstrate its effectiveness.
+  Shows how the Memory Protection Unit (MPU) blocks code execution from RAM to prevent code injection attacks. Demonstrates enable/disable behavior.
 category: Example|Platform
 filter:
   - name: "Device Type"
@@ -40,3 +37,7 @@ readme:
   - path: readme.md
 ui_hints:
   highlight: readme.md
+tag:
+  - hardware:component:mpu
+  - hwfilter:device:device_has_mpu
+  - hwfilter:device:device_series_2

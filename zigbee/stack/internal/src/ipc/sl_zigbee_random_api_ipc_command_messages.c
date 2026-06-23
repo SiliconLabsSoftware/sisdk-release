@@ -3,7 +3,7 @@
  * @brief internal wrappers for 'sl_zigbee_random_api' ipc commands
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -65,6 +65,7 @@ sl_status_t sl_zigbee_get_strong_random_number_array(uint16_t *randomNumber,
 
   if (count > MAX_IPC_VEC_ARG_CAPACITY / sizeof(uint16_t)) {
     assert(false); // "vector randomNumber length exceeds expected maximum
+    return msg.data.get_strong_random_number_array.response.result;
   }
 
   memmove(msg.data.get_strong_random_number_array.request.randomNumber, randomNumber, sizeof(uint16_t) * count);
@@ -73,6 +74,7 @@ sl_status_t sl_zigbee_get_strong_random_number_array(uint16_t *randomNumber,
 
   if (count > MAX_IPC_VEC_ARG_CAPACITY / sizeof(uint16_t)) {
     assert(false); // "vector randomNumber length exceeds expected maximum
+    return msg.data.get_strong_random_number_array.response.result;
   }
 
   memmove(randomNumber, msg.data.get_strong_random_number_array.request.randomNumber, sizeof(uint16_t) * count);

@@ -33,10 +33,10 @@ declare_args() {
 }
 
 spinel_sources = [
-  "openthread-spinel-config.h",
-  "logger.hpp",
   "logger.cpp",
+  "logger.hpp",
   "multi_frame_buffer.hpp",
+  "openthread-spinel-config.h",
   "radio_spinel.cpp",
   "radio_spinel.hpp",
   "spi_frame.hpp",
@@ -73,6 +73,7 @@ source_set("spinel-api") {
 }
 
 static_library("libopenthread-spinel-ncp") {
+  configs += [ "../../..:openthread_private_flags" ]
   sources = spinel_sources
   public_deps = [
     ":spinel-api",
@@ -85,7 +86,28 @@ static_library("libopenthread-spinel-ncp") {
   ]
 }
 
+static_library("libopenthread-radio-spinel") {
+  configs += [ "../../..:openthread_private_flags" ]
+  sources = spinel_sources
+  public_deps = [
+    ":spinel-api",
+    "../../core:libopenthread_core_headers",
+    "../platform:libopenthread-platform",
+  ]
+
+  defines = [
+    "OPENTHREAD_FTD=0",
+    "OPENTHREAD_MTD=0",
+    "OPENTHREAD_RADIO=0",
+  ]
+
+  public_configs = [
+    ":spinel_config_openthread_message_disable",
+  ]
+}
+
 static_library("libopenthread-spinel-rcp") {
+  configs += [ "../../..:openthread_private_flags" ]
   sources = spinel_sources
   public_deps = [
     ":spinel-api",

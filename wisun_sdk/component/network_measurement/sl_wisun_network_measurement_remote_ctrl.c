@@ -46,7 +46,9 @@
 #include "sl_iperf.h"
 #include "sl_iperf_util.h"
 #include "sl_iperf_log.h"
-#include "socket/socket.h"
+#include "sys/socket.h"
+#include "arpa/inet.h"
+#include "netinet/in.h"
 #include "cmsis_os2.h"
 #include "sl_cmsis_os2_common.h"
 #include "sl_sleeptimer.h"
@@ -65,32 +67,6 @@
 
 /// Max stored neighbor count
 #define SL_WISUN_NWM_REMOTE_CTRL_MAX_NB_COUNT              30UL
-
-/// Network Measurement Remote Control ping stat format
-#define SL_WISUN_NWM_REMOTE_CTRL_PING_STAT_JSON_FORMAT \
-  "\"%s\":{\"address\":\"%s\",\
-\"pc\":%u,\
-\"pl\":%u,\
-\"lost\":%u,\
-\"min\":%lu,\
-\"max\":%lu,\
-\"avg\":%lu\
-},\n"
-
-/// Network Measurement Remote Control ping stat format
-#define SL_WISUN_NWM_REMOTE_CTRL_NBR_STAT_JSON_FORMAT \
-  "\"%s\":{\
-\"addr\":\"%s\",\
-\"lt\":%lu,\
-\"txc\":%lu,\
-\"txf\":%lu,\
-\"txmsc\":%lu,\
-\"txmsf\":%lu,\
-\"rplr\":%u,\
-\"etx\":%u,\
-\"rslo\":%u,\
-\"rsli\":%u\
-},\n"
 
 /// Succeed str
 #define SL_WISUN_NWM_REMOTE_CTRL_SUCCEED_STR                      "succeed"
@@ -966,7 +942,15 @@ static void _parse_stat_to_json(char **payload_pos,
   const char *ip_str = NULL;
 
   ip_str = app_wisun_trace_util_get_ip_str(&stat->addr.sin6_addr);
-  r = snprintf(*payload_pos, *payload_len, SL_WISUN_NWM_REMOTE_CTRL_PING_STAT_JSON_FORMAT,
+  r = snprintf(*payload_pos, *payload_len,
+               "\"%s\":{\"address\":\"%s\","
+               "\"pc\":%u,"
+               "\"pl\":%u,"
+               "\"lost\":%u,"
+               "\"min\":%"PRIu32","
+               "\"max\":%"PRIu32","
+               "\"avg\":%"PRIu32""
+               "},\n",
                stat->name,
                ip_str,
                stat->ping_stat.packet_count,
@@ -991,7 +975,19 @@ static void _parse_nbr_stat_to_json(char **payload_pos,
 
   ip_str = app_wisun_trace_util_get_ip_str(&stat->addr.sin6_addr);
 
-  r = snprintf(*payload_pos, *payload_len, SL_WISUN_NWM_REMOTE_CTRL_NBR_STAT_JSON_FORMAT,
+  r = snprintf(*payload_pos, *payload_len,
+               "\"%s\":{"
+               "\"addr\":\"%s\","
+               "\"lt\":%"PRIu32","
+               "\"txc\":%"PRIu32","
+               "\"txf\":%"PRIu32","
+               "\"txmsc\":%"PRIu32","
+               "\"txmsf\":%"PRIu32","
+               "\"rplr\":%u,"
+               "\"etx\":%u,"
+               "\"rslo\":%u,"
+               "\"rsli\":%u"
+               "},\n",
                stat->name,
                ip_str,
                stat->stat.lifetime,

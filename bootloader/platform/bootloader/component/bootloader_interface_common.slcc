@@ -1,0 +1,98 @@
+id: bootloader_interface_common
+label: Bootloader Application Interface Series 2 (common)
+package: bootloader
+description: >
+  Series-2 bootloader application interface sources and headers (btl_interface, storage,
+  internal flash) without bootloader_app_properties, default linker bootloader_size, or SMP
+  switch Flash API. Linker bootloader_size is declared by bootloader_interface_s2; the full
+  S2 bundle (SMP API + conditional app properties + those defaults) is bootloader_interface_s2.
+  Use common when sl_app_properties is supplied elsewhere (e.g. btl_main). Require
+  bootloader_interface_s2 when default sizing (and the SMP Flash API bundle) is required.
+category: Platform|Bootloader
+quality: production
+ui_hints:
+  visibility: never
+source:
+  # Non-secure uses btl_interface_ns.c (veneers). Secure compiles these sources; btl_interface_nsc.c
+  # wraps calls to the same APIs. omit_bootloader_interface_api_sources still suppresses automatic
+  # bootloader_init registration (template_contribution below).
+- path: platform/bootloader/api/btl_interface.c
+  unless: [trustzone_nonsecure]
+- path: platform/bootloader/api/btl_interface_storage.c
+  unless: [trustzone_nonsecure]
+- path: platform/bootloader/core/flash/btl_internal_flash.c
+  # Raw API is implemented in SPI flash sources when external storage is used; omit to avoid duplicate symbols.
+- path: platform/bootloader/storage/internal_flash/btl_storage_internal_flash_raw.c
+  unless: [bootloader_spiflash_storage, bootloader_spiflash_storage_sfdp]
+include:
+- path: platform/bootloader
+- path: platform/bootloader/api
+  file_list:
+  - path: btl_interface.h
+  - path: btl_interface_parser.h
+  - path: btl_interface_storage.h
+- path: platform/bootloader/core/flash/
+  file_list:
+  - path: btl_internal_flash.h
+  - path: btl_internal_flash_raw.h
+provides:
+- name: bootloader_interface_common
+  condition: [device_series_2]
+requires:
+- name: bootloader_interface_headers
+- name: bootloader_application_properties_header
+- name: btl_util_header
+- name: device_series_2
+- name: cmsis_core
+- name: device
+- name: component_catalog
+- name: trustzone_security_state
+- name: emlib_burtc
+- name: emlib_emu
+- name: emlib_cmu
+
+config_file:
+- path: platform/bootloader/config/btl_interface_cfg.h
+  condition: [device_series_2]
+  unless: [trustzone_nonsecure]
+- path: platform/bootloader/config/btl_interface/btl_interface_cfg_s2c1.h
+  file_id: btl_interface_config
+  condition: [device_sdid_200]
+  unless: [trustzone_nonsecure, apploader]
+- path: platform/bootloader/config/btl_interface/btl_interface_cfg_s2c2.h
+  file_id: btl_interface_config
+  condition: [device_sdid_205]
+  unless: [trustzone_nonsecure, apploader]
+- path: platform/bootloader/config/btl_interface/btl_interface_cfg_s2c3.h
+  file_id: btl_interface_config
+  condition: [device_sdid_210]
+  unless: [trustzone_nonsecure, apploader]
+- path: platform/bootloader/config/btl_interface/btl_interface_cfg_s2c4.h
+  file_id: btl_interface_config
+  condition: [device_sdid_215]
+  unless: [trustzone_nonsecure, apploader]
+
+define:
+- name: BOOTLOADER_APPLOADER
+  value: 1
+  condition: [apploader]
+
+template_contribution:
+- name: bootloader_interface_enable
+  value: 1
+- name: component_catalog
+  value: gecko_bootloader_interface
+- name: event_handler
+  value:
+    event: platform_init
+    include: btl_interface.h
+    handler: bootloader_init
+  priority: -8000
+  unless: [trustzone_nonsecure, omit_bootloader_interface_api_sources]
+documentation:
+  docset: mcu-bootloader
+  document: group-Interface
+metadata:
+  sbom:
+    license: MSLA
+root_path: bootloader

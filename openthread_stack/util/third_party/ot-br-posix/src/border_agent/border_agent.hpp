@@ -51,18 +51,6 @@
 #include "sdp_proxy/discovery_proxy.hpp"
 #include "trel_dnssd/trel_dnssd.hpp"
 
-#ifndef OTBR_VENDOR_NAME
-#define OTBR_VENDOR_NAME "OpenThread"
-#endif
-
-#ifndef OTBR_PRODUCT_NAME
-#define OTBR_PRODUCT_NAME "BorderRouter"
-#endif
-
-#ifndef OTBR_MESHCOP_SERVICE_INSTANCE_NAME
-#define OTBR_MESHCOP_SERVICE_INSTANCE_NAME (OTBR_VENDOR_NAME " " OTBR_PRODUCT_NAME)
-#endif
-
 namespace otbr {
 
 /**
@@ -133,6 +121,13 @@ public:
                                       const std::string              &aVendorName,
                                       const std::vector<uint8_t>     &aVendorOui             = {},
                                       const Mdns::Publisher::TxtList &aNonStandardTxtEntries = {});
+
+    /**
+     * This method returns the base service instance name.
+     *
+     * @returns The base service instance name.
+     */
+    const char *GetBaseServiceInstanceName(void) const { return mBaseServiceInstanceName.c_str(); }
 
     /**
      * This method enables/disables the Border Agent.

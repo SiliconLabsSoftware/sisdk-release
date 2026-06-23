@@ -41,7 +41,7 @@
 
 // <gpio> SL_HAL_GPIO_INIT_EXP_7
 // $[GPIO_SL_HAL_GPIO_INIT_EXP_7]
-#define SL_HAL_GPIO_INIT_EXP_7_PORT              SL_GPIO_PORT_C
+#define SL_HAL_GPIO_INIT_EXP_7_PORT              SL_GPIO_PORT_A
 #define SL_HAL_GPIO_INIT_EXP_7_PIN               5
 
 // [GPIO_SL_HAL_GPIO_INIT_EXP_7]$

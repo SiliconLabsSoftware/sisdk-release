@@ -1,0 +1,29 @@
+id: ot_sl_log
+label: Silabs Logger
+package: openthread
+category: OpenThread|Utility|Logging
+quality: production
+description: This component adds support for Silicon Labs logging.
+provides:
+- name: ot_sl_log
+requires:
+- name: ot_platform_abstraction_implementation
+- name: log_none
+conflicts:
+- name: ot_rtt_log
+- name: ot_backchannel_log
+recommends:
+- id: ot_platform_abstraction_source
+  vendor: silabs
+source:
+- path: platform-abstraction/efr32/logging_sl_debug.c
+define:
+- name: OPENTHREAD_CONFIG_LOG_OUTPUT
+  value: OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+template_contribution:
+- name: component_catalog
+  value: ot_sl_log
+metadata:
+  sbom:
+    license: BSD-3-Clause
+root_path: openthread

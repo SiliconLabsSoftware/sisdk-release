@@ -1,0 +1,31 @@
+# Adapter pack file for Studio.
+#
+label=Ninja
+path=$(env.STUDIO_NINJA_PATH),$(env.STUDIO_NINJA_PATH)/bin,.,bin,macosx,linux,win64
+featureLevel=3
+requiredFeatureLevel=apack.core:4
+version=1.12.1
+
+executable(ninja:linux.x86_64) {
+  exe=ninja
+}
+
+executable(ninja:linux.aarch64) {
+  exe=ninja
+}
+
+executable(ninja:win32.x86_64) {
+  exe=ninja.exe
+}
+
+executable(ninja:macosx.x86_64) {
+  exe=ninja
+}
+
+executable(ninja:macosx.aarch64) {
+  exe=ninja
+}
+
+function(help) {
+  cmd=$(ninja) --help
+}

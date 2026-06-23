@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <inttypes.h>
 #include "printf.h"
 #include "sl_component_catalog.h"
 #include "sl_rail.h"
@@ -66,17 +67,14 @@
 #define DEVICE_TYPE "Light"
 /// Send broadcast message in every second
 #define DEMO_LIGHT_STATUS_BROADCAST_INTERVAL    (1000000Ul)
-/// This bit indicates that the Light is in the advertise state, and send
-/// Broadcast messages periodically
-#define DEMO_CONTROL_CMD_ADVERTISE (0U)
 
 /// this structure contains the Light module's details
 typedef struct {
   uint8_t addr[8];
-  light_mode_t mode;
+  light_app_state_t state;
   char* modeText[2];
   char modeTextBuf[10];
-  bool state;
+  bool is_light_on;
 } light_t;
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
@@ -112,26 +110,12 @@ static inline void broadcast_timer_expired();
 /**************************************************************************//**
  * Write to CLI the change of the Light state
  *****************************************************************************/
-static void cli_state_machine_change(void);
+static void cli_log_state_machine_change(void);
 
 /**************************************************************************//**
  * Write to CLI the change of the Light state
  *****************************************************************************/
-static void cli_light_side_light_bulb_toggle(void);
-
-/**************************************************************************//**
- * The ADVERTISE state's function in the state machine
- *
- * @param[in] rail_handle
- *****************************************************************************/
-static void handle_advertise_state(sl_rail_handle_t rail_handle);
-
-/**************************************************************************//**
- * The READY state's function in the state machine
- *
- * @param[in] rail_handle
- *****************************************************************************/
-static void handle_ready_state(sl_rail_handle_t rail_handle);
+static void cli_log_light_side_light_bulb_toggle(void);
 
 /**************************************************************************//**
  * Receive the wireless packet, and save it in a buffer
@@ -158,19 +142,15 @@ static void copy_light_addr_to_payload(void);
 /**************************************************************************//**
  * Write to CLI the change of the Switch state
  *****************************************************************************/
-static void cli_switch_side_light_bulb_toggle(void);
+static void cli_log_switch_side_light_bulb_toggle(void);
 // -----------------------------------------------------------------------------
 //                                Global Variables
 // -----------------------------------------------------------------------------
 //app_name used in LCD functions
 uint8_t app_name[6] = "Light";
-// The variable shows the actual state of the state machine
-volatile state_t state = S_ADVERTISE_STATE;
 
-// Light bulb toggle required from from CLI command
-bool cli_toggle_light_required = false;
-// State change in the State machine required from CLI command
-bool cli_change_state_required = false;
+bool light_bulb_toggle_required = false;
+bool state_change_required = false;
 
 // -----------------------------------------------------------------------------
 //                                Static Variables
@@ -189,22 +169,16 @@ static uint8_t out_packet[TX_PAYLOAD_LENGTH] = {
 
 static light_t light = {
   .addr = { 0 },
-  .mode = LIGHT_MODE_ADVERTISE,
+  .state = LIGHT_STATE_ADVERTISE,
   .modeText = { "ADVERT", "READY" },
   .modeTextBuf = { 0 },
-  .state = false
+  .is_light_on = false
 };
 
 //Send broadcast message periodically
 static bool schedule_broadcast = true;
 // Increase value if packet has received, decrease after process it
 static volatile bool packet_received = false;
-// It shows if there was a transition between the state machine states
-static bool state_changed = true;
-// Light bulb toggle required from PB0 button push
-static bool light_bulb_toggle_required = false;
-// State change in the State machine required from PB1 button push
-static bool state_change_required = false;
 // Hold information about the incoming message
 static sl_rail_rx_packet_info_t packet_info;
 // Status indicator of the RAIL API calls
@@ -227,17 +201,61 @@ void app_process_action(void)
   sl_rail_handle_t rail_handle = sl_rail_util_get_handle(SL_RAIL_UTIL_HANDLE_INST0);
 
   if (current_rail_err != 0) {
-    app_log_error("RAIL Error occurred\nEvents: %lld\n", current_rail_err);
+    app_log_error("RAIL Error occurred\nEvents: 0x%" PRIX64 "\n", current_rail_err);
     current_rail_err = 0;
   }
+  if (state_change_required) {
+    state_change_required = false;
+    switch (light.state) {
+      case LIGHT_STATE_READY:
+        light.state = LIGHT_STATE_ADVERTISE;
+        break;
+      case LIGHT_STATE_ADVERTISE:
+        light.state = LIGHT_STATE_READY;
+        break;
+    }
+    display_all_information();
+    cli_log_state_machine_change();
+  }
 
-  switch (state) {
-    case S_ADVERTISE_STATE:
-      handle_advertise_state(rail_handle);
+  switch (light.state) {
+    case LIGHT_STATE_ADVERTISE:
+      if (packet_received) {
+        packet_received = false;
+        save_received_packet(rail_handle);
+      }
       break;
-    case S_READY_STATE:
-      handle_ready_state(rail_handle);
+
+    case LIGHT_STATE_READY:
+      if (packet_received) {
+        packet_received = false;
+        save_received_packet(rail_handle);
+        light.is_light_on = !light.is_light_on;
+        display_all_information();
+        set_LEDs();
+        schedule_broadcast = true;
+        cli_log_switch_side_light_bulb_toggle();
+      }
+      if (light_bulb_toggle_required) {
+        light_bulb_toggle_required = false;
+        light.is_light_on = !light.is_light_on;
+        display_all_information();
+        set_LEDs();
+        schedule_broadcast = true;
+        cli_log_light_side_light_bulb_toggle();
+      }
       break;
+  }
+
+  // Send broadcast message
+  if (schedule_broadcast) {
+    schedule_broadcast = false;
+    sl_rail_set_timer(rail_handle,
+                      DEMO_LIGHT_STATUS_BROADCAST_INTERVAL,
+                      SL_RAIL_TIME_DELAY,
+                      &broadcast_timer_expired);
+    // Send broadcast message
+    transmit_packet(rail_handle);
   }
 }
 
@@ -288,119 +306,6 @@ SL_CODE_RAM void sl_button_on_change(const sl_button_t *handle)
 #endif
 }
 
-void handle_advertise_state(sl_rail_handle_t rail_handle)
-{
-  // Enter actual state, code just run once
-  if (state_changed) {
-    // Store the actual state
-    light.mode = LIGHT_MODE_ADVERTISE;
-    display_all_information();
-    state_changed = false;
-  }
-
-  if (packet_received) {
-    packet_received = false;
-    save_received_packet(rail_handle);
-  }
-
-  // Send broadcast message
-  if (schedule_broadcast) {
-    schedule_broadcast = false;
-    sl_rail_set_timer(rail_handle,
-                      DEMO_LIGHT_STATUS_BROADCAST_INTERVAL,
-                      SL_RAIL_TIME_DELAY,
-                      &broadcast_timer_expired);
-    // Send broadcast message
-    transmit_packet(rail_handle);
-  }
-
-  // If CLI action occurred, move to next state
-  if (cli_change_state_required) {
-    cli_change_state_required = false;
-    state = S_READY_STATE;
-    state_changed = true;
-    cli_state_machine_change();
-  }
-
-  // If button was pushed, move to next state
-  if (state_change_required) {
-    state = S_READY_STATE;
-    state_changed = true;
-    state_change_required = false;
-    cli_state_machine_change();
-  }
-}
-
-void handle_ready_state(sl_rail_handle_t rail_handle)
-{
-  // Enter actual state, code just runs once
-  if (state_changed) {
-    light.mode = LIGHT_MODE_READY;
-    display_all_information();
-    state_changed = false;
-  }
-
-  if (packet_received) {
-    packet_received = false;
-    save_received_packet(rail_handle);
-    light.state = !light.state;
-    display_all_information();
-    set_LEDs();
-    // Restart the timer with the 1s period
-    schedule_broadcast = true;
-    cli_switch_side_light_bulb_toggle();
-  }
-  // Send broadcast message
-  if (schedule_broadcast) {
-    schedule_broadcast = false;
-    sl_rail_set_timer(rail_handle,
-                      DEMO_LIGHT_STATUS_BROADCAST_INTERVAL,
-                      SL_RAIL_TIME_DELAY,
-                      &broadcast_timer_expired);
-    // Send broadcast message
-    transmit_packet(rail_handle);
-  }
-
-  // If CLI action occurred, move to next state
-  if (cli_change_state_required) {
-    cli_change_state_required = false;
-    state = S_ADVERTISE_STATE;
-    state_changed = true;
-    cli_state_machine_change();
-  }
-
-  // If CLI action occurred, toggle the light bulb
-  if (cli_toggle_light_required) {
-    cli_toggle_light_required = false;
-    // Send out the light bulb's actual state
-    transmit_packet(rail_handle);
-    light.state = !light.state;
-    display_all_information();
-    set_LEDs();
-    schedule_broadcast = true;
-    cli_light_side_light_bulb_toggle();
-  }
-
-  // If PB1 button pushed, move to next state
-  if (state_change_required) {
-    state_change_required = false;
-    state = S_ADVERTISE_STATE;
-    state_changed = true;
-    cli_state_machine_change();
-  }
-
-  // If PB0 button pushed, toggle the light bulb
-  if (light_bulb_toggle_required) {
-    light_bulb_toggle_required = false;
-    light.state = !light.state;
-    display_all_information();
-    set_LEDs();
-    // Send out the light bulb's actual state
-    transmit_packet(rail_handle);
-    cli_light_side_light_bulb_toggle();
-  }
-}
-
 /******************************************************************************
  * Copy the Light's address to the TX FIFO
  *****************************************************************************/
@@ -418,37 +323,33 @@ void transmit_packet(sl_rail_handle_t rail_handle)
   // Set current light state.
   set_role(&out_packet[DEMO_CONTROL_PAYLOAD_BYTE], DEMO_CONTROL_ROLE_LIGHT);
   // Advertisement packet
-  if (LIGHT_MODE_ADVERTISE == light.mode) {
-    set_command_type(&out_packet[DEMO_CONTROL_PAYLOAD_BYTE], (demo_control_command_type_t)DEMO_CONTROL_CMD_ADVERTISE);
+  if (LIGHT_STATE_ADVERTISE == light.state) {
+    set_command_type(&out_packet[DEMO_CONTROL_PAYLOAD_BYTE], CMD_TYPE_LIGHT_ADVERTISE);
   } else {   // Status packet
-    set_command_type(&out_packet[DEMO_CONTROL_PAYLOAD_BYTE], LIGHT_STATE_REPORT);
-    set_light_state(&out_packet[DEMO_CONTROL_PAYLOAD_BYTE], light.state);
+    set_command_type(&out_packet[DEMO_CONTROL_PAYLOAD_BYTE], CMD_TYPE_LIGHT_BULB_STATE_REPORT);
+    set_light_state(&out_packet[DEMO_CONTROL_PAYLOAD_BYTE], light.is_light_on);
   }
   set_light_state_in_payload();
   prepare_packet(rail_handle, out_packet, sizeof(out_packet));
   rail_status = sl_rail_start_tx(rail_handle, get_selected_channel(), SL_RAIL_TX_OPTIONS_DEFAULT, NULL);
   if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_warning("sl_rail_start_tx() result: %lu ", rail_status);
+    app_log_warning("sl_rail_start_tx() result: 0x%08" PRIX32 " ", rail_status);
   }
 }
 
 /******************************************************************************
  * Write to CLI the change of the Light state
  *****************************************************************************/
-static void cli_state_machine_change(void)
+static void cli_log_state_machine_change(void)
 {
-  char text_tmp[64];
 #if defined(_SILICON_LABS_32B_SERIES_2)
   uint64_t sys_id = SYSTEM_GetUnique();
 #else
   uint64_t sys_id = sl_hal_system_get_unique();
 #endif
-  snprintf(text_tmp, sizeof(text_tmp), "%s%04X%s%s",
-           "State changing event at Light Node [",
-           ((uint16_t)(sys_id & 0x0000FFFF)),
-           "]. ",
-           ((light.mode == LIGHT_MODE_ADVERTISE) ? "Mode: READY\n" : "Mode: ADVERTISE\n"));
-  app_log_info(text_tmp);
+  app_log_info("State changing event at Light Node [0x%04" PRIX16 "]. %s",
+               (uint16_t)(sys_id & 0x0000FFFF),
+               (light.state == LIGHT_STATE_ADVERTISE) ? "Mode: ADVERTISE\n" : "Mode: READY\n");
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   app_task_notify();
 #endif
@@ -457,20 +358,16 @@ static void cli_state_machine_change(void)
 /******************************************************************************
  * Write to CLI the change of the Switch state
  *****************************************************************************/
-static void cli_light_side_light_bulb_toggle(void)
+static void cli_log_light_side_light_bulb_toggle(void)
 {
-  char text_tmp[64];
 #if defined(_SILICON_LABS_32B_SERIES_2)
   uint64_t sys_id = SYSTEM_GetUnique();
 #else
   uint64_t sys_id = sl_hal_system_get_unique();
 #endif
-  snprintf(text_tmp, sizeof(text_tmp), "%s%04X%s%s",
-           "Led Toggle event at Light Node [",
-           ((uint16_t)(sys_id & 0x0000FFFF)),
-           "]. ",
-           ((light.state == LIGHT_STATE_OFF) ? "Light Bulb is OFF\n" : "Light Bulb is ON\n"));
-  app_log_info(text_tmp);
+  app_log_info("Led Toggle event at Light Node [0x%04" PRIX16 "]. %s",
+               (uint16_t)(sys_id & 0x0000FFFF),
+               light.is_light_on ? "Light Bulb is ON\n" : "Light Bulb is OFF\n");
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   app_task_notify();
 #endif
@@ -479,13 +376,10 @@ static void cli_light_side_light_bulb_toggle(void)
 /******************************************************************************
  * Write to CLI the change of the Switch state
  *****************************************************************************/
-static void cli_switch_side_light_bulb_toggle(void)
+static void cli_log_switch_side_light_bulb_toggle(void)
 {
-  char text_tmp[64];
-  snprintf(text_tmp, sizeof(text_tmp), "%s%s",
-           "Led Toggle event at Switch Node ",
-           ((light.state == LIGHT_STATE_OFF) ? "Light Bulb is OFF\n" : "Light Bulb is ON\n"));
-  app_log_info(text_tmp);
+  app_log_info("Led Toggle event at Switch Node. %s",
+               light.is_light_on ? "Light Bulb is ON\n" : "Light Bulb is OFF\n");
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   app_task_notify();
 #endif
@@ -502,12 +396,12 @@ static void save_received_packet(sl_rail_handle_t rail_handle)
     if (packet_info.packet_bytes <= SL_RAIL_SDK_RX_FIFO_SIZE) {
       uint16_t packet_size = unpack_packet(rail_handle, rx_buffer, &packet_info, &start_of_packet);
       if (packet_size == 0) {
-        app_log_warning("Received packet size is :%d", packet_size);
+        app_log_warning("Received packet size is :%" PRIu16, packet_size);
       }
     }
     rail_status = sl_rail_release_rx_packet(rail_handle, SL_RAIL_RX_PACKET_HANDLE_OLDEST_COMPLETE);
     if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-      app_log_warning("sl_rail_release_rx_packet() result: %lu", rail_status);
+      app_log_warning("sl_rail_release_rx_packet() result: 0x%" PRIX32, rail_status);
     }
     rx_packet_handle = sl_rail_get_rx_packet_info(rail_handle, SL_RAIL_RX_PACKET_HANDLE_OLDEST_COMPLETE, &packet_info);
   }
@@ -519,13 +413,12 @@ static void save_received_packet(sl_rail_handle_t rail_handle)
 static void set_light_state_in_payload(void)
 {
   // Encode the actual state in the outgoing message
-  switch (light.mode) {
-    case LIGHT_MODE_ADVERTISE:
-      out_packet[DEVICE_STATUS_PAYLOAD_BYTE] &= ~0x03;
+  switch (light.state) {
+    case LIGHT_STATE_ADVERTISE:
+      out_packet[DEVICE_STATUS_PAYLOAD_BYTE] &= ~DEVICE_STATUS_LIGHT_STATE_BIT;
       break;
-    case LIGHT_MODE_READY:
-      out_packet[DEVICE_STATUS_PAYLOAD_BYTE] |=  0x01;
-      out_packet[DEVICE_STATUS_PAYLOAD_BYTE] &= ~0x02;
+    case LIGHT_STATE_READY:
+      out_packet[DEVICE_STATUS_PAYLOAD_BYTE] |= DEVICE_STATUS_LIGHT_STATE_BIT;
       break;
   }
 }
@@ -549,9 +442,9 @@ void init_display(void)
 static void display_all_information(void)
 {
   demoUIClearMainScreen((uint8_t *)app_name, true, false);
-  demoUIDisplayLight(light.state);
+  demoUIDisplayLight(light.is_light_on);
   demoUIDisplayProtocol(DEMO_UI_PROTOCOL1, false);
-  demoUIDisplayId(DEMO_UI_PROTOCOL1, (uint8_t*)light.modeText[light.mode]);
+  demoUIDisplayId(DEMO_UI_PROTOCOL1, (uint8_t*)light.modeText[light.state]);
   put_unique_ID_to_buffer();
   demoUIDisplayId(DEMO_UI_PROTOCOL2, (uint8_t*)light.modeTextBuf);
 }
@@ -573,9 +466,9 @@ static inline void broadcast_timer_expired()
  *****************************************************************************/
 static inline void set_LEDs(void)
 {
-  (light.state == false) \
+  (light.is_light_on == false) \
   ? clear_receive_led() : set_receive_led();
-  (light.state == false) \
+  (light.is_light_on == false) \
   ? clear_send_led() : set_send_led();
 }
 
@@ -586,7 +479,7 @@ static inline void put_unique_ID_to_buffer(void)
 {
   snprintf(light.modeTextBuf,
            sizeof(light.modeTextBuf),
-           "ID:%04X", *((uint16_t*)light.addr));
+           "ID:%" PRIX16, *((uint16_t*)light.addr));
 }
 
 /******************************************************************************

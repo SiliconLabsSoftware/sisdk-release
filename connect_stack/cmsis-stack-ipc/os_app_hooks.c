@@ -166,7 +166,7 @@ void  App_OS_RedzoneHitHook(OS_TCB *p_tcb)
     connect_core_debug_print("stack overflow: %s\n",
                              ((p_tcb) ? p_tcb->NamePtr : "isr"));
 #else
-    connect_core_debug_print("stack overflow: p_tcb=%4x\n", p_tcb);
+    connect_core_debug_print("stack overflow: p_tcb=%p\n", (void*)p_tcb);
 #endif
 #endif // SL_CATALOG_CONNECT_DEBUG_PRINT_PRESENT
   }

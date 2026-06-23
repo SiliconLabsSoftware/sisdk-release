@@ -21,6 +21,7 @@ source:
 
 include:
 - path: "stack/inc"
+- path: "stack/inc/posix"
 
 documentation:
   docset: wisun

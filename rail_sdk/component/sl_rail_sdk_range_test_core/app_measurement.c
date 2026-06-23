@@ -33,6 +33,7 @@
 // -----------------------------------------------------------------------------
 #include <string.h>
 #include <stdlib.h>
+#include <inttypes.h>
 #include "sl_core.h"
 #include "sl_rail.h"
 #include "sl_component_catalog.h"
@@ -391,7 +392,7 @@ SL_WEAK uint16_t unpack_packet(sl_rail_handle_t rail_handle, uint8_t *rx_destina
   sl_rail_status_t result = sl_rail_copy_rx_packet(rail_handle, rx_destination, packet_information);
   if (result != SL_RAIL_STATUS_NO_ERROR) {
 #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_warning("sl_rail_copy_rx_packet failed with error: %ld\n", result);
+    app_log_warning("sl_rail_copy_rx_packet failed with error: 0x%08" PRIX32 "\n", result);
 #endif
   }
   *start_of_payload = rx_destination;
@@ -407,7 +408,7 @@ SL_WEAK void prepare_packet(sl_rail_handle_t rail_handle, uint8_t *out_data, uin
   uint16_t bytes_written_in_fifo = 0;
   bytes_written_in_fifo = sl_rail_write_tx_fifo(rail_handle, out_data, length, true);
   app_assert(bytes_written_in_fifo == length,
-             "sl_rail_write_tx_fifo() failed to write in fifo (%d bytes instead of %d bytes)\n",
+             "sl_rail_write_tx_fifo() failed to write in fifo (%" PRIu16 " bytes instead of %" PRIu16 " bytes)\n",
              bytes_written_in_fifo,
              length);
 }
@@ -478,7 +479,7 @@ void update_tx_power(void)
   sl_rail_handle_t rail_handle = get_current_rail_handler();
   power_status = sl_rail_set_tx_power_dbm(rail_handle, range_test_settings.tx_power);
   if (power_status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_error("sl_rail_set_tx_power_dbm failed with %lu\n", power_status);
+    app_log_error("sl_rail_set_tx_power_dbm failed with 0x%08" PRIX32 "\n", power_status);
   }
 }
 
@@ -529,10 +530,14 @@ void set_power_level_to_max(bool init)
 
   #if defined(SL_CATALOG_RADIO_CONFIG_SIMPLE_RAIL_SINGLEPHY_PRESENT)
   if (!is_current_phy_standard()) {
-    sl_rail_config_channels(rail_handle,
-                            (const sl_rail_channel_config_t *)channelConfigs[range_test_settings.current_phy], NULL);
-    uint16_t channel_first = sl_rail_get_first_channel(rail_handle,
-                                                       (const sl_rail_channel_config_t *)channelConfigs[range_test_settings.current_phy]);
+    sl_rail_config_channels(
+      rail_handle,
+      (const sl_rail_channel_config_t *)channelConfigs[range_test_settings.current_phy], NULL
+      );
+    uint16_t channel_first = sl_rail_get_first_channel(
+      rail_handle,
+      (const sl_rail_channel_config_t *)channelConfigs[range_test_settings.current_phy]
+      );
     sl_rail_prepare_channel(rail_handle, channel_first);
 
     sl_rail_tx_pa_mode_t new_pa_mode = sl_rail_get_pa_mode_from_channel_entry(rail_handle); //from configs
@@ -547,6 +552,8 @@ void set_power_level_to_max(bool init)
         channelConfigs[range_test_settings.current_phy]->configs[0U].channelNumberStart;
     }
   }
+  #else
+  (void)init;
   #endif
 
   int16_t  max_power_deci_dbm = 0;
@@ -626,7 +633,7 @@ void phy_list_generation(uint8_t *buffer, uint8_t *length)
       std_phy_list_generation(phy_index, buffer, length);
     } else {
       // *buffer length comes from app_bluetooth.c
-      snprintf((char*)(&buffer[*length]), 255, "%u:custom_%u,", phy_index, phy_index);
+      snprintf((char*)(&buffer[*length]), 255, "%" PRIu8 ":custom_%" PRIu8 ",", phy_index, phy_index);
       *length = safe_strlen((char*)(buffer));
     }
   }
@@ -743,7 +750,7 @@ void receive_setup_radio(void)
   status = sl_rail_start_rx(rail_handle, range_test_settings.channel, NULL);
 #endif
   if (status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_error("sl_rail_start_rx failed with code 0x%lx", status);
+    app_log_error("sl_rail_start_rx failed with code 0x%08" PRIX32, status);
   }
   rx_crc_error_happened = false;
   rx_packet_received = 0;
@@ -790,12 +797,12 @@ bool receive_measurement(void)
     scheduler_info = (sl_rail_scheduler_info_t){.priority = 200 };
     rail_status = sl_rail_start_rx(rail_handle, range_test_settings.channel, &scheduler_info);
     if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-      app_log_error("sl_rail_start_rx failed with %lu", rail_status);
+      app_log_error("sl_rail_start_rx failed with 0x%08" PRIX32, rail_status);
     }
     #else
     rail_status = sl_rail_start_rx(rail_handle, range_test_settings.channel, NULL);
     if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-      app_log_error("sl_rail_start_rx failed with %lu", rail_status);
+      app_log_error("sl_rail_start_rx failed with 0x%08" PRIX32, rail_status);
     }
     #endif
   }
@@ -1110,7 +1117,7 @@ void send_service_packet(void)
   temp_channel = range_test_settings.channel;
   rail_status = sl_rail_start_tx(rail_handle, range_test_settings.service_channel, SL_RAIL_TX_OPTIONS_DEFAULT, NULL);
   if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_error("sl_rail_start_tx() error 0x%0lX\n", rail_status);
+    app_log_error("sl_rail_start_tx() error 0x%08" PRIX32 "\n", rail_status);
   }
   set_all_radio_handlers_to_idle();
 
@@ -1158,7 +1165,7 @@ void receive_service_packet(void)
   rail_status = sl_rail_start_rx(rail_handle, range_test_settings.service_channel, NULL);
 #endif
   if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_error("sl_rail_start_rx() error 0x%0lX\n", rail_status);
+    app_log_error("sl_rail_start_rx() error 0x%08" PRIX32 "\n", rail_status);
   }
   waiting_service_packet = true;
 }
@@ -1206,7 +1213,7 @@ bool service_packet_received(void)
       sl_rail_status_t result = sl_rail_copy_rx_packet(rail_handle, rx_buffer, &packet_info);
       if (result != SL_RAIL_STATUS_NO_ERROR) {
 #if defined(SL_CATALOG_APP_LOG_PRESENT)
-        app_log_warning("sl_rail_copy_rx_packet failed with error: %ld\n", result);
+        app_log_warning("sl_rail_copy_rx_packet failed with error: 0x%08" PRIX32 "\n", result);
 #else
         // Avoid unused variable warning
         (void)result;
@@ -1373,7 +1380,7 @@ static void send_packet(uint16_t packet_number)
                                              NULL);
 #endif
     if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-      app_log_error("sl_rail_start_tx() error 0x%0lX\n", rail_status);
+      app_log_error("sl_rail_start_tx() error 0x%08" PRIX32 "\n", rail_status);
     }
   }
 }
@@ -1486,7 +1493,7 @@ static inline void print_tx_logs(void)
   uint8_t source_id = range_test_settings.source_id;
   uint8_t destination_id = range_test_settings.destination_id;
 
-  app_log_info("Sent, Actual:%u, Max:%u, IdS:%u, IdR:%u\n",
+  app_log_info("Sent, Actual:%" PRIu16 ", Max:%" PRIu16 ", IdS:%" PRIu8 ", IdR:%" PRIu8 "\n",
                packets_sent,
                packets_repeat_number,
                source_id,
@@ -1506,17 +1513,17 @@ static inline void print_rx_logs(void)
     range_test_settings_t range_test_settings_buf = range_test_settings;
     app_log_error(
       "Rcvd, "          //6
-      "OK:%u, "    //10
-      "CRC:%u, "    //11
-      "Sent:%u, "    //12
-      "Payld:%u, "    //10
-      "MASize:%u, "    //12
-      "PER:%3.1f, "    //11
-      "MA:%3.1f, "    //10
-      "RSSI:% 3d, "    //12
-      "IdS:%u, "    //8
-      "IdR:%u"    //8
-      "\n",    //1+1
+      "OK:%" PRIu16 ", "    //10
+                    "CRC:%" PRIu16 ", " //11
+                                   "Sent:%" PRIu16 ", " //12
+                                                   "Payld:%" PRIu8 ", " //10
+                                                                   "MASize:%" PRIu8 ", " //12
+                                                                                    "PER:%3.1f, " //11
+                                                                                    "MA:%3.1f, " //10
+                                                                                    "RSSI:%" PRId8 ", " //12
+                                                                                                   "IdS:%" PRIu8 ", " //8
+                                                                                                                 "IdR:%" PRIu8 "" //8
+                                                                                                                               "\n", //1+1
       range_test_measurement_buf.packets_received_correctly,
       range_test_measurement_buf.packets_with_crc_error,
       range_test_measurement_buf.packets_received_counter,

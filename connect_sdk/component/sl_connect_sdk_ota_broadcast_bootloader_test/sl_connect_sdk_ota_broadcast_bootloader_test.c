@@ -31,6 +31,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include PLATFORM_HEADER
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "stack/include/ember.h"
 #include "sl_connect_sdk_ota_bootloader_test_common.h"
@@ -101,8 +102,7 @@ bool emberAfPluginOtaBootloaderServerGetImageSegmentCallback(uint32_t start_inde
                                                              uint8_t image_tag,
                                                              uint8_t *image_segment)
 {
-  app_log_info("(server): get segment, start: %lu, end: %lu, tag: 0x%x\n",
-               (long unsigned int) start_index, (long unsigned int) end_index, image_tag);
+  app_log_info("(server): get segment, start: %" PRIu32 ", end: %" PRIu32 ", tag: 0x%" PRIX8 "\n", start_index, end_index, image_tag);
 
   //Initialize bootloader (and flash part) if not yet initialized or in shutdown.
   if ( !emberAfPluginBootloaderInterfaceIsBootloaderInitialized() ) {
@@ -130,7 +130,7 @@ void emberAfPluginOtaBootloaderServerImageDistributionCompleteCallback(EmberAfOt
 {
   uint8_t i;
 
-  app_log_info("image distribution completed, 0x%x\n", status);
+  app_log_info("image distribution completed, 0x%" PRIX8 "\n", status);
 
   for (i = 0; i < target_list_length; i++) {
     uint8_t application_status;
@@ -139,7 +139,7 @@ void emberAfPluginOtaBootloaderServerImageDistributionCompleteCallback(EmberAfOt
       emberAfPluginBootloaderServerGetTargetStatus(target_list[i],
                                                    &application_status);
 
-    app_log_info("Target index %d ID 0x%2X: status 0x%x appStatus 0x%x\n",
+    app_log_info("Target index %" PRIu8 " ID 0x%2X: status 0x%" PRIX8 " appStatus 0x%" PRIX8 "\n",
                  i, target_list[i], status, application_status);
   }
 
@@ -156,7 +156,7 @@ void emberAfPluginBootloaderServerRequestTargetsBootloadCompleteCallback(EmberAf
 {
   uint8_t i;
 
-  app_log_info("bootload request completed, 0x%x\n", status);
+  app_log_info("bootload request completed, 0x%" PRIX8 "\n", status);
 
   for (i = 0; i < target_list_length; i++) {
     uint8_t application_status;
@@ -165,7 +165,7 @@ void emberAfPluginBootloaderServerRequestTargetsBootloadCompleteCallback(EmberAf
       emberAfPluginBootloaderServerGetTargetStatus(target_list[i],
                                                    &application_status);
 
-    app_log_info("Target index %d ID 0x%2X: status 0x%x appStatus 0x%x\n",
+    app_log_info("Target index %" PRIu8 " ID 0x%2X: status 0x%" PRIX8 " appStatus 0x%" PRIX8 "\n",
                  i, target_list[i], status, application_status);
   }
 }
@@ -193,7 +193,7 @@ bool emberAfPluginOtaBootloaderClientNewIncomingImageCallback(EmberNodeId server
   // The client shall accept images with matching tag
   bool accept = (imageTag == ota_bootloader_test_image_tag);
 
-  app_log_info("new incoming image %s (tag=0x%x)\n",
+  app_log_info("new incoming image %s (tag=0x%" PRIX8 ")\n",
                ((accept) ? "ACCEPTED" : "REFUSED"),
                imageTag);
 
@@ -212,7 +212,7 @@ void emberAfPluginOtaBootloaderClientIncomingImageSegmentCallback(EmberNodeId se
                                                                   uint8_t *imageSegment)
 {
   (void)serverId;
-  app_log_info("(client): incoming segment, start: %ld, end: %ld, tag: 0x%x\n",
+  app_log_info("(client): incoming segment, start: %" PRIu32 ", end: %" PRIu32 ", tag: 0x%" PRIX8 "\n",
                startIndex, endIndex, imageTag);
 
   //Initialize bootloader (and flash part) if not yet initialized or in shutdown.
@@ -248,10 +248,10 @@ void emberAfPluginOtaBootloaderClientImageDownloadCompleteCallback(EmberAfOtaBoo
                                                                    uint32_t imageSize)
 {
   if (status == EMBER_OTA_BROADCAST_BOOTLOADER_STATUS_SUCCESS) {
-    app_log_info("Image download COMPLETED tag=0x%x size=%ld\n",
+    app_log_info("Image download COMPLETED tag=0x%" PRIX8 " size=%" PRIu32 "\n",
                  imageTag, imageSize);
   } else {
-    app_log_error("Image download FAILED status=0x%x\n", status);
+    app_log_error("Image download FAILED status=0x%" PRIX8 "\n", status);
   }
 }
 
@@ -276,14 +276,14 @@ bool emberAfPluginOtaBootloaderClientIncomingRequestBootloadCallback(EmberNodeId
   bool accept = (imageTag == ota_bootloader_test_image_tag);
 
   if (accept) {
-    app_log_info("bootload request for image with tag 0x%x accepted, will bootload in %ld ms\n",
+    app_log_info("bootload request for image with tag 0x%" PRIX8 " accepted, will bootload in %" PRIu32 " ms\n",
                  imageTag, bootloadDelayMs);
     // Schedule a bootload action.
     emberEventControlSetDelayMS(emAfPluginOtaBootloaderTestEventControl,
                                 bootloadDelayMs);
   } else {
     *applicationStatus = APPLICATION_STATUS_WRONG_IMAGE_TAG;
-    app_log_info("bootload request refused (tag 0x%x doesn't match)\n",
+    app_log_info("bootload request refused (tag 0x%" PRIX8 " doesn't match)\n",
                  imageTag);
   }
 
@@ -319,6 +319,9 @@ void cli_bootloader_broadcast_set_target(sl_cli_command_arg_t *arguments)
 
   target_list[target_index] = target_id;
   app_log_info("target set\n");
+  #else
+  (void)arguments;
+  app_log_info("OTA bootloader server plugin not included\n");
   #endif
 }
 
@@ -351,7 +354,7 @@ void cli_bootloader_broadcast_broadcast_distribute(sl_cli_command_arg_t *argumen
   if (status == EMBER_OTA_BROADCAST_BOOTLOADER_STATUS_SUCCESS) {
     app_log_info("image distribution initiated\n");
   } else {
-    app_log_error("image distribution failed 0x%x\n", status);
+    app_log_error("image distribution failed 0x%" PRIX8 "\n", status);
   }
 #else
   (void)arguments;
@@ -387,7 +390,7 @@ void cli_bootloader_broadcast_request_bootload(sl_cli_command_arg_t *arguments)
   if (status == EMBER_OTA_BROADCAST_BOOTLOADER_STATUS_SUCCESS) {
     app_log_info("bootload request initiated\n");
   } else {
-    app_log_error("bootload request failed 0x%x\n", status);
+    app_log_error("bootload request failed 0x%" PRIX8 "\n", status);
   }
 #else
   (void)arguments;

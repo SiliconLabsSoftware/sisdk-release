@@ -68,7 +68,7 @@ MAX_ITERATIONS            = 10
 def main(level, validity, serial, ip, device, protocol):
     # Check the presence of Simplicity Commander.
     try:
-        subprocess.run(['commander', '-v'], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT) # Supress output
+        subprocess.run(['commander', '-v'], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT) # Suppress output
     except FileNotFoundError:
         raise FileNotFoundError('Cannot find Simplicity Commander.')
 

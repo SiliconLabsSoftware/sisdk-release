@@ -34,6 +34,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include "sl_assert.h"
 #include "cmsis_os2.h"
@@ -197,13 +198,8 @@ static osThreadId_t _spp_task = NULL;
 static const osThreadAttr_t _spp_task_attr = {
   .name       = "SPP_task",
   .attr_bits  = osThreadDetached,
-  .cb_mem     = NULL,
-  .cb_size    = 0UL,
-  .stack_mem  = NULL,
   .stack_size = (SL_IOSTREAM_BLE_SPP_STACK_SIZE_WORD * sizeof(void *)) & 0xFFFFFFF8U,
-  .priority   = osPriorityNormal1,
-  .tz_module  = 0UL,
-  .reserved   = 0UL
+  .priority   = osPriorityNormal1
 };
 
 // SPP mutex
@@ -307,7 +303,7 @@ sl_status_t sl_iostream_ble_spp_get_mode(sl_iostream_ble_spp_mode_t * const mode
   flags = osEventFlagsGet(_spp_fifo_evt);
   // Event flag error
   if (flags & SL_IOSTREAM_BLE_SPP_EVT_ERROR_MSK) {
-    printf("[Failed: BLE SPP mode evt flags (0x%08lX)]\n", flags);
+    printf("[Failed: BLE SPP mode evt flags (0x%08"PRIx32")]\n", flags);
     return SL_STATUS_FAIL;
   }
 
@@ -611,7 +607,7 @@ static void _spp_task_fnc(void *args)
                              osWaitForever);
 
     if (flags & SL_IOSTREAM_BLE_SPP_EVT_ERROR_MSK) {
-      printf("[Failed: SPP FIFO evt flags (0x%08lX)]\n", flags);
+      printf("[Failed: SPP FIFO evt flags (0x%08"PRIx32")]\n", flags);
       continue;
     }
 

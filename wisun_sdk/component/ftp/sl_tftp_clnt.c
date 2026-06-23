@@ -365,12 +365,8 @@ static osThreadId_t _clnt_thr = NULL;
 static const osThreadAttr_t _clnt_thr_attr = {
   .name        = "TftpClntThread",
   .attr_bits   = osThreadDetached,
-  .cb_mem      = NULL,
-  .cb_size     = 0,
-  .stack_mem   = NULL,
   .stack_size  = (SL_TFTP_CLNT_STACK_SIZE_WORD * sizeof(void *)) & 0xFFFFFFF8U,
-  .priority    = osPriorityNormal7,
-  .tz_module   = 0
+  .priority    = osPriorityNormal7
 };
 
 /// TFTP Client message queue ID
@@ -848,7 +844,7 @@ static uint32_t _calc_option_size(const sl_tftp_clnt_t * const clnt)
   // Blocksize option required
   // opt + null terminator + value + null terminator
   if (clnt->options.blksize != SL_TFTP_DEFAULT_DATA_BLOCK_SIZE) {
-    val_len = snprintf((char *)tmp_buff, SL_TFTP_OPT_VAL_MAX_LEN, "%lu", clnt->options.blksize);
+    val_len = snprintf((char *)tmp_buff, SL_TFTP_OPT_VAL_MAX_LEN, "%"PRIu32, clnt->options.blksize);
 
     if (val_len < 0L) {
       return 0UL;
@@ -862,7 +858,7 @@ static uint32_t _calc_option_size(const sl_tftp_clnt_t * const clnt)
   // Timeout interval option required
   // opt + null terminator + value + null terminator
   if (clnt->options.timeout_sec != SL_TFTP_DEFAULT_SRV_RET_TIMEOUT_SEC) {
-    val_len = snprintf((char *)tmp_buff, SL_TFTP_OPT_VAL_MAX_LEN, "%lu", clnt->options.timeout_sec);
+    val_len = snprintf((char *)tmp_buff, SL_TFTP_OPT_VAL_MAX_LEN, "%"PRIu32, clnt->options.timeout_sec);
 
     if (val_len < 0L) {
       return 0UL;

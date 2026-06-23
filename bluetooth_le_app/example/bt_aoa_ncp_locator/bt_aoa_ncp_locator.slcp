@@ -37,9 +37,11 @@ component:
   - id: bluetooth_feature_sync_scanner
   - id: ncp
   - id: ncp_user_cmd
-  - id: uartdrv_usart
+  - id: iostream_eusart
     instance:
       - vcom
+    condition:
+      - device_has_euart
   - id: mpu
   - id: sl_main
   - id: clock_manager
@@ -64,8 +66,10 @@ configuration:
     value: 4
   - name: SL_BOARD_ENABLE_VCOM
     value: 1
-  - name: SL_UARTDRV_USART_VCOM_FLOW_CONTROL_TYPE
-    value: uartdrvFlowControlHw
+  - name: SL_IOSTREAM_EUSART_VCOM_FLOW_CONTROL_TYPE
+    value: SL_IOSTREAM_EUSART_UART_FLOW_CTRL_CTS_RTS
+  - name: SL_IOSTREAM_USART_VCOM_FLOW_CONTROL_TYPE
+    value: usartHwFlowControlCtsAndRts
   - name: SL_BT_CONFIG_MAX_PERIODIC_ADVERTISING_SYNC
     value: 8
   - name: SL_PSA_KEY_USER_SLOT_COUNT

@@ -1,7 +1,7 @@
 id: ot_platform_abstraction_core
 label: Platform Abstraction (Core)
 package: openthread
-category: OpenThread
+category: OpenThread|Platform Abstraction
 quality: production
 description: This component provides the abstraction layer between the OpenThread stack and Silicon Labs platform
 provides:

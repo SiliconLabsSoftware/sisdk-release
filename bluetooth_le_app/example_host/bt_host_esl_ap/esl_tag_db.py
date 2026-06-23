@@ -27,6 +27,9 @@ ESL Tag Database.
 import esl_lib
 import esl_tag
 from ap_constants import BROADCAST_ADDRESS
+from ap_logger import getLogger
+
+_tagdb_log = getLogger("TDB")
 
 
 class TagDB:
@@ -111,7 +114,9 @@ class TagDB:
         self.by_ble_address.pop(tag.ble_address, None)
 
         if tag.esl_address is not None:
-            self.by_esl_address.pop(tag.esl_address, None)
+            ea = tag.esl_address
+            if self.by_esl_address.get(ea) is tag:
+                self.by_esl_address.pop(ea, None)
             self.by_group_id.get(tag.group_id, set()).discard(tag)
             self.by_esl_id.get(tag.esl_id, set()).discard(tag)
 
@@ -133,16 +138,30 @@ class TagDB:
         # --------------------------------------------------------------
         if field == "esl_address":
             if old is not None:
-                self.by_esl_address.pop(old, None)
+                # Only drop the esl_address key if this tag still owns it. Two Tag objects
+                # must never share one ESL logical address; if a collision overwrote the dict
+                # entry, another tag's clear must not pop the winner's index.
+                if self.by_esl_address.get(old) is tag:
+                    self.by_esl_address.pop(old, None)
                 old_group = (old >> 8) & 0x7F
                 old_id = old & 0xFF
                 self.by_group_id.get(old_group, set()).discard(tag)
                 self.by_esl_id.get(old_id, set()).discard(tag)
 
             if new is not None:
-                self.by_esl_address[new] = tag
-                self.by_group_id.setdefault(tag.group_id, set()).add(tag)
-                self.by_esl_id.setdefault(tag.esl_id, set()).add(tag)
+                incumbent = self.by_esl_address.get(new)
+                if incumbent is not None and incumbent is not tag:
+                    _tagdb_log.warning(
+                        "Refusing by_esl_address index update: logical address 0x%04x is "
+                        "already mapped to %s; duplicate claim by %s ignored.",
+                        new,
+                        incumbent.ble_address,
+                        tag.ble_address,
+                    )
+                else:
+                    self.by_esl_address[new] = tag
+                    self.by_group_id.setdefault(tag.group_id, set()).add(tag)
+                    self.by_esl_id.setdefault(tag.esl_id, set()).add(tag)
 
         # --------------------------------------------------------------
         # connection_handle changed

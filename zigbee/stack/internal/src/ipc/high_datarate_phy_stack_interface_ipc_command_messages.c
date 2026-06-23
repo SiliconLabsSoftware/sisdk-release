@@ -3,7 +3,7 @@
  * @brief internal wrappers for 'high_datarate_phy_stack_interface' ipc commands
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -110,6 +110,7 @@ sl_status_t sl_mac_send_raw_high_datarate_phy_message(uint8_t nwk_index,
 
   if (((payload[1] << 8) + payload[0] + 2) > MAX_HIGH_DATARATE_PHY_PACKET_LENGTH) {
     assert(false); // "vector payload length exceeds expected maximum
+    return msg.data.send_raw_high_datarate_phy_message.response.result;
   }
 
   memmove(msg.data.send_raw_high_datarate_phy_message.request.payload, payload, sizeof(uint8_t) * ((payload[1] << 8) + payload[0] + 2));
@@ -117,6 +118,7 @@ sl_status_t sl_mac_send_raw_high_datarate_phy_message(uint8_t nwk_index,
 
   if (((payload[1] << 8) + payload[0] + 2) > MAX_HIGH_DATARATE_PHY_PACKET_LENGTH) {
     assert(false); // "vector payload length exceeds expected maximum
+    return msg.data.send_raw_high_datarate_phy_message.response.result;
   }
 
   memmove(payload, msg.data.send_raw_high_datarate_phy_message.request.payload, sizeof(uint8_t) * ((payload[1] << 8) + payload[0] + 2));
@@ -132,6 +134,7 @@ sl_status_t sl_mac_send_raw_high_datarate_phy_scheduled_message(uint8_t nwk_inde
 
   if (((payload[1] << 8) + payload[0] + 2) > MAX_HIGH_DATARATE_PHY_PACKET_LENGTH) {
     assert(false); // "vector payload length exceeds expected maximum
+    return msg.data.send_raw_high_datarate_phy_scheduled_message.response.result;
   }
 
   memmove(msg.data.send_raw_high_datarate_phy_scheduled_message.request.payload, payload, sizeof(uint8_t) * ((payload[1] << 8) + payload[0] + 2));
@@ -140,6 +143,7 @@ sl_status_t sl_mac_send_raw_high_datarate_phy_scheduled_message(uint8_t nwk_inde
 
   if (((payload[1] << 8) + payload[0] + 2) > MAX_HIGH_DATARATE_PHY_PACKET_LENGTH) {
     assert(false); // "vector payload length exceeds expected maximum
+    return msg.data.send_raw_high_datarate_phy_scheduled_message.response.result;
   }
 
   memmove(payload, msg.data.send_raw_high_datarate_phy_scheduled_message.request.payload, sizeof(uint8_t) * ((payload[1] << 8) + payload[0] + 2));

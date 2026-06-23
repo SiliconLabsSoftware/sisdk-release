@@ -83,7 +83,7 @@ void sli_zigbee_af_price_client_cli_co2_value_table_print_current(sl_cli_command
   if ( i < SL_ZIGBEE_AF_PLUGIN_PRICE_CLIENT_CO2_TABLE_SIZE ) {
     sli_zigbee_af_price_print_co2_value_table_print_index(endpoint, i);
   } else {
-    sl_zigbee_af_price_cluster_println("NO CURRENT CO2 VALUE");
+    sl_zigbee_af_cli_println("NO CURRENT CO2 VALUE");
   }
 }
 
@@ -146,7 +146,7 @@ void sli_zigbee_af_price_client_cli_consolidated_bill_print_entry_by_event_id(sl
   uint32_t issuerEventId = sl_cli_get_argument_uint32(arguments, 1);
   i = sli_zigbee_af_price_consolidated_bill_table_get_index_with_event_id(endpoint, issuerEventId);
   if ( i >= SL_ZIGBEE_AF_PLUGIN_PRICE_CLIENT_CONSOLIDATED_BILL_TABLE_SIZE ) {
-    sl_zigbee_af_price_cluster_println("NOT FOUND, Event ID=%d", issuerEventId);
+    sl_zigbee_af_cli_println("NOT FOUND, Event ID=%d", issuerEventId);
   } else {
     sli_zigbee_af_price_print_consolidated_bill_table_index(endpoint, i);
   }
@@ -159,7 +159,7 @@ void sli_zigbee_af_price_client_cli_consolidated_bill_print_current_entry(sl_cli
   uint8_t endpoint = sl_cli_get_argument_uint8(arguments, 0);
   i = sli_zigbee_af_price_consolidated_bill_table_get_current_index(endpoint);
   if ( i >= SL_ZIGBEE_AF_PLUGIN_PRICE_CLIENT_CONSOLIDATED_BILL_TABLE_SIZE ) {
-    sl_zigbee_af_price_cluster_println("NO CURRENT BILL");
+    sl_zigbee_af_cli_println("NO CURRENT BILL");
   } else {
     sli_zigbee_af_price_print_consolidated_bill_table_index(endpoint, i);
   }
@@ -188,7 +188,7 @@ void sli_zigbee_af_price_client_cli_credit_payment_print_entry_by_event_id(sl_cl
   uint32_t issuerEventId = sl_cli_get_argument_uint32(arguments, 1);
   i = sli_zigbee_af_price_credit_payment_table_get_index_with_event_id(endpoint, issuerEventId);
   if ( i >= SL_ZIGBEE_AF_PLUGIN_PRICE_CLIENT_CREDIT_PAYMENT_TABLE_SIZE ) {
-    sl_zigbee_af_price_cluster_println("NOT FOUND, Event ID=%d", issuerEventId);
+    sl_zigbee_af_cli_println("NOT FOUND, Event ID=%d", issuerEventId);
   } else {
     sli_zigbee_af_price_print_credit_payment_table_index(endpoint, i);
   }
@@ -202,7 +202,7 @@ void sli_zigbee_af_price_client_cli_currency_conversion_print_by_event_id(sl_cli
   uint32_t issuerEventId = sl_cli_get_argument_uint32(arguments, 1);
   i = sl_zigbee_af_price_cluster_currency_conversion_table_get_index_by_event_id(endpoint, issuerEventId);
   if ( i >= SL_ZIGBEE_AF_PLUGIN_PRICE_CLIENT_CURRENCY_CONVERSION_TABLE_SIZE ) {
-    sl_zigbee_af_price_cluster_println("NOT FOUND, Event ID=%d", issuerEventId);
+    sl_zigbee_af_cli_println("NOT FOUND, Event ID=%d", issuerEventId);
   } else {
     sli_zigbee_af_price_print_currency_conversion_table_index(endpoint, i);
   }
@@ -217,6 +217,6 @@ void sli_zigbee_af_price_client_clie_currency_conversion_print_current_currency(
   if ( i < SL_ZIGBEE_AF_PLUGIN_PRICE_CLIENT_CURRENCY_CONVERSION_TABLE_SIZE ) {
     sli_zigbee_af_price_print_currency_conversion_table_index(endpoint, i);
   } else {
-    sl_zigbee_af_price_cluster_println("NO CURRENT CURRENCY");
+    sl_zigbee_af_cli_println("NO CURRENT CURRENCY");
   }
 }

@@ -125,7 +125,7 @@ class AutoEventHandlersMixin:
                 )  # auto mode can't do anything with a Tag that is connected with failure
             elif (
                 tag.provisioned
-            ):  # we remain in auto mode, so aviod stuck connected in special case below
+            ):  # we remain in auto mode, so avoid stuck connected in special case below
                 if (
                     tag.max_image_index is not None
                     and tag.has_image_transfer

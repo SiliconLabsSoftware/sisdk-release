@@ -29,3 +29,6 @@ readme:
   - path: readme.md
 ui_hints:
   highlight: readme.md
+tag:
+  - hidden
+  - hwfilter:device:device_series_2

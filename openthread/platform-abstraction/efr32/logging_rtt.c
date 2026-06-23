@@ -32,8 +32,11 @@
  *
  */
 
+#include <stdint.h>
+
 #include <openthread-core-config.h>
 #include <openthread/config.h>
+#include <openthread/instance.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/logging.h>
 
@@ -66,6 +69,21 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
 
     va_end(ap);
 }
+
+// Instance-aware logging hook
+#if OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+void otPlatLogOutput(otInstance *aInstance, otLogLevel aLogLevel, const char *aLogLine)
+{
+    uint8_t instanceIndex = 0;
+
+    if (aInstance != NULL)
+    {
+        instanceIndex = otInstanceGetIndex(aInstance);
+    }
+
+    otPlatLog(aLogLevel, OT_LOG_REGION_CORE, "[%u] %s", instanceIndex, aLogLine);
+}
+#endif
 #endif
 
 #endif // SL_CATALOG_OT_RTT_LOG_PRESENT

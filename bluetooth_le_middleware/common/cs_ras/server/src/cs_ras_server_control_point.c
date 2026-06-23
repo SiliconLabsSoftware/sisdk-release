@@ -131,7 +131,7 @@ bool cs_ras_server_control_point_on_bt_event(sl_bt_msg_t *evt)
                                CS_RAS_CP_RESPONSE_CODE_INVALID_PARAMETER);
             break;
           }
-          // Handle retreive lost segments
+          // Handle retrieve lost segments
           handle_retreive_lost_segments(server,
                                         &cmd->data.retreive_lost);
           break;

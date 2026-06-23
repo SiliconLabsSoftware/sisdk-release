@@ -258,22 +258,22 @@ void sli_zigbee_af_messaging_client_print_info(uint8_t endpoint)
     return;
   }
 
-  sl_zigbee_af_messaging_cluster_println("= Client Message =");
-  sl_zigbee_af_messaging_cluster_flush();
+  sl_zigbee_af_cli_println("= Client Message =");
+  sl_zigbee_af_cli_flush();
 
-  sl_zigbee_af_messaging_cluster_println(" vld: %s", (messageTable[ep].valid ? "YES" : "NO"));
-  sl_zigbee_af_messaging_cluster_println(" act: %s", (messageTable[ep].active ? "YES" : "NO"));
-  sl_zigbee_af_messaging_cluster_println("  id: 0x%08X", messageTable[ep].messageId);
-  sl_zigbee_af_messaging_cluster_println("  mc: 0x%02X", messageTable[ep].messageControl);
-  sl_zigbee_af_messaging_cluster_println("  st: 0x%08X", messageTable[ep].startTime);
-  sl_zigbee_af_messaging_cluster_println("  et: 0x%08X", messageTable[ep].endTime);
-  sl_zigbee_af_messaging_cluster_println("time: 0x%08X", sl_zigbee_af_get_current_time());
-  sl_zigbee_af_messaging_cluster_println(" dur: 0x%04X", messageTable[ep].durationInMinutes);
-  sl_zigbee_af_messaging_cluster_flush();
-  sl_zigbee_af_messaging_cluster_print(" mes: \"");
-  sl_zigbee_af_messaging_cluster_print_string(messageTable[ep].message);
-  sl_zigbee_af_messaging_cluster_println("\"");
-  sl_zigbee_af_messaging_cluster_flush();
+  sl_zigbee_af_cli_println(" vld: %s", (messageTable[ep].valid ? "YES" : "NO"));
+  sl_zigbee_af_cli_println(" act: %s", (messageTable[ep].active ? "YES" : "NO"));
+  sl_zigbee_af_cli_println("  id: 0x%08X", messageTable[ep].messageId);
+  sl_zigbee_af_cli_println("  mc: 0x%02X", messageTable[ep].messageControl);
+  sl_zigbee_af_cli_println("  st: 0x%08X", messageTable[ep].startTime);
+  sl_zigbee_af_cli_println("  et: 0x%08X", messageTable[ep].endTime);
+  sl_zigbee_af_cli_println("time: 0x%08X", sl_zigbee_af_get_current_time());
+  sl_zigbee_af_cli_println(" dur: 0x%04X", messageTable[ep].durationInMinutes);
+  sl_zigbee_af_cli_flush();
+  sl_zigbee_af_cli_print(" mes: \"");
+  sl_zigbee_af_cli_print_string(messageTable[ep].message);
+  sl_zigbee_af_cli_println("\"");
+  sl_zigbee_af_cli_flush();
 }
 
 sl_zigbee_af_status_t sl_zigbee_af_messaging_client_confirm_message(uint8_t endpoint)

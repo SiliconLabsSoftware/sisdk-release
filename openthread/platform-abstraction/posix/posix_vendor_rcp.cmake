@@ -23,34 +23,25 @@
 #  3. This notice may not be removed or altered from any source distribution.
 #
 
-set(CPCD_SOURCE_DIR "" CACHE PATH "path to directory containing cpcd CMakeLists.txt")
-
 set(OT_POSIX_CONFIG_RCP_VENDOR_TARGET "cpc-interface")
-set(CPC_LIB_TARGET "cpc")
 
 if (NOT OT_PLATFORM_CONFIG)
     message(WARNING "OT_PLATFORM_CONFIG file which defines OT_VENDOR_RADIO_URL_HELP_BUS missing")
 endif()
 
+include(${CMAKE_CURRENT_LIST_DIR}/posix_cpc_deps.cmake)
+
+# `vendor.cmake` creates `rcp-vendor-intf` with `OT_POSIX_CONFIG_RCP_VENDOR_INTERFACE`
+# Adding remaining sources here for compatibility with previous configure options.
+if(TARGET rcp-vendor-intf)
+    target_sources(rcp-vendor-intf PRIVATE "${CMAKE_CURRENT_LIST_DIR}/cpc_transport.cpp")
+endif()
+
 add_library(${OT_POSIX_CONFIG_RCP_VENDOR_TARGET} INTERFACE)
 
-# If cpc target isn't already defined, run find_package to build
-# library as subdirectory or locate pre-installed resources
-# and add imported targets to cpc interface target
-if (NOT TARGET cpc)
-    if (CPCD_SOURCE_DIR)
-        option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
-
-        # Use cpc (lib) target directly and query header path from cpcd project
-        add_subdirectory(${CPCD_SOURCE_DIR} build)
-        get_target_property(CPC_HEADER cpc PUBLIC_HEADER)
-        get_filename_component(CPC_INC ${CPC_HEADER} DIRECTORY)
-        target_include_directories(${OT_POSIX_CONFIG_RCP_VENDOR_TARGET} INTERFACE ${CPC_INC})
-    else()
-        list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR})
-        find_package(cpc REQUIRED)
-        set(CPC_LIB_TARGET "cpc::cpc")
-    endif()
+# Add cpc header path for OpenThread (when built from CPCD_SOURCE_DIR)
+if(CPCD_SOURCE_DIR)
+    target_include_directories(${OT_POSIX_CONFIG_RCP_VENDOR_TARGET} INTERFACE ${CPCD_SOURCE_DIR}/lib)
 endif()
 
 target_link_libraries(${OT_POSIX_CONFIG_RCP_VENDOR_TARGET} 

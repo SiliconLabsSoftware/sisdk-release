@@ -30,8 +30,8 @@
  * @file This file includes definitions for spinel property encoding and decoding functions.
  */
 
-#ifndef SPINEL_PROP_CODEC_HPP_
-#define SPINEL_PROP_CODEC_HPP_
+#ifndef OT_LIB_SPINEL_SPINEL_PROP_CODEC_HPP_
+#define OT_LIB_SPINEL_SPINEL_PROP_CODEC_HPP_
 
 #include <openthread/platform/dnssd.h>
 
@@ -86,6 +86,19 @@ otError EncodeDnssdBrowseResult(Encoder                       &aEncoder,
                                 const otPlatDnssdBrowseResult &aBrowseResult,
                                 const uint8_t                 *aCallbackData,
                                 uint16_t                       aCallbackDataLen);
+
+/**
+ * Use Spinel::Encode to encode a Dnssd SRV result.
+ *
+ * @param[in] aEncoder          A reference to the encoder object.
+ * @param[in] aSrvResult        A reference to the SRV result object.
+ * @param[in] aCallbackData     A pointer to the callback data.
+ * @param[in] aCallbackDataLen  The data length.
+ */
+otError EncodeDnssdSrvResult(Encoder                    &aEncoder,
+                             const otPlatDnssdSrvResult &aSrvResult,
+                             const uint8_t              *aCallbackData,
+                             uint16_t                    aCallbackDataLen);
 
 /**
  * Use Spinel::Decoder to decode a SPINEL_PROP_DNSSD_HOST message to a otPlatDnssdHost.
@@ -172,7 +185,114 @@ otError DecodeDnssdBrowseResult(Decoder                 &aDecoder,
                                 const uint8_t          *&aCallbackData,
                                 uint16_t                &aCallbackDataLen);
 
+/**
+ * Use Spinel::Decoder to decode a SPINEL_PROP_DNSSD_SRV_RESOLVER message to a otPlatDnssdSrvResolver.
+ *
+ * @param[in]  aDecoder          A reference to the decoder object.
+ * @param[out] aSrvResolver      A reference to the SRV resolver.
+ * @param[out] aCallbackData     A reference to the pointer to the callback data.
+ * @param[out] aCallbackDataLen  A reference to the callback data length.
+ */
+otError DecodeDnssdSrvResolver(Decoder                &aDecoder,
+                               otPlatDnssdSrvResolver &aSrvResolver,
+                               const uint8_t         *&aCallbackData,
+                               uint16_t               &aCallbackDataLen);
+
+/**
+ * Use Spinel::Decoder to decode a Dnssd SRV result.
+ *
+ * @param[in]  aDecoder          A reference to the decoder object.
+ * @param[out] aSrvResult        A reference to the SRV result.
+ * @param[out] aCallbackData     A reference to the pointer to the callback data.
+ * @param[out] aCallbackDataLen  A reference to the callback data length.
+ */
+otError DecodeDnssdSrvResult(Decoder              &aDecoder,
+                             otPlatDnssdSrvResult &aSrvResult,
+                             const uint8_t       *&aCallbackData,
+                             uint16_t             &aCallbackDataLen);
+
+/**
+ * Use Spinel::Encode to encode a Dnssd TXT result.
+ *
+ * @param[in] aEncoder          A reference to the encoder object.
+ * @param[in] aTxtResult        A reference to the TXT result.
+ * @param[in] aCallbackData     A pointer to the callback data.
+ * @param[in] aCallbackDataLen  The data length.
+ */
+otError EncodeDnssdTxtResult(Encoder                    &aEncoder,
+                             const otPlatDnssdTxtResult &aTxtResult,
+                             const uint8_t              *aCallbackData,
+                             uint16_t                    aCallbackDataLen);
+
+/**
+ * Use Spinel::Decoder to decode a SPINEL_PROP_DNSSD_TXT_RESOLVER message to a otPlatDnssdTxtResolver.
+ *
+ * @param[in]  aDecoder          A reference to the decoder object.
+ * @param[out] aTxtResolver      A reference to the TXT resolver.
+ * @param[out] aCallbackData     A reference to the pointer to the callback data.
+ * @param[out] aCallbackDataLen  A reference to the callback data length.
+ */
+otError DecodeDnssdTxtResolver(Decoder                &aDecoder,
+                               otPlatDnssdTxtResolver &aTxtResolver,
+                               const uint8_t         *&aCallbackData,
+                               uint16_t               &aCallbackDataLen);
+
+/**
+ * Use Spinel::Decoder to decode a SPINEL_PROP_DNSSD_TXT_RESULT message to a otPlatDnssdTxtResult.
+ *
+ * @param[in]  aDecoder          A reference to the decoder object.
+ * @param[out] aTxtResult        A reference to the TXT result.
+ * @param[out] aCallbackData     A reference to the pointer to the callback data.
+ * @param[out] aCallbackDataLen  A reference to the callback data length.
+ */
+otError DecodeDnssdTxtResult(Decoder              &aDecoder,
+                             otPlatDnssdTxtResult &aTxtResult,
+                             const uint8_t       *&aCallbackData,
+                             uint16_t             &aCallbackDataLen);
+
+/**
+ * Use Spinel::Encode to encode a Dnssd Address result.
+ *
+ * @param[in] aEncoder          A reference to the encoder object.
+ * @param[in] aAddressResult    A reference to the Address result.
+ * @param[in] aCallbackData     A pointer to the callback data.
+ * @param[in] aCallbackDataLen  The data length.
+ */
+otError EncodeDnssdAddressResult(Encoder                        &aEncoder,
+                                 const otPlatDnssdAddressResult &aAddressResult,
+                                 const uint8_t                  *aCallbackData,
+                                 uint16_t                        aCallbackDataLen);
+
+/**
+ * Use Spinel::Decoder to decode a SPINEL_PROP_DNSSD_IP6_ADDRESS_RESOLVER message to a otPlatDnssdAddressResolver.
+ *
+ * @param[in]  aDecoder          A reference to the decoder object.
+ * @param[out] aAddressResolver  A reference to the Address resolver.
+ * @param[out] aCallbackData     A reference to the pointer to the callback data.
+ * @param[out] aCallbackDataLen  A reference to the callback data length.
+ */
+otError DecodeDnssdAddressResolver(Decoder                    &aDecoder,
+                                   otPlatDnssdAddressResolver &aAddressResolver,
+                                   const uint8_t             *&aCallbackData,
+                                   uint16_t                   &aCallbackDataLen);
+
+/**
+ * Use Spinel::Decoder to decode a SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT message to a otPlatDnssdAddressResult.
+ *
+ * @param[in]  aDecoder          A reference to the decoder object.
+ * @param[out] aAddressResult    A reference to the Address result.
+ * @param[out] aAddressArray     A pointer to the array of Address and TTL.
+ * @param[in]  aMaxAddresses     The maximum number of addresses.
+ * @param[out] aCallbackData     A reference to the pointer to the callback data.
+ * @param[out] aCallbackDataLen  A reference to the callback data length.
+ */
+otError DecodeDnssdAddressResult(Decoder                  &aDecoder,
+                                 otPlatDnssdAddressResult &aAddressResult,
+                                 otPlatDnssdAddressAndTtl *aAddressArray,
+                                 uint16_t                  aMaxAddresses,
+                                 const uint8_t           *&aCallbackData,
+                                 uint16_t                 &aCallbackDataLen);
 } // namespace Spinel
 } // namespace ot
 
-#endif // SPINEL_PROP_CODEC_HPP_
+#endif // OT_LIB_SPINEL_SPINEL_PROP_CODEC_HPP_

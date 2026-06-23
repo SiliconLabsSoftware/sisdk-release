@@ -28,4 +28,7 @@ template_contribution:
     include: sl_cpc_config_vcom.h
     handler: sl_cpc_config_vcom
   priority: 9999
+recommends:
+- id: configuration_over_swo
+  vendor: silabs
 root_path: cpc

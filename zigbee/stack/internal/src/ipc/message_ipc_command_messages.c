@@ -3,7 +3,7 @@
  * @brief internal wrappers for 'message' ipc commands
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -308,6 +308,7 @@ sl_status_t sl_zigbee_send_broadcast(sl_802154_short_addr_t alias,
 
   if (messageLength > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector message length exceeds expected maximum
+    return msg.data.send_broadcast.response.result;
   }
 
   memmove(msg.data.send_broadcast.request.message, message, sizeof(uint8_t) * messageLength);
@@ -354,6 +355,7 @@ sl_status_t sl_zigbee_send_multicast(sl_zigbee_aps_frame_t *apsFrame,
 
   if (messageLength > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector message length exceeds expected maximum
+    return msg.data.send_multicast.response.result;
   }
 
   memmove(msg.data.send_multicast.request.message, message, sizeof(uint8_t) * messageLength);
@@ -391,6 +393,7 @@ sl_status_t sl_zigbee_send_reply(sl_802154_short_addr_t destination,
 
   if (messageLength > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector messageContents length exceeds expected maximum
+    return msg.data.send_reply.response.result;
   }
 
   memmove(msg.data.send_reply.request.messageContents, messageContents, sizeof(uint8_t) * messageLength);
@@ -402,6 +405,7 @@ sl_status_t sl_zigbee_send_reply(sl_802154_short_addr_t destination,
 
   if (messageLength > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector messageContents length exceeds expected maximum
+    return msg.data.send_reply.response.result;
   }
 
   memmove(messageContents, msg.data.send_reply.request.messageContents, sizeof(uint8_t) * messageLength);
@@ -429,6 +433,7 @@ sl_status_t sl_zigbee_send_unicast(sl_zigbee_outgoing_message_type_t type,
 
   if (messageLength > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector message length exceeds expected maximum
+    return msg.data.send_unicast.response.result;
   }
 
   memmove(msg.data.send_unicast.request.message, message, sizeof(uint8_t) * messageLength);

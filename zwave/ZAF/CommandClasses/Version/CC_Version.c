@@ -8,6 +8,8 @@
 /****************************************************************************/
 /*                              INCLUDE FILES                               */
 /****************************************************************************/
+#include <stddef.h>
+#include <stdint.h>
 #include <ZW_TransportEndpoint.h>
 #include <ZW_TransportSecProtocol.h>
 #include "ZW_application_transport_interface.h"
@@ -154,16 +156,11 @@ static received_frame_status_t CC_Version_handler(
       pFrameOut->ZW_VersionCommandClassReportFrame.commandClassVersion = version;
 
       if (0xFF == pFrameOut->ZW_VersionCommandClassReportFrame.commandClassVersion) {
-        /*
-         * When every CC uses the REGISTER_CC() macro, the compiler creates a section in the code.
-         * Also two variables are automatically created and these represent the beginning and the end
-         * of the section. The variables can be used to loop through the section.
-         */
-        CC_handler_map_latest_t const * iter = &cc_handlers_start;
-        for ( ; iter < &cc_handlers_stop; ++iter) {
-          if (pCmd->ZW_VersionCommandClassGetFrame.requestedCommandClass == iter->CC) {
-            ZPAL_LOG_DEBUG(ZPAL_LOG_CC_VERSION, "\r\nCC: %#x - Version: %d\r\n", iter->CC, iter->version);
-            pFrameOut->ZW_VersionCommandClassReportFrame.commandClassVersion = iter->version;
+        /* REGISTER_CC() table: linker range [cc_handlers_start, cc_handlers_stop) (ZAF_types.h). */
+        for (CC_handler_map_latest_t const *p = cc_handlers_start; p < cc_handlers_stop; p++) {
+          if (pCmd->ZW_VersionCommandClassGetFrame.requestedCommandClass == p->CC) {
+            ZPAL_LOG_DEBUG(ZPAL_LOG_CC_VERSION, "\r\nCC: %#x - Version: %d\r\n", p->CC, p->version);
+            pFrameOut->ZW_VersionCommandClassReportFrame.commandClassVersion = p->version;
           }
         }
         if (0xFF == pFrameOut->ZW_VersionCommandClassReportFrame.commandClassVersion) {

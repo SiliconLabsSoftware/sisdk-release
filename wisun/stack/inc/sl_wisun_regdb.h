@@ -73,7 +73,7 @@ enum {
 /// PHY parameters.
 typedef struct phy_params {
   uint8_t rail_phy_mode_id;     // RAIL PHY operating mode ID
-  uint8_t phy_mode_id;          // PHY operating mode ID (0xFF if invalid)
+  uint8_t phy_mode_id;          // PHY operating mode ID (0 if invalid)
   uint8_t modulation;           // Modulation
   uint32_t datarate;            // Datarate (bits/second)
   uint8_t op_mode;              // PHY operating mode (0 if invalid)
@@ -109,11 +109,12 @@ bool ws_regdb_check_phy_chan_compat(const sl_wisun_phy_params_t *phy_params, con
  * Get the PHY parameters associated to an Operating Mode.
  *
  * @param[in] operating_mode Operating Mode
+ * @param[in] fec FEC
  * @return Pointer to the PHY parameters, or NULL if not found
  *
  * Available in libraries: Full, FFN, LFN (see @ref API_AVAILABILITY)
  *****************************************************************************/
-const sl_wisun_phy_params_t *ws_regdb_phy_params_from_mode(uint8_t operating_mode);
+const sl_wisun_phy_params_t *ws_regdb_phy_params_from_mode(uint8_t operating_mode, bool fec);
 
 /**************************************************************************//**
  * Get the PHY parameters associated to a PHY Mode ID.
@@ -128,13 +129,14 @@ const sl_wisun_phy_params_t *ws_regdb_phy_params_from_id(uint8_t phy_mode_id);
 /**************************************************************************//**
  * Retrieve the PHY parameters based on the PHY Mode ID or the Operating Mode.
  *
- * @param[in] operating_mode PHY Mode ID
+ * @param[in] phy_mode_id PHY Mode ID
  * @param[in] operating_mode Operating Mode
+ * @param[in] fec FEC
  * @return Pointer to the PHY parameters, or NULL if not found
  *
  * Available in libraries: Full, FFN, LFN (see @ref API_AVAILABILITY)
  *****************************************************************************/
-const sl_wisun_phy_params_t *ws_regdb_phy_params(uint8_t phy_mode_id, uint8_t operating_mode);
+const sl_wisun_phy_params_t *ws_regdb_phy_params(uint8_t phy_mode_id, uint8_t operating_mode, bool fec);
 
 /**************************************************************************//**
  * Retrieve the Channel Plan parameters based on Regulatory Domain, and the

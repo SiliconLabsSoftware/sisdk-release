@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform Security - SoC PSA Crypto Asymmetric Key
 description: >
-  This example uses the PSA Crypto API to perform asymmetric key operations on the supported device.
+  Demonstrates how to generate, import, export, copy, and destroy asymmetric ECC keys using the PSA Crypto API, with plain and Secure Vault wrapped key storage.
 category: Example|Platform
 filter:
   - name: "Device Type"

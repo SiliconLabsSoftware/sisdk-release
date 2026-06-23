@@ -31,9 +31,10 @@ provides:
 requires:
 - name: cpc_primary
 - name: status
-- name: dmadrv
-- name: hal_generic_eusart
-- name: hal_generic_gpio
+- name: hal_eusart
+- name: hal_gpio
+- name: hal_ldma
+- name: dma_manager
 - name: emlib_cmu
   condition: [device_series_2]
 - name: slist

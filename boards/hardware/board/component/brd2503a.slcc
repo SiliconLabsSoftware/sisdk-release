@@ -43,6 +43,9 @@
   - name: hardware_board_has_hfxo_freq_38.4mhz
   - name: hardware_board_has_hfxo
   - name: hardware_board_has_lfxo
+  - name: hardware_board_has_led0
+  - name: hardware_board_has_btn0
+  - name: hardware_board_has_exclusive_button_led
 - recommends:
   - id: iostream_eusart
     instance:

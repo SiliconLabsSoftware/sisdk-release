@@ -1,8 +1,8 @@
 project_name: ot-ncp-mtd-cpc
-label: OpenThread - NCP (MTD) with CPC
+label: OpenThread - NCP MTD with CPC
 package: openthread
 description: >
-  This is a simple OpenThread Minimal Thread Device NCP application. This is equivalent to the ot-ncp-mtd application in the OpenThread GitHub repo.
+  Demonstrates OpenThread Minimal Thread Device (MTD) Network Co-Processor (NCP) application using CPC (Co-Processor Communication).
 category: OpenThread Examples
 quality: production
 
@@ -23,8 +23,11 @@ component:
   - id: ot_rtt_log
   - id: clock_manager
   - id: ot_reset_utils
-  # Platform - Enable LTO for gcc by installing the following component
+  # Platform - Enable LTO for gcc and llvm by installing the following component
   - id: toolchain_gcc_lto
+    condition: [toolchain_gcc]
+  - id: toolchain_llvm_lto
+    condition: [toolchain_llvm]
   - id: ot_cli_source
 
 include:
@@ -108,6 +111,8 @@ tag:
   - hwfilter:device:device_supports_thread
   - hwfilter:!device:device_family_efr32mr21
   - toolchain:gcc
+  - toolchain:llvm
+  - hwfilter:ram:128k
 
 readme:
   - path: ./README-OT-NCP.md

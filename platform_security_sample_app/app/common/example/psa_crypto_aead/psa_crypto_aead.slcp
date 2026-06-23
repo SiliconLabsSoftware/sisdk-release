@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform Security - SoC PSA Crypto AEAD
 description: >
-  This example uses the PSA Crypto API to perform Authenticated Encryption with Associated Data (AEAD) operations on the supported device.
+  Demonstrates how to perform AEAD operations (AES-CCM, AES-GCM, ChaCha20-Poly1305) using the PSA Crypto API, with hardware acceleration on Secure Vault devices.
 category: Example|Platform
 filter:
   - name: "Device Type"

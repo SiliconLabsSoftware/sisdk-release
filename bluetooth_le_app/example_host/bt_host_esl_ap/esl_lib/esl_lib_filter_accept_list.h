@@ -133,7 +133,7 @@ size_t filter_accept_list_get_size(filter_list_p list);
  *       same device. The list (of addresses) will always remain sorted.
  *       Takes ownership of the command if it succeeds (by creating the node),
  *       but if the allocation fails to create the node, then this call returns
- *       NULL and users must free the previosly allocated command themselves!
+ *       NULL and users must free the previously allocated command themselves!
  *       In the event that a new command is to be added to the list with the
  *       same target address as a command that has previously been added to the
  *       list, it should be noted that the return pointer will point to
@@ -160,7 +160,7 @@ filter_node_p filter_accept_list_insert_command(filter_list_p list,
  *
  * @note Returns the ownership of the stored command through the return value
  *       on success to which the input address is compared under the hood, so
- *       the memory reserved for it shall be freed by tha caller.
+ *       the memory reserved for it shall be freed by the caller.
  *       It should be also noted that the actual return value may differ from
  *       the input parameter in the event that the command to be removed is
  *       passed as a copy. If it is a copy and dynamically allocated, both

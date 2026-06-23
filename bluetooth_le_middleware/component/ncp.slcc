@@ -47,13 +47,7 @@ requires:
 - name: app_rta
 - name: status
 recommends:
-- id: bluetooth_ncp_transport_usart
-  condition:
-  - device_series_2
-  vendor: silabs
 - id: bluetooth_ncp_transport_iostream
-  condition:
-  - device_series_3
   vendor: silabs
 define:
 - name: SL_BT_API_FULL

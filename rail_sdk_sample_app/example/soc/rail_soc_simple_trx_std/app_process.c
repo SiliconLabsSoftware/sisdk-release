@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <inttypes.h>
 #include "em_device.h"
 #if defined _SILICON_LABS_32B_SERIES_2
 #include "em_system.h"
@@ -415,7 +416,7 @@ static void handle_transmit(sl_rail_handle_t rail_handle)
   // sets the tx options based on the current ACK settings (auto-ACK enabled?)
   status = sl_rail_sdk_ieee802154_transmission(rail_handle, tx_app_buff, packet_size);
   if (status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_warning("sl_rail_sdk_ieee802154_transmission() status: %lu\n", status);
+    app_log_warning("sl_rail_sdk_ieee802154_transmission() status: 0x%08" PRIX32 "\n", status);
   }
 
 #elif defined SL_CATALOG_RAIL_SDK_BLE_SUPPORT_PRESENT
@@ -429,11 +430,11 @@ static void handle_transmit(sl_rail_handle_t rail_handle)
   // Send Packet
   status = sl_rail_write_tx_fifo(rail_handle, tx_app_buff, packet_size, true);
   if (status != packet_size) {
-    app_log_warning("BLE sl_rail_write_tx_fifo status: %lu\n", status);
+    app_log_warning("BLE sl_rail_write_tx_fifo status: 0x%08" PRIX32 "\n", status);
   }
   status = sl_rail_start_tx(rail_handle, BLE_CHANNEL, SL_RAIL_TX_OPTIONS_DEFAULT, NULL);
   if (status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_warning("BLE sl_rail_start_tx status: %lu\n", status);
+    app_log_warning("BLE sl_rail_start_tx status: 0x%08" PRIX32 "\n", status);
   }
   #else
 #endif
@@ -454,8 +455,7 @@ static void start_receiving(sl_rail_handle_t rail_handle)
 #else
 #endif
   if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_warning("sl_rail_start_rx() result: %lu\n",
-                    rail_status);
+    app_log_warning("sl_rail_start_rx() result: 0x%08" PRIX32 "\n", rail_status);
   }
 }
 
@@ -488,7 +488,7 @@ static void handle_receive(sl_rail_handle_t rail_handle)
     // after the copy of the packet, the RX packet can be release for RAIL
     rail_status = sl_rail_release_rx_packet(rail_handle, rx_packet_handle);
     if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-      app_log_warning("sl_rail_release_rx_packet() result: %lu\n", rail_status);
+      app_log_warning("sl_rail_release_rx_packet() result: 0x%08" PRIX32 "\n", rail_status);
     }
 
 #ifdef SL_CATALOG_RAIL_SDK_IEEE802154_SUPPORT_PRESENT
@@ -538,17 +538,17 @@ static void handle_error_state(void)
 {
   // Handle Rx error
   if (rail_last_state & SL_RAIL_EVENTS_RX_COMPLETION) {
-    app_log_error("Radio RX Error occurred\nEvents: %lld\n", rail_last_state);
+    app_log_error("Radio RX Error occurred\nEvents: 0x%" PRIX64 "\n", rail_last_state);
     // Handle Tx error
   } else if (rail_last_state & SL_RAIL_EVENTS_TX_COMPLETION) {
-    app_log_error("Radio TX Error occurred\nEvents: %lld\n", rail_last_state);
+    app_log_error("Radio TX Error occurred\nEvents: 0x%" PRIX64 "\n", rail_last_state);
     // Handle calibration error
   } else if (rail_last_state & RAIL_EVENT_CAL_NEEDED) {
-    app_log_warning("Radio Calibr. Error occurred\nEvents: %lld\nsl_rail_calibrate() result:%ld\n",
+    app_log_warning("Radio Calibr. Error occurred\nEvents: 0x%" PRIX64 "\nsl_rail_calibrate() result: 0x%08" PRIX32 "\n",
                     rail_last_state,
                     calibration_status);
   } else if (rail_last_state & SL_RAIL_EVENTS_TXACK_COMPLETION) {
-    app_log_error("ACK TX Error occurred\nEvents: %lld\n", rail_last_state);
+    app_log_error("ACK TX Error occurred\nEvents: 0x%" PRIX64 "\n", rail_last_state);
   }
   start_rx = true;
 }
@@ -562,10 +562,10 @@ static void printf_ble_packet(const sl_rail_sdk_ble_advertising_packet_t *packet
   uint32_t packet_size = sl_rail_sdk_ble_get_packet_size(packet);
   uint32_t payload_len = sl_rail_sdk_ble_get_payload_len(packet);
   uint8_t *packet_byte;
-  app_log_info("BLE Packet: (size = %ld) (payload_len = %ld) {\n", packet_size, payload_len);
+  app_log_info("BLE Packet: (size = %" PRIu32 ") (payload_len = %" PRIu32 ") {\n", packet_size, payload_len);
   for (uint32_t i = 0; i < packet_size; ++i) {
     packet_byte = (uint8_t *)packet + i;
-    app_log_info("[%ld] -> 0x%02X\n", i, *packet_byte);
+    app_log_info("[%" PRIu32 "] -> 0x%02" PRIX8 "\n", i, *packet_byte);
   }
   app_log_info("}\n");
 }
@@ -576,9 +576,9 @@ static void printf_ble_packet(const sl_rail_sdk_ble_advertising_packet_t *packet
 static void printf_ble_recv_payload(const uint8_t * const rx_buffer, uint16_t length)
 {
   uint8_t i = 0;
-  app_log_info("BLE Packet has been received. Payload (%d): ", length);
+  app_log_info("BLE Packet has been received. Payload (%" PRIu16 "): ", length);
   for (i = 0; i < length; i++) {
-    app_log_info("0x%02X, ", rx_buffer[i]);
+    app_log_info("0x%02" PRIX8 ", ", rx_buffer[i]);
   }
   app_log_info("\n");
 }

@@ -420,7 +420,7 @@ typedef uint8_t sl_zigbee_af_interpan_message_type_t;
 #define SL_ZIGBEE_AF_INTERPAN_OPTION_NONE                 0x0000u
 #define SL_ZIGBEE_AF_INTERPAN_OPTION_APS_ENCRYPT          0x0001u
 #define SL_ZIGBEE_AF_INTERPAN_OPTION_MAC_HAS_LONG_ADDRESS 0x0002u
-
+#define SL_ZIGBEE_AF_INTERPAN_OPTION_FRAGMENTATION        0x0004u // Extended FC Indicating Fragmentation 
 /**
  * @brief The options for sending/receiving interpan messages.
  */

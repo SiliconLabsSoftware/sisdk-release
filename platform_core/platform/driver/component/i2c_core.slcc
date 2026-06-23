@@ -12,7 +12,7 @@ description: >
   The driver core provides essential functionalities for I2C communication
   such as initialization, configuration, and data transfer management.
 category: Platform|Driver|I2C
-quality: evaluation
+quality: production
 metadata:
   sbom:
     license: Zlib
@@ -28,7 +28,8 @@ requires:
 - name: sl_assert
 - name: hal_gpio
 - name: hal_i2c
-- name: dmadrv
+- name: dma_manager
+- name: dma_channel
 - name: sleeptimer
 include:
 - path: inc

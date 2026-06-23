@@ -701,7 +701,7 @@ typedef PACKSTRUCT (struct {
       uint16_t object_name;                 ///< GATT database handle for Object Name characteristic
       uint16_t object_type;                 ///< GATT database handle for Object Type characteristic
       uint16_t object_size;                 ///< GATT database handle for Object Size characteristic
-      uint16_t object_first_created;        ///< GATT database handle for Object Frist Created characteristic
+      uint16_t object_first_created;        ///< GATT database handle for Object First Created characteristic
       uint16_t object_last_modified;        ///< GATT database handle for Object Last Modified characteristic
       uint16_t object_id;                   ///< GATT database handle for Object ID characteristic
       uint16_t object_properties;           ///< GATT database handle for Object Properties characteristic

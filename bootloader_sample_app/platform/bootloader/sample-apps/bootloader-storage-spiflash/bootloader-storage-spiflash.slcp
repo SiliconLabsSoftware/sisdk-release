@@ -3,7 +3,7 @@ package: bootloader
 quality: production
 label: Bootloader - SoC SPI Flash Storage (multiple images)
 description: >
-  This sample configuration of the Gecko bootloader configures the bootloader to use an external SPI flash to store firmware update images. The storage configuration is set up to store up to two firmware update images at a time, in two storage slots. The storage slots are configured to start at address 0x2000 and 0x41000 of the SPI flash respectively, and have a size of 252 kB. This can be configured on the "Storage" tab.
+  Demonstrates how to configure the Gecko Bootloader to store firmware update images using external SPI flash, in a dual-slot setup with two 252 kB slots starting at 0x2000 and 0x41000.
 
 category: Example|Bootloader
 filter:

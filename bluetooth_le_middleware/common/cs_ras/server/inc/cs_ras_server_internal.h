@@ -36,14 +36,12 @@
 #include "sl_status.h"
 #include "sl_bt_api.h"
 #include "sl_component_catalog.h"
-#ifdef SL_CATALOG_POWER_MANAGER_PRESENT
-#include "sl_power_manager.h"
-#endif // SL_CATALOG_POWER_MANAGER_PRESENT
 #include "cs_ras_server_config.h"
 #include "cs_ras_common.h"
 #include "cs_ras_server_messaging.h"
 #include "app_queue.h"
 #include "app_timer.h"
+#include "app_rta.h"
 
 #if defined(CS_RAS_SERVER_CONFIG_SUPPORT_FEATURE_REAL_TIME_RANGING_DATA) && (CS_RAS_SERVER_CONFIG_SUPPORT_FEATURE_REAL_TIME_RANGING_DATA == 1)
 #define FEATURE_REAL_TIME_RANGING_DATA
@@ -100,7 +98,6 @@ typedef struct {
     uint16_t on_demand_indication     : 1;
     uint16_t on_demand_notification   : 1;
   } cccd;
-  cs_ras_server_messaging_transmit_t transmit;
   app_queue_t tx_queue;
   struct {
     app_timer_t retention;
@@ -112,6 +109,7 @@ typedef struct {
   int8_t tx_power_dbm;
   bool transmit_request;
   uint8_t antenna_config;
+  cs_ras_server_messaging_transmit_t transmit;
 } cs_ras_server_t;
 
 #ifdef __cplusplus
@@ -216,6 +214,23 @@ sl_status_t cs_ras_send_data_ready(uint8_t connection,
                                    cs_ras_ranging_counter_t ranging_counter);
 
 /**************************************************************************//**
+ * Send RAS data when ready (no RTA guard).
+ *
+ * Same as @ref cs_ras_send_data_ready but the caller is expected to already
+ * hold the RTA guard for @ref cs_ras_server_rta_context. Intended for
+ * internal call sites that are reached from inside an already-acquired
+ * context (e.g., from the BT event handler or the database module). Calling
+ * this without holding the guard is undefined; calling the public variant
+ * from such a site will deadlock on non-recursive guards.
+ *
+ * @param[in] connection Connection handle.
+ * @param[in] ranging_counter Ranging counter.
+ * @return status of the operation.
+ *****************************************************************************/
+sl_status_t cs_ras_send_data_ready_internal(uint8_t connection,
+                                            cs_ras_ranging_counter_t ranging_counter);
+
+/**************************************************************************//**
  * Send RAS data when it is due to retransmit.
  * @param[in] connection Connection handle.
  * @param[in] ranging_counter Ranging counter.
@@ -223,6 +238,20 @@ sl_status_t cs_ras_send_data_ready(uint8_t connection,
  *****************************************************************************/
 sl_status_t cs_ras_send_overwritten(uint8_t connection,
                                     cs_ras_ranging_counter_t ranging_counter);
+
+/**************************************************************************//**
+ * Send RAS data when it is due to retransmit (no RTA guard).
+ *
+ * Same as @ref cs_ras_send_overwritten but the caller is expected to already
+ * hold the RTA guard for @ref cs_ras_server_rta_context. See
+ * @ref cs_ras_send_data_ready_internal for usage constraints.
+ *
+ * @param[in] connection Connection handle.
+ * @param[in] ranging_counter Ranging counter.
+ * @return status of the operation.
+ *****************************************************************************/
+sl_status_t cs_ras_send_overwritten_internal(uint8_t connection,
+                                             cs_ras_ranging_counter_t ranging_counter);
 
 /**************************************************************************//**
  * Get handle for a given characteristic index
@@ -238,24 +267,15 @@ uint16_t cs_ras_server_get_cccd_handle(cs_ras_characteristic_index_t index);
  *****************************************************************************/
 uint16_t cs_ras_server_get_handle(cs_ras_characteristic_index_t index);
 
-#ifdef SL_CATALOG_POWER_MANAGER_PRESENT
+/**************************************************************************//**
+ * Initialize RTA context.
+ *****************************************************************************/
+void cs_ras_server_rta_init(void);
 
-/***************************************************************************//**
- * Checks if it is ok to sleep now / power manager
- * @return true - if ready to sleep, false otherwise
- ******************************************************************************/
-bool cs_ras_server_is_ok_to_sleep(void);
-
-/***************************************************************************//**
- * Routine for power manager handler
- * @return sl_power_manager_on_isr_exit_t
- * @retval SL_POWER_MANAGER_IGNORE = (1UL << 0UL), < The module did not trigger an ISR and it doesn't want to contribute to the decision
- * @retval SL_POWER_MANAGER_SLEEP  = (1UL << 1UL), < The module was the one that caused the system wakeup and the system SHOULD go back to sleep
- * @retval SL_POWER_MANAGER_WAKEUP = (1UL << 2UL), < The module was the one that caused the system wakeup and the system MUST NOT go back to sleep
- ******************************************************************************/
-sl_power_manager_on_isr_exit_t cs_ras_server_sleep_on_isr_exit(void);
-
-#endif // SL_CATALOG_POWER_MANAGER_PRESENT
+/**************************************************************************//**
+ * Ready RTA context.
+ *****************************************************************************/
+void cs_ras_server_rta_ready(void);
 
 #ifdef __cplusplus
 };

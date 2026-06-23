@@ -20,6 +20,7 @@
 
 #include PLATFORM_HEADER
 #include "stack/include/sl_zigbee_types.h"
+#include "stack/include/stack-info.h"
 #include "buffer_manager/legacy-packet-buffer.h"
 #include "message_internal_def.h"
 
@@ -191,6 +192,16 @@ sl_zigbee_packet_action_t sl_zigbee_internal_packet_handoff_incoming_handler(sl_
       act = sl_zigbee_pre_incoming_packet_filter_cb(packetType, flatPacket, &packetLength, data, data_len);
       // notify application
       sli_zigbee_stack_post_incoming_packet_filter_cb(packetType, flatPacket, packetLength, data, data_len, act);
+      extern int8_t sli_zigbee_current_rssi;
+      extern uint8_t sli_zigbee_current_lqi;
+      sl_zigbee_packet_link_quality_t linkQuality = {
+        .rssi    = sli_zigbee_current_rssi,
+        .lqi     = sli_zigbee_current_lqi,
+        .channel = sl_zigbee_get_radio_channel()
+      };
+      sli_zigbee_stack_post_incoming_packet_filter_with_lqi_and_rssi_cb(packetType, &linkQuality,
+                                                                        flatPacket, packetLength,
+                                                                        data, data_len, act);
 #ifdef SL_CATALOG_ZIGBEE_TEST_HARNESS_Z3_PRESENT
       emTempHandoffHeader = NULL_BUFFER;
 #endif

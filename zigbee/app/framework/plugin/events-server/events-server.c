@@ -588,12 +588,12 @@ void sl_zigbee_af_events_server_print_event_log(uint8_t endpoint, sl_zigbee_af_e
 // Print an event
 void sl_zigbee_af_events_server_print_event(const sl_zigbee_af_zcl_event_t *event)
 {
-  sl_zigbee_af_events_cluster_println("       eventId: 0x%04X", event->eventId);
-  sl_zigbee_af_events_cluster_println("     eventTime: 0x%08X", event->eventTime);
-  sl_zigbee_af_events_cluster_println("  eventDataLen: 0x%02X", sl_zigbee_af_string_length(event->eventData));
-  sl_zigbee_af_events_cluster_print("     eventData: ");
-  sl_zigbee_af_events_cluster_print_string(event->eventData);
-  sl_zigbee_af_events_cluster_println("");
+  sl_zigbee_af_cli_println("       eventId: 0x%04X", event->eventId);
+  sl_zigbee_af_cli_println("     eventTime: 0x%08X", event->eventTime);
+  sl_zigbee_af_cli_println("  eventDataLen: 0x%02X", sl_zigbee_af_string_length(event->eventData));
+  sl_zigbee_af_cli_print("     eventData: ");
+  sl_zigbee_af_cli_print_string(event->eventData);
+  sl_zigbee_af_cli_println("");
 }
 
 // Retrieves the event at the index.  Returns false if logId or index is invalid.
@@ -822,14 +822,14 @@ static void printEventLog(uint8_t endpoint, sl_zigbee_af_event_log_id_t logId)
     }
   }
 
-  sl_zigbee_af_events_cluster_println("Log: 0x%02X Total 0x%02X", logId, count);
-  sl_zigbee_af_events_cluster_println("");
+  sl_zigbee_af_cli_println("Log: 0x%02X Total 0x%02X", logId, count);
+  sl_zigbee_af_cli_println("");
   if (count > 0) {
     for (i = 0; i < eventLog->maxEntries; i++) {
       if (!eventIsValid(&eventLog->entries[i])) {
         continue;
       }
-      sl_zigbee_af_events_cluster_println("Index: 0x%02X", i);
+      sl_zigbee_af_cli_println("Index: 0x%02X", i);
       sl_zigbee_af_events_server_print_event(&eventLog->entries[i].event);
     }
   }

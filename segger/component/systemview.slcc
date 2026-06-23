@@ -6,7 +6,7 @@ category: Third Party|Segger|System View
 quality: production
 metadata:
   sbom:
-    license: Segger
+    license: zlib
 config_file:
 - path: systemview/Config/sl_systemview_config.h
 source:
@@ -38,18 +38,6 @@ requires:
 validation_helper:
 - path: systemview/timestamp_source_validation.lua
 template_contribution:
-- name: event_handler
-  value:
-    event: platform_init
-    include: SEGGER_SYSVIEW.h
-    handler: SEGGER_SYSVIEW_Conf
-  priority: -9202
-- name: event_handler
-  value:
-    event: platform_init
-    include: SEGGER_SYSVIEW.h
-    handler: SEGGER_SYSVIEW_Start
-  priority: -9201
 - name: component_catalog
   value: systemview_trace
 root_path: segger

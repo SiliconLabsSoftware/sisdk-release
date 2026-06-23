@@ -99,6 +99,7 @@
 
 //Binding Frames
 #define sl_zigbee_clear_binding_table              sl_zigbee_ezsp_clear_binding_table
+#define sl_zigbee_clear_binding_table_on_leave     sl_zigbee_ezsp_clear_binding_table_on_leave
 #define sl_zigbee_set_binding                     sl_zigbee_ezsp_set_binding
 #define sl_zigbee_get_binding                     sl_zigbee_ezsp_get_binding
 #define sl_zigbee_delete_binding                  sl_zigbee_ezsp_delete_binding

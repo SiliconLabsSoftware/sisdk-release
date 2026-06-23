@@ -23,6 +23,10 @@
 #define RESPONSE                                        0x01
 ///@}
 
+/* Command Status (SerialAPI specification section 4.2.6) */
+#define SAPI_COMMAND_STATUS_FAILURE                     0x00
+#define SAPI_COMMAND_STATUS_SUCCESS                     0x01
+
 ///@addtogroup GET_INIT_DATA_FLAG
 /// Flags used in FUNC_ID_SERIAL_API_GET_INIT_DATA functionality
 /// @{
@@ -353,7 +357,7 @@
 #define FUNC_ID_SERIAL_API_READY                        0xEF  // This define is never used
 
 /* Allocated for proprietary serial API commands */
-#define FUNC_ID_PROPRIETARY_0                           0xF0
+#define FUNC_ID_PROPRIETARY_0                           0xF0 // Used for Host Hibernation commands
 #define FUNC_ID_PROPRIETARY_1                           0xF1
 #define FUNC_ID_PROPRIETARY_2                           0xF2
 #define FUNC_ID_PROPRIETARY_3                           0xF3

@@ -91,7 +91,7 @@ sl_status_t esl_lib_ap_control_cleanup(void);
 sl_status_t esl_lib_ap_control_adv_enable(bool enable);
 
 /**************************************************************************//**
- * Send respose to the remote device.
+ * Send response to the remote device.
  *
  * @param[in] data Pointer to data array.
  *
@@ -100,7 +100,7 @@ sl_status_t esl_lib_ap_control_adv_enable(bool enable);
 sl_status_t esl_lib_ap_control_response(esl_lib_long_array_t *data);
 
 /**************************************************************************//**
- * Send respose for Image Tranfer to the remote device.
+ * Send response for Image Transfer to the remote device.
  *
  * @param[in] data Pointer to data array.
  *

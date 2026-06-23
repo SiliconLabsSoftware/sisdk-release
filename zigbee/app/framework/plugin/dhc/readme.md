@@ -251,7 +251,7 @@ Update DHC protocol version (volatile, not persisted).
 
 **Example:**
 ```bash
-plugin dhc set-dhc-version 5
+plugin dhc set-dhc-version 1
 # Output: set-dhc-version -> 0x00000000
 ```
 

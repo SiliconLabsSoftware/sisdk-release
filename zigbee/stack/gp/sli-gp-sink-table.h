@@ -108,6 +108,7 @@ void sli_zigbee_gp_write_incoming_fc_in_sink_to_token(uint8_t index);
   (sli_zigbee_gp_sink_table[(index)].groupcastRadius)
 
 bool sli_zigbee_gp_address_match(const sl_zigbee_gp_address_t *a1, const sl_zigbee_gp_address_t *a2);
+void sli_zigbee_gp_load_sink_table_entry_key(uint8_t index);
 
 #ifdef __cplusplus
 }

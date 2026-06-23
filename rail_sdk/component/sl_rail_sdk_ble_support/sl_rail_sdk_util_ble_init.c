@@ -31,6 +31,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include "sl_rail.h"
 #include "sl_rail_ble.h" // for sl_rail_ble_state_t
 #include "sli_rail_util_callbacks.h" // for internal-only callback signatures
@@ -99,7 +100,7 @@ void sl_rail_sdk_util_init(void)
                         &sli_rail_util_on_rf_ready
                         );
   app_assert((NULL != sl_rail_sdk_handle),
-             "sl_rail_init failed, return value: %ld\n", status);
+             "sl_rail_init failed, return value: 0x%08" PRIX32 "\n", status);
 
 #if SL_RAIL_UTIL_INIT_DATA_FORMATS_BLE_ENABLE
   // data configuration for BLE
@@ -115,12 +116,12 @@ void sl_rail_sdk_util_init(void)
 
   status = sl_rail_config_tx_data(sl_rail_sdk_handle, &tx_data_config);
   app_assert((SL_RAIL_STATUS_NO_ERROR == status),
-             "sl_rail_config_tx_data failed, return value: %lu",
+             "sl_rail_config_tx_data failed, return value: 0x%08" PRIX32,
              status);
 
   status = sl_rail_config_rx_data(sl_rail_sdk_handle, &rx_data_config);
   app_assert((SL_RAIL_STATUS_NO_ERROR == status),
-             "sl_rail_config_rx_data failed, return value: %lu",
+             "sl_rail_config_rx_data failed, return value: 0x%08" PRIX32,
              status);
 
 #endif // SL_RAIL_UTIL_INIT_DATA_FORMATS_BLE_ENABLE
@@ -140,7 +141,7 @@ void sl_rail_sdk_util_init(void)
     if (channel != SL_RAIL_CHANNEL_INVALID) {
       status = sl_rail_prepare_channel(sl_rail_sdk_handle, channel);
       app_assert((SL_RAIL_STATUS_NO_ERROR == status),
-                 "sl_rail_prepare_channel failed, return value: %lu",
+                 "sl_rail_prepare_channel failed, return value: 0x%08" PRIX32,
                  status);
     }
   }
@@ -148,7 +149,7 @@ void sl_rail_sdk_util_init(void)
   status = sl_rail_sdk_util_ble_protocol_config(sl_rail_sdk_handle,
                                                 SL_RAIL_SDK_UTIL_INIT_PROTOCOL_INSTANCE_DEFAULT);
   app_assert((SL_RAIL_STATUS_NO_ERROR == status),
-             "sl_rail_util_protocol_config failed, return value: %lu",
+             "sl_rail_util_protocol_config failed, return value: 0x%08" PRIX32,
              status);
 #endif // SL_RAIL_UTIL_INIT_PROTOCOLS_BLE_ENABLE
 
@@ -160,7 +161,7 @@ void sl_rail_sdk_util_init(void)
                               | (SL_RAIL_UTIL_INIT_CALIBRATION_ONETIME_NOTIFY_BLE_ENABLE
                                  ? SL_RAIL_CAL_ONETIME : 0U));
   app_assert((SL_RAIL_STATUS_NO_ERROR == status),
-             "sl_rail_config_cal failed, return value: %lu",
+             "sl_rail_config_cal failed, return value: 0x%08" PRIX32,
              status);
 #endif // SL_RAIL_UTIL_INIT_CALIBRATIONS_BLE_ENABLE
 
@@ -170,7 +171,7 @@ void sl_rail_sdk_util_init(void)
                                  SL_RAIL_EVENTS_ALL,
                                  SL_RAIL_UTIL_INIT_EVENT_BLE_MASK);
   app_assert((SL_RAIL_STATUS_NO_ERROR == status),
-             "sl_rail_config_events failed, return value: %lu",
+             "sl_rail_config_events failed, return value: 0x%08" PRIX32,
              status);
 #endif // SL_RAIL_UTIL_INIT_EVENTS_BLE_ENABLE
 
@@ -187,12 +188,12 @@ void sl_rail_sdk_util_init(void)
   status = sl_rail_set_tx_transitions(sl_rail_sdk_handle,
                                       &tx_transitions);
   app_assert((SL_RAIL_STATUS_NO_ERROR == status),
-             "sl_rail_set_tx_transitions failed, return value: %lu",
+             "sl_rail_set_tx_transitions failed, return value: 0x%08" PRIX32,
              status);
   status = sl_rail_set_rx_transitions(sl_rail_sdk_handle,
                                       &rx_transitions);
   app_assert((SL_RAIL_STATUS_NO_ERROR == status),
-             "sl_rail_set_rx_transitions failed, return value: %lu",
+             "sl_rail_set_rx_transitions failed, return value: 0x%08" PRIX32,
              status);
 #endif // SL_RAIL_UTIL_INIT_TRANSITIONS_BLE_ENABLE
 #else // !SL_RAIL_UTIL_INIT_BLE_ENABLE

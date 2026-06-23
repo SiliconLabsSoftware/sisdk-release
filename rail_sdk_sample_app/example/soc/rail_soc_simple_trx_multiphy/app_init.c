@@ -32,7 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
-
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "sl_common.h"
 #include "sl_rail.h"
@@ -101,7 +101,7 @@ void rail_app_init(void)
 
   status = sl_rail_start_rx(rail_handle, DEFAULT_CHANNEL, NULL);
   if (status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_warning("After initialization sl_rail_start_rx() result: %lu\n ", status);
+    app_log_warning("After initialization sl_rail_start_rx() result: 0x%08" PRIX32 "\n ", status);
   }
 
   // CLI info message

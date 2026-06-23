@@ -361,6 +361,7 @@ class PHYS_Bluetooth_LE_Bobcat(IPhy):
                             phy_name=phy_name)
         model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.LE_1M
         self.Bluetooth_LE_Viterbi_base(phy, model)
+        model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.LE_1M
         return phy
 
     # BLE 2M Viterbi
@@ -438,6 +439,7 @@ class PHYS_Bluetooth_LE_Bobcat(IPhy):
                             phy_name=phy_name)
         model.vars.ble_feature.value_forced= model.vars.ble_feature.var_enum.LE_2M
         self.Bluetooth_LE_2M_Viterbi_base(phy, model)
+        model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.LE_2M
         return phy
 
     # BLE 1M TRecS + Viterbi
@@ -495,7 +497,6 @@ class PHYS_Bluetooth_LE_Bobcat(IPhy):
         phy.profile_outputs.MODEM_CGCLKSTOP_FORCEOFF.override = 56831
         phy.profile_outputs.MODEM_CTRL0_FRAMEDETDEL.override = 2
         phy.profile_outputs.MODEM_CTRL6_RXBRCALCDIS.override = 1
-        phy.profile_outputs.MODEM_PRE_BASE.override = 2
 
         # FRC Overrides
         phy.profile_outputs.FRC_AUTOCG_AUTOCGEN.override = 7
@@ -532,6 +533,7 @@ class PHYS_Bluetooth_LE_Bobcat(IPhy):
                             phy_name=phy_name)
         model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.LE_1M
         self.Bluetooth_LE_Viterbi_noDSA_halfrate_base(phy, model)
+        model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.LE_1M
 
         # PGBOBCATVALTEST-2122: 1 MHz BW, 1 dB df2 boost to deal with PA-VCO coupling for 20 dBm PA
         model.vars.synth_tx_mode.value_forced = model.vars.synth_tx_mode.var_enum.MODE1
@@ -544,6 +546,7 @@ class PHYS_Bluetooth_LE_Bobcat(IPhy):
                             phy_name=phy_name)
         model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.LE_1M
         self.Bluetooth_LE_Viterbi_noDSA_halfrate_base(phy, model)
+        model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.LE_1M
 
         phy.profile_inputs.if_frequency_hz.value = 1066666
         phy.profile_inputs.base_frequency_hz.value = long(917000000)
@@ -558,6 +561,7 @@ class PHYS_Bluetooth_LE_Bobcat(IPhy):
                             phy_name=phy_name)
         model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.LE_1M
         self.Bluetooth_LE_Viterbi_noDSA_base(phy, model)
+        model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.LE_1M
 
         # default bandwidth will cause halfrate unless forced
         phy.profile_inputs.adc_rate_mode.value = model.vars.adc_rate_mode.var_enum.FULLRATE
@@ -587,6 +591,7 @@ class PHYS_Bluetooth_LE_Bobcat(IPhy):
                             phy_name=phy_name)
         model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.LE_2M
         self.Bluetooth_LE_2M_Viterbi_noDSA_base(phy, model)
+        model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.LE_2M
 
         phy.profile_inputs.adc_rate_mode.value = model.vars.adc_rate_mode.var_enum.FULLRATE
         # 2M Full rate
@@ -759,6 +764,7 @@ class PHYS_Bluetooth_LE_Bobcat(IPhy):
                             phy_name=phy_name)
         model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.CODED_125K
         self.Bluetooth_LongRange_base(phy, model)
+        model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.CODED_125K
         return phy
 
     def PHY_Bluetooth_LongRange_NOdsa_125kbps(self, model, phy_name=None):
@@ -766,6 +772,7 @@ class PHYS_Bluetooth_LE_Bobcat(IPhy):
                             phy_name=phy_name)
         model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.CODED_125K
         self.Bluetooth_LongRange_base(phy, model)
+        model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.CODED_125K
         phy.profile_outputs.AGC_GAINRANGE_PNGAINSTEP.override = 4
         phy.profile_outputs.MODEM_LONGRANGE_LRBLEDSA.override = 0
         return phy
@@ -799,6 +806,7 @@ class PHYS_Bluetooth_LE_Bobcat(IPhy):
                             phy_name=phy_name)
         model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.CODED_500K
         self.Bluetooth_LongRange_500kbps_base(phy, model)
+        model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.CODED_500K
         return phy
 
     def PHY_Bluetooth_LongRange_NOdsa_500kbps(self, model, phy_name=None):
@@ -806,6 +814,7 @@ class PHYS_Bluetooth_LE_Bobcat(IPhy):
                             phy_name=phy_name)
         model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.CODED_500K
         self.Bluetooth_LongRange_500kbps_base(phy, model)
+        model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.CODED_500K
         phy.profile_outputs.AGC_GAINRANGE_PNGAINSTEP.override = 4
         phy.profile_outputs.MODEM_LONGRANGE_LRBLEDSA.override = 0
         return phy
@@ -815,6 +824,7 @@ class PHYS_Bluetooth_LE_Bobcat(IPhy):
     def PHY_Bluetooth_1M_Concurrent(self, model, phy_name=None):
         # Start with the BLE LR 125k PHY
         phy = self.PHY_Bluetooth_LongRange_dsa_125kbps(model, phy_name)
+        model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.CONCURRENT
         phy.profile_inputs.preamble_pattern.value = 0b10
         model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.CONCURRENT
 
@@ -876,6 +886,7 @@ class PHYS_Bluetooth_LE_Bobcat(IPhy):
         # bobcat uses half-rate PHY compared to Lynx, due to jitter and settling improvements
         # For Bobcat BLE 1M, use PHY_Bluetooth_1M_AOX_prod as there is no difference in TX SYNTH PLL BW
         phy = self.PHY_Bluetooth_LE_Viterbi_noDSA(model, phy_name='PHY_Bluetooth_1M_AOX')
+        model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.AOX_1M
         phy.profile_inputs.aox_enable.value = model.vars.aox_enable.var_enum.ENABLED
         model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.AOX_1M
         self.BLE_RX_AOX_CHF_Coeffs(phy, model)
@@ -898,6 +909,7 @@ class PHYS_Bluetooth_LE_Bobcat(IPhy):
         # For Bobcat BLE 2M, there are separate PHY_Bluetooth_2M_AOX_prod and PHY_Bluetooth_2M_prod to meet emissions
         # Both PHYs must support AoX RX, the difference is in the SYNTH PLL setting + shaping filter for TX
         phy = self.PHY_Bluetooth_LE_2M_Viterbi_noDSA_fullrate(model, phy_name)
+        model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.AOX_2M
         phy.profile_inputs.aox_enable.value = model.vars.aox_enable.var_enum.ENABLED
         model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.AOX_2M
         self.BLE_RX_AOX_CHF_Coeffs(phy, model)
@@ -948,77 +960,3 @@ class PHYS_Bluetooth_LE_Bobcat(IPhy):
         phy.profile_outputs.MODEM_CHFCOE15_SET1COEFF12.override = coeff[12]
         phy.profile_outputs.MODEM_CHFCOE16_SET1COEFF13.override = coeff[13]
         phy.profile_outputs.MODEM_CHFCOE16_SET1COEFF14.override = coeff[14]
-
-    def PHY_Bluetooth_1M_HADM(self, model, phy_name=None):
-        # https://confluence.silabs.com/display/BGHADM/Bobcat#Bobcat-PHYStrategy
-        # Only valid for 40 MHz
-        phy = self.PHY_Bluetooth_LE_Viterbi_noDSA_fullrate(model, phy_name=phy_name)
-        phy.profile_inputs.xtal_frequency_hz.value = 40000000
-        model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.HADM_1M
-        model.vars.adc_clock_mode.value_forced = model.vars.adc_clock_mode.var_enum.HFXOMULT
-
-        phy.profile_inputs.target_osr.value = 5
-
-        # Packet Inputs
-        phy.profile_inputs.frame_bitendian.value = model.vars.frame_bitendian.var_enum.LSB_FIRST
-        phy.profile_inputs.frame_length_type.value = model.vars.frame_length_type.var_enum.FIXED_LENGTH
-        phy.profile_inputs.payload_white_en.value = False
-        phy.profile_inputs.payload_crc_en.value = False
-
-        # Variable length includes header
-        phy.profile_inputs.header_en.value = False
-
-        # NOTE: Currently the 'header_include_crc' variable is not part of the
-        # profile inputs, so we can't set it here, instead we need to force the
-        # output for both FCDs (TX/RX).
-        phy.profile_outputs.FRC_FCD0_INCLUDECRC.override = 0
-        phy.profile_outputs.FRC_FCD2_INCLUDECRC.override = 0
-
-        # AFC at syncword via VTAFCFRAME. Disable feedback to SYNTH as frequency estimates may not be valid with UCAS
-        phy.profile_outputs.MODEM_REALTIMCFE_VTAFCFRAME.override = 1  # estimate from syncword
-        phy.profile_outputs.MODEM_AFC_AFCONESHOT.override = 0
-        phy.profile_outputs.MODEM_AFC_AFCRXMODE.override = 0  # no estimate from DSA
-        phy.profile_outputs.MODEM_AFCADJRX_AFCSCALEM.override = 0  # disable feedback to avoid updates during tracking cycle
-        phy.profile_outputs.MODEM_AFCADJRX_AFCSCALEE.override = 0
-
-        # needed for precise HADM event timing - HADM PHYs are 40 MHz only
-        phy.profile_outputs.rx_sync_delay_ns.override = 24000
-        phy.profile_outputs.rx_eof_delay_ns.override = 8000
-        phy.profile_outputs.tx_sync_delay_ns.override = 0
-        phy.profile_outputs.tx_eof_delay_ns.override = 0
-
-        return phy
-
-    def PHY_Bluetooth_2M_HADM(self, model, phy_name=None):
-        # https://confluence.silabs.com/display/BGHADM/Bobcat#Bobcat-PHYStrategy
-        # Only valid for 40 MHz
-        phy = self.PHY_Bluetooth_LE_2M_Viterbi_noDSA_fullrate(model, phy_name=phy_name)
-        phy.profile_inputs.xtal_frequency_hz.value = 40000000
-        model.vars.ble_feature.value_forced = model.vars.ble_feature.var_enum.HADM_2M
-        model.vars.adc_clock_mode.value_forced = model.vars.adc_clock_mode.var_enum.HFXOMULT
-
-        phy.profile_inputs.target_osr.value = 5
-
-        # Packet Inputs
-        phy.profile_inputs.frame_bitendian.value = model.vars.frame_bitendian.var_enum.LSB_FIRST
-        phy.profile_inputs.frame_length_type.value = model.vars.frame_length_type.var_enum.FIXED_LENGTH
-        phy.profile_inputs.payload_white_en.value = False
-        phy.profile_inputs.payload_crc_en.value = False
-
-        # Variable length includes header
-        phy.profile_inputs.header_en.value = False
-
-        # NOTE: Currently the 'header_include_crc' variable is not part of the
-        # profile inputs, so we can't set it here, instead we need to force the
-        # output for both FCDs (TX/RX).
-        phy.profile_outputs.FRC_FCD0_INCLUDECRC.override = 0
-        phy.profile_outputs.FRC_FCD2_INCLUDECRC.override = 0
-
-        # AFC at syncword via VTAFCFRAME. Disable feedback to SYNTH as frequency estimates may not be valid with UCAS
-        phy.profile_outputs.MODEM_REALTIMCFE_VTAFCFRAME.override = 1 # estimate from syncword
-        phy.profile_outputs.MODEM_AFC_AFCONESHOT.override = 0
-        phy.profile_outputs.MODEM_AFC_AFCRXMODE.override = 0 # no estimate from DSA
-        phy.profile_outputs.MODEM_AFCADJRX_AFCSCALEM.override = 0 # disable feedback to avoid updates during tracking cycle
-        phy.profile_outputs.MODEM_AFCADJRX_AFCSCALEE.override = 0
-
-        return phy

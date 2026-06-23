@@ -30,10 +30,11 @@ provides:
   allow_multiple: false
 requires:
 - name: status
-- name: dmadrv
-- name: hal_generic_gpio
-- name: hal_generic_prs
-- name: hal_generic_eusart
+- name: hal_eusart
+- name: hal_gpio
+- name: hal_ldma
+- name: hal_prs
+- name: dma_manager
 - name: clock_manager_runtime
 - name: slist
 - name: cpc_core

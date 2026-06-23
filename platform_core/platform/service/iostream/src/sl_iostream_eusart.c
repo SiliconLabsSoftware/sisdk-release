@@ -73,7 +73,6 @@
 #define GPIO_MODE_PUSH_PULL     gpioModePushPull
 #define GPIO_MODE_INPUT_PULL    gpioModeInputPull
 #define GPIO_MODE_DISABLED      gpioModeDisabled
-#define LDMA_PERIPH             LDMA
 #define EUSART_UART_INIT_HF     EUSART_UartInitHf
 #define EUSART_UART_INIT_LF     EUSART_UartInitLf
 #define EUSART_INT_ENABLE       EUSART_IntEnable
@@ -93,7 +92,6 @@
 #define GPIO_MODE_PUSH_PULL     SL_GPIO_MODE_PUSH_PULL
 #define GPIO_MODE_INPUT_PULL    SL_GPIO_MODE_INPUT_PULL
 #define GPIO_MODE_DISABLED      SL_GPIO_MODE_DISABLED
-#define LDMA_PERIPH             LDMA0
 #define EUSART_UART_INIT_HF     sl_hal_eusart_init_uart_hf
 #define EUSART_UART_INIT_LF     sl_hal_eusart_init_uart_lf
 #define EUSART_INT_ENABLE       sl_hal_eusart_enable_interrupts
@@ -301,7 +299,8 @@ static inline void init_hf_clocks(sl_iostream_eusart_config_t *eusart_config)
   #if defined(_SILICON_LABS_32B_SERIES_2_CONFIG_2) \
   || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_7)  \
   || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_9) \
-  || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_11)
+  || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_11) \
+  || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_14)
     #if defined(EUART_PRESENT)
   CMU_CLOCK_SELECT_SET(EUART0CLK, EM01GRPACLK);
     #elif defined(EUSART_PRESENT)
@@ -327,7 +326,8 @@ static inline void init_lf_clocks(sl_iostream_eusart_config_t *eusart_config)
   #if defined(_SILICON_LABS_32B_SERIES_2_CONFIG_2) \
   || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_7)  \
   || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_9) \
-  || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_11)
+  || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_11) \
+  || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_14)
   #if defined(EUART_PRESENT)
   CMU_CLOCK_SELECT_SET(EUART0CLK, EM23GRPACLK);
   #elif defined(EUSART_PRESENT)

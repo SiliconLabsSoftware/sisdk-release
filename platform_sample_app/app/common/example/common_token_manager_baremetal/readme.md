@@ -1,60 +1,49 @@
-# COMMON TOKEN MANAGER Bare Metal Application
+# Common Token Manager Bare-metal
 
-This example application demonstrates the use of Common Token Manager for series 2 devices. The application uses command line interface to execute operations which are given by user.
+This example demonstrates use of the CTM (Common Token Manager) interface. Use the CLI to write, read, and delete tokens.
 
-Users can give the following commands:
-NOTE: write_custom_static_token and read_custom_static_token automatically performs operations by using predefined tokens through the application itself. All other commands are interactive through CLI.
+## Table of Contents
 
-The below commands are just few of the operations. This can be expanded as required.
-If a new custom token is introduced (apart from what is already provided), then a corresponding size should also be defined.
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-* Write Custom Static Token (write_custom_static_token)
-Argument 0:
-0 - To write the custom static secure tokens
-1 - To write the custom static device tokens
+## Purpose / Scope
 
-* Read Custom Static Token (read_custom_static_token)
-Argument 0:
-0 - To read the custom static secure tokens
-1 - To read the custom static device tokens
+This bare-metal example shows how to use the Common Token Manager (CTM) for series 2 devices. The application uses the command line interface so you can write, read, and delete tokens. Commands include: write_custom_static_token, read_custom_static_token, write_dynamic_token, read_dynamic_token, delete_dynamic_token, write_counter_token, read_counter_token, increment_counter_token. See the application source and CLI help for arguments. Use this to integrate token management into your application.
 
-* Write Dynamic Token (write_dynamic_token)
-Argument 0:
-0 - To write a data object token
-1 - To write an override token created for static device tokens
-2 - To write an override token created for static secure tokens
-Argument 1:
-This argument is for the key.
-If argument 0 is either 1 or 2, the key should be less than 0xFFF.
-Argument 2:
-This argument is for providing data.
+## Prerequisites / Setup Requirements
 
-* Read Dynamic Token (read_dynamic_token)
-Argument 0:
-0 - To read a data object token
-1 - To read an override token created for static device tokens
-2 - To read an override token created for static secure tokens
-Argument 1:
-This argument is for providing a key which has already been entered else it will throw an error.
+**Hardware**
+- Silicon Labs board (series 2) with support for CTM and serial (VCOM).
 
-* Delete Dynamic Token (delete_dynamic_token)
-Argument 0:
-0 - To delete a dynamic token
-1 - To delete a static device override token
-2 - To delete a static secure override token
-Argument 1:
-This argument is for the key.
+**Software**
+- Simplicity Studio 5 (or later). A serial terminal to connect to VCOM.
 
-* Write Counter Token (write_counter_token)
-Argument 0:
-This argument is to specify the value that you want to set the counter to.
+## Steps to Run Demo
 
-* Read Counter Token (read_counter_token)
-No Arguments
+1. Open the project in Simplicity Studio and build it.
+2. Connect the kit via USB, flash and run.
+3. Open a serial terminal on the kit's VCOM port.
+4. Use the CLI commands to write, read, and delete tokens as needed.
 
-* Increment Counter Token (increment_counter_token)
-No Arguments
+## Troubleshooting
 
-## Requirements
+- **No VCOM or no CLI response:** Ensure the kit is connected and VCOM drivers are installed; confirm correct port and baud rate.
+- **Token errors:** Check token key/size and that the device supports the token types you use.
+- **Build errors:** Verify target part and that CTM/CLI components are correctly configured.
 
-Silicon Labs board
+## Resources
+
+- [Simplicity Studio 5 User's Guide](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/)
+- [Gecko Platform Documentation](https://docs.silabs.com/gecko-platform/latest/)
+- [Silicon Labs Community](https://www.silabs.com/community)
+
+## Report Bugs & Get Support
+
+You are encouraged to report issues and get help from the community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

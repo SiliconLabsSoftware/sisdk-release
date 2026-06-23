@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdlib.h>
+#include <inttypes.h>
 #include "app_menu.h"
 #include "sl_component_catalog.h"
 #include "sl_rail.h"
@@ -564,7 +565,7 @@ static menu_item_icon_t menu_set_phy_display(char *buff[])
   char pVal[15U];
   if (buff) {
     if (!is_current_phy_standard()) {
-      snprintf(pVal, sizeof(pVal), "custom_%u", (range_test_settings.current_phy));
+      snprintf(pVal, sizeof(pVal), "custom_%" PRIu8 "", (range_test_settings.current_phy));
     } else {
       print_standard_name(pVal, range_test_settings.current_phy);
     }
@@ -631,11 +632,11 @@ static menu_item_icon_t menu_set_rf_pa_display(char *buff[])
     power = sl_rail_get_tx_power_dbm(rail_handle);
     reqpower = range_test_settings.tx_power;
     snprintf(pVal, sizeof(pVal),
-             "%+i.%d/%+i.%ddBm",
-             (reqpower / 10),
-             (((reqpower > 0) ? (reqpower) : (-reqpower)) % 10),
-             (power / 10),
-             (((power > 0) ? (power) : (-power)) % 10));
+             "%+" PRId16 ".%" PRId16 "/%+" PRId16 ".%" PRId16 "dBm",
+             (int16_t)(reqpower / 10),
+             (int16_t)(((reqpower > 0) ? (reqpower) : (-reqpower)) % 10),
+             (int16_t)(power / 10),
+             (int16_t)(((power > 0) ? (power) : (-power)) % 10));
     *buff = menu_print("Power:", pVal);
   }
   return ICON_PLUS;
@@ -679,13 +680,13 @@ static menu_item_icon_t menu_set_rf_frequency_display(char *buff[])
 
     if (base_frequency % 1000000U) {
       snprintf(pVal, sizeof(pVal),
-               "%u.%02uMHz",
-               (uint16_t) (base_frequency / 1000000U),
-               (uint16_t) ((base_frequency % 1000000U) / 10000U));
+               "%" PRIu16 ".%" PRIu16 "MHz",
+               (uint16_t)(base_frequency / 1000000U),
+               (uint16_t)((base_frequency % 1000000U) / 10000U));
     } else {
       snprintf(pVal, sizeof(pVal),
-               "%uMHz",
-               (uint16_t) (base_frequency / 1000000U));
+               "%" PRIu16 "MHz",
+               (uint16_t)(base_frequency / 1000000U));
     }
 
     *buff = menu_print("Frequency:", pVal);
@@ -744,7 +745,7 @@ static menu_item_icon_t menu_set_channel_display(char *buff[])
   char pVal[10U];
 
   if (buff) {
-    snprintf(pVal, sizeof(pVal), "%u", range_test_settings.channel);
+    snprintf(pVal, sizeof(pVal), "%" PRIu16 "", range_test_settings.channel);
     *buff = menu_print("Channel number:", pVal);
   }
 
@@ -794,7 +795,7 @@ static menu_item_icon_t menu_set_packets_length_Display(char *buff[])
   char pVal[4U];
 
   if (buff) {
-    snprintf(pVal, sizeof(pVal), "%u", range_test_settings.payload_length);
+    snprintf(pVal, sizeof(pVal), "%" PRIu8 "", range_test_settings.payload_length);
     *buff = menu_print("Payload length:", pVal);
   }
 
@@ -845,7 +846,7 @@ static menu_item_icon_t menu_set_packets_repeat_number_display(char *buff[])
 
   if (buff) {
     if (range_test_settings.packets_repeat_number != RANGETEST_TX_REPEAT) {
-      snprintf(pVal, sizeof(pVal), "%u", range_test_settings.packets_repeat_number);
+      snprintf(pVal, sizeof(pVal), "%" PRIu16 "", range_test_settings.packets_repeat_number);
     }
     *buff = menu_print("Packet Count:",
                        (range_test_settings.packets_repeat_number != RANGETEST_TX_REPEAT) ? (pVal) : ("Repeat"));
@@ -889,7 +890,7 @@ static menu_item_icon_t menu_set_destination_id_display(char *buff[])
   char pVal[4U];
 
   if (buff) {
-    snprintf(pVal, sizeof(pVal), "%u", range_test_settings.destination_id);
+    snprintf(pVal, sizeof(pVal), "%" PRIu8 "", range_test_settings.destination_id);
     *buff = menu_print("Remote ID:", pVal);
   }
 
@@ -930,7 +931,7 @@ static menu_item_icon_t menu_set_source_id_display(char *buff[])
   char pVal[4U];
 
   if (buff) {
-    snprintf(pVal, sizeof(pVal), "%u", range_test_settings.source_id);
+    snprintf(pVal, sizeof(pVal), "%" PRIu8 "", range_test_settings.source_id);
     *buff = menu_print("Self ID:", pVal);
   }
 
@@ -974,7 +975,7 @@ static menu_item_icon_t menu_set_moving_average_window_display(char *buff[])
   char pVal[4U];
 
   if (buff) {
-    snprintf(pVal, sizeof(pVal), "%u", range_test_settings.moving_average_window_size);
+    snprintf(pVal, sizeof(pVal), "%" PRIu8 "", range_test_settings.moving_average_window_size);
     *buff = menu_print("MA Window size:", pVal);
   }
 

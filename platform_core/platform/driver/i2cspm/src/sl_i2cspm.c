@@ -85,7 +85,10 @@ void I2CSPM_Init(I2CSPM_Init_TypeDef *init)
 
   // Get the instance from port number.
   i2cInstance = I2C_NUM(init->port);
-  EFM_ASSERT(i2cInstance >= 0 && i2cInstance < I2C_COUNT);
+  if (i2cInstance < 0 || i2cInstance >= I2C_COUNT) {
+    EFM_ASSERT(false);
+    return;
+  }
 
   // Get the handle for this instance
   handle = &i2cDeviceHandle[i2cInstance];

@@ -1,0 +1,31 @@
+id: bootloader_core_nonsecure_base
+label: Bootloader Core (Non-Secure) Base
+package: bootloader
+description: >
+  Shared non-secure bootloader core sources (reset_ns, bootload_ns) and headers only.
+  Visible NS entry components (bootloader_core_nonsecure, custom_btl_tz_core_nonsecure) supply
+  TrustZone / interface integration requires, linker memory templates, and toolchain settings.
+  Does not include the non-secure entry main file.
+category: Platform|Bootloader|TrustZone NonSecure|Core
+quality: production
+ui_hints:
+  visibility: never
+source:
+- path: platform/bootloader/core/btl_reset_ns.c
+- path: platform/bootloader/core/btl_bootload_ns.c
+
+include:
+- path: platform/bootloader
+  file_list:
+  - path: core/btl_reset_ns.h
+  - path: core/btl_bootload_ns.h
+  - path: debug/btl_debug.h
+  - path: config/btl_config.h
+
+provides:
+- name: bootloader_core_nonsecure_base
+
+metadata:
+  sbom:
+    license: MSLA
+root_path: bootloader

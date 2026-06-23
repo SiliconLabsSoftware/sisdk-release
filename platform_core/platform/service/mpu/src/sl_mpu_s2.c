@@ -37,6 +37,10 @@
 #include "em_device.h"
 #include "sl_core.h"
 
+#if defined(SL_COMPONENT_CATALOG_PRESENT)
+#include "sl_component_catalog.h"
+#endif
+
 /*******************************************************************************
  *********************************   DEFINES   *********************************
  ******************************************************************************/
@@ -114,6 +118,7 @@ static uint32_t region_nbr = 0;
  *****************************************************************************/
 void sl_mpu_disable_execute_from_ram(void)
 {
+#if !defined(SL_RAM_LINKER)
   uint32_t mpu_region_begin = 0u;
   uint32_t mpu_region_end = 0u;
   uint32_t rbar;
@@ -156,6 +161,7 @@ void sl_mpu_disable_execute_from_ram(void)
 
   __DSB();
   __ISB();
+#endif // !defined(SL_RAM_LINKER)
 }
 
 /**************************************************************************//**
@@ -251,8 +257,11 @@ sl_status_t sl_mpu_disable_execute(uint32_t address_begin,
 }
 
 #if __CORTEX_M != (0u)
+#if !defined(SL_CATALOG_CRASH_MANAGER_COMPONENT_PRESENT)
 /**************************************************************************//**
  * MemManage default exception handler. Reset target.
+ * @note Omitted when Crash Manager is present; Crash Manager provides
+ * MemManage_Handler for fault capture and logging.
  *****************************************************************************/
 __WEAK void mpu_fault_handler(void)
 {
@@ -267,4 +276,5 @@ void MemManage_Handler(void)
 {
   mpu_fault_handler();
 }
+#endif
 #endif

@@ -283,17 +283,12 @@ void sl_wsncp_task_init(void)
   sl_wsncp_task_flags = osEventFlagsNew(&sl_wsncp_task_flags_attr);
   EFM_ASSERT(sl_wsncp_task_flags != NULL);
 
-  osThreadAttr_t sl_wsncp_task_attribute = {
-    "Wi-SUN NCP Task",
-    osThreadDetached,
-    NULL,
-    0,
-    NULL,
-    (SL_WSNCP_TASK_STACK_SIZE * sizeof(void *)) & 0xFFFFFFF8u,
-    SL_WSNCP_TASK_PRIORITY,
-    0,
-    0
-    };
+  const osThreadAttr_t sl_wsncp_task_attribute = {
+    .name = "Wi-SUN NCP Task",
+    .attr_bits = osThreadDetached,
+    .stack_size = (SL_WSNCP_TASK_STACK_SIZE * sizeof(void *)) & 0xFFFFFFF8u,
+    .priority = SL_WSNCP_TASK_PRIORITY
+  };
 
   sl_wsncp_task_id = osThreadNew(&sl_wsncp_task,
                                  NULL,

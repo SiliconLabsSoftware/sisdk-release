@@ -1,0 +1,56 @@
+id: bluetooth_peer_security
+package: bluetooth_le_middleware
+label: Bluetooth Peer Security
+description: >
+  Bluetooth Peer Security. Responsible for security of the Bluetooth connection.
+category: Bluetooth|Application|Miscellaneous
+metadata:
+  sbom:
+    license: Zlib
+quality: experimental
+root_path: bluetooth_le_middleware/common/bluetooth_peer_security
+include:
+- path: inc
+  file_list:
+  - path: sl_bt_peer_security.h
+  - path: sli_bt_peer_security.h
+source:
+- path: src/sl_bt_peer_security.c
+requires:
+- name: app_log
+- name: bluetooth_api
+- name: bluetooth_feature_system
+  condition:
+  - device_cortexm
+- name: bluetooth_feature_sm
+  condition:
+  - device_cortexm
+- name: app_rta
+provides:
+- name: bluetooth_peer_security
+config_file:
+- path: config/sl_bt_peer_security_config.h
+documentation:
+  docset: bluetooth
+  document: bluetooth-service-api/sl_bt_peer_security
+template_contribution:
+- name: component_catalog
+  value: bluetooth_peer_security
+- name: event_handler
+  value:
+    event: internal_app_init
+    include: sli_bt_peer_security.h
+    handler: sli_bt_peer_security_init
+- name: event_handler
+  value:
+    event: bluetooth_on_event
+    include: sli_bt_peer_security.h
+    function: sli_bt_peer_security_on_bt_event
+- name: app_rta_init
+  value:
+    include: sli_bt_peer_security.h
+    handler: sli_bt_peer_security_rta_init
+- name: app_rta_ready
+  value:
+    include: sli_bt_peer_security.h
+    handler: sli_bt_peer_security_rta_ready

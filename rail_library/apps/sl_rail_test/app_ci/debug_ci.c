@@ -826,7 +826,7 @@ static char pinForOFDMPRSSignal[OFDM_PRS_SIGNAL_COUNT][5];
 #define PRESENT_SYNCSENT_PRS_SIGNAL_AVAILABLE         '\0'
 
 // Set and clear addresses for MODEM_PRSCTRL register
-#if ((_SILICON_LABS_32B_SERIES_2_CONFIG == 7) || (_SILICON_LABS_32B_SERIES_2_CONFIG == 9))
+#if ((_SILICON_LABS_32B_SERIES_2_CONFIG == 7) || (_SILICON_LABS_32B_SERIES_2_CONFIG == 9) || (_SILICON_LABS_32B_SERIES_2_CONFIG == 11))
 static uint32_t *prsctrlAddress = (uint32_t*)0xB8014240UL,
                 *prsctrlSetAddress = (uint32_t*)0xB8015240UL,
                 *prsctrlClrAddress = (uint32_t*)0xB8016240UL;
@@ -1358,16 +1358,23 @@ void forceAssert(sl_cli_command_arg_t * args)
 
 void configPrintEvents(sl_cli_command_arg_t * args)
 {
+  sl_rail_events_t enabledEvents;
+  if ((railHandle == NULL) || (railHandle == SL_RAIL_EFR32_HANDLE)) {
+    enabledEvents = SL_RAIL_EVENTS_NONE;
+  } else {
+    enabledEvents = sl_rail_get_events_config(railHandle);
+  }
   if (sl_cli_get_argument_count(args) == 0) {
-    responsePrintHeader(sl_cli_get_command_string(args, 0), "name:%s,shift:%u,mask:%x%08x,printEnabled:%s");
+    responsePrintHeader(sl_cli_get_command_string(args, 0), "shift:%2u,maskLH:0x%08x 0x%08x,print:%5s,enabled:%2s,name:%s");
     for (uint32_t i = 0; i < numRailEvents; i++) {
       uint64_t mask = 1ULL << i;
-      responsePrintMulti("name:SL_RAIL_EVENT_%s,shift:%u,mask:0x%x%08x,printEnabled:%s",
-                         eventNames[i],
+      responsePrintMulti("shift:%2u,maskLH:0x%08x 0x%08x,print:%5s,enabled:%2s,name:SL_RAIL_EVENT_%s",
                          i,
-                         (uint32_t)(mask >> 32),
                          (uint32_t)(mask),
-                         (mask & enablePrintEvents) ? "True" : "False");
+                         (uint32_t)(mask >> 32),
+                         (mask & enablePrintEvents) ? "print" : "",
+                         (mask & enabledEvents) ? "on" : "",
+                         eventNames[i]);
     }
     return;
   }
@@ -1389,9 +1396,12 @@ void configPrintEvents(sl_cli_command_arg_t * args)
   enablePrintEvents = (enablePrintEvents & ~printEventsMask)
                       | (printEvents & printEventsMask);
 
-  responsePrint(sl_cli_get_command_string(args, 0), "enablePrintEvents:0x%x%08x",
+  responsePrint(sl_cli_get_command_string(args, 0),
+                "printLH:0x%08x 0x%08x,enabLH:0x%08x 0x%08x",
+                (uint32_t)(enablePrintEvents),
                 (uint32_t)(enablePrintEvents >> 32),
-                (uint32_t)(enablePrintEvents));
+                (uint32_t)(enabledEvents),
+                (uint32_t)(enabledEvents >> 32));
 }
 
 void printTxAcks(sl_cli_command_arg_t * args)

@@ -32,7 +32,7 @@ extern "C" {
  * @return SL_STATUS_OK if the initialization was successful; Other error code
  *   indicates a failure.
  */
-sl_status_t sl_bt_stack_init();
+sl_status_t sl_bt_stack_init(void);
 
 /**
  * @brief Make permanent memory allocations for the Bluetooth stack.

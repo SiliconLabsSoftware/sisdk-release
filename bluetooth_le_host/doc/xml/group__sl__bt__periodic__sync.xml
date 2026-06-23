@@ -6,6 +6,47 @@
     <innergroup refid="group__sl__bt__evt__periodic__sync__opened">sl_bt_evt_periodic_sync_opened</innergroup>
     <innergroup refid="group__sl__bt__evt__periodic__sync__transfer__received">sl_bt_evt_periodic_sync_transfer_received</innergroup>
     <innergroup refid="group__sl__bt__evt__periodic__sync__report">sl_bt_evt_periodic_sync_report</innergroup>
+      <sectiondef kind="enum">
+      <memberdef kind="enum" id="group__sl__bt__periodic__sync_1gaa1f741a2a7b46593e4f3f5b5fa40fc8e" prot="public" static="no" strong="no">
+        <type></type>
+        <name>sl_bt_periodic_sync_data_status_t</name>
+        <enumvalue id="group__sl__bt__periodic__sync_1ggaa1f741a2a7b46593e4f3f5b5fa40fc8ea7ed1b0a919198530ded6bec6f3357b94" prot="public">
+          <name>sl_bt_periodic_sync_data_status_complete</name>
+          <initializer>= 0x0</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+<para>(0x0) All data of the periodic advertisement has been reported. </para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="group__sl__bt__periodic__sync_1ggaa1f741a2a7b46593e4f3f5b5fa40fc8eac7b8f000ada4e7cf5ffc85fdd4952cf9" prot="public">
+          <name>sl_bt_periodic_sync_data_status_incomplete_more</name>
+          <initializer>= 0x1</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+<para>(0x1) Data of the periodic advertisement is incomplete in this event, and more data will come in new events. </para>
+          </detaileddescription>
+        </enumvalue>
+        <enumvalue id="group__sl__bt__periodic__sync_1ggaa1f741a2a7b46593e4f3f5b5fa40fc8ea42d110945bf35b364a6d6c2918893163" prot="public">
+          <name>sl_bt_periodic_sync_data_status_incomplete_nomore</name>
+          <initializer>= 0x2</initializer>
+          <briefdescription>
+          </briefdescription>
+          <detaileddescription>
+<para>(0x2) Data of the periodic advertisement is incomplete in this event, but no more data will come, i.e., the data of the periodic advertisement is truncated. </para>
+          </detaileddescription>
+        </enumvalue>
+        <briefdescription>
+<para>Defines the data completeness status types of periodic advertisements. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="5485" column="1" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="5486" bodyend="5511"/>
+      </memberdef>
+      </sectiondef>
     <briefdescription>
 <para>Periodic Advertising without responses Synchronization. </para>
     </briefdescription>

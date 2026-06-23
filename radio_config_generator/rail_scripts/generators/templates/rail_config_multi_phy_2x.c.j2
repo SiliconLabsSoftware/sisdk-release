@@ -4,6 +4,9 @@
 {% block content -%}
 #include "em_device.h"
 #include "{{filename}}.h"
+{%- if rail_secondary_config and series == 3 %}
+#include "sl_code_classification.h"
+{%- endif %}
 {%- if not rail_secondary_config %}
 {%- if multiPhyConfig.commonStructures.convDecodeBufferSize > 0 %}
 
@@ -43,11 +46,13 @@ void RAILCb_ConfigFrameTypeLength(RAIL_Handle_t railHandle,
 {% endif %}
 {%- endfor %}
 {%- for frameTypeEntryName, frameTypeEntry in multiPhyConfig.commonStructures.frameTypeEntries.items() %}
+{{storeInRam()-}}
 static RAIL_FrameType_t {{frameTypeEntryName}} = {
   (uint16_t *)&{{frameTypeEntry.frameLen.value._uniqueName}}[0], {{frameTypeEntry.offset}}, {{frameTypeEntry.mask}}, {{frameTypeEntry.isValid|listToHexEncoding}}, {{frameTypeEntry.addressFilter|listToHexEncoding}}
 };
 {% endfor %}
 {%- for lookupTableEntryName, lookupTableEntry in multiPhyConfig.commonStructures.lookupTableEntries.items() %}
+{{storeInRam()-}}
 uint32_t {{lookupTableEntry['tableName']}}[] = {
   {%- for items in lookupTableEntry['values']|batch(4) %}
   {{ items|join(", ") -}},
@@ -55,6 +60,7 @@ uint32_t {{lookupTableEntry['tableName']}}[] = {
 };
 {% endfor %}
 {%- for irCalConfigEntryName, irCalConfigEntry in multiPhyConfig.commonStructures.irCalConfigEntries.items() %}
+{{storeInRam()-}}
 static const uint8_t {{irCalConfigEntryName}}[] = {
   {{irCalConfigEntry|length}}{{", "}}
   {%- for value in irCalConfigEntry[:-1] -%}
@@ -74,6 +80,7 @@ __ALIGNED(4) static const uint8_t {{txIrCalConfigEntryName}}[{{txIrCalConfigEntr
 {% endfor %}
 {%- if multiPhyConfig.commonStructures.rffpllConfigEntries.items() %}
 {%- for rffpllConfigEntryName, rffpllConfigEntry in multiPhyConfig.commonStructures.rffpllConfigEntries.items() %}
+{{storeInRam()-}}
 static const uint32_t {{rffpllConfigEntryName}}[] = {
   {% for value in rffpllConfigEntry[:-1] -%}
     {{ value|int}}{{", "}}
@@ -82,6 +89,7 @@ static const uint32_t {{rffpllConfigEntryName}}[] = {
 };
 {% endfor %}
 {% if not rail_internal -%}
+{{storeInRam()-}}
 const RAIL_RffpllConfig_t *radioConfigRffpllConfig = (RAIL_RffpllConfig_t *) {{(multiPhyConfig.commonStructures.rffpllConfigEntries.items()|list)[0][0]}};
 {%- endif %}
 {% endif %}
@@ -99,6 +107,7 @@ static const uint16_t {{modemTxCompensationName}}[{{modemTxCompensationEntry|len
 #endif
 {% endif -%}
 {%- for dcdcRetimingConfigEntryName, dcdcRetimingConfigEntry in multiPhyConfig.commonStructures.dcdcRetimingConfigEntries.items() %}
+{{storeInRam()-}}
 static const uint8_t {{dcdcRetimingConfigEntryName}}[] = {
   {{dcdcRetimingConfigEntry|length}}{{", "}}
   {%- for value in dcdcRetimingConfigEntry[:-1] -%}
@@ -108,6 +117,7 @@ static const uint8_t {{dcdcRetimingConfigEntryName}}[] = {
 };
 {% endfor %}
 {%- for timingConfigEntryName, timingConfigEntry in multiPhyConfig.commonStructures.timingConfigEntries.items() %}
+{{storeInRam()-}}
 static const int32_t {{timingConfigEntryName}}[] = {
   {% for value in timingConfigEntry[:-1] -%}
     {{ value|int}}{{", "}}
@@ -117,6 +127,7 @@ static const int32_t {{timingConfigEntryName}}[] = {
 {% endfor %}
 {%- for newHfxoRetimingConfigEntryName, newHfxoRetimingConfigEntry in multiPhyConfig.commonStructures.hfxoRetimingTableEntries.items() -%}
 {# comment newHfxoRetimingConfigEntryName #}
+{{storeInRam()-}}
 __ALIGNED(4) static const uint8_t {{newHfxoRetimingConfigEntryName}}[] = {
   {{((newHfxoRetimingConfigEntry.hfxoRetimingInfoConfigEntries | length) | int )}}{{", 0, 0, 0, "}}
   {%- for hfxoRetimingInfoConfigEntryName, hfxoRetimingInfoConfigEntry in newHfxoRetimingConfigEntry.hfxoRetimingInfoConfigEntries.items() %}
@@ -148,6 +159,7 @@ __ALIGNED(4) static const uint8_t {{newHfxoRetimingConfigEntryName}}[] = {
 {%- if multiPhyConfig.commonStructures.stackInfoEntries.items() %}
 #ifdef RADIO_CONFIG_ENABLE_STACK_INFO
 {%- for stackInfoName, stackInfoEntry in multiPhyConfig.commonStructures.stackInfoEntries.items() %}
+{{storeInRam()-}}
 __ALIGNED(4) static const uint8_t {{stackInfoName}}[{{stackInfoEntry|length}}] = {
 {%- for element in stackInfoEntry[:-1] -%}
   {{" 0x{0[0]:02x}, ".format(element | split32)}}
@@ -159,6 +171,7 @@ __ALIGNED(4) static const uint8_t {{stackInfoName}}[{{stackInfoEntry|length}}] =
 {% endif %}
 
 {%- for entryName, entry in multiPhyConfig.commonStructures.railChannelConfigEntryAttrEntries.items() %}
+{{storeInRam()-}}
 static RAIL_ChannelConfigEntryAttr_t {{entryName}} = {
 #if RAIL_SUPPORTS_OFDM_PA
   {
@@ -203,6 +216,7 @@ static RAIL_ChannelConfigEntryAttr_t {{entryName}} = {
 };
 {% endfor %}
 {%- for phyInfoEntryName, phyInfoEntry in multiPhyConfig.commonStructures.phyInfoEntries.items() %}
+{{storeInRam()-}}
 static const uint32_t {{phyInfoEntryName}}[] = {
   {{phyInfoEntry.phyInfoData.version}}UL,
   {{"0x{:08X}".format(phyInfoEntry.phyInfoData.freqOffsetFactor_fxp)}}UL, // {{phyInfoEntry.phyInfoData.freqOffsetFactor}}
@@ -264,6 +278,7 @@ static const uint32_t {{phyInfoEntryName}}[] = {
 };
 {% endfor %}
 {%- for modemConfigName, modemConfig in multiPhyConfig.commonStructures.modemConfigEntriesBase.items() %}
+{{storeInRam()-}}
 const uint32_t {{modemConfigName}}[] = {
 {%- for entryName, entry in modemConfig.items() %}
   {%- set firstValue = entry.encodedValues|first %}
@@ -287,6 +302,7 @@ const uint32_t {{modemConfigName}}[] = {
 {% endfor %}
 
 {%- for modemConfigName, modemConfig in multiPhyConfig.commonStructures.modemConfigEntries.items() %}
+{{storeInRam()-}}
 const uint32_t {{modemConfigName}}[] = {
 {%- for entryName, entry in modemConfig.items() %}
   {%- set firstValue = entry.encodedValues|first %}
@@ -310,6 +326,7 @@ const uint32_t {{modemConfigName}}[] = {
 {% endfor %}
 
 {%- for modemConfigName, modemConfig in multiPhyConfig.commonStructures.modemConfigEntriesSubtract.items() %}
+{{storeInRam()-}}
 const uint32_t {{modemConfigName}}[] = {
 {%- for entryName, entry in modemConfig.items() %}
   {%- set firstValue = entry.encodedValues|first %}
@@ -332,6 +349,7 @@ const uint32_t {{modemConfigName}}[] = {
 };
 {% endfor %}
 {%- for entryName, entry in multiPhyConfig.commonStructures.railAlternatePhyEntries.items() %}
+{{storeInRam()-}}
 static const RAIL_AlternatePhy_t {{entryName}} = {
   .baseFrequency = {{entry.baseFrequency|int}}UL,
   .channelSpacing = {{entry.channelSpacing|int}}UL,
@@ -344,6 +362,7 @@ static const RAIL_AlternatePhy_t {{entryName}} = {
 };
 {% endfor %}
 {%- for multiPhyConfigEntryName, multiPhyConfigEntry in multiPhyConfig.multiPhyConfigEntries.items() %}
+{{storeInRam()-}}
 const RAIL_ChannelConfigEntry_t {{multiPhyConfigEntryName}}_channels[] = {
   {%- for entryName, entry in multiPhyConfigEntry.channelConfigEntries.items() %}
   {
@@ -375,6 +394,7 @@ const RAIL_ChannelConfigEntry_t {{multiPhyConfigEntryName}}_channels[] = {
 };
 {% endfor %}
 {%- for multiPhyConfigEntryName, multiPhyConfigEntry in multiPhyConfig.multiPhyConfigEntries.items() %}
+{{storeInRam()-}}
 const RAIL_ChannelConfig_t {{multiPhyConfigEntryName}}_channelConfig = {
   .phyConfigBase = {{(multiPhyConfigEntry.channelConfig.modemConfigBase._uniqueName)}},
   .phyConfigDeltaSubtract = {{multiPhyConfigEntry.channelConfig.modemConfigDeltaSubtract._uniqueName|default("NULL")}},
@@ -385,6 +405,7 @@ const RAIL_ChannelConfig_t {{multiPhyConfigEntryName}}_channelConfig = {
 };
 {% endfor %}
 {%- if not rail_internal %}
+{{storeInRam()-}}
 const RAIL_ChannelConfig_t *channelConfigs[] = {
 {%- for multiPhyConfigEntryName, multiPhyConfigEntry in multiPhyConfig.multiPhyConfigEntries.items() %}
   &{{multiPhyConfigEntryName}}_channelConfig,

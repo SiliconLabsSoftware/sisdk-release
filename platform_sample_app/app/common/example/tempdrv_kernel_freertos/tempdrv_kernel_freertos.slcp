@@ -38,6 +38,7 @@ configuration:
     value: 1
 tag:
   - hardware:component:exp_header:spi
+  - hwfilter:board:simple_led:led0
 readme:
   - path: readme.md
 ui_hints:

@@ -1,7 +1,7 @@
 /***************************************************************************//**
  * @file
  * @brief Provides API to create and configure HCI event filter for filtering
- * Extended Advertisment Reports using RSSI and UUID.
+ * Extended Advertisement Reports using RSSI and UUID.
  *******************************************************************************
  * # License
  * <b>Copyright 2024 Silicon Laboratories Inc. www.silabs.com</b>
@@ -39,7 +39,7 @@
 // -----------------------------------------------------------------------------
 
 // Status codes defined in Bluetooth spec
-#define BT_OK             0 // Command was succesful
+#define BT_OK             0 // Command was successful
 #define BT_ERR_INVALID 0x12 // Used as a generic error
 
 #define HCI_EVENT_LE_META_EVENT 0x3e
@@ -59,7 +59,7 @@
 
 #define HCI_ADV_REPORT_MAX_DATA_LEN 229
 
-// Structure replicating HCI Event packet with Extended Advertisment Report
+// Structure replicating HCI Event packet with Extended Advertisement Report
 SL_PACK_START(1)
 typedef struct {
   uint8_t sub_event_code;
@@ -95,7 +95,7 @@ static bool hci_configure_filter_command(struct sl_btctrl_hci_message *hcimsg);
  * @param event is a pointer to sl_btctrl_hci_event structure containing the
  * HCI event
  * @returns Returns SL_BTCTRL_HCI_EVENT_FILTER_STATUS_EVENT_ACCEPT if event's
- * RSSI value is equal or larger than confiured RSSI threshold value.
+ * RSSI value is equal or larger than configured RSSI threshold value.
  ******************************************************************************/
 static enum sl_btctrl_hci_event_filter_status filter_by_rssi(
   struct sl_btctrl_hci_event *event);
@@ -126,10 +126,10 @@ static bool filter_service_data_uuid(uint8_t uuid_size,
  * @params ad_data pointer to AD structure's data (AD Data field)
  * @params uuid_array_length lengtht of the UUID array
  * @params uuid_array pointer to UUID array to compare
- * @returns Returns true if matcing Service Class UUID is found in the Service
+ * @returns Returns true if matching Service Class UUID is found in the Service
  * Class UUID List
  *
- * Function goes trough AD structure's Incomplete/Complete list of Service
+ * Function goes through AD structure's Incomplete/Complete list of Service
  * Class UUIDs and compares them with UUIDs provided in the UUID array by the
  * filter.
  ******************************************************************************/
@@ -178,7 +178,7 @@ static enum sl_btctrl_hci_event_filter_status filter_32bit_list(uint8_t ad_len,
                                                                 uint8_t *ad_data);
 
 /*******************************************************************************
- * Goes trough a event's AD Structure and filters AD structure if no matching
+ * Goes through an event's AD Structure and filters AD structure if no matching
  * UUIDs are found
  *
  * @params ad_len length of the AD Structure
@@ -209,10 +209,10 @@ static enum sl_btctrl_hci_event_filter_status filter_by_uuid(
 // Handler used for registering hci_configure_filter_command function
 static sl_btctrl_command_handler_t hci_command_handler;
 
-// Event handler structure used for initialzing callback funtion for RSSI filtering
+// Event handler structure used for initializing callback function for RSSI filtering
 static sl_btctrl_hci_event_handler_t filter_by_rssi_handler;
 
-// Event handler structure used for initialzing callback function for UUID filtering
+// Event handler structure used for initializing callback function for UUID filtering
 static sl_btctrl_hci_event_handler_t filter_by_uuid_handler;
 
 struct sli_btctrl_hci_event_uuid {
@@ -228,7 +228,7 @@ struct sli_btctrl_hci_event_filter {
 };
 
 // Internal filter structure used for filtering
-// This structure is modifed with sl_btctrl_hci_event_configure_filtering function
+// This structure is modified with sl_btctrl_hci_event_configure_filtering function
 static struct sli_btctrl_hci_event_filter hci_event_filter;
 
 #define WORK_MEMORY (SL_BT_HCI_FILTER_16BIT_UUID_ARRAY_LEN   \
@@ -243,7 +243,7 @@ struct sli_work_filter {
 } SL_ATTRIBUTE_PACKED work_filter;
 SL_PACK_END()
 
-// Variable to indicate if we have received an incomplete advertisment report
+// Variable to indicate if we have received an incomplete advertisement report
 static bool advertisment_report_incomplete = false;
 
 // -----------------------------------------------------------------------------
@@ -282,14 +282,14 @@ sl_status_t sl_btctrl_hci_event_configure_filtering(
     }
   }
 
-  // copy the lenght of the 16-bit uuid array, which should be the first
+  // copy the length of the 16-bit uuid array, which should be the first
   // byte of the uuid_data
   uint8_t uuid16_list_length = user_filter->data[0];
   if (uuid16_list_length > SL_BT_HCI_FILTER_16BIT_UUID_ARRAY_LEN) {
     return SL_STATUS_INVALID_PARAMETER;
   }
 
-  // copy the lenght of the 32-bit uuid array, which should be the first
+  // copy the length of the 32-bit uuid array, which should be the first
   // byte after the 16-bit uuid array of the uuid_data
   uint8_t uuid32_list_length = user_filter->data[uuid16_list_length + 1];
   if (uuid32_list_length > SL_BT_HCI_FILTER_32BIT_UUID_ARRAY_LEN) {

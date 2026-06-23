@@ -1,0 +1,247 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 25,
+        "patch": 0
+    },
+    "include": [
+        "base.json"
+    ],
+    "configurePresets": [
+        {
+            "hidden": true,
+            "name": "variant-core",
+            "cacheVariables": {
+                "SLED_VARIANT_MODE": "core"
+            }
+        },
+        {
+            "hidden": true,
+            "name": "variant-architecture",
+            "cacheVariables": {
+                "SLED_VARIANT_MODE": "architecture"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-core"],
+            "name": "variant-native",
+            "displayName": "Native variant",
+            "description": "",
+            "cacheVariables": {
+                "SLED_VARIANT": "native"
+            },
+            "environment": {
+                "SLED_VARIANT": "native",
+                "SLED_TOOLCHAIN_ARCH": "native"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-core"],
+            "name": "variant-arm32v7",
+            "displayName": "ARM32V7 variant",
+            "description": "",
+            "cacheVariables": {
+                "SLED_VARIANT": "arm32v7"
+            },
+            "environment": {
+                "SLED_VARIANT": "arm32v7",
+                "SLED_TOOLCHAIN_ARCH": "native"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-core"],
+            "name": "variant-arm64v8",
+            "displayName": "ARM64V8 variant",
+            "description": "",
+            "cacheVariables": {
+                "SLED_VARIANT": "arm64v8"
+            },
+            "environment": {
+                "SLED_VARIANT": "arm64v8",
+                "SLED_TOOLCHAIN_ARCH": "native"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-core"],
+            "name": "variant-i386",
+            "displayName": "I386 variant",
+            "description": "",
+            "cacheVariables": {
+                "SLED_VARIANT": "i386"
+            },
+            "environment": {
+                "SLED_VARIANT": "i386",
+                "SLED_TOOLCHAIN_ARCH": "native"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-core"],
+            "name": "variant-x86-64",
+            "displayName": "X86-64 variant",
+            "description": "",
+            "cacheVariables": {
+                "SLED_VARIANT": "x86-64"
+            },
+            "environment": {
+                "SLED_VARIANT": "x86-64",
+                "SLED_TOOLCHAIN_ARCH": "native"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-core"],
+            "name": "variant-cortex-m0plus",
+            "displayName": "Cortex-M0+ variant",
+            "description": "",
+            "cacheVariables": {
+                "SLED_VARIANT": "cortex-m0plus"
+            },
+            "environment": {
+                "SLED_VARIANT": "cortex-m0plus",
+                "SLED_TOOLCHAIN_ARCH": "arm"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-core"],
+            "name": "variant-cortex-m3",
+            "displayName": "Cortex-M3 variant",
+            "description": "",
+            "cacheVariables": {
+                "SLED_VARIANT": "cortex-m3"
+            },
+            "environment": {
+                "SLED_VARIANT": "cortex-m3",
+                "SLED_TOOLCHAIN_ARCH": "arm"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-core"],
+            "name": "variant-cortex-m4",
+            "displayName": "Cortex-M4 variant",
+            "description": "",
+            "cacheVariables": {
+                "SLED_VARIANT": "cortex-m4"
+            },
+            "environment": {
+                "SLED_VARIANT": "cortex-m4",
+                "SLED_TOOLCHAIN_ARCH": "arm"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-core"],
+            "name": "variant-cortex-m33",
+            "displayName": "Cortex-M33 variant",
+            "description": "",
+            "cacheVariables": {
+                "SLED_VARIANT": "cortex-m33"
+            },
+            "environment": {
+                "SLED_VARIANT": "cortex-m33",
+                "SLED_TOOLCHAIN_ARCH": "arm"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-core"],
+            "name": "variant-cortex-m55",
+            "displayName": "Cortex-M55 variant",
+            "description": "",
+            "cacheVariables": {
+                "SLED_VARIANT": "cortex-m55"
+            },
+            "environment": {
+                "SLED_VARIANT": "cortex-m55",
+                "SLED_TOOLCHAIN_ARCH": "arm"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-core"],
+            "name": "variant-cv32e40p",
+            "displayName": "OpenHW CV32E40P variant",
+            "description": "",
+            "cacheVariables": {
+                "SLED_VARIANT": "cv32e40p"
+            },
+            "environment": {
+                "SLED_VARIANT": "cv32e40p",
+                "SLED_TOOLCHAIN_ARCH": "riscv"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-core"],
+            "name": "variant-cv32e40x-lpw0",
+            "displayName": "OpenHW CV32E40X variant for LPW0 (RV32IMC + extensions)",
+            "description": "",
+            "cacheVariables": {
+                "SLED_VARIANT": "cv32e40x-lpw0"
+            },
+            "environment": {
+                "SLED_VARIANT": "cv32e40x-lpw0",
+                "SLED_TOOLCHAIN_ARCH": "riscv"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-core"],
+            "name": "variant-cv32e40x-lpw1",
+            "displayName": "OpenHW CV32E40X variant for LPW1 (RV32EC + extensions)",
+            "description": "",
+            "cacheVariables": {
+                "SLED_VARIANT": "cv32e40x-lpw1"
+            },
+            "environment": {
+                "SLED_VARIANT": "cv32e40x-lpw1",
+                "SLED_TOOLCHAIN_ARCH": "riscv"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-core"],
+            "name": "variant-cv32e40s-se",
+            "displayName": "OpenHW CV32E40S variant for SE (RV32IMC + extensions)",
+            "description": "",
+            "cacheVariables": {
+                "SLED_VARIANT": "cv32e40s-se"
+            },
+            "environment": {
+                "SLED_VARIANT": "cv32e40s-se",
+                "SLED_TOOLCHAIN_ARCH": "riscv"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-architecture"],
+            "name": "variant-rv32",
+            "displayName": "RISC-V 32-bit architecture variant",
+            "description": "RV32 architecture variant. Users must set the SLED_VARIANT_ARCH and SLED_VARIANT_ABI cache variables.",
+            "cacheVariables": {
+                "SLED_VARIANT": "rv32"
+            },
+            "environment": {
+                "SLED_VARIANT": "rv32",
+                "SLED_TOOLCHAIN_ARCH": "riscv"
+            }
+        },
+        {
+            "hidden": true,
+            "inherits": ["variant-core"],
+            "name": "variant-cross",
+            "displayName": "Generic cross compiler variant",
+            "description": "",
+            "environment": {
+                "SLED_TOOLCHAIN_ARCH": "cross"
+            }
+        }
+    ]
+}

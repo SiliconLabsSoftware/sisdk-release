@@ -28,12 +28,11 @@
  ******************************************************************************/
 
 #include <stdint.h>
+#include <sl_btctrl_linklayer.h>
 #include <sl_core.h>
 #include <em_device.h>
 
 static uint32_t sli_btctrl_events;
-
-void BTLE_LL_Process(uint32_t events);
 
 void PendSV_Handler(void)
 {
@@ -45,7 +44,7 @@ void PendSV_Handler(void)
   sli_btctrl_events = 0;
   CORE_EXIT_ATOMIC();
 
-  BTLE_LL_Process(events);
+  sl_btctrl_process_events(events);
 }
 
 static void sli_btctrl_task_default_callback(void)
@@ -54,7 +53,7 @@ static void sli_btctrl_task_default_callback(void)
   SCB->ICSR = SCB_ICSR_PENDSVSET_Msk;
 }
 
-void BTLE_LL_EventRaise(uint32_t events)
+void sl_btctrl_raise_events(uint32_t events)
 {
   CORE_DECLARE_IRQ_STATE;
   if ((sli_btctrl_events & events) == events) {
@@ -70,13 +69,4 @@ void sli_btctrl_events_init()
 {
   sli_btctrl_events = 0;
   NVIC_ClearPendingIRQ(PendSV_IRQn);
-}
-
-bool sli_pending_btctrl_events(void)
-{
-  if (sli_btctrl_events) {
-    return true;
-  } else {
-    return false;
-  }
 }

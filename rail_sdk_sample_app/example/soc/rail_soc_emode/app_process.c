@@ -31,6 +31,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "sl_rail.h"
 #include "sl_power_manager.h"
@@ -191,20 +192,20 @@ void app_process_action(void)
       app_state = S_IDLE;
       break;
     case S_CW:
-      app_log_info("Tx CW mode; EM%d\n", sleep_mode);
+      app_log_info("Tx CW mode; EM%" PRIu8 "\n", sleep_mode);
       set_radio_to_idle_state(rail_handle);
       rail_status = sl_rail_start_tx_stream(rail_handle, get_selected_channel(), SL_RAIL_STREAM_CARRIER_WAVE, SL_RAIL_TX_OPTIONS_DEFAULT);
       if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-        app_log_warning("sl_rail_start_tx_stream() result: %lu", rail_status);
+        app_log_warning("sl_rail_start_tx_stream() result: 0x%08" PRIX32, rail_status);
       }
       app_state = S_IDLE;
       break;
     case S_RX:
-      app_log_info("Rx mode; EM%d\n", sleep_mode);
+      app_log_info("Rx mode; EM%" PRIu8 "\n", sleep_mode);
       set_radio_to_idle_state(rail_handle);
       rail_status = sl_rail_start_rx(rail_handle, get_selected_channel(), NULL);
       if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-        app_log_warning("sl_rail_start_rx() result: %lu", rail_status);
+        app_log_warning("sl_rail_start_rx() result: 0x%08" PRIX32, rail_status);
       }
       app_state = S_IDLE;
       break;
@@ -220,13 +221,13 @@ void app_process_action(void)
         rail_status = sli_rail_set_tx_power(rail_handle, power_raw);
         power_deci_dbm = sl_rail_get_tx_power_dbm(rail_handle);
         if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-          app_log_warning("sli_rail_set_tx_power() result: %lu", rail_status);
+          app_log_warning("sli_rail_set_tx_power() result: 0x%08" PRIX32, rail_status);
         }
       } else {
         rail_status = sl_rail_set_tx_power_dbm(rail_handle, power_deci_dbm);
         power_raw = sli_rail_get_tx_power(rail_handle);
         if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-          app_log_warning("sl_rail_set_tx_power_dbm() result: %lu", rail_status);
+          app_log_warning("sl_rail_set_tx_power_dbm() result: 0x%08" PRIX32, rail_status);
         }
       }
       print_current_power_levels(rail_handle);
@@ -245,13 +246,13 @@ void app_process_action(void)
         periodic_rx_ended = false;
         rail_status = sl_rail_start_scheduled_rx(rail_handle, get_selected_channel(), &schedule_rx_config, NULL);
         if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-          app_log_warning("sl_rail_start_scheduled_rx() result: %lu", rail_status);
+          app_log_warning("sl_rail_start_scheduled_rx() result: 0x%08" PRIX32, rail_status);
         }
         app_state = S_PERIODIC_RX;
       } else {
         rail_status = sl_rail_start_rx(rail_handle, get_selected_channel(), NULL);
         if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-          app_log_warning("sl_rail_start_rx() result: %lu", rail_status);
+          app_log_warning("sl_rail_start_rx() result: 0x%08" PRIX32, rail_status);
         }
         app_state = S_IDLE;
       }
@@ -329,7 +330,7 @@ SL_CODE_RAM void sl_rail_util_on_event(sl_rail_handle_t rail_handle, sl_rail_eve
 static void print_current_power_levels(sl_rail_handle_t rail_handle)
 {
   if (is_raw) {
-    app_log_info("Power            %d/%d\n",
+    app_log_info("Power            %" PRIu8 "/%" PRIu8 "\n",
                  power_raw,
                  (sli_rail_get_tx_power(rail_handle)));
   } else {
@@ -350,7 +351,7 @@ static void print_current_power_levels(sl_rail_handle_t rail_handle)
  ******************************************************************************/
 static void print_new_sleep_mode(void)
 {
-  app_log_info("Idle mode; EM%d\n", sleep_mode);
+  app_log_info("Idle mode; EM%" PRIu8 "\n", sleep_mode);
 }
 
 /*******************************************************************************
@@ -367,7 +368,7 @@ static void handle_periodic_rx(sl_rail_handle_t rail_handle)
     schedule_rx_config.start = sleep_period;
     schedule_rx_config.end = rx_on_period;
     app_log_info(
-      "Periodic Rx mode, sleepPeriod=%lu, rxPeriod=%lu; EM%d (sleep); EM%d (active)\n",
+      "Periodic Rx mode, sleepPeriod=%" PRIu32 ", rxPeriod=%" PRIu32 "; EM%" PRIu8 " (sleep); EM%" PRIu8 " (active)\n",
       schedule_rx_config.start, schedule_rx_config.end, sleep_mode,
       0);
   }
@@ -375,7 +376,7 @@ static void handle_periodic_rx(sl_rail_handle_t rail_handle)
     periodic_rx_ended = false;
     rail_status = sl_rail_start_scheduled_rx(rail_handle, get_selected_channel(), &schedule_rx_config, NULL);
     if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-      app_log_warning("sl_rail_start_scheduled_rx() result: %lu", rail_status);
+      app_log_warning("sl_rail_start_scheduled_rx() result: 0x%08" PRIX32, rail_status);
     }
   }
 }
@@ -393,7 +394,7 @@ static void handle_periodic_tx(sl_rail_handle_t rail_handle)
     init_needed = false;
     set_radio_to_idle_state(rail_handle);
     schedule_tx_config.when = sleep_period;
-    app_log_info("Periodic Tx mode, period=%lu; EM%d (sleep); EM%d (active)\n",
+    app_log_info("Periodic Tx mode, period=%" PRIu32 "; EM%" PRIu8 " (sleep); EM%" PRIu8 " (active)\n",
                  schedule_tx_config.when, sleep_mode, 0);
   }
 
@@ -401,7 +402,7 @@ static void handle_periodic_tx(sl_rail_handle_t rail_handle)
     prepare_packet(rail_handle, out_packet, sizeof(out_packet));
     rail_status = sl_rail_start_scheduled_tx(rail_handle, get_selected_channel(), SL_RAIL_TX_OPTIONS_DEFAULT, &schedule_tx_config, NULL);
     if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-      app_log_warning("sl_rail_start_scheduled_tx() result: %lu", rail_status);
+      app_log_warning("sl_rail_start_scheduled_tx() result: 0x%08" PRIX32, rail_status);
     }
     packet_sending = true;
   }
@@ -430,7 +431,7 @@ static void handle_received_packet(sl_rail_handle_t rail_handle)
       uint16_t packet_size = unpack_packet(rail_handle, rx_buffer, &packet_info, &start_of_packet);
       rail_status = sl_rail_release_rx_packet(rail_handle, rx_packet_handle);
       if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-        app_log_warning("sl_rail_release_rx_packet() result: %lu", rail_status);
+        app_log_warning("sl_rail_release_rx_packet() result: 0x%08" PRIX32, rail_status);
       }
       printf_rx_packet(start_of_packet, packet_size);
     }
@@ -441,13 +442,13 @@ static void handle_received_packet(sl_rail_handle_t rail_handle)
     periodic_rx_ended = false;
     rail_status = sl_rail_start_scheduled_rx(rail_handle, get_selected_channel(), &schedule_rx_config, NULL);
     if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-      app_log_warning("sl_rail_start_scheduled_rx() result: %lu", rail_status);
+      app_log_warning("sl_rail_start_scheduled_rx() result: 0x%08" PRIX32, rail_status);
     }
     app_state = S_PERIODIC_RX;
   } else {
     rail_status = sl_rail_start_rx(rail_handle, get_selected_channel(), NULL);
     if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-      app_log_warning("sl_rail_start_rx() result: %lu", rail_status);
+      app_log_warning("sl_rail_start_rx() result: 0x%08" PRIX32, rail_status);
     }
     app_state = S_IDLE;
   }

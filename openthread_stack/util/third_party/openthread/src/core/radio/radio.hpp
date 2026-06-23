@@ -31,8 +31,8 @@
  *   This file includes definitions for OpenThread radio abstraction.
  */
 
-#ifndef RADIO_HPP_
-#define RADIO_HPP_
+#ifndef OT_CORE_RADIO_RADIO_HPP_
+#define OT_CORE_RADIO_RADIO_HPP_
 
 #include "openthread-core-config.h"
 
@@ -916,15 +916,15 @@ inline void Radio::SetMacKey(uint8_t                 aKeyIdMode,
                              const Mac::KeyMaterial &aCurrKey,
                              const Mac::KeyMaterial &aNextKey)
 {
-    otRadioKeyType aKeyType;
+    otRadioKeyType keyType;
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    aKeyType = OT_KEY_TYPE_KEY_REF;
+    keyType = OT_KEY_TYPE_KEY_REF;
 #else
-    aKeyType = OT_KEY_TYPE_LITERAL_KEY;
+    keyType = OT_KEY_TYPE_LITERAL_KEY;
 #endif
 
-    otPlatRadioSetMacKey(GetInstancePtr(), aKeyIdMode, aKeyId, &aPrevKey, &aCurrKey, &aNextKey, aKeyType);
+    otPlatRadioSetMacKey(GetInstancePtr(), aKeyIdMode, aKeyId, &aPrevKey, &aCurrKey, &aNextKey, keyType);
 }
 
 inline Error Radio::GetTransmitPower(int8_t &aPower) { return otPlatRadioGetTransmitPower(GetInstancePtr(), &aPower); }
@@ -1114,10 +1114,7 @@ inline Error Radio::ReceiveAt(uint8_t, uint32_t, uint32_t) { return kErrorNone; 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 inline void Radio::UpdateCslSampleTime(uint32_t) {}
 
-inline Error Radio::EnableCsl(uint32_t, Mac::ShortAddress aShortAddr, const Mac::ExtAddress &)
-{
-    return kErrorNotImplemented;
-}
+inline Error Radio::EnableCsl(uint32_t, Mac::ShortAddress, const Mac::ExtAddress &) { return kErrorNotImplemented; }
 
 inline Error Radio::ResetCsl(void) { return kErrorNotImplemented; }
 #endif
@@ -1168,4 +1165,4 @@ inline bool Radio::GetDiagMode(void) { return false; }
 
 } // namespace ot
 
-#endif // RADIO_HPP_
+#endif // OT_CORE_RADIO_RADIO_HPP_

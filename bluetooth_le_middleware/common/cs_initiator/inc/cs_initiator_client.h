@@ -42,6 +42,7 @@
 #include "cs_sync_antenna.h"
 
 #include "cs_initiator_config.h"
+#include "sl_status.h"
 // -----------------------------------------------------------------------------
 // Macros
 
@@ -129,29 +130,37 @@
 // Enums, structs, typedefs
 
 // CS channel map preset
+#ifndef CS_CHANNEL_MAP_PRESET_T_DEFINED
+#define CS_CHANNEL_MAP_PRESET_T_DEFINED
 SL_ENUM(cs_channel_map_preset_t) {
-  CS_CHANNEL_MAP_PRESET_LOW,
+  CS_CHANNEL_MAP_PRESET_LOW,        // This is only for compatibility
   CS_CHANNEL_MAP_PRESET_MEDIUM,
   CS_CHANNEL_MAP_PRESET_HIGH,
   CS_CHANNEL_MAP_PRESET_CUSTOM
 };
+#endif // CS_CHANNEL_MAP_PRESET_T_DEFINED
 
 // CS antenna configuration index
+#ifndef CS_TONE_ANTENNA_CONFIG_INDEX_T_DEFINED
+#define CS_TONE_ANTENNA_CONFIG_INDEX_T_DEFINED
 SL_ENUM(cs_tone_antenna_config_index_t) {
   CS_ANTENNA_CONFIG_INDEX_SINGLE_ONLY = 0,
   CS_ANTENNA_CONFIG_INDEX_DUAL_I_SINGLE_R = 1,
   CS_ANTENNA_CONFIG_INDEX_SINGLE_I_DUAL_R = 4,
   CS_ANTENNA_CONFIG_INDEX_DUAL_ONLY = 7
 };
-
+#endif // CS_TONE_ANTENNA_CONFIG_INDEX_T_DEFINED
 
 // Parameters optimization for energy or frequency
 // Has an effect on procedure and connection intervals
+#ifndef CS_PROCEDURE_SCHEDULING_T_DEFINED
+#define CS_PROCEDURE_SCHEDULING_T_DEFINED
 SL_ENUM(cs_procedure_scheduling_t) {
   CS_PROCEDURE_SCHEDULING_OPTIMIZED_FOR_FREQUENCY = 0,
   CS_PROCEDURE_SCHEDULING_OPTIMIZED_FOR_ENERGY,
   CS_PROCEDURE_SCHEDULING_CUSTOM
 };
+#endif // CS_PROCEDURE_SCHEDULING_T_DEFINED
 
 SL_ENUM(cs_error_event_t) {
   CS_ERROR_EVENT_UNHANDLED,
@@ -287,6 +296,7 @@ void cs_initiator_apply_channel_map_preset(cs_channel_map_preset_t preset, uint8
 
 /**************************************************************************//**
  * Get the connection and procedure intervals
+ * Compatibility API for old SDK.
  * @param[in] main_mode CS main mode.
  * @param[in] sub_mode CS sub mode.
  * @param[in] procedure_scheduling Procedure scheduling.
@@ -307,6 +317,74 @@ sl_status_t cs_initiator_get_intervals(uint8_t main_mode,
                                        uint8_t use_real_time_ras_mode,
                                        uint16_t *conn_interval,
                                        uint16_t *proc_interval);
+
+/**************************************************************************//**
+ * Get the connection and procedure intervals
+ * @param[in] main_mode CS main mode.
+ * @param[in] sub_mode CS sub mode.
+ * @param[in] procedure_scheduling Procedure scheduling.
+ * @param[in] channel_map_preset Channel map preset.
+ * @param[in] algo_mode Algorithm mode.
+ * @param[in] antenna_path Antenna path.
+ * @param[in] use_real_time_ras_mode Use real-time RAS mode.
+ * @param[in] max_reflector_count Maximum reflector count multiplier.
+ * @param[out] conn_interval Connection interval.
+ * @param[out] proc_interval CS procedure interval.
+ * @return Status of the operation.
+ *****************************************************************************/
+sl_status_t cs_initiator_get_multiple_intervals(uint8_t main_mode,
+                                                uint8_t sub_mode,
+                                                cs_procedure_scheduling_t procedure_scheduling,
+                                                uint8_t channel_map_preset,
+                                                uint8_t algo_mode,
+                                                uint8_t antenna_path,
+                                                uint8_t use_real_time_ras_mode,
+                                                uint8_t max_reflector_count,
+                                                uint16_t *conn_interval,
+                                                uint16_t *proc_interval);
+
+/**************************************************************************//**
+ * Select antennas for the CS mode.
+ *
+ * Updates the antenna-related fields of @p config based on the available
+ * number of local/remote antennas and the requested antenna configuration.
+ *
+ * @param[in,out] config            Pointer to the initiator config to update.
+ * @param[in]     local_antenna_num Number of antennas available on the local
+ *                                  (initiator) device.
+ * @param[in]     remote_antenna_num Number of antennas available on the remote
+ *                                  (reflector) device.
+ * @param[out]    num_antenna_paths Optional. If not NULL, receives the number
+ *                                  of PBR antenna paths that result from the
+ *                                  selection (1, 2, or 4 for PBR; 0 for RTT).
+ *
+ * @return Status of the operation.
+ *         SL_STATUS_OK if the requested configuration is supported.
+ *         SL_STATUS_NULL_POINTER if @p config is NULL.
+ *         SL_STATUS_NOT_SUPPORTED if the requested antenna usage is not
+ *         supported with the given local/remote antenna counts. In this case
+ *         a fallback configuration is still applied to @p config.
+ *****************************************************************************/
+sl_status_t cs_initiator_select_antennas(cs_initiator_config_t *config,
+                                         uint8_t local_antenna_num,
+                                         uint8_t remote_antenna_num,
+                                         uint8_t *num_antenna_paths);
+
+/**************************************************************************//**
+ * Validate the minimum and maximum subevent lengths against
+ * connection and procedure interval limits.
+ * @param[in] min_subevent_len_us Minimum subevent length in microseconds.
+ * @param[in] max_subevent_len_us Maximum subevent length in microseconds.
+ * @param[in] max_connection_interval Maximum connection interval (in 1.25 ms steps)
+ *                                    @ref CS_INITIATOR_DEFAULT_MAX_CONNECTION_INTERVAL
+ * @param[in] max_procedure_interval Maximum procedure interval.
+ * @return SL_STATUS_OK if the min/max subevent relation is correct and min subevent length fits
+ *         within the computed maximum procedure time; SL_STATUS_INVALID_PARAMETER otherwise.
+ *****************************************************************************/
+sl_status_t cs_initiator_validate_subevent_length(uint32_t min_subevent_len_us,
+                                                  uint32_t max_subevent_len_us,
+                                                  uint16_t max_connection_interval,
+                                                  uint16_t max_procedure_interval);
 
 #ifdef __cplusplus
 };

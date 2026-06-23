@@ -1,19 +1,52 @@
-# I2C SPM Bare Metal Application
+# SHT4x I2C SPM Bare-metal
 
+This example demonstrates the I2C Simple Polled Master driver with the SHT4x humidity and temperature sensor in a bare-metal configuration.
 
-This example project demonstrates the use of the I2C Simple Polled Master driver with the SHT4x Relative Humidity and Temperature Sensor in a bare metal configuration.
+## Table of Contents
 
-In this application, the initial temperature is read from the SHT4x sensor. Upper and lower limits are then set based on the defined TEMPERATURE\_BAND\_C. The program continuously monitors the temperature and responds as follows:
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-If two LEDs are available:
+## Purpose / Scope
 
-- When the temperature exceeds the upper limit, LED0 is turned on to indicate high temperature. A message, "Temperature is high", is printed to the VCOM serial console.
+This bare-metal example uses the I2C Simple Polled Master (SPM) driver to read the SHT4x relative humidity and temperature sensor. Upper and lower limits are set from TEMPERATURE_BAND_C. When temperature exceeds the upper limit, LED0 turns on and "Temperature is high" is printed on VCOM; when it falls below the lower limit, LED1 turns on and "Temperature is low" is printed. If only the console is available, the messages still appear on VCOM. Use it to learn I2C SPM with the SHT4x sensor.
 
-- When the temperature falls below the lower limit, LED1 is turned on to indicate low temperature. A message, "Temperature is low", is printed to the VCOM serial console.
+## Prerequisites / Setup Requirements
 
-If only the console is available:
+**Hardware**
+- Silicon Labs board with I2C support and an SHT4x sensor (on-board or expansion). On-board LEDs if using LED feedback.
 
-- Regardless of the LED status, the application will output "Temperature is high" or "Temperature is low" on the VCOM serial console whenever the temperature goes above the upper limit or below the lower limit, respectively.
+**Software**
+- Simplicity Studio 5 (or later). A serial terminal for VCOM output.
+
+## Steps to Run Demo
+
+1. Open the project in Simplicity Studio and build it.
+2. Connect the kit and SHT4x sensor (if on expansion board) with correct I2C wiring.
+3. Flash and run. Observe temperature-based LED behavior and/or "Temperature is high/low" on VCOM.
+4. Optionally adjust TEMPERATURE_BAND_C and rebuild.
+
+## Troubleshooting
+
+- **No sensor readings:** Check I2C wiring, pull-ups, and SHT4x address; verify SCL/SDA pins in the project.
+- **No VCOM output:** Ensure correct VCOM port and baud rate; confirm USART is configured for the console.
+- **Build errors:** Verify target part and that I2C SPM and SHT4x components are present.
+
+## Resources
+
+- [Simplicity Studio 5 User's Guide](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/)
+- [Gecko Platform Documentation](https://docs.silabs.com/gecko-platform/latest/)
+- [Silicon Labs Community](https://www.silabs.com/community)
+
+## Report Bugs & Get Support
+
+You are encouraged to report issues and get help from the community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)
 
 ## Note
 

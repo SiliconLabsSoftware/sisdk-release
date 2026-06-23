@@ -86,9 +86,13 @@ component:
   - id: ncp_btmesh_user_cmd
   - id: rail_util_pti
   - id: toolchain_gcc_lto
-  - id: uartdrv_usart
+    condition:
+      - toolchain_gcc
+  - id: iostream_eusart
     instance:
       - vcom
+    condition:
+      - device_has_euart
   - id: sl_main
 
 source:
@@ -186,10 +190,10 @@ configuration:
     condition:
       - ncp_sec
 
-  - name: SL_UARTDRV_USART_VCOM_FLOW_CONTROL_TYPE
-    value: uartdrvFlowControlNone
-    condition:
-      - hardware_board_tb
+  - name: SL_IOSTREAM_EUSART_VCOM_FLOW_CONTROL_TYPE
+    value: SL_IOSTREAM_EUSART_UART_FLOW_CTRL_CTS_RTS
+  - name: SL_IOSTREAM_USART_VCOM_FLOW_CONTROL_TYPE
+    value: usartHwFlowControlCtsAndRts
 
 post_build:
   - path: "../../postbuild_profile/btmesh_common_s2.slpb"

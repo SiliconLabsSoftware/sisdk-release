@@ -47,6 +47,23 @@ extern "C" {
    sl_status_t (*backend_deinit)(void);
    /** @brief Write log events to proprietary backend */
    sl_status_t (*backend_write)(sl_log_event_t *buffer, uint32_t read_index, uint32_t event_count);
+   /**
+    * @brief Optional: refresh the backend transport on EM2/EM3 wake.
+    *
+    * Called from the logger's post-sleep handler, which itself runs
+    * inside the power-manager critical section (interrupts masked), so
+    * implementations must be short and non-blocking. Distinct from
+    * @ref backend_init, which the core invokes once during stage-2
+    * bring-up; @ref on_wake fires every time the device leaves a deep
+    * sleep mode and is expected to be safe to call repeatedly.
+    *
+    * Leave NULL when the backend doesn't need any wake-time action -
+    * for example because its transport survives deep sleep unchanged
+    * (SystemView over RTT) or because the underlying driver layer
+    * already handles the EM transition itself (iostream UART driver
+    * subscribes to power_manager events directly).
+    */
+   sl_status_t (*on_wake)(void);
   } sl_log_api_backend_t;
 
 /**

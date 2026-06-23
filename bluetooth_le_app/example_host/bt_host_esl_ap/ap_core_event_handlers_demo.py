@@ -267,7 +267,7 @@ class DemoEventHandlersMixin:
         if self.controller_command == CCMD_DISCONNECT:
             self.notify_controller(self.controller_command, CONTROLLER_COMMAND_SUCCESS)
         elif self.controller_command != None:
-            # In case of other command, the connection should't be closed -if closed it's a failure
+            # In case of other command, the connection shouldn't be closed -if closed it's a failure
             self.notify_controller(self.controller_command, CONTROLLER_COMMAND_FAIL)
 
     def demo_esl_event_error(self, evt: esl_lib.EventError):

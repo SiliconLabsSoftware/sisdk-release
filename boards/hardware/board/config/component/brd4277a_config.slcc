@@ -4,7 +4,7 @@
 - description: Configuration files for BRD4277A
 - package: boards
 - category: Platform|Board|Config
-- quality: production
+- quality: evaluation
 - metadata:
     sbom:
       license: Zlib

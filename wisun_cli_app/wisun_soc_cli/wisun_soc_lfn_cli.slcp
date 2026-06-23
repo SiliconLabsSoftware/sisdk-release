@@ -389,6 +389,17 @@ template_contribution:
   - name: "cli_command"
     value:
       group: "wisun"
+      name: "trigger"
+      handler: "app_trigger_frame"
+      help: "Trigger the transmission of a frame"
+      shortcuts:
+        - name: "tx"
+      argument:
+        - type: string
+          help: "frame type"
+  - name: "cli_command"
+    value:
+      group: "wisun"
       name: "getsockname"
       handler: "app_getsockname"
       help: "Get socket's local Ip address"
@@ -423,6 +434,29 @@ template_contribution:
       help: "Reset the duty cycle counters"
       shortcuts:
         - name: "rdc"
+  - name: "cli_command"
+    value:
+      group: "wisun"
+      name: "set_option"
+      handler: "app_set_option"
+      help: "set Wi-SUN option"
+      shortcuts:
+        - name: "sopt"
+      argument:
+        - type: uint32
+          help: "Wi-SUN option ID"
+        - type: uint32
+          help: "Option value"
+        - type: uint16
+          help: "Option length in bytes"
+  - name: "cli_command"
+    value:
+      group: "wisun"
+      name: "reset_parameters"
+      handler: "app_reset_parameters"
+      help: "reset Wi-SUN parameters"
+      shortcuts:
+        - name: "rstpar"
 
 # -------------------------------
   - name: "cli_group"
@@ -481,8 +515,35 @@ template_contribution:
       shortcuts:
         - name: "sttx"
 
+# -------------------------------
+  - name: "cli_group"
+    value:
+      name: "util"
+      help: "Utility commands"
+      shortcuts:
+        - name: "u"
+  - name: "cli_command"
+    value:
+      group: "util"
+      name: "fill_heap"
+      handler: "app_util_fill_heap"
+      help: "Fill the heap with fixed-size blocks: u fh <block_size>"
+      argument:
+        - type: uint16
+          help: "block size"
+      shortcuts:
+        - name: "fh"
+  - name: "cli_command"
+    value:
+      group: "util"
+      name: "release_heap"
+      handler: "app_util_release_heap"
+      help: "Release previously filled heap: u rh"
+      shortcuts:
+        - name: "rh"
+
 readme:
-  - path: doc/readme_lfn.md
+  - path: readme_lfn.md
 
 other_file:
   - path: doc/readme_img0.png
@@ -497,7 +558,7 @@ toolchain_settings:
 
 ui_hints:
   highlight:
-    - path: doc/readme_lfn.md
+    - path: readme_lfn.md
       focus: true
 
 tag:

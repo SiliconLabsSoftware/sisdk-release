@@ -11,8 +11,11 @@ root_path: "wisun/./stack"
 requires:
 - name: "device_supports_wisun"
 - name: "a_wisun_stack"
+- name: "wisun_dc_client_implementation"
 recommends:
 - id: wisun_stack
+  vendor: silabs
+- id: wisun_dc_client_stubs
 
   vendor: silabs
 provides:

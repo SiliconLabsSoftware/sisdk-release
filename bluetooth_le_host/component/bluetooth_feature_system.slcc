@@ -8,6 +8,7 @@ category: Bluetooth|Bluetooth Host (Stack)|Features with Commands and Events
 quality: "production"
 requires:
 - name: "bluetooth_stack"
+- name: "bluetooth_crypto_lib"
 provides:
 - name: "bluetooth_feature_system"
 template_contribution:

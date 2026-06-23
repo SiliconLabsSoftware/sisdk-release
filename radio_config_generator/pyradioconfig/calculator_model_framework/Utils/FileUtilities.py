@@ -22,7 +22,8 @@ class FileUtilities(object):
                 else:
                     os.remove(dir + "/" + file)
         else:
-            os.mkdir(dir)
+            # Create missing parent directories as well (important for clean CI workspaces).
+            os.makedirs(dir, exist_ok=True)
 
     # Attempt to create a directory, and allow an already-existing directory.
     @staticmethod

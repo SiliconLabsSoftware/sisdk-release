@@ -34,6 +34,8 @@
 #ifndef OTBR_AGENT_NCP_HOST_HPP_
 #define OTBR_AGENT_NCP_HOST_HPP_
 
+#include <openthread/platform/dnssd.h>
+
 #include "lib/spinel/coprocessor_type.h"
 #include "lib/spinel/spinel_driver.hpp"
 
@@ -82,7 +84,7 @@ class NcpHost : public MainloopProcessor,
                 public NcpNetworkProperties,
                 public Netif::Dependencies,
                 public InfraIf::Dependencies
-#if OTBR_ENABLE_SRP_ADVERTISING_PROXY
+#if OTBR_ENABLE_MDNS && (OTBR_ENABLE_SRP_ADVERTISING_PROXY || OTBR_ENABLE_DNSSD_PLAT)
     ,
                 public Mdns::StateObserver
 #endif
@@ -126,7 +128,14 @@ public:
     void SetUdpForwardToHostCallback(UdpForwardToHostCallback aCallback) override;
     const otMeshLocalPrefix *GetMeshLocalPrefix(void) const override;
 #if OTBR_ENABLE_BORDER_AGENT && !OTBR_ENABLE_BORDER_AGENT_MESHCOP_SERVICE
-    void SetBorderAgentVendorTxtData(const std::vector<uint8_t> &aVendorTxtData) override;
+    void    SetBorderAgentVendorTxtData(const std::vector<uint8_t> &aVendorTxtData) override;
+    otError SetBorderAgentMeshCoPServiceBaseName(const char *aBaseName) override;
+#endif
+#ifndef OTBR_VENDOR_NAME
+    otError SetVendorName(const char *aVendorName) override;
+#endif
+#ifndef OTBR_PRODUCT_NAME
+    otError SetVendorModel(const char *aVendorModel) override;
 #endif
 
     CoprocessorType GetCoprocessorType(void) override { return OT_COPROCESSOR_NCP; }
@@ -144,6 +153,14 @@ public:
     void SetMdnsPublisher(Mdns::Publisher *aPublisher);
 #endif
 
+#if OTBR_ENABLE_DNSSD_PLAT
+    void NotifyDnssdPlatformStateToNcp(otPlatDnssdState aState);
+#endif
+#if OTBR_ENABLE_TREL
+    void    SetTrelStateChangedCallback(NcpSpinel::TrelStateChangedCallback aCallback);
+    otError SetTrelHostUdpPort(bool aEnabled, uint16_t aHostPort);
+#endif
+
     void InitNetifCallbacks(Netif &aNetif);
     void InitInfraIfCallbacks(InfraIf &aInfraIf);
     void SetHostPowerState(uint8_t aPowerState, const AsyncResultReceiver &aReceiver);
@@ -158,7 +175,7 @@ public:
 #endif
 
 private:
-#if OTBR_ENABLE_SRP_ADVERTISING_PROXY
+#if OTBR_ENABLE_MDNS && (OTBR_ENABLE_SRP_ADVERTISING_PROXY || OTBR_ENABLE_DNSSD_PLAT)
     void HandleMdnsState(Mdns::Publisher::State aState) override;
 #endif
     otbrError UdpForward(const uint8_t      *aUdpPayload,
@@ -169,6 +186,7 @@ private:
 
     otbrError Ip6Send(const uint8_t *aData, uint16_t aLength) override;
     otbrError Ip6MulAddrUpdateSubscription(const otIp6Address &aAddress, bool aIsAdded) override;
+    void      HandleThreadInterfaceIp6UnicastAddressesUpdated(const std::vector<Ip6AddressInfo> &aAddrInfos) override;
     otbrError SetInfraIf(uint32_t                       aInfraIfIndex,
                          bool                           aIsRunning,
                          const std::vector<Ip6Address> &aIp6Addresses) override;
@@ -177,7 +195,7 @@ private:
                             const uint8_t    *aData,
                             uint16_t          aDataLen) override;
 #if OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
-    otbrError TryProcessIcmp6RaMessage(const uint8_t *aData, uint16_t aLength) override;
+    otbrError BorderRoutingProcessDhcp6PdPrefix(const otBorderRoutingPrefixTableEntry *aPrefixInfo) override;
 #endif
 
     bool                      mIsInitialized;
@@ -186,38 +204,6 @@ private:
     NcpSpinel                 mNcpSpinel;
     TaskRunner                mTaskRunner;
     CliDaemon                 mCliDaemon;
-
-#if OTBR_ENABLE_TREL
-    struct TrelSocket
-    {
-        int      mFd     = -1;    // Socket file descriptor.
-        uint16_t mPort   = 0;     // Bound UDP port (same as NCP advertised port).
-        bool     mActive = false; // True if socket created & bound.
-    } mTrelSocket;
-
-    void                   OpenTrelSocket(uint16_t aPort);
-    void                   CloseTrelSocket(void);
-    void                   ProcessTrelSocket(const MainloopContext &aMainloop);
-    void                   UpdateTrelSocketFdSet(MainloopContext &aMainloop);
-    void                   HandleTrelPortChanged(uint16_t aPort);
-    void                   HandleExtAddrChanged(const uint8_t aExtAddr[OT_EXT_ADDRESS_SIZE]);
-    void                   HandleExtPanIdChanged(const uint8_t aExtPanId[OT_EXT_PAN_ID_SIZE]);
-    void                   MaybePublishTrelService(void);
-    std::string            BuildTrelInstanceName(void) const;
-    std::vector<uint8_t>   BuildTrelTxtData(void) const;
-    bool                   mTrelServicePublished = false;
-    Mdns::Publisher       *mPublisher            = nullptr;
-    Mdns::Publisher::State mPublisherState       = Mdns::Publisher::State::kIdle;
-    uint8_t                mExtAddr[OT_EXT_ADDRESS_SIZE];
-    bool                   mHasExtAddr = false;
-    uint8_t                mExtPanId[OT_EXT_PAN_ID_SIZE];
-    bool                   mHasExtPanId = false;
-
-    bool     mTrelBrowseActive       = false;
-    uint64_t mTrelBrowseSubscriberId = 0;
-    void     StartTrelPeerBrowse(void);
-    void     StopTrelPeerBrowse(void);
-#endif // OTBR_ENABLE_TREL
 };
 
 } // namespace Host

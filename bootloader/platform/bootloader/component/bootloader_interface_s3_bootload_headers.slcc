@@ -1,0 +1,29 @@
+id: bootloader_interface_s3_bootload_headers
+label: Bootloader interface Series-3 bootload/parser headers
+package: bootloader
+description: >
+  Series-3 API and core utility headers needed when compiling btl_bootload.c, btl_interface_storage.c,
+  and related sources. Bootloadinfo API header is owned by bootloader package
+  btl_storage_bootloadinfo_header (required by bootloader_interface_s3 and storage components).
+category: Platform|Bootloader
+quality: production
+ui_hints:
+  visibility: never
+include:
+- path: platform/bootloader/series3/core
+- path: platform/bootloader/series3
+  file_list:
+  - path: core/btl_util.h
+- path: platform/bootloader/series3/api
+  file_list:
+  - path: btl_interface.h
+  - path: btl_interface_parser.h
+  - path: btl_interface_storage.h
+provides:
+- name: bootloader_interface_s3_bootload_headers
+requires:
+- name: bootloader_application_properties_header
+metadata:
+  sbom:
+    license: MSLA
+root_path: bootloader

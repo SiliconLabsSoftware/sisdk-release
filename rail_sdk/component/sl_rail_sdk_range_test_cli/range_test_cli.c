@@ -31,6 +31,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include "sl_component_catalog.h"
@@ -151,11 +152,11 @@ void cli_get_phy(sl_cli_command_arg_t *arguments)
   (void) arguments;
   char phy_name[13U];
   if (!is_current_phy_standard()) {
-    snprintf(phy_name, sizeof(phy_name), "custom_%u", (range_test_settings.current_phy));
+    snprintf(phy_name, sizeof(phy_name), "custom_%" PRIu8 "", (range_test_settings.current_phy));
   } else {
     print_standard_name(phy_name, range_test_settings.current_phy);
   }
-  app_log_info("PHY:              %d:%s\n", range_test_settings.current_phy, phy_name);
+  app_log_info("PHY:              %" PRIu8 ":%s\n", range_test_settings.current_phy, phy_name);
 }
 
 /*******************************************************************************
@@ -210,11 +211,11 @@ void cli_get_power(sl_cli_command_arg_t *arguments)
   int16_t power = 0;
   get_rail_config_data(&base_frequency, &channel_spacing, &power);
   int16_t tx_power = range_test_settings.tx_power;
-  app_log_info("Power:            %+i.%d/%+i.%ddBm\n",
-               (tx_power / 10),
-               (((tx_power > 0) ? (tx_power) : (-tx_power)) % 10),
-               (power / 10),
-               (((power > 0) ? (power) : (-power)) % 10));
+  app_log_info("Power:            %+" PRId16 ".%" PRId16 "/%+" PRId16 ".%" PRId16 "dBm\n",
+               (int16_t)(tx_power / 10),
+               (int16_t)(((tx_power > 0) ? (tx_power) : (-tx_power)) % 10),
+               (int16_t)(power / 10),
+               (int16_t)(((power > 0) ? (power) : (-power)) % 10));
 }
 
 /*******************************************************************************
@@ -242,7 +243,7 @@ void cli_set_power(sl_cli_command_arg_t *arguments)
     add_bluetooth_indication(gattdb_txPower);
 #endif
   } else {
-    app_log_info("Out of range! Correct range is %d - %d\n", min_power_deci_dbm, max_power_deci_dbm);
+    app_log_info("Out of range! Correct range is %" PRId16 " - %" PRId16 "\n", min_power_deci_dbm, max_power_deci_dbm);
   }
 }
 
@@ -261,12 +262,12 @@ void cli_get_frequency(sl_cli_command_arg_t *arguments)
 
   if (base_frequency % 1000000U) {
     snprintf(freq_string, sizeof(freq_string),
-             "%u.%02uMHz",
+             "%" PRIu16 ".%" PRIu16 "MHz",
              (uint16_t) (base_frequency / 1000000U),
              (uint16_t) ((base_frequency % 1000000U) / 10000U));
   } else {
     snprintf(freq_string, sizeof(freq_string),
-             "%uMHz",
+             "%" PRIu16 "MHz",
              (uint16_t) (base_frequency / 1000000U));
   }
 
@@ -280,7 +281,7 @@ void cli_get_channel_number(sl_cli_command_arg_t *arguments)
 {
   // Eliminate compiler warning
   (void) arguments;
-  app_log_info("Channel number:   %d\n", range_test_settings.channel);
+  app_log_info("Channel number:   %" PRIu16 "\n", range_test_settings.channel);
 }
 
 /*******************************************************************************
@@ -307,7 +308,7 @@ void cli_set_channel_number(sl_cli_command_arg_t *arguments)
     add_bluetooth_indication(gattdb_channel);
 #endif
   } else {
-    app_log_info("Out of range! Correct range is %d - %d\n", start, end);
+    app_log_info("Out of range! Correct range is %" PRIu16 " - %" PRIu16 "\n", start, end);
   }
 }
 
@@ -318,7 +319,7 @@ void cli_get_payload_length(sl_cli_command_arg_t *arguments)
 {
   // Eliminate compiler warning
   (void) arguments;
-  app_log_info("Payload length:   %d\n", range_test_settings.payload_length);
+  app_log_info("Payload length:   %" PRIu8 "\n", range_test_settings.payload_length);
 }
 
 /*******************************************************************************
@@ -345,7 +346,7 @@ void cli_set_payload_length(sl_cli_command_arg_t *arguments)
     add_bluetooth_indication(gattdb_payload);
 #endif
   } else {
-    app_log_info("Out of range! Correct range is %d - %d\n", min, max);
+    app_log_info("Out of range! Correct range is %" PRIu8 " - %" PRIu8 "\n", min, max);
   }
 }
 
@@ -357,7 +358,7 @@ void cli_get_packet_count(sl_cli_command_arg_t *arguments)
   // Eliminate compiler warning
   (void) arguments;
   if (range_test_settings.packets_repeat_number != 0xFFFF) {
-    app_log_info("Packet Count:     %d\n", range_test_settings.packets_repeat_number);
+    app_log_info("Packet Count:     %" PRIu16 "\n", range_test_settings.packets_repeat_number);
   } else {
     app_log_info("Packet Count:     Repeat\n");
   }
@@ -397,7 +398,7 @@ void cli_get_remote_id(sl_cli_command_arg_t *arguments)
 {
   // Eliminate compiler warning
   (void) arguments;
-  app_log_info("Remote ID:        %d\n", range_test_settings.destination_id);
+  app_log_info("Remote ID:        %" PRIu8 "\n", range_test_settings.destination_id);
 }
 
 /*******************************************************************************
@@ -432,7 +433,7 @@ void cli_get_self_id(sl_cli_command_arg_t *arguments)
 {
   // Eliminate compiler warning
   (void) arguments;
-  app_log_info("Self ID:          %d\n", range_test_settings.source_id);
+  app_log_info("Self ID:          %" PRIu8 "\n", range_test_settings.source_id);
 }
 
 /*******************************************************************************
@@ -467,7 +468,7 @@ void cli_get_ma_window_size(sl_cli_command_arg_t *arguments)
 {
   // Eliminate compiler warning
   (void) arguments;
-  app_log_info("MA Window size:   %d\n", range_test_settings.moving_average_window_size);
+  app_log_info("MA Window size:   %" PRIu8 "\n", range_test_settings.moving_average_window_size);
 }
 
 /*******************************************************************************
@@ -574,7 +575,7 @@ void cli_get_service_channel_number(sl_cli_command_arg_t *arguments)
 {
   // Eliminate compiler warning
   (void) arguments;
-  app_log_info("Service channel number:   %d\n", range_test_settings.service_channel);
+  app_log_info("Service channel number:   %" PRIu16 "\n", range_test_settings.service_channel);
 }
 
 /*******************************************************************************
@@ -600,7 +601,7 @@ void cli_set_service_channel_number(sl_cli_command_arg_t *arguments)
     add_bluetooth_indication(gattdb_channel);
 #endif
   } else {
-    app_log_info("Out of range! Correct range is %d - %d\n", start, end);
+    app_log_info("Out of range! Correct range is %" PRIu16 " - %" PRIu16 "\n", start, end);
   }
 }
 
@@ -613,11 +614,11 @@ void cli_get_service_phy_number(sl_cli_command_arg_t *arguments)
   (void) arguments;
   char phy_name[13U];
   if (!is_phy_standard(range_test_settings.service_phy)) {
-    snprintf(phy_name, sizeof(phy_name), "custom_%u", (range_test_settings.service_phy));
+    snprintf(phy_name, sizeof(phy_name), "custom_%" PRIu8 "", (range_test_settings.service_phy));
   } else {
     print_standard_name(phy_name, range_test_settings.service_phy);
   }
-  app_log_info("Service PHY:              %d:%s\n", range_test_settings.service_phy, phy_name);
+  app_log_info("Service PHY:              %" PRIu8 ":%s\n", range_test_settings.service_phy, phy_name);
 }
 
 /*******************************************************************************
@@ -754,8 +755,8 @@ void cli_info(sl_cli_command_arg_t *arguments)
 #if defined(SL_CATALOG_RANGE_TEST_DMP_COMPONENT_PRESENT)
   app_log_info("\n");
   cli_is_ble_connected(arguments);
-  app_log_info("Device Name:      DMP%04X\n", *(uint16_t*)(bluetooth_address.addr));
-  app_log_info("Device Address:   %02X:%02X:%02X:%02X:%02X:%02X\n",
+  app_log_info("Device Name:      DMP%" PRIu16 "\n", *(uint16_t*)(bluetooth_address.addr));
+  app_log_info("Device Address:   %02" PRIX8 ":%02" PRIX8 ":%02" PRIX8 ":%02" PRIX8 ":%02" PRIX8 ":%02" PRIX8 "\n",
                bluetooth_address.addr[5],
                bluetooth_address.addr[4],
                bluetooth_address.addr[3],

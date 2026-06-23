@@ -12,9 +12,15 @@ sl_status_t sl_btctrl_hci_cpc_rtos_init(void);
 void sl_btctrl_hci_cpc_rtos_deinit(void);
 
 /**
- * Callback handler when new packet is received from cpc
+ * Callback handler invoked when a new iframe is available. Also invoked
+ * from sl_hci_cpc_error following an SL_CPC_ENDPOINT_ON_ERROR notification.
  */
-void sl_btctrl_hci_cpc_rx(uint8_t endpoint_id, void * arg);
+void sl_btctrl_hci_cpc_on_transport_notify(uint8_t endpoint_id, void * arg);
+
+/**
+ * Deprecated: use sl_btctrl_hci_cpc_on_transport_notify().
+ */
+void sl_btctrl_hci_cpc_rx(uint8_t endpoint_id, void *arg);
 
 /**
  * Get the available stack space of the HCI CPC thread as determined

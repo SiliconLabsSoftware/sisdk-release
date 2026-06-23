@@ -80,7 +80,7 @@ class Commander:
     def call(self, args):
         try:
             ap_logger.log(
-                "Excuting Simplicity Commander with arguments:",
+                "Executing Simplicity Commander with arguments:",
                 args[:3],
                 _half_indent_log=True,
             )
@@ -155,7 +155,7 @@ def generate_qrcode(data, height, width):
         abort(-3)
     # Create black and white QR code image
     img = qr.make_image(fill_color="black", back_color="white")
-    img = img.convert("RGBA") # BG-18013: fix regression caused by Pillow module update v11, keeps backward compatibiliy with older Pillow versions
+    img = img.convert("RGBA") # BG-18013: fix regression caused by Pillow module update v11, keeps backward compatibility with older Pillow versions
     qr_width, qr_height = img.size
     log.info(f"Generated QR code size: {qr_width}x{qr_height}")
     log.info(f"Scaling it to: {width}x{height}")
@@ -279,7 +279,7 @@ def validate_ip(value):
     ipv4_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
     # Simple validation for IPv6
     ipv6_pattern = r'^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$'
-    
+
     if re.match(ipv4_pattern, value):
         # Additional check for valid IPv4 octets (0-255)
         octets = value.split('.')
@@ -287,7 +287,7 @@ def validate_ip(value):
             return value
     elif re.match(ipv6_pattern, value):
         return value
-    
+
     raise argparse.ArgumentTypeError(f"IP address must be valid IPv4 or IPv6 format, got: {value}")
 
 
@@ -306,13 +306,13 @@ Can be omitted if the device is already flashed with the correct file and is unl
         default=FALLBACK_HEX,
     )
     parser.add_argument(
-        "-s", "--serialno", 
+        "-s", "--serialno",
         action='append',
         type=validate_serialno,
         help="J-Link serial number of target WSTK (exactly 9 digits). Use multiple times for multiple devices: -s 440128129 -s 440128130"
     )
     parser.add_argument(
-        "-i", "--ip", 
+        "-i", "--ip",
         action='append',
         type=validate_ip,
         help="IP address of target WSTK (IPv4 or IPv6). Use multiple times for multiple devices: -i 192.168.1.10 -i 192.168.1.11"
@@ -349,12 +349,12 @@ Can be omitted if the device is already flashed with the correct file and is unl
         if pool:
             pool.terminate()
             pool.join()
-    
+
     pool = None
-    try: 
+    try:
         pool = multiprocessing.Pool(processes=min(cpu_count, len(task_list)))
         async_result = pool.map_async(process_device, task_list, chunksize=chunk_size)
-        
+
         # Poll with short timeout to make CTRL+C responsive
         while not async_result.ready():
             try:
@@ -362,10 +362,10 @@ Can be omitted if the device is already flashed with the correct file and is unl
                 break
             except multiprocessing.TimeoutError:
                 continue  # Not ready yet, continue polling
-        
+
         # If we got here, tasks completed successfully
         async_result.get()  # Verify there are no errors
-            
+
     except KeyboardInterrupt:
         log.warning("Interrupted by user")
         cleanup_pool(pool)

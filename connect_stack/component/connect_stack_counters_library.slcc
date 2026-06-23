@@ -19,6 +19,10 @@ library:
   condition:
   - "toolchain_gcc"
   - device_series_2
+- path: "libs/libconnect-stack-counters-library-efr32xg2x-llvm.a"
+  condition:
+  - "toolchain_llvm"
+  - device_series_2
 
 metadata:
   sbom:

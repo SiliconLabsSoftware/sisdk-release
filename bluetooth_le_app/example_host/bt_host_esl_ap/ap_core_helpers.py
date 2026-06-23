@@ -295,7 +295,7 @@ class HelpersMixin:
                 if not self.max_conn_count_reached:
                     tag = tag_list[
                         random.randint(0, len(tag_list) - 1)
-                    ]  # chosing randomly helps to cope with netwokrs that include erroneous tags
+                    ]  # choosing randomly helps to cope with netwokrs that include erroneous tags
                     self.bonding_finished = (
                         True
                         if self.lib_connection_mode

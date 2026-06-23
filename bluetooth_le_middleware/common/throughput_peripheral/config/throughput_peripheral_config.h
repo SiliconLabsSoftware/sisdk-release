@@ -7,6 +7,7 @@
  **************************************************************************************************/
 
 #include "throughput_types.h"
+#include "throughput_common.h"
 
 // <<< Use Configuration Wizard in Context Menu >>>
 
@@ -47,9 +48,9 @@
 
 // <h> Data settings
 
-// <o THROUGHPUT_PERIPHERAL_MTU_SIZE> Default MTU size <23-250>
-// <i> Default: 247
-#define THROUGHPUT_PERIPHERAL_MTU_SIZE                   247
+// <o THROUGHPUT_PERIPHERAL_MTU_SIZE> Default MTU size
+// <i> Default: THROUGHPUT_MAXIMUM_MTU_SIZE
+#define THROUGHPUT_PERIPHERAL_MTU_SIZE                   THROUGHPUT_MAXIMUM_MTU_SIZE
 
 // <o THROUGHPUT_PERIPHERAL_DATA_TRANSFER_SIZE_INDICATIONS> Transfer size for indications <0-255>
 // <i> Default: 0

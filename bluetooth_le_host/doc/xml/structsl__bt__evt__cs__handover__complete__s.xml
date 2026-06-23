@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.4" xml:lang="en-US">
+  <compounddef id="structsl__bt__evt__cs__handover__complete__s" kind="struct" language="C++" prot="public">
+    <compoundname>sl_bt_evt_cs_handover_complete_s</compoundname>
+    <includes refid="sl__bt__api_8h" local="no">sl_bt_api.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structsl__bt__evt__cs__handover__complete__s_1ab66ba8fd0a99a9c169ad4c5ee26e25b0" prot="public" static="no" mutable="no">
+        <type>uint8_t</type>
+        <definition>uint8_t sl_bt_evt_cs_handover_complete_s::reason</definition>
+        <argsstring></argsstring>
+        <name>reason</name>
+        <qualifiedname>sl_bt_evt_cs_handover_complete_s::reason</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Enum <ref refid="group__sl__bt__cs_1ga8850c7bbb087a73a571cfd280a2a1a93" kindref="member">sl_bt_cs_handover_complete_reason_t</ref>. Reason for completion. Values:<itemizedlist>
+<listitem><para><bold>sl_bt_cs_handover_complete_reason_max_procedure_count_reached (0x0):</bold> Configured maximum procedure count was reached.</para>
+</listitem><listitem><para><bold>sl_bt_cs_handover_complete_reason_sync_lost (0x1):</bold> Synchronization to the connection was lost. </para>
+</listitem></itemizedlist>
+</para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="14595" column="11" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="14595" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structsl__bt__evt__cs__handover__complete__s_1ab9ea4a347be056c12dad7e65709d6692" prot="public" static="no" mutable="no">
+        <type>uint8_t</type>
+        <definition>uint8_t sl_bt_evt_cs_handover_complete_s::analyzer</definition>
+        <argsstring></argsstring>
+        <name>analyzer</name>
+        <qualifiedname>sl_bt_evt_cs_handover_complete_s::analyzer</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>Connection analyzer handle </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="14603" column="11" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="14603" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structsl__bt__evt__cs__handover__complete__s_1a1e06b1897aa10659bf1d887243599903" prot="public" static="no" mutable="no">
+        <type>uint8_t</type>
+        <definition>uint8_t sl_bt_evt_cs_handover_complete_s::config_id</definition>
+        <argsstring></argsstring>
+        <name>config_id</name>
+        <qualifiedname>sl_bt_evt_cs_handover_complete_s::config_id</qualifiedname>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+<para>CS configuration identifier </para>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="14604" column="11" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="14604" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Data structure of the handover_complete event. </para>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="14593" column="1" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="14594" bodyend="14605"/>
+    <listofallmembers>
+      <member refid="structsl__bt__evt__cs__handover__complete__s_1ab9ea4a347be056c12dad7e65709d6692" prot="public" virt="non-virtual"><scope>sl_bt_evt_cs_handover_complete_s</scope><name>analyzer</name></member>
+      <member refid="structsl__bt__evt__cs__handover__complete__s_1a1e06b1897aa10659bf1d887243599903" prot="public" virt="non-virtual"><scope>sl_bt_evt_cs_handover_complete_s</scope><name>config_id</name></member>
+      <member refid="structsl__bt__evt__cs__handover__complete__s_1ab66ba8fd0a99a9c169ad4c5ee26e25b0" prot="public" virt="non-virtual"><scope>sl_bt_evt_cs_handover_complete_s</scope><name>reason</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

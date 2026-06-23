@@ -22,15 +22,18 @@
 ***************************************************************************/
 
 #ifndef SL_ZIGBEE_TEST
+#if (SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_PRINT_SYSTEM == 1)
 WEAK(void sl_zigbee_af_core_print_wrapper(const char * formatString, ...))
 {
   (void)formatString;
 }
 
+#if !defined(SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT)
 WEAK(void sl_zigbee_af_print_big_endian_eui64_wrapper(uint8_t * eui, ...))
 {
   (void)eui;
 }
+#endif // !SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
 
 WEAK(void sl_zigbee_af_print_buffer_wrapper(uint16_t area, const uint8_t *buffer, uint16_t bufferLen, bool withSpace))
 {
@@ -38,6 +41,12 @@ WEAK(void sl_zigbee_af_print_buffer_wrapper(uint16_t area, const uint8_t *buffer
   (void)buffer;
   (void)bufferLen;
   (void)withSpace;
+}
+
+WEAK(void sl_zigbee_af_print_string_wrapper(uint16_t area, const uint8_t *buffer))
+{
+  (void)area;
+  (void)buffer;
 }
 
 WEAK(void sl_zigbee_af_app_println_wrapper(const char * formatString, ...))
@@ -53,6 +62,16 @@ WEAK(void sl_zigbee_af_app_print_wrapper(const char * formatString, ...))
 WEAK(void sl_zigbee_af_print_wrapper(uint16_t area, const char * formatString, ...))
 {
   (void)area;
+  (void)formatString;
+}
+
+WEAK(void sl_zigbee_af_cli_print_wrapper(const char * formatString, ...))
+{
+  (void)formatString;
+}
+
+WEAK(void sl_zigbee_af_cli_println_wrapper(const char * formatString, ...))
+{
   (void)formatString;
 }
 
@@ -98,4 +117,6 @@ WEAK(void sl_zigbee_af_println_wrapper(uint16_t area, const char * formatString,
   (void)area;
   (void)formatString;
 }
+
+#endif // (SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_PRINT_SYSTEM == 1)
 #endif // !SL_ZIGBEE_TEST

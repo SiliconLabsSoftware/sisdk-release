@@ -1,0 +1,33 @@
+id: device_init_dcdc_s2
+label: DC-DC Converter
+package: platform_core
+description: >
+  Instantiate the component for DC-DC converter initialization based on the
+  provided component configuration.
+category: Services|Device Initialization|Peripherals
+quality: production
+metadata:
+  sbom:
+    license: Zlib
+ui_hints:
+  visibility: never
+root_path: platform_core/platform/service/device_init/
+source:
+- path: src/sl_device_init_dcdc_s2.c
+  condition: [device_series_2]
+provides:
+- name: device_init_dcdc_impl
+  condition: [device_series_2]
+requires:
+- name: device_init_dcdc
+- name: emlib_emu
+template_contribution:
+- name: event_handler
+  value:
+    event: platform_init
+    include: sl_device_init_dcdc.h
+    handler: sl_device_init_dcdc
+  priority: -9800
+  condition: [sl_system, kernel]
+- name: component_catalog
+  value: device_init_dcdc

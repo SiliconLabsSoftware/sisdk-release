@@ -50,11 +50,11 @@ static uint8_t calendarIndexForPrinting = 0;
 
 static bool printSelectedCalendar(void)
 {
-  sl_zigbee_af_calendar_cluster_println("Selected Calendar Index: %d",
-                                        calendarIndexForPrinting);
+  sl_zigbee_af_cli_println("Selected Calendar Index: %d",
+                           calendarIndexForPrinting);
   if (SL_ZIGBEE_AF_PLUGIN_CALENDAR_COMMON_TOTAL_CALENDARS <= calendarIndexForPrinting
       || calendars[calendarIndexForPrinting].calendarId == SL_ZIGBEE_AF_PLUGIN_CALENDAR_COMMON_INVALID_CALENDAR_ID) {
-    sl_zigbee_af_calendar_cluster_println("No data.");
+    sl_zigbee_af_cli_println("No data.");
     return false;
   }
   return true;
@@ -66,21 +66,21 @@ static void printScheduleEntryData(uint8_t calendarType, uint8_t data)
     case SL_ZIGBEE_ZCL_CALENDAR_TYPE_DELIVERED_CALENDAR:
     case SL_ZIGBEE_ZCL_CALENDAR_TYPE_RECEIVED_CALENDAR:
     case SL_ZIGBEE_ZCL_CALENDAR_TYPE_DELIVERED_AND_RECEIVED_CALENDAR:
-      sl_zigbee_af_calendar_cluster_print("Price Tier: 0x%02X", data);
+      sl_zigbee_af_cli_print("Price Tier: 0x%02X", data);
       break;
     case SL_ZIGBEE_ZCL_CALENDAR_TYPE_FRIENDLY_CREDIT_CALENDAR:
-      sl_zigbee_af_calendar_cluster_print("Friendly credit: %s",
-                                          (data == 0
-                                           ? "not available"
-                                           : "enabled"));
+      sl_zigbee_af_cli_print("Friendly credit: %s",
+                             (data == 0
+                              ? "not available"
+                              : "enabled"));
       break;
     case SL_ZIGBEE_ZCL_CALENDAR_TYPE_AUXILLIARY_LOAD_SWITCH_CALENDAR:
-      sl_zigbee_af_calendar_cluster_print("Auxilliary Switch state: 0x%02X", data);
+      sl_zigbee_af_cli_print("Auxilliary Switch state: 0x%02X", data);
       break;
     default:
-      sl_zigbee_af_calendar_cluster_print("Invalid calendar type (%d), data: %d",
-                                          calendarType,
-                                          data);
+      sl_zigbee_af_cli_print("Invalid calendar type (%d), data: %d",
+                             calendarType,
+                             data);
       break;
   }
 }
@@ -90,20 +90,20 @@ static void printTime(const char* prefix,
 {
   sl_zigbee_af_time_struct_t time;
   sl_zigbee_af_fill_time_struct_from_utc(zigbeeUtcTime, &time);
-  sl_zigbee_af_calendar_cluster_print("%s", prefix);
-  sl_zigbee_af_calendar_cluster_println("%08X (%d/%s%d/%s%d, %s%d:%s%d:%s%d)",
-                                        zigbeeUtcTime,
-                                        time.year,
-                                        (time.month < 10 ? "0" : ""),
-                                        time.month,
-                                        (time.day < 10 ? "0" : ""),
-                                        time.day,
-                                        (time.hours < 10 ? "0" : ""),
-                                        time.hours,
-                                        (time.minutes < 10 ? "0" : ""),
-                                        time.minutes,
-                                        (time.seconds < 10 ? "0" : ""),
-                                        time.seconds);
+  sl_zigbee_af_cli_print("%s", prefix);
+  sl_zigbee_af_cli_println("%08X (%d/%s%d/%s%d, %s%d:%s%d:%s%d)",
+                           zigbeeUtcTime,
+                           time.year,
+                           (time.month < 10 ? "0" : ""),
+                           time.month,
+                           (time.day < 10 ? "0" : ""),
+                           time.day,
+                           (time.hours < 10 ? "0" : ""),
+                           time.hours,
+                           (time.minutes < 10 ? "0" : ""),
+                           time.minutes,
+                           (time.seconds < 10 ? "0" : ""),
+                           time.seconds);
 }
 
 static void printScheduleEntry(const sl_zigbee_af_calendar_day_schedule_entry_struct_t* scheduleEntry,
@@ -115,13 +115,13 @@ static void printScheduleEntry(const sl_zigbee_af_calendar_day_schedule_entry_st
     hours = scheduleEntry->minutesFromMidnight / MINUTES_PER_HOUR;
     minutes = scheduleEntry->minutesFromMidnight % MINUTES_PER_HOUR;
   }
-  sl_zigbee_af_calendar_cluster_print("%s%d:%s%d - ",
-                                      (hours < 10 ? "0" : ""),
-                                      hours,
-                                      (minutes < 10 ? "0" : ""),
-                                      minutes);
+  sl_zigbee_af_cli_print("%s%d:%s%d - ",
+                         (hours < 10 ? "0" : ""),
+                         hours,
+                         (minutes < 10 ? "0" : ""),
+                         minutes);
   printScheduleEntryData(calendarType, scheduleEntry->data);
-  sl_zigbee_af_calendar_cluster_println("");
+  sl_zigbee_af_cli_println("");
 }
 
 static void printDayProfile(const sl_zigbee_af_calendar_day_struct_t* day,
@@ -129,7 +129,7 @@ static void printDayProfile(const sl_zigbee_af_calendar_day_struct_t* day,
 {
   uint8_t i;
   for (i = 0; i < day->numberOfScheduleEntries; i++) {
-    sl_zigbee_af_calendar_cluster_print("  ");
+    sl_zigbee_af_cli_print("  ");
     printScheduleEntry(&(day->scheduleEntries[i]),
                        calendarType);
   }
@@ -138,9 +138,9 @@ static void printDayProfile(const sl_zigbee_af_calendar_day_struct_t* day,
 static void printSpecialDayProfile(const sl_zigbee_af_calendar_special_day_struct_t* specialDay,
                                    const sl_zigbee_af_calendar_day_struct_t* normalDays)
 {
-  sl_zigbee_af_calendar_cluster_print("  Date: ");
+  sl_zigbee_af_cli_print("  Date: ");
   sl_zigbee_af_print_dateln(&specialDay->startDate);
-  sl_zigbee_af_calendar_cluster_println("  Day ID: %d", normalDays[specialDay->normalDayIndex].id);
+  sl_zigbee_af_cli_println("  Day ID: %d", normalDays[specialDay->normalDayIndex].id);
 }
 
 static void printDayProfiles(const sl_zigbee_af_calendar_struct_t* calendar,
@@ -152,12 +152,12 @@ static void printDayProfiles(const sl_zigbee_af_calendar_struct_t* calendar,
                  : calendar->numberOfDayProfiles);
   for (i = 0; i < max; i++) {
     if (printSpecialDays) {
-      sl_zigbee_af_calendar_cluster_println("Special Day: %d", i);
+      sl_zigbee_af_cli_println("Special Day: %d", i);
       printSpecialDayProfile(&(calendar->specialDays[i]),
                              calendar->normalDays);
     } else {
-      sl_zigbee_af_calendar_cluster_println("Day ID: %d - Schedule",
-                                            calendar->normalDays[i].id);
+      sl_zigbee_af_cli_println("Day ID: %d - Schedule",
+                               calendar->normalDays[i].id);
       printDayProfile(&(calendar->normalDays[i]),
                       calendar->calendarType);
     }
@@ -168,22 +168,22 @@ static void printCalendar(const sl_zigbee_af_calendar_struct_t* calendar)
 {
   sl_zigbee_af_time_struct_t time;
   sl_zigbee_af_fill_time_struct_from_utc(calendar->startTimeUtc, &time);
-  sl_zigbee_af_calendar_cluster_print("Name: ");
+  sl_zigbee_af_cli_print("Name: ");
   sl_zigbee_af_calendar_cluster_print_string(calendar->name);
-  sl_zigbee_af_calendar_cluster_println("");
-  sl_zigbee_af_calendar_cluster_println("ID:              0x%08X", calendar->calendarId);
-  sl_zigbee_af_calendar_cluster_println("Issuer Event ID: 0x%08X", calendar->issuerEventId);
-  sl_zigbee_af_calendar_cluster_println("Provider ID:     0x%08X", calendar->providerId);
-  sl_zigbee_af_calendar_cluster_println("Type:            %d (%s)",
-                                        calendar->calendarType,
-                                        (calendar->calendarType <= MAX_CALENDAR_TYPE
-                                         ? calendarTypeStrings[calendar->calendarType]
-                                         : "???"));
+  sl_zigbee_af_cli_println("");
+  sl_zigbee_af_cli_println("ID:              0x%08X", calendar->calendarId);
+  sl_zigbee_af_cli_println("Issuer Event ID: 0x%08X", calendar->issuerEventId);
+  sl_zigbee_af_cli_println("Provider ID:     0x%08X", calendar->providerId);
+  sl_zigbee_af_cli_println("Type:            %d (%s)",
+                           calendar->calendarType,
+                           (calendar->calendarType <= MAX_CALENDAR_TYPE
+                            ? calendarTypeStrings[calendar->calendarType]
+                            : "???"));
   printTime("Start Time:      ", calendar->startTimeUtc);
-  sl_zigbee_af_calendar_cluster_println("Season Profiles:      %d", calendar->numberOfSeasons);
-  sl_zigbee_af_calendar_cluster_println("Week Profiles:        %d", calendar->numberOfWeekProfiles);
-  sl_zigbee_af_calendar_cluster_println("Day Profiles:         %d", calendar->numberOfDayProfiles);
-  sl_zigbee_af_calendar_cluster_println("Special Day Profiles: %d", calendar->numberOfSpecialDayProfiles);
+  sl_zigbee_af_cli_println("Season Profiles:      %d", calendar->numberOfSeasons);
+  sl_zigbee_af_cli_println("Week Profiles:        %d", calendar->numberOfWeekProfiles);
+  sl_zigbee_af_cli_println("Day Profiles:         %d", calendar->numberOfDayProfiles);
+  sl_zigbee_af_cli_println("Special Day Profiles: %d", calendar->numberOfSpecialDayProfiles);
 }
 
 // The offset is useful for making each day's schedule entry different so as it tell
@@ -260,15 +260,15 @@ void sl_zigbee_af_calendar_common_print_summary_command(sl_cli_command_arg_t *ar
   }
 
   printCalendar(&(calendars[calendarIndexForPrinting]));
-  sl_zigbee_af_calendar_cluster_println("");
+  sl_zigbee_af_cli_println("");
 }
 
 void sl_zigbee_af_calendar_common_select_command(sl_cli_command_arg_t *arguments)
 {
   uint8_t temp = sl_cli_get_argument_uint8(arguments, 0);
   if (SL_ZIGBEE_AF_PLUGIN_CALENDAR_COMMON_TOTAL_CALENDARS <= temp) {
-    sl_zigbee_af_calendar_cluster_println("Error: Invalid index.  Max is %d.",
-                                          SL_ZIGBEE_AF_PLUGIN_CALENDAR_COMMON_TOTAL_CALENDARS - 1);
+    sl_zigbee_af_cli_println("Error: Invalid index.  Max is %d.",
+                             SL_ZIGBEE_AF_PLUGIN_CALENDAR_COMMON_TOTAL_CALENDARS - 1);
     return;
   }
   calendarIndexForPrinting = temp;
@@ -283,17 +283,17 @@ void sl_zigbee_af_calendar_common_print_weeks_command(sl_cli_command_arg_t *argu
     return;
   }
 
-  sl_zigbee_af_calendar_cluster_println("Week Profiles");
+  sl_zigbee_af_cli_println("Week Profiles");
   for (i = 0; i <  calendars[calendarIndexForPrinting].numberOfWeekProfiles; i++) {
     sl_zigbee_af_calendar_week_struct_t *week = &(calendars[calendarIndexForPrinting].weeks[i]);
-    sl_zigbee_af_calendar_cluster_println("  Week ID: %d", week->id);
-    sl_zigbee_af_calendar_cluster_println("    Monday    (Day ID Ref):      0x%02X", calendars[calendarIndexForPrinting].normalDays[week->normalDayIndexes[0]].id);
-    sl_zigbee_af_calendar_cluster_println("    Tuesday   (Day ID Ref):      0x%02X", calendars[calendarIndexForPrinting].normalDays[week->normalDayIndexes[1]].id);
-    sl_zigbee_af_calendar_cluster_println("    Wednesday (Day ID Ref):      0x%02X", calendars[calendarIndexForPrinting].normalDays[week->normalDayIndexes[2]].id);
-    sl_zigbee_af_calendar_cluster_println("    Thursday  (Day ID Ref):      0x%02X", calendars[calendarIndexForPrinting].normalDays[week->normalDayIndexes[3]].id);
-    sl_zigbee_af_calendar_cluster_println("    Friday    (Day ID Ref):      0x%02X", calendars[calendarIndexForPrinting].normalDays[week->normalDayIndexes[4]].id);
-    sl_zigbee_af_calendar_cluster_println("    Saturday  (Day ID Ref):      0x%02X", calendars[calendarIndexForPrinting].normalDays[week->normalDayIndexes[5]].id);
-    sl_zigbee_af_calendar_cluster_println("    Sunday    (Day ID Ref):      0x%02X", calendars[calendarIndexForPrinting].normalDays[week->normalDayIndexes[6]].id);
+    sl_zigbee_af_cli_println("  Week ID: %d", week->id);
+    sl_zigbee_af_cli_println("    Monday    (Day ID Ref):      0x%02X", calendars[calendarIndexForPrinting].normalDays[week->normalDayIndexes[0]].id);
+    sl_zigbee_af_cli_println("    Tuesday   (Day ID Ref):      0x%02X", calendars[calendarIndexForPrinting].normalDays[week->normalDayIndexes[1]].id);
+    sl_zigbee_af_cli_println("    Wednesday (Day ID Ref):      0x%02X", calendars[calendarIndexForPrinting].normalDays[week->normalDayIndexes[2]].id);
+    sl_zigbee_af_cli_println("    Thursday  (Day ID Ref):      0x%02X", calendars[calendarIndexForPrinting].normalDays[week->normalDayIndexes[3]].id);
+    sl_zigbee_af_cli_println("    Friday    (Day ID Ref):      0x%02X", calendars[calendarIndexForPrinting].normalDays[week->normalDayIndexes[4]].id);
+    sl_zigbee_af_cli_println("    Saturday  (Day ID Ref):      0x%02X", calendars[calendarIndexForPrinting].normalDays[week->normalDayIndexes[5]].id);
+    sl_zigbee_af_cli_println("    Sunday    (Day ID Ref):      0x%02X", calendars[calendarIndexForPrinting].normalDays[week->normalDayIndexes[6]].id);
   }
 }
 
@@ -304,10 +304,10 @@ void sl_zigbee_af_calendar_common_print_days_command(sl_cli_command_arg_t *argum
   }
 
   if (memcmp(arguments->argv[arguments->arg_ofs - 1], "days", strlen("days")) == 0) {
-    sl_zigbee_af_calendar_cluster_println("Normal Day Profiles");
+    sl_zigbee_af_cli_println("Normal Day Profiles");
     printDayProfiles(&(calendars[calendarIndexForPrinting]), false);  // special days?
   } else {
-    sl_zigbee_af_calendar_cluster_println("Special Day Profiles");
+    sl_zigbee_af_cli_println("Special Day Profiles");
     printDayProfiles(&(calendars[calendarIndexForPrinting]), true);   // special days?
   }
 }
@@ -324,7 +324,7 @@ void sl_zigbee_af_calendar_common_setup_test_calendars_command(sl_cli_command_ar
   uint8_t i;
   for (i = 0; i < 2; i++) {
     if (SL_ZIGBEE_AF_PLUGIN_CALENDAR_COMMON_TOTAL_CALENDARS <= i) {
-      sl_zigbee_af_calendar_cluster_println("Calendar at index %d could not be accessed in setup.", i);
+      sl_zigbee_af_cli_println("Calendar at index %d could not be accessed in setup.", i);
       continue;
     }
     sl_zigbee_af_copy_string(calendars[i].name,
@@ -346,9 +346,9 @@ void sl_zigbee_af_calendar_common_setup_test_calendars_command(sl_cli_command_ar
     setupTestWeeks(&(calendars[i]), i);
     setupTestSeasons(&(calendars[i]), i);
   }
-  sl_zigbee_af_calendar_cluster_println("Calendars initialized with test-data.");
+  sl_zigbee_af_cli_println("Calendars initialized with test-data.");
 #else
-  sl_zigbee_af_calendar_cluster_println("This command is not available with current set of configuration");
+  sl_zigbee_af_cli_println("This command is not available with current set of configuration");
 #endif
 }
 
@@ -361,15 +361,15 @@ void sl_zigbee_af_calendar_common_print_seasons_command(sl_cli_command_arg_t *ar
     return;
   }
 
-  sl_zigbee_af_calendar_cluster_println("Seasons");
+  sl_zigbee_af_cli_println("Seasons");
   for (i = 0; i <  calendars[calendarIndexForPrinting].numberOfSeasons; i++) {
-    sl_zigbee_af_calendar_cluster_println("Season: %d", i);
+    sl_zigbee_af_cli_println("Season: %d", i);
     if (calendars[calendarIndexForPrinting].seasons[i].weekIndex == SL_ZIGBEE_AF_PLUGIN_CALENDAR_COMMON_INVALID_ID) {
-      sl_zigbee_af_calendar_cluster_println("  No data");
+      sl_zigbee_af_cli_println("  No data");
     } else {
-      sl_zigbee_af_calendar_cluster_print("  Start Date:  ");
+      sl_zigbee_af_cli_print("  Start Date:  ");
       sl_zigbee_af_print_dateln(&calendars[calendarIndexForPrinting].seasons[i].startDate);
-      sl_zigbee_af_calendar_cluster_println("  Week ID: %d", calendars[calendarIndexForPrinting].weeks[calendars[calendarIndexForPrinting].seasons[i].weekIndex].id);
+      sl_zigbee_af_cli_println("  Week ID: %d", calendars[calendarIndexForPrinting].weeks[calendars[calendarIndexForPrinting].seasons[i].weekIndex].id);
     }
   }
 }
@@ -468,10 +468,10 @@ void sl_zigbee_af_calendar_common_load_simple_calendar_command(sl_cli_command_ar
     // Special Days Table
     calendars[index].numberOfSpecialDayProfiles = 0;
   } else {
-    sl_zigbee_af_calendar_cluster_println("Index must be in the range of 0 to %d", SL_ZIGBEE_AF_PLUGIN_CALENDAR_COMMON_TOTAL_CALENDARS - 1);
+    sl_zigbee_af_cli_println("Index must be in the range of 0 to %d", SL_ZIGBEE_AF_PLUGIN_CALENDAR_COMMON_TOTAL_CALENDARS - 1);
   }
 #else
-  sl_zigbee_af_calendar_cluster_println("This command is not available with current set of configuration");
+  sl_zigbee_af_cli_println("This command is not available with current set of configuration");
 #endif
 }
 
@@ -604,11 +604,11 @@ void sl_zigbee_af_calendar_common_load_enhanced_calendar_command(sl_cli_command_
     // Special Days Table
     calendars[index].numberOfSpecialDayProfiles = 0;
   } else {
-    sl_zigbee_af_calendar_cluster_println("Index must be in the range of 0 to %d", SL_ZIGBEE_AF_PLUGIN_CALENDAR_COMMON_TOTAL_CALENDARS - 1);
+    sl_zigbee_af_cli_println("Index must be in the range of 0 to %d", SL_ZIGBEE_AF_PLUGIN_CALENDAR_COMMON_TOTAL_CALENDARS - 1);
   }
 #else
   UNUSED_VAR(arguments);
-  sl_zigbee_af_calendar_cluster_println("This command is not available with current set of configuration");
+  sl_zigbee_af_cli_println("This command is not available with current set of configuration");
 #endif
 }
 
@@ -662,10 +662,10 @@ void sl_zigbee_af_calendar_common_load_flat_calendar_command(sl_cli_command_arg_
     // Special Days Table
     calendars[index].numberOfSpecialDayProfiles = 0;
   } else {
-    sl_zigbee_af_calendar_cluster_println("Index must be in the range of 0 to %d", SL_ZIGBEE_AF_PLUGIN_CALENDAR_COMMON_TOTAL_CALENDARS - 1);
+    sl_zigbee_af_cli_println("Index must be in the range of 0 to %d", SL_ZIGBEE_AF_PLUGIN_CALENDAR_COMMON_TOTAL_CALENDARS - 1);
   }
 #else
-  sl_zigbee_af_calendar_cluster_println("This command is not available with current set of configuration");
+  sl_zigbee_af_cli_println("This command is not available with current set of configuration");
 #endif
 }
 
@@ -688,10 +688,10 @@ void sl_zigbee_af_calendar_common_load_simple_special_days_command(sl_cli_comman
     sl_zigbee_af_decode_date(0x710C1903, &calendars[index].specialDays[5].startDate); // (25th December 2013)
     sl_zigbee_af_decode_date(0x710C1A04, &calendars[index].specialDays[6].startDate); // (26th December 2013)
   } else {
-    sl_zigbee_af_calendar_cluster_println("Index must be in the range of 0 to %d", SL_ZIGBEE_AF_PLUGIN_CALENDAR_COMMON_TOTAL_CALENDARS - 1);
+    sl_zigbee_af_cli_println("Index must be in the range of 0 to %d", SL_ZIGBEE_AF_PLUGIN_CALENDAR_COMMON_TOTAL_CALENDARS - 1);
   }
 #else
-  sl_zigbee_af_calendar_cluster_println("This command is not available with current set of configuration");
+  sl_zigbee_af_cli_println("This command is not available with current set of configuration");
 #endif
 }
 
@@ -757,10 +757,10 @@ void sl_zigbee_af_calendar_common_load_enhanced_special_days_command(sl_cli_comm
     sl_zigbee_af_decode_date(0x710C0901, &calendars[index].specialDays[48].startDate); // (9th December 2013)
     sl_zigbee_af_decode_date(0x710C1001, &calendars[index].specialDays[49].startDate); // (16th December 2013)
   } else {
-    sl_zigbee_af_calendar_cluster_println("Index must be in the range of 0 to %d", SL_ZIGBEE_AF_PLUGIN_CALENDAR_COMMON_TOTAL_CALENDARS - 1);
+    sl_zigbee_af_cli_println("Index must be in the range of 0 to %d", SL_ZIGBEE_AF_PLUGIN_CALENDAR_COMMON_TOTAL_CALENDARS - 1);
   }
 #else
-  sl_zigbee_af_calendar_cluster_println("This command is not available with current set of configuration");
+  sl_zigbee_af_cli_println("This command is not available with current set of configuration");
 #endif
 }
 

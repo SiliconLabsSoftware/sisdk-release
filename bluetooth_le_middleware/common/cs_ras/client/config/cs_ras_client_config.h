@@ -37,9 +37,7 @@
 
 // <q CS_RAS_CLIENT_CONFIG_LOG_ENABLE> Log
 // <i> Default: 0
-#ifndef CS_RAS_CLIENT_CONFIG_LOG_ENABLE
 #define CS_RAS_CLIENT_CONFIG_LOG_ENABLE                                              0
-#endif
 
 // </h>
 
@@ -48,24 +46,24 @@
 // <o CS_RAS_CLIENT_REAL_TIME_RANGING_DATA_PROCEDURE_TIMEOUT_MS> Real-Time Ranging Data timeout from procedure start [ms] <1..5000>
 // <i> Timeout for data reception after procedure is started.
 // <i> Default: 5000
-#ifndef CS_RAS_CLIENT_REAL_TIME_RANGING_DATA_PROCEDURE_TIMEOUT_MS
 #define CS_RAS_CLIENT_REAL_TIME_RANGING_DATA_PROCEDURE_TIMEOUT_MS                    5000
-#endif
 
 // <o CS_RAS_CLIENT_RANGING_DATA_READY_PROCEDURE_TIMEOUT_MS> Ranging Data Ready Timeout from procedure start [ms] <1..5000>
 // <i> Timeout for data Ranging Data Ready indication/notification after procedure started.
 // <i> Default: 5000
-#ifndef CS_RAS_CLIENT_RANGING_DATA_READY_PROCEDURE_TIMEOUT_MS
 #define CS_RAS_CLIENT_RANGING_DATA_READY_PROCEDURE_TIMEOUT_MS                        5000
-#endif
 
 // <o CS_RAS_CLIENT_CONTROL_POINT_TIMEOUT_MS> Control Point response timeout [ms] <1..5000>
 // <i> Timeout for RAS Control Point response after a request is sent.
 // <i> Default: 5000
-#ifndef CS_RAS_CLIENT_CONTROL_POINT_TIMEOUT_MS
 #define CS_RAS_CLIENT_CONTROL_POINT_TIMEOUT_MS                                       5000
-#endif
 
+// </h>
+
+// <h> Runtime settings
+// <o CS_RAS_CLIENT_WAIT_FOR_GUARD> Timeout for guard (in ticks)
+// <i> Default: 10
+#define CS_RAS_CLIENT_WAIT_FOR_GUARD                                                  10
 // </h>
 
 // <<< end of configuration section >>>

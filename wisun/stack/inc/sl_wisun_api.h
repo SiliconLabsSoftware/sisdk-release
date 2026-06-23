@@ -59,10 +59,38 @@ extern "C" {
  * are also used by the stack to notify the application of any important
  * information, such as the state of the connection.
  *
- * The application is expected to override sl_wisun_on_event() to handle events
- * from the stack. Because all events share a common header, the function may be
- * implemented as a switch statement. The event-specific data can be accessed
- * through the #sl_wisun_evt_t::evt union.
+ * The stack relies on platform specific event system to deliver events to the
+ * application. The application is expected to subscribe to SL_EVENT_CLASS_WISUN
+ * event class and SL_WISUN_EVENT_IND_MASK event mask to receive these events.
+ * Because all events share a common header, they can be differentiated using a
+ * switch statement. The event-specific data can be accessed through the
+ * #sl_wisun_evt_t::evt union.
+ *
+ * The API is thread-safe, which means it can be called from multiple RTOS tasks.
+ * The stack guarantees that only a single request is executed at a time and that
+ * requests are handled in the order they were made. Note that the events need to
+ * be handled in a different context so the API functions can be called directly.
+ *
+ * @{
+ *****************************************************************************/
+
+/**
+ * @name Callbacks
+ * @{
+ */
+
+/**************************************************************************//**
+ * Function called to receive events from the Wi-SUN stack.
+ *
+ * @param[out] evt The event to be handled
+ *
+ * The component wisun_event_task provides a default implementation of a task that
+ * can be used to receive the events published by the stack and redirect them to
+ * the function sl_wisun_on_event().
+ * The application needs to implement this function to receive the events published
+ * by the stack and handle them accordingly. The function is called from a
+ * task context different from the Wi-SUN stack so the API functions can be called
+ * directly.
  *
  * @code
  *     void sl_wisun_on_event(sl_wisun_evt_t *evt)
@@ -77,28 +105,9 @@ extern "C" {
  *     }
  * @endcode
  *
- * The API is thread-safe, which means can be called from multiple RTOS tasks. The
- * stack guarantees that only a single request is executed at a time and that requests
- * are handled in the order they were made. Event callback is executed in a
- * different context than the request, so the API functions may be called from
- * the event callback.
- *
- * @{
- *****************************************************************************/
-
-/**
- * @name Callbacks
- * @{
- */
-
-/**************************************************************************//**
- * Callback handler for a single event.
- *
- * @param[out] evt The event to be handled
- *
- * This function is called when the stack sends an event to the application.
- * The application can declare its own version this function to customize
- * event handling. The default implementation discards all events.
+ * @note The application can use the component wisun_disable_event_task to
+ *       implement its own event handling logic instead of using the default
+ *       implementation provided by the component wisun_event_task.
  *
  * @see #SL_WISUN_EVT
  *****************************************************************************/
@@ -158,8 +167,6 @@ sl_status_t sl_wisun_disconnect();
  * @param[in] certificate_options Options for the certificate
  *   - #SL_WISUN_CERTIFICATE_OPTION_APPEND: Append the certificate to the list of trusted certificates
  *                                          instead of replacing the previous entries
- *   - #SL_WISUN_CERTIFICATE_OPTION_IS_REF: The application guarantees the certificate data will remain
- *                                          in scope and can therefore be referenced instead of copied
  * @param[in] certificate_length Size of the certificate data
  * @param[in] certificate Pointer to the certificate data
  * @return SL_STATUS_OK if successful, an error code otherwise
@@ -183,9 +190,6 @@ sl_status_t sl_wisun_set_trusted_certificate(uint16_t certificate_options,
  * @param[in] certificate_options Options for the certificate.
  *   - #SL_WISUN_CERTIFICATE_OPTION_APPEND: Append the certificate to the list of device certificates
  *                                          instead of replacing the previous entries
- *   - #SL_WISUN_CERTIFICATE_OPTION_IS_REF: The application guarantees the certificate data will remain
- *                                          in scope and can therefore be referenced instead of copied
- *   - #SL_WISUN_CERTIFICATE_OPTION_HAS_KEY: The certificate has a corresponding private key
  * @param[in] certificate_length Size of the certificate data
  * @param[in] certificate Pointer to the certificate data
  * @return SL_STATUS_OK if successful, an error code otherwise
@@ -206,8 +210,6 @@ sl_status_t sl_wisun_set_device_certificate(uint16_t certificate_options,
  * Set the device private key used to authenticate to the authentication server.
  *
  * @param[in] key_options Options for the private key
- *   - #SL_WISUN_PRIVATE_KEY_OPTION_IS_REF: The application guarantees the private key data will remain
- *                                          in scope and can therefore be referenced instead of copied
  * @param[in] key_length Size of the private key data
  * @param[in] key Pointer to the private key data
  * @return SL_STATUS_OK if successful, an error code otherwise
@@ -680,6 +682,177 @@ sl_status_t sl_wisun_set_mode_switch(uint8_t mode,
 sl_status_t sl_wisun_set_connection_parameters(const sl_wisun_connection_params_t *params);
 
 /**************************************************************************//**
+ * Set a Wi-SUN option.
+ *
+ * @param[in] id      Option to set (see @ref sl_wisun_option_id_t).
+ * @param[in] val     Pointer to the new value. The stack reads val_len
+ *                    bytes from this address.
+ * @param[in] val_len Size in bytes of the value. Must equal the size of the
+ *                    type associated with id.
+ *
+ * @return SL_STATUS_OK on success.
+ * @return SL_STATUS_INVALID_STATE if the stack state does not allow the option to be set,
+ *         or if @ref sl_wisun_set_connection_parameters,
+ *         @ref sl_wisun_set_lfn_parameters, or
+ *         @ref sl_wisun_br_set_connection_parameters has been called
+ *         previously.
+ * @return SL_STATUS_INVALID_PARAMETER if id is not recognized,
+ *         val_len does not match the expected size for id, or the
+ *         value is out of the allowed range for that option.
+ *
+ * By default, the stack automatically adapts its behavior based on the
+ * PAN Size advertised in the Wi-SUN PAN-IE. This automatic adaptation is
+ * optimized for use with a Silicon Labs Border Router.
+ *
+ * This function is intended for fine-grained configuration of parameters that
+ * are not automatically adapted by the stack and therefore remain fixed unless
+ * explicitly changed.
+ *
+ * This function and
+ * @ref sl_wisun_set_connection_parameters
+ * @ref sl_wisun_set_lfn_parameters
+ * @ref sl_wisun_br_set_connection_parameters
+ * are mutually exclusive. If any of these legacy connection parameters APIs
+ * has been called, any subsequent call to this function will fail with
+ * SL_STATUS_INVALID_STATE. When using the Full library, this applies
+ * regardless of the role the option targets: a previous call to any of the
+ * three legacy APIs locks this function out entirely.
+ *
+ * This restriction remains in effect even if the stack is later disconnected.
+ * To switch back to auto mode and allow this function again, call
+ * @ref sl_wisun_reset_parameters.
+ *
+ * A later call to @ref sl_wisun_set_connection_parameters,
+ * @ref sl_wisun_set_lfn_parameters, or
+ * @ref sl_wisun_br_set_connection_parameters also overrides any overlapping
+ * settings previously applied with this function.
+ *
+ * This function can be used together with
+ * @ref sl_wisun_set_ffn_advanced_parameters
+ * @ref sl_wisun_set_lfn_advanced_parameters
+ * @ref sl_wisun_br_set_advanced_parameters
+ *
+ * Most options can only be set before joining a network, i.e.
+ * before calling @ref sl_wisun_join.
+ * When this restriction does not apply, it is stated as a note in the individual
+ * option ID documentation (see @ref sl_wisun_option_id_t).
+ *
+ * Available in libraries: Full, FFN, LFN, BR (see @ref API_AVAILABILITY)
+ *****************************************************************************/
+sl_status_t sl_wisun_set_option(sl_wisun_option_id_t id, const void *val, uint16_t val_len);
+
+/**************************************************************************//**
+ * Set advanced Wi-SUN connection parameters.
+ *
+ * @param[in] params Pointer to the advanced connection parameters.
+ *
+ * @return SL_STATUS_OK on success.
+ * @return SL_STATUS_INVALID_STATE if the stack is not in disconnected
+ *         state, or if @ref sl_wisun_set_connection_parameters was
+ *         called previously.
+ * @return SL_STATUS_INVALID_PARAMETER if one or more parameters are
+ *         invalid.
+ *
+ * By default, the stack automatically adapts its behavior based on the
+ * PAN Size advertised in the Wi-SUN PAN-IE. This automatic adaptation is
+ * optimized for use with a Silicon Labs Border Router.
+ *
+ * This function overrides that automatic adjustment with explicit values.
+ *
+ * When connecting to a non-Silicon Labs Border Router, automatic adaptation
+ * may not always provide the desired behavior. In that case, it is recommended
+ * to use this function to explicitly set the parameters.
+ *
+ * This function and @ref sl_wisun_set_connection_parameters are mutually
+ * exclusive. If @ref sl_wisun_set_connection_parameters has been called, any
+ * subsequent call to this function will fail with SL_STATUS_INVALID_STATE.
+ *
+ * This restriction remains in effect even if the stack is later disconnected.
+ * To switch back to auto mode and allow this function again, call
+ * @ref sl_wisun_reset_parameters.
+ *
+ * A later call to @ref sl_wisun_set_connection_parameters also overrides any
+ * overlapping settings previously applied with this function.
+ *
+ * This function can be used together with @ref sl_wisun_set_option.
+ *
+ * This function can only be called before joining a network, i.e.
+ * before calling @ref sl_wisun_join.
+ *
+ * Available in libraries: Full, FFN (see @ref API_AVAILABILITY)
+ *****************************************************************************/
+sl_status_t sl_wisun_set_ffn_advanced_parameters(const sl_wisun_ffn_advanced_parameters_t *params);
+
+/**************************************************************************//**
+ * Set advanced Wi-SUN LFN connection parameters.
+ *
+ * @param[in] params Pointer to the advanced LFN parameters.
+ *
+ * @return SL_STATUS_OK on success.
+ * @return SL_STATUS_INVALID_STATE if the stack is not in disconnected
+ *         state, or if @ref sl_wisun_set_lfn_parameters was called
+ *         previously.
+ * @return SL_STATUS_INVALID_PARAMETER if one or more parameters are
+ *         invalid.
+ *
+ * By default, the stack automatically adapts its behavior based on the
+ * PAN Size advertised in the Wi-SUN PAN-IE. This automatic adaptation is
+ * optimized for use with a Silicon Labs Border Router.
+ *
+ * This function overrides that automatic adjustment with explicit values.
+ *
+ * When connecting to a non-Silicon Labs Border Router, automatic adaptation
+ * may not always provide the desired behavior. In that case, it is recommended
+ * to use this function to explicitly set the parameters.
+ *
+ * This function and @ref sl_wisun_set_lfn_parameters are mutually
+ * exclusive. If @ref sl_wisun_set_lfn_parameters has been called, any
+ * subsequent call to this function will fail with SL_STATUS_INVALID_STATE.
+ *
+ * This restriction remains in effect even if the stack is later disconnected.
+ * To switch back to auto mode and allow this function again, call
+ * @ref sl_wisun_reset_parameters.
+ *
+ * A later call to @ref sl_wisun_set_lfn_parameters also overrides any
+ * overlapping settings previously applied with this function.
+ *
+ * This function can be used together with @ref sl_wisun_set_option.
+ *
+ * This function can only be called before joining a network, i.e.
+ * before calling @ref sl_wisun_join.
+ *
+ * Available in libraries: Full, LFN (see @ref API_AVAILABILITY)
+ *****************************************************************************/
+sl_status_t sl_wisun_set_lfn_advanced_parameters(const sl_wisun_lfn_advanced_parameters_t *params);
+
+/**************************************************************************//**
+ * Reset all parameters and options to defaults and re-enable auto mode.
+ *
+ * @return SL_STATUS_OK on success.
+ * @return SL_STATUS_INVALID_STATE if the stack is not in disconnected
+ *         state.
+ *
+ * This function restores all connection parameters and options to their
+ * default values and re-enables the automatic adjustment of parameters
+ * based on the PAN Size advertised in the Wi-SUN PAN-IE.
+ *
+ * After calling this function, the stack switches back to auto mode.
+ * Calls to @ref sl_wisun_set_option,
+ * @ref sl_wisun_set_ffn_advanced_parameters,
+ * @ref sl_wisun_set_lfn_advanced_parameters,
+ * @ref sl_wisun_br_set_advanced_parameters are allowed again.
+ *
+ * Any parameter or option customization previously applied through
+ * those functions is discarded.
+ *
+ * This function can only be called before joining a network, i.e.
+ * before calling @ref sl_wisun_join.
+ *
+ * Available in libraries: Full, FFN, LFN, BR (see @ref API_AVAILABILITY)
+ *****************************************************************************/
+sl_status_t sl_wisun_reset_parameters(void);
+
+/**************************************************************************//**
  * Configure the list of PHY operating modes the device will use for mode switch operations.
  *
  * @param[in] phy_mode_id_count Number of PhyModeId to configure. If set to 0,
@@ -793,6 +966,7 @@ sl_status_t sl_wisun_set_pti_state(bool pti_state);
  *   - #SL_WISUN_FRAME_TYPE_PC: Transmit a PAN Configuration frame
  *   - #SL_WISUN_FRAME_TYPE_DIS: Transmit a DODAG Information Solicitation frame
  *   - #SL_WISUN_FRAME_TYPE_DIO: Transmit a DODAG Information Object frame
+ *   - #SL_WISUN_FRAME_TYPE_LPAS: Transmit a LFN PAN Advertisement Solicit frame
  * @return SL_STATUS_OK if successful, an error code otherwise
  *
  * This function causes a periodic frame (FAN Discovery, RPL) to be transmitted
@@ -912,6 +1086,141 @@ sl_status_t sl_wisun_set_direct_connect_state(bool is_enabled);
  * Available in libraries: Full, FFN (see @ref API_AVAILABILITY)
  *****************************************************************************/
 sl_status_t sl_wisun_accept_direct_connect_link(in6_addr_t *link_local_ipv6);
+
+/**************************************************************************//**
+ * Advertise the Direct Connect Server identity in response to a discovery request.
+ *
+ * This function is used by a Direct Connect Server to advertise its identity to a
+ * client that has initiated a discovery scan.
+ *
+ * When a SL_WISUN_MSG_DIRECT_CONNECT_ID_SOLICIT_IND_ID event is received,
+ * the application should inspect the DC ID contained in the event. If the DC ID
+ * is recognized as valid for identification or scanning purposes, this function
+ * should be called to respond to the client.
+ *
+ * The advertisement process stops automatically when:
+ *   - The client acknowledges the DCI (identification frame), or
+ *   - The configured maximum number of Identity Advertisement (max_advert_count) is reached.
+ *
+ * @note
+ *   - This function must only be called upon reception of a SL_WISUN_MSG_DIRECT_CONNECT_ID_SOLICIT_IND_ID event.
+ *   - The DC ID format and matching logic are defined by the application.
+ *
+ * @param[in] link_local_ipv6
+ *   Pointer to the link-local IPv6 address of the client that sent the identification solicitation.
+ *
+ * @param[in] dc_id
+ *   Pointer to the Direct Connect Server Identifier (DC ID).
+ *   The format and length of this identifier are application-defined.
+ *
+ * @return
+ *   SL_STATUS_OK if the advertisement process started successfully.
+ *   Error code otherwise (e.g. invalid parameters or transmission failure).
+ *
+ * Available in libraries: Full, FFN (see @ref API_AVAILABILITY).
+ *****************************************************************************/
+sl_status_t sl_wisun_advert_direct_connect_server_id(const in6_addr_t *link_local_ipv6,
+                                                     const sl_wisun_dc_id_t *dc_id);
+
+/**************************************************************************//**
+ * Initialize the Direct Connect (DC) client.
+ *
+ * @param[in] phy  Pointer to the PHY configuration (#sl_wisun_phy_config_t).
+ *                 Supported types: #SL_WISUN_PHY_CONFIG_FAN10, #SL_WISUN_PHY_CONFIG_FAN11,
+ *                 or #SL_WISUN_PHY_CONFIG_EXPLICIT. Must match the DC server configuration.
+ * @return SL_STATUS_OK if successful, an error code otherwise.
+ *
+ * This function configures and starts the Direct Connect client, enabling
+ * point-to-point communication with a DC server. The DC client provides low-latency,
+ * single-hop connectivity that can operate standalone or alongside a Wi-SUN mesh
+ * network connection.
+ *
+ * Upon success, the DC client enters an idle state, ready to perform discovery scans
+ * via sl_wisun_start_direct_connect_scan() or establish connections via
+ * sl_wisun_connect_to_direct_connect_server(). State changes are reported via
+ * #SL_WISUN_MSG_DIRECT_CONNECT_CLIENT_STATE_CHANGED_IND_ID events.
+ *
+ * Security credentials (PMK) should be configured via sl_wisun_set_direct_connect_pmk().
+ *
+ * @note The behavior depends on when this function is called relative to sl_wisun_join():
+ *   - DC-only mode (called before sl_wisun_join()): The stack operates exclusively in
+ *     DC client mode. sl_wisun_join() is blocked until sl_wisun_stop_direct_connect_client()
+ *     is called.
+ *   - Concurrent mode (called after sl_wisun_join()): The DC client operates alongside
+ *     the Wi-SUN network (whether join is complete or in progress). This enables use cases
+ *     such as debugging devices that cannot join the mesh by reaching them via DC link.
+ *
+ * Available in libraries: Full, FFN (see @ref API_AVAILABILITY).
+ *****************************************************************************/
+sl_status_t sl_wisun_start_direct_connect_client(const sl_wisun_phy_config_t *phy);
+
+/**************************************************************************//**
+ * Stop the Direct Connect client.
+ *
+ * Immediately ends any ongoing scan and aborts any
+ * ongoing or active connection. After return, the client is idle.
+ *
+ * @return SL_STATUS_OK if stopped or already idle; error code otherwise.
+ *
+ * Available in libraries: Full, FFN (see @ref API_AVAILABILITY).
+*****************************************************************************/
+sl_status_t sl_wisun_stop_direct_connect_client(void);
+
+/**************************************************************************//**
+ * Start a Direct Connect client discovery scan.
+ *
+ * Client starts to transmit Direct Connect identity solicitation frames using
+ * \p dc_id up to \p max_solicits_count sequences. Matching servers reply with
+ * Direct Connect identification frames (DCI). Scanning runs independently of
+ * connection state (idle / connecting / connected).
+ *
+ * @param[in] dc_id Pointer to the application-defined Direct Connect ID (see @ref sl_wisun_dc_id_t).
+ * @param[in] max_solicits_count  Max solicitation sequences; if 0, the scan is persistent.
+ * @return SL_STATUS_OK on success; error code otherwise.
+ *
+ * @note The application interprets/validates server identifiers and may call
+ *       sl_wisun_connect_to_direct_connect_server() at any time to switch targets.
+ *       The application must call sl_wisun_stop_direct_connect_scan() to stop the scan
+ *       when the current scan is no longer needed or need to scan for a different DC ID.
+ *
+ * Available in libraries: Full, FFN (see @ref API_AVAILABILITY).
+ *****************************************************************************/
+sl_status_t sl_wisun_start_direct_connect_scan(const sl_wisun_dc_id_t *dc_id,
+                                               uint8_t max_solicits_count);
+
+/**************************************************************************//**
+ * Stop an ongoing Direct Connect client discovery scan.
+ *
+ * Immediately stops the Direct Connect client from transmitting Direct Connect
+ * identity solicitations. This does not affect connection establishment or an already
+ * established Direct Connect link.
+ *
+ * @return SL_STATUS_OK if stopped or not scanning; error code otherwise.
+ *
+ * Available in libraries: Full, FFN (see @ref API_AVAILABILITY).
+ *****************************************************************************/
+sl_status_t sl_wisun_stop_direct_connect_scan(void);
+
+/**************************************************************************//**
+ * Establish or switch a Direct Connect link to a selected server.
+ *
+ * Starts (or restarts) authentication and link establishment with \p mac_address using
+ * \p pmk_id. If a connection is in progress or active, it is aborted and the
+ * new target is attempted. Scanning is not affected by this API.
+ *
+ * @param[in] mac_address MAC address of the target server.
+ * @param[in] pmk_id Pairwise Master Key identifier to use.
+ * @param[in] max_solicits_count  Max solicitation retries for this connection.
+ * @return SL_STATUS_OK on success; error code otherwise.
+ *
+ * @note This API may be called while scanning, connecting, or connected to
+ *       switch the active/attempted connection to a newly discovered target.
+ *
+ * Available in libraries: Full, FFN (see @ref API_AVAILABILITY).
+*****************************************************************************/
+sl_status_t sl_wisun_connect_to_direct_connect_server(const sl_wisun_mac_address_t *mac_address,
+                                                      uint32_t pmk_id,
+                                                      uint8_t max_solicits_count);
 
 /**************************************************************************//**
  * Set the radio sensitivity for the given PHY.
@@ -1073,6 +1382,68 @@ sl_status_t sl_wisun_set_fan_tps_version(uint8_t fan_tps_version);
  * Available in libraries: Full, FFN, LFN, BR (see @ref API_AVAILABILITY)
  *****************************************************************************/
 sl_status_t sl_wisun_set_rx_fifo_size(uint16_t size);
+
+/**************************************************************************//**
+ * Set DHCPv6 vendor-specific information data to be inserted in DHCPv6 Solicits.
+ *
+ * @param[in] enterprise_number The IANA-assigned Private Enterprise Number
+ *                              identifying the vendor.
+ * @param[in] data Pointer to the vendor-specific data buffer. To clear any
+ *                 previously set vendor-specific data, set length to 0.
+ *                 According to RFC 3315, the vendor-option-data field MUST be encoded
+ *                 as a sequence of code/length/value fields in big endian with format:
+ *                   - Code: 2 bytes, vendor-specific option code
+ *                   - Length: 2 bytes
+ *                   - Value: variable length corresponding to Length field
+ * @param[in] length Length of the vendor-specific data in bytes.
+ *
+ * @return SL_STATUS_OK if successful,
+ *         SL_STATUS_INVALID_PARAMETER if data is NULL while length is non-zero,
+ *         SL_STATUS_ALLOCATION_FAILED if the stack failed to allocate the necessary memory.
+ *
+ * @note This API does not check the integrity or correctness of the provided vendor data.
+ *
+ * Available in libraries: Full, FFN, LFN (see @ref API_AVAILABILITY)
+ ******************************************************************************/
+sl_status_t sl_wisun_set_dhcpv6_vendor_data(uint32_t enterprise_number, const uint8_t *data, uint16_t length);
+
+/**************************************************************************//**
+ * Configure the Last Gasp mode.
+ *
+ * @param[in] enable Enable (true) or disable (false) Last Gasp mode
+ * @return SL_STATUS_OK if successful,
+ *         SL_STATUS_INVALID_STATE if the stack is not ready
+ *
+ * This function configures the Last Gasp mode.
+ * It can be called after the Wi-SUN network is joined with enable set to true
+ * to activate Last Gasp mode. After a successful call to this function with enable
+ * set to true the stack enters low energy mode. If application needs to send Last
+ * Gasp data, it needs to use a socket with DSCP set to DSCP_EF.
+ * Last Gasp mode can only be enabled once. If it is already enabled, the function
+ * returns SL_STATUS_INVALID_STATE.
+ * When called with enable set to false, the Last Gasp mode is disabled.
+ * The stack returns to normal operation.
+ *
+ * Available in libraries: Full, FFN, (see @ref API_AVAILABILITY)
+ *****************************************************************************/
+sl_status_t sl_wisun_set_last_gasp(bool enable);
+
+/**************************************************************************//**
+ * Enable or disable Wi-SUN First Breath on the FFN.
+ *
+ * @param[in] enable First Breath state
+ *   - **true**: enable First Breath (route/next-hop handling and discovery per First Breath rules)
+ *   - **false**: disable First Breath and tear down the associated route
+ * @return SL_STATUS_OK if successful, an error code otherwise
+ *
+ * When the stack is ready to route datagrams, the event
+ * @ref SL_WISUN_MSG_FB_READY_IND_ID is raised to notify the application.
+ * On reception of the event, the application needs to use a socket with DSCP
+ * set to DSCP_EF to send First Breath data.
+ *
+ * Available in libraries: Full, FFN (see @ref API_AVAILABILITY)
+ *****************************************************************************/
+sl_status_t sl_wisun_set_first_breath(bool enable);
 
 /** @} (end SL_WISUN_API) */
 

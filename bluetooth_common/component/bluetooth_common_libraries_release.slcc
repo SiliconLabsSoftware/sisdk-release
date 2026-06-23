@@ -15,14 +15,26 @@ library:
   condition:
   - toolchain_gcc
   - cortexm33
+- path: lib/build/gcc/cortex-m55/bgcommon/release/libbgcommon.a
+  condition:
+  - toolchain_gcc
+  - cortexm55
 - path: lib/build/iar/cortex-m33/bgcommon/release/libbgcommon.a
   condition:
   - toolchain_iar
   - cortexm33
+- path: lib/build/iar/cortex-m55/bgcommon/release/libbgcommon.a
+  condition:
+  - toolchain_iar
+  - cortexm55
 - path: lib/build/llvm/cortex-m33/bgcommon/release/libbgcommon.a
   condition:
   - toolchain_llvm
   - cortexm33
+- path: lib/build/llvm/cortex-m55/bgcommon/release/libbgcommon.a
+  condition:
+  - toolchain_llvm
+  - cortexm55
 metadata:
   sbom:
     license: MSLA

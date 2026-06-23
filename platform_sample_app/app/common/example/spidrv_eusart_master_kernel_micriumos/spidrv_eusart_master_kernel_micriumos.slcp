@@ -1,7 +1,7 @@
 project_name: spidrv_eusart_master_kernel_micriumos
 package: platform
 quality: production
-label: Platform - SPIDRV Master on Micrium OS kernel using EUSART
+label: Platform - SPIDRV Master on Micrium OS Kernel using EUSART
 description: >
   This example project demonstrates how to use the master mode of the Serial Peripheral Interface driver in a Micrium OS kernel task.
 category: Example|Platform
@@ -41,3 +41,8 @@ ui_hints:
   highlight: readme.md
 tag:
   - hardware:component:exp_header:spi
+  - hardware:device:ram:20
+  - hwfilter:board:hardware:has:exp_header:spi
+  - hwfilter:device:device_has_eusart
+  - hwfilter:ram:20k
+  - hwfilter:device:device_series_2

@@ -43,6 +43,6 @@
         <value length="8" type="hex" variable_length="false"/>
         <properties read="true" read_requirement="mandatory"/>
       </characteristic>
-    </service>	
+    </service>
   </gatt>
 </project>

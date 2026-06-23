@@ -24,7 +24,7 @@ set transfer_stoped=0
 set transfer_status=0
 
 echo ***********************************************************************************
-echo * Player is running in backgound mode. Please press start button for audio streaming. 
+echo * Player is running in background mode. Please press start button for audio streaming.
 echo * Please Ctrl+C to break this script.
 echo *************************************
 goto %voble_cmd%
@@ -43,12 +43,12 @@ IF %transfer_stoped%==0 IF %transfer_started%==1 IF %transfer_status%==0 (
   set transfer_stoped=1
   taskkill /PID %PARENT_PID% /F /T >null
 
-  echo Transmission stoped
+  echo Transmission stopped
 )
 
-IF %transfer_stoped%==0 IF %transfer_started%==1 IF %transfer_status%==1 (		  
+IF %transfer_stoped%==0 IF %transfer_started%==1 IF %transfer_status%==1 (
   setlocal enabledelayedexpansion
-  for /f "tokens=2 delims= " %%A IN ('tasklist ^| find "tail.exe"') do set PID=%%A  
+  for /f "tokens=2 delims= " %%A IN ('tasklist ^| find "tail.exe"') do set PID=%%A
   for /f "usebackq tokens=2 delims==" %%A	in (`wmic process where ^(processid^=!PID!^) get parentprocessid /value`) do (
     set PARENT_PID=%%A
   )
@@ -74,4 +74,3 @@ goto end
 
 :end
 echo End
-

@@ -131,8 +131,16 @@ void sl_zigbee_af_get_mfg_string(uint8_t* returnData)
   static bool mfgStringRetrieved = false;
 
   if (mfgStringRetrieved == false) {
-    sl_zigbee_ezsp_get_mfg_token(SL_ZIGBEE_EZSP_MFG_STRING, mfgString);
-    mfgStringRetrieved = true;
+    uint8_t len = sl_zigbee_ezsp_get_mfg_token(SL_ZIGBEE_EZSP_MFG_STRING, mfgString);
+    if (len != 255) {
+      mfgStringRetrieved = true;
+    } else {
+      // Deprecated token (e.g. Series 3 NCP): use placeholder to match SOC behavior.
+      static const char placeholder[] = "(deprecated)";
+      memcpy(mfgString, placeholder, sizeof(placeholder) - 1);
+      memset(mfgString + sizeof(placeholder) - 1, 0, MFG_STRING_MAX_LENGTH - (sizeof(placeholder) - 1));
+      mfgStringRetrieved = true;
+    }
   }
   // NOTE:  The MFG string is not NULL terminated.
   memmove(returnData, mfgString, MFG_STRING_MAX_LENGTH);

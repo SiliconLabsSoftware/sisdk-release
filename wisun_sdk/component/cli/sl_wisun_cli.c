@@ -1859,7 +1859,7 @@ void app_disconnect(const sl_cli_command_arg_t *arguments)
   if (ret == SL_STATUS_OK) {
     printf("[Disconnecting]\n");
   } else {
-    printf("[Disconnection failed: %lu]\n", ret);
+    printf("[Disconnection failed: %"PRIu32"]\n", ret);
   }
 }
 #endif
@@ -1881,14 +1881,14 @@ void app_mac_allow(const sl_cli_command_arg_t *arguments)
     // Attempt to convert the MAC address string
     ret = app_util_get_mac_address(&address, address_str);
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to parse the MAC address: %lu]\n", ret);
+      printf("[Failed: unable to parse the MAC address: %"PRIu32"]\n", ret);
       return;
     }
   }
 
   ret = sl_wisun_allow_mac_address(&address);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to add the MAC address to the access list: %lu]\n", ret);
+    printf("[Failed: unable to add the MAC address to the access list: %"PRIu32"]\n", ret);
     return;
   }
 
@@ -1912,14 +1912,14 @@ void app_mac_deny(const sl_cli_command_arg_t *arguments)
     // Attempt to convert the MAC address string
     ret = app_util_get_mac_address(&address, address_str);
     if (ret != SL_STATUS_OK) {
-      printf("[Failed: unable to parse the MAC address: %lu]\n", ret);
+      printf("[Failed: unable to parse the MAC address: %"PRIu32"]\n", ret);
       return;
     }
   }
 
   ret = sl_wisun_deny_mac_address(&address);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to add the MAC address to the deny list: %lu]\n", ret);
+    printf("[Failed: unable to add the MAC address to the deny list: %"PRIu32"]\n", ret);
     return;
   }
 
@@ -1945,7 +1945,7 @@ void app_stop(const sl_cli_command_arg_t *arguments)
 
   ret = sl_wisun_br_stop();
   if (ret != SL_STATUS_OK) {
-    printf("[Failed: unable to stop Border Router: %lu]\n", ret);
+    printf("[Failed: unable to stop Border Router: %"PRIu32"]\n", ret);
     return;
   }
 
@@ -1967,7 +1967,7 @@ void app_wifi_connect(const sl_cli_command_arg_t *arguments)
 
   status = app_wisun_setting_get_ssid(ssid_buffer, sizeof(ssid_buffer));
   if (status != SL_STATUS_OK) {
-    printf("[wifi: SSID failure %lu]\n", status);
+    printf("[wifi: SSID failure %"PRIu32"]\n", status);
     return;
   }
 
@@ -1975,12 +1975,12 @@ void app_wifi_connect(const sl_cli_command_arg_t *arguments)
 
   status = app_wisun_setting_get_security(&security_type);
   if (status != SL_STATUS_OK) {
-    printf("[wifi: Security failure %lu]\n", status);
+    printf("[wifi: Security failure %"PRIu32"]\n", status);
   }
 
   status = app_wisun_setting_get_passphrase(passphrase_buffer, sizeof(passphrase_buffer));
   if (status != SL_STATUS_OK) {
-    printf("[wifi: Passphrase failure %lu]\n", status);
+    printf("[wifi: Passphrase failure %"PRIu32"]\n", status);
     return;
   }
 
@@ -1989,7 +1989,7 @@ void app_wifi_connect(const sl_cli_command_arg_t *arguments)
                                     (wifi_security_type_t)security_type,
                                     passphrase_buffer);
   if (status != SL_STATUS_OK) {
-    printf("[wifi: connection failure %lu]\n", status);
+    printf("[wifi: connection failure %"PRIu32"]\n", status);
   }
 }
 
@@ -2093,7 +2093,7 @@ void app_set_trace_level(const sl_cli_command_arg_t *arguments)
   if (ret == SL_STATUS_OK) {
     printf("[Set %d trace groups]\n", group_count);
   } else {
-    printf("[Error when setting trace level: %lu]\n", ret);
+    printf("[Error when setting trace level: %"PRIu32"]\n", ret);
   }
 }
 #endif
@@ -2296,7 +2296,7 @@ static sl_status_t _app_cli_get_connection(char *value_str,
   sl_wisun_join_state_t join_state = SL_WISUN_JOIN_STATE_DISCONNECTED;
   (void)key_str;
 
-  if ((value_str == NULL) || (entry == NULL)) {
+  if ((value_str == NULL) || (entry == NULL) || (entry->output_enum_list == NULL)) {
     return SL_STATUS_FAIL;
   }
 
@@ -2312,6 +2312,10 @@ static sl_status_t _app_cli_get_connection(char *value_str,
 
   if (value_enum->value_str != NULL) {
     while (value_enum) {
+      if (value_enum->value_str == NULL) {
+        // No matching enumeration found
+        return SL_STATUS_FAIL;
+      }
       if (value_enum->value == value) {
         // Matching enumeration found
         break;
@@ -2421,11 +2425,15 @@ static sl_status_t _app_cli_get_network_size(char *value_str,
   // finds the proper string for the value
   value_enum = entry->output_enum_list;
 
-  if (res != SL_STATUS_OK || value_enum->value_str == NULL) {
+  if (res != SL_STATUS_OK || value_enum == NULL || value_enum->value_str == NULL) {
     return SL_STATUS_FAIL;
   }
 
   while (value_enum) {
+    if (value_enum->value_str == NULL) {
+      // No matching enumeration found
+      return SL_STATUS_FAIL;
+    }
     if (value_enum->value == value) {
       // Matching enumeration found
       break;
@@ -2533,7 +2541,7 @@ static sl_status_t _app_cli_get_phy(char *value_str,
 
     // CH0 Frequency
   } else if (strstr(entry->key, APP_CLI_PHY_PARAM_CH0_FREQ_STR)) {
-    snprintf(value_str, APP_CLI_STR_VALUE_LENGTH, "%lu %s",
+    snprintf(value_str, APP_CLI_STR_VALUE_LENGTH, "%"PRIu32" %s",
              _phy_common_params.ch0_frequency,
              _param_used_flag_str(APP_CLI_PHY_PARAM_CH0_FREQ_STR));
 
@@ -2671,13 +2679,13 @@ static sl_status_t _app_ms_get_counters(char *value_str,
   }
   // mode switch TX-RX counters (inc. failed)
   if (strstr(entry->key, "mode_switch_tx_counter")) {
-    snprintf(value_str, APP_CLI_STR_VALUE_LENGTH, "%lu", stat.mac.tx_ms_count);
+    snprintf(value_str, APP_CLI_STR_VALUE_LENGTH, "%"PRIu32, stat.mac.tx_ms_count);
   } else if (strstr(entry->key, "mode_switch_tx_failed_counter")) {
-    snprintf(value_str, APP_CLI_STR_VALUE_LENGTH, "%lu", stat.mac.tx_ms_failed_count);
+    snprintf(value_str, APP_CLI_STR_VALUE_LENGTH, "%"PRIu32, stat.mac.tx_ms_failed_count);
   } else if (strstr(entry->key, "mode_switch_rx_counter")) {
-    snprintf(value_str, APP_CLI_STR_VALUE_LENGTH, "%lu", stat.mac.rx_ms_count);
+    snprintf(value_str, APP_CLI_STR_VALUE_LENGTH, "%"PRIu32, stat.mac.rx_ms_count);
   } else if (strstr(entry->key, "mode_switch_rx_failed_counter")) {
-    snprintf(value_str, APP_CLI_STR_VALUE_LENGTH, "%lu", stat.mac.rx_ms_failed_count);
+    snprintf(value_str, APP_CLI_STR_VALUE_LENGTH, "%"PRIu32, stat.mac.rx_ms_failed_count);
   } else {
     // nothing to do
   }
@@ -2721,7 +2729,7 @@ static sl_status_t _app_set_regulation(const char *value_str,
                              entry->input & APP_CLI_INPUT_FLAG_SIGNED);
 
   if (res != SL_STATUS_OK) {
-    printf("[Failed: Get value error: %lu]\n", res);
+    printf("[Failed: Get value error: %"PRIu32"]\n", res);
     return res;
   }
 
@@ -2731,7 +2739,7 @@ static sl_status_t _app_set_regulation(const char *value_str,
     res = sl_wisun_set_regulation_tx_thresholds(thresholds.warning_threshold,
                                                 thresholds.alert_threshold);
     if (res != SL_STATUS_OK) {
-      printf("[Failed: unable to set regulation TX thresholds: %lu]\n", res);
+      printf("[Failed: unable to set regulation TX thresholds: %"PRIu32"]\n", res);
       return res;
     }
 
@@ -2804,7 +2812,7 @@ static sl_status_t _app_set_regulation_warning_threshold(const char *value_str,
                              entry->input & APP_CLI_INPUT_FLAG_SIGNED);
 
   if (res != SL_STATUS_OK) {
-    printf("[Failed: Get value error: %lu]\n", res);
+    printf("[Failed: Get value error: %"PRIu32"]\n", res);
     return res;
   }
 
@@ -2812,7 +2820,7 @@ static sl_status_t _app_set_regulation_warning_threshold(const char *value_str,
     (void)sl_wisun_app_core_get_regulation_thresholds(&thresholds);
     res = sl_wisun_set_regulation_tx_thresholds((int8_t)value, thresholds.alert_threshold);
     if (res != SL_STATUS_OK) {
-      printf("[Failed: unable to set regulation TX warning threshold: %lu]\n", res);
+      printf("[Failed: unable to set regulation TX warning threshold: %"PRIu32"]\n", res);
       return res;
     } else {
       sl_wisun_app_core_set_regulation_thresholds((int8_t)value, thresholds.alert_threshold);
@@ -2854,7 +2862,7 @@ static sl_status_t _app_set_regulation_alert_threshold(const char *value_str,
                              entry->input & APP_CLI_INPUT_FLAG_SIGNED);
 
   if (res != SL_STATUS_OK) {
-    printf("[Failed: Get value error: %lu]\n", res);
+    printf("[Failed: Get value error: %"PRIu32"]\n", res);
     return res;
   }
 
@@ -2862,7 +2870,7 @@ static sl_status_t _app_set_regulation_alert_threshold(const char *value_str,
     (void)sl_wisun_app_core_get_regulation_thresholds(&thresholds);
     res = sl_wisun_set_regulation_tx_thresholds(thresholds.warning_threshold, (int8_t)value);
     if (res != SL_STATUS_OK) {
-      printf("[Failed: unable to set regulation TX alert threshold: %lu]\n", res);
+      printf("[Failed: unable to set regulation TX alert threshold: %"PRIu32"]\n", res);
       return res;
     } else {
       sl_wisun_app_core_set_regulation_thresholds(thresholds.warning_threshold, (int8_t)value);
@@ -2889,11 +2897,15 @@ static sl_status_t _app_get_regulation(char *value_str,
 
   // finds the proper string for the value for regulation
   value_enum = entry->output_enum_list;
-  if (value_enum->value_str == NULL) {
+  if (value_enum == NULL || value_enum->value_str == NULL) {
     return SL_STATUS_FAIL;
   }
 
   while (value_enum) {
+    if (value_enum->value_str == NULL) {
+      // No matching enumeration found
+      return SL_STATUS_FAIL;
+    }
     if (value_enum->value == _app_regulation) {
       // Matching enumeration found
       break;
@@ -3028,7 +3040,7 @@ static sl_status_t _app_get_device_type(char *value_str,
     return SL_STATUS_FAIL;
   }
 
-  (void) snprintf(value_str, APP_CLI_STR_VALUE_LENGTH, "%s (%lu)", dev_type_str, (uint32_t) dev_type);
+  (void) snprintf(value_str, APP_CLI_STR_VALUE_LENGTH, "%s (%"PRIu32")", dev_type_str, (uint32_t) dev_type);
   return SL_STATUS_OK;
 }
 
@@ -3052,7 +3064,7 @@ static sl_status_t _app_get_lfn_profile(char *value_str,
     return SL_STATUS_FAIL;
   }
 
-  (void) snprintf(value_str, APP_CLI_STR_VALUE_LENGTH, "%s (%lu)", lfn_profile_str, (uint32_t) lfn_profile);
+  (void) snprintf(value_str, APP_CLI_STR_VALUE_LENGTH, "%s (%"PRIu32")", lfn_profile_str, (uint32_t) lfn_profile);
   return SL_STATUS_OK;
 }
 #endif
@@ -3112,7 +3124,7 @@ static sl_status_t _app_cli_get_wifi_info(char *value_str,
 
   status = sl_wisun_br_wifi_get_info(&connected, &channel_number, mac_address, ipv6_address);
   if (status != SL_STATUS_OK) {
-    printf("[Failed to retrieve Wi-Fi information: %lu]\n", status);
+    printf("[Failed to retrieve Wi-Fi information: %"PRIu32"]\n", status);
     return SL_STATUS_FAIL;
   }
 
@@ -3195,11 +3207,15 @@ static sl_status_t _app_cli_get_security(char *value_str,
   // finds the proper string for the value
   value_enum = entry->output_enum_list;
 
-  if (res != SL_STATUS_OK || value_enum->value_str == NULL) {
+  if (res != SL_STATUS_OK || value_enum == NULL || value_enum->value_str == NULL) {
     return SL_STATUS_FAIL;
   }
 
   while (value_enum) {
+    if (value_enum->value_str == NULL) {
+      // No matching enumeration found
+      return SL_STATUS_FAIL;
+    }
     if (value_enum->value == value) {
       // Matching enumeration found
       break;

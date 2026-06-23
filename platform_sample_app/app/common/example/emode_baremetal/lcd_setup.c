@@ -424,8 +424,6 @@ void emode_app_process_action(void)
      * See files for "emodes" for more information.
      * Copy and paste function definition to replicate setup.*/
     start_emode_test(&local_emode);
-    // Should not be reached.
-    EFM_ASSERT(false);
   } else {
     /* Updates the lcd */
     lcd_select_mode();

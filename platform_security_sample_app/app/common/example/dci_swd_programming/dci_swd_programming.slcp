@@ -56,3 +56,8 @@ configuration:
 toolchain_settings:
   - option: optimize
     value: debug
+tag:
+  # DCI/SWD programming supports Series 2 devices (xg21, xg22, xg23, xg2d families)
+  # Board whitelist in old config (only brd4182a) suggests very specific hardware requirements
+  # This may need to be documented as a known limitation if truly only one board works
+  - hwfilter:device:device_series_2

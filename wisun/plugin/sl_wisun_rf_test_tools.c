@@ -160,6 +160,16 @@ uint8_t rf_test_build_fsk_phr(uint8_t *dst, uint16_t frame_length, uint8_t crc_l
   return LEGACY_FSK_PHR_LENGTH;
 }
 
+static uint8_t rf_test_get_crc_length(uint8_t crc_type)
+{
+  if (crc_type == SL_WISUN_4_BYTES_CRC) {
+    return 4;
+  } else if (crc_type == SL_WISUN_2_BYTES_CRC) {
+    return 2;
+  }
+  return 0;
+}
+
 uint8_t rf_test_build_ofdm_phr(uint8_t *dst,
                                uint16_t frame_length,
                                uint8_t mcs,
@@ -223,7 +233,7 @@ bool rf_test_prepare_tx_buffer(uint8_t phy_mode_id,
     }
   }
 
-  uint16_t total_length = (uint16_t)(data_length + local_phr_length);
+  uint16_t total_length = (uint16_t)(frame_length + local_phr_length);
   if (total_length > MAX_PACKET_LENGTH) {
     sl_wisun_trace_error("rf_test: length %u is greater than %u", total_length, MAX_PACKET_LENGTH);
     return false;
@@ -244,10 +254,33 @@ bool rf_test_prepare_tx_buffer(uint8_t phy_mode_id,
 
   *fifo_size_bytes = fifo_size;
   *phr_length = local_phr_length;
-  *init_bytes = total_length;
+  *init_bytes = local_phr_length + data_length;
   return true;
 }
 
+sl_status_t rf_test_config_pa(sl_rail_handle_t rail_handle,
+                              uint32_t ch0_frequency_hz,
+                              uint8_t phy_mode_id)
+{
+  sl_rail_status_t rail_status = SL_RAIL_STATUS_INVALID_PARAMETER;
+
+#if SL_RAIL_SUPPORTS_OFDM_PA
+  if (IS_OFDM(phy_mode_id)) {
+    rail_status = sl_rail_util_pa_post_init(rail_handle, SL_RAIL_TX_PA_MODE_SUB_GHZ_OFDM);
+  } else
+#else
+  (void) phy_mode_id;
+#endif
+
+  {
+    if (ch0_frequency_hz >= 2400000000) {
+      rail_status = sl_rail_util_pa_post_init(rail_handle, SL_RAIL_TX_PA_MODE_2P4_GHZ);
+    } else {
+      rail_status = sl_rail_util_pa_post_init(rail_handle, SL_RAIL_TX_PA_MODE_SUB_GHZ);
+    }
+  }
+  return rail_status;
+}
 
 sl_status_t rf_test_phy_config_to_chan_config(sl_wisun_phy_config_t *phy_config,
                                               sl_rail_channel_config_entry_t *chan_config,
@@ -255,7 +288,8 @@ sl_status_t rf_test_phy_config_to_chan_config(sl_wisun_phy_config_t *phy_config,
                                               uint8_t *reg_domain,
                                               uint16_t *physical_channel_offset,
                                               uint16_t *channel_start,
-                                              uint16_t *channel_end)
+                                              uint16_t *channel_end,
+                                              uint8_t *crc_length)
 {
   sl_status_t status = SL_STATUS_OK;
   sl_rail_handle_t rail_handle;
@@ -284,6 +318,7 @@ sl_status_t rf_test_phy_config_to_chan_config(sl_wisun_phy_config_t *phy_config,
         channel_spacing_hz = chan_params->chan_spacing_hz;
         number_of_channels = chan_params->chan_count;
       }
+      *crc_length = 4;
       break;
 
     case SL_WISUN_PHY_CONFIG_FAN11:
@@ -296,6 +331,7 @@ sl_status_t rf_test_phy_config_to_chan_config(sl_wisun_phy_config_t *phy_config,
         channel_spacing_hz = chan_params->chan_spacing_hz;
         number_of_channels = chan_params->chan_count;
       }
+      *crc_length = 4;
       break;
 
     case SL_WISUN_PHY_CONFIG_EXPLICIT:
@@ -306,6 +342,7 @@ sl_status_t rf_test_phy_config_to_chan_config(sl_wisun_phy_config_t *phy_config,
       channel_spacing_hz = ws_regdb_chan_spacing_value(phy_config->config.explicit_plan.channel_spacing);
       phy_version = STACK_INFO_VERSION_UNUSED;
       *reg_domain = STACK_INFO_REG_DOMAIN_UNUSED;
+      *crc_length = 0;
       break;
     case SL_WISUN_PHY_CONFIG_CUSTOM_FSK:
       *phy_mode_id = phy_config->config.custom_fsk.phy_mode_id;
@@ -315,6 +352,7 @@ sl_status_t rf_test_phy_config_to_chan_config(sl_wisun_phy_config_t *phy_config,
       channel_spacing_hz = phy_config->config.custom_fsk.channel_spacing_khz * 1000;
       phy_version = STACK_INFO_VERSION_UNUSED;
       *reg_domain = STACK_INFO_REG_DOMAIN_UNUSED;
+      *crc_length = rf_test_get_crc_length(phy_config->config.custom_fsk.crc_type);
       break;
     case SL_WISUN_PHY_CONFIG_CUSTOM_OFDM:
       *phy_mode_id = phy_config->config.custom_ofdm.phy_mode_id;
@@ -324,6 +362,7 @@ sl_status_t rf_test_phy_config_to_chan_config(sl_wisun_phy_config_t *phy_config,
       channel_spacing_hz = phy_config->config.custom_ofdm.channel_spacing_khz * 1000;
       phy_version = STACK_INFO_VERSION_UNUSED;
       *reg_domain = STACK_INFO_REG_DOMAIN_UNUSED;
+      *crc_length = rf_test_get_crc_length(phy_config->config.custom_ofdm.crc_type);
       break;
     case SL_WISUN_PHY_CONFIG_CUSTOM_OQPSK:
       *phy_mode_id = phy_config->config.custom_oqpsk.phy_mode_id;
@@ -333,15 +372,17 @@ sl_status_t rf_test_phy_config_to_chan_config(sl_wisun_phy_config_t *phy_config,
       channel_spacing_hz = phy_config->config.custom_oqpsk.channel_spacing_khz * 1000;
       phy_version = STACK_INFO_VERSION_UNUSED;
       *reg_domain = STACK_INFO_REG_DOMAIN_UNUSED;
+      *crc_length = rf_test_get_crc_length(phy_config->config.custom_oqpsk.crc_type);
       break;
 
-    case SL_WISUN_PHY_CONFIG_IDS:
+    case SL_WISUN_PHY_CONFIG_IDS: {
+      int proto_index = 0;
+
       status = sli_wisun_get_rail_handle(&rail_handle);
       if (status != SL_STATUS_OK) {
         sl_wisun_trace_error("rf_test: failed to get rail handle");
         return status;
       }
-      int proto_index = 0;
       while (channelConfigs[proto_index] != NULL && proto_index < phy_config->config.ids.protocol_id) {
         proto_index++;
       }
@@ -352,6 +393,7 @@ sl_status_t rf_test_phy_config_to_chan_config(sl_wisun_phy_config_t *phy_config,
       iter = channelConfigs[proto_index];
 
       sl_rail_config_channels(rail_handle, iter, NULL);
+      *crc_length = 4;
 
       if (phy_config->config.ids.channel_id < iter->number_of_entries) {
         const sl_rail_channel_config_entry_t *entry = &iter->p_entries[phy_config->config.ids.channel_id];
@@ -369,6 +411,7 @@ sl_status_t rf_test_phy_config_to_chan_config(sl_wisun_phy_config_t *phy_config,
       }
       sl_wisun_trace_error("rf_test: IDS config did not match entry");
       return SL_STATUS_INVALID_PARAMETER;
+    }
 
     default:
       sl_wisun_trace_error("rf_test: unknown phy_config type %u",

@@ -44,3 +44,7 @@ ui_hints:
 tag:
   - hardware:component:button:2+
   - hardware:device:ram:20
+  - hwfilter:board:simple_button:btn0
+  - hwfilter:board:simple_button:btn1
+  - hwfilter:ram:20k
+  - hwfilter:device:device_series_2

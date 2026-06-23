@@ -30,6 +30,8 @@
 
 #include "sl_segmentlcd.h"
 #include "sl_hal_ldma.h"
+#include "sl_dma_manager.h"
+
 #include "sl_clock_manager.h"
 
 #define LDMA_CHANNEL                    0
@@ -38,7 +40,6 @@
 #define NUM_STATE                       10
 #define NUM_DIGIT                       4
 #define NUM_SEG                         8
-#define LDMA_INIT_IRQ_PRIORITY_DEFAULT  3
 
 uint32_t display[NUM_STATE][NUM_SEG];
 sl_hal_ldma_descriptor_t descriptors[3];
@@ -101,27 +102,6 @@ uint8_t get_count(void)
 }
 
 /***************************************************************************//**
- * LDMA IRQ handler.
- ******************************************************************************/
-void LDMA_IRQHandler(void)
-{
-  uint32_t pending;
-
-  // Read interrupt source
-  pending = sl_hal_ldma_get_pending_interrupts(LDMA0);
-
-  // Clear interrupts
-  sl_hal_ldma_clear_interrupts(LDMA0, pending);
-
-  // Check for LDMA error
-  if (pending & LDMA_IF_ERROR) {
-    // Loop here to enable the debugger to see what has happened
-    while (1) {
-    }
-  }
-}
-
-/***************************************************************************//**
  * Initialize application.
  ******************************************************************************/
 void segment_lcd_app_init(void)
@@ -147,19 +127,15 @@ void segment_lcd_app_init(void)
     }
   }
 
-  // Enable the LDMA and LDMAXBAR clock
-  sl_clock_manager_enable_bus_clock(SL_BUS_CLOCK_LDMA0);
+  // DMA Manager is auto-initialized via SL Main (LDMA clock, LDMA init, NVIC setup).
+  // LDMAXBAR has a separate bus clock that the DMA Manager does not enable. Without it,
+  // sl_hal_ldma_init_transfer faults when writing to LDMAXBAR->CH[n].REQSEL. Enable it
+  // manually whenever sl_hal_ldma_* is used directly instead of the dma_channel driver.
   sl_clock_manager_enable_bus_clock(SL_BUS_CLOCK_LDMAXBAR0);
 
-  // Initialize the LDMA
-  sl_hal_ldma_init_t init = SL_HAL_LDMA_INIT_DEFAULT;
-  sl_hal_ldma_init(LDMA0, &init);
-  NVIC_ClearPendingIRQ(LDMA_IRQn);
+  // Reserve the fixed channel so the DMA Manager does not allocate it to others.
+  sl_dma_manager_reserve_channel(NULL, LDMA_CHANNEL);
 
-  /* Range is 0-7, where 0 is the highest priority. */
-  NVIC_SetPriority(LDMA_IRQn, LDMA_INIT_IRQ_PRIORITY_DEFAULT);
-
-  NVIC_EnableIRQ(LDMA_IRQn);
   // Configure the LDMA to trigger on an LCD DMA request
   sl_hal_ldma_transfer_init_t transfer_config = SL_HAL_LDMA_TRANSFER_CFG_PERIPHERAL_LOOP(
     SL_HAL_LDMA_PERIPHERAL_SIGNAL_LCD,
@@ -193,9 +169,6 @@ void segment_lcd_app_init(void)
     -2);
 
   // Start LDMA transfers
-  sl_hal_ldma_enable(LDMA0);
-  sl_hal_ldma_enable_interrupts(LDMA0, LDMA_IF_ERROR);
-  sl_hal_ldma_enable_interrupts(LDMA0, LDMA_IF_DONE0);
   sl_hal_ldma_init_transfer(LDMA0, 0, &transfer_config, &descriptors[0]);
   sl_hal_ldma_start_transfer(LDMA0, 0);
 }

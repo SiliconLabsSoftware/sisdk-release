@@ -28,22 +28,10 @@
 *
 ******************************************************************************/
 
+// <<< Use Configuration Wizard in Context Menu >>>
+
 #ifndef SL_LOG_COMMON_CONFIG_H
 #define SL_LOG_COMMON_CONFIG_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/** @addtogroup sl_log_config SL Log Configuration
- * @{
- */
-
-/**
- * @defgroup sl_log_levels Log Levels
- * @brief Log level definitions for filtering log messages
- * @{
- */
 
 /** @brief Debug level logging */
 #define SL_LOG_CONFIG_LEVEL_DEBUG 1
@@ -55,17 +43,12 @@ extern "C" {
 #define SL_LOG_CONFIG_LEVEL_ERROR 4
 /** @brief Crash level logging - most critical messages */
 #define SL_LOG_CONFIG_LEVEL_CRASH 5
-/** @brief No logging - all log messages are disabled */
-#define SL_LOG_CONFIG_LEVEL_NONE 6
-
-/** @} (end addtogroup sl_log_levels) */
-
-
-/**
- * @defgroup sl_log_args Log Arguments
- * @brief Maximum number of arguments that can be passed to log functions
- * @{
+/** @brief No logging - all log messages are disabled,
+ * once this level is set during at compile time,
+ * all logging macros will be replaced with void
+ * operations to completely eliminate logging overhead.
  */
+#define SL_LOG_CONFIG_LEVEL_NONE 6
 
 /** @brief No arguments supported */
 #define SL_LOG_CONFIG_ARG0 0
@@ -75,28 +58,20 @@ extern "C" {
 #define SL_LOG_CONFIG_ARG2 2
 /** @brief Up to 3 arguments supported */
 #define SL_LOG_CONFIG_ARG3 3
-
-/** @} (end addtogroup sl_log_args) */
-
-/**
- * @defgroup sl_log_uc_config UC Configuration Settings
- * @brief Silicon Labs Universal Configurator settings for the logging system
- * @{
- */
-
-// <<< Use Configuration Wizard in Context Menu >>>
-//  <e>DEBUG LOGGER UC Configuration
-/**
- * @brief Enable Universal Configurator support for SL Log
- *
- * When enabled, allows configuration of the logging system through
- * Silicon Labs' Universal Configurator interface.
- *
- * @note Default value is 1 (enabled)
- */
-#ifndef SL_LOG_ENABLE_UC_CONFIG
-#define SL_LOG_ENABLE_UC_CONFIG 1
-#endif
+/** @brief Up to 4 arguments supported */
+#define SL_LOG_CONFIG_ARG4 4
+/** @brief Up to 5 arguments supported */
+#define SL_LOG_CONFIG_ARG5 5
+/** @brief Up to 6 arguments supported */
+#define SL_LOG_CONFIG_ARG6 6
+/** @brief Up to 7 arguments supported */
+#define SL_LOG_CONFIG_ARG7 7
+/** @brief Up to 8 arguments supported */
+#define SL_LOG_CONFIG_ARG8 8
+/** @brief Up to 9 arguments supported */
+#define SL_LOG_CONFIG_ARG9 9
+/** @brief Up to 10 arguments supported */
+#define SL_LOG_CONFIG_ARG10 10
 
 // <o SL_LOG_CONFIG_LEVEL_COMPILE_TIME> LOG_LEVEL
 // <SL_LOG_CONFIG_LEVEL_NONE => NONE
@@ -104,83 +79,39 @@ extern "C" {
 // <SL_LOG_CONFIG_LEVEL_INFO => INFO
 // <SL_LOG_CONFIG_LEVEL_WARN => WARN
 // <SL_LOG_CONFIG_LEVEL_ERROR => ERROR
-// <i> Default: SL_LOG_CONFIG_LEVEL_INFO
-/**
- * @brief Compile-time log level filter
- *
- * Sets the minimum log level that will be compiled into the application.
- * Log messages below this level will be completely removed at compile time,
- * reducing code size and runtime overhead.
- *
- * Valid values:
- * - SL_LOG_CONFIG_LEVEL_NONE: No logging
- * - SL_LOG_CONFIG_LEVEL_DEBUG: Debug level and above
- * - SL_LOG_CONFIG_LEVEL_INFO: Info level and above
- * - SL_LOG_CONFIG_LEVEL_WARN: Warning level and above
- * - SL_LOG_CONFIG_LEVEL_ERROR: Error level and above
- * - SL_LOG_CONFIG_LEVEL_CRASH: Only crash level messages
- *
- * @note Default: SL_LOG_CONFIG_LEVEL_INFO
- */
-#define SL_LOG_CONFIG_LEVEL_COMPILE_TIME SL_LOG_CONFIG_LEVEL_INFO
+// <SL_LOG_CONFIG_LEVEL_CRASH => CRASH
+// <i> Default: SL_LOG_CONFIG_LEVEL_ERROR
+#define SL_LOG_CONFIG_LEVEL_COMPILE_TIME SL_LOG_CONFIG_LEVEL_ERROR
 
 // <o SL_LOG_CONFIG_ARG> CONFIG_MAX_ARGS
 // <SL_LOG_CONFIG_ARG0 => 0
 // <SL_LOG_CONFIG_ARG1 => 1
 // <SL_LOG_CONFIG_ARG2 => 2
 // <SL_LOG_CONFIG_ARG3 => 3
+// <SL_LOG_CONFIG_ARG4 => 4
+// <SL_LOG_CONFIG_ARG5 => 5
+// <SL_LOG_CONFIG_ARG6 => 6
+// <SL_LOG_CONFIG_ARG7 => 7
+// <SL_LOG_CONFIG_ARG8 => 8
+// <SL_LOG_CONFIG_ARG9 => 9
+// <SL_LOG_CONFIG_ARG10 => 10
 // <i> Default: 3
-/**
- * @brief Maximum number of arguments supported in log messages
- *
- * Configures the maximum number of variable arguments that can be
- * passed to log functions. Higher values increase flexibility but
- * may consume more memory and processing time.
- *
- * Valid values:
- * - SL_LOG_CONFIG_ARG0: No arguments (string-only logging)
- * - SL_LOG_CONFIG_ARG1: Up to 1 argument
- * - SL_LOG_CONFIG_ARG2: Up to 2 arguments
- * - SL_LOG_CONFIG_ARG3: Up to 3 arguments
- *
- * @note Default: SL_LOG_CONFIG_ARG3 (3 arguments)
- */
 #define SL_LOG_CONFIG_ARG SL_LOG_CONFIG_ARG3
 
 // <o SL_LOG_NUMBER_OF_EVENTS> No of Logs <1-255>
 // <i> Default: 128
-/**
- * @brief Maximum number of log events that can be stored
- *
- * Defines the size of the internal log event buffer. This determines
- * how many log messages can be queued before older messages are
- * overwritten or transmission is required.
- *
- * @note Valid range: 1-255
- * @note Default: 128
- */
 #define SL_LOG_NUMBER_OF_EVENTS 128 // Number of events
 
-/**
- * @brief Timer instance used as timestamp counter
- *
- * Make sure TIMER instance size is 32bits.
- * Check datasheet for 32bits TIMERs.
- *
- * @note Valid range: 0 - 6
- * @note Default: 0
- */
-// <o SL_LOG_CONFIG_TIMER_INSTANCE> TIMER Instance Used for timestamp counter
-// <i> Default: 0
-#define SL_LOG_CONFIG_TIMER_INSTANCE 0
+// <q SL_LOG_DEBUG_ASSERT_ENABLE> Enable Debug Assertions
+// <i> When enabled, SL_DEBUG_ASSERT will check conditions and trigger asserts on failure.
+// <i> When disabled, SL_DEBUG_ASSERT becomes a no-op to save code space in release builds.
+// <i>during development to catch errors early
+// <i> Default: 0 (disabled)
+#define SL_LOG_DEBUG_ASSERT_ENABLE 0
 
-/** @} (end addtogroup sl_log_uc_config) */
+/** @brief Event ID: Crash (args: type, pc, sp). "CRSH" = Crash */
+#define SL_LOG_EVENT_ID_CRASH 0x43525348U
 
-/** @} (end addtogroup sl_log_config) */
+#endif /* SL_LOG_COMMON_CONFIG_H */
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-//  </e>
+// <<< end of configuration section >>>

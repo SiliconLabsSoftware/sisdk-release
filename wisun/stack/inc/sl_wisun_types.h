@@ -66,6 +66,8 @@
 #define SL_WISUN_GAK_LEN  16
 /// Maximum size of EAP identity
 #define SL_WISUN_EAP_IDENTITY_SIZE 32
+/// Maximum size of the Direct Connect ID
+#define SL_WISUN_DC_ID_LEN 32
 
 /// Enumerations for device type
 typedef enum {
@@ -113,9 +115,9 @@ typedef enum {
   SL_WISUN_CERTIFICATE_OPTION_NONE    = 0,
   /// Certificate is appended to a chain
   SL_WISUN_CERTIFICATE_OPTION_APPEND  = 1,
-  /// Certificate data will remain in scope
+  /// Deprecated/Ignored: Certificate is stored into a parsed form internally
   SL_WISUN_CERTIFICATE_OPTION_IS_REF  = 2,
-  /// Certificate has a private key
+  /// Deprecated/Ignored: Device certificates must have a key
   SL_WISUN_CERTIFICATE_OPTION_HAS_KEY = 4
 } sl_wisun_certificate_option_t;
 
@@ -123,7 +125,7 @@ typedef enum {
 typedef enum {
   /// Empty option
   SL_WISUN_PRIVATE_KEY_OPTION_NONE    = 0,
-  /// Private key data will remain in scope
+  /// Deprecated/Ignored: Private key is stored into a parsed form internally
   SL_WISUN_PRIVATE_KEY_OPTION_IS_REF  = 1
 } sl_wisun_private_key_option_t;
 
@@ -322,7 +324,9 @@ typedef enum {
   /// Profile providing balance between power consumption and performance
   SL_WISUN_LFN_PROFILE_BALANCED = 1,
   /// Profile optimized for low power consumption
-  SL_WISUN_LFN_PROFILE_ECO      = 2
+  SL_WISUN_LFN_PROFILE_ECO      = 2,
+  /// Profile for automatic connection parameters adjustment
+  SL_WISUN_LFN_PROFILE_AUTOMATIC = 3,
 } sl_wisun_lfn_profile_t;
 
 /// Enumeration for CRC type
@@ -334,6 +338,20 @@ typedef enum {
   /// 4 bytes CRC
   SL_WISUN_4_BYTES_CRC = 2
 } sl_wisun_crc_type_t;
+
+/// Enumeration for the state of the Direct Connect client
+typedef enum {
+  /// Connected state
+  SL_WISUN_DC_CLIENT_STATE_CONNECTED = 0,
+  /// Connection lost state
+  SL_WISUN_DC_CLIENT_STATE_CONNECTION_LOST = 1,
+  /// Connection establishment failed
+  SL_WISUN_DC_CLIENT_STATE_CONNECTION_FAILED = 2,
+  /// Stopped state
+  SL_WISUN_DC_CLIENT_STATE_STOPPED = 3,
+  /// Scan complete state
+  SL_WISUN_DC_CLIENT_STATE_SCAN_COMPLETE = 4,
+} sl_wisun_dc_client_state_t;
 
 /// Wi-SUN Message API common header
 SL_PACK_START(1)
@@ -433,7 +451,7 @@ typedef struct {
 
 /// 6LoWPAN/IP stack statistics
 typedef struct {
-  /// Number of received IP6 packets.
+  /// Number of received IPv6 packets.
   uint32_t ip_rx_count;
   /// Number of transmitted IPv6 packets.
   uint32_t ip_tx_count;
@@ -443,11 +461,11 @@ typedef struct {
   uint32_t ip_cksum_error;
   /// Amount of transmitted IPv6 data in bytes.
   uint32_t ip_tx_bytes;
-  /// Amount received IPv6 data in bytes.
+  /// Amount of received IPv6 data in bytes.
   uint32_t ip_rx_bytes;
   /// Amount of forwarded IPv6 data in bytes.
   uint32_t ip_routed_up;
-  /// Number of discarded IPv6 packets due to lack routing information.
+  /// Number of discarded IPv6 packets due to lack of routing information.
   uint32_t ip_no_route;
   /// Number of fragmentation errors in received IPv6 packets.
   uint32_t frag_rx_errors;
@@ -499,6 +517,8 @@ typedef struct {
   uint16_t mpl_freed_messages_count;
   /// Number of deleted MPL messages that were never sent.
   uint16_t mpl_not_tx_count;
+  /// Number of failed neighbor allocation attempts.
+  uint16_t neighbor_alloc_fail;
 } sl_wisun_statistics_network_t;
 
 /// ARIB regulation statistics
@@ -696,6 +716,15 @@ typedef struct {
   ///          byte of the MAC address.
   uint8_t address[SL_WISUN_MAC_ADDRESS_SIZE];
 } SL_ATTRIBUTE_PACKED sl_wisun_mac_address_t;
+SL_PACK_END()
+
+/// Direct Connect ID
+SL_PACK_START(1)
+typedef struct {
+  /// Direct Connect ID
+  /// @note The format of the identifier is application-specific.
+  uint8_t id[SL_WISUN_DC_ID_LEN];
+} sl_wisun_dc_id_t;
 SL_PACK_END()
 
 /// Channel mask
@@ -976,19 +1005,19 @@ typedef enum {
   SL_WISUN_TRACE_GROUP_REG     = 43,    ///< Regional regulation
   SL_WISUN_TRACE_GROUP_TXALG   = 44,    ///< RFC 8415 TX algorithm
   SL_WISUN_TRACE_GROUP_MAC_FSM = 45,    ///< MAC Finite state machine
-
+  SL_WISUN_TRACE_GROUP_FB      = 46,    ///< First breath
   // [...] reserved for future use
   SL_WISUN_TRACE_GROUP_INT     = 63,    ///< Internal usage
   SL_WISUN_TRACE_GROUP_COUNT   = 64     ///< Max number of trace group in this enum
 } sl_wisun_trace_group_t;
 
-/// Thread identifier "Wi-SUN Task"
+/// Thread identifier "ws_task"
 #define SL_WISUN_TRACE_THREAD_WISUN         "WS"
-/// Thread identifier "Wi-SUN Event Task"
+/// Thread identifier "ws_evt"
 #define SL_WISUN_TRACE_THREAD_EVENT_TASK    "EVT"
-/// Thread identifier "Wi-SUN Event Loop Task"
+/// Thread identifier "ws_evl"
 #define SL_WISUN_TRACE_THREAD_EVENT_LOOP    "EVL"
-/// Thread identifier "Wi-SUN RF Task"
+/// Thread identifier "ws_rf"
 #define SL_WISUN_TRACE_THREAD_MAC           "MAC"
 
 /// Enumerations for trace level
@@ -1083,6 +1112,10 @@ typedef enum {
   SL_WISUN_FRAME_TYPE_DIS = 4,
   /// DODAG Information Object
   SL_WISUN_FRAME_TYPE_DIO = 5,
+  /// Reserved
+  SL_WISUN_FRAME_RESERVED1 = 6,
+  /// LFN PAN Advertisement Solicit
+  SL_WISUN_FRAME_TYPE_LPAS = 7,
 } sl_wisun_frame_type_t;
 
 /// Wi-SUN network information
@@ -1241,6 +1274,424 @@ typedef struct {
 } SL_ATTRIBUTE_PACKED sl_wisun_mac_params_t;
 SL_PACK_END()
 
+/// Wi-SUN option identifiers for @ref sl_wisun_set_option
+typedef enum {
+  /// Border router communication timeout PAN_TIMEOUT in minutes.
+  /// Type: uint8_t
+  /// Default: 60
+  /// Available: FFN
+  SL_WISUN_OPTION_PAN_TIMEOUT_M = 0,
+  /// Minimum signal level for a node to be selected as the EAPOL target for
+  /// authentication in join state 1 immediately after a PAN Advertisement
+  /// reception. Range from -174 (0) to +80 (254) dBm, 255 to disable.
+  /// Enabling this feature may speed up connection times, but at the cost of
+  /// increased simultaneous authentication traffic.
+  /// Use DBM_TO_RSL_RANGE() to convert from dBm to RSL range encoding.
+  /// Type: uint8_t
+  /// Default: DBM_TO_RSL_RANGE(-60)
+  /// Available: FFN
+  SL_WISUN_OPTION_EAPOL_TARGET_MIN_SENS = 1,
+  /// Allow join state 1 to be skipped using cached information from the
+  /// previous connection.
+  /// Type: uint8_t (boolean)
+  /// Default: 1
+  /// Available: FFN
+  SL_WISUN_OPTION_ALLOW_DISCOVERY_SKIP = 2,
+  /// Allow join state 2 to be skipped using cached credentials from the
+  /// previous connection.
+  /// Type: uint8_t (boolean)
+  /// Default: 1
+  /// Available: FFN, LFN
+  SL_WISUN_OPTION_ALLOW_EAPOL_SKIP = 3,
+  /// Number of broadcast LFN Pan Config retries when LFN Version is
+  /// incremented. Referred to as LFN_MAINTAIN_PARENT_TIME in FAN TPS 1.1.
+  /// Type: uint8_t
+  /// Default: 5
+  /// Available: FFN, BR
+  SL_WISUN_OPTION_LFN_LPC_RETRY_COUNT = 4,
+  /// Expected number of nodes in the PAN. In auto mode, when non-zero, this
+  /// value is used instead of the PAN Size advertised in the Wi-SUN PAN-IE to
+  /// automatically adjust the stack behavior during connection.
+  /// Setting this value may be beneficial to connection time in some cases.
+  /// It can also be used as a simpler way to set the connection parameters
+  /// when one does not want to use advanced connection parameters APIs.
+  /// Note this option is ignored if advanced or legacy connection parameters
+  /// have been set.
+  /// Note on the BR, this option will not affect the PAN Size advertised in
+  /// the Wi-SUN PAN-IE.
+  /// Type: uint16_t
+  /// Default: 0
+  /// Available: FFN, LFN, BR
+  SL_WISUN_OPTION_JOIN_NODE_COUNT = 5,
+  /// GTK_MAX_MISMATCH (minutes).
+  /// Maximum time between a SUP detecting a GTKHASH mismatch and the SUP
+  /// initiating Msg1 of the authentication flow.
+  /// Type: uint16_t
+  /// Default: 64
+  /// Available: FFN
+  SL_WISUN_OPTION_GTK_MAX_MISMATCH_M = 65,
+  /// LGTK_MAX_MISMATCH (minutes).
+  /// Maximum time between a SUP detecting an LGTKHASH mismatch and the SUP
+  /// initiating Msg1 of the authentication flow.
+  /// Type: uint16_t
+  /// Default: 60
+  /// Available: FFN, LFN
+  SL_WISUN_OPTION_LGTK_MAX_MISMATCH_M = 66,
+
+  /// Maximum number of RPL parents.
+  /// Limited to 4 due to Path Control field size in DAO.
+  /// Type: uint8_t
+  /// Default: 2
+  /// Available: FFN
+  SL_WISUN_OPTION_RPL_PARENTS_MAX = 6,
+  /// Maximum number of RPL candidate parents.
+  /// Type: uint8_t
+  /// Default: 5
+  /// Available: FFN
+  SL_WISUN_OPTION_RPL_PARENT_CANDIDATES_MAX = 7,
+  /// Maximum delay before sending an RPL DIS message (seconds).
+  /// Type: uint16_t
+  /// Default: 180
+  /// Available: FFN
+  SL_WISUN_OPTION_RPL_DIS_MAX_DELAY_S = 8,
+  /// Delay after the first DIO reception before selecting a parent (seconds).
+  /// Type: uint16_t
+  /// Default: 10
+  /// Available: FFN
+  SL_WISUN_OPTION_RPL_PARENT_SELECTION_DELAY_S = 9,
+  /// Number of samples used to calculate ETX during join state 4.
+  /// Lower values may allow faster parent selection and transition to join
+  /// state 5, but result in a less accurate ETX estimate. Higher values
+  /// improve ETX accuracy, at the cost of slower parent selection and
+  /// transition to join state 5.
+  /// The default value provides a good tradeoff.
+  /// Type: uint8_t
+  /// Default: 2
+  /// Available: FFN
+  SL_WISUN_OPTION_RPL_ETX_SAMPLES_INIT = 10,
+  /// Number of samples used to refresh ETX.
+  /// Type: uint8_t
+  /// Default: 4
+  /// Available: FFN
+  SL_WISUN_OPTION_RPL_ETX_SAMPLES_REFRESH = 11,
+  /// Amount of time a parent should retain a registered GUA/ULA (seconds).
+  /// Type: uint16_t
+  /// Default: 2220
+  /// Available: FFN
+  SL_WISUN_OPTION_REGISTRATION_LIFETIME_S = 12,
+
+  /// Maximum Transmission Unit (MTU) for 6LoWPAN packets in bytes.
+  /// A larger packet will be fragmented using 6LoWPAN fragmentation.
+  /// Type: uint16_t
+  /// Default: 1576
+  /// Available: FFN, LFN, BR
+  SL_WISUN_OPTION_TRAFFIC_LOWPAN_MTU_BYTES = 13,
+  /// Maximum Receive Unit (MRU) for fragmented IPv6 packets in bytes.
+  /// A larger packet will be silently discarded.
+  /// Type: uint16_t
+  /// Default: 1504
+  /// Available: FFN, LFN, BR
+  SL_WISUN_OPTION_TRAFFIC_IPV6_MRU_BYTES = 14,
+  /// Maximum number of frames to send in a single EDFE transaction
+  /// (0 to 10). 0 disables EDFE for fragmented packets.
+  /// Type: uint8_t
+  /// Default: 5
+  /// Available: FFN, LFN, BR
+  SL_WISUN_OPTION_TRAFFIC_MAX_EDFE_FRAGMENT_COUNT = 15,
+
+  /// Length of one backoff period in microseconds. If 0, the length will be
+  /// calculated based on the PHY.
+  /// Type: uint16_t
+  /// Default: Calculated based on the PHY in use.
+  /// Available: FFN, LFN, BR
+  SL_WISUN_OPTION_MAC_BACKOFF_PERIOD_US = 16,
+  /// Minimum value of CSMA-CA backoff exponent.
+  /// Type: uint8_t
+  /// Default: 3
+  /// Available: FFN, LFN, BR
+  SL_WISUN_OPTION_MAC_MIN_BE = 17,
+  /// Maximum value of CSMA-CA backoff exponent.
+  /// Type: uint8_t
+  /// Default: 5
+  /// Available: FFN, LFN, BR
+  SL_WISUN_OPTION_MAC_MAX_BE = 18,
+  /// Maximum number of CCA retries. The transmission is aborted if the channel
+  /// is still busy after 1 + max_cca_retries attempts.
+  /// Type: uint8_t
+  /// Default: 8
+  /// Available: FFN, LFN, BR
+  SL_WISUN_OPTION_MAC_MAX_CCA_RETRIES = 19,
+  /// Maximum number of transmission retries. The transmission is aborted if no
+  /// acknowledgment has been received after 1 + max_frame_retries attempts.
+  /// Type: uint8_t
+  /// Default: 7
+  /// Available: FFN, LFN, BR
+  SL_WISUN_OPTION_MAC_MAX_FRAME_RETRIES = 20,
+
+  /// MPL trickle timer minimum interval size (seconds).
+  /// Type: uint16_t
+  /// Default: 1
+  /// Available: FFN, BR
+  SL_WISUN_OPTION_MPL_TRICKLE_IMIN_S = 21,
+  /// MPL trickle timer maximum interval size (seconds).
+  /// Type: uint16_t
+  /// Default: 10
+  /// Available: FFN, BR
+  SL_WISUN_OPTION_MPL_TRICKLE_IMAX_S = 22,
+  /// MPL trickle redundancy constant, 0 for infinity.
+  /// Type: uint8_t
+  /// Default: 8
+  /// Available: FFN, BR
+  SL_WISUN_OPTION_MPL_TRICKLE_K = 23,
+  /// MPL seed set entry lifetime (seconds).
+  /// Type: uint16_t
+  /// Default: 180
+  /// Available: FFN, BR
+  SL_WISUN_OPTION_MPL_SEED_SET_ENTRY_LIFETIME_S = 24,
+  /// MPL trickle timer expirations.
+  /// Type: uint8_t
+  /// Default: 2
+  /// Available: FFN, BR
+  SL_WISUN_OPTION_MPL_TRICKLE_E = 25,
+  /// MPL seed-id type.
+  ///  0 indicates the seed-id is elided and is the IPv6 source address,
+  ///  3 indicates the seed-id is the 128-bit ULA/GUA of the source.
+  /// Type: uint8_t
+  /// Default: 0
+  /// Available: FFN
+  SL_WISUN_OPTION_MPL_SEED_ID_TYPE = 26,
+
+  /// Direct Connect EAPOL TX algorithm: max delay of first key request
+  /// (seconds).
+  /// Type: uint16_t
+  /// Default: 0
+  /// Available: FFN
+  SL_WISUN_OPTION_DIRECT_CONNECT_TXALG_MAX_DELAY_S = 27,
+  /// Direct Connect EAPOL TX algorithm: initial retransmission time (seconds).
+  /// Type: uint16_t
+  /// Default: 10
+  /// Available: FFN
+  SL_WISUN_OPTION_DIRECT_CONNECT_TXALG_IRT_S = 28,
+  /// Direct Connect EAPOL TX algorithm: maximum retransmission time (seconds).
+  /// Type: uint16_t
+  /// Default: 30
+  /// Available: FFN
+  SL_WISUN_OPTION_DIRECT_CONNECT_TXALG_MRT_S = 29,
+  /// Direct Connect EAPOL TX algorithm: maximum retransmission count.
+  /// Type: uint8_t
+  /// Default: 3
+  /// Available: FFN
+  SL_WISUN_OPTION_DIRECT_CONNECT_TXALG_MRC = 30,
+  /// Direct Connect EAPOL TX algorithm: maximum retransmission duration (seconds).
+  /// Type: uint16_t
+  /// Default: 0
+  /// Available: FFN
+  SL_WISUN_OPTION_DIRECT_CONNECT_TXALG_MRD_S = 31,
+  /// Direct Connect EAPOL TX algorithm: randomization factor.
+  /// Type: float
+  /// Default: 0.1
+  /// Available: FFN
+  SL_WISUN_OPTION_DIRECT_CONNECT_TXALG_RAND = 32,
+
+  /// LFN PAN Advertisement (LPA) listening slot duration (milliseconds).
+  /// Type: uint8_t
+  /// Default: 60
+  /// Available: LFN
+  SL_WISUN_OPTION_LFN_DISCOVERY_SLOT_TIME_MS = 33,
+  /// Number of LPA slots for which an LFN shall listen for LPA frames.
+  /// Type: uint8_t
+  /// Default: 40
+  /// Available: LFN
+  SL_WISUN_OPTION_LFN_DISCOVERY_SLOTS = 34,
+  /// Delay between two LFN PAN Advertistement Solicit messages.
+  /// Type: uint16_t
+  /// Default: 10
+  /// Available: LFN
+  SL_WISUN_OPTION_LFN_LPAS_INTERVAL_S = 67,
+  /// Initial LFN Unicast interval proposed by the LFN (milliseconds).
+  /// Type: uint32_t
+  /// Default: 60000
+  /// Available: LFN
+  /// Note: this option may be used before and after join.
+  SL_WISUN_OPTION_LFN_UNICAST_INTERVAL_MS = 35,
+  /// Minimum acceptable LFN unicast interval (milliseconds).
+  /// Type: uint32_t
+  /// Default: 1000
+  /// Available: LFN
+  SL_WISUN_OPTION_LFN_UNICAST_INTERVAL_MIN_MS = 36,
+  /// Maximum acceptable LFN unicast interval (milliseconds).
+  /// Type: uint32_t
+  /// Default: 300000
+  /// Available: LFN
+  SL_WISUN_OPTION_LFN_UNICAST_INTERVAL_MAX_MS = 37,
+  /// Shorter LFN Unicast interval used during the EAPOL exchange (milliseconds).
+  /// Type: uint32_t
+  /// Default: 1300
+  /// Available: LFN
+  SL_WISUN_OPTION_LFN_EAPOL_UNICAST_INTERVAL_MS = 38,
+  /// Number of broadcast sync periods with no message from the parent before
+  /// the LFN assumes the parent is lost.
+  /// Type: uint8_t
+  /// Default: 20
+  /// Available: LFN
+  SL_WISUN_OPTION_LFN_MAINTAIN_PARENT_TIME = 39,
+  /// Address registration lifetime (IPv6 lease duration) the LFN requires to
+  /// the Border Router (minutes).
+  /// Type: uint16_t
+  /// Default: 3600
+  /// Available: LFN
+  SL_WISUN_OPTION_LFN_REGISTRATION_LIFETIME_M = 40,
+  /// Minimum duration of the listening window (microseconds).
+  /// Applies to both Unicast and Broadcast slots.
+  /// Type: uint16_t
+  /// Default: 500
+  /// Available: LFN
+  SL_WISUN_OPTION_LFN_LISTENING_WINDOW_MIN_US = 41,
+  /// Minimum margin added to the listening window, before and after (microseconds).
+  /// The real margin increases with aging synchronization info.
+  /// Type: uint16_t
+  /// Default: 1000
+  /// Available: LFN
+  SL_WISUN_OPTION_LFN_WINDOW_MARGIN_MIN_US = 42,
+  /// If true, the LFN wakes up only for broadcast slots containing
+  /// synchronization information. If false, the node wakes up on every LFN
+  /// broadcast slot.
+  /// Type: uint8_t (boolean)
+  /// Default: 0
+  /// Available: LFN
+  SL_WISUN_OPTION_LFN_BROADCAST_LTS_ONLY = 43,
+
+  /// BR EAPOL PMK lifetime (minutes).
+  /// Type: uint32_t
+  /// Default: 172800
+  /// Available: BR
+  SL_WISUN_OPTION_BR_EAPOL_PMK_LIFETIME_M = 44,
+  /// BR EAPOL LPMK lifetime (minutes).
+  /// Type: uint32_t
+  /// Default: 788400
+  /// Available: BR
+  SL_WISUN_OPTION_BR_EAPOL_LPMK_LIFETIME_M = 45,
+  /// BR EAPOL PTK lifetime (minutes).
+  /// Type: uint32_t
+  /// Default: 86400
+  /// Available: BR
+  SL_WISUN_OPTION_BR_EAPOL_PTK_LIFETIME_M = 46,
+  /// BR EAPOL LPTK lifetime (minutes).
+  /// Type: uint32_t
+  /// Default: 525600
+  /// Available: BR
+  SL_WISUN_OPTION_BR_EAPOL_LPTK_LIFETIME_M = 47,
+  /// GTK_EXPIRE_OFFSET (minutes).
+  /// The expiration time of a GTK is calculated as the expiration time of the
+  /// GTK most recently installed at the Border Router plus this offset.
+  /// Type: uint32_t
+  /// Default: 43200
+  /// Available: BR
+  SL_WISUN_OPTION_BR_EAPOL_GTK_EXPIRE_OFFSET_M = 48,
+  /// LGTK_EXPIRE_OFFSET (minutes).
+  /// The expiration time of a LGTK is calculated as the expiration time of the
+  /// LGTK most recently installed at the Border Router plus this offset.
+  /// Type: uint32_t
+  /// Default: 129600
+  /// Available: BR
+  SL_WISUN_OPTION_BR_EAPOL_LGTK_EXPIRE_OFFSET_M = 49,
+  /// GTK_NEW_ACTIVATION_TIME (fraction 1/X of GTK_EXPIRE_OFFSET).
+  /// The time at which the Border Router activates the next GTK prior to
+  /// expiration of the currently activated GTK.
+  /// Type: uint16_t
+  /// Default: 720
+  /// Available: BR
+  SL_WISUN_OPTION_BR_EAPOL_GTK_NEW_ACTIVATION_TIME = 50,
+  /// LGTK_NEW_ACTIVATION_TIME (fraction 1/X of LGTK_EXPIRE_OFFSET).
+  /// The time at which the Border Router activates the next LGTK prior to
+  /// expiration of the currently activated LGTK.
+  /// Type: uint16_t
+  /// Default: 180
+  /// Available: BR
+  SL_WISUN_OPTION_BR_EAPOL_LGTK_NEW_ACTIVATION_TIME = 51,
+  /// GTK_NEW_INSTALL_REQUIRED (percentage).
+  /// The percentage of time elapsed in the active GTK's lifetime at which a
+  /// new GTK must be installed on the Border Router.
+  /// Type: uint8_t
+  /// Default: 80
+  /// Available: BR
+  SL_WISUN_OPTION_BR_EAPOL_GTK_NEW_INSTALL_REQUIRED = 52,
+  /// LGTK_NEW_INSTALL_REQUIRED (percentage).
+  /// The percentage of time elapsed in the active LGTK's lifetime at which a
+  /// new LGTK must be installed on the Border Router.
+  /// Type: uint8_t
+  /// Default: 90
+  /// Available: BR
+  SL_WISUN_OPTION_BR_EAPOL_LGTK_NEW_INSTALL_REQUIRED = 53,
+  /// FFN_REVOCATION_LIFETIME_REDUCTION.
+  /// Factor by which the active GTK lifetime is reduced during node revocation
+  /// procedures.
+  /// Type: uint8_t
+  /// Default: 30
+  /// Available: BR
+  SL_WISUN_OPTION_BR_EAPOL_FFN_REVOCATION_LIFETIME_REDUCTION = 54,
+  /// LFN_REVOCATION_LIFETIME_REDUCTION.
+  /// Factor by which the active LGTK lifetime is reduced during node revocation
+  /// procedures.
+  /// Type: uint8_t
+  /// Default: 30
+  /// Available: BR
+  SL_WISUN_OPTION_BR_EAPOL_LFN_REVOCATION_LIFETIME_REDUCTION = 55,
+
+  /// RPL MinHopRankIncrease (RFC 6550 3.5.1).
+  /// Type: uint16_t
+  /// Default: 128
+  /// Available: BR
+  SL_WISUN_OPTION_BR_RPL_MIN_HOP_RANK_INCREASE = 56,
+  /// RPL allowable increase in rank for local repair
+  /// (RFC 6550 6.7.6).
+  /// Type: uint16_t
+  /// Default: 0
+  /// Available: BR
+  SL_WISUN_OPTION_BR_RPL_DAG_MAX_RANK_INCREASE = 57,
+  /// RPL default lifetime unit (RFC 6550 6.7.6).
+  /// Type: uint16_t
+  /// Default: 1200
+  /// Available: BR
+  SL_WISUN_OPTION_BR_RPL_DEFAULT_LIFETIME_UNIT = 58,
+  /// RPL trickle Imin: DIO interval equals
+  /// 2^rpl_dio_interval_min ms (RFC 6550 8.3.1).
+  /// Type: uint8_t
+  /// Default: 19
+  /// Available: BR
+  SL_WISUN_OPTION_BR_RPL_DIO_INTERVAL_MIN = 59,
+  /// RPL trickle Imax: DIOIntervalDoublings
+  /// (RFC 6550 8.3.1).
+  /// Type: uint8_t
+  /// Default: 1
+  /// Available: BR
+  SL_WISUN_OPTION_BR_RPL_DIO_INTERVAL_DOUBLINGS = 60,
+  /// RPL trickle k: DIORedundancyConstant
+  /// (RFC 6550 8.3.1).
+  /// Type: uint8_t
+  /// Default: 0
+  /// Available: BR
+  SL_WISUN_OPTION_BR_RPL_DIO_REDUNDANCY_CONSTANT = 61,
+  /// RPL default lifetime for routes in lifetime units
+  /// (RFC 6550 6.7.6).
+  /// Type: uint8_t
+  /// Default: 6
+  /// Available: BR
+  SL_WISUN_OPTION_BR_RPL_DEFAULT_LIFETIME = 62,
+
+  /// Maximum number of nodes supported by the border router.
+  /// Type: uint32_t
+  /// Default: 100
+  /// Available: BR
+  SL_WISUN_OPTION_BR_PAN_CAPACITY = 63,
+  /// Enable authentication of FAN 1.0 routers.
+  /// Type: uint8_t (boolean)
+  /// Default: 0
+  /// Available: BR
+  SL_WISUN_OPTION_BR_ENABLE_FFN10 = 64,
+  SL_WISUN_OPTION_MAX = 68,
+} sl_wisun_option_id_t;
+
 /// Enumeration for event types
 typedef enum {
   SL_WISUN_LOGGER_EVENT_TYPE_NONE = 0,
@@ -1332,7 +1783,7 @@ SL_PACK_END()
 /// Value for rssi when not applicable (e.g. TX or non-RX events)
 #define SL_WISUN_RF_TEST_RSSI_NOT_AVAILABLE  (-128)
 
-/// RF test RX event information (valid when @ref SL_RAIL_EVENT_RX_PACKET_RECEIVED is set)
+/// RF test RX event information (valid when SL_RAIL_EVENT_RX_PACKET_RECEIVED is set)
 SL_PACK_START(1)
 typedef struct {
   /// RSSI in dBm; @ref SL_WISUN_RF_TEST_RSSI_NOT_AVAILABLE when not applicable
@@ -1349,7 +1800,7 @@ typedef struct {
   uint64_t events;
   /// Event-specific data
   union {
-    /// RX packet received information (when @ref SL_RAIL_EVENT_RX_PACKET_RECEIVED is set in events)
+    /// RX packet received information (when SL_RAIL_EVENT_RX_PACKET_RECEIVED is set in events)
     sl_wisun_logger_event_rf_test_rx_t rx;
   } u;
 } SL_ATTRIBUTE_PACKED sl_wisun_logger_event_rf_test_t;

@@ -26,6 +26,13 @@ include:
   - path: gnu/armv6m_os_cpu.h
     condition:
     - toolchain_gcc
+    # llvm
+  - path: gnu/armv6m_cpu_port.h
+    condition:
+    - toolchain_llvm
+  - path: gnu/armv6m_os_cpu.h
+    condition:
+    - toolchain_llvm
     # iar
   - path: iar/armv6m_cpu_port.h
     condition:

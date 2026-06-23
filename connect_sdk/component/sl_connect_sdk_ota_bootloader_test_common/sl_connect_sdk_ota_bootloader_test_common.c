@@ -31,6 +31,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include PLATFORM_HEADER
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "stack/include/ember.h"
 #include "sl_connect_sdk_ota_bootloader_test_common.h"
@@ -69,7 +70,7 @@ void cli_bootloader_get_version(sl_cli_command_arg_t *arguments)
 
   emberAfPluginBootloaderInterfaceGetVersion(&bl_version);
 
-  app_log_info("bootloader version: %d\n", bl_version);
+  app_log_info("bootloader version: %" PRIu16 "\n", bl_version);
 }
 
 /**************************************************************************//**
@@ -142,7 +143,7 @@ void cli_bootloader_flash_erase_slot(sl_cli_command_arg_t *arguments)
 
   uint32_t slot = sl_cli_get_argument_uint32(arguments, 0);
 
-  app_log_info("flash erasing slot %lu started\n", (long unsigned int) slot);
+  app_log_info("flash erasing slot %" PRIu32 " started\n", slot);
 
   if ( emberAfPluginBootloaderInterfaceChipEraseSlot(slot) ) {
     app_log_info("flash erase successful!\n");
@@ -181,9 +182,9 @@ void cli_bootloader_flash_read(sl_cli_command_arg_t *arguments)
 
   if (emberAfPluginBootloaderInterfaceRead(address, length, buff)) {
     app_log_info("flash read succeeded!\n");
-    app_log_info("address: %lu, length: %d, data:\n", (long unsigned int) address, length);
+    app_log_info("address: %" PRIu32 ", length: %" PRIu8 ", data:\n", address, length);
     for (uint8_t i = 0; i < length; i++) {
-      app_log_info("0x%x ", buff[i]);
+      app_log_info("0x%" PRIX8 " ", buff[i]);
     }
     app_log_info("\n");
   } else {

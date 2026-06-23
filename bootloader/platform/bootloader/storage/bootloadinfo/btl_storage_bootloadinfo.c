@@ -24,6 +24,20 @@
 
 #include "debug/btl_debug.h"
 
+// Validate the fixed header of a BootloadInfo_t read from storage.
+// The length field is read from flash and must be bounded before it is used as
+// a read/write/CRC size. Older compatible records may be smaller than the
+// current BootloadInfo_t, but they must fit in the local buffer, include the
+// fixed header and CRC word, and be word-aligned.
+static bool bootload_info_header_valid(const BootloadInfo_t *btlInfo)
+{
+  return (btlInfo->magic == BTL_STORAGE_BOOTLOADINFO_MAGIC)
+         && (btlInfo->structVersion == BTL_STORAGE_BOOTLOADINFO_VERSION)
+         && (btlInfo->length >= (4UL * sizeof(uint32_t)))
+         && (btlInfo->length <= sizeof(BootloadInfo_t))
+         && ((btlInfo->length % sizeof(uint32_t)) == 0UL);
+}
+
 int32_t storage_getBootloadList(int32_t slotIds[], size_t length)
 {
   BootloadInfo_t btlInfo = { 0 };
@@ -56,14 +70,14 @@ int32_t storage_getBootloadList(int32_t slotIds[], size_t length)
     return retval;
   }
 
-  if (btlInfo.magic != BTL_STORAGE_BOOTLOADINFO_MAGIC) {
+  if (!bootload_info_header_valid(&btlInfo)) {
     // Page 0 is corrupt; read from page 1
     retval = storage_readRaw(btlInfoAddress1, (uint8_t *)&btlInfo, 12UL);
     if (retval != BOOTLOADER_OK) {
       return retval;
     }
 
-    if (btlInfo.magic != BTL_STORAGE_BOOTLOADINFO_MAGIC) {
+    if (!bootload_info_header_valid(&btlInfo)) {
       // Page 1 is also corrupt; cannot do anything but bail
       for (size_t i = 0UL; i < length; i++) {
         slotIds[i] = -1;
@@ -73,7 +87,22 @@ int32_t storage_getBootloadList(int32_t slotIds[], size_t length)
     }
 
     // Header looks good; read rest of struct
-    storage_readRaw(btlInfoAddress1, (uint8_t *)&btlInfo, btlInfo.length);
+    retval = storage_readRaw(btlInfoAddress1,
+                             (uint8_t *)&btlInfo,
+                             btlInfo.length);
+    if (retval != BOOTLOADER_OK) {
+      return retval;
+    }
+
+    // Validate page 1 contents before copying them back to page 0
+    if (btl_crc32Stream((uint8_t *)&btlInfo, btlInfo.length, BTL_CRC32_START)
+        != BTL_CRC32_END) {
+      for (size_t i = 0UL; i < length; i++) {
+        slotIds[i] = -1;
+      }
+      BTL_DEBUG_PRINTLN("CRC ERR");
+      return BOOTLOADER_ERROR_BOOTLOAD_LIST_INVALID;
+    }
 
     // Recover page 0 from page 1
     BTL_DEBUG_PRINTLN("BI pg0 recover");
@@ -90,7 +119,10 @@ int32_t storage_getBootloadList(int32_t slotIds[], size_t length)
   }
 
   // Header looks good; read rest of struct
-  storage_readRaw(btlInfoAddress0, (uint8_t *)&btlInfo, btlInfo.length);
+  retval = storage_readRaw(btlInfoAddress0, (uint8_t *)&btlInfo, btlInfo.length);
+  if (retval != BOOTLOADER_OK) {
+    return retval;
+  }
 
   // Test CRC to ensure struct is valid
   if (btl_crc32Stream((uint8_t *)&btlInfo, btlInfo.length, BTL_CRC32_START)
@@ -120,7 +152,7 @@ int32_t storage_getBootloadList(int32_t slotIds[], size_t length)
   return BOOTLOADER_OK;
 }
 
-int32_t storage_setBootloadList(int32_t slotIds[], size_t length)
+int32_t storage_setBootloadList(const int32_t slotIds[], size_t length)
 {
   BootloadInfo_t btlInfo = { 0 };
   btlInfo.magic = BTL_STORAGE_BOOTLOADINFO_MAGIC;

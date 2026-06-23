@@ -267,9 +267,16 @@ void sli_zigbee_af_fragmentation_message_sent_handler(sl_status_t status,
 //------------------------------------------------------------------------------
 // Public APIs
 
+// Deprecated (MFG_STRING token removed on Series 3 platforms).
+// Writes a placeholder so callers still get a valid buffer/string.
 void sl_zigbee_af_get_mfg_string(uint8_t* returnData)
 {
-  (void)sl_token_manager_get_data(SL_TOKEN_GET_STATIC_DEVICE_TOKEN(TOKEN_MFG_STRING), (void *)returnData, sizeof(tokTypeMfgString));
+  static const char placeholder[] = "(deprecated)";
+  if (returnData != NULL) {
+    memcpy(returnData, placeholder, sizeof(placeholder) - 1);
+    memset(returnData + sizeof(placeholder) - 1, 0,
+           MFG_STRING_MAX_LENGTH - (sizeof(placeholder) - 1));
+  }
 }
 
 uint8_t sl_zigbee_af_get_stack_profile(void)

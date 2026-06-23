@@ -242,11 +242,11 @@ void        DiscoverNat64Prefix(const Ip6::Prefix &aPrefix);
 extern "C" {
 
 #if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
-void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+#if OPENTHREAD_CONFIG_LOG_INSTANCE_AWARE_API_ENABLE
+void otPlatLogOutput(otInstance *, otLogLevel, const char *aLogLine) { printf("   %s\n", aLogLine); }
+#else
+void otPlatLog(otLogLevel, otLogRegion, const char *aFormat, ...)
 {
-    OT_UNUSED_VARIABLE(aLogLevel);
-    OT_UNUSED_VARIABLE(aLogRegion);
-
     va_list args;
 
     printf("   ");
@@ -255,6 +255,7 @@ void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat
     va_end(args);
     printf("\n");
 }
+#endif
 #endif
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -287,14 +288,16 @@ uint32_t otPlatAlarmMilliGetNow(void) { return sNow; }
 //---------------------------------------------------------------------------------------------------------------------
 // otPlatInfraIf
 
-bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
+bool otPlatInfraIfHasAddress(otInstance *aInstance, uint32_t aInfraIfIndex, const otIp6Address *aAddress)
 {
+    VerifyOrQuit(aInstance == sInstance);
     VerifyOrQuit(aInfraIfIndex == kInfraIfIndex);
 
     return AsCoreType(aAddress) == sInfraIfAddress;
 }
 
-otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
+otError otPlatInfraIfSendIcmp6Nd(otInstance         *aInstance,
+                                 uint32_t            aInfraIfIndex,
                                  const otIp6Address *aDestAddress,
                                  const uint8_t      *aBuffer,
                                  uint16_t            aBufferLength)
@@ -305,6 +308,7 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
     Log("otPlatInfraIfSendIcmp6Nd(aDestAddr: %s, aBufferLength:%u)", AsCoreType(aDestAddress).ToString().AsCString(),
         aBufferLength);
 
+    VerifyOrQuit(aInstance == sInstance);
     VerifyOrQuit(aInfraIfIndex == kInfraIfIndex);
 
     packet.Init(aBuffer, aBufferLength);
@@ -1382,19 +1386,23 @@ void VerifyFavoredOnLinkPrefix(const Ip6::Prefix &aPrefix)
     VerifyOrQuit(favoredPrefix == aPrefix);
 }
 
-void InitTest(bool aEnablBorderRouting = false, bool aAfterReset = false)
+void InitTest(bool aEnablBorderRouting = false, bool aResetInstance = false)
 {
     uint32_t delay = 10000;
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Initialize OT instance.
 
-    sNow      = 0;
-    sAlarmOn  = false;
-    sInstance = static_cast<Instance *>(testInitInstance());
+    sNow     = 0;
+    sAlarmOn = false;
 
-    if (aAfterReset)
+    if (!aResetInstance)
     {
+        sInstance = testInitInstance();
+    }
+    else
+    {
+        sInstance = testResetInstance(sInstance);
         delay += 26000; // leader reset sync delay
     }
 
@@ -1416,6 +1424,18 @@ void InitTest(bool aEnablBorderRouting = false, bool aAfterReset = false)
 
     SuccessOrQuit(otIp6SetEnabled(sInstance, true));
     SuccessOrQuit(otThreadSetEnabled(sInstance, true));
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_MULTI_AIL_DETECTION_ENABLE
+    // We explicitly disable the multi-AIL detector to prevent
+    // interference with the tests. The detector enables
+    // `RxRaTracker` and keeps it enabled even when Border Routing is
+    // disabled, which keeps prefix entries in the heap and can
+    // invalidate the heap allocation checks. It may also mess up the
+    // expected timing of RS (Router Solicitation) messages (starting
+    // the `RxRaTracker` early).
+    otBorderRoutingSetMultiAilDetectionEnabled(sInstance, false);
+#endif
+
     SuccessOrQuit(otBorderRoutingSetEnabled(sInstance, aEnablBorderRouting));
 
     // Reset all test flags
@@ -4269,9 +4289,7 @@ void TestSavedOnLinkPrefixes(void)
 
     Log("Disabling and re-enabling OT Instance");
 
-    testFreeInstance(sInstance);
-
-    InitTest(/* aEnablBorderRouting */ true, /* aAfterReset */ true);
+    InitTest(/* aEnablBorderRouting */ true, /* aResetInstance */ true);
 
     sExpectedPio = kPioAdvertisingLocalOnLink;
 
@@ -4315,9 +4333,7 @@ void TestSavedOnLinkPrefixes(void)
 
     Log("Disabling and re-enabling OT Instance");
 
-    testFreeInstance(sInstance);
-
-    InitTest(/* aEnablBorderRouting */ false, /* aAfterReset */ true);
+    InitTest(/* aEnablBorderRouting */ false, /* aResetInstance */ true);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Start Routing Manager.
@@ -4365,8 +4381,7 @@ void TestSavedOnLinkPrefixes(void)
 
     Log("Disabling and re-enabling OT Instance again");
 
-    testFreeInstance(sInstance);
-    InitTest(/* aEnablBorderRouting */ false, /* aAfterReset */ true);
+    InitTest(/* aEnablBorderRouting */ false, /* aResetInstance */ true);
 
     SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(true));
     AdvanceTime(100);
@@ -4615,7 +4630,7 @@ void TestNat64PrefixSelection(void)
     Ip6::Prefix                     localOmr;
     NetworkData::OnMeshPrefixConfig prefixConfig;
     Ip6::Prefix                     omrPrefix             = PrefixFromString("2000:0000:1111:4444::", 64);
-    Ip6::Prefix                     infraIfNat64Prefix    = PrefixFromString("2000:0:0:1:0:0::", 96);
+    Ip6::Prefix                     platformNat64Prefix   = PrefixFromString("2000:0:0:1:0:0::", 96);
     Ip6::Prefix                     raTrackerNat64PrefixA = PrefixFromString("2000:0:0:2:0:f::", 96);
     Ip6::Address                    routerAddressA        = AddressFromString("fd00::aaaa");
     Ip6::Prefix                     raTrackerNat64PrefixB = PrefixFromString("2000:0:0:2:0:0::", 96);
@@ -4651,18 +4666,18 @@ void TestNat64PrefixSelection(void)
     VerifyNat64PrefixInNetData(localNat64);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // InfraIf NAT64 prefix (e.g. using DNS - RFC 7050) discovered. No infra-derived OMR prefix in Network Data. Check
-    // local NAT64 prefix in Network Data.
+    // Platform-provided NAT64 prefix (e.g. using DNS - RFC 7050) discovered. No infra-derived OMR prefix in Network
+    // Data. Check local NAT64 prefix in Network Data.
 
-    DiscoverNat64Prefix(infraIfNat64Prefix);
+    DiscoverNat64Prefix(platformNat64Prefix);
 
     AdvanceTime(20000);
 
     VerifyNat64PrefixInNetData(localNat64);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Add a medium preference OMR prefix into Network Data.
-    // Check InfraIf NAT64 prefix published in Network Data.
+    // Add a medium preference OMR prefix into Network Data. Check that the platform-provided NAT64 prefix is now
+    // published in Network Data.
 
     prefixConfig.Clear();
     prefixConfig.mPrefix       = omrPrefix;
@@ -4679,7 +4694,7 @@ void TestNat64PrefixSelection(void)
     AdvanceTime(20000);
 
     VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
-    VerifyNat64PrefixInNetData(infraIfNat64Prefix);
+    VerifyNat64PrefixInNetData(platformNat64Prefix);
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Send an RA from a router advertising a NAT64 prefix. Check that the RA-discovered NAT64 prefix is now favored
@@ -4735,16 +4750,16 @@ void TestNat64PrefixSelection(void)
     AdvanceTime(20000);
 
     VerifyOmrPrefixInNetData(omrPrefix, /* aDefaultRoute */ false);
-    VerifyNat64PrefixInNetData(infraIfNat64Prefix);
+    VerifyNat64PrefixInNetData(platformNat64Prefix);
 
     VerifyNat64PrefixTableIsEmpty();
 
     //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // InfraIf NAT64 prefix removed.
+    // Platform-provided NAT64 prefix removed.
     // Check local NAT64 prefix in Network Data.
 
-    infraIfNat64Prefix.Clear();
-    DiscoverNat64Prefix(infraIfNat64Prefix);
+    platformNat64Prefix.Clear();
+    DiscoverNat64Prefix(platformNat64Prefix);
 
     AdvanceTime(20000);
 
@@ -5089,6 +5104,239 @@ void TestDhcp6Pd(void)
     FinalizeTest();
 }
 
+void TestDhcp6PdConflict(void)
+{
+    Ip6::Prefix  localOmr;
+    Ip6::Prefix  pdPrefix       = PrefixFromString("2001:db8:dead:beef::", 64);
+    Ip6::Address routerAddressA = AddressFromString("fd00::aaaa");
+    uint16_t     heapAllocations;
+
+    Log("--------------------------------------------------------------------------------------------");
+    Log("TestDhcp6PdConflict");
+
+    InitTest(/* aEnableBorderRouting */ true);
+    heapAllocations = sHeapAllocatedPtrs.GetLength();
+
+    sInstance->Get<BorderRouter::RoutingManager>().SetDhcp6PdEnabled(true);
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().GetOmrPrefix(localOmr));
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Report a PD prefix and check that its used as OMR prefix
+
+    Log("Report DHCPv6-PD prefix");
+    ReportPdPrefixesAsRa({Pio(pdPrefix, kValidLitime, kPreferredLifetime)});
+
+    sExpectedRios.Add(pdPrefix);
+    AdvanceTime(10 * 1000);
+
+    VerifyPdOmrPrefix(pdPrefix);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    VerifyOmrPrefixInNetData(pdPrefix, /* aDefaultRoute */ false);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Advertise the same prefix as on-link from a router.
+
+    Log("Router A advertises PD prefix as on-link");
+    SendRouterAdvert(routerAddressA, {Pio(pdPrefix, 200, 200)});
+
+    // Check that the PD prefix is no longer used as OMR prefix due to
+    // conflict. The OMR should switch back to local OMR.
+
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(10 * 1000);
+    VerifyOrQuit(sExpectedRios.SawAll());
+
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Wait for the PIO from Router A to expire. We renew the PD
+    // prefix during this time to ensure it stays valid.
+
+    Log("Wait for Router A PIO to expire");
+
+    AdvanceTime(300 * 1000);
+    ReportPdPrefixesAsRa({Pio(pdPrefix, kValidLitime, kPreferredLifetime)});
+    AdvanceTime(300 * 1000);
+
+    // Router A entry should be expired and removed. The PD prefix is still
+    // valid (renewed). The conflict should be resolved. Validate that PD
+    // prefix is again being use as OMR prefix.
+
+    sExpectedRios.Clear();
+    sExpectedRios.Add(pdPrefix);
+
+    AdvanceTime(100 * 1000);
+
+    VerifyPdOmrPrefix(pdPrefix);
+    VerifyOrQuit(sExpectedRios.SawAll());
+    VerifyOmrPrefixInNetData(pdPrefix, /* aDefaultRoute */ false);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Remove the PD prefix
+
+    ReportPdPrefixesAsRa({Pio(pdPrefix, 0, 0)});
+
+    AdvanceTime(1 * 1000);
+    VerifyNoPdOmrPrefix();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Now Advertise the PD prefix as on-link from a router first.
+
+    Log("Router A advertises PD prefix as on-link before delegating the prefix");
+    SendRouterAdvert(routerAddressA, {Pio(pdPrefix, 350, 350)});
+
+    // Check that local OMR is used.
+
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(10 * 1000);
+    VerifyOrQuit(sExpectedRios.SawAll());
+
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Report the same PD prefix. Validate that local OMR prefix is
+    // still being used.
+
+    Log("Delegate PD prefix which conflicts with already advertised on-link prefix from router A");
+    ReportPdPrefixesAsRa({Pio(pdPrefix, kValidLitime, kPreferredLifetime)});
+
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(200 * 1000);
+    VerifyOrQuit(sExpectedRios.SawAll());
+
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ true);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Wait for the PIO from Router A to expire. We renew the PD
+    // prefix during this time to ensure it stays valid.
+
+    Log("Wait for Router A PIO to expire");
+
+    AdvanceTime(200 * 1000);
+    ReportPdPrefixesAsRa({Pio(pdPrefix, kValidLitime, kPreferredLifetime)});
+    AdvanceTime(200 * 1000);
+
+    // Router A entry should be expired and removed. The PD prefix is still
+    // valid (renewed). The conflict should be resolved. Validate that PD
+    // prefix is again being use as OMR prefix.
+
+    AdvanceTime(100 * 1000);
+
+    VerifyPdOmrPrefix(pdPrefix);
+    VerifyOmrPrefixInNetData(pdPrefix, /* aDefaultRoute */ false);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Remove the PD prefix
+
+    ReportPdPrefixesAsRa({Pio(pdPrefix, 0, 0)});
+
+    AdvanceTime(1 * 1000);
+    VerifyNoPdOmrPrefix();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Now Advertise the PD prefix as RIO from a router first.
+
+    Log("Router A advertises PD prefix as RIO before delegating the prefix");
+    SendRouterAdvert(routerAddressA, {Rio(pdPrefix, kValidLitime, NetworkData::kRoutePreferenceMedium)});
+
+    // Check that local OMR is used.
+
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(10 * 1000);
+    VerifyOrQuit(sExpectedRios.SawAll());
+
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Report the same PD prefix. Validate that local OMR prefix is
+    // still being used (due to RIO conflict).
+
+    Log("Delegate PD prefix which conflicts with already advertised RIO prefix from router A");
+    ReportPdPrefixesAsRa({Pio(pdPrefix, kValidLitime, kPreferredLifetime)});
+
+    sExpectedRios.Clear();
+    sExpectedRios.Add(localOmr);
+
+    AdvanceTime(200 * 1000);
+    VerifyOrQuit(sExpectedRios.SawAll());
+
+    VerifyOmrPrefixInNetData(localOmr, /* aDefaultRoute */ false);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Remove the RIO from Router A. Validate that the PD prefix is
+    // now accepted and used as OMR.
+
+    Log("Router A removes RIO, conflict should be resolved");
+    SendRouterAdvert(routerAddressA, {Rio(pdPrefix, 0, NetworkData::kRoutePreferenceMedium)});
+
+    sExpectedRios.Clear();
+    sExpectedRios.Add(pdPrefix);
+
+    AdvanceTime(10 * 1000);
+    VerifyOrQuit(sExpectedRios.SawAll());
+
+    VerifyOmrPrefixInNetData(pdPrefix, /* aDefaultRoute */ false);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Remove the PD prefix
+
+    ReportPdPrefixesAsRa({Pio(pdPrefix, 0, 0)});
+
+    AdvanceTime(1 * 1000);
+    VerifyNoPdOmrPrefix();
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Report the PD prefix again. Validate that it is used as OMR prefix.
+
+    Log("Delegate PD prefix");
+    ReportPdPrefixesAsRa({Pio(pdPrefix, kValidLitime, kPreferredLifetime)});
+
+    sExpectedRios.Clear();
+    sExpectedRios.Add(pdPrefix);
+
+    AdvanceTime(10 * 1000);
+    VerifyOrQuit(sExpectedRios.SawAll());
+
+    VerifyOmrPrefixInNetData(pdPrefix, /* aDefaultRoute */ false);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Advertise the same prefix as RIO from a router. This should NOT
+    // be treated as a conflict since the PD prefix is already adopted
+    // and used.
+
+    Log("Router A advertises PD prefix as RIO after it is delegated");
+    SendRouterAdvert(routerAddressA, {Rio(pdPrefix, kValidLitime, NetworkData::kRoutePreferenceMedium)});
+
+    AdvanceTime(1 * 1000);
+
+    sExpectedRios.Clear();
+    sExpectedRios.Add(pdPrefix);
+
+    AdvanceTime(300 * 1000);
+    VerifyOrQuit(sExpectedRios.SawAll());
+
+    VerifyOmrPrefixInNetData(pdPrefix, /* aDefaultRoute */ false);
+
+    //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    SuccessOrQuit(sInstance->Get<BorderRouter::RoutingManager>().SetEnabled(false));
+    AdvanceTime(3000);
+
+    VerifyOrQuit(sHeapAllocatedPtrs.GetLength() <= heapAllocations);
+
+    Log("End of TestDhcp6PdConflict");
+
+    FinalizeTest();
+}
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
 
 static void HandleRdnssChanged(void *aContext)
@@ -5366,6 +5614,7 @@ int main(void)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
     ot::TestDhcp6Pd();
+    ot::TestDhcp6PdConflict();
 #endif
     ot::TestRdnss();
 

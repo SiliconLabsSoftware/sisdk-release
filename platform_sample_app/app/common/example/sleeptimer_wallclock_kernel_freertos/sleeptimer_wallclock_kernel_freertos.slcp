@@ -86,3 +86,7 @@ template_contribution:
       name: get_datetime
       handler: sleeptimer_app_get_datetime
       help: "Get date and time"
+tag:
+  - hwfilter:board:simple_led:led0
+  - hwfilter:ram:20k
+  - hwfilter:device:device_series_2

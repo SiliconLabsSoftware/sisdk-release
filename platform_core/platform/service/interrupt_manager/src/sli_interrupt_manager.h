@@ -68,6 +68,21 @@ extern "C" {
 sl_interrupt_manager_irq_handler_t *sli_interrupt_manager_set_irq_table(sl_interrupt_manager_irq_handler_t *table,
                                                                         uint32_t handler_count);
 
+/***************************************************************************//**
+ * @brief
+ *   Set the handler for a core exception (negative IRQn).
+ *
+ * @param[in] irqn
+ *   Core exception IRQ number (for example BusFault_IRQn).
+ *
+ * @param[in] handler
+ *   New exception handler.
+ *
+ * @return
+ *   SL_STATUS_OK on success.
+ ******************************************************************************/
+sl_status_t sli_interrupt_manager_set_core_exception_handler(int32_t irqn,
+                                                             sl_interrupt_manager_irq_handler_t handler);
 #endif
 
 /***************************************************************************//**

@@ -19,6 +19,8 @@ class PhysStudioSidewalkNerio(IPhy):
         # Default xtal frequency of 39MHz
         phy.profile_inputs.xtal_frequency_hz.value = 39000000
 
+        return phy
+
     ### Sidewalk 150kbps and 250kbps currently not in spec ###
 
     '''

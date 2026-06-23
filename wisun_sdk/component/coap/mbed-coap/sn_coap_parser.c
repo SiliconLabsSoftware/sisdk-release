@@ -725,8 +725,13 @@ static const uint8_t * sn_coap_parser_options_parse(const uint8_t * restrict pac
         break;
 
       default:
-        tr_error("sn_coap_parser_options_parse - unknown option!");
-        return NULL;
+        if (option_number & 0x01) {
+          tr_error("sn_coap_parser_options_parse - unknown critical option!");
+          return NULL;
+        }
+        packet_data_ptr += option_len;
+        tr_warning("sn_coap_parser_options_parse - unknown elective option!");
+        break;
     }
 
     /* Check for overflow */

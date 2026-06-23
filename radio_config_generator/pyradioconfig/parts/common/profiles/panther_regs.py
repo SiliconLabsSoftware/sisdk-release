@@ -497,7 +497,7 @@ def build_modem_regs_panther_lynx_common_part2(model, profile):
     profile.outputs.append(ModelOutput(model.vars.RAC_IFADCDBG_IFADCENCLK, '',         ModelOutputType.SVD_REG_FIELD, readable_name='RAC.IFADCDBG.IFADCENCLK'           ))
     profile.outputs.append(ModelOutput(model.vars.RAC_LNAMIXEN_LNAMIXENLDO, '',         ModelOutputType.SVD_REG_FIELD, readable_name='RAC.LNAMIXEN.LNAMIXENLDO'           ))
     # Not in Ocelot.
-    if model.part_family.lower() in ["panther", "lynx", "leopard", "lion"]:
+    if model.part_family.lower() in ["panther", "lynx", "leopard", "lion", "curl"]:
         profile.outputs.append(ModelOutput(model.vars.RAC_LNAMIXTRIM0_LNAMIXLOWCUR, '',         ModelOutputType.SVD_REG_FIELD, readable_name='RAC.LNAMIXTRIM0.LNAMIXLOWCUR'           ))
         profile.outputs.append(ModelOutput(model.vars.RAC_PGACTRL_LNAMIXRFPKDTHRESHSEL, '',         ModelOutputType.SVD_REG_FIELD, readable_name='RAC.PGACTRL.LNAMIXRFPKDTHRESHSEL'           ))
     profile.outputs.append(ModelOutput(model.vars.RAC_PGACTRL_PGAENLATCHI, '',         ModelOutputType.SVD_REG_FIELD, readable_name='RAC.PGACTRL.PGAENLATCHI'           ))
@@ -576,7 +576,7 @@ def build_modem_regs_panther_lynx_common_part2(model, profile):
     profile.outputs.append(ModelOutput(model.vars.SYNTH_DSMCTRLTX_MASHORDERTX, '',         ModelOutputType.SVD_REG_FIELD, readable_name='SYNTH.DSMCTRLTX.MASHORDERTX'           ))
     profile.outputs.append(ModelOutput(model.vars.SYNTH_DSMCTRLTX_REQORDERTX, '',         ModelOutputType.SVD_REG_FIELD, readable_name='SYNTH.DSMCTRLTX.REQORDERTX'           ))
     # Not in Ocelot.
-    if model.part_family.lower() in ["panther", "lynx", "leopard", "lion"]:
+    if model.part_family.lower() in ["panther", "lynx", "leopard", "lion", "curl"]:
         profile.outputs.append(ModelOutput(model.vars.RAC_SYNTHCTRL_MMDPOWERBALANCEDISABLE, '',         ModelOutputType.SVD_REG_FIELD, readable_name='RAC.SYNTHCTRL.MMDPOWERBALANCEDISABLE'           ))
     profile.outputs.append(ModelOutput(model.vars.RAC_SYNTHREGCTRL_MMDLDOVREFTRIM, '',         ModelOutputType.SVD_REG_FIELD, readable_name='RAC.SYNTHREGCTRL.MMDLDOVREFTRIM'           ))
 

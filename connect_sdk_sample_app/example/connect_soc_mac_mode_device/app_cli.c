@@ -30,6 +30,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "em_system.h"
 #include "em_cmu.h"
@@ -71,7 +72,7 @@ void cli_start_active_scan(sl_cli_command_arg_t *arguments)
   EmberStatus status;
   uint16_t channel_to_scan = sl_cli_get_argument_uint16(arguments, 0);
   status = emberStartActiveScan(channel_to_scan);
-  app_log_info("Start active scanning: channel %d, status=0x%02X\n", channel_to_scan, status);
+  app_log_info("Start active scanning: channel %" PRIu16 ", status=0x%02" PRIX8 "\n", channel_to_scan, status);
 }
 
 /******************************************************************************
@@ -98,7 +99,7 @@ void cli_commission(sl_cli_command_arg_t *arguments)
   if (status == EMBER_SUCCESS) {
     app_log_info("Node parameters commissioned\n");
   } else {
-    app_log_error("Commissioning failed, status 0x%02X\n", status);
+    app_log_error("Commissioning failed, status 0x%02" PRIX8 "\n", status);
   }
 }
 
@@ -111,7 +112,7 @@ void cli_start_energy_scan(sl_cli_command_arg_t *arguments)
   uint16_t channel_to_scan = sl_cli_get_argument_uint16(arguments, 0);
   uint8_t samples = sl_cli_get_argument_uint8(arguments, 1);
   status = emberStartEnergyScan(channel_to_scan, samples);
-  app_log_info("Start energy scanning: channel %d, samples %d, status=0x%02X\n", channel_to_scan, samples, status);
+  app_log_info("Start energy scanning: channel %" PRIu16 ", samples %" PRIu8 ", status=0x%02" PRIX8 "\n", channel_to_scan, samples, status);
 }
 
 /******************************************************************************
@@ -136,7 +137,7 @@ void cli_form(sl_cli_command_arg_t *arguments)
   if (status == EMBER_SUCCESS) {
     app_log_info("Network formed\n");
   } else {
-    app_log_info("Network form failed, status 0x%02X\n", status);
+    app_log_info("Network form failed, status 0x%02" PRIX8 "\n", status);
   }
 }
 
@@ -147,18 +148,18 @@ void cli_info(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
   app_log_info("Info:\n");
-  app_log_info("         MCU Id: 0x%016llX\n", SYSTEM_GetUnique());
-  app_log_info("  Network state: 0x%02X\n", emberNetworkState());
-  app_log_info("      Node type: 0x%02X\n", emberGetNodeType());
-  app_log_info("        Node id: 0x%04X\n", emberGetNodeId());
+  app_log_info("         MCU Id: 0x%016" PRIX64 "\n", SYSTEM_GetUnique());
+  app_log_info("  Network state: 0x%02" PRIX8 "\n", emberNetworkState());
+  app_log_info("      Node type: 0x%02" PRIX8 "\n", emberGetNodeType());
+  app_log_info("        Node id: 0x%04" PRIX16 "\n", emberGetNodeId());
   app_log_info("   Node Long id: 0x");
   for (uint8_t i = 0; i < EUI64_SIZE; i++) {
-    app_log_info("%02X", emberGetEui64()[i]);
+    app_log_info("%02" PRIX8, emberGetEui64()[i]);
   }
   app_log_info("\n");
-  app_log_info("         Pan id: 0x%04X\n", emberGetPanId());
-  app_log_info("        Channel: %d\n", (uint16_t)emberGetRadioChannel());
-  app_log_info("          Power: %d\n", (int16_t)emberGetRadioPower());
+  app_log_info("         Pan id: 0x%04" PRIX16 "\n", emberGetPanId());
+  app_log_info("        Channel: %" PRIu16 "\n", emberGetRadioChannel());
+  app_log_info("          Power: %" PRId16 "\n", emberGetRadioPower());
   app_log_info("     TX options: MAC acks %s, security %s, priority %s\n",
                ((tx_options & EMBER_OPTIONS_ACK_REQUESTED) ? "enabled" : "disabled"),
                ((tx_options & EMBER_OPTIONS_SECURITY_ENABLED) ? "enabled" : "disabled"),
@@ -192,7 +193,7 @@ void cli_join_network(sl_cli_command_arg_t *arguments)
   if (status == EMBER_SUCCESS) {
     app_log_info("Started the joining process\n");
   } else {
-    app_log_error("Join network failed, status 0x%02X\n", status);
+    app_log_error("Join network failed, status 0x%02" PRIX8 "\n", status);
   }
 }
 
@@ -214,7 +215,7 @@ void cli_set_permit_join(sl_cli_command_arg_t *arguments)
   EmberStatus status = emberPermitJoining(duration);
 
   if (status == EMBER_SUCCESS) {
-    app_log_info("Permit join set 0x%02X\n", duration);
+    app_log_info("Permit join set 0x%02" PRIX8 "\n", duration);
   } else {
     app_log_error("Permit join failed\n");
   }
@@ -227,7 +228,7 @@ void cli_poll(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
   EmberStatus status = emberPollForData();
-  app_log_info("Poll status 0x%02X", status);
+  app_log_info("Poll status 0x%02" PRIX8, status);
 }
 
 /******************************************************************************
@@ -240,7 +241,7 @@ void cli_purge_indirect(sl_cli_command_arg_t *arguments)
   if (status == EMBER_SUCCESS) {
     app_log_info("Purge indirect success\n");
   } else {
-    app_log_error("Purge indirect failed, 0x%02X\n", status);
+    app_log_error("Purge indirect failed, 0x%02" PRIX8 "\n", status);
   }
 }
 
@@ -342,7 +343,7 @@ void cli_send(sl_cli_command_arg_t *arguments)
   if (status == EMBER_SUCCESS) {
     app_log_info("MAC frame submitted\n");
   } else {
-    app_log_error("MAC frame submission failed, status=0x%02X\n",
+    app_log_error("MAC frame submission failed, status=0x%02" PRIX8 "\n",
                   status);
   }
 }
@@ -360,9 +361,9 @@ void cli_set_beacon_payload(sl_cli_command_arg_t *arguments)
 
   app_log_info("Set beacon payload: {");
   for (uint8_t i = 0; i < length; i++) {
-    app_log_info("%02X", contents[i]);
+    app_log_info("%02" PRIX8, contents[i]);
   }
-  app_log_info("}: status=0x%02X\n", status);
+  app_log_info("}: status=0x%02" PRIX8 "\n", status);
 }
 
 /******************************************************************************
@@ -374,9 +375,9 @@ void cli_set_channel(sl_cli_command_arg_t *arguments)
   uint16_t channel = sl_cli_get_argument_uint16(arguments, 0);
   status = emberSetRadioChannel(channel);
   if (status == EMBER_SUCCESS) {
-    app_log_info("Radio channel set, status=0x%02X\n", status);
+    app_log_info("Radio channel set, status=0x%02" PRIX8 "\n", status);
   } else {
-    app_log_error("Setting radio channel failed, status=0x%02X\n", status);
+    app_log_error("Setting radio channel failed, status=0x%02" PRIX8 "\n", status);
   }
 }
 
@@ -399,7 +400,7 @@ void cli_set_security_key(sl_cli_command_arg_t *arguments)
 #else
   (void)arguments;
   app_log_info("Security plugin: CONNECT AES SECURITY is missing\n");
-  app_log_info("Security key set failed 0x%02X\n", EMBER_ERR_FATAL);
+  app_log_info("Security key set failed 0x%02" PRIX8 "\n", EMBER_ERR_FATAL);
 #endif
 }
 
@@ -422,7 +423,7 @@ void cli_unset_security_key(sl_cli_command_arg_t *arguments)
 void cli_set_options(sl_cli_command_arg_t *arguments)
 {
   tx_options = sl_cli_get_argument_uint8(arguments, 0);
-  app_log_info("Send options set: 0x%02X\n", tx_options);
+  app_log_info("Send options set: 0x%02" PRIX8 "\n", tx_options);
 }
 
 /******************************************************************************
@@ -456,7 +457,7 @@ void cli_set_poll_destination(sl_cli_command_arg_t *arguments)
   if (status == EMBER_SUCCESS) {
     app_log_info("Poll address set\n");
   } else {
-    app_log_info("Poll address set failed, 0x%02X\n", status);
+    app_log_info("Poll address set failed, 0x%02" PRIX8 "\n", status);
   }
 }
 
@@ -485,7 +486,7 @@ void set_security_mapping_command(sl_cli_command_arg_t *arguments)
   if (status == EMBER_SUCCESS) {
     app_log_info("Security mapping set\n");
   } else {
-    app_log_info("Security mapping set failed, 0x%02X\n", status);
+    app_log_info("Security mapping set failed, 0x%02" PRIX8 "\n", status);
   }
 }
 
@@ -501,7 +502,7 @@ void clear_security_mappings_command(sl_cli_command_arg_t *arguments)
   if (status == EMBER_SUCCESS) {
     app_log_info("Security mappings cleared\n");
   } else {
-    app_log_info("Security mappings clear failed, 0x%02X\n", status);
+    app_log_info("Security mappings clear failed, 0x%02" PRIX8 "\n", status);
   }
 }
 
@@ -520,7 +521,7 @@ static bool check_channel(uint16_t channel)
   uint16_t default_channel = emberGetDefaultChannel();
 
   if (channel < default_channel) {
-    app_log_info("Channel %d is invalid, the first valid channel is %d!\n", channel, default_channel);
+    app_log_info("Channel %" PRIu16 " is invalid, the first valid channel is %" PRIu16 "!\n", channel, default_channel);
     channel_ok = false;
   }
   return channel_ok;
@@ -562,9 +563,9 @@ static bool set_security_key(uint8_t* key, size_t key_length)
                           &security_key_id);
 
   if (status == PSA_SUCCESS) {
-    app_log_info("Security key import successful, key id: %lu\n", security_key_id);
+    app_log_info("Security key import successful, key id: %" PRIu32 "\n", security_key_id);
   } else {
-    app_log_info("Security Key import failed: 0x%02lx\n", status);
+    app_log_info("Security Key import failed: %" PRId32 "\n", status);
   }
 
   emstatus = emberSetPsaSecurityKey(security_key_id);
@@ -573,7 +574,7 @@ static bool set_security_key(uint8_t* key, size_t key_length)
     app_log_info("Security key set successful\n");
     success = true;
   } else {
-    app_log_info("Security key set failed 0x%02X\n", emstatus);
+    app_log_info("Security key set failed 0x%02" PRIX8 "\n", emstatus);
   }
 
   return success;

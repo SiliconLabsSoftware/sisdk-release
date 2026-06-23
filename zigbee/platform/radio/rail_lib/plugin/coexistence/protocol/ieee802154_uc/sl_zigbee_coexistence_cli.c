@@ -31,6 +31,7 @@
 #include "sl_cli.h"
 #include "sl_zigbee_debug_print.h"
 #include "stack/include/sl_zigbee_types.h"
+#include "stack/include/stack-info.h"
 #include "counters.h"
 
 #ifdef EZSP_HOST

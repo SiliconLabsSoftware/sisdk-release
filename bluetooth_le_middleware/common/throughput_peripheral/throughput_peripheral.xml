@@ -8,7 +8,7 @@
       <value length="255" type="hex" variable_length="false">0x00</value>
       <properties indicate="true" indicate_requirement="optional"/>
     </characteristic>
-    
+
     <!--Notifications-->
     <characteristic id="throughput_notifications" name="Notifications" sourceId="custom.type" uuid="47b73dd6-dee3-4da1-9be0-f5c539a9a4be">
       <description>Notification data array</description>
@@ -16,7 +16,7 @@
       <value length="255" type="hex" variable_length="false">0x00</value>
       <properties notify="true" notify_requirement="optional"/>
     </characteristic>
-    
+
     <!--Transmission ON-->
     <characteristic id="transmission_on" name="Transmission ON" sourceId="custom.type" uuid="be6b6be1-cd8a-4106-9181-5ffe2bc67718">
       <description>Transmission ON</description>
@@ -24,7 +24,7 @@
       <value length="1" type="hex" variable_length="false">0x00</value>
       <properties read="true" read_requirement="optional" write="true" write_no_response="true" write_no_response_requirement="optional" write_requirement="optional" notify="true" notify_requirement="optional"/>
     </characteristic>
-    
+
     <!--Throughput result-->
     <characteristic id="throughput_result" name="Throughput result" sourceId="custom.type" uuid="adf32227-b00f-400c-9eeb-b903a6cc291b">
       <description>Throughput result</description>

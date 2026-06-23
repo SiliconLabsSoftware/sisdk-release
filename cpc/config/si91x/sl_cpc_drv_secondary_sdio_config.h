@@ -49,11 +49,11 @@
 // <o SLI_CPC_RX_BUFFER_MAX_LENGTH> Rx queue items max count
 #define SLI_CPC_RX_QUEUE_ITEM_MAX_COUNT      SLI_CPC_DRV_SDIO_RX_QUEUE_ITEM_MAX_COUNT
 
-// <o SL_CPC_DRV_SDIO_EXP_RX_QUEUE_SIZE> Number of frame that can be queued in the driver receive queue
+// <o SL_CPC_DRV_SDIO_EXP_RX_QUEUE_SIZE> Number of frame that can be queued in the driver receive queue <1-1024>
 // <i> Default: 10
 #define SL_CPC_DRV_SDIO_EXP_RX_QUEUE_SIZE 10
 
-// <o SL_CPC_DRV_SDIO_EXP_TX_QUEUE_SIZE> Number of frame that can be queued in the driver transmit queue
+// <o SL_CPC_DRV_SDIO_EXP_TX_QUEUE_SIZE> Number of frame that can be queued in the driver transmit queue <1-1024>
 // <i> Default: 10
 #define SL_CPC_DRV_SDIO_EXP_TX_QUEUE_SIZE 10
 

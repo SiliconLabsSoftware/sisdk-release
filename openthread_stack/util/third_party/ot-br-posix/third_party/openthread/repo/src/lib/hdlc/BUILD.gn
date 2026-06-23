@@ -26,6 +26,7 @@
 #
 
 static_library("libopenthread-hdlc") {
+  configs += [ "../../../:openthread_private_flags" ]
   sources = [
     "hdlc.cpp",
     "hdlc.hpp",

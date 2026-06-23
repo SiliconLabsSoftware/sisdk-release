@@ -34,16 +34,16 @@ void sl_zigbee_af_custom_ezsp_set_power_mode_command(sl_cli_command_arg_t *argum
                : SL_ZIGBEE_XNCP_LOW_POWER_MODE;
 
   if (mode > 1) {
-    sl_zigbee_af_core_println("Invalid mode, allowed values: {0,1}");
+    sl_zigbee_af_cli_println("Invalid mode, allowed values: {0,1}");
     return;
   }
 
   status = sl_zigbee_ezsp_custom_frame(2, message, &replyLength, NULL);
 
   if (status == SL_STATUS_OK) {
-    sl_zigbee_af_core_println("Power mode set");
+    sl_zigbee_af_cli_println("Power mode set");
   } else {
-    sl_zigbee_af_core_println("Power mode set failed, status:0x%02X", status);
+    sl_zigbee_af_cli_println("Power mode set failed, status:0x%02X", status);
   }
 
   assert(replyLength == 0);
@@ -67,14 +67,14 @@ void sl_zigbee_af_custom_ezsp_get_power_mode_command(sl_cli_command_arg_t *argum
     assert(replyLength == 1);
 
     if (reply[0] == SL_ZIGBEE_XNCP_NORMAL_MODE) {
-      sl_zigbee_af_core_println("Power mode: NORMAL");
+      sl_zigbee_af_cli_println("Power mode: NORMAL");
     } else if (reply[0] == SL_ZIGBEE_XNCP_LOW_POWER_MODE) {
-      sl_zigbee_af_core_println("Power mode: LOW_POWER");
+      sl_zigbee_af_cli_println("Power mode: LOW_POWER");
     } else {
-      sl_zigbee_af_core_println("Power mode: UNDEFINED");
+      sl_zigbee_af_cli_println("Power mode: UNDEFINED");
     }
   } else {
-    sl_zigbee_af_core_println("Command failed, status:0x%02X", status);
+    sl_zigbee_af_cli_println("Command failed, status:0x%02X", status);
   }
 }
 
@@ -95,9 +95,9 @@ void sl_zigbee_af_custom_ezsp_add_cluster_to_filtering_list_command(sl_cli_comma
 
   if (status == SL_STATUS_OK) {
     assert(replyLength == 0);
-    sl_zigbee_af_core_println("Cluster ADD success");
+    sl_zigbee_af_cli_println("Cluster ADD success");
   } else {
-    sl_zigbee_af_core_println("Cluster ADD failed, status:0x%02X", status);
+    sl_zigbee_af_cli_println("Cluster ADD failed, status:0x%02X", status);
   }
 }
 
@@ -118,9 +118,9 @@ void sl_zigbee_af_custom_ezsp_remove_cluster_to_filtering_list_command(sl_cli_co
 
   if (status == SL_STATUS_OK) {
     assert(replyLength == 0);
-    sl_zigbee_af_core_println("Cluster REMOVE success");
+    sl_zigbee_af_cli_println("Cluster REMOVE success");
   } else {
-    sl_zigbee_af_core_println("Cluster REMOVE failed, status:0x%02X", status);
+    sl_zigbee_af_cli_println("Cluster REMOVE failed, status:0x%02X", status);
   }
 }
 
@@ -140,15 +140,15 @@ void sl_zigbee_af_custom_ezsp_print_cluster_filtering_list_command(sl_cli_comman
   status = sl_zigbee_ezsp_custom_frame(1, message, &replyLength, reply);
 
   if (status == SL_STATUS_OK) {
-    sl_zigbee_af_core_println("Cluster filtering list, size=0x%02X", reply[0]);
+    sl_zigbee_af_cli_println("Cluster filtering list, size=0x%02X", reply[0]);
 
     // First byte of the reply payload is the number of entries
     for (i = 1; i < replyLength; i += 2) {
-      sl_zigbee_af_core_println("Cluster filtering entry -> Cluster ID 0x%04X",
-                                HIGH_LOW_TO_INT(reply[i + 1], reply[i]));
+      sl_zigbee_af_cli_println("Cluster filtering entry -> Cluster ID 0x%04X",
+                               HIGH_LOW_TO_INT(reply[i + 1], reply[i]));
     }
   } else {
-    sl_zigbee_af_core_println("Command failed, status:0x%02X", status);
+    sl_zigbee_af_cli_println("Command failed, status:0x%02X", status);
   }
 }
 
@@ -169,9 +169,9 @@ void sl_zigbee_af_custom_ezsp_enable_reports_command(sl_cli_command_arg_t *argum
 
   if (status == SL_STATUS_OK) {
     assert(replyLength == 0);
-    sl_zigbee_af_core_println("Reports enabled");
+    sl_zigbee_af_cli_println("Reports enabled");
   } else {
-    sl_zigbee_af_core_println("Reports enabling failed, status:0x%02X", status);
+    sl_zigbee_af_cli_println("Reports enabling failed, status:0x%02X", status);
   }
 }
 
@@ -190,9 +190,9 @@ void sl_zigbee_af_custom_ezsp_disable_reports_command(sl_cli_command_arg_t *argu
 
   if (status == SL_STATUS_OK) {
     assert(replyLength == 0);
-    sl_zigbee_af_core_println("Reports disabled");
+    sl_zigbee_af_cli_println("Reports disabled");
   } else {
-    sl_zigbee_af_core_println("Reports disabling failed, status:0x%02X", status);
+    sl_zigbee_af_cli_println("Reports disabling failed, status:0x%02X", status);
   }
 }
 
@@ -219,9 +219,9 @@ void sl_zigbee_af_custom_ezsp_set_custom_token_command(sl_cli_command_arg_t *arg
 
   if (status == SL_STATUS_OK) {
     assert(replyLength == 0);
-    sl_zigbee_af_core_println("Custom token set");
+    sl_zigbee_af_cli_println("Custom token set");
   } else {
-    sl_zigbee_af_core_println("Custom token set failed, status:0x%02X", status);
+    sl_zigbee_af_cli_println("Custom token set failed, status:0x%02X", status);
   }
 }
 
@@ -242,12 +242,12 @@ void sl_zigbee_af_custom_ezsp_get_custom_token_command(sl_cli_command_arg_t *arg
 
   if (status == SL_STATUS_OK) {
     assert(replyLength == 5);
-    sl_zigbee_af_core_println("Custom token - nodeType:0x%02X nodeId:0x%04X panId:0x%04X",
-                              reply[0],
-                              HIGH_LOW_TO_INT(reply[1], reply[2]),
-                              HIGH_LOW_TO_INT(reply[3], reply[4]));
+    sl_zigbee_af_cli_println("Custom token - nodeType:0x%02X nodeId:0x%04X panId:0x%04X",
+                             reply[0],
+                             HIGH_LOW_TO_INT(reply[1], reply[2]),
+                             HIGH_LOW_TO_INT(reply[3], reply[4]));
   } else {
-    sl_zigbee_af_core_println("Custom token read failed, status:0x%02X", status);
+    sl_zigbee_af_cli_println("Custom token read failed, status:0x%02X", status);
   }
 }
 
@@ -262,10 +262,10 @@ void sl_zigbee_af_custom_ezsp_get_x_ncp_info_command(sl_cli_command_arg_t *argum
   status = sl_zigbee_ezsp_get_xncp_info(&manufacturerId, &versionNumber);
 
   if (status == SL_STATUS_OK) {
-    sl_zigbee_af_core_println("XNCP library present, manufacturer ID:0x%04X version:0x%04X",
-                              manufacturerId,
-                              versionNumber);
+    sl_zigbee_af_cli_println("XNCP library present, manufacturer ID:0x%04X version:0x%04X",
+                             manufacturerId,
+                             versionNumber);
   } else {
-    sl_zigbee_af_core_println("XNCP library not present");
+    sl_zigbee_af_cli_println("XNCP library not present");
   }
 }

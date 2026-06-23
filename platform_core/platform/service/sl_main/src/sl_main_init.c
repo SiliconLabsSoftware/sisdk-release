@@ -38,6 +38,10 @@
 #include "sl_component_catalog.h"
 #endif
 
+#if defined(SL_CATALOG_LOG_COMPONENT_PRESENT)
+#include "sl_log.h"
+#endif
+
 #if defined(SL_CATALOG_HAL_SYSTEM_PRESENT)
 #include "sl_hal_system.h"
 #endif
@@ -134,6 +138,10 @@
 #define SLI_METRIC_EVENT_HANDLER_SAVE(func)
 #endif
 
+#if defined(SL_CATALOG_SYSTEMVIEW_TRACE_PRESENT) && !defined(SL_CATALOG_LOG_BACKEND_SYSTEMVIEW_PRESENT)
+#include "SEGGER_SYSVIEW.h"
+#endif
+
 /******************************************************************************
  * @brief User-defined function for pre-clock app initialization.
  *
@@ -164,7 +172,7 @@ SL_WEAK void app_init_early(void)
 }
 
 /******************************************************************************
- * @brief User-defined function for application initialization after platform 
+ * @brief User-defined function for application initialization after platform
  * and initialization.
  *
  * @details This function is called from sl_main_second_stage_init():
@@ -241,6 +249,16 @@ void sl_main_init(void)
 {
   SLI_METRIC_EVENT_HANDLER_START();
 
+#if defined(SL_CATALOG_LOG_COMPONENT_PRESENT)
+  sl_log_init_stage1();
+  SLI_METRIC_EVENT_HANDLER_SAVE("sl_log_init_stage1");
+#endif
+
+#if defined(SL_CATALOG_SYSTEMVIEW_TRACE_PRESENT) && !defined(SL_CATALOG_LOG_BACKEND_SYSTEMVIEW_PRESENT)
+  SEGGER_SYSVIEW_Conf();
+  SEGGER_SYSVIEW_Start();
+#endif
+
 #if defined(SL_CATALOG_MEMORY_MANAGER_PRESENT) && !defined(SL_CATALOG_CPP_SUPPORT_PRESENT)
   sl_memory_init();
   SLI_METRIC_EVENT_HANDLER_SAVE("sl_memory_init");
@@ -251,7 +269,7 @@ void sl_main_init(void)
   SLI_METRIC_EVENT_HANDLER_SAVE("sl_memory_init_psram");
 #endif
 
-#if defined(SL_CATALOG_MEMORY_MANAGER_DTCM_PRESENT)
+#if defined(SL_CATALOG_MEMORY_MANAGER_DTCM_PRESENT) && !defined(SL_CATALOG_CPP_SUPPORT_PRESENT)
   sl_memory_init_dtcm();
   SLI_METRIC_EVENT_HANDLER_SAVE("sl_memory_init_dtcm");
 #endif

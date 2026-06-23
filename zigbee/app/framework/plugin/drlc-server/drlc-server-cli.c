@@ -36,11 +36,11 @@ void sl_zigbee_af_drlc_server_slce_command(sl_cli_command_arg_t *arguments)
   status = sli_zigbee_af_get_scheduled_load_control_event(endpoint, index, &event);
 
   if (status != SL_STATUS_OK) {
-    sl_zigbee_af_demand_response_load_control_cluster_println("slce fail: 0x%02X", status);
+    sl_zigbee_af_cli_println("slce fail: 0x%02X", status);
     return;
   }
   if (length > sizeof(sl_zigbee_af_load_control_event_t)) {
-    sl_zigbee_af_demand_response_load_control_cluster_println("slce fail, length: %02X, max: %02X", length, sizeof(sl_zigbee_af_load_control_event_t));
+    sl_zigbee_af_cli_println("slce fail, length: %02X, max: %02X", length, sizeof(sl_zigbee_af_load_control_event_t));
     return;
   }
 
@@ -61,7 +61,7 @@ void sl_zigbee_af_drlc_server_slce_command(sl_cli_command_arg_t *arguments)
   event.eventControl = sl_zigbee_af_get_int8u(slceBuffer, 22, length);
   event.source[0] = 0x00; //activate the event in the table
   status = sli_zigbee_af_set_scheduled_load_control_event(endpoint, index, &event);
-  sl_zigbee_af_demand_response_load_control_cluster_println("DRLC event scheduled on server: 0x%02X", status);
+  sl_zigbee_af_cli_println("DRLC event scheduled on server: 0x%02X", status);
 }
 
 // plugin drlc-server lce-schedule-mand <endpoint:1> <index:1> <eventId:4> <class:2> <ueg:1> <startTime:4>
@@ -75,7 +75,7 @@ void sl_zigbee_af_drlc_server_schedule_mandatory_lce(sl_cli_command_arg_t *argum
   uint8_t index = sl_cli_get_argument_uint8(arguments, 1);
   status = sli_zigbee_af_get_scheduled_load_control_event(endpoint, index, &event);
   if ( status != SL_STATUS_OK ) {
-    sl_zigbee_af_demand_response_load_control_cluster_println("Error: Get LCE status=0x%02X", status);
+    sl_zigbee_af_cli_println("Error: Get LCE status=0x%02X", status);
   }
   event.eventId                 = sl_cli_get_argument_uint32(arguments, 2);
   event.deviceClass             = sl_cli_get_argument_uint16(arguments, 3);
@@ -95,9 +95,9 @@ void sl_zigbee_af_drlc_server_schedule_mandatory_lce(sl_cli_command_arg_t *argum
   event.source[0] = 0x00; //activate the event in the table
   status = sli_zigbee_af_set_scheduled_load_control_event(endpoint, index, &event);
   if ( status == SL_STATUS_OK ) {
-    sl_zigbee_af_demand_response_load_control_cluster_println("DRLC event scheduled");
+    sl_zigbee_af_cli_println("DRLC event scheduled");
   } else {
-    sl_zigbee_af_demand_response_load_control_cluster_println("Error: Schedule DRLC event: 0x%02X", status);
+    sl_zigbee_af_cli_println("Error: Schedule DRLC event: 0x%02X", status);
   }
 }
 

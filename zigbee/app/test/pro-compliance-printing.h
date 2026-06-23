@@ -17,6 +17,9 @@
 
 void sl_zigbee_af_core_print(const char * formatString, ...);
 void sl_zigbee_af_core_println(const char * formatString, ...);
+#ifndef sl_zigbee_af_core_errorln
+#define sl_zigbee_af_core_errorln sl_zigbee_af_core_println
+#endif
 void sl_zigbee_af_print_big_endian_eui64(const sl_802154_long_addr_t eui64);
 
 //#define sl_zigbee_af_core_print(...) proComplianceCorePrint(__VA_ARGS__)

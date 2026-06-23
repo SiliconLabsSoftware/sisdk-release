@@ -42,7 +42,7 @@
         <link refid="sl__bt__api__compatibility_8h_source"/>
       </node>
       <node id="1">
-        <label>/var/lib/jenkins/github@2/bluetooth_le_host/event_system/inc/sli_bt_event_system.h</label>
+        <label>/var/lib/jenkins/github/bluetooth_le_host/event_system/inc/sli_bt_event_system.h</label>
         <link refid="sli__bt__event__system_8h"/>
         <childnode refid="2" relation="include">
         </childnode>
@@ -104,6 +104,6 @@
 <codeline lineno="90"><highlight class="normal"></highlight></codeline>
 <codeline lineno="91"><highlight class="normal"></highlight><highlight class="preprocessor">#endif<sp/></highlight><highlight class="comment">//<sp/>SLI_BT_EVENT_SYSTEM_H</highlight><highlight class="normal"></highlight></codeline>
     </programlisting>
-    <location file="/var/lib/jenkins/github@2/bluetooth_le_host/event_system/inc/sli_bt_event_system.h"/>
+    <location file="/var/lib/jenkins/github/bluetooth_le_host/event_system/inc/sli_bt_event_system.h"/>
   </compounddef>
 </doxygen>

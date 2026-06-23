@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.4" xml:lang="en-US">
+  <compounddef id="group__sl__bt__evt__cs__handover__complete" kind="group">
+    <compoundname>sl_bt_evt_cs_handover_complete</compoundname>
+    <title>sl_bt_evt_cs_handover_complete</title>
+    <innerclass refid="structsl__bt__evt__cs__handover__complete__s" prot="public">sl_bt_evt_cs_handover_complete_s</innerclass>
+      <sectiondef kind="typedef">
+      <memberdef kind="typedef" id="group__sl__bt__evt__cs__handover__complete_1ga4c8825f961c0373f8708e9518c46c0ed" prot="public" static="no">
+        <type>struct <ref refid="structsl__bt__evt__cs__handover__complete__s" kindref="compound">sl_bt_evt_cs_handover_complete_s</ref></type>
+        <definition>typedef struct sl_bt_evt_cs_handover_complete_s sl_bt_evt_cs_handover_complete_t</definition>
+        <argsstring></argsstring>
+        <name>sl_bt_evt_cs_handover_complete_t</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="14607" column="47" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="14607" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="define">
+      <memberdef kind="define" id="group__sl__bt__evt__cs__handover__complete_1ga20cd24ece832db270f23f9088e64c89a" prot="public" static="no">
+        <name>sl_bt_evt_cs_handover_complete_id</name>
+        <initializer>0x075900a0</initializer>
+        <briefdescription>
+<para>Identifier of the handover_complete event. </para>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="14588" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="14588" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Indicates that the controller completed the CS handover procedure because synchronization was lost or the configured maximum procedure count was reached. </para>
+    </briefdescription>
+    <detaileddescription>
+<para>When this event is sent, the configured CS parameters are removed and the associated connection analyzer handle is deallocated. This event is intended for the CS Follower role. </para>
+    </detaileddescription>
+  </compounddef>
+</doxygen>

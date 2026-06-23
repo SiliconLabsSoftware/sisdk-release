@@ -36,11 +36,10 @@
 #endif
 
 #ifdef SL_CATALOG_ZW_CLI_COMMON_PRESENT
-
+#include "zw_cli_common.h"
 #include "zaf_event_distributor_soc.h"
 #include "CC_MultilevelSwitch_Support.h"
 #include "sl_cli.h"
-#include "app_log.h"
 #include "ev_man.h"
 #include "events.h"
 #include "CC_MultilevelSwitch_Support.h"
@@ -81,13 +80,13 @@ void cli_toggle_endpoint(sl_cli_command_arg_t *arguments)
 {
   uint8_t endpoint = sl_cli_get_argument_uint8(arguments, 0);
   if (endpoint == 1) {
-    app_log_info("Toggle endpoint 1\r\n");
+    cli_printf("[I] Toggle endpoint 1\r\n");
     zaf_event_distributor_enqueue_app_event(EVENT_APP_OUTLET1_TOGGLE);
   } else if (endpoint == 2) {
-    app_log_info("Toggle endpoint 2\r\n");
+    cli_printf("[I] Toggle endpoint 2\r\n");
     zaf_event_distributor_enqueue_app_event(EVENT_APP_OUTLET2_DIMMER_SHORT_PRESS);
   } else {
-    app_log_error("Invalid endpoint\r\n");
+    cli_printf("[E] Invalid endpoint\r\n");
   }
 }
 
@@ -98,10 +97,10 @@ void cli_dim_endpoint(sl_cli_command_arg_t *arguments)
 {
   uint8_t dimming_rate_level = sl_cli_get_argument_uint8(arguments, 0);
   if (dimming_rate_level > CC_MULTILEVEL_SWITCH_ACTUATOR_MAX_VALUE) {
-    app_log_error("Invalid dimming rate\r\n");
+    cli_printf("[E] Invalid dimming rate\r\n");
     return;
   }
-  app_log_info("Dimming endpoint 2 to %d%%\r\n", dimming_rate_level);
+  cli_printf("[I] Dimming endpoint 2 to %d%%\r\n", dimming_rate_level);
   cc_multilevel_switch_t *switches;
   switches = cc_multilevel_switch_support_config_get_switches();
   cc_multilevel_switch_set_level(&switches[0], dimming_rate_level, DIMMING_TRANSITION_PERIOD_SEC);
@@ -116,10 +115,10 @@ void cli_toggle_notification_sending(sl_cli_command_arg_t *arguments)
   (void) arguments;
 
   if (notification_sending) {
-    app_log_info("Stop sending Overload detected notification\r\n");
+    cli_printf("[I] Stop sending Overload detected notification\r\n");
     notification_sending = false;
   } else {
-    app_log_info("Start sending Overload detected notification\r\n");
+    cli_printf("[I] Start sending Overload detected notification\r\n");
     notification_sending = true;
   }
   zaf_event_distributor_enqueue_app_event(EVENT_APP_NOTIFICATION_TOGGLE);
@@ -131,10 +130,10 @@ void cli_toggle_notification_sending(sl_cli_command_arg_t *arguments)
 void cli_get_led_state(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
-  app_log_info("Get the state of the LED1\r\n");
+  cli_printf("[I] Get the state of the LED1\r\n");
   cc_binary_switch_t * p_switches = cc_binary_switch_get_config();
   char* state = cc_binary_switch_get_current_value(&p_switches[0]) > 0 ? "on" : "off";
-  app_log_info("LED1 state: %s\r\n", state);
+  cli_printf("[I] LED1 state: %s\r\n", state);
 }
 
 /******************************************************************************
@@ -142,18 +141,18 @@ void cli_get_led_state(sl_cli_command_arg_t *arguments)
  *****************************************************************************/
 void cli_get_rgb_values(__attribute__((unused)) sl_cli_command_arg_t *arguments)
 {
-  app_log_info("Get rgb LED values\r\n");
+  cli_printf("[I] Get rgb LED values\r\n");
 #ifdef SL_CATALOG_RGB_LED_PRESENT
   uint16_t color_switch_red_value, color_switch_green_value, color_switch_blue_value;
   sl_led_get_rgb_color(&sl_simple_rgb_pwm_led_rgb_led0, &color_switch_red_value, &color_switch_green_value, &color_switch_blue_value);
-  app_log_info("Red: %d, Green: %d, Blue: %d\r\n", color_switch_red_value, color_switch_green_value, color_switch_blue_value);
+  cli_printf("[I] Red: %d, Green: %d, Blue: %d\r\n", color_switch_red_value, color_switch_green_value, color_switch_blue_value);
 #endif
 
 #ifdef SL_CATALOG_PWM_PRESENT
   uint8_t monochrome_percent =
     100 * cc_multilevel_switch_get_current_value(&cc_multilevel_switch_support_config_get_switches()[0])
     / cc_multilevel_switch_get_max_value();
-  app_log_info("Monochrome: %d%%\r\n", monochrome_percent);
+  cli_printf("[I] Monochrome: %d%%\r\n", monochrome_percent);
 #endif
 }
 
@@ -167,13 +166,13 @@ void cli_log_cc_binary_switch_events(const uint8_t event, const void * const dat
   switch (event) {
     case CC_BINARY_SWITCH_EVENT_START_LEVEL_CHANGE:
       if (p_switch->actuator.valueCurrent != p_switch->actuator.valueTarget) {
-        app_log_info("%s is turning %s\r\n", message_common,
-                     p_switch->actuator.valueTarget == 0 ? "off" : "on");
+        cli_printf("[I] %s is turning %s\r\n", message_common,
+                   p_switch->actuator.valueTarget == 0 ? "off" : "on");
       }
       break;
     case CC_BINARY_SWITCH_EVENT_REACHED_FINAL_VALUE:
-      app_log_info("%s turned %s\r\n", message_common,
-                   p_switch->actuator.valueCurrent == 0 ? "off" : "on");
+      cli_printf("[I] %s turned %s\r\n", message_common,
+                 p_switch->actuator.valueCurrent == 0 ? "off" : "on");
       break;
     default:
       break;
@@ -192,18 +191,18 @@ void cli_log_cc_multilevel_switch_events(const uint8_t event, const void * const
   const char message_common[] = "Multilevel switch";
   switch (event) {
     case CC_MULTILEVEL_SWITCH_EVENT_START_LEVEL_CHANGE:
-      app_log_info("%s level change started: %d -> %d\r\n", message_common,
-                   p_switch->actuator.valueCurrent / 10,
-                   p_switch->actuator.valueTarget / 10);
+      cli_printf("[I] %s level change started: %d -> %d\r\n", message_common,
+                 p_switch->actuator.valueCurrent / 10,
+                 p_switch->actuator.valueTarget / 10);
       break;
     case CC_MULTILEVEL_SWITCH_EVENT_STOP_LEVEL_CHANGE:
-      app_log_info("%s level change stopped at %d\r\n", message_common,
-                   p_switch->actuator.valueCurrent / 10);
+      cli_printf("[I] %s level change stopped at %d\r\n", message_common,
+                 p_switch->actuator.valueCurrent / 10);
       break;
     case CC_MULTILEVEL_SWITCH_EVENT_REACHED_FINAL_VALUE:
       if (p_switch->actuator.valueCurrent % 10 == 0) { // Avoid logging intermediate states
-        app_log_info("%s level is now at %d\r\n", message_common,
-                     p_switch->actuator.valueCurrent / 10);
+        cli_printf("[I] %s level is now at %d\r\n", message_common,
+                   p_switch->actuator.valueCurrent / 10);
       }
       break;
     default:

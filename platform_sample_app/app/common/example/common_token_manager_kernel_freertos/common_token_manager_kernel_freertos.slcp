@@ -1,7 +1,7 @@
 project_name: common_token_manager_kernel_freertos
 package: platform
 quality: production
-label: Platform - Common Token Manager Kernel FreeRtos
+label: Platform - Common Token Manager Kernel FreeRTOS
 description: >
   This example project demonstrates use of the CTM interface.
   Using the command line interface, the user can write, read and delete tokens.
@@ -112,3 +112,5 @@ readme:
   - path: readme.md
 ui_hints:
   highlight: readme.md
+tag:
+  - hwfilter:device:device_series_3

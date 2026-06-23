@@ -94,6 +94,7 @@ $(document).ready(function(){initNavTree('group__sl__bt__pawr__sync.html',''); i
 <div class="header">
   <div class="summary">
 <a href="#groups">Modules</a> &#124;
+<a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">Periodic Advertising with responses Synchronization</div></div>
 </div><!--header-->
@@ -114,6 +115,16 @@ Modules</h2></td></tr>
 <tr class="memdesc:group__sl__bt__evt__pawr__sync__subevent__report"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports that the device's radio has received a periodic advertisement in a subevent of an active PAwR train. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:ga177073dd4204ac9d634309db80a7460f"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__pawr__sync.html#ga177073dd4204ac9d634309db80a7460f">sl_bt_pawr_sync_subevent_data_status_t</a> { <a class="el" href="group__sl__bt__pawr__sync.html#gga177073dd4204ac9d634309db80a7460fac293c1974a1d03fb12be133f85597ff5">sl_bt_pawr_sync_subevent_data_status_complete</a> = 0x0
+, <a class="el" href="group__sl__bt__pawr__sync.html#gga177073dd4204ac9d634309db80a7460fa561617299ee57795ac8e7c4e7ebd2eb9">sl_bt_pawr_sync_subevent_data_status_incomplete_more</a> = 0x1
+, <a class="el" href="group__sl__bt__pawr__sync.html#gga177073dd4204ac9d634309db80a7460fa2446f37f9d20aafee78592e282b96566">sl_bt_pawr_sync_subevent_data_status_incomplete_nomore</a> = 0x2
+, <a class="el" href="group__sl__bt__pawr__sync.html#gga177073dd4204ac9d634309db80a7460fa961e290fd830df993b09333dcfc0ad9f">sl_bt_pawr_sync_subevent_data_status_not_received</a> = 0xff
+ }</td></tr>
+<tr class="memdesc:ga177073dd4204ac9d634309db80a7460f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Defines the data completeness status types of data received in PAwR subevents.  <a href="group__sl__bt__pawr__sync.html#ga177073dd4204ac9d634309db80a7460f">More...</a><br /></td></tr>
+<tr class="separator:ga177073dd4204ac9d634309db80a7460f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:ga29e4752f20ecb30867463c7dfb3a382d"><td class="memItemLeft" align="right" valign="top">sl_status_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__pawr__sync.html#ga29e4752f20ecb30867463c7dfb3a382d">sl_bt_pawr_sync_set_sync_subevents</a> (uint16_t sync, size_t subevents_len, const uint8_t *subevents)</td></tr>
@@ -124,6 +135,33 @@ Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p >Periodic Advertising with responses Synchronization. </p>
 <p >Provides events and control for synchronized Periodic Advertising with Responses (PAwR) trains. Synchronization is achieved by scanning (see <a class="el" href="group__sl__bt__sync__scanner.html">Periodic Advertising Sync Scanner</a>) or by receiving Periodic Advertising Synchronization Transfer (see <a class="el" href="group__sl__bt__past__receiver.html">PAST Receiver</a>). </p>
+<h2 class="groupheader">Enumeration Type Documentation</h2>
+<a id="ga177073dd4204ac9d634309db80a7460f" name="ga177073dd4204ac9d634309db80a7460f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga177073dd4204ac9d634309db80a7460f">&#9670;&nbsp;</a></span>sl_bt_pawr_sync_subevent_data_status_t</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="group__sl__bt__pawr__sync.html#ga177073dd4204ac9d634309db80a7460f">sl_bt_pawr_sync_subevent_data_status_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Defines the data completeness status types of data received in PAwR subevents. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="gga177073dd4204ac9d634309db80a7460fac293c1974a1d03fb12be133f85597ff5" name="gga177073dd4204ac9d634309db80a7460fac293c1974a1d03fb12be133f85597ff5"></a>sl_bt_pawr_sync_subevent_data_status_complete&#160;</td><td class="fielddoc"><p >(0x0) All data of the PAwR subevent has been reported. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga177073dd4204ac9d634309db80a7460fa561617299ee57795ac8e7c4e7ebd2eb9" name="gga177073dd4204ac9d634309db80a7460fa561617299ee57795ac8e7c4e7ebd2eb9"></a>sl_bt_pawr_sync_subevent_data_status_incomplete_more&#160;</td><td class="fielddoc"><p >(0x1) Data of the PAwR subevent is incomplete in this event, and more data will come in new events. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga177073dd4204ac9d634309db80a7460fa2446f37f9d20aafee78592e282b96566" name="gga177073dd4204ac9d634309db80a7460fa2446f37f9d20aafee78592e282b96566"></a>sl_bt_pawr_sync_subevent_data_status_incomplete_nomore&#160;</td><td class="fielddoc"><p >(0x2) Data of the PAwR subevent is incomplete in this event, but no more data will come, i.e., the data of the PAwR subevent is truncated. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga177073dd4204ac9d634309db80a7460fa961e290fd830df993b09333dcfc0ad9f" name="gga177073dd4204ac9d634309db80a7460fa961e290fd830df993b09333dcfc0ad9f"></a>sl_bt_pawr_sync_subevent_data_status_not_received&#160;</td><td class="fielddoc"><p >(0xff) Failed to receive subevent data in this subevent. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="ga29e4752f20ecb30867463c7dfb3a382d" name="ga29e4752f20ecb30867463c7dfb3a382d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ga29e4752f20ecb30867463c7dfb3a382d">&#9670;&nbsp;</a></span>sl_bt_pawr_sync_set_sync_subevents()</h2>

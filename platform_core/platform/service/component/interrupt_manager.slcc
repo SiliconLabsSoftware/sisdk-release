@@ -30,6 +30,7 @@ requires:
 - name: component_catalog
 - name: interrupt_manager_vector_table_in_ram
   condition: [device_series_3]
+- name: memory_manager_region
 template_contribution:
 - name: component_catalog
   value: interrupt_manager

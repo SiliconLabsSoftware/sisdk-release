@@ -39,7 +39,9 @@
 #include "cmsis_os2.h"
 #include "sl_cmsis_os2_common.h"
 #include "sl_string.h"
-#include "socket/socket.h"
+#include "sys/socket.h"
+#include "arpa/inet.h"
+#include "netinet/in.h"
 #include "app_project_info.h"
 #include "sl_component_catalog.h"
 #include "sl_wisun_types.h"
@@ -77,9 +79,6 @@
 /// Application version string length
 #define SL_WISUN_APP_STATUS_VERSION_STR_LEN               64U
 
-/// Application version format string
-#define SL_WISUN_APP_STATUS_VERSION_FORMAT_STR            "v%lu.%lu.%lu"
-
 #if SL_WISUN_APP_STATUS_COAP_RESOURCE_ENABLE
 /// Resource type for application status
 #define SL_WISUN_APP_STATUS_RESOURCE_RT_STATUS            "status"
@@ -93,36 +92,6 @@
 /// App status failed response string
 #define SL_WISUN_APP_STATUS_FAILED_RESP                   "[App status failed]"
 #endif
-
-/// Neighbour info notification json header str
-#define SL_WISUN_APP_STATUS_NOTIF_NEIGHBOUR_INFO_JSON_HEADER_STR \
-  "\"nb_info\": {\n"                                             \
-  "  \"ip\":[\"t\",\"lt\",\"txc\",\"txf\",\"txms\",\"txmsf\",\"rpl\",\"etx\",\"rslo\",\"rsli\"],\n"
-
-/// Neighbour json entry format string
-#define SL_WISUN_APP_STATUS_NEIGHBOUR_FORMAT_STR \
-  "  \"%s\":[%lu,%lu,%lu,%lu,%lu,%lu,%u,%u,%u,%u]"
-
-/// Time statistic json format string
-#define SL_WISUN_APP_STATUS_TIME_STAT_JSON_STR \
-  "\"stat\": {\n"                              \
-  "  \"run\": \"%s\",\n"                       \
-  "  \"conn_cnt\": %lu,\n"                     \
-  "  \"conn\": \"%s\",\n"                      \
-  "  \"tot_conn\": \"%s\",\n"                  \
-  "  \"disconn\": \"%s\",\n"                   \
-  "  \"tot_disconn\": \"%s\",\n"               \
-  "  \"available\": \"%u.%02u%%\"\n"           \
-  "}"
-
-/// Device info json format string
-#define SL_WISUN_APP_STATUS_DEVICE_INFO_JSON_STR    \
-  "\"dev_info\": {\n"                               \
-  "  \"hw\": \"%s %s %s\",\n"                       \
-  "  \"sw\": \"%s %s (stack: v%lu.%lu.%lu %s)\",\n" \
-  "  \"mac\": \"%s\",\n"                            \
-  "  \"ip\": \"%s\"\n"                              \
-  "}"
 
 /// Default application name
 #define SL_WISUN_APP_STATUS_DEFAULT_APP_NAME        "Wi-SUN"
@@ -367,7 +336,9 @@ static void _build_neighbour_info(uint8_t **buf, uint16_t *buf_len)
   }
 
   // print header
-  __print_to_buff(r, *buf, *buf_len, SL_WISUN_APP_STATUS_NOTIF_NEIGHBOUR_INFO_JSON_HEADER_STR);
+  __print_to_buff(r, *buf, *buf_len,
+                  "\"nb_info\": {\n"
+                  "  \"ip\":[\"t\",\"lt\",\"txc\",\"txf\",\"txms\",\"txmsf\",\"rpl\",\"etx\",\"rslo\",\"rsli\"],\n");
 
   for (uint8_t idx = 0U; idx < neighbors_count; ++idx) {
     if (sl_wisun_get_neighbor_info(&mac_addrs[idx], &info) != SL_STATUS_OK) {
@@ -379,7 +350,7 @@ static void _build_neighbour_info(uint8_t **buf, uint16_t *buf_len)
       continue;
     }
     __print_to_buff(r, *buf, *buf_len,
-                    SL_WISUN_APP_STATUS_NEIGHBOUR_FORMAT_STR,
+                    "  \"%s\":[%"PRIu32",%"PRIu32",%"PRIu32",%"PRIu32",%"PRIu32",%"PRIu32",%u,%u,%u,%u]",
                     ip_str,
                     info.type,
                     info.lifetime,
@@ -470,7 +441,7 @@ static void _build_device_info(uint8_t **buf, uint16_t *buf_len)
       }
 
       (void) snprintf(ver_app_str, SL_WISUN_APP_STATUS_VERSION_STR_LEN,
-                      SL_WISUN_APP_STATUS_VERSION_FORMAT_STR,
+                      "v%"PRIu32".%"PRIu32".%"PRIu32,
                       ver_app->major.val,
                       ver_app->minor.val,
                       ver_app->patch.val);
@@ -480,7 +451,12 @@ static void _build_device_info(uint8_t **buf, uint16_t *buf_len)
   }
 
   __print_to_buff(r, *buf, *buf_len,
-                  SL_WISUN_APP_STATUS_DEVICE_INFO_JSON_STR,
+                  "\"dev_info\": {\n"
+                  "  \"hw\": \"%s %s %s\",\n"
+                  "  \"sw\": \"%s %s (stack: v%"PRIu32".%"PRIu32".%"PRIu32" %s)\",\n"
+                  "  \"mac\": \"%s\",\n"
+                  "  \"ip\": \"%s\"\n"
+                  "}",
                   board_name, board_rev, part_number,
                   pinf->project_name == NULL ? SL_WISUN_APP_STATUS_DEFAULT_APP_NAME : pinf->project_name,
                   ver_app_str,
@@ -532,7 +508,15 @@ static void _build_time_stat(uint8_t **buf, uint16_t *buf_len)
   avail_f = (uint8_t) (tmp - avail_i * 100U);
 
   __print_to_buff(r, *buf, *buf_len,
-                  SL_WISUN_APP_STATUS_TIME_STAT_JSON_STR,
+                  "\"stat\": {\n"
+                  "  \"run\": \"%s\",\n"
+                  "  \"conn_cnt\": %"PRIu32",\n"
+                  "  \"conn\": \"%s\",\n"
+                  "  \"tot_conn\": \"%s\",\n"
+                  "  \"disconn\": \"%s\",\n"
+                  "  \"tot_disconn\": \"%s\",\n"
+                  "  \"available\": \"%u.%02u%%\"\n"
+                  "}",
                   run_str,
                   stat.conn_cnt,
                   conn_str,

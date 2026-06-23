@@ -1,0 +1,30 @@
+id: log_none
+label: Log None
+package: platform_core
+description: >
+  This component provides required header files for logging system and log stub functions to prevent linker errors when logger is disabled.
+category: Services|Log
+quality: evaluation
+metadata:
+  sbom:
+    license: Zlib
+ui_hints:
+  visibility: never
+root_path: platform_core/platform/service/sl_log
+include:
+- path: inc
+  file_list:
+  - path: sl_log.h
+  - path: sl_log_platform_specific.h
+  - path: sl_log_helper.h
+  - path: sl_log_internal.h
+config_file:
+- path: config/sl_log_common_config.h
+  unless: [log_backend]
+source:
+- path: src/sl_log_weak.c
+provides:
+- name: log_none
+template_contribution:
+- name: component_catalog
+  value: log_component_none

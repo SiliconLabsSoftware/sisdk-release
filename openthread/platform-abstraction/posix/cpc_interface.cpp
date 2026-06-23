@@ -30,22 +30,14 @@
 
 #include "cpc_interface.hpp"
 
+#include "cpc_transport.hpp"
 #include "platform-posix.h"
 #include "vendor_interface.hpp"
 
-#include "sl_cpc.h"
-
 #include <assert.h>
 #include <errno.h>
-#include <fcntl.h>
-#include <stdarg.h>
 #include <stdlib.h>
-#include <sys/resource.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/wait.h>
-#include <syslog.h>
-#include <termios.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "common/code_utils.hpp"
@@ -62,19 +54,70 @@ using ot::Spinel::SpinelInterface;
 namespace ot {
 namespace Posix {
 
+namespace {
+void DieIfNegativeErrno(int aRet)
+{
+    if (aRet >= 0)
+    {
+        return;
+    }
+    errno = (aRet == -1) ? EIO : -aRet;
+    DieNow(OT_EXIT_ERROR_ERRNO);
+}
+
+void OnCpcReconnectFailed(int aErr, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aContext);
+    DieIfNegativeErrno(aErr);
+}
+
+void OnCpcTransportLog(CpcTransportLogLevel aLevel, const char *aMessage, void *aContext)
+{
+    OT_UNUSED_VARIABLE(aContext);
+
+    switch (aLevel)
+    {
+    case CpcTransportLogLevel::kCrit:
+        otLogCritPlat("%s", aMessage);
+        break;
+    case CpcTransportLogLevel::kWarning:
+        otLogWarnPlat("%s", aMessage);
+        break;
+    }
+}
+} // namespace
+
 // ----------------------------------------------------------------------------
-// `CpcInterfaceImpl` API
+// `CpcInterfaceImpl` - delegates to CpcTransport
 // ----------------------------------------------------------------------------
 
-volatile sig_atomic_t CpcInterfaceImpl::sCpcResetReq      = false;
-bool                  CpcInterfaceImpl::sIsCpcInitialized = false;
+bool CpcInterfaceImpl::sIsCpcInitialized = false;
+
+void OnCpcFrame(const uint8_t *aFrame, uint16_t aLength, void *aContext)
+{
+    auto *ctx = static_cast<CpcInterfaceImpl::TransportContext *>(aContext);
+    bool  ok  = true;
+
+    for (uint16_t i = 0; ok && i < aLength; i++)
+    {
+        if (!ctx->frameBuffer->CanWrite(1) || (ctx->frameBuffer->WriteByte(aFrame[i]) != OT_ERROR_NONE))
+        {
+            ctx->frameBuffer->DiscardFrame();
+            ok = false;
+        }
+    }
+
+    if (ok)
+    {
+        ctx->callback(ctx->context);
+    }
+}
 
 CpcInterfaceImpl::CpcInterfaceImpl(const Url::Url &aRadioUrl)
     : mReceiveFrameCallback(nullptr)
     , mReceiveFrameContext(nullptr)
     , mReceiveFrameBuffer(nullptr)
     , mRadioUrl(aRadioUrl)
-    , mSockFd(-1)
 {
     memset(&mInterfaceMetrics, 0, sizeof(mInterfaceMetrics));
     mInterfaceMetrics.mRcpInterfaceType = kSpinelInterfaceTypeVendor;
@@ -85,53 +128,46 @@ otError CpcInterfaceImpl::Init(ReceiveFrameCallback aCallback, void *aCallbackCo
 {
     otError     error = OT_ERROR_NONE;
     const char *value;
-    int         cpc_err;
 
-    VerifyOrExit(mSockFd == -1, error = OT_ERROR_ALREADY);
+    VerifyOrExit(!mTransport.IsEndpointOpen(), error = OT_ERROR_ALREADY);
+
+    mTransport.SetLogHandler(OnCpcTransportLog, nullptr);
+
+    mTransportContext.callback    = aCallback;
+    mTransportContext.context     = aCallbackContext;
+    mTransportContext.frameBuffer = &aFrameBuffer;
+
+    mTransport.SetReconnectFailedCallback(OnCpcReconnectFailed, nullptr);
 
     if (!sIsCpcInitialized)
     {
-        if ((cpc_err = cpc_init(&mHandle, mRadioUrl.GetPath(), false, HandleSecondaryReset)) != 0)
+        int ret = mTransport.Init(mRadioUrl.GetPath(), mId, false);
+        if (ret != 0)
         {
-            otLogCritPlat(
-                "CPC init failed Error: %d. Ensure radio-url argument has the form 'spinel+cpc://cpcd_0?iid=<1..3>'",
-                cpc_err);
+            otLogCritPlat("CPC init failed Error: %d. Ensure radio-url argument has the form "
+                          "'spinel+cpc://cpcd_0?iid=<1..3>'",
+                          ret);
             DieNow(OT_EXIT_FAILURE);
-        }
-
-        mSockFd = cpc_open_endpoint(mHandle, &mEndpoint, mId, 1);
-
-        if (mSockFd < 0)
-        {
-            otLogCritPlat("CPC endpoint open failed");
-            error = OT_ERROR_FAILED;
         }
     }
     else
     {
-        // Re-initialize the CPC interface.
-        SetCpcResetReq(true);
-        CheckAndReInitCpc();
+        DieIfNegativeErrno(mTransport.Reconnect());
     }
+    mTransport.SetReceiveCallback(OnCpcFrame, &mTransportContext);
 
     if ((value = mRadioUrl.GetValue("cpc-bus-speed")))
     {
         mCpcBusSpeed = static_cast<uint32_t>(atoi(value));
     }
 
-    sIsCpcInitialized = true;
-
+    sIsCpcInitialized     = true;
     mReceiveFrameCallback = aCallback;
     mReceiveFrameContext  = aCallbackContext;
     mReceiveFrameBuffer   = &aFrameBuffer;
 
 exit:
     return error;
-}
-
-void CpcInterfaceImpl::HandleSecondaryReset(void)
-{
-    SetCpcResetReq(true);
 }
 
 CpcInterfaceImpl::~CpcInterfaceImpl(void)
@@ -141,125 +177,41 @@ CpcInterfaceImpl::~CpcInterfaceImpl(void)
 
 void CpcInterfaceImpl::Deinit(void)
 {
-    VerifyOrExit(0 == cpc_close_endpoint(&mEndpoint), perror("close cpc endpoint"));
-
-    // Invalidate file descriptor
-    mSockFd = -1;
-
-exit:
-    return;
+    mTransport.Deinit();
+    mReceiveFrameCallback = nullptr;
+    mReceiveFrameContext  = nullptr;
+    mReceiveFrameBuffer   = nullptr;
+    sIsCpcInitialized     = false;
 }
 
 void CpcInterfaceImpl::Read(uint64_t aTimeoutUs)
 {
-    uint8_t  buffer[kMaxFrameSize];
-    uint8_t *ptr = buffer;
-    ssize_t  bytesRead;
-    bool     block = false;
-    int      ret;
-
-#ifdef NDEBUG
-    OT_UNUSED_VARIABLE(ret);
-#endif
-
-    if (aTimeoutUs > 0)
-    {
-        cpc_timeval_t timeout;
-
-        timeout.seconds      = static_cast<int>(aTimeoutUs / OT_US_PER_S);
-        timeout.microseconds = static_cast<int>(aTimeoutUs % OT_US_PER_S);
-
-        block = true;
-        ret   = cpc_set_endpoint_option(mEndpoint, CPC_OPTION_BLOCKING, &block, sizeof(block));
-        OT_ASSERT(ret == 0);
-        ret = cpc_set_endpoint_option(mEndpoint, CPC_OPTION_RX_TIMEOUT, &timeout, sizeof(timeout));
-        OT_ASSERT(ret == 0);
-    }
-    else
-    {
-        ret = cpc_set_endpoint_option(mEndpoint, CPC_OPTION_BLOCKING, &block, sizeof(block));
-        OT_ASSERT(ret == 0);
-    }
-    bytesRead = cpc_read_endpoint(mEndpoint, buffer, sizeof(buffer), CPC_ENDPOINT_READ_FLAG_NONE);
-
-    if (bytesRead > 0)
-    {
-        // Unpack concatenated spinel frames (see ncp_cpc.cpp)
-        while (bytesRead > 0)
-        {
-            if (bytesRead < 2)
-            {
-                break;
-            }
-            uint16_t bufferLen = BigEndian::ReadUint16(ptr);
-            ptr += 2;
-            bytesRead -= 2;
-            if (bytesRead < bufferLen)
-            {
-                break;
-            }
-            for (uint16_t i = 0; i < bufferLen; i++)
-            {
-                if (!mReceiveFrameBuffer->CanWrite(1) || (mReceiveFrameBuffer->WriteByte(*(ptr++)) != OT_ERROR_NONE))
-                {
-                    mReceiveFrameBuffer->DiscardFrame();
-                    return;
-                }
-            }
-            bytesRead -= bufferLen;
-            mReceiveFrameCallback(mReceiveFrameContext);
-        }
-    }
-    else if (bytesRead == -ECONNRESET)
-    {
-        SetCpcResetReq(true);
-    }
-    else if ((bytesRead != -EAGAIN) && (bytesRead != -EINTR))
-    {
-        DieNow(OT_EXIT_ERROR_ERRNO);
-    }
+    DieIfNegativeErrno(mTransport.ReadEndpoint(aTimeoutUs));
 }
 
 otError CpcInterfaceImpl::SendFrame(const uint8_t *aFrame, uint16_t aLength)
 {
-    otError error;
-
-    CheckAndReInitCpc();
-    error = Write(aFrame, aLength);
-    return error;
-}
-
-otError CpcInterfaceImpl::Write(const uint8_t *aFrame, uint16_t aLength)
-{
     otError error = OT_ERROR_NONE;
 
-    // We are catching the SPINEL reset command and returning
-    // a SPINEL reset response immediately
     if (IsSpinelResetCommand(aFrame, aLength))
     {
         SendResetResponse();
-        return error;
+        ExitNow();
     }
 
-    while (aLength)
-    {
-        ssize_t bytesWritten = cpc_write_endpoint(mEndpoint, aFrame, aLength, CPC_ENDPOINT_WRITE_FLAG_NON_BLOCKING);
+    ssize_t n;
 
-        if (bytesWritten == aLength)
-        {
-            break;
-        }
-        else if (bytesWritten > 0)
-        {
-            aLength -= static_cast<uint16_t>(bytesWritten);
-            aFrame += static_cast<uint16_t>(bytesWritten);
-        }
-        else if (bytesWritten < 0)
-        {
-            VerifyOrExit((bytesWritten == -EPIPE), SetCpcResetReq(true));
-            VerifyOrDie((bytesWritten == -EAGAIN) || (bytesWritten == -EWOULDBLOCK) || (bytesWritten == -EINTR),
-                        OT_EXIT_ERROR_ERRNO);
-        }
+    do
+    {
+        n = mTransport.Send(aFrame, aLength);
+    } while (n == -EINTR);
+
+    // CPC endpoint writes do not send partial frames. Only completed writes or errors are valid.
+    if (n != static_cast<ssize_t>(aLength))
+    {
+        VerifyOrDie(n < 0, OT_EXIT_FAILURE);
+        VerifyOrExit(((n != -EAGAIN) && (n != -EWOULDBLOCK) && (n != -EINVAL)), error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(!mTransport.CheckAndClearDisconnectStatus(), error = OT_ERROR_FAILED);
     }
 
 exit:
@@ -268,12 +220,8 @@ exit:
 
 otError CpcInterfaceImpl::WaitForFrame(uint64_t aTimeoutUs)
 {
-    otError error = OT_ERROR_NONE;
-
-    CheckAndReInitCpc();
     Read(aTimeoutUs);
-
-    return error;
+    return OT_ERROR_NONE;
 }
 
 void CpcInterfaceImpl::UpdateFdSet(void *aMainloopContext)
@@ -281,87 +229,25 @@ void CpcInterfaceImpl::UpdateFdSet(void *aMainloopContext)
     otSysMainloopContext *context = reinterpret_cast<otSysMainloopContext *>(aMainloopContext);
     OT_ASSERT(context != nullptr);
 
-    FD_SET(mSockFd, &context->mReadFdSet);
-
-    if (context->mMaxFd < mSockFd)
+    if (mTransport.IsEndpointOpen())
     {
-        context->mMaxFd = mSockFd;
+        int fd = mTransport.GetFd();
+        FD_SET(fd, &context->mReadFdSet);
+        if (context->mMaxFd < fd)
+        {
+            context->mMaxFd = fd;
+        }
     }
 }
 
 void CpcInterfaceImpl::Process(const void *aMainloopContext)
 {
     OT_UNUSED_VARIABLE(aMainloopContext);
-    CheckAndReInitCpc();
-    Read(0);
-}
-
-void CpcInterfaceImpl::CheckAndReInitCpc(void)
-{
-    int result;
-    int attempts;
-
-    // Check if CPC needs to be restarted
-    VerifyOrExit(sCpcResetReq);
-
-    // Clear the flag
-    SetCpcResetReq(false);
-
-    // Check if the endpoint was previously opened
-    if (mSockFd > 0)
-    {
-        // Close endpoint
-        result = cpc_close_endpoint(&mEndpoint);
-        // If the close failed, exit
-        VerifyOrDie(result == 0, OT_EXIT_ERROR_ERRNO);
-        // Invalidate file descriptor
-        mSockFd = -1;
-    }
-
-    // Restart communication with cpcd
-    attempts = 0;
-    do
-    {
-        // Add some delay before attempting to restart
-        usleep(kMaxSleepDuration);
-        // Try to restart CPC
-        result = cpc_restart(&mHandle);
-        // Mark how many times the restart was attempted
-        attempts++;
-        // Continue to try and restore CPC communication until we
-        // have exhausted the retries or restart was successful
-    } while ((result != 0) && (attempts < kMaxRestartAttempts));
-
-    // If the restart failed, exit
-    VerifyOrDie(result == 0, OT_EXIT_ERROR_ERRNO);
-
-    // Reopen the endpoint
-    attempts = 0;
-    do
-    {
-        // Add some delay before attempting to open the endpoint
-        usleep(kMaxSleepDuration);
-        // Try to open the endpoint
-        mSockFd = cpc_open_endpoint(mHandle, &mEndpoint, mId, 1);
-        // Mark how many times the open was attempted
-        attempts++;
-        // Continue to try and open the endpoint until we
-        // have exhausted the retries or open was successful
-    } while ((mSockFd <= 0) && (attempts < kMaxRestartAttempts));
-
-    // If the open failed, exit
-    VerifyOrDie(mSockFd > 0, OT_EXIT_ERROR_ERRNO);
-
-    otLogCritPlat("Restarted CPC successfully");
-
-exit:
-    return;
+    DieIfNegativeErrno(mTransport.Process());
 }
 
 void CpcInterfaceImpl::SendResetResponse(void)
 {
-    // Put CPC Reset call here
-
     for (int i = 0; i < kResetCMDSize; ++i)
     {
         if (mReceiveFrameBuffer->CanWrite(sizeof(uint8_t)))
@@ -369,7 +255,6 @@ void CpcInterfaceImpl::SendResetResponse(void)
             IgnoreError(mReceiveFrameBuffer->WriteByte(mResetResponse[i]));
         }
     }
-
     mReceiveFrameCallback(mReceiveFrameContext);
 }
 

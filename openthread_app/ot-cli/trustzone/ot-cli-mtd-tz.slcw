@@ -1,6 +1,8 @@
-label: ot-cli-mtd-tz-workspace
+workspace_name: ot-cli-mtd-tz
+label: OpenThread - SoC CLI MTD TrustZone Workspace
+package: openthread
 description: >
-  Workspace to build trustzone enabled ot-cli-mtd application and accompanying bootloader.
+  Workspace to build TrustZone-enabled OpenThread - SoC CLI MTD application and accompanying bootloader.
 quality: production
 
 project:

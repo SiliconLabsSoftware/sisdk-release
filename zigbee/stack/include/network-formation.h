@@ -640,10 +640,6 @@ sl_status_t sl_zigbee_get_beacon_classification_params(sl_zigbee_beacon_classifi
  */
 sl_status_t sl_zigbee_set_beacon_classification_params(sl_zigbee_beacon_classification_params_t* param);
 
-/** @brief Change the PAN ID on the local node.
- */
-void slx_zigbee_change_pan_id_now(sl_802154_pan_id_t panId);
-
 /** @} END addtogroup */
 
 /**
@@ -672,5 +668,8 @@ void slx_zigbee_change_pan_id_now(sl_802154_pan_id_t panId);
  * </ul>
  * HIDDEN -->
  */
+
+// Internal function to change the PAN ID immediately. Used for testing only.
+void slx_zigbee_change_pan_id_now(sl_802154_pan_id_t panId);
 
 #endif // SILABS_NETWORK_INFORMATION_H

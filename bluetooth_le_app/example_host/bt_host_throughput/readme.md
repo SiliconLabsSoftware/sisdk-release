@@ -31,9 +31,7 @@ The host application supports only the central role.
 
 1. Build and flash a Bluetooth - SoC Throughput example or demo onto your Bluetooth LE device.
     Refer to the bt_soc_throughput documentation for details.
-2. Generate a Bluetooth - NCP application.
-    - Add the bluetooth_feature_power_control.
-    - Build and flash to the target.
+2. Build and flash a Bluetooth - NCP Throughput application.
 3. Connect the NCP target to your host.
 4. Start the host application.
 5. If no time or data length was specified, press Button 0

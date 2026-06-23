@@ -1,0 +1,29 @@
+id: dma_manager_hal_ldma
+label: DMA Manager HAL LDMA
+package: platform_core
+description: >
+  The DMA Manager HAL for LDMA is responsible for handling the low-level
+  interactions with the LDMA peripheral for the DMA Manager.
+category: Services|DMA Manager
+quality: production
+ui_hints:
+  visibility: never
+metadata:
+  sbom:
+    license: Zlib
+provides:
+- name: dma_manager_hal
+- name: dma_manager_hal_ldma
+requires:
+- name: device_peripheral
+- name: clock_manager_runtime
+- name: status
+- name: bit
+- name: hal_ldma
+- name: interrupt_manager
+root_path: platform_core/platform/service/dma_manager
+source:
+- path: src/sl_dma_manager_hal_ldma.c
+documentation:
+  docset: gecko-platform
+  document: platform-service/dma-manager

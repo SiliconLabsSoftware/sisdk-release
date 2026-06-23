@@ -25,9 +25,18 @@
 
 set(OT_DIR ${CMAKE_CURRENT_LIST_DIR}/../..)
 
+# Root tree that contains src/cli (e.g. memory_usage_cli.c). In the full Silabs thread
+# repo this matches OT_DIR. For split packages (openthread vs openthread_internal), pass
+# -DOT_INTERNAL_DIR=<openthread_internal package root> to ensure that paths resolve;
+# the multiprotocol host builds should set this.
+if(NOT OT_INTERNAL_DIR)
+    set(OT_INTERNAL_DIR "${OT_DIR}")
+endif()
+
 set(POSIX_SRC_DIR ${OT_DIR}/platform-abstraction/posix)
 set(PAL_INC_DIR   ${OT_DIR}/platform-abstraction/include)
 set(CLI_SRC_DIR   ${OT_DIR}/src/cli)
+set(INTERNAL_CLI_SRC_DIR ${OT_INTERNAL_DIR}/src/cli)
 set(CLI_INC_DIR   ${OT_DIR}/include)
 set(UTIL_SRC_DIR  ${OT_DIR}/src/util)
 set(UTIL_INC_DIR  ${OT_DIR}/include/util)

@@ -1,28 +1,42 @@
 from siliconlabs.slc.board_gen.project_config import ProjectConfig
 from siliconlabs.slc.board_gen.hardware import Hardware
+from siliconlabs.slc.board_gen.util.clock_util import get_board_id as _hardware_board_slug
 
 import yaml
 from pathlib import Path
 from typing import Set
 
-antenna_offset_info_file = Path(__file__).parent / '../../../../platform/scripts/board_generation/generation_files/rail_util_cs_antenna_offset.yaml'
-if not antenna_offset_info_file.exists():
-    print(antenna_offset_info_file.resolve())
-    raise Exception('rail_util_cs_antenna_offset.yaml not found. Make sure that the file exists!')
+
+def _rail_util_cs_antenna_offset_yaml() -> Path:
+    """
+    Resolve generation data whether the override script lives under legacy
+    platform/hardware/... or under package/boards/hardware/... (Jenkins board-gen).
+    """
+    rels = (
+        Path('platform/scripts/board_generation/generation_files/rail_util_cs_antenna_offset.yaml'),
+        Path('platform/platform/scripts/board_generation/generation_files/rail_util_cs_antenna_offset.yaml'),
+    )
+    here = Path(__file__).resolve().parent
+    for anc in [here, *here.parents]:
+        for rel in rels:
+            cand = anc / rel
+            if cand.is_file():
+                return cand
+    raise Exception(
+        'rail_util_cs_antenna_offset.yaml not found. Make sure that the file exists! '
+        '(searched under ancestors of {!r})'.format(here)
+    )
+
+
+antenna_offset_info_file = _rail_util_cs_antenna_offset_yaml()
 
 with open(antenna_offset_info_file) as file_handle:
     antenna_offset_info = yaml.safe_load(file_handle)
 
 
 def get_board_id(board: Hardware) -> str:
-    # Crude way of getting the actual board id that we are trying to generate for
-    # some boards like brd4182a have multiple revisions which we don't care about
-    # so we strip off the last part of the name which is separate by underscore.
-    board_id = ''
-    for bc in board.board_components:
-        if bc.name != 'brd4001a' and bc.name != 'brd4002a':
-            board_id = bc.name
-    return board_id.split('_')[0]
+    return _hardware_board_slug(board)
+
 
 def compatible(provides: Set[str], board: Hardware) -> bool:
     if get_board_id(board) in antenna_offset_info['cs_antenna_offset']:

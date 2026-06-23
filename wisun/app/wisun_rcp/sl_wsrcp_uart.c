@@ -11,7 +11,8 @@
  * [1] www.silabs.com/about-us/legal/master-software-license-agreement
  *
  ******************************************************************************/
-
+#include <sl_clock_manager.h>
+#include <sl_dma_manager.h>
 #include <string.h>
 #include <em_gpio.h>
 #include <common/bits.h>
@@ -27,6 +28,8 @@
 
 #define MASK_PAYLOAD_LEN 0x07ff
 
+struct sl_wsrcp_uart *g_uart_ctxt = NULL;
+
 __WEAK void uart_rx_ready(struct sl_wsrcp_uart *uart_ctxt)
 {
     (void)uart_ctxt;
@@ -38,15 +41,12 @@ __WEAK void uart_crc_error(struct sl_wsrcp_uart *uart_ctxt, uint8_t irq_overflow
     (void)irq_overflow_cnt;
 }
 
-static bool uart_handle_rx_dma_complete(unsigned int chan, unsigned int seq_num, void *user_param)
+static void uart_handle_rx_dma_complete(void)
 {
     CORE_DECLARE_IRQ_STATE;
-    struct sl_wsrcp_uart *uart_ctxt = user_param;
+    struct sl_wsrcp_uart *uart_ctxt = g_uart_ctxt;
     int ret;
     unsigned int i;
-
-    (void)chan;
-    (void)seq_num;
 
     // Protect descr_cnt_rx and rx_ring against uart_handle_rx_dma_timeout()
     CORE_ENTER_ATOMIC();
@@ -58,18 +58,13 @@ static bool uart_handle_rx_dma_complete(unsigned int chan, unsigned int seq_num,
     uart_ctxt->descr_cnt_rx %= ARRAY_SIZE(uart_ctxt->buf_rx);
     uart_rx_ready(uart_ctxt);
     CORE_EXIT_ATOMIC();
-    return true;
 }
 
-static bool uart_handle_tx_dma_complete(unsigned int chan, unsigned int seq_num, void *user_param)
+static void uart_handle_tx_dma_complete(void)
 {
-    struct sl_wsrcp_uart *uart_ctxt = user_param;
-
-    (void)chan;
-    (void)seq_num;
+    struct sl_wsrcp_uart *uart_ctxt = g_uart_ctxt;
 
     osSemaphoreRelease(uart_ctxt->tx_dma_lock);
-    return true;
 }
 
 void uart_handle_rx_dma_timeout(struct sl_wsrcp_uart *uart_ctxt)
@@ -85,14 +80,13 @@ void uart_handle_rx_dma_timeout(struct sl_wsrcp_uart *uart_ctxt)
     // (with USART, we need to execute that in less than 5µs for a 2Mbps UART link)
     // (with EUSART, thanks to it 16bytes depth fifo , we need to execute the
     // code below in less than 40µs for a 4Mbps UART link)
-    DMADRV_StopTransfer(uart_ctxt->dma_chan_rx);
-    DMADRV_TransferRemainingCount(uart_ctxt->dma_chan_rx, &remaining);
+    LDMA_StopTransfer(uart_ctxt->dma_chan_rx);
+    remaining = LDMA_TransferRemainingCount(uart_ctxt->dma_chan_rx);
     descr_cnt_rx = uart_ctxt->descr_cnt_rx;
     uart_ctxt->descr_cnt_rx += 1;
     uart_ctxt->descr_cnt_rx %= ARRAY_SIZE(uart_ctxt->buf_rx);
-    DMADRV_LdmaStartTransfer(uart_ctxt->dma_chan_rx, &ldma_cfg,
-                             &(uart_ctxt->descr_rx[uart_ctxt->descr_cnt_rx]),
-                             uart_handle_rx_dma_complete, uart_ctxt);
+    LDMA_StartTransfer(uart_ctxt->dma_chan_rx, &ldma_cfg,
+                       &uart_ctxt->descr_rx[uart_ctxt->descr_cnt_rx]);
     // End of realtime constrained section
 
     for (i = 0; i < sizeof(uart_ctxt->buf_rx[0]) - remaining; i++) {
@@ -124,7 +118,7 @@ int uart_tx(struct sl_wsrcp_uart *uart_ctxt, const void *buf, int buf_len)
     BUG_ON(buf_len > FIELD_MAX(MASK_PAYLOAD_LEN));
     // Only double buffering is supported
     BUG_ON(ARRAY_SIZE(uart_ctxt->descr_tx) != 2);
-    BUG_ON(sizeof(uart_ctxt->buf_tx[0]) > DMADRV_MAX_XFER_COUNT);
+    BUG_ON(sizeof(*uart_ctxt->buf_tx) > LDMA_DESCRIPTOR_MAX_XFER_SIZE);
 
     osMutexAcquire(uart_ctxt->tx_lock, osWaitForever);
     while (buf_offset < buf_len) {
@@ -155,8 +149,7 @@ int uart_tx(struct sl_wsrcp_uart *uart_ctxt, const void *buf, int buf_len)
         }
         dma_descr->xfer.xferCnt = dma_buf_offset - 1;
         osSemaphoreAcquire(uart_ctxt->tx_dma_lock, osWaitForever);
-        DMADRV_LdmaStartTransfer(uart_ctxt->dma_chan_tx, &ldma_cfg,
-                                 dma_descr, uart_handle_tx_dma_complete, uart_ctxt);
+        LDMA_StartTransfer(uart_ctxt->dma_chan_tx, &ldma_cfg, dma_descr);
         uart_ctxt->descr_cnt_tx = (uart_ctxt->descr_cnt_tx + 1) % ARRAY_SIZE(uart_ctxt->descr_tx);
     }
     osMutexRelease(uart_ctxt->tx_lock);
@@ -220,7 +213,10 @@ int uart_rx(struct sl_wsrcp_uart *uart_ctxt, void *buf, int buf_len)
 void uart_init(struct sl_wsrcp_uart *uart_ctxt, struct sli_wisun_timer_context *timer_ctxt)
 {
     LDMA_TransferCfg_t ldma_cfg = LDMA_TRANSFER_CFG_PERIPHERAL(UART_LDMA_SIGNAL_RX);
+    const LDMA_Init_t ldma_init = LDMA_INIT_DEFAULT;
     unsigned int i, next;
+
+    g_uart_ctxt = uart_ctxt;
 
     ring_init(&uart_ctxt->rx_ring, uart_ctxt->rx_ring_data, sizeof(uart_ctxt->rx_ring_data));
     uart_ctxt->tx_lock = osMutexNew(NULL);
@@ -268,11 +264,15 @@ void uart_init(struct sl_wsrcp_uart *uart_ctxt, struct sli_wisun_timer_context *
         uart_ctxt->descr_tx[i].xfer.dstAddr     = (uintptr_t)&(uart_ctxt->hw_regs->TXDATA);
     }
     uart_hw_init(uart_ctxt);
-    DMADRV_Init();
-    DMADRV_AllocateChannel(&uart_ctxt->dma_chan_tx, NULL);
-    DMADRV_AllocateChannel(&uart_ctxt->dma_chan_rx, NULL);
-    DMADRV_LdmaStartTransfer(uart_ctxt->dma_chan_rx, &ldma_cfg,
-                             &(uart_ctxt->descr_rx[0]),
-                             uart_handle_rx_dma_complete, uart_ctxt);
+    sl_dma_manager_allocate_channel(NULL, &uart_ctxt->dma_chan_tx);
+    sl_dma_manager_register_channel_irq_callback(NULL, uart_ctxt->dma_chan_tx,
+                                                 uart_handle_tx_dma_complete);
+    sl_dma_manager_allocate_channel(NULL, &uart_ctxt->dma_chan_rx);
+    sl_dma_manager_register_channel_irq_callback(NULL, uart_ctxt->dma_chan_rx,
+                                                 uart_handle_rx_dma_complete);
+    sl_clock_manager_enable_bus_clock(SL_BUS_CLOCK_LDMA0);
+    sl_clock_manager_enable_bus_clock(SL_BUS_CLOCK_LDMAXBAR0);
+    LDMA_Init(&ldma_init);
+    LDMA_StartTransfer(uart_ctxt->dma_chan_rx, &ldma_cfg, &uart_ctxt->descr_rx[0]);
     sli_wisun_timer_init(&uart_ctxt->timer, timer_ctxt, uart_timeout, "UART frame timeout");
 }

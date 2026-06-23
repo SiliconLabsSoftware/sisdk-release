@@ -32,6 +32,7 @@
 #define SL_WISUN_COMMON_H
 
 #include <inttypes.h>
+#include <sl_slist.h>
 
 #define CMSIS_RTOS_ERROR_MASK       0x80000000
 
@@ -60,8 +61,8 @@ do {\
 // since some the limits used in SLI_WISUN_PARAM_CHECK_LIMITS may be
 // the minimum/maximum integer value.
 #ifdef __ICCARM__
-#define SUPPRESS_CHECK_LIMITS_WARNING _Pragma ("diag_suppress=Pa084")
-#define RESTORE_CHECK_LIMITS_WARNING _Pragma ("diag_default=Pa084")
+#define SUPPRESS_CHECK_LIMITS_WARNING _Pragma ("diag_suppress=Pa084,Pe186")
+#define RESTORE_CHECK_LIMITS_WARNING _Pragma ("diag_default=Pa084,Pe186")
 #else
 #define SUPPRESS_CHECK_LIMITS_WARNING
 #define RESTORE_CHECK_LIMITS_WARNING
@@ -146,8 +147,6 @@ uint64_t divide_integer(uint64_t dividend, uint32_t divisor);
 
 #define MAX(a, b) (((a) >= (b)) ? (a) : (b))
 
-#define container_of(ptr, type, member)  (type *)((uintptr_t)(ptr) - ((uintptr_t)(&((type *)0)->member)))
-
 /// Get the number of elements in an array (must not be used with pointers)
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
@@ -175,6 +174,14 @@ static inline uint32_t add32sat(uint32_t a, uint32_t b)
     uint32_t sum = a + b;
 
     return sum < a ? UINT32_MAX : sum;
+}
+
+// 8bit addition with saturation
+static inline uint8_t add8sat(uint8_t a, uint8_t b)
+{
+    uint8_t sum = a + b;
+
+    return sum < a ? UINT8_MAX : sum;
 }
 
 #endif

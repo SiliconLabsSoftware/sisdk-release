@@ -1,0 +1,2518 @@
+diff --git a/.gitmodules b/.gitmodules
+index 9d4eeb89cfd5a5fcc643708d0ffd90d3bad5862e..c0c97efe51fad458fda7cafc591e4e57387bc655 100644
+--- a/.gitmodules
++++ b/.gitmodules
+@@ -1,7 +1,3 @@
+-[submodule "third_party/openthread/repo"]
+-	path = third_party/openthread/repo
+-	url = https://github.com/openthread/openthread.git
+-	branch = main
+ [submodule "third_party/cJSON/repo"]
+ 	path = third_party/cJSON/repo
+ 	url = https://github.com/DaveGamble/cJSON.git
+diff --git a/etc/cmake/options.cmake b/etc/cmake/options.cmake
+index 1339b3b20b32bee4a6debce96df04bcd2161ea42..b3229f87cb3d11f5fedc0ca8dfa16cd40806dfcc 100644
+--- a/etc/cmake/options.cmake
++++ b/etc/cmake/options.cmake
+@@ -205,6 +205,16 @@ else()
+     target_compile_definitions(otbr-config INTERFACE OTBR_ENABLE_NAT64=0)
+ endif()
+ 
++option(OTBR_NAT64_TAYGA "Sync favored NAT64 prefix to TAYGA at runtime" OFF)
++if(OTBR_NAT64_TAYGA)
++    if(NOT OTBR_NAT64)
++        message(FATAL_ERROR "OTBR_NAT64_TAYGA requires OTBR_NAT64")
++    endif()
++    target_compile_definitions(otbr-config INTERFACE OTBR_ENABLE_NAT64_TAYGA=1)
++else()
++    target_compile_definitions(otbr-config INTERFACE OTBR_ENABLE_NAT64_TAYGA=0)
++endif()
++
+ option(OTBR_VENDOR_INFRA_LINK_SELECT "Enable Vendor-specific infrastructure link selection rules" OFF)
+ if(OTBR_VENDOR_INFRA_LINK_SELECT)
+     target_compile_definitions(otbr-config INTERFACE OTBR_ENABLE_VENDOR_INFRA_LINK_SELECT=1)
+diff --git a/etc/docker/test/Dockerfile b/etc/docker/test/Dockerfile
+index 341efda163756fe22fad6e58c853505012aa8b3d..f3ac5d18bc40ca958bcc49b43913a699c38f648f 100644
+--- a/etc/docker/test/Dockerfile
++++ b/etc/docker/test/Dockerfile
+@@ -71,7 +71,7 @@ ENV OTBR_DOCKER_DEPS git ca-certificates
+ 
+ # Required and installed during build (script/bootstrap), could be removed
+ ENV OTBR_BUILD_DEPS apt-utils build-essential psmisc ninja-build cmake wget ca-certificates \
+-  libreadline-dev libncurses-dev libdbus-1-dev libavahi-common-dev \
++  libreadline-dev libedit-dev libncurses-dev libdbus-1-dev libavahi-common-dev \
+   libavahi-client-dev \
+   libnetfilter-queue-dev
+ 
+@@ -85,7 +85,7 @@ RUN rm /var/lib/dpkg/info/libc-bin.* \
+   && apt-get install --no-install-recommends -y libc-bin
+ 
+ RUN apt-get update \
+-  && apt-get install --no-install-recommends -y $OTBR_DOCKER_REQS $OTBR_DOCKER_DEPS \
++  && apt-get install --no-install-recommends -y $OTBR_DOCKER_REQS $OTBR_DOCKER_DEPS $OTBR_BUILD_DEPS \
+   && ([ "${OT_BACKBONE_CI}" != "1" ] || apt-get install --no-install-recommends -y $OTBR_OT_BACKBONE_CI_DEPS) \
+   && ln -fs /usr/share/zoneinfo/UTC /etc/localtime
+ 
+diff --git a/script/_nat64 b/script/_nat64
+index 3f063f9439b6f37aee37aac4961d10382703437c..3e356f63ae9d441a5c6173fb7aeb8af700258ab9 100644
+--- a/script/_nat64
++++ b/script/_nat64
+@@ -29,13 +29,134 @@
+ #   Description:
+ #       This script manipulates nat64 configuration.
+ #
++#   NAT64_SERVICE selects the dataplane translator when NAT64=1:
++#     - openthread: OpenThread POSIX NAT64 translator (default); tayga_* are skipped.
++#     - tayga:      userspace TAYGA on the host; requires /etc/default/tayga and /etc/tayga.conf.
++#
++#   NAT64_SERVICE is defined in script/_otbr (default openthread) before this file is sourced.
++#
+ 
++TAYGA_DEFAULT=/etc/default/tayga
++TAYGA_CONF=/etc/tayga.conf
++TAYGA_IPV4_ADDR=192.168.255.1
++TAYGA_IPV6_ADDR=fdaa:bb:1::1
++TAYGA_TUN_V6_ADDR=fdaa:bb:1::2
++NAT64_PREFIX=64:ff9b::/96
++DYNAMIC_POOL="${NAT64_DYNAMIC_POOL:-192.168.255.0/24}"
+ NAT44_SERVICE=/etc/init.d/otbr-nat44
+ WLAN_IFNAMES="${INFRA_IF_NAME:-eth0}"
+ THREAD_IF="${THREAD_IF:-wpan0}"
+ 
++# Read `tun-device` from tayga.conf (first match). Default matches distro examples.
++tayga_tun_device()
++{
++    local dev
++    dev=$(grep -m1 -E '^tun-device[[:space:]]+' "$TAYGA_CONF" 2>/dev/null | awk '{print $2}')
++    echo "${dev:-nat64}"
++}
++
++# Ensure exactly one active tayga.conf directive line (idempotent across setup re-runs).
++tayga_conf_ensure_line()
++{
++    local key="$1"
++    local value="$2"
++    local commented_marker="##${key}"
++
++    # Drop prior OTBR/active lines for this key (setup runs uninstall then install).
++    sudo sed -i "/^${key}[[:space:]]/d" "$TAYGA_CONF"
++    sudo sed -i "/^${commented_marker}[[:space:]]/d" "$TAYGA_CONF"
++    echo "${key} ${value}" | sudo tee -a "$TAYGA_CONF" >/dev/null
++}
++
++tayga_install()
++{
++    local tayga_tun otbr_tayga_dropin otbr_tayga_sysctl
++
++    test -f $TAYGA_DEFAULT -a -f $TAYGA_CONF || die 'Cannot find tayga configuration file!'
++    tayga_tun=$(tayga_tun_device)
++    otbr_tayga_dropin=/etc/systemd/system/tayga.service.d/otbr-tayga.conf
++    otbr_tayga_sysctl=/etc/sysctl.d/99-otbr-tayga-nat64.conf
++
++    sudo sed -i 's/^RUN="no"/RUN="yes"/' $TAYGA_DEFAULT
++    sudo sed -i 's/^IPV4_TUN_ADDR=""/IPV4_TUN_ADDR="'$TAYGA_IPV4_ADDR'"/' $TAYGA_DEFAULT
++    sudo sed -i 's/^IPV6_TUN_ADDR=""/IPV6_TUN_ADDR="'$TAYGA_TUN_V6_ADDR'"/' $TAYGA_DEFAULT
++    tayga_conf_ensure_line prefix "$NAT64_PREFIX"
++    tayga_conf_ensure_line ipv6-addr "$TAYGA_IPV6_ADDR"
++    tayga_conf_ensure_line dynamic-pool "$DYNAMIC_POOL"
++
++    if have systemctl; then
++        sudo mkdir -p "$(dirname "$otbr_tayga_dropin")"
++        # Type=simple overrides any distro-packaged Type=forking; without it systemctl restart hangs
++        # waiting for a fork that --nodetach prevents. ExecStart= clears inherited value; ExecStartPost polls TUN.
++        sudo tee "$otbr_tayga_dropin" >/dev/null <<OTBR_TAYGA_UNIT
++[Service]
++Type=simple
++ExecStart=
++ExecStart=/usr/sbin/tayga --nodetach --config ${TAYGA_CONF}
++ExecStartPost=/bin/bash -c "TUN=${tayga_tun}; for i in \$(seq 1 50); do ip link show dev \"\$TUN\" >/dev/null 2>&1 && break; sleep 0.05; done; ip link set dev \"\$TUN\" up; ip route replace ${DYNAMIC_POOL} dev \"\$TUN\"; ip -6 route replace ${NAT64_PREFIX} dev \"\$TUN\" metric 256"
++OTBR_TAYGA_UNIT
++        sudo tee "$otbr_tayga_sysctl" >/dev/null <<OTBR_TAYGA_SYSCTL
++# Installed by OTBR script/_nat64 (tayga). Strict rp_filter on the TUN drops translated IPv4 before MASQUERADE.
++net.ipv4.conf.${tayga_tun}.rp_filter=0
++OTBR_TAYGA_SYSCTL
++        sudo systemctl daemon-reload
++        sudo sysctl -p "$otbr_tayga_sysctl" || true
++        sudo systemctl restart tayga || die 'Unable to restart tayga service!'
++        sudo systemctl enable tayga || die 'Unable to enable tayga service!'
++    fi
++}
++
++tayga_uninstall()
++{
++    local otbr_tayga_dropin otbr_tayga_sysctl
++
++    otbr_tayga_dropin=/etc/systemd/system/tayga.service.d/otbr-tayga.conf
++    otbr_tayga_sysctl=/etc/sysctl.d/99-otbr-tayga-nat64.conf
++
++    if have systemctl; then
++        sudo systemctl stop tayga || true
++        sudo rm -f "$otbr_tayga_dropin"
++        sudo rmdir /etc/systemd/system/tayga.service.d 2>/dev/null || true
++        sudo rm -f "$otbr_tayga_sysctl"
++        sudo systemctl daemon-reload
++    fi
++
++    sudo sed -i 's/^RUN="yes"/RUN="no"/' $TAYGA_DEFAULT
++    sudo sed -i 's/^IPV4_TUN_ADDR="'$TAYGA_IPV4_ADDR'"/IPV4_TUN_ADDR=""/' $TAYGA_DEFAULT
++    sudo sed -i "/^prefix[[:space:]]${NAT64_PREFIX//\//\\/}/d" "$TAYGA_CONF"
++    sudo sed -i "/^dynamic-pool[[:space:]]${DYNAMIC_POOL//\//\\/}/d" "$TAYGA_CONF"
++    sudo sed -i "/^ipv6-addr[[:space:]]${TAYGA_IPV6_ADDR}\$/d" "$TAYGA_CONF"
++}
++
++tayga_start()
++{
++    if with DOCKER; then
++        service tayga start || die 'Failed to start tayga'
++    elif have systemctl; then
++        sudo systemctl start tayga || die 'Failed to start tayga!'
++        sudo systemctl enable tayga || die 'Failed to enable tayga!'
++    fi
++}
++
++tayga_stop()
++{
++    if with DOCKER; then
++        service tayga stop || true
++    elif have systemctl; then
++        sudo systemctl stop tayga || true
++    fi
++}
++
+ nat44_install()
+ {
++    local tayga_tun_nat44
++
++    tayga_tun_nat44=
++    if [ "${NAT64_SERVICE:-openthread}" = tayga ]; then
++        test -f "$TAYGA_CONF" || die 'tayga.conf missing for nat44_install'
++        tayga_tun_nat44=$(tayga_tun_device)
++    fi
++
+     sudo tee $NAT44_SERVICE <<EOF
+ #! /bin/sh
+ #
+@@ -84,13 +205,27 @@ nat44_install()
+ case "\$1" in
+     start)
+ EOF
+-    # Just a random fwmark bits.
+-    echo "        iptables -t mangle -A PREROUTING -i $THREAD_IF -j MARK --set-mark 0x1001" | sudo tee -a $NAT44_SERVICE
+-    echo "        iptables -t nat -A POSTROUTING -m mark --mark 0x1001 -j MASQUERADE" | sudo tee -a $NAT44_SERVICE
+-    for IFNAME in $WLAN_IFNAMES; do
+-        echo "        iptables -t filter -A FORWARD -o $IFNAME -j ACCEPT" | sudo tee -a $NAT44_SERVICE
+-        echo "        iptables -t filter -A FORWARD -i $IFNAME -j ACCEPT" | sudo tee -a $NAT44_SERVICE
+-    done
++    if [ "${NAT64_SERVICE:-openthread}" = tayga ]; then
++        # Although Tayga itself also configures a NAT44 iptables route, this iptables route is used with Tayga
++        # due to some history reason. It might be removed when native NAT64 service is ready.
++        for IFNAME in $WLAN_IFNAMES; do
++            echo "        iptables -t nat -A POSTROUTING -o $IFNAME -j MASQUERADE" | sudo tee -a $NAT44_SERVICE
++        done
++        for IFNAME in $WLAN_IFNAMES; do
++            echo "        iptables -t filter -A FORWARD -i $THREAD_IF -o $IFNAME -j ACCEPT" | sudo tee -a $NAT44_SERVICE
++            echo "        iptables -t filter -A FORWARD -i $IFNAME -o $THREAD_IF -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT" | sudo tee -a $NAT44_SERVICE
++            echo "        iptables -t filter -A FORWARD -i $tayga_tun_nat44 -o $IFNAME -j ACCEPT" | sudo tee -a $NAT44_SERVICE
++            echo "        iptables -t filter -A FORWARD -i $IFNAME -o $tayga_tun_nat44 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT" | sudo tee -a $NAT44_SERVICE
++        done
++    else
++        # Just a random fwmark bits.
++        echo "        iptables -t mangle -A PREROUTING -i $THREAD_IF -j MARK --set-mark 0x1001" | sudo tee -a $NAT44_SERVICE
++        echo "        iptables -t nat -A POSTROUTING -m mark --mark 0x1001 -j MASQUERADE" | sudo tee -a $NAT44_SERVICE
++        for IFNAME in $WLAN_IFNAMES; do
++            echo "        iptables -t filter -A FORWARD -o $IFNAME -j ACCEPT" | sudo tee -a $NAT44_SERVICE
++            echo "        iptables -t filter -A FORWARD -i $IFNAME -j ACCEPT" | sudo tee -a $NAT44_SERVICE
++        done
++    fi
+     sudo tee -a $NAT44_SERVICE <<EOF
+         ;;
+     restart|reload|force-reload)
+@@ -148,6 +283,10 @@ nat64_install()
+ {
+     with NAT64 || return 0
+ 
++    if [ "${NAT64_SERVICE:-openthread}" = tayga ]; then
++        tayga_install
++    fi
++
+     nat44_install
+ }
+ 
+@@ -156,6 +295,11 @@ nat64_uninstall()
+     with NAT64 || return 0
+ 
+     nat64_stop
++
++    if [ "${NAT64_SERVICE:-openthread}" = tayga ]; then
++        tayga_uninstall
++    fi
++
+     nat44_uninstall
+ }
+ 
+@@ -163,6 +307,10 @@ nat64_start()
+ {
+     with NAT64 || return 0
+ 
++    if [ "${NAT64_SERVICE:-openthread}" = tayga ]; then
++        tayga_start
++    fi
++
+     nat44_start
+ }
+ 
+@@ -170,5 +318,9 @@ nat64_stop()
+ {
+     with NAT64 || return 0
+ 
++    if [ "${NAT64_SERVICE:-openthread}" = tayga ]; then
++        tayga_stop
++    fi
++
+     nat44_stop
+ }
+diff --git a/script/_otbr b/script/_otbr
+index fbac6a126dded14dfe3c0c046390453208fff1d7..4ddf3395195f9acba63af8b9304402904f6661c5 100644
+--- a/script/_otbr
++++ b/script/_otbr
+@@ -39,6 +39,9 @@ readonly BACKBONE_ROUTER
+ NAT64="${NAT64:-1}"
+ readonly NAT64
+ 
++NAT64_SERVICE="${NAT64_SERVICE:-openthread}"
++readonly NAT64_SERVICE
++
+ DISCOVERY_PROXY="${DISCOVERY_PROXY:-1}"
+ readonly DISCOVERY_PROXY
+ 
+@@ -161,6 +164,16 @@ otbr_install()
+         otbr_options+=(
+             "-DOTBR_NAT64=OFF"
+         )
++    elif [[ ${NAT64_SERVICE} == "openthread" ]]; then
++        otbr_options+=(
++            "-DOTBR_NAT64=ON"
++            "-DOT_POSIX_NAT64_CIDR=${NAT64_DYNAMIC_POOL:-192.168.255.0/24}"
++        )
++    elif [[ ${NAT64_SERVICE} == "tayga" ]]; then
++        otbr_options+=(
++            "-DOTBR_NAT64=ON"
++            "-DOTBR_NAT64_TAYGA=ON"
++        )
+     fi
+ 
+     # OT Discovery Proxy depends on Border Routing. Disable it if Border Routing is disabled or if explicitly disabled.
+diff --git a/script/bootstrap b/script/bootstrap
+index 89bd7df1f8b4b72f9a78661c3e9afb881d7df71d..0dbcca5b2fd9a05cdd59b222b57c4d3f4d522c34 100755
+--- a/script/bootstrap
++++ b/script/bootstrap
+@@ -33,6 +33,8 @@
+ # shellcheck source=script/_initrc
+ . "$(dirname "$0")"/_initrc
+ 
++NAT64_SERVICE="${NAT64_SERVICE:-openthread}"
++
+ FIREWALL="${FIREWALL:-1}"
+ 
+ # Handle deprecated DHCPV6_PD_REF flag
+@@ -105,6 +107,10 @@ install_packages_apt()
+     # nat64
+     sudo apt-get install --no-install-recommends -y iptables
+ 
++    if with NAT64 && [[ ${NAT64_SERVICE} == "tayga" ]]; then
++        sudo apt-get install --no-install-recommends -y tayga
++    fi
++
+     sudo apt-get install --no-install-recommends -y bind9
+ 
+     # DHCPv6 PD client implementation using dhcpcd
+@@ -160,6 +166,9 @@ install_packages_rpm()
+     sudo $PM install -y dbus-devel
+     sudo $PM install -y avahi avahi-devel
+     sudo $PM install -y iptables
++    if with NAT64 && [[ ${NAT64_SERVICE} == "tayga" ]]; then
++        sudo $PM install -y tayga
++    fi
+     sudo $PM install -y jsoncpp-devel
+     sudo $PM install -y wget
+     sudo $PM install -y protobuf protobuf-devel
+diff --git a/src/agent/application.cpp b/src/agent/application.cpp
+index fe2aa55bb106dcdd6080dee1fd09fe6202278ff4..482a880981850d02cfd7439a11eef8697aa816e0 100644
+--- a/src/agent/application.cpp
++++ b/src/agent/application.cpp
+@@ -37,9 +37,13 @@
+ #include <systemd/sd-daemon.h>
+ #endif
+ 
++#include <openthread/error.h>
++
+ #include "agent/application.hpp"
+ #include "common/code_utils.hpp"
++#include "common/logging.hpp"
+ #include "common/mainloop_manager.hpp"
++#include "common/types.hpp"
+ #include "host/posix/dnssd.hpp"
+ #include "utils/infra_link_selector.hpp"
+ 
+@@ -75,6 +79,12 @@ Application::Application(Host::ThreadHost  &aHost,
+     , mEphemeralKeyUdpProxy(mHost)
+ #endif
+ #endif
++#if OTBR_ENABLE_TREL
++    , mTrelUdpProxy(mHost)
++#endif
++#if OTBR_ENABLE_BACKBONE_ROUTER
++    , mBackboneTmfUdpProxy(mHost)
++#endif
+ #if OTBR_ENABLE_DBUS_SERVER
+     , mDBusAgent(MakeDBusDependentComponents())
+ #endif
+@@ -373,6 +383,25 @@ void Application::CreateNcpMode(void)
+ #endif
+ }
+ 
++void Application::ConfigureUdpProxiesInfraInterface(void)
++{
++    const char *infraIfName = mBackboneInterfaceName.empty() ? nullptr : mBackboneInterfaceName.c_str();
++
++#if OTBR_ENABLE_BORDER_AGENT
++    mBorderAgentUdpProxy.SetInfraInterface(infraIfName);
++#if OTBR_ENABLE_EPSKC
++    mEphemeralKeyUdpProxy.SetInfraInterface(infraIfName);
++#endif
++#endif
++#if OTBR_ENABLE_TREL
++    mTrelUdpProxy.SetInfraInterface(infraIfName);
++#endif
++#if OTBR_ENABLE_BACKBONE_ROUTER
++    mBackboneTmfUdpProxy.SetInfraInterface(infraIfName);
++#endif
++    OTBR_UNUSED_VARIABLE(infraIfName);
++}
++
+ void Application::InitNcpMode(void)
+ {
+     otbr::Host::NcpHost &ncpHost = static_cast<otbr::Host::NcpHost &>(mHost);
+@@ -385,9 +414,10 @@ void Application::InitNcpMode(void)
+     {
+         mInfraIf->SetInfraIf(mBackboneInterfaceName);
+     }
++    ConfigureUdpProxiesInfraInterface();
+     ncpHost.InitInfraIfCallbacks(*mInfraIf);
+ 
+-#if OTBR_ENABLE_SRP_ADVERTISING_PROXY
++#if OTBR_ENABLE_MDNS && (OTBR_ENABLE_SRP_ADVERTISING_PROXY || OTBR_ENABLE_DNSSD_PLAT)
+     mMdnsStateSubject.AddObserver(ncpHost);
+ #endif
+ #if OTBR_ENABLE_BORDER_AGENT && OTBR_ENABLE_BORDER_AGENT_MESHCOP_SERVICE
+@@ -420,19 +450,6 @@ void Application::InitNcpMode(void)
+             OTBR_UNUSED_VARIABLE(aLength);
+ #endif
+         });
+-    mHost.SetUdpForwardToHostCallback([this](const uint8_t *aUdpPayload, uint16_t aLength,
+-                                             const otIp6Address &aPeerAddr, uint16_t aPeerPort, uint16_t aLocalPort) {
+-        if (aLocalPort == mBorderAgentUdpProxy.GetThreadPort())
+-        {
+-            mBorderAgentUdpProxy.SendToPeer(aUdpPayload, aLength, aPeerAddr, aPeerPort);
+-        }
+-#if OTBR_ENABLE_EPSKC
+-        else if (aLocalPort == mEphemeralKeyUdpProxy.GetThreadPort())
+-        {
+-            mEphemeralKeyUdpProxy.SendToPeer(aUdpPayload, aLength, aPeerAddr, aPeerPort);
+-        }
+-#endif // OTBR_ENABLE_EPSKC
+-    });
+ #if OTBR_ENABLE_EPSKC
+     mHost.AddEphemeralKeyStateChangedCallback([this](otBorderAgentEphemeralKeyState aState, uint16_t aPort) {
+         if (aState == OT_BORDER_AGENT_STATE_STARTED)
+@@ -452,6 +469,95 @@ void Application::InitNcpMode(void)
+ #endif // OTBR_ENABLE_EPSKC
+     SetBorderAgentOnInitState();
+ #endif
++#if OTBR_ENABLE_BORDER_AGENT || OTBR_ENABLE_TREL || OTBR_ENABLE_BACKBONE_ROUTER
++    mHost.SetUdpForwardToHostCallback([this](const uint8_t *aUdpPayload, uint16_t aLength,
++                                             const otIp6Address &aPeerAddr, uint16_t aPeerPort, uint16_t aLocalPort) {
++#if OTBR_ENABLE_BORDER_AGENT
++        if (aLocalPort == mBorderAgentUdpProxy.GetThreadPort() && mBorderAgentUdpProxy.GetThreadPort() != 0)
++        {
++            mBorderAgentUdpProxy.SendToPeer(aUdpPayload, aLength, aPeerAddr, aPeerPort);
++            return;
++        }
++#if OTBR_ENABLE_EPSKC
++        if (aLocalPort == mEphemeralKeyUdpProxy.GetThreadPort() && mEphemeralKeyUdpProxy.GetThreadPort() != 0)
++        {
++            mEphemeralKeyUdpProxy.SendToPeer(aUdpPayload, aLength, aPeerAddr, aPeerPort);
++            return;
++        }
++#endif
++#endif
++#if OTBR_ENABLE_TREL
++        if (aLocalPort == mTrelUdpProxy.GetThreadPort() && mTrelUdpProxy.GetThreadPort() != 0)
++        {
++            mTrelUdpProxy.SendToPeer(aUdpPayload, aLength, aPeerAddr, aPeerPort);
++            return;
++        }
++#endif
++#if OTBR_ENABLE_BACKBONE_ROUTER
++        if (aLocalPort == mBackboneTmfUdpProxy.GetThreadPort() && mBackboneTmfUdpProxy.GetThreadPort() != 0)
++        {
++            mBackboneTmfUdpProxy.SendToPeer(aUdpPayload, aLength, aPeerAddr, aPeerPort);
++            return;
++        }
++#endif
++        otbrLogWarning("UDP forward: no UdpProxy for localThreadPort=%u (BorderAgent=%u, EphemeralKey=%u, TREL=%u, "
++                       "BackboneTmf=%u) — port mismatch or proxy not started",
++                       aLocalPort
++#if OTBR_ENABLE_BORDER_AGENT
++                       ,
++                       mBorderAgentUdpProxy.GetThreadPort()
++#else
++                       ,
++                       0u
++#endif
++#if OTBR_ENABLE_BORDER_AGENT && OTBR_ENABLE_EPSKC
++                           ,
++                       mEphemeralKeyUdpProxy.GetThreadPort()
++#else
++                       ,
++                       0u
++#endif
++#if OTBR_ENABLE_TREL
++                           ,
++                       mTrelUdpProxy.GetThreadPort()
++#else
++                       ,
++                       0u
++#endif
++#if OTBR_ENABLE_BACKBONE_ROUTER
++                           ,
++                       mBackboneTmfUdpProxy.GetThreadPort()
++#else
++                       ,
++                       0u
++#endif
++        );
++    });
++#endif
++#if OTBR_ENABLE_BACKBONE_ROUTER
++    if (!mBackboneInterfaceName.empty())
++    {
++        mBackboneTmfUdpProxy.Start(BackboneRouter::BackboneAgent::kBackboneUdpPort,
++                                   BackboneRouter::BackboneAgent::kBackboneUdpPort);
++    }
++#endif
++#if OTBR_ENABLE_TREL
++    ncpHost.SetTrelStateChangedCallback([this, &ncpHost](bool aEnabled, uint16_t aThreadPort) {
++        if (!aEnabled || aThreadPort == 0)
++        {
++            mTrelUdpProxy.Stop();
++            return;
++        }
++
++        mTrelUdpProxy.Start(aThreadPort);
++
++        otError err = ncpHost.SetTrelHostUdpPort(true, mTrelUdpProxy.GetHostPort());
++        if (err != OT_ERROR_NONE)
++        {
++            otbrLogWarning("Failed to set TREL host UDP port on NCP: %s", otThreadErrorToString(err));
++        }
++    });
++#endif
+ #if OTBR_ENABLE_BACKBONE_ROUTER
+     mHost.SetBackboneRouterStateChangedCallback(
+         [this](otBackboneRouterState aState) { mMulticastRoutingManager->HandleStateChange(aState); });
+@@ -465,6 +571,8 @@ void Application::InitNcpMode(void)
+ #endif
+ 
+ #if OTBR_ENABLE_DNSSD_PLAT
++    mDnssdPlatform.SetDnssdStateChangedCallback(
++        [&ncpHost](otPlatDnssdState aState) { ncpHost.NotifyDnssdPlatformStateToNcp(aState); });
+     mDnssdPlatform.Start();
+ #endif
+ }
+@@ -476,7 +584,25 @@ void Application::DeinitNcpMode(void)
+     mBorderAgent.Deinit();
+     mBorderAgentUdpProxy.Stop();
+ #endif
+-#if OTBR_ENABLE_SRP_ADVERTISING_PROXY
++#if OTBR_ENABLE_TREL
++    {
++        otbr::Host::NcpHost &ncpHost = static_cast<otbr::Host::NcpHost &>(mHost);
++        otError              err     = ncpHost.SetTrelHostUdpPort(false, 0);
++
++        if (err != OT_ERROR_NONE)
++        {
++            otbrLogWarning("Failed to clear TREL host UDP port on NCP: %s", otThreadErrorToString(err));
++        }
++    }
++    mTrelUdpProxy.Stop();
++#endif
++#if OTBR_ENABLE_BACKBONE_ROUTER
++    mBackboneTmfUdpProxy.Stop();
++#endif
++#if OTBR_ENABLE_DNSSD_PLAT
++    mDnssdPlatform.Stop();
++#endif
++#if OTBR_ENABLE_MDNS
+     mPublisher->Stop();
+ #endif
+     mNetif->Deinit();
+diff --git a/src/agent/application.hpp b/src/agent/application.hpp
+index 24f3f0f105239af2bd2d850f0270b53400c66c9a..df2702c568dc5be7b300b87d94c3eef4305a13fc 100644
+--- a/src/agent/application.hpp
++++ b/src/agent/application.hpp
+@@ -262,6 +262,7 @@ private:
+     void CreateNcpMode(void);
+     void InitNcpMode(void);
+     void DeinitNcpMode(void);
++    void ConfigureUdpProxiesInfraInterface(void);
+ 
+ #if OTBR_ENABLE_BORDER_AGENT
+     void SetBorderAgentOnInitState(void);
+@@ -290,10 +291,14 @@ private:
+     UdpProxy mEphemeralKeyUdpProxy;
+ #endif
+ 
++#endif
++#if OTBR_ENABLE_TREL
++    UdpProxy mTrelUdpProxy;
+ #endif
+ #if OTBR_ENABLE_BACKBONE_ROUTER
+     std::unique_ptr<BackboneRouter::BackboneAgent> mBackboneAgent;
+     std::unique_ptr<MulticastRoutingManager>       mMulticastRoutingManager;
++    UdpProxy                                       mBackboneTmfUdpProxy;
+ #endif
+ #if OTBR_ENABLE_SRP_ADVERTISING_PROXY
+     std::unique_ptr<AdvertisingProxy> mAdvertisingProxy;
+diff --git a/src/host/ncp_host.cpp b/src/host/ncp_host.cpp
+index ebf1a4520cbb98278466ee34a556999f2639a73c..39b9ddd201838366b97a554a44ed6653e001c757 100644
+--- a/src/host/ncp_host.cpp
++++ b/src/host/ncp_host.cpp
+@@ -38,6 +38,7 @@
+ #include <openthread/openthread-system.h>
+ 
+ #include "host/async_task.hpp"
++#include "host/posix/firewall_ingress.hpp"
+ #include "lib/spinel/spinel_driver.hpp"
+ 
+ namespace otbr {
+@@ -146,6 +147,8 @@ void NcpHost::Init(void)
+ #if OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
+     mNcpSpinel.BorderRoutingSetDhcp6PdEnabled(true);
+ #endif
++    // NAT64 prefix management on NCP is enabled after SPINEL_PROP_INFRA_IF_STATE is first set
++    // (see NcpSpinel::SetInfraIf) so the NCP sees infra before BORDER_ROUTER_NAT64_ENABLE.
+     mIsInitialized = true;
+ }
+ 
+@@ -393,13 +396,36 @@ void NcpHost::SetMdnsPublisher(Mdns::Publisher *aPublisher)
+ }
+ #endif
+ 
+-#if OTBR_ENABLE_SRP_ADVERTISING_PROXY
++#if OTBR_ENABLE_MDNS && (OTBR_ENABLE_SRP_ADVERTISING_PROXY || OTBR_ENABLE_DNSSD_PLAT)
+ void NcpHost::HandleMdnsState(Mdns::Publisher::State aState)
+ {
+     mNcpSpinel.DnssdSetState(aState);
+ }
+ #endif
+ 
++#if OTBR_ENABLE_DNSSD_PLAT
++void NcpHost::NotifyDnssdPlatformStateToNcp(otPlatDnssdState aState)
++{
++#if OTBR_ENABLE_MDNS && (OTBR_ENABLE_SRP_ADVERTISING_PROXY || OTBR_ENABLE_DNSSD_PLAT)
++    Mdns::Publisher::State mdnsState =
++        (aState == OT_PLAT_DNSSD_READY) ? Mdns::Publisher::State::kReady : Mdns::Publisher::State::kIdle;
++    mNcpSpinel.DnssdSetState(mdnsState);
++#endif
++}
++#endif
++
++#if OTBR_ENABLE_TREL
++void NcpHost::SetTrelStateChangedCallback(NcpSpinel::TrelStateChangedCallback aCallback)
++{
++    mNcpSpinel.SetTrelStateChangedCallback(aCallback);
++}
++
++otError NcpHost::SetTrelHostUdpPort(bool aEnabled, uint16_t aHostPort)
++{
++    return mNcpSpinel.SetTrelHostUdpPort(aEnabled, aHostPort);
++}
++#endif
++
+ otbrError NcpHost::UdpForward(const uint8_t      *aUdpPayload,
+                               uint16_t            aLength,
+                               const otIp6Address &aRemoteAddr,
+@@ -443,6 +469,11 @@ otbrError NcpHost::Ip6Send(const uint8_t *aData, uint16_t aLength)
+     return mNcpSpinel.Ip6Send(aData, aLength);
+ }
+ 
++void NcpHost::HandleThreadInterfaceIp6UnicastAddressesUpdated(const std::vector<Ip6AddressInfo> &aAddrInfos)
++{
++    RefreshIngressAllowDstFromThreadUnicastAddrs(aAddrInfos);
++}
++
+ otbrError NcpHost::Ip6MulAddrUpdateSubscription(const otIp6Address &aAddress, bool aIsAdded)
+ {
+     return mNcpSpinel.Ip6MulAddrUpdateSubscription(aAddress, aIsAdded);
+diff --git a/src/host/ncp_host.hpp b/src/host/ncp_host.hpp
+index 45ad7aea10cc945786d0453f54a5eb5982de739a..7f0ccdd2784a3973a881fd2bed1a9497167a504f 100644
+--- a/src/host/ncp_host.hpp
++++ b/src/host/ncp_host.hpp
+@@ -34,6 +34,8 @@
+ #ifndef OTBR_AGENT_NCP_HOST_HPP_
+ #define OTBR_AGENT_NCP_HOST_HPP_
+ 
++#include <openthread/platform/dnssd.h>
++
+ #include "lib/spinel/coprocessor_type.h"
+ #include "lib/spinel/spinel_driver.hpp"
+ 
+@@ -82,7 +84,7 @@ class NcpHost : public MainloopProcessor,
+                 public NcpNetworkProperties,
+                 public Netif::Dependencies,
+                 public InfraIf::Dependencies
+-#if OTBR_ENABLE_SRP_ADVERTISING_PROXY
++#if OTBR_ENABLE_MDNS && (OTBR_ENABLE_SRP_ADVERTISING_PROXY || OTBR_ENABLE_DNSSD_PLAT)
+     ,
+                 public Mdns::StateObserver
+ #endif
+@@ -151,6 +153,14 @@ public:
+     void SetMdnsPublisher(Mdns::Publisher *aPublisher);
+ #endif
+ 
++#if OTBR_ENABLE_DNSSD_PLAT
++    void NotifyDnssdPlatformStateToNcp(otPlatDnssdState aState);
++#endif
++#if OTBR_ENABLE_TREL
++    void    SetTrelStateChangedCallback(NcpSpinel::TrelStateChangedCallback aCallback);
++    otError SetTrelHostUdpPort(bool aEnabled, uint16_t aHostPort);
++#endif
++
+     void InitNetifCallbacks(Netif &aNetif);
+     void InitInfraIfCallbacks(InfraIf &aInfraIf);
+     void SetHostPowerState(uint8_t aPowerState, const AsyncResultReceiver &aReceiver);
+@@ -165,7 +175,7 @@ public:
+ #endif
+ 
+ private:
+-#if OTBR_ENABLE_SRP_ADVERTISING_PROXY
++#if OTBR_ENABLE_MDNS && (OTBR_ENABLE_SRP_ADVERTISING_PROXY || OTBR_ENABLE_DNSSD_PLAT)
+     void HandleMdnsState(Mdns::Publisher::State aState) override;
+ #endif
+     otbrError UdpForward(const uint8_t      *aUdpPayload,
+@@ -176,6 +186,7 @@ private:
+ 
+     otbrError Ip6Send(const uint8_t *aData, uint16_t aLength) override;
+     otbrError Ip6MulAddrUpdateSubscription(const otIp6Address &aAddress, bool aIsAdded) override;
++    void      HandleThreadInterfaceIp6UnicastAddressesUpdated(const std::vector<Ip6AddressInfo> &aAddrInfos) override;
+     otbrError SetInfraIf(uint32_t                       aInfraIfIndex,
+                          bool                           aIsRunning,
+                          const std::vector<Ip6Address> &aIp6Addresses) override;
+diff --git a/src/host/ncp_spinel.cpp b/src/host/ncp_spinel.cpp
+index c95237f43e5b8339271fd0803b6c4193a6db99ab..8899ce6c7f1e39d2d7e08e96f94a61686ffb2c4a 100644
+--- a/src/host/ncp_spinel.cpp
++++ b/src/host/ncp_spinel.cpp
+@@ -42,6 +42,9 @@
+ #include "common/code_utils.hpp"
+ #include "common/logging.hpp"
+ #include "host/posix/dnssd.hpp"
++#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_NAT64_TAYGA
++#include "host/posix/nat64_tayga_host.hpp"
++#endif
+ #include "lib/spinel/spinel.h"
+ #include "lib/spinel/spinel_decoder.hpp"
+ #include "lib/spinel/spinel_driver.hpp"
+@@ -68,6 +71,9 @@ NcpSpinel::NcpSpinel(void)
+ #if OTBR_ENABLE_DNSSD_PLAT
+     , mDiscoveryProxyId(0)
+ #endif
++#if OTBR_ENABLE_TREL
++    , mTrelThreadUdpPort(0)
++#endif
+ {
+     std::fill_n(mWaitingKeyTable, SPINEL_PROP_LAST_STATUS, sizeof(mWaitingKeyTable));
+     memset(mCmdTable, 0, sizeof(mCmdTable));
+@@ -274,6 +280,9 @@ void NcpSpinel::SrpServerSetEnabled(bool aEnabled)
+     }
+ }
+ 
++#endif // OTBR_ENABLE_SRP_ADVERTISING_PROXY
++
++#if OTBR_ENABLE_MDNS && (OTBR_ENABLE_SRP_ADVERTISING_PROXY || OTBR_ENABLE_DNSSD_PLAT)
+ void NcpSpinel::DnssdSetState(Mdns::Publisher::State aState)
+ {
+     otError          error;
+@@ -286,7 +295,46 @@ void NcpSpinel::DnssdSetState(Mdns::Publisher::State aState)
+         otbrLogWarning("Failed to call DnssdSetState, %s", otThreadErrorToString(error));
+     }
+ }
+-#endif // OTBR_ENABLE_SRP_ADVERTISING_PROXY
++#endif
++
++#if OTBR_ENABLE_TREL
++void NcpSpinel::SetTrelStateChangedCallback(const TrelStateChangedCallback &aCallback)
++{
++    mTrelStateChangedCallback = aCallback;
++
++    otbrLogInfo("SetTrelStateChangedCallback: enabling TREL on NCP (SPINEL_PROP_TREL_USER_ENABLE)");
++    if (SetProperty(SPINEL_PROP_TREL_USER_ENABLE,
++                    [](ot::Spinel::Encoder &aEncoder) { return aEncoder.WriteBool(true); }) != OT_ERROR_NONE)
++    {
++        otbrLogWarning("Failed to set TREL user enable on NCP");
++    }
++
++    // Pull current TREL state so the UDP proxy starts when the NCP already had TREL enabled
++    // (otbr-only restart without an NCP reset does not emit a TREL_STATE notify).
++    SuccessOrDie(GetProperty(SPINEL_PROP_TREL_STATE), "Failed to get TREL state");
++}
++
++otError NcpSpinel::SetTrelHostUdpPort(bool aEnabled, uint16_t aHostPort)
++{
++    otError      error        = OT_ERROR_NONE;
++    EncodingFunc encodingFunc = [aEnabled, aHostPort](ot::Spinel::Encoder &aEncoder) {
++        otError encErr = OT_ERROR_NONE;
++        SuccessOrExit(encErr = aEncoder.WriteBool(aEnabled));
++        SuccessOrExit(encErr = aEncoder.WriteUint16(aHostPort));
++    exit:
++        return encErr;
++    };
++
++    otbrLogInfo("SetTrelHostUdpPort: enabled=%s hostUdpPort=%u", aEnabled ? "true" : "false", aHostPort);
++    error = SetProperty(SPINEL_PROP_TREL_STATE, encodingFunc);
++    if (error != OT_ERROR_NONE)
++    {
++        otbrLogWarning("Failed to set TREL host UDP port on NCP, %s", otThreadErrorToString(error));
++    }
++
++    return error;
++}
++#endif
+ 
+ void NcpSpinel::SetBorderAgentMeshCoPServiceChangedCallback(const BorderAgentMeshCoPServiceChangedCallback &aCallback)
+ {
+@@ -530,6 +578,7 @@ void NcpSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, ui
+     }
+ 
+     case SPINEL_PROP_STREAM_NET:
++    case SPINEL_PROP_STREAM_NET_INSECURE:
+     {
+         const uint8_t *data;
+         uint16_t       dataLen;
+@@ -614,13 +663,40 @@ void NcpSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, ui
+         break;
+     }
+ 
++#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_NAT64_TAYGA
++    case SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX:
++    {
++        otIp6Prefix prefix;
++
++        SuccessOrExit(ParseNat64FavoredPrefix(aBuffer, aLength, prefix) == OT_ERROR_NONE, error = OTBR_ERROR_PARSE);
++        SyncNat64Tayga(prefix);
++        break;
++    }
++#endif
++
++#if OTBR_ENABLE_TREL
++    case SPINEL_PROP_TREL_STATE:
++    {
++        bool                enabled;
++        uint16_t            port;
++        ot::Spinel::Decoder decoder;
++
++        decoder.Init(aBuffer, aLength);
++        SuccessOrExit(decoder.ReadBool(enabled), error = OTBR_ERROR_PARSE);
++        SuccessOrExit(decoder.ReadUint16(port), error = OTBR_ERROR_PARSE);
++        otbrLogInfo("NCP TREL_STATE notify: enabled=%s threadUdpPort=%u", enabled ? "true" : "false", port);
++        SafeInvoke(mTrelStateChangedCallback, enabled, port);
++        break;
++    }
++#endif
++
+     default:
+         otbrLogWarning("Received unrecognized key: %u", aKey);
+         break;
+     }
+ 
+ exit:
+-    otbrLogResult(error, "%s, Property:%s", __FUNCTION__, spinel_prop_key_to_cstr(aKey));
++    otbrLogResult(error, "%s, key: %u, Property:%s", __FUNCTION__, aKey, spinel_prop_key_to_cstr(aKey));
+     return;
+ }
+ 
+@@ -676,7 +752,7 @@ void NcpSpinel::HandleValueInserted(spinel_prop_key_t aKey, const uint8_t *aBuff
+         otPlatDnssdService           service;
+         Mdns::Publisher::SubTypeList subTypeList;
+         const char                  *subTypeArray[kMaxSubTypes];
+-        uint16_t                     subTypeCount;
++        uint16_t                     subTypeCount = kMaxSubTypes;
+         Mdns::Publisher::TxtData     txtData;
+         otPlatDnssdRequestId         requestId;
+         const uint8_t               *callbackData;
+@@ -684,7 +760,8 @@ void NcpSpinel::HandleValueInserted(spinel_prop_key_t aKey, const uint8_t *aBuff
+         std::vector<uint8_t>         callbackDataCopy;
+ 
+         SuccessOrExit(ot::Spinel::DecodeDnssdService(decoder, service, subTypeArray, subTypeCount, requestId,
+-                                                     callbackData, callbackDataSize));
++                                                     callbackData, callbackDataSize),
++                      error = OTBR_ERROR_PARSE);
+         for (uint16_t i = 0; i < subTypeCount; i++)
+         {
+             subTypeList.push_back(subTypeArray[i]);
+@@ -734,7 +811,81 @@ void NcpSpinel::HandleValueInserted(spinel_prop_key_t aKey, const uint8_t *aBuff
+                                                      [this, callbackDataCopy](const otPlatDnssdBrowseResult &aResult) {
+                                                          SendDnssdBrowseResult(aResult, callbackDataCopy);
+                                                      },
+-                                                     mDiscoveryProxyId++));
++                                                     AllocateDnssdStableId(callbackDataCopy)));
++        break;
++    }
++    case SPINEL_PROP_DNSSD_SRV_RESOLVER:
++    {
++        otPlatDnssdSrvResolver srvResolver;
++        const uint8_t         *callbackData;
++        uint16_t               callbackDataSize;
++        std::vector<uint8_t>   callbackDataCopy;
++
++        SuccessOrExit(ot::Spinel::DecodeDnssdSrvResolver(decoder, srvResolver, callbackData, callbackDataSize));
++        callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
++
++        DnssdPlatform::Get().StartServiceResolver(srvResolver,
++                                                  std::make_shared<DnssdPlatform::StdSrvCallback>(
++                                                      [this, callbackDataCopy](const otPlatDnssdSrvResult &aResult) {
++                                                          SendDnssdSrvResult(aResult, callbackDataCopy);
++                                                      },
++                                                      AllocateDnssdStableId(callbackDataCopy)));
++        break;
++    }
++    case SPINEL_PROP_DNSSD_TXT_RESOLVER:
++    {
++        otPlatDnssdTxtResolver txtResolver;
++        const uint8_t         *callbackData;
++        uint16_t               callbackDataSize;
++        std::vector<uint8_t>   callbackDataCopy;
++
++        SuccessOrExit(ot::Spinel::DecodeDnssdTxtResolver(decoder, txtResolver, callbackData, callbackDataSize));
++        callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
++
++        DnssdPlatform::Get().StartTxtResolver(txtResolver,
++                                              std::make_shared<DnssdPlatform::StdTxtCallback>(
++                                                  [this, callbackDataCopy](const otPlatDnssdTxtResult &aResult) {
++                                                      SendDnssdTxtResult(aResult, callbackDataCopy);
++                                                  },
++                                                  AllocateDnssdStableId(callbackDataCopy)));
++        break;
++    }
++    case SPINEL_PROP_DNSSD_IP6_ADDRESS_RESOLVER:
++    {
++        otPlatDnssdAddressResolver addrResolver;
++        const uint8_t             *callbackData;
++        uint16_t                   callbackDataSize;
++        std::vector<uint8_t>       callbackDataCopy;
++
++        SuccessOrExit(ot::Spinel::DecodeDnssdAddressResolver(decoder, addrResolver, callbackData, callbackDataSize));
++        callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
++
++        DnssdPlatform::Get().StartIp6AddressResolver(
++            addrResolver, std::make_shared<DnssdPlatform::StdAddressCallback>(
++                              [this, callbackDataCopy](const otPlatDnssdAddressResult &aResult) {
++                                  SendDnssdAddressResult(SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT, aResult,
++                                                         callbackDataCopy);
++                              },
++                              AllocateDnssdStableId(callbackDataCopy)));
++        break;
++    }
++    case SPINEL_PROP_DNSSD_IP4_ADDRESS_RESOLVER:
++    {
++        otPlatDnssdAddressResolver addrResolver;
++        const uint8_t             *callbackData;
++        uint16_t                   callbackDataSize;
++        std::vector<uint8_t>       callbackDataCopy;
++
++        SuccessOrExit(ot::Spinel::DecodeDnssdAddressResolver(decoder, addrResolver, callbackData, callbackDataSize));
++        callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
++
++        DnssdPlatform::Get().StartIp4AddressResolver(
++            addrResolver, std::make_shared<DnssdPlatform::StdAddressCallback>(
++                              [this, callbackDataCopy](const otPlatDnssdAddressResult &aResult) {
++                                  SendDnssdAddressResult(SPINEL_PROP_DNSSD_IP4_ADDRESS_RESULT, aResult,
++                                                         callbackDataCopy);
++                              },
++                              AllocateDnssdStableId(callbackDataCopy)));
+         break;
+     }
+ #endif // OTBR_ENABLE_DNSSD_PLAT
+@@ -788,18 +939,19 @@ void NcpSpinel::HandleValueRemoved(spinel_prop_key_t aKey, const uint8_t *aBuffe
+     {
+         otPlatDnssdService   service;
+         const char          *subTypeArray[kMaxSubTypes];
+-        uint16_t             subTypeCount;
++        uint16_t             subTypeCount = kMaxSubTypes;
+         otPlatDnssdRequestId requestId;
+         const uint8_t       *callbackData;
+         uint16_t             callbackDataSize;
+         std::vector<uint8_t> callbackDataCopy;
+ 
+         SuccessOrExit(ot::Spinel::DecodeDnssdService(decoder, service, subTypeArray, subTypeCount, requestId,
+-                                                     callbackData, callbackDataSize));
++                                                     callbackData, callbackDataSize),
++                      error = OTBR_ERROR_PARSE);
+         callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
+ 
+         mPublisher->UnpublishService(
+-            service.mHostName, service.mServiceType, [this, requestId, callbackDataCopy](otbrError aError) {
++            service.mServiceInstance, service.mServiceType, [this, requestId, callbackDataCopy](otbrError aError) {
+                 OT_UNUSED_VARIABLE(SendDnssdResult(requestId, callbackDataCopy, OtbrErrorToOtError(aError)));
+             });
+         break;
+@@ -821,6 +973,100 @@ void NcpSpinel::HandleValueRemoved(spinel_prop_key_t aKey, const uint8_t *aBuffe
+         break;
+     }
+ #endif // OTBR_ENABLE_SRP_ADVERTISING_PROXY
++#if OTBR_ENABLE_DNSSD_PLAT
++    case SPINEL_PROP_DNSSD_BROWSER:
++    {
++        otPlatDnssdBrowser   browser;
++        const uint8_t       *callbackData;
++        uint16_t             callbackDataSize;
++        std::vector<uint8_t> callbackDataCopy;
++        uint64_t             stableId;
++
++        SuccessOrExit(ot::Spinel::DecodeDnssdBrowser(decoder, browser, callbackData, callbackDataSize));
++        callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
++
++        VerifyOrExit(ReleaseDnssdStableId(callbackDataCopy, stableId), error = OTBR_ERROR_NOT_FOUND);
++
++        DnssdPlatform::Get().StopServiceBrowser(
++            browser, DnssdPlatform::StdBrowseCallback(
++                         [](const DnssdPlatform::BrowseResult &aResult) { OT_UNUSED_VARIABLE(aResult); }, stableId));
++        break;
++    }
++    case SPINEL_PROP_DNSSD_SRV_RESOLVER:
++    {
++        otPlatDnssdSrvResolver srvResolver;
++        const uint8_t         *callbackData;
++        uint16_t               callbackDataSize;
++        std::vector<uint8_t>   callbackDataCopy;
++        uint64_t               stableId;
++
++        SuccessOrExit(ot::Spinel::DecodeDnssdSrvResolver(decoder, srvResolver, callbackData, callbackDataSize));
++        callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
++
++        VerifyOrExit(ReleaseDnssdStableId(callbackDataCopy, stableId), error = OTBR_ERROR_NOT_FOUND);
++
++        DnssdPlatform::Get().StopServiceResolver(
++            srvResolver, DnssdPlatform::StdSrvCallback(
++                             [](const DnssdPlatform::SrvResult &aResult) { OT_UNUSED_VARIABLE(aResult); }, stableId));
++        break;
++    }
++    case SPINEL_PROP_DNSSD_TXT_RESOLVER:
++    {
++        otPlatDnssdTxtResolver txtResolver;
++        const uint8_t         *callbackData;
++        uint16_t               callbackDataSize;
++        std::vector<uint8_t>   callbackDataCopy;
++        uint64_t               stableId;
++
++        SuccessOrExit(ot::Spinel::DecodeDnssdTxtResolver(decoder, txtResolver, callbackData, callbackDataSize));
++        callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
++
++        VerifyOrExit(ReleaseDnssdStableId(callbackDataCopy, stableId), error = OTBR_ERROR_NOT_FOUND);
++
++        DnssdPlatform::Get().StopTxtResolver(
++            txtResolver, DnssdPlatform::StdTxtCallback(
++                             [](const DnssdPlatform::TxtResult &aResult) { OT_UNUSED_VARIABLE(aResult); }, stableId));
++        break;
++    }
++    case SPINEL_PROP_DNSSD_IP6_ADDRESS_RESOLVER:
++    {
++        otPlatDnssdAddressResolver addrResolver;
++        const uint8_t             *callbackData;
++        uint16_t                   callbackDataSize;
++        std::vector<uint8_t>       callbackDataCopy;
++        uint64_t                   stableId;
++
++        SuccessOrExit(ot::Spinel::DecodeDnssdAddressResolver(decoder, addrResolver, callbackData, callbackDataSize));
++        callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
++
++        VerifyOrExit(ReleaseDnssdStableId(callbackDataCopy, stableId), error = OTBR_ERROR_NOT_FOUND);
++
++        DnssdPlatform::Get().StopIp6AddressResolver(
++            addrResolver,
++            DnssdPlatform::StdAddressCallback(
++                [](const DnssdPlatform::AddressResult &aResult) { OT_UNUSED_VARIABLE(aResult); }, stableId));
++        break;
++    }
++    case SPINEL_PROP_DNSSD_IP4_ADDRESS_RESOLVER:
++    {
++        otPlatDnssdAddressResolver addrResolver;
++        const uint8_t             *callbackData;
++        uint16_t                   callbackDataSize;
++        std::vector<uint8_t>       callbackDataCopy;
++        uint64_t                   stableId;
++
++        SuccessOrExit(ot::Spinel::DecodeDnssdAddressResolver(decoder, addrResolver, callbackData, callbackDataSize));
++        callbackDataCopy.assign(callbackData, callbackData + callbackDataSize);
++
++        VerifyOrExit(ReleaseDnssdStableId(callbackDataCopy, stableId), error = OTBR_ERROR_NOT_FOUND);
++
++        DnssdPlatform::Get().StopIp4AddressResolver(
++            addrResolver,
++            DnssdPlatform::StdAddressCallback(
++                [](const DnssdPlatform::AddressResult &aResult) { OT_UNUSED_VARIABLE(aResult); }, stableId));
++        break;
++    }
++#endif // OTBR_ENABLE_DNSSD_PLAT
+     case SPINEL_PROP_BACKBONE_ROUTER_MULTICAST_LISTENER:
+     {
+         const otIp6Address *addr;
+@@ -865,6 +1111,31 @@ otbrError NcpSpinel::HandleResponseForPropGet(spinel_tid_t      aTid,
+         SafeInvoke(mBorderAgentMeshCoPServiceChangedCallback, isActive, port, data, dataLen);
+         break;
+     }
++#if OTBR_ENABLE_TREL
++    case SPINEL_PROP_TREL_STATE:
++    {
++        bool                enabled;
++        uint16_t            port;
++        ot::Spinel::Decoder decoder;
++
++        decoder.Init(aData, aLength);
++        SuccessOrExit(decoder.ReadBool(enabled), error = OTBR_ERROR_PARSE);
++        SuccessOrExit(decoder.ReadUint16(port), error = OTBR_ERROR_PARSE);
++        SafeInvoke(mTrelStateChangedCallback, enabled, port);
++        break;
++    }
++#endif
++
++#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_NAT64_TAYGA
++    case SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX:
++    {
++        otIp6Prefix prefix;
++
++        SuccessOrExit(ParseNat64FavoredPrefix(aData, aLength, prefix) == OT_ERROR_NONE, error = OTBR_ERROR_PARSE);
++        SyncNat64Tayga(prefix);
++        break;
++    }
++#endif
+ 
+     default:
+         VerifyOrExit(aKey == mWaitingKeyTable[aTid], error = OTBR_ERROR_INVALID_STATE);
+@@ -927,6 +1198,7 @@ otbrError NcpSpinel::HandleResponseForPropSet(spinel_tid_t      aTid,
+         break;
+ 
+     case SPINEL_PROP_STREAM_NET:
++    case SPINEL_PROP_STREAM_NET_INSECURE:
+         break;
+ 
+     case SPINEL_PROP_STREAM_CLI:
+@@ -971,7 +1243,15 @@ otbrError NcpSpinel::HandleResponseForPropSet(spinel_tid_t      aTid,
+         break;
+ 
+     default:
+-        VerifyOrExit(aKey == mWaitingKeyTable[aTid], error = OTBR_ERROR_INVALID_STATE);
++        if (aKey == SPINEL_PROP_LAST_STATUS)
++        {
++            SuccessOrExit(error = SpinelDataUnpack(aData, aLength, SPINEL_DATATYPE_UINT_PACKED_S, &status));
++            VerifyOrExit(status == SPINEL_STATUS_OK, error = OTBR_ERROR_OPENTHREAD);
++        }
++        else
++        {
++            VerifyOrExit(aKey == mWaitingKeyTable[aTid], error = OTBR_ERROR_INVALID_STATE);
++        }
+         break;
+     }
+ 
+@@ -1255,6 +1535,28 @@ exit:
+     return error;
+ }
+ 
++#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_NAT64_TAYGA
++otError NcpSpinel::ParseNat64FavoredPrefix(const uint8_t *aBuf, uint16_t aLen, otIp6Prefix &aPrefix)
++{
++    otError             error = OT_ERROR_NONE;
++    const otIp6Address *addr;
++    uint8_t             prefixLength;
++    ot::Spinel::Decoder decoder;
++
++    VerifyOrExit(aBuf != nullptr, error = OT_ERROR_INVALID_ARGS);
++
++    decoder.Init(aBuf, aLen);
++    SuccessOrExit(error = decoder.ReadIp6Address(addr));
++    SuccessOrExit(error = decoder.ReadUint8(prefixLength));
++
++    memcpy(&aPrefix.mPrefix, addr, sizeof(otIp6Address));
++    aPrefix.mLength = prefixLength;
++
++exit:
++    return error;
++}
++#endif // OTBR_ENABLE_NAT64 && OTBR_ENABLE_NAT64_TAYGA
++
+ otError NcpSpinel::ParseOperationalDatasetTlvs(const uint8_t            *aBuf,
+                                                uint16_t                  aLen,
+                                                otOperationalDatasetTlvs &aDatasetTlvs)
+@@ -1360,6 +1662,80 @@ otError NcpSpinel::SendDnssdBrowseResult(const otPlatDnssdBrowseResult &aResult,
+ 
+     return error;
+ }
++
++otError NcpSpinel::SendDnssdSrvResult(const otPlatDnssdSrvResult &aResult, const std::vector<uint8_t> &aCallbackData)
++{
++    otError      error        = OT_ERROR_NONE;
++    EncodingFunc encodingFunc = [&aResult, &aCallbackData](ot::Spinel::Encoder &aEncoder) {
++        return EncodeDnssdSrvResult(aEncoder, aResult, aCallbackData.data(), aCallbackData.size());
++    };
++
++    error = SetProperty(SPINEL_PROP_DNSSD_SRV_RESULT, encodingFunc);
++    if (error != OT_ERROR_NONE)
++    {
++        otbrLogWarning("Failed to send DnssdSrvResult: %s", otThreadErrorToString(error));
++    }
++
++    return error;
++}
++
++otError NcpSpinel::SendDnssdTxtResult(const otPlatDnssdTxtResult &aResult, const std::vector<uint8_t> &aCallbackData)
++{
++    otError      error        = OT_ERROR_NONE;
++    EncodingFunc encodingFunc = [&aResult, &aCallbackData](ot::Spinel::Encoder &aEncoder) {
++        return EncodeDnssdTxtResult(aEncoder, aResult, aCallbackData.data(), aCallbackData.size());
++    };
++
++    error = SetProperty(SPINEL_PROP_DNSSD_TXT_RESULT, encodingFunc);
++
++    if (error != OT_ERROR_NONE)
++    {
++        otbrLogWarning("Failed to send DnssdTxtResult: %s", otThreadErrorToString(error));
++    }
++
++    return error;
++}
++
++otError NcpSpinel::SendDnssdAddressResult(spinel_prop_key_t               aKey,
++                                          const otPlatDnssdAddressResult &aResult,
++                                          const std::vector<uint8_t>     &aCallbackData)
++{
++    otError      error        = OT_ERROR_NONE;
++    EncodingFunc encodingFunc = [&aResult, &aCallbackData](ot::Spinel::Encoder &aEncoder) {
++        return EncodeDnssdAddressResult(aEncoder, aResult, aCallbackData.data(), aCallbackData.size());
++    };
++
++    error = SetProperty(aKey, encodingFunc);
++
++    if (error != OT_ERROR_NONE)
++    {
++        otbrLogWarning("Failed to send DnssdAddressResult: %s", otThreadErrorToString(error));
++    }
++
++    return error;
++}
++
++uint64_t NcpSpinel::AllocateDnssdStableId(const std::vector<uint8_t> &aCallbackData)
++{
++    uint64_t id = mDiscoveryProxyId++;
++
++    mDnssdStableIdByCallbackData[aCallbackData] = id;
++    return id;
++}
++
++bool NcpSpinel::ReleaseDnssdStableId(const std::vector<uint8_t> &aCallbackData, uint64_t &aStableIdOut)
++{
++    auto iter = mDnssdStableIdByCallbackData.find(aCallbackData);
++
++    if (iter == mDnssdStableIdByCallbackData.end())
++    {
++        return false;
++    }
++
++    aStableIdOut = iter->second;
++    mDnssdStableIdByCallbackData.erase(iter);
++    return true;
++}
+ #endif
+ 
+ otbrError NcpSpinel::SetInfraIf(uint32_t aInfraIfIndex, bool aIsRunning, const std::vector<Ip6Address> &aIp6Addresses)
+@@ -1380,6 +1756,10 @@ otbrError NcpSpinel::SetInfraIf(uint32_t aInfraIfIndex, bool aIsRunning, const s
+ 
+     SuccessOrExit(SetProperty(SPINEL_PROP_INFRA_IF_STATE, encodingFunc), error = OTBR_ERROR_OPENTHREAD);
+ 
++#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_BORDER_ROUTING
++    BorderRoutingSetNat64Enabled(true);
++#endif
++
+ exit:
+     return error;
+ }
+@@ -1608,5 +1988,20 @@ exit:
+ }
+ #endif // OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
+ 
++#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_BORDER_ROUTING
++void NcpSpinel::BorderRoutingSetNat64Enabled(bool aEnabled)
++{
++    otError      error;
++    EncodingFunc encodingFunc = [aEnabled](ot::Spinel::Encoder &aEncoder) { return aEncoder.WriteBool(aEnabled); };
++
++    error = SetProperty(SPINEL_PROP_BORDER_ROUTER_NAT64_ENABLE, encodingFunc);
++    if (error != OT_ERROR_NONE)
++    {
++        otbrLogWarning("Failed to call BorderRoutingSetNat64Enabled, %s (aEnabled: %d)", otThreadErrorToString(error),
++                       aEnabled);
++    }
++}
++#endif // OTBR_ENABLE_NAT64 && OTBR_ENABLE_BORDER_ROUTING
++
+ } // namespace Host
+ } // namespace otbr
+diff --git a/src/host/ncp_spinel.hpp b/src/host/ncp_spinel.hpp
+index 6e18d40476c298473299833c1a4822cfd72757d8..c0c9cdc65edf9fabcf51ae5cb9af20dce882c38d 100644
+--- a/src/host/ncp_spinel.hpp
++++ b/src/host/ncp_spinel.hpp
+@@ -35,10 +35,13 @@
+ #define OTBR_AGENT_NCP_SPINEL_HPP_
+ 
+ #include <functional>
++#include <map>
+ #include <memory>
+ 
+ #include <vector>
+ 
++#include "openthread-br/config.h"
++
+ #include <openthread/backbone_router_ftd.h>
+ #include <openthread/border_agent.h>
+ #if OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
+@@ -347,13 +350,16 @@ public:
+      */
+     void SrpServerSetAutoEnableMode(bool aEnabled);
+ 
++#endif // OTBR_ENABLE_SRP_ADVERTISING_PROXY
++
++#if OTBR_ENABLE_MDNS && (OTBR_ENABLE_SRP_ADVERTISING_PROXY || OTBR_ENABLE_DNSSD_PLAT)
+     /**
+      * This method sets the dnssd state on NCP.
+      *
+      * @param[in] aState  The dnssd state.
+      */
+     void DnssdSetState(Mdns::Publisher::State aState);
+-#endif // OTBR_ENABLE_SRP_ADVERTISING_PROXY
++#endif
+ 
+ #if OTBR_ENABLE_MDNS
+     /**
+@@ -380,6 +386,18 @@ public:
+      */
+     void AddEphemeralKeyStateChangedCallback(const EphemeralKeyStateChangedCallback &aCallback);
+ 
++#if OTBR_ENABLE_TREL
++    /**
++     * Invoked when the NCP signals TREL state (`SPINEL_PROP_TREL_STATE`): `aThreadPort` is the UDP port on the
++     * NCP/Thread side to associate with the host UDP proxy.
++     */
++    using TrelStateChangedCallback = std::function<void(bool aEnabled, uint16_t aThreadPort)>;
++
++    void SetTrelStateChangedCallback(const TrelStateChangedCallback &aCallback);
++
++    otError SetTrelHostUdpPort(bool aEnabled, uint16_t aHostPort);
++#endif
++
+     /**
+      * This method forwards a UDP packet to the NCP.
+      *
+@@ -489,6 +507,20 @@ public:
+     otbrError BorderRoutingProcessDhcp6PdPrefix(const otBorderRoutingPrefixTableEntry *aPrefixInfo);
+ #endif
+ 
++#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_BORDER_ROUTING
++    /**
++     * This method enables/disables NAT64 prefix management on NCP.
++     *
++     * With border-routing NAT64 enabled on the co-processor, the NCP discovers NAT64
++     * prefixes on the infrastructure link (for example from Router Advertisements) and
++     * publishes them in Thread Network Data. Packet translation is outside the NCP when
++     * the NAT64 translator is not built or enabled on the co-processor.
++     *
++     * @param[in] aEnabled  A boolean to enable/disable NAT64 prefix management.
++     */
++    void BorderRoutingSetNat64Enabled(bool aEnabled);
++#endif
++
+ private:
+     using FailureHandler = std::function<void(otError)>;
+ 
+@@ -580,9 +612,19 @@ private:
+                                   const otIp6Address *&aPeerAddr,
+                                   uint16_t            &aPeerPort,
+                                   uint16_t            &aLocalPort);
++#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_NAT64_TAYGA
++    otError ParseNat64FavoredPrefix(const uint8_t *aBuf, uint16_t aLen, otIp6Prefix &aPrefix);
++#endif
+     otError SendDnssdResult(otPlatDnssdRequestId aRequestId, const std::vector<uint8_t> &aCallbackData, otError aError);
+ #if OTBR_ENABLE_DNSSD_PLAT
+-    otError SendDnssdBrowseResult(const otPlatDnssdBrowseResult &aResult, const std::vector<uint8_t> &aCallbackData);
++    otError  SendDnssdBrowseResult(const otPlatDnssdBrowseResult &aResult, const std::vector<uint8_t> &aCallbackData);
++    otError  SendDnssdSrvResult(const otPlatDnssdSrvResult &aResult, const std::vector<uint8_t> &aCallbackData);
++    otError  SendDnssdTxtResult(const otPlatDnssdTxtResult &aResult, const std::vector<uint8_t> &aCallbackData);
++    otError  SendDnssdAddressResult(spinel_prop_key_t               aKey,
++                                    const otPlatDnssdAddressResult &aResult,
++                                    const std::vector<uint8_t>     &aCallbackData);
++    uint64_t AllocateDnssdStableId(const std::vector<uint8_t> &aCallbackData);
++    bool     ReleaseDnssdStableId(const std::vector<uint8_t> &aCallbackData, uint64_t &aStableIdOut);
+ #endif
+ 
+     ot::Spinel::SpinelDriver *mSpinelDriver;
+@@ -606,7 +648,8 @@ private:
+     otbr::Mdns::Publisher *mPublisher;
+ #endif
+ #if OTBR_ENABLE_DNSSD_PLAT
+-    uint64_t mDiscoveryProxyId;
++    uint64_t                                 mDiscoveryProxyId;
++    std::map<std::vector<uint8_t>, uint64_t> mDnssdStableIdByCallbackData;
+ #endif
+ 
+     AsyncTaskPtr mDatasetSetActiveTask;
+@@ -629,6 +672,11 @@ private:
+     BackboneRouterStateChangedCallback       mBackboneRouterStateChangedCallback;
+     BackboneRouterMulticastListenerCallback  mBackboneRouterMulticastListenerCallback;
+     EphemeralKeyStateChangedCallback         mEphemeralKeyStateChangedCallback;
++#if OTBR_ENABLE_TREL
++    TrelStateChangedCallback mTrelStateChangedCallback;
++    /// TREL stack UDP port on the NCP (from `SPINEL_PROP_TREL_STATE`); 0 when TREL is off or not yet known.
++    uint16_t mTrelThreadUdpPort;
++#endif
+ };
+ 
+ } // namespace Host
+diff --git a/src/host/posix/CMakeLists.txt b/src/host/posix/CMakeLists.txt
+index 7742934b094966dda1d710137cc04bcf9a4b924e..3244c58b06068669939bda50002c93ab9e463b54 100644
+--- a/src/host/posix/CMakeLists.txt
++++ b/src/host/posix/CMakeLists.txt
+@@ -33,6 +33,10 @@ add_library(otbr-posix
+     dnssd.cpp
+     entropy.hpp
+     entropy.cpp
++    firewall_ingress.hpp
++    firewall_ingress.cpp
++    nat64_tayga_host.hpp
++    nat64_tayga_host.cpp
+     infra_if.hpp
+     infra_if.cpp
+     multicast_routing_manager.hpp
+@@ -45,7 +49,11 @@ add_library(otbr-posix
+     udp_proxy.hpp
+ )
+ 
+-target_link_libraries(otbr-posix
++target_link_libraries(otbr-posix PRIVATE
+     otbr-common
+     otbr-utils
+ )
++
++if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND DEFINED OT_FIREWALL AND OT_FIREWALL)
++    target_compile_definitions(otbr-posix PRIVATE OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE=1)
++endif()
+diff --git a/src/host/posix/dnssd.cpp b/src/host/posix/dnssd.cpp
+index 0e9857247ffdfb0fa8f0f0abe54cd9e33c878995..2a1b6ea668e6591a062b805a6f1ea454cd271cc9 100644
+--- a/src/host/posix/dnssd.cpp
++++ b/src/host/posix/dnssd.cpp
+@@ -550,6 +550,8 @@ void DnssdPlatform::ProcessIpAddrResolvers(const std::string
+     std::vector<otPlatDnssdAddressAndTtl> addressAndTtls;
+     auto                                  it = mIpAddrResolversMap.find(aHostName);
+ 
++    mResolvedHostInfoCache[DnsName(aHostName)] = aInfo;
++
+     VerifyOrExit(mState == kStateReady);
+ 
+     VerifyOrExit(it != mIpAddrResolversMap.end());
+@@ -573,11 +575,28 @@ exit:
+     return;
+ }
+ 
++void DnssdPlatform::ReplayResolvedHostAddressesIfAny(const DnsName &aDnsName)
++{
++    auto cacheIt = mResolvedHostInfoCache.find(aDnsName);
++
++    VerifyOrExit(mState == kStateReady);
++    VerifyOrExit(cacheIt != mResolvedHostInfoCache.end());
++    VerifyOrExit(!cacheIt->second.mAddresses.empty());
++    VerifyOrExit(mHostSubscriptions.find(aDnsName) != mHostSubscriptions.end());
++
++    ProcessIpAddrResolvers(aDnsName.GetName(), cacheIt->second);
++
++exit:
++    return;
++}
++
+ void DnssdPlatform::StartAddressResolver(const AddressResolver &aAddressResolver, AddressCallbackPtr aCallbackPtr)
+ {
+-    auto &entryList = mIpAddrResolversMap[DnsName(aAddressResolver.mHostName)];
++    DnsName dnsName(aAddressResolver.mHostName);
++
++    mIpAddrResolversMap[dnsName].AddIfAbsent(aAddressResolver.mInfraIfIndex, std::move(aCallbackPtr));
+ 
+-    entryList.AddIfAbsent(aAddressResolver.mInfraIfIndex, std::move(aCallbackPtr));
++    ReplayResolvedHostAddressesIfAny(dnsName);
+ 
+     PostHostSubscriptionUpdateTask();
+ }
+@@ -690,6 +709,7 @@ void DnssdPlatform::ExecuteHostSubscriptionUpdate(void)
+         if (mIpAddrResolversMap.find(dnsName) == mIpAddrResolversMap.end())
+         {
+             mPublisher.UnsubscribeHost(dnsName.GetName());
++            mResolvedHostInfoCache.erase(dnsName);
+             iter = mHostSubscriptions.erase(iter);
+         }
+         else
+diff --git a/src/host/posix/dnssd.hpp b/src/host/posix/dnssd.hpp
+index 9c22f9cc3ef32fbe085409f773de428f75bf4c24..80863954ce6172aaac052945ebac958e139647c7 100644
+--- a/src/host/posix/dnssd.hpp
++++ b/src/host/posix/dnssd.hpp
+@@ -343,13 +343,48 @@ private:
+ 
+         bool IsEmpty(void) { return mEntries.empty(); }
+ 
++        /**
++         * Returns how many registered callbacks should receive results for @p aReportedInfraIfIndex.
++         * A registered index of 0 matches any reported index (NCP may use 0 before infra-if is known).
++         */
++        size_t GetMatchCountForInfraIf(uint64_t aReportedInfraIfIndex) const
++        {
++            size_t n = 0;
++
++            for (const auto &entry : mEntries)
++            {
++                if (InfraIfIndexMatches(entry.first, aReportedInfraIfIndex))
++                {
++                    n++;
++                }
++            }
++            return n;
++        }
++
++        /** Comma-separated registered `mInfraIfIndex` values (0 means wildcard for matching; see
++         * `InfraIfIndexMatches`). */
++        std::string ListRegisteredInfraIfIndices(void) const
++        {
++            std::string s;
++
++            for (const auto &entry : mEntries)
++            {
++                if (!s.empty())
++                {
++                    s += ",";
++                }
++                s += std::to_string(entry.first);
++            }
++            return s.empty() ? std::string("(none)") : s;
++        }
++
+         void InvokeAllCallbacks(uint64_t aInfraIfIndex, CallbackResultType &aResult)
+         {
+             std::vector<CallbackPtrType> copyCallbacks;
+ 
+             for (auto &entry : mEntries)
+             {
+-                if (entry.first == aInfraIfIndex)
++                if (InfraIfIndexMatches(entry.first, aInfraIfIndex))
+                 {
+                     copyCallbacks.push_back(entry.second);
+                 }
+@@ -362,6 +397,11 @@ private:
+         }
+ 
+     private:
++        static bool InfraIfIndexMatches(uint64_t aRegisteredIfIndex, uint64_t aReportedIfIndex)
++        {
++            return aRegisteredIfIndex == aReportedIfIndex || aRegisteredIfIndex == 0;
++        }
++
+         using IteratorType = typename std::vector<RequestType>::iterator;
+ 
+         IteratorType FindEntry(uint64_t aInfraIfIndex, const CallbackType &aCallback)
+@@ -388,6 +428,7 @@ private:
+     void ProcessServiceResolvers(const std::string &aType, const Mdns::Publisher::DiscoveredInstanceInfo &aInfo);
+     void ProcessTxtResolvers(const std::string &aType, const Mdns::Publisher::DiscoveredInstanceInfo &aInfo);
+     void ProcessIpAddrResolvers(const std::string &aHostName, const Mdns::Publisher::DiscoveredHostInfo &aInfo);
++    void ReplayResolvedHostAddressesIfAny(const DnsName &aDnsName);
+ 
+     void StartAddressResolver(const AddressResolver &aAddressResolver, AddressCallbackPtr aCallbackPtr);
+     void StopAddressResolver(const AddressResolver &aAddressResolver, const AddressCallback &aCallback);
+@@ -413,9 +454,10 @@ private:
+     std::map<DnsServiceName, EntryList<TxtEntry>>    mTxtResolversMap;
+     std::map<DnsName, EntryList<AddressEntry>>       mIpAddrResolversMap;
+ 
+-    std::set<DnsServiceType> mServiceTypeSubscriptions;
+-    std::set<DnsServiceName> mServiceNameSubscriptions;
+-    std::set<DnsName>        mHostSubscriptions;
++    std::set<DnsServiceType>                               mServiceTypeSubscriptions;
++    std::set<DnsServiceName>                               mServiceNameSubscriptions;
++    std::set<DnsName>                                      mHostSubscriptions;
++    std::map<DnsName, Mdns::Publisher::DiscoveredHostInfo> mResolvedHostInfoCache;
+ };
+ 
+ } // namespace otbr
+diff --git a/src/host/posix/firewall_ingress.cpp b/src/host/posix/firewall_ingress.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..9c9ad3e4616b71c3c9f297963b1fbd8ab1d51b82
+--- /dev/null
++++ b/src/host/posix/firewall_ingress.cpp
+@@ -0,0 +1,105 @@
++/*
++ *  Copyright (c) 2026, The OpenThread Authors.
++ *  All rights reserved.
++ *
++ *  Redistribution and use in source and binary forms, with or without
++ *  modification, are permitted provided that the following conditions are met:
++ *  1. Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *  2. Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in the
++ *     documentation and/or other materials provided with the distribution.
++ *  3. Neither the name of the copyright holder nor the
++ *     names of its contributors may be used to endorse or promote products
++ *     derived from this software without specific prior written permission.
++ *
++ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ *  POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#define OTBR_LOG_TAG "FIREWALL_INGRESS"
++
++#include "firewall_ingress.hpp"
++
++#include <openthread/ip6.h>
++
++#include <set>
++#include <string>
++#include <vector>
++
++#include "common/code_utils.hpp"
++#include "common/logging.hpp"
++
++#if defined(__linux__) && OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
++namespace ot {
++namespace Posix {
++void ApplyOtbrIngressAllowDstPrefixes(const char *const *aPrefixes, size_t aCount);
++} // namespace Posix
++} // namespace ot
++#endif
++
++namespace otbr {
++
++void RefreshIngressAllowDstFromThreadUnicastAddrs(const std::vector<Ip6AddressInfo> &aAddrs)
++{
++#if defined(__linux__) && OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
++    constexpr uint8_t         kPrefixLen64 = 64;
++    std::set<std::string>     prefixes;
++    std::vector<std::string>  storage;
++    std::vector<const char *> cstrs;
++
++    for (const Ip6AddressInfo &info : aAddrs)
++    {
++        otIp6Prefix prefix;
++        char        prefixBuf[OT_IP6_PREFIX_STRING_SIZE];
++
++        if (info.mPrefixLength != kPrefixLen64)
++        {
++            continue;
++        }
++
++        if (info.mAddress.mFields.m8[0] == 0xff)
++        {
++            continue;
++        }
++
++        if (info.mAddress.mFields.m8[0] == 0xfe && (info.mAddress.mFields.m8[1] & 0xc0) == 0x80)
++        {
++            continue;
++        }
++
++        memcpy(&prefix.mPrefix, &info.mAddress, sizeof(otIp6Address));
++        prefix.mLength = kPrefixLen64;
++        otIp6PrefixToString(&prefix, prefixBuf, sizeof(prefixBuf));
++        prefixes.insert(prefixBuf);
++    }
++
++    storage.reserve(prefixes.size());
++    for (const std::string &p : prefixes)
++    {
++        storage.push_back(p);
++    }
++
++    cstrs.reserve(storage.size());
++    for (const std::string &s : storage)
++    {
++        cstrs.push_back(s.c_str());
++    }
++
++    ot::Posix::ApplyOtbrIngressAllowDstPrefixes(cstrs.data(), cstrs.size());
++    otbrLogDebug("ingress allow-dst refreshed: %zu /64 prefix(es) (NAT64 reply path toward Thread)", cstrs.size());
++#else
++    OTBR_UNUSED_VARIABLE(aAddrs);
++#endif
++}
++
++} // namespace otbr
+diff --git a/src/host/posix/firewall_ingress.hpp b/src/host/posix/firewall_ingress.hpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..f35bcd66afb8d3fde20cebc6e2b49e41fefdfea5
+--- /dev/null
++++ b/src/host/posix/firewall_ingress.hpp
+@@ -0,0 +1,54 @@
++/*
++ *  Copyright (c) 2026, The OpenThread Authors.
++ *  All rights reserved.
++ *
++ *  Redistribution and use in source and binary forms, with or without
++ *  modification, are permitted provided that the following conditions are met:
++ *  1. Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *  2. Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in the
++ *     documentation and/or other materials provided with the distribution.
++ *  3. Neither the name of the copyright holder nor the
++ *     names of its contributors may be used to endorse or promote products
++ *     derived from this software without specific prior written permission.
++ *
++ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ *  POSSIBILITY OF SUCH DAMAGE.
++ */
++
++/**
++ * @file
++ * @brief
++ *   NCP-only refresh of `otbr-ingress-allow-dst` from Thread interface unicast addresses.
++ */
++
++#ifndef OTBR_AGENT_POSIX_FIREWALL_INGRESS_HPP_
++#define OTBR_AGENT_POSIX_FIREWALL_INGRESS_HPP_
++
++#include <vector>
++
++#include "common/types.hpp"
++
++namespace otbr {
++
++/**
++ * Updates the `otbr-ingress-allow-dst` ipset from global `/64` prefixes derived from the given unicast addresses
++ * (NCP path where OpenThread POSIX `UpdateIpSets()` is not used).
++ *
++ * @param[in] aAddrs  Current Thread interface IPv6 unicast addresses (as reported by the NCP).
++ */
++void RefreshIngressAllowDstFromThreadUnicastAddrs(const std::vector<Ip6AddressInfo> &aAddrs);
++
++} // namespace otbr
++
++#endif // OTBR_AGENT_POSIX_FIREWALL_INGRESS_HPP_
+diff --git a/src/host/posix/nat64_tayga_host.cpp b/src/host/posix/nat64_tayga_host.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..d7bfb95f7195039ffaa1a66a26b0b502be4462aa
+--- /dev/null
++++ b/src/host/posix/nat64_tayga_host.cpp
+@@ -0,0 +1,305 @@
++/*
++ *  Copyright (c) 2026, The OpenThread Authors.
++ *  All rights reserved.
++ *
++ *  Redistribution and use in source and binary forms, with or without
++ *  modification, are permitted provided that the following conditions are met:
++ *  1. Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *  2. Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in the
++ *     documentation and/or other materials provided with the distribution.
++ *  3. Neither the name of the copyright holder nor the
++ *     names of its contributors may be used to endorse or promote products
++ *     derived from this software without specific prior written permission.
++ *
++ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ *  POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#define OTBR_LOG_TAG "NAT64_TAYGA"
++
++#include "nat64_tayga_host.hpp"
++
++#include <openthread/ip6.h>
++
++#include <net/if.h>
++
++#include <fstream>
++#include <string>
++#include <unistd.h>
++#include <vector>
++
++#include "common/code_utils.hpp"
++#include "common/logging.hpp"
++#include "utils/system_utils.hpp"
++
++#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_NAT64_TAYGA && defined(__linux__)
++
++namespace otbr {
++
++namespace {
++
++// Paths and defaults aligned with OTBR script/_nat64 (tayga_install / sync-tayga-nat64-prefix.sh).
++constexpr char kTaygaConfPath[]         = "/etc/tayga.conf";
++constexpr char kTaygaConfTmpPath[]      = "/etc/tayga.conf.tmp";
++constexpr char kTaygaServiceUnit[]      = "tayga";
++constexpr char kTunDevice[]             = "nat64";
++constexpr char kWpanInterface[]         = "wpan0";
++constexpr char kTaygaIpv6Addr[]         = "fdaa:bb:1::1";
++constexpr char kTaygaIpv4Addr[]         = "192.168.255.1";
++constexpr char kTaygaDynamicPool[]      = "192.168.255.0/24";
++constexpr char kConfKeyPrefix[]         = "prefix ";
++constexpr char kConfKeyTunDevice[]      = "tun-device";
++constexpr char kConfKeyIpv6Addr[]       = "ipv6-addr";
++constexpr char kConfKeyIpv4Addr[]       = "ipv4-addr";
++constexpr char kConfKeyDynamicPool[]    = "dynamic-pool";
++constexpr char kSysctlRpFilterDisable[] = "0";
++
++constexpr uint8_t kNat64PrefixLength = 96;
++
++constexpr uint8_t    kTunDevicePollMaxAttempts = 50;
++constexpr useconds_t kTunDevicePollIntervalUs  = 50000;
++
++constexpr const char *kRpFilterInterfaces[] = {kWpanInterface, kTunDevice};
++
++class TaygaHostCommands
++{
++public:
++    static void InstallRoutes(const char *aNat64Prefix, bool aTaygaWasRestarted);
++    static void ConfigureRpFilter(void);
++    static void RestartTaygaService(void);
++
++private:
++    static bool IsTunDevicePresent(void);
++    static bool WaitForTunDeviceReady(bool aTaygaWasRestarted);
++    static void SetTunDeviceUp(void);
++    static void SetRpFilter(const char *aIpVersion, const char *aInterface);
++};
++
++bool TaygaHostCommands::IsTunDevicePresent(void)
++{
++    return if_nametoindex(kTunDevice) != 0;
++}
++
++bool TaygaHostCommands::WaitForTunDeviceReady(bool aTaygaWasRestarted)
++{
++    bool ready = false;
++
++    if (!aTaygaWasRestarted)
++    {
++        ready = IsTunDevicePresent();
++        ExitNow();
++    }
++
++    for (uint8_t attempt = 0; attempt < kTunDevicePollMaxAttempts; attempt++)
++    {
++        if (IsTunDevicePresent())
++        {
++            ready = true;
++            ExitNow();
++        }
++
++        usleep(kTunDevicePollIntervalUs);
++    }
++
++exit:
++    return ready;
++}
++
++void TaygaHostCommands::SetTunDeviceUp(void)
++{
++    SystemUtils::ExecuteCommand("ip link set dev %s up", kTunDevice);
++}
++
++void TaygaHostCommands::InstallRoutes(const char *aNat64Prefix, bool aTaygaWasRestarted)
++{
++    if (!WaitForTunDeviceReady(aTaygaWasRestarted))
++    {
++        otbrLogWarning("NAT64 TAYGA: %s not present, skipping route install", kTunDevice);
++        ExitNow();
++    }
++
++    SetTunDeviceUp();
++    SystemUtils::ExecuteCommand("ip -6 route replace %s dev %s", aNat64Prefix, kTunDevice);
++    SystemUtils::ExecuteCommand("ip route replace %s dev %s", kTaygaDynamicPool, kTunDevice);
++
++exit:
++    return;
++}
++
++void TaygaHostCommands::SetRpFilter(const char *aIpVersion, const char *aInterface)
++{
++    SystemUtils::ExecuteCommand("sysctl -w net.%s.conf.%s.rp_filter=%s >/dev/null 2>&1", aIpVersion, aInterface,
++                                kSysctlRpFilterDisable);
++}
++
++void TaygaHostCommands::ConfigureRpFilter(void)
++{
++    for (const char *iface : kRpFilterInterfaces)
++    {
++        SetRpFilter("ipv4", iface);
++        SetRpFilter("ipv6", iface);
++    }
++}
++
++void TaygaHostCommands::RestartTaygaService(void)
++{
++    SystemUtils::ExecuteCommand("systemctl try-restart %s", kTaygaServiceUnit);
++}
++
++bool ConfLineHasKey(const std::string &aLine, const char *aKey)
++{
++    return aLine.rfind(aKey, 0) == 0;
++}
++
++bool EnsureConfLine(std::vector<std::string> &aLines, const char *aKey, const char *aValue)
++{
++    const std::string want = std::string(aKey) + " " + aValue;
++
++    for (std::string &line : aLines)
++    {
++        if (ConfLineHasKey(line, aKey))
++        {
++            if (line != want)
++            {
++                line = want;
++                return true;
++            }
++            return false;
++        }
++    }
++
++    aLines.emplace_back(want);
++    return true;
++}
++
++bool HasPrefixLine(const std::vector<std::string> &aLines)
++{
++    for (const std::string &line : aLines)
++    {
++        if (ConfLineHasKey(line, kConfKeyPrefix))
++        {
++            return true;
++        }
++    }
++
++    return false;
++}
++
++bool UpdateTaygaConf(const char *aPrefix)
++{
++    std::vector<std::string> lines;
++    std::string              line;
++    std::ifstream            in(kTaygaConfPath);
++    bool                     changed = false;
++
++    if (!in.is_open())
++    {
++        return false;
++    }
++
++    while (std::getline(in, line))
++    {
++        if (ConfLineHasKey(line, kConfKeyPrefix))
++        {
++            std::string newLine = std::string(kConfKeyPrefix) + aPrefix;
++
++            if (line != newLine)
++            {
++                changed = true;
++            }
++            lines.push_back(newLine);
++        }
++        else
++        {
++            lines.push_back(line);
++        }
++    }
++    in.close();
++
++    changed |= EnsureConfLine(lines, kConfKeyTunDevice, kTunDevice);
++    changed |= EnsureConfLine(lines, kConfKeyIpv6Addr, kTaygaIpv6Addr);
++    changed |= EnsureConfLine(lines, kConfKeyIpv4Addr, kTaygaIpv4Addr);
++    changed |= EnsureConfLine(lines, kConfKeyDynamicPool, kTaygaDynamicPool);
++
++    if (!HasPrefixLine(lines))
++    {
++        lines.emplace_back(std::string(kConfKeyPrefix) + aPrefix);
++        changed = true;
++    }
++
++    if (!changed)
++    {
++        return false;
++    }
++
++    {
++        std::ofstream out(kTaygaConfTmpPath);
++
++        if (!out.is_open())
++        {
++            return false;
++        }
++
++        for (const std::string &outLine : lines)
++        {
++            out << outLine << '\n';
++        }
++    }
++
++    return std::rename(kTaygaConfTmpPath, kTaygaConfPath) == 0;
++}
++
++} // namespace
++
++void SyncNat64Tayga(const otIp6Prefix &aPrefix)
++{
++    char prefixBuf[OT_IP6_PREFIX_STRING_SIZE];
++    bool confChanged;
++
++    VerifyOrExit(aPrefix.mLength == kNat64PrefixLength);
++
++    TaygaHostCommands::ConfigureRpFilter();
++
++    otIp6PrefixToString(&aPrefix, prefixBuf, sizeof(prefixBuf));
++
++    confChanged = UpdateTaygaConf(prefixBuf);
++
++    if (confChanged)
++    {
++        TaygaHostCommands::RestartTaygaService();
++    }
++
++    // Install routes after tayga is up. Routes added before restart are lost when the TUN is recreated.
++    TaygaHostCommands::InstallRoutes(prefixBuf, confChanged);
++
++    otbrLogInfo("NAT64 TAYGA synced prefix %s", prefixBuf);
++
++exit:
++    return;
++}
++
++} // namespace otbr
++
++#else
++
++namespace otbr {
++
++void SyncNat64Tayga(const otIp6Prefix &aPrefix)
++{
++    OTBR_UNUSED_VARIABLE(aPrefix);
++}
++
++} // namespace otbr
++
++#endif
+diff --git a/src/host/posix/nat64_tayga_host.hpp b/src/host/posix/nat64_tayga_host.hpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..41bd4d6b0ee9d526e6cfb29e8b30a7aafd15bcf6
+--- /dev/null
++++ b/src/host/posix/nat64_tayga_host.hpp
+@@ -0,0 +1,40 @@
++/*
++ *  Copyright (c) 2026, The OpenThread Authors.
++ *  All rights reserved.
++ *
++ *  Redistribution and use in source and binary forms, with or without
++ *  modification, are permitted provided that the following conditions are met:
++ *  1. Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *  2. Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in the
++ *     documentation and/or other materials provided with the distribution.
++ *  3. Neither the name of the copyright holder nor the
++ *     names of its contributors may be used to endorse or promote products
++ *     derived from this software without specific prior written permission.
++ *
++ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ *  POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef OTBR_HOST_POSIX_NAT64_TAYGA_HOST_HPP_
++#define OTBR_HOST_POSIX_NAT64_TAYGA_HOST_HPP_
++
++#include <openthread/ip6.h>
++
++namespace otbr {
++
++void SyncNat64Tayga(const otIp6Prefix &aPrefix);
++
++} // namespace otbr
++
++#endif // OTBR_HOST_POSIX_NAT64_TAYGA_HOST_HPP_
+diff --git a/src/host/posix/netif.cpp b/src/host/posix/netif.cpp
+index 3745974eba936b6883bc5297d06ab7b7407d3819..a8a9625b0a6411ae2b9d603414ccc4d30c591a6c 100644
+--- a/src/host/posix/netif.cpp
++++ b/src/host/posix/netif.cpp
+@@ -82,6 +82,10 @@ otbrError Netif::Dependencies::BorderRoutingProcessDhcp6PdPrefix(const otBorderR
+ }
+ #endif
+ 
++void Netif::Dependencies::HandleThreadInterfaceIp6UnicastAddressesUpdated(const std::vector<Ip6AddressInfo> &)
++{
++}
++
+ OT_TOOL_PACKED_BEGIN
+ struct Mldv2Header
+ {
+@@ -177,6 +181,8 @@ void Netif::UpdateIp6UnicastAddresses(const std::vector<Ip6AddressInfo> &aAddrIn
+     }
+ 
+     mIp6UnicastAddresses.assign(aAddrInfos.begin(), aAddrInfos.end());
++
++    mDeps.HandleThreadInterfaceIp6UnicastAddressesUpdated(aAddrInfos);
+ }
+ 
+ otbrError Netif::UpdateIp6MulticastAddresses(const std::vector<Ip6Address> &aAddrs)
+diff --git a/src/host/posix/netif.hpp b/src/host/posix/netif.hpp
+index 2286f6ef82f2a2e893858f5d32bf04e3056cd5cc..362abcd0b8d6120cfba576196b59917e58fa006f 100644
+--- a/src/host/posix/netif.hpp
++++ b/src/host/posix/netif.hpp
+@@ -63,6 +63,7 @@ public:
+ #if OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
+         virtual otbrError BorderRoutingProcessDhcp6PdPrefix(const otBorderRoutingPrefixTableEntry *aPrefixInfo);
+ #endif
++        virtual void HandleThreadInterfaceIp6UnicastAddressesUpdated(const std::vector<Ip6AddressInfo> &aAddrInfos);
+     };
+ 
+     Netif(const std::string &aInterfaceName, Dependencies &aDependencies);
+diff --git a/src/host/posix/udp_proxy.cpp b/src/host/posix/udp_proxy.cpp
+index e8e793a45ac5b7fc3d804213f4a92d6f16b3c492..09fa4a5691fac4947c47f7897c111e2f0769d523 100644
+--- a/src/host/posix/udp_proxy.cpp
++++ b/src/host/posix/udp_proxy.cpp
+@@ -36,12 +36,14 @@
+ 
+ #include <assert.h>
+ #include <errno.h>
++#include <net/if.h>
+ #include <netinet/in.h>
+ #include <sys/select.h>
+ #include <unistd.h>
+ 
+ #include "common/code_utils.hpp"
+ #include "common/logging.hpp"
++#include "common/types.hpp"
+ #include "host/posix/dnssd.hpp"
+ #include "utils/socket_utils.hpp"
+ 
+@@ -66,15 +68,33 @@ UdpProxy::UdpProxy(Dependencies &aDeps)
+     : mFd(-1)
+     , mHostPort(0)
+     , mThreadPort(0)
++    , mInfraIfIndex(0)
+     , mDeps(aDeps)
+ {
+ }
+ 
+-void UdpProxy::Start(uint16_t aPort)
++void UdpProxy::SetInfraInterface(const char *aInfraIfName)
++{
++    mInfraIfIndex = 0;
++
++    if (aInfraIfName == nullptr || aInfraIfName[0] == '\0')
++    {
++        return;
++    }
++
++    mInfraIfIndex = if_nametoindex(aInfraIfName);
++    if (mInfraIfIndex == 0)
++    {
++        otbrLogWarning("Failed to resolve infra interface %s for UDP proxy: %s", aInfraIfName, strerror(errno));
++    }
++}
++
++void UdpProxy::Start(uint16_t aPort, uint16_t aHostPort)
+ {
+     VerifyOrExit(!IsStarted());
+ 
+-    BindToEphemeralPort();
++    mPeerLocalAddrs.clear();
++    BindToPort(aHostPort);
+     mThreadPort = aPort;
+ 
+ exit:
+@@ -86,6 +106,7 @@ void UdpProxy::Stop(void)
+     VerifyOrExit(IsStarted());
+ 
+     mHostPort = 0;
++    mPeerLocalAddrs.clear();
+ 
+     if (mFd >= 0)
+     {
+@@ -111,8 +132,14 @@ void UdpProxy::Process(const MainloopContext &aContext)
+ 
+     SuccessOrExit(ReceivePacket(payload, length, remoteAddr, remotePort));
+ 
+-    // UDP Forward to NCPq
+-    mDeps.UdpForward(payload, length, remoteAddr, remotePort, *this);
++    {
++        otbrError fwdError = mDeps.UdpForward(payload, length, remoteAddr, remotePort, *this);
++
++        if (fwdError != OTBR_ERROR_NONE)
++        {
++            otbrLogWarning("UDP proxy: UdpForward to NCP failed len=%u: %s", length, otbrErrorString(fwdError));
++        }
++    }
+ 
+ exit:
+     return;
+@@ -152,6 +179,11 @@ void UdpProxy::SendToPeer(const uint8_t      *aUdpPayload,
+     peerAddr.sin6_port   = htons(aPeerPort);
+     peerAddr.sin6_family = AF_INET6;
+     memcpy(&peerAddr.sin6_addr, &aPeerAddr, sizeof(aPeerAddr));
++    if (mInfraIfIndex != 0 &&
++        (IN6_IS_ADDR_LINKLOCAL(&peerAddr.sin6_addr) || IN6_IS_ADDR_MC_LINKLOCAL(&peerAddr.sin6_addr)))
++    {
++        peerAddr.sin6_scope_id = mInfraIfIndex;
++    }
+     memset(control, 0, sizeof(control));
+ 
+     iov.iov_base = reinterpret_cast<void *>(const_cast<uint8_t *>(aUdpPayload));
+@@ -165,12 +197,35 @@ void UdpProxy::SendToPeer(const uint8_t      *aUdpPayload,
+     msg.msg_iovlen     = 1;
+     msg.msg_flags      = 0;
+ 
++    cmsg = CMSG_FIRSTHDR(&msg);
++
++    if (mInfraIfIndex != 0)
++    {
++        struct in6_pktinfo *packetInfo;
++        otIp6Address        localAddr = GetPeerLocalAddr(aPeerAddr, aPeerPort);
++        struct in6_addr     localIn6Addr;
++
++        cmsg->cmsg_level = IPPROTO_IPV6;
++        cmsg->cmsg_type  = IPV6_PKTINFO;
++        cmsg->cmsg_len   = CMSG_LEN(sizeof(*packetInfo));
++        packetInfo       = reinterpret_cast<struct in6_pktinfo *>(CMSG_DATA(cmsg));
++        memset(packetInfo, 0, sizeof(*packetInfo));
++        packetInfo->ipi6_ifindex = mInfraIfIndex;
++        memcpy(&localIn6Addr, &localAddr, sizeof(localIn6Addr));
++        if (!IN6_IS_ADDR_UNSPECIFIED(&localIn6Addr))
++        {
++            packetInfo->ipi6_addr = localIn6Addr;
++        }
++
++        controlLength += CMSG_SPACE(sizeof(*packetInfo));
++        cmsg = CMSG_NXTHDR(&msg, cmsg);
++    }
++
+     {
+         constexpr int kIp6HopLimit = 64;
+ 
+         int hopLimit = kIp6HopLimit;
+ 
+-        cmsg             = CMSG_FIRSTHDR(&msg);
+         cmsg->cmsg_level = IPPROTO_IPV6;
+         cmsg->cmsg_type  = IPV6_HOPLIMIT;
+         cmsg->cmsg_len   = CMSG_LEN(sizeof(int));
+@@ -194,20 +249,34 @@ void UdpProxy::SendToPeer(const uint8_t      *aUdpPayload,
+     }
+ }
+ 
+-otbrError UdpProxy::BindToEphemeralPort(void)
++otbrError UdpProxy::BindToPort(uint16_t aHostPort)
+ {
+     otbrError error = OTBR_ERROR_NONE;
+     mFd             = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_UDP, kSocketNonBlock);
+ 
+     VerifyOrExit(mFd != 0, error = OTBR_ERROR_ERRNO);
+ 
++    if (mInfraIfIndex != 0)
++    {
++#ifdef __linux__
++        char ifName[IF_NAMESIZE];
++
++        VerifyOrExit(if_indextoname(mInfraIfIndex, ifName) != nullptr, error = OTBR_ERROR_ERRNO);
++        VerifyOrExit(0 == setsockopt(mFd, SOL_SOCKET, SO_BINDTODEVICE, ifName, strlen(ifName)),
++                     error = OTBR_ERROR_ERRNO);
++#else
++        VerifyOrExit(0 == setsockopt(mFd, IPPROTO_IPV6, IPV6_BOUND_IF, &mInfraIfIndex, sizeof(mInfraIfIndex)),
++                     error = OTBR_ERROR_ERRNO);
++#endif
++    }
++
+     {
+         struct sockaddr_in6 sin6;
+ 
+         memset(&sin6, 0, sizeof(sin6));
+         sin6.sin6_family = AF_INET6;
+         sin6.sin6_addr   = in6addr_any;
+-        sin6.sin6_port   = 0;
++        sin6.sin6_port   = htons(aHostPort);
+ 
+         VerifyOrExit(0 == bind(mFd, reinterpret_cast<struct sockaddr *>(&sin6), sizeof(sin6)),
+                      error = OTBR_ERROR_ERRNO);
+@@ -219,9 +288,16 @@ otbrError UdpProxy::BindToEphemeralPort(void)
+         VerifyOrExit(0 == setsockopt(mFd, IPPROTO_IPV6, IPV6_RECVPKTINFO, &on, sizeof(on)), error = OTBR_ERROR_ERRNO);
+     }
+ 
++    if (aHostPort != 0)
++    {
++        mHostPort = aHostPort;
++        otbrLogInfo("Bound to port: %u", mHostPort);
++    }
++    else
+     {
+         struct sockaddr_in bound_addr;
+         socklen_t          addr_len = sizeof(bound_addr);
++
+         getsockname(mFd, (struct sockaddr *)&bound_addr, &addr_len);
+ 
+         mHostPort = ntohs(bound_addr.sin_port);
+@@ -229,7 +305,7 @@ otbrError UdpProxy::BindToEphemeralPort(void)
+     }
+ 
+ exit:
+-    otbrLogResult(error, "Bind to ephemeral port");
++    otbrLogResult(error, "Bind to port");
+     if (error != OTBR_ERROR_NONE)
+     {
+         Stop();
+@@ -268,11 +344,49 @@ otbrError UdpProxy::ReceivePacket(uint8_t      *aPayload,
+     aRemotePort = ntohs(peerAddr.sin6_port);
+     memcpy(&aRemoteAddr, &peerAddr.sin6_addr, sizeof(otIp6Address));
+ 
+-    otbrLogDebug("Receive a packet, remote address:%s, remote port:%d", Ip6Address(aRemoteAddr).ToString().c_str(),
+-                 aRemotePort);
++    for (struct cmsghdr *cmh = CMSG_FIRSTHDR(&msg); cmh != nullptr; cmh = CMSG_NXTHDR(&msg, cmh))
++    {
++        if (cmh->cmsg_level == IPPROTO_IPV6 && cmh->cmsg_type == IPV6_PKTINFO &&
++            cmh->cmsg_len == CMSG_LEN(sizeof(struct in6_pktinfo)))
++        {
++            const struct in6_pktinfo *pktInfo = reinterpret_cast<const struct in6_pktinfo *>(CMSG_DATA(cmh));
++            otIp6Address              localAddr;
++
++            memcpy(&localAddr, &pktInfo->ipi6_addr, sizeof(localAddr));
++            UpdatePeerLocalAddr(aRemoteAddr, aRemotePort, localAddr);
++            break;
++        }
++    }
+ 
+ exit:
+     return rval > 0 ? OTBR_ERROR_NONE : OTBR_ERROR_ERRNO;
+ }
+ 
++void UdpProxy::UpdatePeerLocalAddr(const otIp6Address &aPeerAddr, uint16_t aPeerPort, const otIp6Address &aLocalAddr)
++{
++    struct in6_addr localIn6Addr;
++
++    memcpy(&localIn6Addr, &aLocalAddr, sizeof(localIn6Addr));
++    VerifyOrExit(!IN6_IS_ADDR_UNSPECIFIED(&localIn6Addr));
++
++    mPeerLocalAddrs[{aPeerAddr, aPeerPort}] = aLocalAddr;
++
++exit:
++    return;
++}
++
++otIp6Address UdpProxy::GetPeerLocalAddr(const otIp6Address &aPeerAddr, uint16_t aPeerPort) const
++{
++    otIp6Address localAddr = {};
++
++    auto it = mPeerLocalAddrs.find({aPeerAddr, aPeerPort});
++
++    if (it != mPeerLocalAddrs.end())
++    {
++        localAddr = it->second;
++    }
++
++    return localAddr;
++}
++
+ } // namespace otbr
+diff --git a/src/host/posix/udp_proxy.hpp b/src/host/posix/udp_proxy.hpp
+index fa7b53fe4b209f2526e2d377a7db58c123e4bb03..5f912aa6e1a2a55b1c05fef07d1ade9267972860 100644
+--- a/src/host/posix/udp_proxy.hpp
++++ b/src/host/posix/udp_proxy.hpp
+@@ -34,6 +34,8 @@
+ #ifndef OTBR_AGENT_POSIX_UDP_PROXY_HPP_
+ #define OTBR_AGENT_POSIX_UDP_PROXY_HPP_
+ 
++#include <map>
++
+ #include <openthread/error.h>
+ #include <openthread/ip6.h>
+ 
+@@ -64,14 +66,25 @@ public:
+ 
+     ~UdpProxy(void) = default;
+ 
++    /**
++     * Sets the infrastructure interface used for link-local egress on this proxy.
++     *
++     * Should be called before @p Start. When unset or empty, outbound link-local packets are not scoped to an
++     * interface (legacy behavior).
++     *
++     * @param[in] aInfraIfName  The infrastructure interface name (e.g. backbone `-B` interface), or `nullptr`.
++     */
++    void SetInfraInterface(const char *aInfraIfName);
++
+     /**
+      * Start the UDP Proxy for Thread UDP port @p aPort.
+      *
+      * The UDP Proxy will bind to an ephemeral port and set a mapping between the ephemeral port and @p aPort.
+      *
+-     * @param[in] aPort  The UDP port to be proxied in Thread stack.
++     * @param[in] aPort      The UDP port to be proxied in Thread stack.
++     * @param[in] aHostPort  The UDP port to bind on host, or `0` to use an ephemeral port.
+      */
+-    void Start(uint16_t aPort);
++    void Start(uint16_t aPort, uint16_t aHostPort = 0);
+ 
+     /**
+      * Stop the UDP Proxy if started.
+@@ -107,13 +120,31 @@ private:
+     void Process(const MainloopContext &aMainloop) override;
+     void Update(MainloopContext &aMainloop) override;
+ 
+-    bool      IsStarted(void) const { return mHostPort != 0; }
+-    otbrError BindToEphemeralPort(void);
+-    otbrError ReceivePacket(uint8_t *aPayload, uint16_t &aLength, otIp6Address &aRemoteAddr, uint16_t &aRemotePort);
++    bool         IsStarted(void) const { return mHostPort != 0; }
++    otbrError    BindToPort(uint16_t aHostPort);
++    otbrError    ReceivePacket(uint8_t *aPayload, uint16_t &aLength, otIp6Address &aRemoteAddr, uint16_t &aRemotePort);
++    void         UpdatePeerLocalAddr(const otIp6Address &aPeerAddr, uint16_t aPeerPort, const otIp6Address &aLocalAddr);
++    otIp6Address GetPeerLocalAddr(const otIp6Address &aPeerAddr, uint16_t aPeerPort) const;
++
++    struct PeerKey
++    {
++        otIp6Address mAddr;
++        uint16_t     mPort;
++
++        bool operator<(const PeerKey &aOther) const
++        {
++            int cmp = memcmp(mAddr.mFields.m8, aOther.mAddr.mFields.m8, sizeof(mAddr.mFields.m8));
++
++            return (cmp != 0) ? (cmp < 0) : (mPort < aOther.mPort);
++        }
++    };
+ 
+     int      mFd; ///< Used to proxy UDP packets in Thread network.
+     uint16_t mHostPort;
+     uint16_t mThreadPort;
++    uint32_t mInfraIfIndex; ///< Backbone interface for link-local egress (0 if unset).
++
++    std::map<PeerKey, otIp6Address> mPeerLocalAddrs;
+ 
+     Dependencies &mDeps;
+ };
+diff --git a/src/mdns/mdns.cpp b/src/mdns/mdns.cpp
+index c845b8246f1e84e584448762496372005ec381ed..62773c5dfb82501f9a25e4bf8f5cdfdb8fec8b1e 100644
+--- a/src/mdns/mdns.cpp
++++ b/src/mdns/mdns.cpp
+@@ -213,6 +213,12 @@ void Publisher::OnServiceResolved(std::string aType, DiscoveredInstanceInfo aIns
+     otbrLogInfo("Service %s is resolved successfully: %s %s host %s addresses %zu", aType.c_str(),
+                 aInstanceInfo.mRemoved ? "remove" : "add", aInstanceInfo.mName.c_str(), aInstanceInfo.mHostName.c_str(),
+                 aInstanceInfo.mAddresses.size());
++    if (aInstanceInfo.mRemoved)
++    {
++        otbrLogInfo(
++            "DNSSD lc mDNS publisher: dispatching removal to subscribers (DnssdPlatform/others) for inst=%s type=%s",
++            aInstanceInfo.mName.c_str(), aType.c_str());
++    }
+ 
+     if (!aInstanceInfo.mRemoved)
+     {
+@@ -276,7 +282,9 @@ void Publisher::OnServiceRemoved(uint32_t aNetifIndex, std::string aType, std::s
+ {
+     DiscoveredInstanceInfo instanceInfo;
+ 
+-    otbrLogInfo("Service %s.%s is removed from netif %u.", aInstanceName.c_str(), aType.c_str(), aNetifIndex);
++    otbrLogInfo("DNSSD lc mDNS publisher: service instance departed inst=%s type=%s ifIndex=%u "
++                "(reason=browse_remove_event from mDNS stack; not an OTBR subscription cleanup)",
++                aInstanceName.c_str(), aType.c_str(), static_cast<unsigned>(aNetifIndex));
+ 
+     instanceInfo.mRemoved    = true;
+     instanceInfo.mNetifIndex = aNetifIndex;
+diff --git a/src/mdns/mdns_avahi.cpp b/src/mdns/mdns_avahi.cpp
+index a50e90bb362708e62746654407c6cc39e491bddd..fa9f0e82a659ce75b7d7f405e0672a24f0f683cd 100644
+--- a/src/mdns/mdns_avahi.cpp
++++ b/src/mdns/mdns_avahi.cpp
+@@ -1191,6 +1191,9 @@ void PublisherAvahi::ServiceSubscription::HandleBrowseResult(AvahiServiceBrowser
+         Resolve(aInterfaceIndex, aProtocol, aName, aType);
+         break;
+     case AVAHI_BROWSER_REMOVE:
++        otbrLogInfo("DNSSD lc mDNS (Avahi): browse REMOVE inst=%s type=%s ifIndex=%u "
++                    "(AVAHI_BROWSER_REMOVE — service departed on this interface)",
++                    aName, aType, static_cast<unsigned>(aInterfaceIndex));
+         mPublisherAvahi->OnServiceRemoved(static_cast<uint32_t>(aInterfaceIndex), aType, aName);
+         RemoveServiceResolver(aName);
+         break;
+diff --git a/src/mdns/mdns_mdnssd.cpp b/src/mdns/mdns_mdnssd.cpp
+index c55207cce8ab9d2bd0284dcc9917935f9634abae..1893fa5636664dd57bbff3ecef1bf76500bd55f1 100644
+--- a/src/mdns/mdns_mdnssd.cpp
++++ b/src/mdns/mdns_mdnssd.cpp
+@@ -924,6 +924,7 @@ otbrError PublisherMDnsSd::PublishHostImpl(const std::string &aName,
+ 
+     aCallback = HandleDuplicateHostRegistration(aName, aAddresses, std::move(aCallback));
+     VerifyOrExit(!aCallback.IsNull());
++    VerifyOrExit(!aAddresses.empty(), std::move(aCallback)(OTBR_ERROR_NONE));
+ 
+     hostReg = std::make_shared<DnssdHostRegistration>(aName, aAddresses, std::move(aCallback), this);
+     AddHostRegistration(hostReg);
+@@ -1194,6 +1195,9 @@ void PublisherMDnsSd::ServiceSubscription::HandleBrowseResult(DNSServiceRef
+     }
+     else
+     {
++        otbrLogInfo("DNSSD lc mDNS (dns_sd): browse REMOVE inst=%s type=%s ifIndex=%u "
++                    "(DNSServiceBrowse callback without kDNSServiceFlagsAdd — service left or goodbye)",
++                    aInstanceName, aType, aInterfaceIndex);
+         mPublisher.OnServiceRemoved(aInterfaceIndex, mType, aInstanceName);
+         Remove(aInterfaceIndex, aInstanceName, aType, aDomain);
+     }
+diff --git a/third_party/openthread/repo b/third_party/openthread/repo
+deleted file mode 160000
+index fb274efe68be744992e8cd6ac4372ac9fee58707..0000000000000000000000000000000000000000
+--- a/third_party/openthread/repo
++++ /dev/null
+@@ -1 +0,0 @@
+-Subproject commit fb274efe68be744992e8cd6ac4372ac9fee58707
+diff --git a/third_party/openthread/repo b/third_party/openthread/repo
+new file mode 120000
+index 0000000000000000000000000000000000000000..187daed247c149bf839782e61409834b00d53154
+--- /dev/null
++++ b/third_party/openthread/repo
+@@ -0,0 +1 @@
++../../../openthread
+\ No newline at end of file

@@ -153,7 +153,12 @@ extern "C" {
 SL_ENUM(sl_mpa_manager_attribute_t) {
   /// Region is non-cacheable.
   SL_MPA_MANAGER_ATTRIBUTE_NON_CACHEABLE = 0,
-  /// Region is non-cacheable only when the device has a unified cache.
+  /// Region is non-cacheable only when the device has a unified L2 cache
+  /// (instructions and data share a single cache memory). Intended primarily
+  /// for data ranges (e.g. NVM3 storage) that would otherwise evict
+  /// instruction cache lines on parts with a unified cache. On parts that
+  /// have a dedicated L2 data cache, this attribute is a no-op and the
+  /// region is left cacheable.
   SL_MPA_MANAGER_ATTRIBUTE_NON_CACHEABLE_UNIFIED_CACHE,
   /// Region is shareable.
   SL_MPA_MANAGER_ATTRIBUTE_NON_SHAREABLE,

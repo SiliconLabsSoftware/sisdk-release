@@ -26,6 +26,8 @@ requires:
 - name: enum
 - name: hal_system
 - name: hal_syscfg
+- name: hal_dcdc_s3
+  condition: [device_dcdc_buck, device_series_3]
 template_contribution:
 - name: component_catalog
   value: hal_emu

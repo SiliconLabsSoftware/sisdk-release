@@ -1,7 +1,7 @@
 id: ot_ant_div
 label: Antenna Diversity
 package: openthread
-category: OpenThread
+category: OpenThread|Radio
 quality: production
 description: This component provides support for Antenna Diversity with OpenThread
 provides:

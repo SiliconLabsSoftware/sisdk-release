@@ -54,6 +54,7 @@ To compile the sources, you need the following tools:
 * make utility
 
 ### Building the application
+
 On the target: Build and flash the "bt_cs_ncp" application.
 On the host: Build the application by issuing the following command:
 
@@ -78,4 +79,5 @@ The Real Time Library (RTL) estimates the distance, and sends the result to the 
 Reflector instances are advertising with device name "CS RFLCT".
 
 ## Resources
+
 [Bluetooth Channel Sounding development guide](https://docs.silabs.com/rtl-lib/latest/rtl-lib-channel-sounding-dev-guide/04-sample-applications)

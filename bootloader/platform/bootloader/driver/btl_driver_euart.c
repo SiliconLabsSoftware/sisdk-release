@@ -97,7 +97,7 @@ static LDMA_TransferCfg_t ldmaRxTransfer = LDMA_TRANSFER_CFG_PERIPHERAL(0);
 static LDMA_Descriptor_t ldmaTxDesc = LDMA_DESCRIPTOR_SINGLE_M2P_BYTE(
   txBuffer,
   NULL,
-  0
+  1
   );
 
 static LDMA_Descriptor_t ldmaRxDesc[4] = {

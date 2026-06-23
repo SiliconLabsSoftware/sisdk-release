@@ -60,6 +60,6 @@ void app_init(void);
  * - Start RAIL reception
  * - Printf start message
  *****************************************************************************/
-void app_init(void);
+void rail_app_init(void);
 
 #endif  // APP_INIT_H

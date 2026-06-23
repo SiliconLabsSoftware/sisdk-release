@@ -114,7 +114,7 @@ class RM_Device_SIXG301XFULL_RevB0(Base_RM_Device):
         self.__dict__['zz_frozen'] = False
         super(RM_Device_SIXG301XFULL_RevB0, self).__init__(rmio, label,
             'SIXG301XFULL',
-            RM_SVD_Info('SIXG301XFULL_SEQ.svd', 'af41e736ec3aa42ab0de42189a758331'))
+            RM_SVD_Info('SIXG301XFULL_SEQ.svd', '0d677063a4b0bf32a464f12f9527281e'))
 
         self.AGC_NS = RM_Peripheral_AGC_NS(self.zz_rmio, self.zz_label)
         self.zz_pdict['AGC_NS'] = self.AGC_NS

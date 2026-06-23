@@ -236,35 +236,35 @@ void sli_zigbee_af_drlc_server_print_info(uint8_t endpoint)
 
   for (i = 0; i < SL_ZIGBEE_AF_PLUGIN_DRLC_SERVER_SCHEDULED_EVENT_TABLE_SIZE; i++) {
     sl_zigbee_af_load_control_event_t *lce = &scheduledLoadControlEventTable[ep][i];
-    sl_zigbee_af_demand_response_load_control_cluster_flush();
-    sl_zigbee_af_demand_response_load_control_cluster_println("= LCE %d =", i);
-    sl_zigbee_af_demand_response_load_control_cluster_println("eid: 0x%08X", lce->eventId);
-    sl_zigbee_af_demand_response_load_control_cluster_println("src: 0x%02X%02X", lce->source[1], lce->source[0]);
-    sl_zigbee_af_demand_response_load_control_cluster_println("sep: 0x%02X", lce->sourceEndpoint);
-    sl_zigbee_af_demand_response_load_control_cluster_flush();
-    sl_zigbee_af_demand_response_load_control_cluster_println("dep: 0x%02X", lce->destinationEndpoint);
-    sl_zigbee_af_demand_response_load_control_cluster_println("dev: 0x%04X", lce->deviceClass);
-    sl_zigbee_af_demand_response_load_control_cluster_println("ueg: 0x%02X", lce->utilityEnrollmentGroup);
-    sl_zigbee_af_demand_response_load_control_cluster_println(" st: 0x%08X", lce->startTime);
-    sl_zigbee_af_demand_response_load_control_cluster_flush();
-    sl_zigbee_af_demand_response_load_control_cluster_println("dur: 0x%04X", lce->duration);
-    sl_zigbee_af_demand_response_load_control_cluster_println(" cl: 0x%02X", lce->criticalityLevel);
-    sl_zigbee_af_demand_response_load_control_cluster_println("cto: 0x%02X", lce->coolingTempOffset);
-    sl_zigbee_af_demand_response_load_control_cluster_println("hto: 0x%02X", lce->heatingTempOffset);
-    sl_zigbee_af_demand_response_load_control_cluster_flush();
-    sl_zigbee_af_demand_response_load_control_cluster_println("cts: 0x%04X", lce->coolingTempSetPoint);
-    sl_zigbee_af_demand_response_load_control_cluster_println("hts: 0x%04X", lce->heatingTempSetPoint);
-    sl_zigbee_af_demand_response_load_control_cluster_println("alp: 0x%02X", lce->avgLoadPercentage);
-    sl_zigbee_af_demand_response_load_control_cluster_println(" dc: 0x%02X", lce->dutyCycle);
-    sl_zigbee_af_demand_response_load_control_cluster_flush();
-    sl_zigbee_af_demand_response_load_control_cluster_println(" ev: 0x%02X", lce->eventControl);
-    sl_zigbee_af_demand_response_load_control_cluster_println(" sr: 0x%04X", lce->startRand);
-    sl_zigbee_af_demand_response_load_control_cluster_println(" dr: 0x%04X", lce->durationRand);
-    sl_zigbee_af_demand_response_load_control_cluster_println(" oc: 0x%02X", lce->optionControl);
-    sl_zigbee_af_demand_response_load_control_cluster_flush();
+    sl_zigbee_af_cli_flush();
+    sl_zigbee_af_cli_println("= LCE %d =", i);
+    sl_zigbee_af_cli_println("eid: 0x%08X", lce->eventId);
+    sl_zigbee_af_cli_println("src: 0x%02X%02X", lce->source[1], lce->source[0]);
+    sl_zigbee_af_cli_println("sep: 0x%02X", lce->sourceEndpoint);
+    sl_zigbee_af_cli_flush();
+    sl_zigbee_af_cli_println("dep: 0x%02X", lce->destinationEndpoint);
+    sl_zigbee_af_cli_println("dev: 0x%04X", lce->deviceClass);
+    sl_zigbee_af_cli_println("ueg: 0x%02X", lce->utilityEnrollmentGroup);
+    sl_zigbee_af_cli_println(" st: 0x%08X", lce->startTime);
+    sl_zigbee_af_cli_flush();
+    sl_zigbee_af_cli_println("dur: 0x%04X", lce->duration);
+    sl_zigbee_af_cli_println(" cl: 0x%02X", lce->criticalityLevel);
+    sl_zigbee_af_cli_println("cto: 0x%02X", lce->coolingTempOffset);
+    sl_zigbee_af_cli_println("hto: 0x%02X", lce->heatingTempOffset);
+    sl_zigbee_af_cli_flush();
+    sl_zigbee_af_cli_println("cts: 0x%04X", lce->coolingTempSetPoint);
+    sl_zigbee_af_cli_println("hts: 0x%04X", lce->heatingTempSetPoint);
+    sl_zigbee_af_cli_println("alp: 0x%02X", lce->avgLoadPercentage);
+    sl_zigbee_af_cli_println(" dc: 0x%02X", lce->dutyCycle);
+    sl_zigbee_af_cli_flush();
+    sl_zigbee_af_cli_println(" ev: 0x%02X", lce->eventControl);
+    sl_zigbee_af_cli_println(" sr: 0x%04X", lce->startRand);
+    sl_zigbee_af_cli_println(" dr: 0x%04X", lce->durationRand);
+    sl_zigbee_af_cli_println(" oc: 0x%02X", lce->optionControl);
+    sl_zigbee_af_cli_flush();
   }
-  sl_zigbee_af_demand_response_load_control_cluster_println("Table size: %d",
-                                                            SL_ZIGBEE_AF_PLUGIN_DRLC_SERVER_SCHEDULED_EVENT_TABLE_SIZE);
+  sl_zigbee_af_cli_println("Table size: %d",
+                           SL_ZIGBEE_AF_PLUGIN_DRLC_SERVER_SCHEDULED_EVENT_TABLE_SIZE);
 }
 
 void sli_zigbee_af_drlc_server_slce_message(sl_802154_short_addr_t nodeId,

@@ -3,7 +3,7 @@
  * @brief internal wrappers for 'mfglib' ipc commands
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -172,6 +172,7 @@ sl_status_t mfglibSendPacket(uint8_t *packet,
 
   if ((packet[0] + 1) > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector packet length exceeds expected maximum
+    return msg.data.mfgSendPacket.response.result;
   }
 
   memmove(msg.data.mfgSendPacket.request.packet, packet, sizeof(uint8_t) * (packet[0] + 1));
@@ -180,6 +181,7 @@ sl_status_t mfglibSendPacket(uint8_t *packet,
 
   if ((packet[0] + 1) > MAX_IPC_VEC_ARG_CAPACITY) {
     assert(false); // "vector packet length exceeds expected maximum
+    return msg.data.mfgSendPacket.response.result;
   }
 
   memmove(packet, msg.data.mfgSendPacket.request.packet, sizeof(uint8_t) * (packet[0] + 1));

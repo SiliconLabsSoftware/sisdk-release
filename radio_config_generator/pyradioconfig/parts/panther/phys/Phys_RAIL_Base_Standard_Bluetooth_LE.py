@@ -589,7 +589,7 @@ class PhysRAILBaseStandardBluetoothLEPanther(IPhy):
         phy.profile_inputs.pll_bandwidth_rx.value = model.vars.pll_bandwidth_rx.var_enum.BW_200KHz
         phy.profile_inputs.preamble_length.value = 20
         phy.profile_inputs.rx_xtal_error_ppm.value = 20
-        phy.profile_inputs.shaping_filter.value = model.vars.shaping_filter.var_enum.NONE
+        phy.profile_inputs.shaping_filter.value = model.vars.shaping_filter.var_enum.Gaussian
         phy.profile_inputs.shaping_filter_param.value = 0.5
         phy.profile_inputs.symbols_in_timing_window.value = 0
         phy.profile_inputs.target_osr.value = 4

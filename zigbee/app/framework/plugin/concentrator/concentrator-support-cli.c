@@ -36,11 +36,11 @@ void sl_zigbee_af_concentrator_print_source_route_table(sl_cli_command_arg_t *ar
                                                                    &destination,
                                                                    &closerIndex);
     if (status != SL_STATUS_OK) {
-      sl_zigbee_af_app_println("0 of 0 total entries.");
+      sl_zigbee_af_cli_println("0 of 0 total entries.");
       return;
     }
 
-    sl_zigbee_af_app_print("%d: 0x%04X -> ",
+    sl_zigbee_af_cli_print("%d: 0x%04X -> ",
                            index, destination);
 
     while (closerIndex != SOURCE_ROUTE_NULL_INDEX) {
@@ -49,15 +49,15 @@ void sl_zigbee_af_concentrator_print_source_route_table(sl_cli_command_arg_t *ar
                                                          &destination,
                                                          &closerIndex);
       if (status == SL_STATUS_OK) {
-        sl_zigbee_af_app_print("0x%04X -> ", destination);
+        sl_zigbee_af_cli_print("0x%04X -> ", destination);
       } else {
-        sl_zigbee_af_app_print("NULL ");
+        sl_zigbee_af_cli_print("NULL ");
         return;
       }
     }
-    sl_zigbee_af_app_println("0x%04X (Me)", sl_zigbee_af_get_node_id());
+    sl_zigbee_af_cli_println("0x%04X (Me)", sl_zigbee_af_get_node_id());
   }
-  sl_zigbee_af_app_println("%d of %d total entries.",
+  sl_zigbee_af_cli_println("%d of %d total entries.",
                            sl_zigbee_af_get_source_route_table_filled_size(),
                            sl_zigbee_af_get_source_route_table_total_size());
 }
@@ -65,23 +65,23 @@ void sl_zigbee_af_concentrator_print_source_route_table(sl_cli_command_arg_t *ar
 void sl_zigbee_af_concentrator_status(sl_cli_command_arg_t *arguments)
 {
   (void)arguments;
-  sl_zigbee_af_app_println("Type:  %s RAM",
+  sl_zigbee_af_cli_println("Type:  %s RAM",
                            ((SL_ZIGBEE_AF_PLUGIN_CONCENTRATOR_CONCENTRATOR_TYPE
                              == SL_ZIGBEE_LOW_RAM_CONCENTRATOR)
                             ? "Low"
                             : "High"));
 
-  sl_zigbee_af_app_println("Min Time Between Broadcasts (sec): %d",
+  sl_zigbee_af_cli_println("Min Time Between Broadcasts (sec): %d",
                            SL_ZIGBEE_AF_PLUGIN_CONCENTRATOR_MIN_TIME_BETWEEN_BROADCASTS_SECONDS);
-  sl_zigbee_af_app_println("Max Time Between Broadcasts (sec): %d",
+  sl_zigbee_af_cli_println("Max Time Between Broadcasts (sec): %d",
                            SL_ZIGBEE_AF_PLUGIN_CONCENTRATOR_MAX_TIME_BETWEEN_BROADCASTS_SECONDS);
-  sl_zigbee_af_app_println("Max Hops: %d",
+  sl_zigbee_af_cli_println("Max Hops: %d",
                            (SL_ZIGBEE_AF_PLUGIN_CONCENTRATOR_MAX_HOPS == 0
                             ? SL_ZIGBEE_MAX_HOPS
                             : SL_ZIGBEE_AF_PLUGIN_CONCENTRATOR_MAX_HOPS));
-  sl_zigbee_af_app_println("Route Error Threshold:      %d",
+  sl_zigbee_af_cli_println("Route Error Threshold:      %d",
                            SL_ZIGBEE_AF_PLUGIN_CONCENTRATOR_ROUTE_ERROR_THRESHOLD);
-  sl_zigbee_af_app_println("Delivery Failure Threshold: %d",
+  sl_zigbee_af_cli_println("Delivery Failure Threshold: %d",
                            SL_ZIGBEE_AF_PLUGIN_CONCENTRATOR_DELIVERY_FAILURE_THRESHOLD);
 }
 
@@ -89,7 +89,7 @@ void sl_zigbee_af_concentrator_start_discovery_command(sl_cli_command_arg_t *arg
 {
   (void)arguments;
   uint32_t qsLeft =  sl_zigbee_set_source_route_discovery_mode(SL_ZIGBEE_SOURCE_ROUTE_DISCOVERY_ON);
-  sl_zigbee_af_app_println("%d sec until next MTORR broadcast", (qsLeft >> 2));
+  sl_zigbee_af_cli_println("%d sec until next MTORR broadcast", (qsLeft >> 2));
 }
 
 void sl_zigbee_af_concentrator_stop_discovery_command(sl_cli_command_arg_t *arguments)
@@ -110,13 +110,13 @@ void sl_zigbee_af_concentrator_set_router_behavior_command(sl_cli_command_arg_t 
     = (sl_zigbee_af_plugin_concentrator_router_behavior_t)sl_cli_get_argument_uint8(arguments, 0);
 
   if (behavior > SL_ZIGBEE_AF_PLUGIN_CONCENTRATOR_ROUTER_BEHAVIOR_MAX) {
-    sl_zigbee_af_core_println("Illegal concentrator router behavior: 0x%02X", behavior);
+    sl_zigbee_af_cli_println("Illegal concentrator router behavior: 0x%02X", behavior);
   } else {
-    sl_zigbee_af_core_println("Set concentrator router behavior to: 0x%02X", behavior);
+    sl_zigbee_af_cli_println("Set concentrator router behavior to: 0x%02X", behavior);
     if (behavior != sl_zigbee_af_concentrator_get_router_behavior()) {
       sl_status_t status = sl_zigbee_af_concentrator_change_router_behavior(behavior);
       if (status != SL_STATUS_OK) {
-        sl_zigbee_af_core_println("Set concentrator router behavior failed: 0x%02X", status);
+        sl_zigbee_af_cli_println("Set concentrator router behavior failed: 0x%02X", status);
       }
     }
   }

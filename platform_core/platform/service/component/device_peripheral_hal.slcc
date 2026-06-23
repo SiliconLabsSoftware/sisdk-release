@@ -32,6 +32,8 @@ provides:
 - name: device_peripheral_hal
   condition: [device_sdid_260]
 - name: device_peripheral_hal
+  condition: [device_generic_family_efr32xg2b]
+- name: device_peripheral_hal
   condition: [device_generic_family_sixx301]
 requires:
 - name: device_clock
@@ -58,5 +60,7 @@ source:
   condition: [device_sdid_240]
 - path: devices/sl_device_peripheral_hal_efr32xg2d.c
   condition: [device_sdid_260]
+- path: devices/sl_device_peripheral_hal_efr32xg2b.c
+  condition: [device_generic_family_efr32xg2b]
 - path: devices/sl_device_peripheral_hal_sixx301.c
   condition: [device_generic_family_sixx301]

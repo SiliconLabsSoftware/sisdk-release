@@ -74,6 +74,7 @@ include:
   - path: "ZW_slave_api.h"
   - path: "ZW_UserTask.h"
   - path: "ZW_classcmd.h"
+  - path: "ZW_wake_on_critical_message.h"
 - path: "dist/include/zpal"
   file_list:
   - path: "zpal_bootloader.h"

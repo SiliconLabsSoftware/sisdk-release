@@ -3,7 +3,7 @@
  * @brief callback event handlers for raw-message
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -29,6 +29,10 @@ void sli_802154_stack_filter_match_message_handler(sl_zigbee_mac_filter_match_da
                                                    uint8_t *messageContents)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.filter_match_message_handler.filterValueMatch = filterValueMatch;
   cb_event->data.filter_match_message_handler.legacyPassthroughType = legacyPassthroughType;
 
@@ -37,6 +41,11 @@ void sli_802154_stack_filter_match_message_handler(sl_zigbee_mac_filter_match_da
   }
 
   cb_event->data.filter_match_message_handler.messageLength = messageLength;
+
+  if (messageLength > MAX_IPC_VEC_ARG_CAPACITY) {
+    assert(false); // "vector messageContents length exceeds expected maximum
+    messageLength = MAX_IPC_VEC_ARG_CAPACITY;
+  }
 
   if (messageContents != NULL) {
     memmove(cb_event->data.filter_match_message_handler.messageContents, messageContents, sizeof(uint8_t) * messageLength);
@@ -56,6 +65,10 @@ void sli_802154_stack_passthrough_message_handler(sl_zigbee_mac_passthrough_type
                                                   uint8_t *messageContents)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.passthrough_message_handler.messageType = messageType;
 
   if (packetInfo != NULL) {
@@ -63,6 +76,11 @@ void sli_802154_stack_passthrough_message_handler(sl_zigbee_mac_passthrough_type
   }
 
   cb_event->data.passthrough_message_handler.messageLength = messageLength;
+
+  if (messageLength > MAX_IPC_VEC_ARG_CAPACITY) {
+    assert(false); // "vector messageContents length exceeds expected maximum
+    messageLength = MAX_IPC_VEC_ARG_CAPACITY;
+  }
 
   if (messageContents != NULL) {
     memmove(cb_event->data.passthrough_message_handler.messageContents, messageContents, sizeof(uint8_t) * messageLength);
@@ -82,7 +100,16 @@ void sli_zigbee_stack_raw_transmit_complete_handler(uint8_t messageLength,
                                                     uint8_t messageTag)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.raw_transmit_complete_handler.messageLength = messageLength;
+
+  if (messageLength > MAX_IPC_VEC_ARG_CAPACITY) {
+    assert(false); // "vector messageContents length exceeds expected maximum
+    messageLength = MAX_IPC_VEC_ARG_CAPACITY;
+  }
 
   if (messageContents != NULL) {
     memmove(cb_event->data.raw_transmit_complete_handler.messageContents, messageContents, sizeof(uint8_t) * messageLength);

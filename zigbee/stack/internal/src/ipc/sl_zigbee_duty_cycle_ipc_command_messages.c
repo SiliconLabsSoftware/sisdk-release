@@ -3,7 +3,7 @@
  * @brief internal wrappers for 'sl_zigbee_duty_cycle' ipc commands
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -53,6 +53,7 @@ sl_status_t sl_zigbee_get_current_duty_cycle(uint8_t maxDevices,
 
   if (maxDevices > SL_ZIGBEE_MAX_CHILDREN_FOR_PER_DEVICE_DUTY_CYCLE_MONITOR) {
     assert(false); // "vector arrayOfDeviceDutyCycles length exceeds expected maximum
+    return msg.data.get_current_duty_cycle.response.result;
   }
 
   memmove(msg.data.get_current_duty_cycle.request.arrayOfDeviceDutyCycles, arrayOfDeviceDutyCycles, sizeof(sl_zigbee_per_device_duty_cycle_t) * maxDevices);
@@ -60,6 +61,7 @@ sl_status_t sl_zigbee_get_current_duty_cycle(uint8_t maxDevices,
 
   if (maxDevices > SL_ZIGBEE_MAX_CHILDREN_FOR_PER_DEVICE_DUTY_CYCLE_MONITOR) {
     assert(false); // "vector arrayOfDeviceDutyCycles length exceeds expected maximum
+    return msg.data.get_current_duty_cycle.response.result;
   }
 
   memmove(arrayOfDeviceDutyCycles, msg.data.get_current_duty_cycle.request.arrayOfDeviceDutyCycles, sizeof(sl_zigbee_per_device_duty_cycle_t) * maxDevices);

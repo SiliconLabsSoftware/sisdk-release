@@ -33,7 +33,7 @@
 
 #if defined(__ICCARM__)
 #define SPEED_OPT _Pragma("optimize=speed")
-#elif defined(__GNUC__) && defined(__CORTEX_M)
+#elif defined(__GNUC__) && !defined(__clang__) && defined(__CORTEX_M)
 #define SPEED_OPT _Pragma("GCC optimize(\"O3\")")
 #else
 #define SPEED_OPT

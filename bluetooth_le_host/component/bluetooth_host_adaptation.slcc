@@ -9,8 +9,6 @@ category: Bluetooth|Bluetooth Host (Stack)
 quality: "production"
 ui_hints:
   visibility: never
-config_file:
-- path: "config/sl_bt_host_adaptation_config.h"
 include:
 - path: "inc/"
   file_list:

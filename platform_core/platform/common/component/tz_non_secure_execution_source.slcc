@@ -1,10 +1,12 @@
 id: tz_non_secure_execution_source
 label: TrustZone Non-Secure Execution (Source Reference Only)
 description: >
-  Contains the source file for the pre-compiled binary added by the
-  tz_non_secure_execution component. This component shall not be added to
-  any project. It is only made available to reference what is pre-compiled
-  in the tz_non_secure_execution binary blob.
+  Source build of the TrustZone non-secure handoff logic. It matches what the prebuilt
+  component embeds as a byte array: the prebuilt is generated from these sources but
+  linked so the image can be flashed through the Non-Secure flash alias while execution
+  remains on the Secure alias. Prefer tz_non_secure_execution_prebuilt for normal
+  integrations; use this component mainly as a reference and for debugging when you
+  need the implementation compiled in your project.
 package: platform_core
 category: Platform|TrustZone
 quality: production
@@ -16,23 +18,14 @@ source:
 - path: src/sl_tz_non_secure_execution_source.c
 provides:
 - name: tz_non_secure_execution_source
-- name: tz_execution
+- name: tz_non_secure_execution_impl
+  condition: [device_has_deepsleep_retention]
+- name: tz_non_secure_execution_flash_only
 requires:
-- name: device_series_3
-- name: trustzone_unaware
-- name: sl_common
+- name: device_has_deepsleep_retention
 define:
-- name: SL_TZ_NON_SECURE_EXECUTION
-- name: configRUN_FREERTOS_SECURE_ONLY
-  value: 0
-- name: configENABLE_TRUSTZONE
-  value: 0
 - name: SL_TZ_NON_SECURE_EXECUTION_USE_SOURCE
   value: 1
-conflicts:
-- name: ram_only_execution
 template_contribution:
-- name: tz_non_secure_execution
-  value: 1
 - name: tz_non_secure_execution_source
   value: 1

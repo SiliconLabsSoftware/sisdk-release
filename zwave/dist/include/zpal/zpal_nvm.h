@@ -1,6 +1,6 @@
 /**
  * @file
- * Defines a platform abstraction layer for the Z-Wave NVM.
+ * Defines a platform abstraction layer for the Z-Wave non-volatile memory (NVM).
  *
  * @copyright 2021 Silicon Laboratories Inc.
  */
@@ -25,16 +25,15 @@ extern "C" {
  * @brief
  * Defines a platform abstraction layer for the Z-Wave NVM.
  *
- * How to use the entropy API
- *
  * The ZPAL NVM provides a way for an application to safely store and retrieve
- * variable size data in a page-based non-volatile memory (NVM).
+ * variable-size data in NVM. Within an area, objects are
+ * addressed by relative keys (@ref zpal_nvm_object_key_t).
  * Data are identified with 20-bit identifiers denoted as data_id.
  *
  * The following outlines an example of use:
- * 1. Initialize module with zpal_nvm_init().
+ * 1. Initialize an area with zpal_nvm_init().
  * 2. Invoke zpal_nvm_write() to store data.
- * 3. Invoke zpal_nvm_read() to get data.
+ * 3. Invoke zpal_nvm_read() to retrieve data.
  *
  * @{
  */
@@ -50,7 +49,11 @@ typedef enum {
 } zpal_nvm_area_t;
 
 /**
- * @brief Data id type. Only the 20 least significant bits are used.
+ * @brief Object key type used to address data within an NVM area.
+ *
+ * Only the 20 least significant bits are used.
+ * Keys are relative to the area opened by @ref zpal_nvm_init(). The valid
+ * key range is determined by the underlying implementation for that area.
  */
 typedef uint32_t zpal_nvm_object_key_t;
 

@@ -6,10 +6,6 @@ constants:
   - name: sample_signing_key
     value: config/sample_keys/sample_sign.key
 steps:
-  # Print usage data
-  - task: "usage"
-    input: "{{build_dir}}/{{project_name}}.out"
-    map: "{{build_dir}}/{{project_name}}.map"
   # Generate GBL for the application and copy it to the artifact folder
   - task: create_gbl
     app: "{{build_dir}}/{{project_name}}.hex"

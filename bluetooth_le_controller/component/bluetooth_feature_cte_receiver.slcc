@@ -1,0 +1,21 @@
+id: "bluetooth_feature_cte_receiver"
+label: "CTE Receiver"
+package: bluetooth_le_controller
+description: >
+  This component enables sampling and reporting the Constant Tone Extension (CTE).
+category: Bluetooth|Bluetooth LE Controller (Link Layer)|Additional Features
+quality: "production"
+requires:
+- name: bluetooth_controller
+provides:
+- name: bluetooth_feature_cte_receiver
+template_contribution:
+- name: component_catalog
+  value: bluetooth_feature_cte_receiver
+documentation:
+  docset: bluetooth
+  document: bluetooth-stack-api/sl-bt-cte-receiver
+metadata:
+  sbom:
+    license: MSLA
+root_path: bluetooth_le_controller

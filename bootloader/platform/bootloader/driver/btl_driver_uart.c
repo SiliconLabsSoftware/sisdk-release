@@ -124,7 +124,7 @@ static LDMA_TransferCfg_t ldmaTxTransfer = LDMA_TRANSFER_CFG_PERIPHERAL(BTL_DRIV
 static LDMA_TransferCfg_t ldmaRxTransfer = LDMA_TRANSFER_CFG_PERIPHERAL(BTL_DRIVER_UART_LDMA_RXDATAV_SIGNAL);
 
 /// LDMA transfer for copying transmit buffer to UART TX FIFO
-static LDMA_Descriptor_t ldmaTxDesc = LDMA_DESCRIPTOR_SINGLE_M2P_BYTE(txBuffer, NULL, 0);
+static LDMA_Descriptor_t ldmaTxDesc = LDMA_DESCRIPTOR_SINGLE_M2P_BYTE(txBuffer, NULL, 1);
 
 static LDMA_Descriptor_t ldmaRxDesc[4] = {
   /// First half of receive pingpong configuration

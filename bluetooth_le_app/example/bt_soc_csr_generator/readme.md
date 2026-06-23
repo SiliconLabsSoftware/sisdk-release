@@ -48,7 +48,7 @@ To generate the device certificate and get it signed, follow this process:
 
 9. Check the Jlink serial number of your debug adapter either with Simplicity Studio or with Simplicity Commander.
 
-10. Run the `production_line_tool.py` python script on your computer with the following parameters: 
+10. Run the `production_line_tool.py` python script on your computer with the following parameters:
 `python production_line_tool.py -p ble --serial <serialnumber>`. This will read out the signing request, sign the device certificate and flash the signed certificate on the device. *Note: the 'serial' parameter is not required if only one device is connected to your PC.*
 
 11. Now the EC key pair and the signed certificate are stored on your device. You can flash a new application to the device, this will not remove the keys and the certificate.

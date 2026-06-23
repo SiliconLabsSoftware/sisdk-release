@@ -163,7 +163,7 @@ class JSONHelper:
                 raise ValueError("BT Address shall be in esl_lib::Address format!")
 
             extended_config = json.loads(json.dumps(config))  # input validation!
-            # Allows epmty dictionary to be extended
+            # Allows empty dictionary to be extended
             if (
                 extended_config is None
                 or len(extended_config) == 0
@@ -262,7 +262,7 @@ def main():
     # Load the previously saved data
     data2 = jason.load_network_config(file)
 
-    # Try extend the previosly loaded config
+    # Try extend the previously loaded config
     esl_id = 254
     group = 3
     address = Address(b"ef1436")

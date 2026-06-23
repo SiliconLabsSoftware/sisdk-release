@@ -1,9 +1,9 @@
 project_name: dmadrv_kernel_freertos
 package: platform
 quality: production
-label: Platform - DMADRV Kernel FreeRTOS
+label: Platform - DMA Kernel FreeRTOS
 description: >
-  This example project shows how to use DMADRV driver to transfer data between memory and a EUSART peripheral in a freertos configuration.
+  This example project shows how to use the DMA driver (DMA Manager and DMA Channel Driver) to transfer data between memory and a EUSART peripheral in a freertos configuration.
 category: Example|Platform
 filter:
   - name: "Device Type"
@@ -25,7 +25,8 @@ component:
   - id: device_init
   - id: clock_manager
   - id: freertos
-  - id: dmadrv
+  - id: dma_manager
+  - id: dma_channel
   - id: power_manager
   - id: sleeptimer
   - id: iostream
@@ -39,3 +40,6 @@ readme:
   - path: readme.md
 ui_hints:
   highlight: readme.md
+tag:
+  - hardware:component:eusart
+  - hwfilter:device:device_has_eusart

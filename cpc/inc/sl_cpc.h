@@ -133,8 +133,8 @@ SL_ENUM(sl_cpc_endpoint_option_t){
 #define SL_CPC_OPEN_ENDPOINT_FLAG_DISABLE_ENCRYPTION        SL_CPC_ENDPOINT_FLAG_DISABLE_ENCRYPTION
 
 #define SL_CPC_MAJOR_VERSION     4
-#define SL_CPC_MINOR_VERSION     8
-#define SL_CPC_PATCH_VERSION     3
+#define SL_CPC_MINOR_VERSION     9
+#define SL_CPC_PATCH_VERSION     0
 
 /***************************************************************************//**
  * Typedef for the user - supplied callback function which is called when

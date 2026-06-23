@@ -1,0 +1,19 @@
+id: nvm3_hal_crypto
+label: NVM3 Crypto HAL Headers
+package: platform_core
+description: >
+  NVM3 crypto HAL headers shared across NVM3 crypto components.
+category: Services|NVM3
+quality: production
+metadata:
+  sbom:
+    license: Zlib
+include:
+- path: platform/emdrv/nvm3/inc
+  file_list:
+  - path: nvm3_hal_crypto.h
+  - path: nvm3_hal_crypto_handle.h
+  unless: [trustzone_nonsecure]
+provides:
+- name: nvm3_hal_crypto
+root_path: platform_core

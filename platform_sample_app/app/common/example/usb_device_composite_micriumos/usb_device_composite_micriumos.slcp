@@ -1,7 +1,7 @@
 project_name: usb_device_composite_micriumos
 package: platform
 quality: production
-label: Platform - USB Composite Device with Micrium OS kernel
+label: Platform - USB Composite Device with Micrium OS Kernel
 description: >
   This example uses the USB stack with the Micrium OS kernel to create a composite device.
 category: Example|Platform
@@ -42,5 +42,8 @@ readme:
   - path: readme.md
 tag:
   - hardware:component:usb
+  - hwfilter:device:device_has_usb
+  - hwfilter:ram:64k
+  - hwfilter:device:device_series_2
 ui_hints:
   highlight: readme.md

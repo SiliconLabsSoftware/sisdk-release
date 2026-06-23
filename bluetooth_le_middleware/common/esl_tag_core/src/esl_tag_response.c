@@ -107,7 +107,7 @@ uint8_t esl_core_get_responses(uint8_t remaining_length, uint8_t *buf_p)
 
 /**************************************************************************//**
  * Purge all ESL Tag responses from the queue (if any) - and set response
- * payload size limit dinamically to fit to current PAwR response slot spacing.
+ * payload size limit dynamically to fit to current PAwR response slot spacing.
  *****************************************************************************/
 void esl_core_purge_responses(uint8_t payload_limit)
 {

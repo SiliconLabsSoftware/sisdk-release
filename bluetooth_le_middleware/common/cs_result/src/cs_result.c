@@ -281,9 +281,9 @@ sl_status_t cs_result_create_session_data(uint8_t *buffer,
   return sc;
 }
 
-void cs_initiator_print_result(cs_result_field_type_t field_type,
-                               bool header,
-                               void *result_data)
+void cs_result_print(cs_result_field_type_t field_type,
+                     bool header,
+                     void *result_data)
 {
   switch (field_type) {
     case CS_RESULT_FIELD_DISTANCE_MAINMODE:
@@ -388,8 +388,8 @@ void cs_initiator_print_result(cs_result_field_type_t field_type,
   }
 }
 
-void cs_initiator_print_bt_address(bool header,
-                                   const bd_addr *bt_address)
+void cs_result_print_bt_address(bool header,
+                                const bd_addr *bt_address)
 {
   #if defined CS_INITIATOR_BT_ADDR_LOG && (CS_INITIATOR_BT_ADDR_LOG == 1)
   if (header) {

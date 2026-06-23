@@ -32,6 +32,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "app_assert.h"
 #include "app_log.h"
@@ -144,7 +145,7 @@ void sl_rail_util_on_rf_ready(sl_rail_handle_t rail_handle)
   // Added 3rd buffer as only 2 buffer is supported by default
   rail_status = sl_rail_add_state_buffer_3(SL_RAIL_EFR32_HANDLE);
   if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_error("sl_rail_add_state_buffer_3 error, 3rd state buffer was previously added or this isn't the RAIL multiprotocol library. Error code: %lX", rail_status);
+    app_log_error("sl_rail_add_state_buffer_3 error, 3rd state buffer was previously added or this isn't the RAIL multiprotocol library. Error code: 0x%" PRIX32, rail_status);
   }
   #endif
 }
@@ -192,7 +193,7 @@ void rail_app_task(void *p_arg)
       scheduler_info.priority = SL_RAIL_SCHEDULER_PRIORITY_SEND;
       rail_status = sl_rail_start_tx(rail_handle, 0, SL_RAIL_TX_OPTIONS_DEFAULT, &scheduler_info);
       if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-        app_log_warning("TX error %lu\n", rail_status);
+        app_log_warning("TX error 0x%" PRIX32 "\n", rail_status);
       }
     }
     if (packet_sent) {
@@ -213,7 +214,7 @@ void rail_app_task(void *p_arg)
       scheduler_info.priority = SL_RAIL_SCHEDULER_PRIORITY_RECEIVE;
       rail_status = sl_rail_start_rx(rail_handle, 0, &scheduler_info);
       if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-        app_log_warning("sl_rail_start_rx() result: %lu\n", rail_status);
+        app_log_warning("sl_rail_start_rx() result: 0x%08" PRIX32 "\n", rail_status);
       }
     }
     if (stop_rx) {
@@ -221,7 +222,7 @@ void rail_app_task(void *p_arg)
       app_log_info("Stop RAIL RX\n");
       rail_status = sl_rail_idle(rail_handle, RAIL_IDLE, true);
       if (rail_status != RAIL_STATUS_NO_ERROR) {
-        app_log_warning("sl_rail_idle() result: %lu\n", rail_status);
+        app_log_warning("sl_rail_idle() result: 0x%08" PRIX32 "\n", rail_status);
       }
     }
     if (packet_received) {
@@ -240,7 +241,7 @@ void rail_app_task(void *p_arg)
       if (masked_task == SL_RAIL_SCHEDULER_TASK_SINGLE_TX) {
         tx_requested = true;
       }
-      app_log_info("Scheduler status: %d, task: %d\n", masked_status, masked_task);
+      app_log_info("Scheduler status: %" PRIu8 ", task: %" PRIu8 "\n", masked_status, masked_task);
     }
     handle_os_pending();
   }

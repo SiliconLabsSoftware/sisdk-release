@@ -14,10 +14,8 @@
 
 #include <string.h>
 #include <em_eusart.h>
-#include <em_ldma.h>
 #include <em_cmu.h>
 #include <em_gpio.h>
-#include <dmadrv.h>
 #include <cmsis_os2.h>
 #include <sl_clock_manager.h>
 #include <sl_device_peripheral.h>
@@ -28,14 +26,11 @@
 #include "sl_wsrcp_uart_config.h"
 #include "sl_wsrcp_utils.h"
 
-static struct sl_wsrcp_uart *g_uart_ctxt;
-
 void uart_hw_init(struct sl_wsrcp_uart *uart_ctxt)
 {
     sl_bus_clock_t bus_clock;
     EUSART_UartInit_TypeDef uart_cfg = EUSART_UART_INIT_DEFAULT_HF;
 
-    g_uart_ctxt = uart_ctxt;
     NVIC_ClearPendingIRQ(UART_RX_IRQ);
     NVIC_EnableIRQ(UART_RX_IRQ);
     sl_clock_manager_enable_bus_clock(SL_BUS_CLOCK_GPIO);

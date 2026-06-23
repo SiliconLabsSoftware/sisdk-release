@@ -31,6 +31,14 @@
 #endif
 
 // -----------------------------------------------------------------------------
+// Defines
+
+#define SFDP_DEFAULT_4K_ERASE_MAX_TIME_MS     400U
+#define SFDP_DEFAULT_CHIP_ERASE_MAX_TIME_MS 200000U
+#define SFDP_DEFAULT_PAGE_SIZE  	      256U
+#define SFDP_BASIC_TABLE_LEN_ERASE_MAX_TIME   11U
+
+// -----------------------------------------------------------------------------
 // Globals
 
 const BootloaderStorageLayout_t storageLayout = {
@@ -104,13 +112,37 @@ static uint32_t SFDP_getPTP(void)  //Parameter Table Pointer
   return ptp;
 }
 
+static uint32_t SFDP_getTableLengthDw(void)
+{
+  uint32_t lengthDw;
+
+  spi_setCsActive();
+  // The parameter header for Basic Flash Parameter Table (PTP0)
+  SFDP_sendCommand(0x0B);
+
+  lengthDw = spi_readByte(); 
+  
+  spi_setCsInactive();
+
+  return lengthDw;
+}
+
 static uint32_t SFDP_maxEraseChipTime(void)
 {
   uint32_t ptp = SFDP_getPTP();
+  uint32_t LengthDw = SFDP_getTableLengthDw();
+
+  // DW11 (chip erase time) is at DWORD 11
+  // Check if the flash part supports at least 11 DWORDs
+  if (LengthDw < SFDP_BASIC_TABLE_LEN_ERASE_MAX_TIME) {
+    // For Legacy JESD216 (9 DW) devices, return default value
+    return SFDP_DEFAULT_CHIP_ERASE_MAX_TIME_MS;
+  }
+
   uint8_t t_time;
   uint8_t count;
   uint8_t multiplier;
-  uint32_t max_time;
+  uint32_t max_time = 0;
 
   spi_setCsActive();
 
@@ -155,6 +187,15 @@ static uint32_t SFDP_maxEraseChipTime(void)
 static uint32_t SFDP_4KMaxEraseTime(void)
 {
   uint32_t ptp = SFDP_getPTP();
+  uint32_t LengthDw = SFDP_getTableLengthDw();
+
+  // DW10 (4K Maxmimum erase time) is at DWORD10
+  // Check if the flash part supports at least 11 DWORDs
+  if (LengthDw < SFDP_BASIC_TABLE_LEN_ERASE_MAX_TIME) {
+    // For Legacy JESD216 (9 DW) devices, return default value
+    return SFDP_DEFAULT_4K_ERASE_MAX_TIME_MS;
+  }
+
   uint16_t t_arr;
   uint8_t count_m; //count max erase time
   uint8_t count_t; //count typical erase time
@@ -180,7 +221,7 @@ static uint32_t SFDP_4KMaxEraseTime(void)
   //11b: 1s
   uint8_t unit = (t_arr & 0x600) >> 9;
   uint16_t multiplier = 2 * (count_m + 1);
-  uint32_t time;
+  uint32_t time = 0;
 
   //Formula: Erase Type n (or Chip) erase maximum time =2 * (count + 1) *  Erase Type n (or Chip) erase typical time
 
@@ -215,6 +256,15 @@ static uint32_t SFDP_getSectorSize(void)
 static uint32_t SFDP_getPageSize()
 {
   uint32_t ptp = SFDP_getPTP();
+  uint32_t LengthDw = SFDP_getTableLengthDw();
+  
+  // DW11 (Page size) is at DWORD11
+  // Check if the flash part supports at least 11 DWORDs
+  if (LengthDw < SFDP_BASIC_TABLE_LEN_ERASE_MAX_TIME) {
+    //For legacy JESD216 (9 DWORDS) devices, return default value
+    return SFDP_DEFAULT_PAGE_SIZE;
+  }
+
   spi_setCsActive();
 
   //Querying the 11th DWORD of the PTP(0)
@@ -388,7 +438,7 @@ BootloaderStorageImplementationInformation_t getDeviceInfo(void)
                                 | BOOTLOADER_STORAGE_IMPL_CAPABILITY_PAGE_ERASE_REQUIRED);
   flashInfo.pageEraseMs = SFDP_4KMaxEraseTime();
   flashInfo.partEraseMs = SFDP_maxEraseChipTime();
-  flashInfo.pageSize = SFDP_getSectorSize();
+  flashInfo.pageSize = SFDP_getPageSize();
   //Check if 4K sector erase is supported by the device
   if (!SFDP_sectorErase()) {
     flashInfo.pageSize = SFDP_eraseSize();
@@ -506,7 +556,7 @@ int32_t storage_readRaw(uint32_t address, uint8_t *data, size_t length)
   return BOOTLOADER_OK;
 }
 
-int32_t storage_writeRaw(uint32_t address, uint8_t *data, size_t numBytes)
+int32_t storage_writeRaw(uint32_t address, const uint8_t *data, size_t numBytes)
 {
   uint32_t nextPageAddr;
   uint32_t currentLength;

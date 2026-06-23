@@ -11,15 +11,10 @@ metadata:
 source:
 - path: platform/emdrv/nvm3/src/nvm3_hal_crypto_host.c
   unless: [trustzone_nonsecure]
-include:
-- path: platform/emdrv/nvm3/inc
-  file_list:
-  - path: nvm3_hal_crypto.h
-  - path: nvm3_hal_crypto_handle.h
-  unless: [trustzone_nonsecure]
 provides:
 - name: nvm3_crypto_host
 requires:
+- name: nvm3_hal_crypto
 - name: se_manager
 - name: sli_crypto
 ui_hints:

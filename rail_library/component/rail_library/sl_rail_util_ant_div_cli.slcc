@@ -6,7 +6,7 @@ category: Platform|Radio
 quality: production
 metadata:
   sbom:
-    id: rail_util_ant_div_cli
+    id: sl_rail_util_ant_div_cli
     name: RAIL Utility, Antenna Diversity CLI (RAIL 3)
     license: Zlib
 provides:

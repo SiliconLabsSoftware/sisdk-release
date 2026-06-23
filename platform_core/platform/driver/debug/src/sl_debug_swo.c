@@ -110,13 +110,13 @@ sl_status_t sl_debug_swo_init(void)
                | (postpreset << DWT_CTRL_POSTPRESET_Pos) // Post-tap counter reload value
                | (1UL << DWT_CTRL_CYCCNTENA_Pos));  // Enable cycle counter
   // Set TPIU prescaler for the current debug clock frequency. ACPR value is div - 1.
-  TPI->ACPR = ((freq + (SL_DEBUG_SWO_FREQ / 2)) / SL_DEBUG_SWO_FREQ) - 1UL;
+  TPIU->ACPR = ((freq + (SL_DEBUG_SWO_FREQ / 2)) / SL_DEBUG_SWO_FREQ) - 1UL;
 
   // Set protocol to NRZ
-  TPI->SPPR = 2UL;
+  TPIU->SPPR = 2UL;
 
   // Disable continuous formatting
-  TPI->FFCR = TPI_FFCR_TrigIn_Msk;
+  TPIU->FFCR = TPIU_FFCR_TrigIn_Msk;
 
   // Unlock ITM and output data
   ITM->LAR = 0xC5ACCE55UL;

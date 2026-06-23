@@ -5,7 +5,7 @@
 #include "coexistence-hal.h"
 
 //Status codes defined in Bluetooth spec
-#define BT_OK             0 //Command was succesful
+#define BT_OK             0 //Command was successful
 #define BT_ERR_INVALID 0x12 //Used as a generic error
 
 static sl_btctrl_command_handler_t sli_bt_hci_command_handler;

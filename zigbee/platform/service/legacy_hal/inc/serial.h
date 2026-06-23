@@ -21,8 +21,12 @@
 #include <stdarg.h>
 #include "sl_status.h"
 
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
 
+
+#ifndef SL_SERIAL_BAUD_AND_PARITY_DEFINED
+#define SL_SERIAL_BAUD_AND_PARITY_DEFINED
+
+#ifdef DOXYGEN_SHOULD_SKIP_THIS
 /**
  * @brief Assign numerical values for variables that hold Baud Rate
  * parameters.
@@ -130,6 +134,7 @@ enum
 };
 
 #endif//CORTEXM3_EFM32_MICRO
+#endif // SL_SERIAL_BAUD_AND_PARITY_DEFINED
 
 sl_status_t sli_legacy_serial_init(uint8_t port,
                                    SerialBaudRate rate,
@@ -142,6 +147,10 @@ sl_status_t sl_legacy_serial_read_data(uint8_t port,
                                        uint8_t *data,
                                        uint16_t length,
                                        uint16_t *bytesRead);
+
+uint16_t sli_legacy_serial_read_available(uint8_t port);
+
+uint16_t sli_legacy_serial_write_available(uint8_t port);
 
 sl_status_t sli_legacy_serial_write_byte(uint8_t port, uint8_t dataByte);
 

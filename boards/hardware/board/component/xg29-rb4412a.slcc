@@ -17,10 +17,10 @@
   - name: SL_KIT_NAME
     value: '"XG29-RB4412A"'
   - name: SL_KIT_REV
-    value: '"A02"'
+    value: '"A01"'
 - tag:
   - kit:opn:xG29-RB4412A
   - kit:pn:RB4412
   - kit:variant:A
-  - kit:revision:A02
+  - kit:revision:A01
 - root_path: boards

@@ -165,7 +165,7 @@ template_contribution:
     help: Set reception mode
     argument:
     - type: uint8
-      help: "Mode: 0:Continous, 1:Fixed time, 2: Fixed size"
+      help: "Mode: 0:Continuous, 1:Fixed time, 2:Fixed size"
     - type: uint32
       help: Value to set (in case of fixed time/size)
   condition:
@@ -177,7 +177,7 @@ template_contribution:
     handler: cli_throughput_central_mode_get
     shortcuts:
     - name: g
-    help: "Get reception mode, 0:Continous, 1:Fixed time, 2: Fixed size"
+    help: "Get reception mode, 0:Continuous, 1:Fixed time, 2:Fixed size"
   condition:
   - cli
 - name: cli_group
@@ -234,7 +234,7 @@ template_contribution:
     - name: s
     help: Set data size
     argument:
-    - type: uint8
+    - type: uint16
       help: Maximum MTU size
   condition:
   - cli

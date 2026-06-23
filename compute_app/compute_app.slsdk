@@ -1,0 +1,7 @@
+id=com.silabs.sdk.compute_app
+version=1.0.0
+label=Silicon Labs Compute Sample Applications
+description=Compute sample applications
+
+prop.file.templatesFile=compute_templates.xml
+prop.file.demosFile=compute_demos.xml

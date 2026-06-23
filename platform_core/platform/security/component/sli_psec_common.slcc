@@ -1,0 +1,25 @@
+id: sli_psec_common
+label: PSEC Common Primitives
+package: platform_core
+description: >-
+  Common LTO-safe primitives shared across the platform/security components.
+  Currently exposes sli_psec_zeroize() — the canonical secret-buffer wipe
+  helper used by se_manager, sl_psa_driver, and sl_mbedtls_support.
+  Header-only, no transitive dependencies, safe to pull into low-layer
+  components.
+category: Platform|Security
+quality: production
+ui_hints:
+  visibility: never
+include:
+- path: inc
+  file_list:
+  - path: sli_psec_common.h
+
+provides:
+- name: sli_psec_common
+
+metadata:
+  sbom:
+    license: Zlib
+root_path: platform_core/platform/security/sl_component/sli_psec_common

@@ -43,7 +43,9 @@
 #include "sl_status.h"
 #include "sl_mempool.h"
 #include "sl_string.h"
-#include "socket/socket.h"
+#include "sys/socket.h"
+#include "arpa/inet.h"
+#include "netinet/in.h"
 #include "sl_wisun_event_mgr.h"
 #include "sl_wisun_app_core.h"
 #include "sl_wisun_config.h"
@@ -78,36 +80,6 @@
 #else
 #define SL_WISUN_METER_MAX_TX_PKT (SL_WISUN_METER_MEASUREMENT_BUFFER_SIZE)
 #endif
-
-/// Warning message format string
-#define SL_WISUN_METER_WARNING_MSG_FORMAT_STR            "[Warning: TX buffer is truncated to store %lu packets]\n"
-
-/// Invalid arguments format string
-#define SL_WISUN_METER_INVALID_ARGS_FORMAT_STR           "[Invalid arguments in request from '%s': '%s']\n"
-
-/// Invalid token format string
-#define SL_WISUN_METER_INVALID_TOKEN_FORMAT_STR          "[Invalid token: '%s']\n"
-
-/// Collector registered format string
-#define SL_WISUN_METER_COLLECTOR_REG_FORMAT_STR          "[Collector '%s' registered]\n"
-
-/// Registering collector failed format string
-#define SL_WISUN_METER_COLLECTOR_REG_FAILED_FORMAT_STR   "[Registering collector '%s' failed]\n"
-
-/// Collector removed format string
-#define SL_WISUN_METER_COLLECTOR_RM_FORMAT_STR           "[Collector '%s' removed]\n"
-
-/// Collector registration failed format string
-#define SL_WISUN_METER_COLLECTOR_RM_FAILED_FORMAT_STR   "[Removing collector '%s' failed]\n"
-
-/// Invalid request format string
-#define SL_WISUN_METER_INVALID_REQUEST_FORMAT_STR        "[Invalid request from '%s': '%s']\n"
-
-/// Measurement failed format string
-#define SL_WISUN_METER_MEAS_FAILED_FORMAT_STR            "[Measurement failed]\n"
-
-/// Measurement sending failed format string
-#define SL_WISUN_METER_MEAS_SEND_FAILED_FORMAT_STR       "[Measurement sending to '%s' failed]\n"
 
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
@@ -224,7 +196,8 @@ void sl_wisun_meter_init(void)
                                sizeof(_collector_buff)) == SL_STATUS_OK);
 
   if (SL_WISUN_METER_MAX_TX_PKT < SL_WISUN_METER_MEASUREMENT_BUFFER_SIZE) {
-    printf(SL_WISUN_METER_WARNING_MSG_FORMAT_STR, (uint32_t)SL_WISUN_METER_MAX_TX_PKT);
+    printf("[Warning: TX buffer is truncated to store %u packets]\n",
+           SL_WISUN_METER_MAX_TX_PKT);
   }
 }
 
@@ -271,7 +244,7 @@ void sl_wisun_meter_loop(void)
       if (request == NULL
           || token == NULL
           || strtok(NULL, SL_WISUN_METER_REQUEST_DELIMITER) != NULL) {
-        printf(SL_WISUN_METER_INVALID_ARGS_FORMAT_STR, collector_ip, buff);
+        printf("[Invalid arguments in request from '%s': '%s']\n", collector_ip, buff);
         app_wisun_trace_util_destroy_ip_str(collector_ip);
         continue;
       }
@@ -280,7 +253,7 @@ void sl_wisun_meter_loop(void)
       if (strncmp(token,
                   SL_WISUN_METER_COLLECTOR_TOKEN,
                   SL_WISUN_METER_COLLECTOR_TOKEN_MAX_SIZE)) {
-        printf(SL_WISUN_METER_INVALID_TOKEN_FORMAT_STR, token);
+        printf("[Invalid token: '%s']\n", token);
         app_wisun_trace_util_destroy_ip_str(collector_ip);
         continue;
       }
@@ -297,9 +270,9 @@ void sl_wisun_meter_loop(void)
           _metrics_cnt.reg_coll_cnt++;
           _send_metrics(sockd, &collector_addr, (const uint8_t *) &meas_pkt_packed,
                         sizeof(sl_wisun_meter_packet_packed_t));
-          printf(SL_WISUN_METER_COLLECTOR_REG_FORMAT_STR, collector_ip);
+          printf("[Collector '%s' registered]\n", collector_ip);
         } else {
-          printf(SL_WISUN_METER_COLLECTOR_REG_FAILED_FORMAT_STR, collector_ip);
+          printf("[Registering collector '%s' failed]\n", collector_ip);
         }
 
         // Remove request
@@ -312,9 +285,9 @@ void sl_wisun_meter_loop(void)
           _metrics_cnt.reg_coll_cnt--;
           _send_metrics(sockd, &collector_addr, (const uint8_t *) &meas_pkt_packed,
                         sizeof(sl_wisun_meter_packet_packed_t));
-          printf(SL_WISUN_METER_COLLECTOR_RM_FORMAT_STR, collector_ip);
+          printf("[Collector '%s' removed]\n", collector_ip);
         } else {
-          printf(SL_WISUN_METER_COLLECTOR_RM_FAILED_FORMAT_STR, collector_ip);
+          printf("[Removing collector '%s' failed]\n", collector_ip);
         }
 
         // Async request
@@ -325,7 +298,7 @@ void sl_wisun_meter_loop(void)
         _send_metrics(sockd, &collector_addr, (const uint8_t *) &meas_pkt_packed,
                       sizeof(sl_wisun_meter_packet_packed_t));
       } else {
-        printf(SL_WISUN_METER_INVALID_REQUEST_FORMAT_STR, collector_ip, request);
+        printf("[Invalid request from '%s': '%s']\n", collector_ip, request);
       }
 
       app_wisun_trace_util_destroy_ip_str(collector_ip);
@@ -422,7 +395,7 @@ static void _measure_period(const int32_t sockd)
   pkt_ptr = (sl_wisun_meter_packet_packed_t *) sl_mempool_alloc(&_metrics_mpool);
   stat = _measure(pkt_ptr);
   if (stat != SL_STATUS_OK) {
-    printf(SL_WISUN_METER_MEAS_FAILED_FORMAT_STR);
+    printf("[Measurement failed]\n");
     _metrics_cnt.err_cnt++;
     return;
   }
@@ -469,7 +442,7 @@ static void _send_metrics(const int32_t sockd,
 
   if (res < 0L) {
     collector_ip = app_wisun_trace_util_get_ip_str(&addr_ptr->sin6_addr);
-    printf(SL_WISUN_METER_MEAS_SEND_FAILED_FORMAT_STR, collector_ip);
+    printf("[Measurement sending to '%s' failed]\n", collector_ip);
     app_wisun_trace_util_destroy_ip_str(collector_ip);
   }
 }

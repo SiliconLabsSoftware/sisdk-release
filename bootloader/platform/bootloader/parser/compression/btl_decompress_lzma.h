@@ -105,7 +105,7 @@ int32_t gbl_lzmaParseProgTag(ParserContext_t                   *ctx,
  *
  * @return Error code
  ******************************************************************************/
-int32_t gbl_lzmaExitProgTag(ParserContext_t                   *ctx,
+int32_t gbl_lzmaExitProgTag(ParserContext_t             *ctx,
                             const BootloaderParserCallbacks_t *callbacks);
 
 /***************************************************************************//**
@@ -114,7 +114,7 @@ int32_t gbl_lzmaExitProgTag(ParserContext_t                   *ctx,
  *
  * @return Number of bytes required
  ******************************************************************************/
-size_t gbl_lzmaNumBytesRequired(ParserContext_t *ctx);
+size_t gbl_lzmaNumBytesRequired(const ParserContext_t *ctx);
 
 /** @} addtogroup LzmaProgTag */
 /** @} addtogroup CustomTags */

@@ -212,16 +212,32 @@ sl_zigbee_af_zcl_request_status_t sl_zigbee_af_groups_cluster_get_group_membersh
   uint8_t count = 0;
   uint8_t list[SL_ZIGBEE_BINDING_TABLE_SIZE << 1];
   uint8_t listLen = 0;
+  uint16_t groupListOffset = 0;
+  uint16_t groupListAvail = 0;
+  uint8_t maxGroupsInPayload = 0;
 
   if (zcl_decode_groups_cluster_get_group_membership_command(cmd, &cmd_data)
       != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
     return SL_ZIGBEE_ZCL_STATUS_UNSUP_COMMAND;
   }
 
+  if (cmd_data.groupCount != 0) {
+    groupListOffset = (uint16_t)(cmd_data.groupList - cmd->buffer);
+    groupListAvail = (cmd->bufLen > groupListOffset)
+                       ? (cmd->bufLen - groupListOffset) : 0;
+    maxGroupsInPayload = (uint8_t)(groupListAvail / 2u);
+
+    if (cmd_data.groupCount > maxGroupsInPayload) {
+      return SL_ZIGBEE_ZCL_STATUS_MALFORMED_COMMAND;
+    }
+  }
+
   sl_zigbee_af_groups_cluster_print("RX: GetGroupMembership 0x%02X,", cmd_data.groupCount);
   for (i = 0; i < cmd_data.groupCount; i++) {
     sl_zigbee_af_groups_cluster_print(" [0x%04X]",
-                                      sl_zigbee_af_get_int16u(cmd_data.groupList + (i << 1), 0, 2));
+                                      sl_zigbee_af_get_int16u(cmd->buffer,
+                                                              (uint16_t)(groupListOffset + ((uint16_t)i << 1)),
+                                                              cmd->bufLen));
   }
   sl_zigbee_af_groups_cluster_println("");
 
@@ -245,7 +261,9 @@ sl_zigbee_af_zcl_request_status_t sl_zigbee_af_groups_cluster_get_group_membersh
     }
   } else {
     for (i = 0; i < cmd_data.groupCount; i++) {
-      uint16_t groupId = sl_zigbee_af_get_int16u(cmd_data.groupList + (i << 1), 0, 2);
+      uint16_t groupId = sl_zigbee_af_get_int16u(cmd->buffer,
+                                                 (uint16_t)(groupListOffset + ((uint16_t)i << 1)),
+                                                 cmd->bufLen);
       for (j = 0; j < SL_ZIGBEE_BINDING_TABLE_SIZE; j++) {
         sl_zigbee_binding_table_entry_t entry;
         status = sl_zigbee_get_binding(j, &entry);

@@ -7,3 +7,14 @@ upgrade:
         description: >
           In sisdk-2025.6.0 the cs_initiator component was significantly changed along with its public API. The automated upgrade is not possible, it has to be carried out manually. The recommended way to upgrade your project using this component is to create a new project from sisdk-2025.6.0 and migrate your changes (e.g. application logic) on top of that.
         status: impossible
+  - sdk:
+      id: simplicity_sdk
+      version: "2026.6.0"
+    component:
+      - script: bluetooth_le_middleware/component/upgrade_component_cs_ncp.lua
+        description: >
+          In Simplicity SDK 2025.12 and earlier, bt_cs_ncp used iostream_dummy to prevent the
+          board component from adding a VCOM IO Stream transport, because the NCP already used
+          VCOM through UARTDRV. Since the default NCP transport now uses IO Stream instead of
+          UARTDRV, this workaround is no longer needed and the board component can recommend the
+          required VCOM IO Stream instance.

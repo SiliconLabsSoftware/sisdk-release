@@ -72,7 +72,7 @@ sl_zigbee_af_status_t zcl_decode_{{as_underscore_lowercase clusterName}}_cluster
 {{!--Not a fixed length command and command argument always present--}}
 
 {{#if_command_not_fixed_length_command_argument_always_present parent.id this}}
-  if (cmd->bufLen < payloadOffset + {{zcl_string_type_return type short_string="sl_zigbee_af_string_length(cmd->buffer + payloadOffset) + 1u)" long_string="sl_zigbee_af_get_long_string(cmd->buffer + payloadOffset) + 2u)" default=""}}
+  if ({{zcl_string_type_return type short_string="payloadOffset >= cmd->bufLen || " long_string="cmd->bufLen <= payloadOffset + 1u || " default=""}}cmd->bufLen < payloadOffset + {{zcl_string_type_return type short_string="sl_zigbee_af_string_length(cmd->buffer + payloadOffset) + 1u)" long_string="sl_zigbee_af_long_string_length(cmd->buffer + payloadOffset) + 2u)" default=""}}
 {{#unless (is_zcl_string type)}}
 {{as_underlying_zcl_type type array="" one_byte="1" two_byte="2" three_byte="3" four_byte="4" short_string="" long_string="" ten_byte="10" eleven_byte="11" twelve_byte="12" thirten_byte="13" fourteen_byte="14" fifteen_byte="15" sixteen_byte="16" struct="0" defaul="0" zclCharFormatter="true"}}u)
 {{/unless}}
@@ -85,7 +85,7 @@ sl_zigbee_af_status_t zcl_decode_{{as_underscore_lowercase clusterName}}_cluster
 {{!--Not a fixed length command, command argument introduced in a specific zcl spec version but no present if conditions for the command argument--}}
 {{#if_command_arg_not_always_present_no_presentif this}}
   // - Argument is not present in all versions.
-  if (cmd->bufLen < payloadOffset + {{zcl_string_type_return type short_string="sl_zigbee_af_string_length(cmd->buffer + payloadOffset) + 1u)" long_string="sl_zigbee_af_get_long_string(cmd->buffer + payloadOffset) + 2u)" default=""}}
+  if ({{zcl_string_type_return type short_string="payloadOffset >= cmd->bufLen || " long_string="cmd->bufLen <= payloadOffset + 1u || " default=""}}cmd->bufLen < payloadOffset + {{zcl_string_type_return type short_string="sl_zigbee_af_string_length(cmd->buffer + payloadOffset) + 1u)" long_string="sl_zigbee_af_long_string_length(cmd->buffer + payloadOffset) + 2u)" default=""}}
 {{#unless (is_zcl_string type)}}
 {{as_underlying_zcl_type type array="" one_byte="1" two_byte="2" three_byte="3" four_byte="4" short_string="" long_string="" ten_byte="10" eleven_byte="11" twelve_byte="12" thirten_byte="13" fourteen_byte="14" fifteen_byte="15" sixteen_byte="16" struct="0" default="0" zclCharFormatter="true"}}u)
 {{/unless}}
@@ -103,7 +103,7 @@ sl_zigbee_af_status_t zcl_decode_{{as_underscore_lowercase clusterName}}_cluster
 {{#if_command_arg_not_always_present_with_presentif this}}
     // - Argument is conditionally present based on expression: {{add_prefix_to_all_strings presentIf "cmd_struct->"}}
     // - Argument is not present in all versions
-    if (cmd->bufLen < payloadOffset + {{zcl_string_type_return type short_string="sl_zigbee_af_string_length(cmd->buffer + payloadOffset) + 1u ||" long_string="sl_zigbee_af_get_long_string(cmd->buffer + payloadOffset) + 2u ||" default=""}}
+    if ({{zcl_string_type_return type short_string="payloadOffset >= cmd->bufLen || " long_string="cmd->bufLen <= payloadOffset + 1u || " default=""}}cmd->bufLen < payloadOffset + {{zcl_string_type_return type short_string="sl_zigbee_af_string_length(cmd->buffer + payloadOffset) + 1u ||" long_string="sl_zigbee_af_long_string_length(cmd->buffer + payloadOffset) + 2u ||" default=""}}
 {{#unless (is_zcl_string type)}}
 {{as_underlying_zcl_type type array="" one_byte="1" two_byte="2" three_byte="3" four_byte="4" short_string="" long_string="" ten_byte="10" eleven_byte="11" twelve_byte="12" thirten_byte="13" fourteen_byte="14" fifteen_byte="15" sixteen_byte="16" struct="0" default="0" zclCharFormatter="true"}}u ||
 {{/unless}} !({{add_prefix_to_all_strings presentIf "cmd_struct->"}}))
@@ -128,6 +128,13 @@ sl_zigbee_af_status_t zcl_decode_{{as_underscore_lowercase clusterName}}_cluster
         memset(cmd_struct->{{as_symbol label}}, 0, {{typeSize}});
         {{/if_compare}}
       } else {
+        if ({{zcl_string_type_return type short_string="payloadOffset >= cmd->bufLen || " long_string="cmd->bufLen <= payloadOffset + 1u || " default=""}}cmd->bufLen < payloadOffset + {{zcl_string_type_return type short_string="sl_zigbee_af_string_length(cmd->buffer + payloadOffset) + 1u)" long_string="sl_zigbee_af_long_string_length(cmd->buffer + payloadOffset) + 2u)" default=""}}
+{{#unless (is_zcl_string type)}}
+{{as_underlying_zcl_type type array="" one_byte="1" two_byte="2" three_byte="3" four_byte="4" short_string="" long_string="" ten_byte="10" eleven_byte="11" twelve_byte="12" thirten_byte="13" fourteen_byte="14" fifteen_byte="15" sixteen_byte="16" struct="0" default="0" zclCharFormatter="true"}}u)
+{{/unless}}
+        {
+          return SL_ZIGBEE_ZCL_STATUS_MALFORMED_COMMAND;
+        }
 {{/if_command_arg_always_present_with_presentif}}
 {{!--Close: Not a fixed length command, command argument present in all zcl specifications and present if conditions are present for the command argument--}}
         {{#if_compare typeSize 4 operator='<='}}
@@ -150,7 +157,7 @@ sl_zigbee_af_status_t zcl_decode_{{as_underscore_lowercase clusterName}}_cluster
 
 
 {{#unless (is_last_element index count)}}
-        payloadOffset+= {{#if (is_zcl_string type)}}{{zcl_string_type_return type short_string="sl_zigbee_af_string_length(cmd->buffer + payloadOffset) + 1u" long_string="sl_zigbee_af_get_long_string(cmd->buffer + payloadOffset) + 2u" default=""}}{{else}}{{as_underlying_zcl_type type zclCharFormatter="true"}}u{{/if}};
+        payloadOffset+= {{#if (is_zcl_string type)}}{{zcl_string_type_return type short_string="sl_zigbee_af_string_length(cmd->buffer + payloadOffset) + 1u" long_string="sl_zigbee_af_long_string_length(cmd->buffer + payloadOffset) + 2u" default=""}}{{else}}{{as_underlying_zcl_type type zclCharFormatter="true"}}u{{/if}};
 {{/unless}}
 {{#if_command_arg_not_always_present_no_presentif this}}
       }

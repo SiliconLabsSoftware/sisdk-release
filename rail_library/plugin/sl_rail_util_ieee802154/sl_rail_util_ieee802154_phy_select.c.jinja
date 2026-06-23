@@ -50,6 +50,14 @@
 {%- endif %}
 {%- endfor %}
 
+#ifdef SL_COMPONENT_CATALOG_PRESENT
+#include "sl_component_catalog.h"
+#endif // SL_COMPONENT_CATALOG_PRESENT
+
+#ifdef SL_CATALOG_SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT
+#include "sl_rail_util_ieee802154_rx_duty_cycling_radio_config.h"
+#endif
+
 #if SL_RAIL_UTIL_ANT_DIV_RX_MODE
 #define ANT_DIV_PHY_DEFAULT_ENABLED \
   (SL_RAIL_UTIL_ANT_DIV_RX_MODE != SL_RAIL_UTIL_ANTENNA_MODE_DISABLED)
@@ -236,6 +244,11 @@ typedef struct sl_rail_util_ieee802154_config {
 #error "Default PHY FEATURE combination is unsupported on this platform!"
 #endif
 
+#if IS_PHY_FEATURE_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_DUTY_CYCLING)
+static const RAIL_ChannelConfig_t *const RAIL_IEEE802154_PhyRxDutyCycling =
+  &RAIL_IEEE802154_PhyRxDC_channelConfig;
+#endif
+
 // The PHY table is ordered by RX sensitivity (best first).
 // We select the first PHY supporting all desired features to maximize performance.
 static sl_rail_util_ieee802154_config_t sl_rail_util_ieee802154_supported_phys[] = {
@@ -315,7 +328,7 @@ static sl_rail_util_ieee802154_config_t sl_rail_util_ieee802154_supported_phys[]
   {
     .phy_id = SL_RAIL_IEEE802154_PHY_2P4_GHZ_RX_DUTY_CYCLING,
     .phy_features = SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_DUTY_CYCLING,
-    .phy_cb = &sl_rail_ieee802154_config_2p4_ghz_radio_rx_duty_cycling
+    .channel_config = &RAIL_IEEE802154_PhyRxDutyCycling
   },
 #endif
 #if IS_PHY_FEATURE_SUPPORTED(SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_DC_2_MBPS)

@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 #include "sl_wisun_ip6string.h"
 #include "nvm3.h"
 #include "app_settings.h"
@@ -114,7 +115,7 @@
 #endif
 
 #ifndef APP_SETTINGS_WISUN_DEFAULT_NETWORK_SIZE
-  #define APP_SETTINGS_WISUN_DEFAULT_NETWORK_SIZE  SL_WISUN_NETWORK_SIZE_SMALL
+  #define APP_SETTINGS_WISUN_DEFAULT_NETWORK_SIZE  SL_WISUN_NETWORK_SIZE_AUTOMATIC
 #endif
 #ifndef APP_SETTINGS_WISUN_DEFAULT_ALLOWED_CHANNELS
   #define APP_SETTINGS_WISUN_DEFAULT_ALLOWED_CHANNELS  "0-255"
@@ -135,7 +136,7 @@
   #define APP_SETTINGS_WISUN_DEFAULT_RX_PHY_MODE_IDS_COUNT  -1
 #endif
 #ifndef APP_SETTINGS_WISUN_DEFAULT_LFN_PROFILE
-  #define APP_SETTINGS_WISUN_DEFAULT_LFN_PROFILE SL_WISUN_LFN_PROFILE_TEST
+  #define APP_SETTINGS_WISUN_DEFAULT_LFN_PROFILE SL_WISUN_LFN_PROFILE_AUTOMATIC
 #endif
 
 #define APP_SETTINGS_WISUN_DEFAULT_UC_DWELL_INTERVAL  255
@@ -332,8 +333,13 @@ const app_saving_item_t *saving_settings[] = {
 };
 
 static sl_wisun_statistics_t app_statistics;
-static sl_wisun_network_info_t app_network_info;
-static sl_wisun_rpl_info_t app_rpl_info;
+
+SL_ALIGN(4) static sl_wisun_network_info_t app_network_info SL_ATTRIBUTE_ALIGN(4);
+SL_ALIGN(4) static sl_wisun_rpl_info_t app_rpl_info SL_ATTRIBUTE_ALIGN(4);
+
+static uint16_t app_settings_mirror_network_pan_id;
+static uint16_t app_settings_mirror_rpl_dodag_rank;
+static uint16_t app_settings_mirror_rpl_lifetime_unit;
 
 #if SLI_WISUN_DISABLE_SECURITY
 uint32_t app_security_state = 1;
@@ -468,6 +474,7 @@ static const app_enum_t app_settings_wisun_lfn_profile_enum[] =
   { "test", SL_WISUN_LFN_PROFILE_TEST },
   { "balanced", SL_WISUN_LFN_PROFILE_BALANCED },
   { "eco", SL_WISUN_LFN_PROFILE_ECO },
+  { "automatic", SL_WISUN_LFN_PROFILE_AUTOMATIC },
   { NULL, 0 }
 };
 
@@ -2554,6 +2561,19 @@ static const app_settings_entry_t app_statistics_entries[] =
     .description = "Number of MPL messages that are deleted and never transmitted"
   },
   {
+    .key = "neighbor_alloc_fail",
+    .domain = app_statistics_domain_network,
+    .value_size = APP_SETTINGS_VALUE_SIZE_UINT16,
+    .input = APP_SETTINGS_INPUT_FLAG_DEFAULT,
+    .output = APP_SETTINGS_OUTPUT_FLAG_DEFAULT,
+    .value = &app_statistics.network.neighbor_alloc_fail,
+    .input_enum_list = NULL,
+    .output_enum_list = NULL,
+    .set_handler = NULL,
+    .get_handler = app_settings_get_integer,
+    .description = "Neighbor allocation failure count"
+  },
+  {
     .key = "tx_duration_ms",
     .domain = app_statistics_domain_regulation,
     .value_size = APP_SETTINGS_VALUE_SIZE_UINT32,
@@ -2745,7 +2765,7 @@ static const app_settings_entry_t app_info_entries[] =
     .value_size = APP_SETTINGS_VALUE_SIZE_UINT16,
     .input = APP_SETTINGS_INPUT_FLAG_DEFAULT,
     .output = APP_SETTINGS_OUTPUT_FLAG_DEFAULT,
-    .value = &app_network_info.pan_id,
+    .value = &app_settings_mirror_network_pan_id,
     .input_enum_list = NULL,
     .output_enum_list = NULL,
     .set_handler = NULL,
@@ -2814,7 +2834,7 @@ static const app_settings_entry_t app_rpl_entries[] =
     .value_size = APP_SETTINGS_VALUE_SIZE_UINT16,
     .input = APP_SETTINGS_INPUT_FLAG_DEFAULT,
     .output = APP_SETTINGS_OUTPUT_FLAG_DEFAULT,
-    .value = &app_rpl_info.dodag_rank,
+    .value = &app_settings_mirror_rpl_dodag_rank,
     .input_enum_list = NULL,
     .output_enum_list = NULL,
     .set_handler = NULL,
@@ -2931,7 +2951,7 @@ static const app_settings_entry_t app_rpl_entries[] =
     .value_size = APP_SETTINGS_VALUE_SIZE_UINT16,
     .input = APP_SETTINGS_INPUT_FLAG_DEFAULT,
     .output = APP_SETTINGS_OUTPUT_FLAG_DEFAULT,
-    .value = &app_rpl_info.lifetime_unit,
+    .value = &app_settings_mirror_rpl_lifetime_unit,
     .input_enum_list = NULL,
     .output_enum_list = NULL,
     .set_handler = NULL,
@@ -3182,13 +3202,13 @@ static sl_status_t app_settings_get_neighbors(char *value_str,
             if (strcmp(value_str, "::")) {
               printf("    gua = %s\r\n", value_str);
             }
-            printf("    lifetime = %lu\r\n", neighbor_info.lifetime);
-            printf("    mac_tx_count = %lu\r\n", neighbor_info.mac_tx_count);
-            printf("    mac_tx_failed_count = %lu\r\n", neighbor_info.mac_tx_failed_count);
-            printf("    mac_tx_ms_count = %lu\r\n", neighbor_info.mac_tx_ms_count);
-            printf("    mac_tx_ms_failed_count = %lu\r\n", neighbor_info.mac_tx_ms_failed_count);
-            printf("    mac_rx_count = %lu\r\n", neighbor_info.mac_rx_count);
-            printf("    mac_tx_cd_count = %lu\r\n", neighbor_info.mac_tx_cd_count);
+            printf("    lifetime = %"PRIu32"\r\n", neighbor_info.lifetime);
+            printf("    mac_tx_count = %"PRIu32"\r\n", neighbor_info.mac_tx_count);
+            printf("    mac_tx_failed_count = %"PRIu32"\r\n", neighbor_info.mac_tx_failed_count);
+            printf("    mac_tx_ms_count = %"PRIu32"\r\n", neighbor_info.mac_tx_ms_count);
+            printf("    mac_tx_ms_failed_count = %"PRIu32"\r\n", neighbor_info.mac_tx_ms_failed_count);
+            printf("    mac_rx_count = %"PRIu32"\r\n", neighbor_info.mac_rx_count);
+            printf("    mac_tx_cd_count = %"PRIu32"\r\n", neighbor_info.mac_tx_cd_count);
             if (neighbor_info.rpl_rank != 0xFFFF) {
               printf("    rpl_rank = %hu\r\n", neighbor_info.rpl_rank);
             }
@@ -3244,7 +3264,7 @@ static sl_status_t app_settings_get_statistics(char *value_str,
   // Update statistics
   ret = sl_wisun_get_statistics(statistics_type, &app_statistics);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed to retrieve statistics: %lu]\r\n", ret);
+    printf("[Failed to retrieve statistics: %"PRIu32"]\r\n", ret);
     return SL_STATUS_FAIL;
   }
 
@@ -3694,9 +3714,11 @@ static sl_status_t app_settings_get_network_info(char *value_str,
 
   ret = sl_wisun_get_network_info(&app_network_info);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed to retrieve Wi-SUN network information: %lu]\r\n", ret);
+    printf("[Failed to retrieve Wi-SUN network information: %"PRIu32"]\r\n", ret);
     return SL_STATUS_FAIL;
   }
+
+  app_settings_mirror_network_pan_id = app_network_info.pan_id;
 
   iter = app_info_entries;
   while (iter->key) {
@@ -3731,9 +3753,12 @@ static sl_status_t app_settings_get_rpl_info(char *value_str,
 
   ret = sl_wisun_get_rpl_info(&app_rpl_info);
   if (ret != SL_STATUS_OK) {
-    printf("[Failed to retrieve Wi-SUN RPL information: %lu]\r\n", ret);
+    printf("[Failed to retrieve Wi-SUN RPL information: %"PRIu32"]\r\n", ret);
     return SL_STATUS_FAIL;
   }
+
+  app_settings_mirror_rpl_dodag_rank = app_rpl_info.dodag_rank;
+  app_settings_mirror_rpl_lifetime_unit = app_rpl_info.lifetime_unit;
 
   iter = app_rpl_entries;
   while (iter->key) {
@@ -3858,7 +3883,7 @@ static sl_status_t app_settings_set_preferred_pan(const char *value_str,
     if (ret == SL_STATUS_OK) {
       printf("[Preferred PAN set]\r\n");
     } else {
-      printf("[Failed: unable to set preferred PAN: %lu]\r\n", ret);
+      printf("[Failed: unable to set preferred PAN: %"PRIu32"]\r\n", ret);
     }
   }
 

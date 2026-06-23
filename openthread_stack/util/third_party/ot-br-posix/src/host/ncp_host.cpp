@@ -30,12 +30,6 @@
 
 #include "ncp_host.hpp"
 
-#include <errno.h>
-#include <fcntl.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
 #include <memory>
 
 #include <openthread/error.h>
@@ -43,13 +37,8 @@
 
 #include <openthread/openthread-system.h>
 
-#if OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
-#include <openthread/border_routing.h>
-#include <openthread/icmp6.h>
-#include <openthread/ip6.h>
-#endif
-
 #include "host/async_task.hpp"
+#include "host/posix/firewall_ingress.hpp"
 #include "lib/spinel/spinel_driver.hpp"
 
 namespace otbr {
@@ -158,16 +147,9 @@ void NcpHost::Init(void)
 #if OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
     mNcpSpinel.BorderRoutingSetDhcp6PdEnabled(true);
 #endif
+    // NAT64 prefix management on NCP is enabled after SPINEL_PROP_INFRA_IF_STATE is first set
+    // (see NcpSpinel::SetInfraIf) so the NCP sees infra before BORDER_ROUTER_NAT64_ENABLE.
     mIsInitialized = true;
-
-#if OTBR_ENABLE_TREL
-    // Register TREL callbacks.
-    mNcpSpinel.SetTrelPortChangedCallback([this](uint16_t aPort) { HandleTrelPortChanged(aPort); });
-    mNcpSpinel.SetExtAddrChangedCallback(
-        [this](const uint8_t aExtAddr[OT_EXT_ADDRESS_SIZE]) { HandleExtAddrChanged(aExtAddr); });
-    mNcpSpinel.SetExtPanIdChangedCallback(
-        [this](const uint8_t aExtPanId[OT_EXT_PAN_ID_SIZE]) { HandleExtPanIdChanged(aExtPanId); });
-#endif
 }
 
 void NcpHost::Deinit(void)
@@ -360,15 +342,38 @@ void NcpHost::SetBorderAgentVendorTxtData(const std::vector<uint8_t> &aVendorTxt
     // To be implemented
     OTBR_UNUSED_VARIABLE(aVendorTxtData);
 }
+
+otError NcpHost::SetBorderAgentMeshCoPServiceBaseName(const char *aBaseName)
+{
+    // To be implemented
+    OTBR_UNUSED_VARIABLE(aBaseName);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+#endif
+
+#ifndef OTBR_VENDOR_NAME
+otError NcpHost::SetVendorName(const char *aVendorName)
+{
+    // TODO: Implement SetVendorName under NCP mode.
+    OTBR_UNUSED_VARIABLE(aVendorName);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+#endif
+
+#ifndef OTBR_PRODUCT_NAME
+otError NcpHost::SetVendorModel(const char *aVendorModel)
+{
+    // TODO: Implement SetVendorModel under NCP mode.
+    OTBR_UNUSED_VARIABLE(aVendorModel);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
 #endif
 
 void NcpHost::Process(const MainloopContext &aMainloop)
 {
     mSpinelDriver.Process(&aMainloop);
     mCliDaemon.Process(aMainloop);
-#if OTBR_ENABLE_TREL
-    ProcessTrelSocket(aMainloop);
-#endif
 }
 
 void NcpHost::Update(MainloopContext &aMainloop)
@@ -382,31 +387,42 @@ void NcpHost::Update(MainloopContext &aMainloop)
     }
 
     mCliDaemon.UpdateFdSet(aMainloop);
-#if OTBR_ENABLE_TREL
-    UpdateTrelSocketFdSet(aMainloop);
-#endif
 }
 
 #if OTBR_ENABLE_MDNS
 void NcpHost::SetMdnsPublisher(Mdns::Publisher *aPublisher)
 {
-#if OTBR_ENABLE_TREL
-    mPublisher = aPublisher;
-#endif
     mNcpSpinel.SetMdnsPublisher(aPublisher);
 }
 #endif
 
-#if OTBR_ENABLE_SRP_ADVERTISING_PROXY
+#if OTBR_ENABLE_MDNS && (OTBR_ENABLE_SRP_ADVERTISING_PROXY || OTBR_ENABLE_DNSSD_PLAT)
 void NcpHost::HandleMdnsState(Mdns::Publisher::State aState)
 {
-#if OTBR_ENABLE_TREL
-    mPublisherState = aState;
-#endif
     mNcpSpinel.DnssdSetState(aState);
-#if OTBR_ENABLE_TREL
-    MaybePublishTrelService();
+}
 #endif
+
+#if OTBR_ENABLE_DNSSD_PLAT
+void NcpHost::NotifyDnssdPlatformStateToNcp(otPlatDnssdState aState)
+{
+#if OTBR_ENABLE_MDNS && (OTBR_ENABLE_SRP_ADVERTISING_PROXY || OTBR_ENABLE_DNSSD_PLAT)
+    Mdns::Publisher::State mdnsState =
+        (aState == OT_PLAT_DNSSD_READY) ? Mdns::Publisher::State::kReady : Mdns::Publisher::State::kIdle;
+    mNcpSpinel.DnssdSetState(mdnsState);
+#endif
+}
+#endif
+
+#if OTBR_ENABLE_TREL
+void NcpHost::SetTrelStateChangedCallback(NcpSpinel::TrelStateChangedCallback aCallback)
+{
+    mNcpSpinel.SetTrelStateChangedCallback(aCallback);
+}
+
+otError NcpHost::SetTrelHostUdpPort(bool aEnabled, uint16_t aHostPort)
+{
+    return mNcpSpinel.SetTrelHostUdpPort(aEnabled, aHostPort);
 }
 #endif
 
@@ -440,296 +456,6 @@ void NcpHost::InitNetifCallbacks(Netif &aNetif)
         [&aNetif](const uint8_t *aData, uint16_t aLength) { aNetif.Ip6Receive(aData, aLength); });
 }
 
-#if OTBR_ENABLE_TREL
-void NcpHost::HandleTrelPortChanged(uint16_t aPort)
-{
-    if (aPort == 0)
-    {
-        CloseTrelSocket();
-        return;
-    }
-    OpenTrelSocket(aPort);
-    MaybePublishTrelService();
-    StartTrelPeerBrowse();
-}
-
-void NcpHost::HandleExtAddrChanged(const uint8_t aExtAddr[OT_EXT_ADDRESS_SIZE])
-{
-    static constexpr uint8_t kZeroExtAddr[OT_EXT_ADDRESS_SIZE] = {0};
-    memcpy(mExtAddr, aExtAddr, OT_EXT_ADDRESS_SIZE);
-    mHasExtAddr = (memcmp(aExtAddr, kZeroExtAddr, OT_EXT_ADDRESS_SIZE) != 0);
-    MaybePublishTrelService();
-}
-
-void NcpHost::HandleExtPanIdChanged(const uint8_t aExtPanId[OT_EXT_PAN_ID_SIZE])
-{
-    static constexpr uint8_t kZeroExtPanId[OT_EXT_PAN_ID_SIZE] = {0};
-    memcpy(mExtPanId, aExtPanId, OT_EXT_PAN_ID_SIZE);
-    mHasExtPanId = (memcmp(aExtPanId, kZeroExtPanId, OT_EXT_PAN_ID_SIZE) != 0);
-    MaybePublishTrelService();
-}
-
-void NcpHost::OpenTrelSocket(uint16_t aPort)
-{
-    if (mTrelSocket.mActive && mTrelSocket.mPort == aPort)
-    {
-        return;
-    }
-    CloseTrelSocket();
-
-    int fd = ::socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-    if (fd < 0)
-    {
-        otbrLogWarning("TREL socket create failed: %s", strerror(errno));
-        return;
-    }
-
-    int on = 1;
-    (void)setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
-
-    // Non-blocking
-    int flags = fcntl(fd, F_GETFL, 0);
-    if (flags != -1)
-    {
-        (void)fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-    }
-
-    struct sockaddr_in6 addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.sin6_family = AF_INET6;
-    addr.sin6_port   = htons(aPort);
-    addr.sin6_addr   = in6addr_any;
-    if (bind(fd, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr)) < 0)
-    {
-        otbrLogWarning("TREL socket bind(%u) failed: %s", aPort, strerror(errno));
-        close(fd);
-        return;
-    }
-
-    mTrelSocket.mFd     = fd;
-    mTrelSocket.mPort   = aPort;
-    mTrelSocket.mActive = true;
-    otbrLogInfo("TREL socket bound on UDP port %u", aPort);
-}
-
-void NcpHost::CloseTrelSocket(void)
-{
-    if (mTrelSocket.mActive)
-    {
-        StopTrelPeerBrowse();
-        close(mTrelSocket.mFd);
-        mTrelSocket.mFd       = -1;
-        mTrelSocket.mPort     = 0;
-        mTrelSocket.mActive   = false;
-        mTrelServicePublished = false;
-        otbrLogInfo("TREL socket closed");
-    }
-}
-
-void NcpHost::ProcessTrelSocket(const MainloopContext &aMainloop)
-{
-    if (!mTrelSocket.mActive)
-    {
-        return;
-    }
-
-    if (FD_ISSET(mTrelSocket.mFd, &aMainloop.mReadFdSet))
-    {
-        uint8_t             buffer[1280]; // IPv6 minimum MTU
-        struct sockaddr_in6 srcAddr;
-        socklen_t           addrLen = sizeof(srcAddr);
-        ssize_t             len;
-        while ((len = recvfrom(mTrelSocket.mFd, buffer, sizeof(buffer), 0, (struct sockaddr *)&srcAddr, &addrLen)) > 0)
-        {
-            // Forward inbound TREL datagram using existing UDP forward property (remote=src, localPort = trel port)
-            otIp6Address peer;
-            memcpy(peer.mFields.m8, &srcAddr.sin6_addr, sizeof(peer.mFields.m8));
-            // We reuse UdpForward API with local port (Thread side) equal to advertised TREL port.
-            uint16_t remotePort = ntohs(srcAddr.sin6_port);
-            mNcpSpinel.UdpForward(buffer, static_cast<uint16_t>(len), peer, remotePort, mTrelSocket.mPort);
-        }
-    }
-}
-
-void NcpHost::UpdateTrelSocketFdSet(MainloopContext &aMainloop)
-{
-    if (!mTrelSocket.mActive)
-    {
-        return;
-    }
-
-    FD_SET(mTrelSocket.mFd, &aMainloop.mReadFdSet);
-
-    if (mTrelSocket.mFd > aMainloop.mMaxFd)
-    {
-        aMainloop.mMaxFd = mTrelSocket.mFd;
-    }
-}
-
-std::string NcpHost::BuildTrelInstanceName(void) const
-{
-    if (!mHasExtAddr)
-    {
-        return std::string();
-    }
-
-    char name[48];
-    // Align with stack-managed DNS-SD prefix (otTREL + hex EUI-64)
-    snprintf(name, sizeof(name), "otTREL%02x%02x%02x%02x%02x%02x%02x%02x", mExtAddr[0], mExtAddr[1], mExtAddr[2],
-             mExtAddr[3], mExtAddr[4], mExtAddr[5], mExtAddr[6], mExtAddr[7]);
-    return std::string(name);
-}
-
-std::vector<uint8_t> NcpHost::BuildTrelTxtData(void) const
-{
-    std::vector<uint8_t> txt;
-    if (!mHasExtAddr || !mHasExtPanId)
-    {
-        return txt; // Need both for valid peer discoverer parse.
-    }
-
-    auto appendEntry = [&txt](const char *key, const uint8_t *bytes, size_t len) {
-        char   buf[4 + OT_EXT_ADDRESS_SIZE + OT_EXT_PAN_ID_SIZE];
-        size_t written = 0;
-        written += snprintf(buf, sizeof(buf), "%s=", key);
-        for (size_t i = 0; i < len && written + 2 < sizeof(buf); i++)
-        {
-            written += snprintf(buf + written, sizeof(buf) - written, "%02x", bytes[i]);
-        }
-        // DNS-SD TXT entry: length-prefixed string.
-        if (written <= 255)
-        {
-            txt.push_back(static_cast<uint8_t>(written));
-            txt.insert(txt.end(), buf, buf + written);
-        }
-    };
-
-    appendEntry("xa", mExtAddr, OT_EXT_ADDRESS_SIZE);
-    appendEntry("xp", mExtPanId, OT_EXT_PAN_ID_SIZE);
-    return txt;
-}
-
-void NcpHost::MaybePublishTrelService(void)
-{
-#if OTBR_ENABLE_MDNS && !OTBR_ENABLE_MDNS_OPENTHREAD
-    if (mTrelServicePublished)
-    {
-        return;
-    }
-
-    if (!mTrelSocket.mActive || !mHasExtAddr || !mHasExtPanId)
-    {
-        return; // Need port + ext addr + ext pan id.
-    }
-
-    if (mPublisher == nullptr)
-    {
-        return;
-    }
-
-    if (mPublisherState != Mdns::Publisher::State::kReady)
-    {
-        return;
-    }
-
-    std::string                  instance = BuildTrelInstanceName();
-    std::vector<uint8_t>         txt      = BuildTrelTxtData();
-    Mdns::Publisher::SubTypeList subtypes; // none for now.
-    otbrLogInfo("Publishing _trel._udp service: instance=%s port=%u", instance.c_str(), mTrelSocket.mPort);
-    mPublisher->PublishService("", instance, "_trel._udp", subtypes, mTrelSocket.mPort, txt, [this](otbrError aError) {
-        if (aError == OTBR_ERROR_NONE)
-        {
-            otbrLogInfo("_trel._udp published successfully");
-            mTrelServicePublished = true;
-            StartTrelPeerBrowse();
-        }
-        else
-        {
-            otbrLogWarning("Failed to publish _trel._udp: %d", aError);
-        }
-    });
-#endif
-}
-
-void NcpHost::StartTrelPeerBrowse(void)
-{
-#if OTBR_ENABLE_MDNS && !OTBR_ENABLE_MDNS_OPENTHREAD
-    if (!mPublisher || mTrelBrowseActive || !mTrelSocket.mActive)
-    {
-        return;
-    }
-
-    if (mPublisherState != Mdns::Publisher::State::kReady)
-    {
-        return;
-    }
-
-    // Subscribe to _trel._udp service instances.
-    mTrelBrowseSubscriberId = mPublisher->AddSubscriptionCallbacks(
-        [this](const std::string &aType, const Mdns::Publisher::DiscoveredInstanceInfo &aInfo) {
-            if (StringUtils::EqualCaseInsensitive(aType, "_trel._udp"))
-            {
-                NcpSpinel::TrelPeerInfo peerInfo;
-                memset(&peerInfo, 0, sizeof(peerInfo));
-                // Parse extended address from TXT (search key xa=hex...)
-                std::string txt(reinterpret_cast<const char *>(aInfo.mTxtData.data()), aInfo.mTxtData.size());
-                size_t      pos = txt.find("xa=");
-                if (pos != std::string::npos && (pos + 3 + 16) <= txt.size())
-                {
-                    for (uint8_t i = 0; i < OT_EXT_ADDRESS_SIZE; i++)
-                    {
-                        unsigned int byteVal = 0;
-                        sscanf(txt.substr(pos + 3 + i * 2, 2).c_str(), "%02x", &byteVal);
-                        peerInfo.mExtAddr[i] = static_cast<uint8_t>(byteVal);
-                    }
-                }
-                // Pick first link-local address.
-                for (const auto &addr : aInfo.mAddresses)
-                {
-                    if (addr.IsLinkLocal())
-                    {
-                        memcpy(peerInfo.mIp6Addr.mFields.m8, addr.GetAddress().mFields.m8,
-                               sizeof(peerInfo.mIp6Addr.mFields.m8));
-                        break;
-                    }
-                }
-                peerInfo.mPort  = aInfo.mPort;
-                peerInfo.mFlags = 0; // added
-                peerInfo.mTxtData.assign(aInfo.mTxtData.begin(), aInfo.mTxtData.end());
-                if (aInfo.mRemoved)
-                {
-                    peerInfo.mFlags |= 0x01;
-                    OT_UNUSED_VARIABLE(mNcpSpinel.RemoveTrelPeer(peerInfo));
-                }
-                else
-                {
-                    OT_UNUSED_VARIABLE(mNcpSpinel.InsertTrelPeer(peerInfo));
-                }
-            }
-        },
-        /* host callback */ nullptr);
-    mPublisher->SubscribeService("_trel._udp", "");
-    mTrelBrowseActive = true;
-    otbrLogInfo("Started browsing _trel._udp peers");
-#endif
-}
-
-void NcpHost::StopTrelPeerBrowse(void)
-{
-#if OTBR_ENABLE_MDNS && !OTBR_ENABLE_MDNS_OPENTHREAD
-    if (!mTrelBrowseActive || !mPublisher)
-    {
-        return;
-    }
-    mPublisher->UnsubscribeService("_trel._udp", "");
-    mPublisher->RemoveSubscriptionCallbacks(mTrelBrowseSubscriberId);
-    mTrelBrowseSubscriberId = 0;
-    mTrelBrowseActive       = false;
-    otbrLogInfo("Stopped browsing _trel._udp peers");
-#endif
-}
-#endif // OTBR_ENABLE_TREL
-
 void NcpHost::InitInfraIfCallbacks(InfraIf &aInfraIf)
 {
     mNcpSpinel.InfraIfSetIcmp6NdSendCallback(
@@ -741,6 +467,11 @@ void NcpHost::InitInfraIfCallbacks(InfraIf &aInfraIf)
 otbrError NcpHost::Ip6Send(const uint8_t *aData, uint16_t aLength)
 {
     return mNcpSpinel.Ip6Send(aData, aLength);
+}
+
+void NcpHost::HandleThreadInterfaceIp6UnicastAddressesUpdated(const std::vector<Ip6AddressInfo> &aAddrInfos)
+{
+    RefreshIngressAllowDstFromThreadUnicastAddrs(aAddrInfos);
 }
 
 otbrError NcpHost::Ip6MulAddrUpdateSubscription(const otIp6Address &aAddress, bool aIsAdded)
@@ -762,108 +493,9 @@ otbrError NcpHost::HandleIcmp6Nd(uint32_t          aInfraIfIndex,
 }
 
 #if OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
-otbrError NcpHost::TryProcessIcmp6RaMessage(const uint8_t *aData, uint16_t aLength)
+otbrError NcpHost::BorderRoutingProcessDhcp6PdPrefix(const otBorderRoutingPrefixTableEntry *aPrefixInfo)
 {
-    otbrError      error = OTBR_ERROR_NOT_FOUND;
-    const uint8_t *ra    = nullptr;
-    ssize_t        raLength;
-    const uint8_t *optionPtr;
-    ssize_t        remainingLen;
-    bool           foundPio = false;
-
-    // Check if data is a valid IPv6 packet with ICMPv6 RA message
-    VerifyOrExit(aData != nullptr && aLength >= OT_IP6_HEADER_SIZE + OT_ICMP6_ROUTER_ADVERT_MIN_SIZE,
-                 error = OTBR_ERROR_INVALID_ARGS);
-
-    // Check IPv6 version (first 4 bits should be 6)
-    VerifyOrExit((aData[0] >> 4) == 6, error = OTBR_ERROR_INVALID_ARGS);
-
-    // Check if protocol is ICMPv6 (0x3A = 58)
-    VerifyOrExit(aData[OT_IP6_HEADER_PROTO_OFFSET] == OT_IP6_PROTO_ICMP6, error = OTBR_ERROR_INVALID_ARGS);
-
-    // Get pointer to ICMPv6 header (after IPv6 header)
-    ra       = aData + OT_IP6_HEADER_SIZE;
-    raLength = aLength - OT_IP6_HEADER_SIZE;
-
-    // Check if it's a Router Advertisement message (Type 134, Code 0)
-    VerifyOrExit(raLength >= OT_ICMP6_ROUTER_ADVERT_MIN_SIZE, error = OTBR_ERROR_INVALID_ARGS);
-    VerifyOrExit(ra[0] == OT_ICMP6_TYPE_ROUTER_ADVERT && ra[1] == 0, error = OTBR_ERROR_INVALID_ARGS);
-
-    // Parse options to find Prefix Information Options (PIO)
-    // Options start after RA header (offset 16 from ICMPv6 header start)
-    optionPtr    = ra + 16;
-    remainingLen = raLength - 16;
-
-    while (remainingLen >= 8) // Minimum option size is 8 bytes
-    {
-        uint8_t  optionType   = optionPtr[0];
-        uint8_t  optionLength = optionPtr[1]; // Length in units of 8 bytes
-        uint16_t optionSize   = optionLength * 8;
-
-        // Check if we have enough data for this option
-        if (optionLength == 0 || remainingLen < optionSize)
-        {
-            break; // Invalid option, stop parsing
-        }
-
-        // Process Prefix Information Option (Type 3)
-        if (optionType == 3 && optionLength == 4) // PIO is 32 bytes
-        {
-            // PIO structure:
-            // Bytes 0-1: Type (3) and Length (4 = 32 bytes)
-            // Byte 2: Prefix Length
-            // Byte 3: Flags (L|A|Reserved1)
-            // Bytes 4-7: Valid Lifetime
-            // Bytes 8-11: Preferred Lifetime
-            // Bytes 12-15: Reserved2
-            // Bytes 16-31: Prefix (16 bytes)
-
-            otBorderRoutingPrefixTableEntry pioEntry;
-            memset(&pioEntry, 0, sizeof(pioEntry));
-
-            // Extract prefix (16 bytes starting at offset 16)
-            memcpy(pioEntry.mPrefix.mPrefix.mFields.m8, &optionPtr[16], OT_IP6_ADDRESS_SIZE);
-            // Extract prefix length
-            pioEntry.mPrefix.mLength = optionPtr[2];
-            // Extract lifetimes (big-endian)
-            pioEntry.mValidLifetime = (static_cast<uint32_t>(optionPtr[4]) << 24) |
-                                      (static_cast<uint32_t>(optionPtr[5]) << 16) |
-                                      (static_cast<uint32_t>(optionPtr[6]) << 8) | static_cast<uint32_t>(optionPtr[7]);
-            pioEntry.mPreferredLifetime =
-                (static_cast<uint32_t>(optionPtr[8]) << 24) | (static_cast<uint32_t>(optionPtr[9]) << 16) |
-                (static_cast<uint32_t>(optionPtr[10]) << 8) | static_cast<uint32_t>(optionPtr[11]);
-
-            // Logging the PIO information
-            Ip6Address prefixAddr(pioEntry.mPrefix.mPrefix);
-            otbrLogInfo("PIO Entry: prefix=%s/%u, validLifetime=%u, preferredLifetime=%u",
-                        prefixAddr.ToString().c_str(), pioEntry.mPrefix.mLength, pioEntry.mValidLifetime,
-                        pioEntry.mPreferredLifetime);
-
-            // Process this PIO by sending it to NCP
-            otError pioError = mNcpSpinel.BorderRoutingProcessDhcp6PdPrefix(&pioEntry);
-            if (pioError != OT_ERROR_NONE)
-            {
-                otbrLogWarning("Failed to process PIO from RA message, %s", otThreadErrorToString(pioError));
-            }
-            else
-            {
-                foundPio = true;
-            }
-        }
-
-        // Move to next option
-        optionPtr += optionSize;
-        remainingLen -= optionSize;
-    }
-
-    // Return success if we found at least one PIO
-    if (foundPio)
-    {
-        error = OTBR_ERROR_NONE;
-    }
-
-exit:
-    return error;
+    return mNcpSpinel.BorderRoutingProcessDhcp6PdPrefix(aPrefixInfo);
 }
 #endif // OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
 

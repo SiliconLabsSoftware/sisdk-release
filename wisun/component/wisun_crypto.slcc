@@ -46,7 +46,7 @@ template_contribution:
 - name: "psa_key_slots"
   value:
     name: "psa_key_slots_wisun_stack"
-    count: "21"
+    count: "31"
   condition: [wisun_br_stack]
 - name: "psa_its_files"
   value:

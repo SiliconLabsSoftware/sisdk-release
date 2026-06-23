@@ -15,6 +15,15 @@
 - provides:
   - name: brd8029a
   - name: hardware_exp_board
+  - name: hardware_board_has_led0
+  - name: hardware_board_has_led1
+  - name: hardware_board_has_led2
+  - name: hardware_board_has_led3
+  - name: hardware_board_has_btn0
+  - name: hardware_board_has_btn1
+  - name: hardware_board_has_btn2
+  - name: hardware_board_has_btn3
+  - name: hardware_board_has_exclusive_button_led
 - recommends:
   - id: simple_led
     instance:

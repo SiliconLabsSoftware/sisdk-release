@@ -1,0 +1,31 @@
+id: mbedtls_ssl_proto_tls12
+package: platform_core
+label: TLS Client
+description: >-
+  This component enable support for the TLS 1.2 protocol in Mbed TLS.
+category: Platform|Security|Mbed TLS|Upper Layer
+quality: production
+provides:
+- name: mbedtls_ssl_proto_tls12
+- name: mbedtls_ssl_proto
+  allow_multiple: true
+requires:
+  # TLS 1.2 requires SHA-256 or SHA-384 (running handshake hash) 
+- name: psa_crypto_hash
+  # TLS 1.2 requires a MBEDTLS_KEY_EXCHANGE_xxxx
+- name: mbedtls_key_exchange
+recommends:
+- id: psa_crypto_sha256
+  vendor: silabs
+- id: mbedtls_key_exchange_ecdhe_psk
+
+  vendor: silabs
+template_contribution:
+- name: mbedtls_config
+  value: MBEDTLS_SSL_PROTO_TLS1_2
+documentation:
+  url: https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/mbedtls__config_8h/#c.MBEDTLS_SSL_PROTO_TLS1_2
+metadata:
+  sbom:
+    reference: mbedtls_sbom
+root_path: platform_core

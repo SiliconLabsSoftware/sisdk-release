@@ -3,7 +3,7 @@
  * @brief internal wrappers for 'stack-info' ipc commands
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -1047,6 +1047,7 @@ void sl_zigbee_read_and_clear_counters(uint16_t *counter_array,
 
   if (len > SL_ZIGBEE_COUNTER_TYPE_COUNT) {
     assert(false); // "vector counter_array length exceeds expected maximum
+    return;
   }
 
   memmove(msg.data.read_and_clear_counters.request.counter_array, counter_array, sizeof(uint16_t) * len);
@@ -1055,6 +1056,7 @@ void sl_zigbee_read_and_clear_counters(uint16_t *counter_array,
 
   if (len > SL_ZIGBEE_COUNTER_TYPE_COUNT) {
     assert(false); // "vector counter_array length exceeds expected maximum
+    return;
   }
 
   memmove(counter_array, msg.data.read_and_clear_counters.request.counter_array, sizeof(uint16_t) * len);
@@ -1067,6 +1069,7 @@ void sl_zigbee_read_counters(uint16_t *counter_array,
 
   if (len > SL_ZIGBEE_COUNTER_TYPE_COUNT) {
     assert(false); // "vector counter_array length exceeds expected maximum
+    return;
   }
 
   memmove(msg.data.read_counters.request.counter_array, counter_array, sizeof(uint16_t) * len);
@@ -1075,6 +1078,7 @@ void sl_zigbee_read_counters(uint16_t *counter_array,
 
   if (len > SL_ZIGBEE_COUNTER_TYPE_COUNT) {
     assert(false); // "vector counter_array length exceeds expected maximum
+    return;
   }
 
   memmove(counter_array, msg.data.read_counters.request.counter_array, sizeof(uint16_t) * len);

@@ -48,7 +48,5 @@ class Source_Code(object):
 
         # write the lines to a file
         outputfile = open(outputfilename, 'w')
-        for line in output_lines:
-            outputfile.write('%s\n' % line)
-        outputfile.write('\n')
+        outputfile.write('\n'.join(output_lines) + '\n\n')
         outputfile.close()

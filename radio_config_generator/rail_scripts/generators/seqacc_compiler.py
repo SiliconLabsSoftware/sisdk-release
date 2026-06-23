@@ -332,8 +332,9 @@ class Sequence(Sequences):
                             # Insert JUMP right after SKIPCOND instruction to reach end of If condition
                             instructionList.insert(indexIf + 1, {'JUMP': lenIf})
                             indexEndIf += 1
-                    except IndexError:
-                        # Ending up here means the IF condition has no ELSE AND there is no other instruction afterward
+                    except (IndexError, AttributeError):
+                        # Ending up here means the IF condition has no ELSE AND there is no other instruction afterward,
+                        # or, in the case of AttributeError, the instruction afterward is a string (probably #if/#endif).
                         # So we can just execute the "else" condition just above:
                         # Insert JUMP right after SKIPCOND instruction to reach end of If condition
                         instructionList.insert(indexIf + 1, {'JUMP': lenIf})

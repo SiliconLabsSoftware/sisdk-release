@@ -47,7 +47,6 @@ class PHYS_Bluetooth_LE_Margay(PHYS_Bluetooth_LE_Ocelot):
         phy.profile_outputs.MODEM_CGCLKSTOP_FORCEOFF.override = 56831
         phy.profile_outputs.MODEM_CTRL0_FRAMEDETDEL.override = 2
         phy.profile_outputs.MODEM_CTRL6_RXBRCALCDIS.override = 1
-        phy.profile_outputs.MODEM_PRE_BASE.override = 2
 
         # Shaping overrides
         self.BLE_TX_Shaping_Coeffs(phy, model)

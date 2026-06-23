@@ -19,8 +19,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <signal.h>
-#include <time.h>
 
 #include "sl_rail.h"
 

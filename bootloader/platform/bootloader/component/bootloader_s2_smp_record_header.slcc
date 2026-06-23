@@ -1,0 +1,22 @@
+id: bootloader_s2_smp_record_header
+label: Bootloader S2 (SMP switch record header)
+package: bootloader
+description: >
+  Header-only carrier for btl_smp_switch_record.h in the bootloader package. Keeps a single
+  SBOM/include owner for the record header while bootloader_interface_s2 (bootloader_interface
+  package) and bootloader_smp_switch both require it. Required by bootloader_interface_s2 and
+  bootloader_smp_switch.
+category: Platform|Bootloader
+quality: production
+ui_hints:
+  visibility: never
+include:
+- path: platform/bootloader/core/smp_switch
+  file_list:
+  - path: btl_smp_switch_record.h
+provides:
+- name: bootloader_s2_smp_record_header
+metadata:
+  sbom:
+    license: MSLA
+root_path: bootloader

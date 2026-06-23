@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<api device_id="4" device_name="bt" version="11.0.2">
+<api device_id="4" device_name="bt" version="11.1.0">
     <datatypes>
         <datatype base="uint16" name="errorcode" length="2"/>
         <datatype base="int16" name="int16" length="2"/>
@@ -285,6 +285,24 @@
                 <param datatype="errorcode" name="result" type="uint16"/>
             </returns>
         </command>
+        <command index="1" name="get_hci_connection_handle" >
+            <params>
+                <param datatype="uint8" name="connection" type="uint8"/>
+            </params>
+            <returns>
+                <param datatype="errorcode" name="result" type="uint16"/>
+                <param datatype="uint16" name="hci_connection_handle" type="uint16"/>
+            </returns>
+        </command>
+        <command index="2" name="get_bgapi_connection_handle" >
+            <params>
+                <param datatype="uint16" name="hci_connection_handle" type="uint16"/>
+            </params>
+            <returns>
+                <param datatype="errorcode" name="result" type="uint16"/>
+                <param datatype="uint8" name="connection" type="uint8"/>
+            </returns>
+        </command>
         <event index="0" name="event_info_report">
             <params>
                 <param datatype="uint32" name="configuration" type="uint32"/>
@@ -356,6 +374,16 @@
                 <param datatype="errorcode" name="result" type="uint16"/>
             </returns>
         </command>
+        <command index="7" name="set_privacy_mode_with_rpa_randomization" >
+            <params>
+                <param datatype="uint8" name="privacy" type="uint8"/>
+                <param datatype="uint8" name="interval_min_minutes" type="uint8"/>
+                <param datatype="uint8" name="interval_max_minutes" type="uint8"/>
+            </params>
+            <returns>
+                <param datatype="errorcode" name="result" type="uint16"/>
+            </returns>
+        </command>
         <command index="2" name="set_data_channel_classification" >
             <params>
                 <param datatype="uint8array" name="channel_map" type="uint8array"/>
@@ -388,6 +416,12 @@
                 <param datatype="uint8" name="num_connections" type="uint8"/>
             </returns>
         </command>
+        <event index="0" name="random_address_refresh">
+            <params>
+                <param datatype="bd_addr" name="address" type="bd_addr"/>
+                <param datatype="uint8" name="address_type" type="uint8"/>
+            </params>
+        </event>
         <enums name="address_type">
             <enum name="public_address" value="0x0"/>
             <enum name="static_address" value="0x1"/>
@@ -517,6 +551,13 @@
                 <param datatype="bd_addr" name="address" type="bd_addr"/>
                 <param datatype="uint8" name="address_type" type="uint8"/>
                 <param datatype="uint8" name="bonding" type="uint8"/>
+            </params>
+        </event>
+        <event index="3" name="random_address_refresh">
+            <params>
+                <param datatype="uint8" name="advertising_set" type="uint8"/>
+                <param datatype="bd_addr" name="address" type="bd_addr"/>
+                <param datatype="uint8" name="address_type" type="uint8"/>
             </params>
         </event>
         <enums name="discovery_mode">
@@ -676,6 +717,14 @@
                 <param datatype="errorcode" name="result" type="uint16"/>
             </returns>
         </command>
+        <command index="4" name="refresh_data_id" >
+            <params>
+                <param datatype="uint8" name="advertising_set" type="uint8"/>
+            </params>
+            <returns>
+                <param datatype="errorcode" name="result" type="uint16"/>
+            </returns>
+        </command>
         <command index="2" name="start" >
             <params>
                 <param datatype="uint8" name="advertising_set" type="uint8"/>
@@ -705,6 +754,7 @@
         <defines name="flags">
             <define name="include_tx_power" value="0x1"/>
             <define name="auto_start_extended_advertising" value="0x2"/>
+            <define name="include_advertising_data_information" value="0x4"/>
         </defines>
     </class>
     <class index="5" name="scanner">
@@ -850,6 +900,7 @@
         <enums name="reporting_mode">
             <enum name="report_none" value="0x0"/>
             <enum name="report_all" value="0x1"/>
+            <enum name="report_non_duplicate" value="0x2"/>
         </enums>
         <enums name="advertiser_clock_accuracy">
             <enum name="clock_accuracy_500" value="0x1f4"/>
@@ -1016,6 +1067,11 @@
                 <param datatype="uint8array" name="data" type="uint8array"/>
             </params>
         </event>
+        <enums name="data_status">
+            <enum name="data_status_complete" value="0x0"/>
+            <enum name="data_status_incomplete_more" value="0x1"/>
+            <enum name="data_status_incomplete_nomore" value="0x2"/>
+        </enums>
     </class>
     <class index="84" name="pawr_sync">
         <command index="2" name="set_sync_subevents" >
@@ -1089,6 +1145,12 @@
                 <param datatype="uint8array" name="data" type="uint8array"/>
             </params>
         </event>
+        <enums name="subevent_data_status">
+            <enum name="subevent_data_status_complete" value="0x0"/>
+            <enum name="subevent_data_status_incomplete_more" value="0x1"/>
+            <enum name="subevent_data_status_incomplete_nomore" value="0x2"/>
+            <enum name="subevent_data_status_not_received" value="0xff"/>
+        </enums>
     </class>
     <class index="85" name="pawr_advertiser">
         <command index="0" name="start" >
@@ -1183,6 +1245,12 @@
                 <param datatype="uint8array" name="data" type="uint8array"/>
             </params>
         </event>
+        <enums name="response_data_status">
+            <enum name="response_data_status_complete" value="0x0"/>
+            <enum name="response_data_status_incomplete_more" value="0x1"/>
+            <enum name="response_data_status_incomplete_nomore" value="0x2"/>
+            <enum name="response_data_status_not_received" value="0xff"/>
+        </enums>
     </class>
     <class index="6" name="connection">
         <command index="0" name="set_default_parameters" >
@@ -2884,6 +2952,16 @@
                 <param datatype="errorcode" name="result" type="uint16"/>
             </returns>
         </command>
+        <command index="5" name="read_peer_resolvable_address" >
+            <params>
+                <param datatype="bd_addr" name="address" type="bd_addr"/>
+                <param datatype="uint8" name="address_type" type="uint8"/>
+            </params>
+            <returns>
+                <param datatype="errorcode" name="result" type="uint16"/>
+                <param datatype="bd_addr" name="address_out" type="bd_addr"/>
+            </returns>
+        </command>
         <enums name="privacy_mode">
             <enum name="privacy_mode_network" value="0x0"/>
             <enum name="privacy_mode_device" value="0x1"/>
@@ -3121,6 +3199,58 @@
                 <param datatype="errorcode" name="result" type="uint16"/>
             </returns>
         </command>
+        <command index="10" name="handover_get_procedure_parameters" >
+            <params>
+                <param datatype="connection" name="connection" type="uint8"/>
+                <param datatype="uint8" name="config_id" type="uint8"/>
+            </params>
+            <returns>
+                <param datatype="errorcode" name="result" type="uint16"/>
+                <param datatype="uint8array" name="cs_parameters" type="uint8array"/>
+            </returns>
+        </command>
+        <command index="11" name="handover_set_procedure_parameters" >
+            <params>
+                <param datatype="uint8array" name="cs_parameters" type="uint8array"/>
+            </params>
+            <returns>
+                <param datatype="errorcode" name="result" type="uint16"/>
+                <param datatype="uint8" name="analyzer" type="uint8"/>
+                <param datatype="uint8" name="config_id" type="uint8"/>
+            </returns>
+        </command>
+        <command index="12" name="handover_create_sync" >
+            <params>
+                <param datatype="uint8" name="analyzer" type="uint8"/>
+                <param datatype="uint8" name="config_id" type="uint8"/>
+                <param datatype="uint16" name="procedure_counter" type="uint16"/>
+            </params>
+            <returns>
+                <param datatype="errorcode" name="result" type="uint16"/>
+            </returns>
+        </command>
+        <command index="13" name="handover_enable_procedure" >
+            <params>
+                <param datatype="uint8" name="enable" type="uint8"/>
+                <param datatype="uint16" name="start_procedure_counter" type="uint16"/>
+                <param datatype="uint16" name="procedure_skip" type="uint16"/>
+                <param datatype="uint8" name="handle_type" type="uint8"/>
+                <param datatype="uint8" name="handle" type="uint8"/>
+                <param datatype="uint8" name="config_id" type="uint8"/>
+            </params>
+            <returns>
+                <param datatype="errorcode" name="result" type="uint16"/>
+            </returns>
+        </command>
+        <command index="14" name="handover_remove_procedure" >
+            <params>
+                <param datatype="uint8" name="analyzer" type="uint8"/>
+                <param datatype="uint8" name="config_id" type="uint8"/>
+            </params>
+            <returns>
+                <param datatype="errorcode" name="result" type="uint16"/>
+            </returns>
+        </command>
         <event index="0" name="security_enable_complete">
             <params>
                 <param datatype="connection" name="connection" type="uint8"/>
@@ -3224,6 +3354,49 @@
                 <param datatype="uint8" name="tx_snr_capability" type="uint8"/>
             </params>
         </event>
+        <event index="6" name="handover_sync_established">
+            <params>
+                <param datatype="errorcode" name="status" type="uint16"/>
+                <param datatype="uint8" name="analyzer" type="uint8"/>
+                <param datatype="uint8" name="config_id" type="uint8"/>
+                <param datatype="uint16" name="procedure_counter" type="uint16"/>
+            </params>
+        </event>
+        <event index="7" name="handover_complete">
+            <params>
+                <param datatype="uint8" name="reason" type="uint8"/>
+                <param datatype="uint8" name="analyzer" type="uint8"/>
+                <param datatype="uint8" name="config_id" type="uint8"/>
+            </params>
+        </event>
+        <event index="8" name="handover_result">
+            <params>
+                <param datatype="uint8" name="analyzer" type="uint8"/>
+                <param datatype="uint8" name="config_id" type="uint8"/>
+                <param datatype="uint16" name="start_acl_conn_event" type="uint16"/>
+                <param datatype="uint16" name="procedure_counter" type="uint16"/>
+                <param datatype="int16" name="frequency_compensation" type="int16"/>
+                <param datatype="int8" name="reference_power_level" type="int8"/>
+                <param datatype="uint8" name="procedure_done_status" type="uint8"/>
+                <param datatype="uint8" name="subevent_done_status" type="uint8"/>
+                <param datatype="uint8" name="abort_reason" type="uint8"/>
+                <param datatype="uint8" name="num_antenna_paths" type="uint8"/>
+                <param datatype="uint8" name="num_steps" type="uint8"/>
+                <param datatype="uint8array" name="data" type="uint8array"/>
+            </params>
+        </event>
+        <event index="9" name="handover_result_continue">
+            <params>
+                <param datatype="uint8" name="analyzer" type="uint8"/>
+                <param datatype="uint8" name="config_id" type="uint8"/>
+                <param datatype="uint8" name="procedure_done_status" type="uint8"/>
+                <param datatype="uint8" name="subevent_done_status" type="uint8"/>
+                <param datatype="uint8" name="abort_reason" type="uint8"/>
+                <param datatype="uint8" name="num_antenna_paths" type="uint8"/>
+                <param datatype="uint8" name="num_steps" type="uint8"/>
+                <param datatype="uint8array" name="data" type="uint8array"/>
+            </params>
+        </event>
         <enums name="role">
             <enum name="role_initiator" value="0x0"/>
             <enum name="role_reflector" value="0x1"/>
@@ -3235,6 +3408,14 @@
         <enums name="procedure_state">
             <enum name="procedure_state_disabled" value="0x0"/>
             <enum name="procedure_state_enabled" value="0x1"/>
+        </enums>
+        <enums name="handover_handle_type">
+            <enum name="handover_handle_type_connection" value="0x1"/>
+            <enum name="handover_handle_type_analyzer" value="0x2"/>
+        </enums>
+        <enums name="handover_complete_reason">
+            <enum name="handover_complete_reason_max_procedure_count_reached" value="0x0"/>
+            <enum name="handover_complete_reason_sync_lost" value="0x1"/>
         </enums>
         <enums name="mode">
             <enum name="mode_rtt" value="0x1"/>
@@ -3732,6 +3913,15 @@
             <returns>
                 <param datatype="errorcode" name="result" type="uint16"/>
                 <param datatype="uint8" name="analyzer" type="uint8"/>
+            </returns>
+        </command>
+        <command index="2" name="process_llcp_event" >
+            <params>
+                <param datatype="uint8" name="analyzer" type="uint8"/>
+                <param datatype="uint8array" name="llcp_event_info" type="uint8array"/>
+            </params>
+            <returns>
+                <param datatype="errorcode" name="result" type="uint16"/>
             </returns>
         </command>
         <command index="1" name="stop" >

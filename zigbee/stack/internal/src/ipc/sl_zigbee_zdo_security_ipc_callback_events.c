@@ -3,7 +3,7 @@
  * @brief callback event handlers for sl_zigbee_zdo_security
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -28,6 +28,10 @@ void sli_zigbee_stack_get_authentication_level_callback(sl_zigbee_zdo_status_t r
                                                         uint8_t link_key_update)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.get_authentication_level_callback.rsp_status = rsp_status;
 
   if (target != NULL) {
@@ -49,6 +53,10 @@ void sli_zigbee_stack_set_authenticaion_level_callback(sl_802154_long_addr_t tar
                                                        sl_zigbee_active_link_key_type *active_link_key_type)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
 
   if (target != NULL) {
     memmove(cb_event->data.set_authenticaion_level_callback.target, target, sizeof(sl_802154_long_addr_t));
@@ -73,6 +81,10 @@ void sli_zigbee_stack_set_authenticaion_level_callback(sl_802154_long_addr_t tar
 void sli_zigbee_stack_zdo_retrieve_authentication_token_complete_callback(sl_status_t status)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.zdo_retrieve_authentication_token_complete_callback.status = status;
   cb_event->tag = SLI_ZIGBEE_STACK_ZDO_RETRIEVE_AUTHENTICATION_TOKEN_COMPLETE_CALLBACK_IPC_EVENT_TYPE;
   #ifndef SL_ZIGBEE_MULTI_NETWORK_STRIPPED

@@ -31,6 +31,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "sl_rail_sdk_channel_selector.h"
 #ifdef SL_CATALOG_RAIL_SDK_PHY_SELECTOR_PRESENT
@@ -77,7 +78,7 @@ uint8_t set_selected_channel(uint16_t new_channel)
     return 1;
   } else {
 #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_error("Channel Out of range! Correct range is %d - %d\n", start, end);
+    app_log_error("Channel Out of range! Correct range is %" PRIu16 " - %" PRIu16 "\n", start, end);
 #endif
     return 0;
   }
@@ -119,7 +120,7 @@ sl_rail_status_t restart_rx_channel(void)
   sl_rail_status_t status = sl_rail_start_rx(rail_handle, get_selected_channel(), NULL);
 #if defined(SL_CATALOG_APP_LOG_PRESENT)
   if (status != SL_RAIL_STATUS_NO_ERROR) {
-    app_log_warning("After initialization sl_rail_start_rx() result:%lu\n", status);
+    app_log_warning("After initialization sl_rail_start_rx() result: 0x%08" PRIX32 "\n", status);
   }
 #endif
   return status;

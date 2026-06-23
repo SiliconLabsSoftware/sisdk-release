@@ -31,8 +31,8 @@
  *   This file contains definitions for the CLI interpreter.
  */
 
-#ifndef CLI_HPP_
-#define CLI_HPP_
+#ifndef OT_CLI_CLI_HPP_
+#define OT_CLI_CLI_HPP_
 
 #include "openthread-core-config.h"
 
@@ -56,6 +56,7 @@
 #include <openthread/thread_ftd.h>
 #include <openthread/udp.h>
 
+#include "cli/cli_ba.hpp"
 #include "cli/cli_bbr.hpp"
 #include "cli/cli_br.hpp"
 #include "cli/cli_coap.hpp"
@@ -88,7 +89,6 @@
 namespace ot {
 
 /**
- * @namespace ot::Cli
  *
  * @brief
  *   This namespace contains definitions for the CLI interpreter.
@@ -106,11 +106,13 @@ extern "C" void otCliOutputFormat(const char *aFmt, ...);
 class Interpreter : public OutputImplementer, public Utils
 {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
+    friend class Ba;
     friend class Br;
     friend class Bbr;
     friend class Commissioner;
     friend class Dns;
     friend class Joiner;
+    friend class History;
     friend class LinkMetrics;
     friend class Mdns;
     friend class MeshDiag;
@@ -181,6 +183,17 @@ public:
      */
     otError SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext);
 
+#if OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
+    /**
+     * Configures whether or not the CLI interpreter outputs prompt string.
+     *
+     * It is enabled by default.
+     *
+     * @param[in] aEnabled  TRUE to enable outputting prompt, FALSE to disable.
+     */
+    void SetPromptConfig(bool aEnabled);
+#endif
+
 protected:
     static Interpreter *sInterpreter;
 
@@ -225,6 +238,11 @@ private:
 #if OPENTHREAD_FTD
     void OutputEidCacheEntry(const otCacheEntryInfo &aEntry);
 #endif
+
+#if OPENTHREAD_CONFIG_IP6_INIT_EXT_ADDR_POOL_ENABLE && OPENTHREAD_CONFIG_CLI_IFCONFIG_INIT_ENABLE
+    otError ProcessIfconfigInit(Arg aArgs[]);
+#endif
+
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
     static void HandleLocateResult(void               *aContext,
                                    otError             aError,
@@ -252,7 +270,7 @@ private:
     static void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
 
 #if OPENTHREAD_CONFIG_TMF_NETDIAG_CLIENT_ENABLE
-    void HandleDiagnosticGetResponse(otError aError, const otMessage *aMessage, const Ip6::MessageInfo *aMessageInfo);
+    void HandleDiagnosticGetResponse(otError aError, const otMessage *aMessage, const otMessageInfo *aMessageInfo);
     static void HandleDiagnosticGetResponse(otError              aError,
                                             otMessage           *aMessage,
                                             const otMessageInfo *aMessageInfo,
@@ -268,6 +286,10 @@ private:
     void OutputNetworkDiagMacCounters(uint8_t aIndentSize, const otNetworkDiagMacCounters &aMacCounters);
     void OutputNetworkDiagMleCounters(uint8_t aIndentSize, const otNetworkDiagMleCounters &aMleCounters);
     void OutputChildTableEntry(uint8_t aIndentSize, const otNetworkDiagChildEntry &aChildEntry);
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_TXT_DATA_PARSER_ENABLE
+    void OutputBorderAgentTxtDataInfo(uint8_t aIndentSize, const otBorderAgentTxtDataInfo &aInfo);
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -291,18 +313,10 @@ private:
     void HandleSntpResponse(uint64_t aTime, otError aResult);
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    void OutputBorderAgentCounters(const otBorderAgentCounters &aCounters);
-#if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-    static void HandleBorderAgentEphemeralKeyStateChange(void *aContext);
-    void        HandleBorderAgentEphemeralKeyStateChange(void);
-#endif
-#endif
-
     static void HandleDetachGracefullyResult(void *aContext);
     void        HandleDetachGracefullyResult(void);
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MLE_DISCOVERY_SCAN_REQUEST_CALLBACK_ENABLE
     static void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext);
     void        HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo);
 #endif
@@ -329,8 +343,9 @@ private:
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-    static void HandleDiagOutput(const char *aFormat, va_list aArguments, void *aContext);
-    void        HandleDiagOutput(const char *aFormat, va_list aArguments);
+    static void HandleDiagOutput(const char *aFormat, va_list aArguments, void *aContext)
+        OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(1, 0);
+    void HandleDiagOutput(const char *aFormat, va_list aArguments) OT_TOOL_PRINTF_STYLE_FORMAT_ARG_CHECK(2, 0);
 #endif
 
     void SetCommandTimeout(uint32_t aTimeoutMilli);
@@ -348,6 +363,9 @@ private:
     UserCommandsEntry mUserCommands[kMaxUserCommandEntries];
     bool              mCommandIsPending;
     bool              mInternalDebugCommand;
+#if OPENTHREAD_CONFIG_CLI_PROMPT_ENABLE
+    bool mPromptEnabled;
+#endif
 
     TimerMilliContext mTimer;
 
@@ -370,6 +388,10 @@ private:
 
 #if OPENTHREAD_CONFIG_MULTICAST_DNS_ENABLE && OPENTHREAD_CONFIG_MULTICAST_DNS_PUBLIC_API_ENABLE
     Mdns mMdns;
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    Ba mBa;
 #endif
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -433,4 +455,4 @@ private:
 } // namespace Cli
 } // namespace ot
 
-#endif // CLI_HPP_
+#endif // OT_CLI_CLI_HPP_

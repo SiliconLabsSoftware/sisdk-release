@@ -55,7 +55,7 @@ sl_status_t esl_image_add(uint16_t width,
  * Select an ESL Tag image object to write.
  *
  * @param[in] void const *data pointer to object id
- * @param[in] uint16_t lenght data length in bytes
+ * @param[in] uint16_t length data length in bytes
  * @return sl_status_t
  *****************************************************************************/
 sl_status_t esl_image_select_object(void const *data, uint16_t length);

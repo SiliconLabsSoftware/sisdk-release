@@ -1,5 +1,13 @@
 # Release Notes - X301 SE Firmware
 
+## v3.4.0
+
+- Stability enhancements for TRNG handling
+- Expands the User Data Storage command with 2 new options:
+  - 0x02 to force set the user data. This option can be used to overwrite the "max allowed" user data writes
+  - 0x03 to retrieve the number of remaining "allowed" writes
+- Improved MTP robustness during power loss conditions
+
 ## v3.3.7
 
 - Stability fix for flash accesses during flash erase/write operations. Flash read accesses (instruction or data fetches) from the host CPU at the exact same time as a flash write or erase operation was started by the SE could lead to bus faults, corrupted data or hang situations leading to lack of debug connection depending on flash encryption mode (AXiP, EXiP, None). This release fixes the issue by ensuring there are no ongoing read operations when flash write/erase operations are started. Note that the fix has the side-effect that the host bus will be frozen for 1-2 microseconds while the SE ensures that no transactions are in progress.

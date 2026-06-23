@@ -43,7 +43,7 @@
 // <q MSG_RECV_TIMEOUT_MS> 1
 // <i> Millisec timeout for peek function calls.
 #ifndef MSG_RECV_TIMEOUT_MS
-#define MSG_RECV_TIMEOUT_MS      10
+#define MSG_RECV_TIMEOUT_MS      30
 #endif
 
 // </h> End Peek Configuration

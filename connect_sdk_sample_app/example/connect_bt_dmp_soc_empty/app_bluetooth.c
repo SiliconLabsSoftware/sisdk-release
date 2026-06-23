@@ -31,6 +31,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include "sl_bluetooth.h"
 #include "sl_bt_api.h"
 #include "printf.h"
@@ -109,7 +110,7 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
   }
 
   if (bt_status != SL_STATUS_OK) {
-    printf("bt_status returned with failure error code: %#lX\n", bt_status);
+    printf("bt_status returned with failure error code: 0x%08" PRIX32 "\n", bt_status);
   }
 }
 

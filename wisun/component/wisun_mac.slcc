@@ -19,12 +19,11 @@ requires:
 - name: "nvm3"
 - name: "slist"
 - name: "sl_rail_util_pti"
-- name: "wisun_mac_implementation"
 - name: "wisun_crypto"
 - name: "sleeptimer"
+- name: "hal_prs"
+- name: "clock_manager_runtime"
 recommends:
-- id: "wisun_mac_library"
-  vendor: silabs
 - id: "rail_lib_singleprotocol"
   vendor: silabs
 provides:
@@ -45,10 +44,51 @@ include:
   - path: "sl_wisun_common.h"
   - path: "sli_wisun_timer_service.h"
 
+library:
+- path: libwisun_mac_efr32xg2x_gcc_debug.a
+  condition: [device_series_2, toolchain_gcc, wisun_stack_debug]
+  unless: [device_sdid_210]
+- path: libwisun_mac_efr32xg2x_iar_debug.a
+  condition: [device_series_2, toolchain_iar, wisun_stack_debug]
+  unless: [device_sdid_210]
+- path: libwisun_mac_efr32xg2x_llvm_debug.a
+  condition: [device_series_2, toolchain_llvm, wisun_stack_debug]
+  unless: [device_sdid_210]
+- path: libwisun_mac_efr32xg23_gcc_debug.a
+  condition: [device_sdid_210, toolchain_gcc, wisun_stack_debug]
+- path: libwisun_mac_efr32xg23_iar_debug.a
+  condition: [device_sdid_210, toolchain_iar, wisun_stack_debug]
+- path: libwisun_mac_efr32xg23_llvm_debug.a
+  condition: [device_sdid_210, toolchain_llvm, wisun_stack_debug]
+
+- path: libwisun_mac_efr32xg2x_gcc_release.a
+  condition: [device_series_2, toolchain_gcc]
+  unless: [device_sdid_210, wisun_stack_debug]
+- path: libwisun_mac_efr32xg2x_iar_release.a
+  condition: [device_series_2, toolchain_iar]
+  unless: [device_sdid_210, wisun_stack_debug]
+- path: libwisun_mac_efr32xg2x_llvm_release.a
+  condition: [device_series_2, toolchain_llvm]
+  unless: [device_sdid_210, wisun_stack_debug]
+- path: libwisun_mac_efr32xg23_gcc_release.a
+  condition: [device_sdid_210, toolchain_gcc]
+  unless: [wisun_stack_debug]
+- path: libwisun_mac_efr32xg23_iar_release.a
+  condition: [device_sdid_210, toolchain_iar]
+  unless: [wisun_stack_debug]
+- path: libwisun_mac_efr32xg23_llvm_release.a
+  condition: [device_sdid_210, toolchain_llvm]
+  unless: [wisun_stack_debug]
+
 template_contribution:
 - name: component_catalog
   value: wisun_mac
 
 metadata:
   sbom:
-    license: MSLA
+    license: MSLA AND Apache-2.0
+    upstream:
+      name: Nanostack
+      version: 14.0.0
+      supplier: Pelion and affiliates
+      url: https://github.com/ARMmbed/mbed-os/tree/9957e7b4ae4315e6d1d2bc064c469e69fb34ff78/features/nanostack

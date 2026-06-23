@@ -37,6 +37,7 @@
  **************************************************************************************************/
 
 #include "sl_status.h"
+#include "sl_bt_api.h"
 #include <stdbool.h>
 
 #ifdef __cplusplus
@@ -49,6 +50,16 @@ extern "C" {
  * @pre Can be called only after the Bluetooth system boot event has arrived.
  *****************************************************************************/
 sl_status_t cs_antenna_configure(bool wired);
+
+/**************************************************************************//**
+ * Bluetooth event handler of the CS Antenna component.
+ * Registered automatically via the @c bluetooth_on_event template contribution.
+ *
+ * @param[in] evt Bluetooth event.
+ * @return Always returns false; the event is left for further processing
+ *         by other handlers.
+ *****************************************************************************/
+bool cs_antenna_on_bt_event(sl_bt_msg_t *evt);
 
 #ifdef __cplusplus
 };

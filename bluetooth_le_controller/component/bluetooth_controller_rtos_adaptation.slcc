@@ -12,6 +12,16 @@ config_file:
 - path: "config/sl_btctrl_rtos_config.h"
   unless:
   - bluetooth_stack
+- path: "config/sl_btctrl_rtos_config_s2.h"
+  condition:
+  - device_series_2
+  unless:
+  - bluetooth_stack
+- path: "config/sl_btctrl_rtos_config_s3.h"
+  condition:
+  - device_series_3
+  unless:
+  - bluetooth_stack
 include:
 - path: "inc/"
   file_list:

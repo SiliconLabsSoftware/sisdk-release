@@ -26,7 +26,7 @@ provides:
 - name: device_init
 requires:
 - name: device_init_dcdc
-  condition: [device_has_dcdc, device_series_2]
+  condition: [device_has_dcdc]
 - name: device_init_hfrco
   condition: [device_sdid_200]
 - name: device_init_lfrco

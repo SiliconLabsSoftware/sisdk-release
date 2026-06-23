@@ -1,0 +1,21 @@
+id: bootloader_application_properties_header
+label: Bootloader application properties header
+package: bootloader
+description: >
+  Header-only owner for api/application_properties.h (Series 2 and Series 3; single
+  package-analysis owner). Application tag metadata declarations used by bootloader core and
+  GBL format headers; kept in the bootloader package. Consumers resolve it via requires.
+category: Platform|Bootloader|Core
+quality: production
+ui_hints:
+  visibility: never
+include:
+- path: platform/bootloader
+  file_list:
+  - path: api/application_properties.h
+provides:
+- name: bootloader_application_properties_header
+metadata:
+  sbom:
+    license: MSLA
+root_path: bootloader

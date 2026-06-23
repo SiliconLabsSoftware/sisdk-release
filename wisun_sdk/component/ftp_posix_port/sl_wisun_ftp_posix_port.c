@@ -32,7 +32,9 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include "sl_ftp.h"
-#include "socket/socket.h"
+#include "sys/socket.h"
+#include "arpa/inet.h"
+#include "netinet/in.h"
 #include "cmsis_os2.h"
 #include "sl_wisun_app_core_util.h"
 #include "sl_wisun_types.h"

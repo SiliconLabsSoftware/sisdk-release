@@ -99,11 +99,15 @@ extern "C" {
  ********************************   STRUCTS   **********************************
  ******************************************************************************/
 
-/// A Cycle Counter Instance
+/// A Cycle Counter instance handle data structure.
+/// Allocated by the application. The application must
+/// not modify the contents of this handle and should not depend on its values.
 typedef struct {
+  /// @cond DO_NOT_INCLUDE_WITH_DOXYGEN
   uint32_t start;    ///< Cycle counter at start of recording
   uint32_t cycles;   ///< Cycles elapsed in last recording
   uint32_t max;      ///< Max recorded cycles since last reset or init
+  /// @endcond
 } sl_cycle_counter_handle_t;
 
 /*******************************************************************************

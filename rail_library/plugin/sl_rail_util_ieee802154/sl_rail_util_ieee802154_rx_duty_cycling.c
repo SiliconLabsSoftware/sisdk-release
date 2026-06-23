@@ -29,6 +29,13 @@
  ******************************************************************************/
 
 #include "sl_rail_util_ieee802154_rx_duty_cycling.h"
+#include "sl_rail_util_ieee802154_rx_duty_cycling_radio_config.h"
+
+#if SL_RAIL_SUPPORTS_RX_DUTY_CYCLING
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RAIL_UTIL_IEEE802154_PHY_SELECT, SL_CODE_CLASS_TIME_CRITICAL)
+const sl_rail_channel_config_t * const sl_rail_ieee802154_phy_2p4_ghz_rx_duty_cycling =
+  (sl_rail_channel_config_t *) &RAIL_IEEE802154_PhyRxDC_channelConfig;
+#endif
 
 sl_rail_status_t sl_rail_ieee802154_config_2p4_ghz_radio_rx_duty_cycling(sl_rail_handle_t rail_handle)
 {

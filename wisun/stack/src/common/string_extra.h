@@ -30,9 +30,8 @@ static inline void *memrcpy(void *dst, const void *src, size_t size)
 {
     const uint8_t *src8 = src;
     uint8_t *dst8 = dst;
-    unsigned int i;
 
-    for (i = 0; i < size; i++)
+    for (unsigned int i = 0; i < size; i++)
         dst8[i] = src8[size - i - 1];
     return dst;
 }

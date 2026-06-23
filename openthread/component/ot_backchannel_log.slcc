@@ -1,17 +1,17 @@
 id: ot_backchannel_log
 label: Backchannel Logger
 package: openthread
-category: OpenThread
+category: OpenThread|Utility|Logging
 quality: production
 description: This component adds support for debug backchannel logging.
 provides:
-- name: ot_logging
 - name: ot_backchannel_log
 requires:
 - name: ot_platform_abstraction_implementation
 - name: ot_debug_channel
 conflicts:
 - name: ot_rtt_log
+- name: ot_sl_log
 recommends:
 - id: ot_platform_abstraction_source
   vendor: silabs

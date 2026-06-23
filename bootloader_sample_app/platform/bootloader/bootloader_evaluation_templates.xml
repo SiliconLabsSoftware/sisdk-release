@@ -14,6 +14,7 @@
     <properties key="quality" value="EVALUATION" />
     <properties key="stockConfigCompatibility" value="com.silabs.ss.framework.project.toolchain.core.default" />
     <properties key="filters" value="Device\ Type|SoC MCU|Bootloader Project\ Difficulty|Advanced" />
+    <properties key="hidden" value="true" />
   </descriptors>
   <descriptors name="bootloader-apploader-secure" label="Bootloader - SoC Bluetooth AppLoader OTA DFU Secure part of Bootloader using TrustZone" description="TrustZone is used to split into a Secure and Non-Secure bootloader. This is the secure part of the bootloader. The non-secure part of the bootloader, which contains the communication interfaces needs to be built separately and used together with the secure part of the bootloader.&#10;">
     <properties key="namespace" value="template.uc" />
@@ -29,6 +30,7 @@
     <properties key="quality" value="EVALUATION" />
     <properties key="stockConfigCompatibility" value="com.silabs.ss.framework.project.toolchain.core.default" />
     <properties key="filters" value="Device\ Type|SoC MCU|Bootloader Project\ Difficulty|Advanced" />
+    <properties key="hidden" value="true" />
   </descriptors>
   <descriptors name="bootloader-spi-ezsp-nonsecure" label="Bootloader - NCP EZSP SPI Non-Secure part of Bootloader using TrustZone" description="TrustZone is used to split into a Secure and Non-Secure bootloader. This is the non-secure part of the bootloader. The secure part of the bootloader, which contains the core functionalities needs to be built separately and used together with the non-secure part of the bootloader.&#10;">
     <properties key="namespace" value="template.uc" />
@@ -44,6 +46,7 @@
     <properties key="quality" value="EVALUATION" />
     <properties key="stockConfigCompatibility" value="com.silabs.ss.framework.project.toolchain.core.default" />
     <properties key="filters" value="Device\ Type|NCP MCU|Bootloader Project\ Difficulty|Advanced" />
+    <properties key="hidden" value="true" />
   </descriptors>
   <descriptors name="bootloader-spi-ezsp-secure" label="Bootloader - NCP EZSP SPI Secure part of Bootloader using TrustZone" description="TrustZone is used to split into a Secure and Non-Secure bootloader. This is the secure part of the bootloader. The non-secure part of the bootloader, which contains the communication interfaces needs to be built separately and used together with the secure part of the bootloader.&#10;">
     <properties key="namespace" value="template.uc" />
@@ -59,6 +62,7 @@
     <properties key="quality" value="EVALUATION" />
     <properties key="stockConfigCompatibility" value="com.silabs.ss.framework.project.toolchain.core.default" />
     <properties key="filters" value="Device\ Type|NCP MCU|Bootloader Project\ Difficulty|Advanced" />
+    <properties key="hidden" value="true" />
   </descriptors>
   <descriptors name="bootloader-uart-bgapi-nonsecure" label="Bootloader - NCP BGAPI UART DFU Non-Secure part of Bootloader using TrustZone" description="TrustZone is used to split into a Secure and Non-Secure bootloader. This is the non-secure part of the bootloader. The secure part of the bootloader, which contains the core functionalities needs to be built separately and used together with the non-secure part of the bootloader.&#10;">
     <properties key="namespace" value="template.uc" />
@@ -74,6 +78,7 @@
     <properties key="quality" value="EVALUATION" />
     <properties key="stockConfigCompatibility" value="com.silabs.ss.framework.project.toolchain.core.default" />
     <properties key="filters" value="Device\ Type|NCP MCU|Bootloader Project\ Difficulty|Advanced" />
+    <properties key="hidden" value="true" />
   </descriptors>
   <descriptors name="bootloader-uart-bgapi-secure" label="Bootloader - NCP BGAPI UART DFU Secure part of Bootloader using TrustZone" description="TrustZone is used to split into a Secure and Non-Secure bootloader. This is the secure part of the bootloader. The non-secure part of the bootloader, which contains the communication interfaces needs to be built separately and used together with the secure part of the bootloader.&#10;">
     <properties key="namespace" value="template.uc" />
@@ -89,6 +94,7 @@
     <properties key="quality" value="EVALUATION" />
     <properties key="stockConfigCompatibility" value="com.silabs.ss.framework.project.toolchain.core.default" />
     <properties key="filters" value="Device\ Type|NCP MCU|Bootloader Project\ Difficulty|Advanced" />
+    <properties key="hidden" value="true" />
   </descriptors>
   <descriptors name="bootloader-uart-xmodem-nonsecure" label="Bootloader - NCP UART XMODEM Non-Secure part of Bootloader using TrustZone" description="TrustZone is used to split into a Secure and Non-Secure bootloader. This is the non-secure part of the bootloader. The secure part of the bootloader, which contains the core functionalities needs to be built separately and used together with the non-secure part of the bootloader.&#10;">
     <properties key="namespace" value="template.uc" />
@@ -104,6 +110,7 @@
     <properties key="quality" value="EVALUATION" />
     <properties key="stockConfigCompatibility" value="com.silabs.ss.framework.project.toolchain.core.default" />
     <properties key="filters" value="Device\ Type|NCP MCU|Bootloader Project\ Difficulty|Advanced" />
+    <properties key="hidden" value="true" />
   </descriptors>
   <descriptors name="bootloader-uart-xmodem-secure" label="Bootloader - NCP UART XMODEM Secure part of Bootloader using TrustZone" description="TrustZone is used to split into a Secure and Non-Secure bootloader. This is the secure part of the bootloader. The non-secure part of the bootloader, which contains the communication interfaces needs to be built separately and used together with the secure part of the bootloader.&#10;">
     <properties key="namespace" value="template.uc" />
@@ -119,5 +126,6 @@
     <properties key="quality" value="EVALUATION" />
     <properties key="stockConfigCompatibility" value="com.silabs.ss.framework.project.toolchain.core.default" />
     <properties key="filters" value="Device\ Type|NCP MCU|Bootloader Project\ Difficulty|Advanced" />
+    <properties key="hidden" value="true" />
   </descriptors>
 </ns0:MDescriptors>

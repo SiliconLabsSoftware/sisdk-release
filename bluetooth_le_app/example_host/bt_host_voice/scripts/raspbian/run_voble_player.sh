@@ -17,7 +17,7 @@ cd $VOBLE_HOME_DIR
 # Get current audio transmission status
 TRANSFER_STATUS=`cat $TRANSFER_STATUS_FILE`
 
-# Cleas transmission flags
+# Clear transfer flags
 TRANSFER_STARTED=0
 TRANSFER_STOPED=0
 

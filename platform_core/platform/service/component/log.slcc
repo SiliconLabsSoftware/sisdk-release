@@ -9,32 +9,23 @@ quality: evaluation
 metadata:
   sbom:
     license: Zlib
+ui_hints:
+  visibility: never
 provides:
 - name: log
 requires:
-- name: log_backend
-- name: log_platform_core
+- name: log_none
 root_path: platform_core/platform/service/sl_log
 source:
 - path: src/sl_log.c
-include:
-- path: inc
-  file_list:
-  - path: sl_log.h
-  - path: sl_log_helper.h
-  - path: sl_log_platform_specific.h
-config_file:
-- path: config/sl_log_common_config.h
 template_contribution:
-- name: logger_enable
-  value: 1
 - name: event_handler
   value:
     event: service_init
     include: sl_log.h
-    handler: sl_log_init
+    handler: sl_log_init_stage2
   priority: 9999
 - name: sl_log_module_present
   value: true
 - name: component_catalog
-  value: logger_component
+  value: log_component

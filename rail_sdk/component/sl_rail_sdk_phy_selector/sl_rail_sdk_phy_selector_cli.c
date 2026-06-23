@@ -31,6 +31,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include "sl_rail_sdk_phy_selector.h"
 #include "sl_cli.h"
 #include "rail_config.h"
@@ -68,7 +69,7 @@ void cli_get_phy(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
 #ifdef SL_CATALOG_APP_LOG_PRESENT
-  app_log_info("Current phy index is: %d\n", get_selected_phy());
+  app_log_info("Current phy index is: %" PRIu16 "\n", get_selected_phy());
 #endif
 }
 
@@ -94,68 +95,68 @@ void cli_get_phy_list(sl_cli_command_arg_t *arguments)
       switch (channelConfigs[i]->configs[0U].stackInfo[0]) {
         case CUSTOM_AND_SUN_OQPSK:
           if (channelConfigs[i]->configs[0U].stackInfo[1] == 0x60 || channelConfigs[i]->configs[0U].stackInfo[1] == 0x70) {
-            app_log_info("Phy index:%d with stackInfo: SUN_OQPSK\n", i);
+            app_log_info("Phy index:%" PRIu8 " with stackInfo: SUN_OQPSK\n", i);
           } else {
-            app_log_info("Phy index:%d with stackInfo: CUSTOM\n", i);
+            app_log_info("Phy index:%" PRIu8 " with stackInfo: CUSTOM\n", i);
           }
           break;
         case EMBER_PHY:
-          app_log_info("Phy index:%d with stackInfo: EMBER_PHY\n", i);
+          app_log_info("Phy index:%" PRIu8 " with stackInfo: EMBER_PHY\n", i);
           break;
         case THREAD:
-          app_log_info("Phy index:%d with stackInfo: THREAD\n", i);
+          app_log_info("Phy index:%" PRIu8 " with stackInfo: THREAD\n", i);
           break;
         case BLE:
-          app_log_info("Phy index:%d with stackInfo: BLE\n", i);
+          app_log_info("Phy index:%" PRIu8 " with stackInfo: BLE\n", i);
           break;
         case CONNECT:
           if (channelConfigs[i]->configs[0U].stackInfo[1] >= 0x20) {
-            app_log_info("Phy index:%d with stackInfo: CONNECT OFDM\n", i);
+            app_log_info("Phy index:%" PRIu8 " with stackInfo: CONNECT OFDM\n", i);
           } else if (channelConfigs[i]->configs[0U].stackInfo[1] == 0x01) {
-            app_log_info("Phy index:%d with stackInfo: CONNECT SUN-FSK\n", i);
+            app_log_info("Phy index:%" PRIu8 " with stackInfo: CONNECT SUN-FSK\n", i);
           } else {
-            app_log_info("Phy index:%d with stackInfo: CONNECT\n", i);
+            app_log_info("Phy index:%" PRIu8 " with stackInfo: CONNECT\n", i);
           }
           break;
         case ZIGBEE:
-          app_log_info("Phy index:%d with stackInfo: ZIGBEE\n", i);
+          app_log_info("Phy index:%" PRIu8 " with stackInfo: ZIGBEE\n", i);
           break;
         case ZWAVE:
-          app_log_info("Phy index:%d with stackInfo: ZWAVE\n", i);
+          app_log_info("Phy index:%" PRIu8 " with stackInfo: ZWAVE\n", i);
           break;
         case WISUN:
           if (channelConfigs[i]->configs[0U].stackInfo[1] >= 0x20) {
-            app_log_info("Phy index:%d with stackInfo: WISUN OFDM\n", i);
+            app_log_info("Phy index:%" PRIu8 " with stackInfo: WISUN OFDM\n", i);
           } else {
-            app_log_info("Phy index:%d with stackInfo: WISUN\n", i);
+            app_log_info("Phy index:%" PRIu8 " with stackInfo: WISUN\n", i);
           }
           break;
         case BPSK:
-          app_log_info("Phy index:%d with stackInfo: BPSK\n", i);
+          app_log_info("Phy index:%" PRIu8 " with stackInfo: BPSK\n", i);
           break;
         case LONGRANGE:
-          app_log_info("Phy index:%d with stackInfo: LONGRANGE\n", i);
+          app_log_info("Phy index:%" PRIu8 " with stackInfo: LONGRANGE\n", i);
           break;
         case MBUS:
-          app_log_info("Phy index:%d with stackInfo: MBUS\n", i);
+          app_log_info("Phy index:%" PRIu8 " with stackInfo: MBUS\n", i);
           break;
         case SIDEWALK:
-          app_log_info("Phy index:%d with stackInfo: SIDEWALK\n", i);
+          app_log_info("Phy index:%" PRIu8 " with stackInfo: SIDEWALK\n", i);
           break;
         case SIGFOX:
-          app_log_info("Phy index:%d with stackInfo: SIGFOX\n", i);
+          app_log_info("Phy index:%" PRIu8 " with stackInfo: SIGFOX\n", i);
           break;
         default:
-          app_log_info("Phy index:%d with stackInfo: UNDEFINED\n", i);
+          app_log_info("Phy index:%" PRIu8 " with stackInfo: UNDEFINED\n", i);
           break;
       }
 #else
-      app_log_info("Phy index:%d with stackInfo: %d\n", i, channelConfigs[i]->configs[0U].stackInfo[0]);
+      app_log_info("Phy index:%" PRIu8 " with stackInfo: %" PRIu8 "\n", i, channelConfigs[i]->configs[0U].stackInfo[0]);
 #endif
     }
 #ifdef SL_CATALOG_APP_LOG_PRESENT
     else {
-      app_log_info("Phy index:%d stackInfo is not present!\n", i);
+      app_log_info("Phy index:%" PRIu8 " stackInfo is not present!\n", i);
     }
 #endif
   }

@@ -37,9 +37,13 @@
 #include <systemd/sd-daemon.h>
 #endif
 
+#include <openthread/error.h>
+
 #include "agent/application.hpp"
 #include "common/code_utils.hpp"
+#include "common/logging.hpp"
 #include "common/mainloop_manager.hpp"
+#include "common/types.hpp"
 #include "host/posix/dnssd.hpp"
 #include "utils/infra_link_selector.hpp"
 
@@ -50,6 +54,7 @@ namespace otbr {
 #endif
 
 std::atomic_bool     Application::sShouldTerminate(false);
+std::atomic_bool     Application::sIsPseudoReset(false);
 const struct timeval Application::kPollTimeout = {OTBR_MAINLOOP_POLL_TIMEOUT_SEC, 0};
 
 Application::Application(Host::ThreadHost  &aHost,
@@ -74,10 +79,19 @@ Application::Application(Host::ThreadHost  &aHost,
     , mEphemeralKeyUdpProxy(mHost)
 #endif
 #endif
+#if OTBR_ENABLE_TREL
+    , mTrelUdpProxy(mHost)
+#endif
+#if OTBR_ENABLE_BACKBONE_ROUTER
+    , mBackboneTmfUdpProxy(mHost)
+#endif
 #if OTBR_ENABLE_DBUS_SERVER
     , mDBusAgent(MakeDBusDependentComponents())
 #endif
 {
+    sShouldTerminate = false;
+    sIsPseudoReset   = false;
+
     if (mHost.GetCoprocessorType() == OT_COPROCESSOR_RCP)
     {
         CreateRcpMode();
@@ -137,6 +151,10 @@ void Application::Deinit(void)
     }
 
     mHost.Deinit();
+
+#if OTBR_ENABLE_DBUS_SERVER
+    mDBusAgent.Deinit();
+#endif
 }
 
 otbrError Application::Run(void)
@@ -299,8 +317,15 @@ void Application::InitRcpMode(const std::string &aRestListenAddress, int aRestLi
     });
     SetBorderAgentOnInitState();
 #else
-    mBorderAgent.SetVendorTxtDataChangedCallback(
-        [this](const BorderAgent::TxtData &aVendorTxtData) { mHost.SetBorderAgentVendorTxtData(aVendorTxtData); });
+    mBorderAgent.SetVendorTxtDataChangedCallback([this](const BorderAgent::TxtData &aVendorTxtData) {
+        otError error = mHost.SetBorderAgentMeshCoPServiceBaseName(mBorderAgent.GetBaseServiceInstanceName());
+        if (error != OT_ERROR_NONE)
+        {
+            otbrLogWarning("Failed to set Border Agent MeshCoP service base name: %s", otThreadErrorToString(error));
+        }
+
+        mHost.SetBorderAgentVendorTxtData(aVendorTxtData);
+    });
 #endif
 #endif // OTBR_ENABLE_BORDER_AGENT
 #if OTBR_ENABLE_BACKBONE_ROUTER
@@ -358,6 +383,25 @@ void Application::CreateNcpMode(void)
 #endif
 }
 
+void Application::ConfigureUdpProxiesInfraInterface(void)
+{
+    const char *infraIfName = mBackboneInterfaceName.empty() ? nullptr : mBackboneInterfaceName.c_str();
+
+#if OTBR_ENABLE_BORDER_AGENT
+    mBorderAgentUdpProxy.SetInfraInterface(infraIfName);
+#if OTBR_ENABLE_EPSKC
+    mEphemeralKeyUdpProxy.SetInfraInterface(infraIfName);
+#endif
+#endif
+#if OTBR_ENABLE_TREL
+    mTrelUdpProxy.SetInfraInterface(infraIfName);
+#endif
+#if OTBR_ENABLE_BACKBONE_ROUTER
+    mBackboneTmfUdpProxy.SetInfraInterface(infraIfName);
+#endif
+    OTBR_UNUSED_VARIABLE(infraIfName);
+}
+
 void Application::InitNcpMode(void)
 {
     otbr::Host::NcpHost &ncpHost = static_cast<otbr::Host::NcpHost &>(mHost);
@@ -370,13 +414,17 @@ void Application::InitNcpMode(void)
     {
         mInfraIf->SetInfraIf(mBackboneInterfaceName);
     }
+    ConfigureUdpProxiesInfraInterface();
     ncpHost.InitInfraIfCallbacks(*mInfraIf);
 
-#if OTBR_ENABLE_SRP_ADVERTISING_PROXY
+#if OTBR_ENABLE_MDNS && (OTBR_ENABLE_SRP_ADVERTISING_PROXY || OTBR_ENABLE_DNSSD_PLAT)
     mMdnsStateSubject.AddObserver(ncpHost);
 #endif
 #if OTBR_ENABLE_BORDER_AGENT && OTBR_ENABLE_BORDER_AGENT_MESHCOP_SERVICE
     mMdnsStateSubject.AddObserver(mBorderAgent);
+#endif
+#if OTBR_ENABLE_DNSSD_PLAT
+    mMdnsStateSubject.AddObserver(mDnssdPlatform);
 #endif
 #if OTBR_ENABLE_MDNS
     ncpHost.SetMdnsPublisher(mPublisher.get());
@@ -402,19 +450,6 @@ void Application::InitNcpMode(void)
             OTBR_UNUSED_VARIABLE(aLength);
 #endif
         });
-    mHost.SetUdpForwardToHostCallback([this](const uint8_t *aUdpPayload, uint16_t aLength,
-                                             const otIp6Address &aPeerAddr, uint16_t aPeerPort, uint16_t aLocalPort) {
-        if (aLocalPort == mBorderAgentUdpProxy.GetThreadPort())
-        {
-            mBorderAgentUdpProxy.SendToPeer(aUdpPayload, aLength, aPeerAddr, aPeerPort);
-        }
-#if OTBR_ENABLE_EPSKC
-        else if (aLocalPort == mEphemeralKeyUdpProxy.GetThreadPort())
-        {
-            mEphemeralKeyUdpProxy.SendToPeer(aUdpPayload, aLength, aPeerAddr, aPeerPort);
-        }
-#endif // OTBR_ENABLE_EPSKC
-    });
 #if OTBR_ENABLE_EPSKC
     mHost.AddEphemeralKeyStateChangedCallback([this](otBorderAgentEphemeralKeyState aState, uint16_t aPort) {
         if (aState == OT_BORDER_AGENT_STATE_STARTED)
@@ -434,6 +469,95 @@ void Application::InitNcpMode(void)
 #endif // OTBR_ENABLE_EPSKC
     SetBorderAgentOnInitState();
 #endif
+#if OTBR_ENABLE_BORDER_AGENT || OTBR_ENABLE_TREL || OTBR_ENABLE_BACKBONE_ROUTER
+    mHost.SetUdpForwardToHostCallback([this](const uint8_t *aUdpPayload, uint16_t aLength,
+                                             const otIp6Address &aPeerAddr, uint16_t aPeerPort, uint16_t aLocalPort) {
+#if OTBR_ENABLE_BORDER_AGENT
+        if (aLocalPort == mBorderAgentUdpProxy.GetThreadPort() && mBorderAgentUdpProxy.GetThreadPort() != 0)
+        {
+            mBorderAgentUdpProxy.SendToPeer(aUdpPayload, aLength, aPeerAddr, aPeerPort);
+            return;
+        }
+#if OTBR_ENABLE_EPSKC
+        if (aLocalPort == mEphemeralKeyUdpProxy.GetThreadPort() && mEphemeralKeyUdpProxy.GetThreadPort() != 0)
+        {
+            mEphemeralKeyUdpProxy.SendToPeer(aUdpPayload, aLength, aPeerAddr, aPeerPort);
+            return;
+        }
+#endif
+#endif
+#if OTBR_ENABLE_TREL
+        if (aLocalPort == mTrelUdpProxy.GetThreadPort() && mTrelUdpProxy.GetThreadPort() != 0)
+        {
+            mTrelUdpProxy.SendToPeer(aUdpPayload, aLength, aPeerAddr, aPeerPort);
+            return;
+        }
+#endif
+#if OTBR_ENABLE_BACKBONE_ROUTER
+        if (aLocalPort == mBackboneTmfUdpProxy.GetThreadPort() && mBackboneTmfUdpProxy.GetThreadPort() != 0)
+        {
+            mBackboneTmfUdpProxy.SendToPeer(aUdpPayload, aLength, aPeerAddr, aPeerPort);
+            return;
+        }
+#endif
+        otbrLogWarning("UDP forward: no UdpProxy for localThreadPort=%u (BorderAgent=%u, EphemeralKey=%u, TREL=%u, "
+                       "BackboneTmf=%u) — port mismatch or proxy not started",
+                       aLocalPort
+#if OTBR_ENABLE_BORDER_AGENT
+                       ,
+                       mBorderAgentUdpProxy.GetThreadPort()
+#else
+                       ,
+                       0u
+#endif
+#if OTBR_ENABLE_BORDER_AGENT && OTBR_ENABLE_EPSKC
+                           ,
+                       mEphemeralKeyUdpProxy.GetThreadPort()
+#else
+                       ,
+                       0u
+#endif
+#if OTBR_ENABLE_TREL
+                           ,
+                       mTrelUdpProxy.GetThreadPort()
+#else
+                       ,
+                       0u
+#endif
+#if OTBR_ENABLE_BACKBONE_ROUTER
+                           ,
+                       mBackboneTmfUdpProxy.GetThreadPort()
+#else
+                       ,
+                       0u
+#endif
+        );
+    });
+#endif
+#if OTBR_ENABLE_BACKBONE_ROUTER
+    if (!mBackboneInterfaceName.empty())
+    {
+        mBackboneTmfUdpProxy.Start(BackboneRouter::BackboneAgent::kBackboneUdpPort,
+                                   BackboneRouter::BackboneAgent::kBackboneUdpPort);
+    }
+#endif
+#if OTBR_ENABLE_TREL
+    ncpHost.SetTrelStateChangedCallback([this, &ncpHost](bool aEnabled, uint16_t aThreadPort) {
+        if (!aEnabled || aThreadPort == 0)
+        {
+            mTrelUdpProxy.Stop();
+            return;
+        }
+
+        mTrelUdpProxy.Start(aThreadPort);
+
+        otError err = ncpHost.SetTrelHostUdpPort(true, mTrelUdpProxy.GetHostPort());
+        if (err != OT_ERROR_NONE)
+        {
+            otbrLogWarning("Failed to set TREL host UDP port on NCP: %s", otThreadErrorToString(err));
+        }
+    });
+#endif
 #if OTBR_ENABLE_BACKBONE_ROUTER
     mHost.SetBackboneRouterStateChangedCallback(
         [this](otBackboneRouterState aState) { mMulticastRoutingManager->HandleStateChange(aState); });
@@ -445,6 +569,12 @@ void Application::InitNcpMode(void)
     mHost.SetBackboneRouterEnabled(true);
 #endif
 #endif
+
+#if OTBR_ENABLE_DNSSD_PLAT
+    mDnssdPlatform.SetDnssdStateChangedCallback(
+        [&ncpHost](otPlatDnssdState aState) { ncpHost.NotifyDnssdPlatformStateToNcp(aState); });
+    mDnssdPlatform.Start();
+#endif
 }
 
 void Application::DeinitNcpMode(void)
@@ -454,7 +584,25 @@ void Application::DeinitNcpMode(void)
     mBorderAgent.Deinit();
     mBorderAgentUdpProxy.Stop();
 #endif
-#if OTBR_ENABLE_SRP_ADVERTISING_PROXY
+#if OTBR_ENABLE_TREL
+    {
+        otbr::Host::NcpHost &ncpHost = static_cast<otbr::Host::NcpHost &>(mHost);
+        otError              err     = ncpHost.SetTrelHostUdpPort(false, 0);
+
+        if (err != OT_ERROR_NONE)
+        {
+            otbrLogWarning("Failed to clear TREL host UDP port on NCP: %s", otThreadErrorToString(err));
+        }
+    }
+    mTrelUdpProxy.Stop();
+#endif
+#if OTBR_ENABLE_BACKBONE_ROUTER
+    mBackboneTmfUdpProxy.Stop();
+#endif
+#if OTBR_ENABLE_DNSSD_PLAT
+    mDnssdPlatform.Stop();
+#endif
+#if OTBR_ENABLE_MDNS
     mPublisher->Stop();
 #endif
     mNetif->Deinit();

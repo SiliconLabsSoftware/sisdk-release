@@ -27,11 +27,6 @@ set(CMAKE_CONFIGURATION_TYPES fast)
 # CMSIS-DSP #
 #############
 
-# TODO: IAR build fails for fp16, disable it for now
-if(CMAKE_C_COMPILER_ID STREQUAL "IAR")
-  set(DISABLEFLOAT16 ON)
-endif()
-
 add_subdirectory(Source)
 # Link DSP library with CMSIS-Core
 find_package(SLCC MODULE REQUIRED COMPONENTS cmsis_core)

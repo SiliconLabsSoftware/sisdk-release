@@ -86,6 +86,12 @@ static uint16_t gMessageTimeout;
 
 #define MAC_ACK_REQUIRED              0x0020
 
+#if defined(ALLOW_FRAGMENTATION) && defined(ALLOW_APS_ENCRYPTED_MESSAGES)
+// Byte index of the stub APS frame control in a maximum-sized long-source
+// Inter-PAN unicast frame (used for post-assembly APS decrypt on IPMFs).
+#define INTERPAN_STUB_APS_FC_INDEX (MAX_INTER_PAN_MAC_SIZE + STUB_NWK_SIZE)
+#endif
+
 #if defined(ALLOW_APS_ENCRYPTED_MESSAGES)
   #define APS_ENCRYPTION_ALLOWED 1
 #else
@@ -132,11 +138,21 @@ static void printMessage(sl_zigbee_mac_passthrough_type_t passthroughType, sl_zi
 
 #if defined(ALLOW_FRAGMENTATION)
 static sl_status_t interpanFragmentationSendUnicast(sl_zigbee_af_interpan_header_t* header, uint8_t* message, uint16_t messageLen);
-static bool isInterpanFragment(uint8_t* payload, uint8_t payloadLen);
+static bool isInterpanIpmfResponse(uint8_t* payload, uint8_t payloadLen);
+static bool isInterpanFragmentDataPayload(uint8_t* payload, uint8_t payloadLen);
 static sl_status_t interpanFragmentationSendIpmf(sli_zigbee_tx_fragmented_interpan_packet_t* txPacket);
 static sl_status_t interpanFragmentationProcessIpmf(sl_zigbee_af_interpan_header_t header, uint8_t *message, uint8_t messageLen);
 static void interpanFragmentationSendIpmfResponse(sl_zigbee_af_interpan_header_t header, uint8_t fragNum, uint8_t responseStatus);
 static void interpanFragmentationProcessIpmfResponse(sl_zigbee_af_interpan_header_t header, uint8_t* payload, uint8_t payloadLen);
+#if defined(ALLOW_APS_ENCRYPTED_MESSAGES)
+static bool sli_interpan_peek_wire_prefix(const uint8_t *message,
+                                          uint8_t messageLength,
+                                          sl_zigbee_af_interpan_header_t *headerOut,
+                                          uint8_t *apsHeaderIndexOut,
+                                          uint8_t *apsFrameControlOut);
+static bool sli_interpan_try_secure_ipmf_fragment(uint8_t *messageContents,
+                                                  uint8_t messageLength);
+#endif // ALLOW_APS_ENCRYPTED_MESSAGES
 
 static sli_zigbee_tx_fragmented_interpan_packet_t txPackets[SL_ZIGBEE_AF_PLUGIN_INTERPAN_FRAGMENTATION_MAX_OUTGOING_PACKETS];
 static sli_zigbee_rx_fragmented_interpan_packet_t rxPackets[SL_ZIGBEE_AF_PLUGIN_INTERPAN_FRAGMENTATION_MAX_INCOMING_PACKETS];
@@ -452,7 +468,10 @@ static sl_status_t makeInterPanMessage(sl_zigbee_af_interpan_header_t *headerDat
 
   apsFrame = finger;
   *finger++ = (headerData->messageType
-               | INTERPAN_APS_FRAME_TYPE);
+               | INTERPAN_APS_FRAME_TYPE)
+              | ((headerData->options & SL_ZIGBEE_AF_INTERPAN_OPTION_FRAGMENTATION)
+                 ? INTERPAN_APS_FRAME_EXTENDED_FC
+                 : 0x00);
 
   if (headerData->messageType == SL_ZIGBEE_AF_INTER_PAN_MULTICAST) {
     finger = pushInt16u(finger, headerData->groupId);
@@ -493,6 +512,40 @@ static sl_status_t makeInterPanMessage(sl_zigbee_af_interpan_header_t *headerDat
   return SL_STATUS_OK;
 }
 
+#if defined(ALLOW_FRAGMENTATION) && defined(ALLOW_APS_ENCRYPTED_MESSAGES)
+// Secured IPMF MAC frames carry a cleartext IPMF shim at INTERPAN_UNICAST_HEADER_SIZE
+// followed by a slice of the secured APS payload; APS decrypt must run only after
+// reassembly (interpanFragmentationProcessIpmf), not on each fragment here.
+static bool sli_interpan_is_secure_ipmf_wire_fragment(const uint8_t *message,
+                                                      uint8_t messageLength)
+{
+  const uint8_t *ipmfBase;
+  uint8_t extFc;
+  uint8_t infoByte;
+
+  if (messageLength <= (INTERPAN_UNICAST_HEADER_SIZE
+                      + SL_ZIGBEE_APS_INTERPAN_FRAGMENTATION_OVERHEAD)) {
+    return false;
+  }
+  if ((message[INTERPAN_STUB_APS_FC_INDEX] & INTERPAN_APS_FRAME_EXTENDED_FC) == 0U) {
+    return false;
+  }
+
+  ipmfBase = message + INTERPAN_UNICAST_HEADER_SIZE;
+  extFc = ipmfBase[INTERPAN_FRAGMENTATION_APS_EXTENDED_FC_INDEX];
+  infoByte = ipmfBase[INTERPAN_FRAGMENTATION_APS_INFO_BYTE_INDEX];
+
+  switch (extFc & 0x03u) {
+    case INTERPAN_APS_EXTENDED_FC_FRAGMENT_FIRST:
+      return (infoByte != 0);
+    case INTERPAN_APS_EXTENDED_FC_FRAGMENT_NEXT:
+      return true;
+    default:
+      return false;
+  }
+}
+#endif // ALLOW_FRAGMENTATION && ALLOW_APS_ENCRYPTED_MESSAGES
+
 static uint8_t parseInterpanMessage(uint8_t *message,
                                     uint8_t *messageLength,
                                     sl_zigbee_af_interpan_header_t *headerData)
@@ -513,24 +566,22 @@ static uint8_t parseInterpanMessage(uint8_t *message,
                     & ~(MAC_ACK_REQUIRED);
 
   if (macFrameControl == LONG_DEST_FRAME_CONTROL) {
-    // control, sequence, dest PAN ID, long dest
-    finger += 2 + 1 + 2 + 8;
+    finger += INTERPAN_MAC_LONG_DEST_PREFIX_SIZE;
   } else if (macFrameControl == SHORT_DEST_FRAME_CONTROL) {
-    // control, sequence, dest PAN ID, short dest
-    finger += 2 + 1 + 2 + 2;
+    finger += INTERPAN_MAC_SHORT_DEST_PREFIX_SIZE;
   } else {
     return 0;
   }
 
   // Source PAN ID
   headerData->panId = HIGH_LOW_TO_INT(finger[1], finger[0]);
-  finger += 2;
+  finger += INTERPAN_MAC_PAN_ID_FIELD_SIZE;
 
   // It is expected that the long Source Address is always present and
   // that the stack MAC filters insured that to be the case.
   headerData->options |= SL_ZIGBEE_AF_INTERPAN_OPTION_MAC_HAS_LONG_ADDRESS;
-  memmove(headerData->longAddress, finger, 8);
-  finger += 8;
+  memmove(headerData->longAddress, finger, INTERPAN_MAC_LONG_ADDRESS_FIELD_SIZE);
+  finger += INTERPAN_MAC_LONG_ADDRESS_FIELD_SIZE;
 
   // Now that we know the correct MAC length, verify the interpan
   // frame is the correct length.
@@ -544,14 +595,15 @@ static uint8_t parseInterpanMessage(uint8_t *message,
   if (HIGH_LOW_TO_INT(finger[1], finger[0]) != STUB_NWK_FRAME_CONTROL) {
     return 0;
   }
-  finger += 2;
+  finger += STUB_NWK_SIZE;
   apsHeaderIndex = (finger - message);
-  remainingLength -= 2;
+  remainingLength -= STUB_NWK_SIZE;
 
   apsFrameControl = (*finger++);
 
   if ((apsFrameControl & ~(INTERPAN_APS_FRAME_DELIVERY_MODE_MASK)
-       &~INTERPAN_APS_FRAME_SECURITY)
+       & ~(INTERPAN_APS_FRAME_SECURITY)
+       & ~(INTERPAN_APS_FRAME_EXTENDED_FC))
       != INTERPAN_APS_FRAME_CONTROL_NO_DELIVERY_MODE) {
     sl_zigbee_af_app_println("%sBad APS frame control 0x%02X",
                              "ERR: Inter-PAN ",
@@ -583,17 +635,46 @@ static uint8_t parseInterpanMessage(uint8_t *message,
       return 0;
   }
 
-  headerData->clusterId = HIGH_LOW_TO_INT(finger[1], finger[0]);
-  finger += 2;
-  headerData->profileId = HIGH_LOW_TO_INT(finger[1], finger[0]);
-  finger += 2;
+  bool secureUnicastBroadcast = (((apsFrameControl & INTERPAN_APS_FRAME_SECURITY) != 0U)
+                                 && (headerData->messageType != SL_ZIGBEE_AF_INTER_PAN_MULTICAST));
+
+  if (!secureUnicastBroadcast) {
+    headerData->clusterId = HIGH_LOW_TO_INT(finger[1], finger[0]);
+    finger += 2;
+    headerData->profileId = HIGH_LOW_TO_INT(finger[1], finger[0]);
+    finger += 2;
+  }
+
+  if (apsFrameControl & INTERPAN_APS_FRAME_EXTENDED_FC) {
+    if (remainingLength < SL_ZIGBEE_APS_INTERPAN_FRAGMENTATION_OVERHEAD) {
+      return 0;
+    }
+    {
+      uint8_t extFc = (uint8_t)(*finger & 0x03u);
+      if ((extFc == INTERPAN_APS_EXTENDED_FC_FRAGMENT_FIRST)
+          || (extFc == INTERPAN_APS_EXTENDED_FC_FRAGMENT_NEXT)) {
+        headerData->options |= SL_ZIGBEE_AF_INTERPAN_OPTION_FRAGMENTATION;
+      }
+    }
+  }
 
   if (apsFrameControl & INTERPAN_APS_FRAME_SECURITY) {
+#if defined(ALLOW_FRAGMENTATION) && defined(ALLOW_APS_ENCRYPTED_MESSAGES)
+    if (secureUnicastBroadcast
+        && sli_interpan_is_secure_ipmf_wire_fragment(message, *messageLength)) {
+      return 0;
+    }
+#endif // ALLOW_FRAGMENTATION && ALLOW_APS_ENCRYPTED_MESSAGES
     sl_status_t status = SL_STATUS_NOT_AVAILABLE;
     uint8_t apsEncryptLength = *messageLength - apsHeaderIndex;
     headerData->options |= SL_ZIGBEE_AF_INTERPAN_OPTION_APS_ENCRYPT;
     #if defined(ALLOW_APS_ENCRYPTED_MESSAGES)
-    uint8_t UNUSED apsHeaderLength = (uint8_t)(finger - message) - apsHeaderIndex;
+    uint8_t apsHeaderLength = (uint8_t)(finger - message) - apsHeaderIndex;
+    if (secureUnicastBroadcast) {
+      // Cluster and profile are inside the secured APS payload; use the fixed
+      // stub APS header length (same as makeInterPanMessage before payload).
+      apsHeaderLength = INTERPAN_APS_UNICAST_SIZE;
+    }
     printData("Before Decryption",
               message + apsHeaderIndex,
               apsEncryptLength);
@@ -617,6 +698,26 @@ static uint8_t parseInterpanMessage(uint8_t *message,
               apsEncryptLength);
 
     *messageLength = apsHeaderIndex + apsEncryptLength;
+
+    if (secureUnicastBroadcast) {
+      // Parse cleartext cluster and profile after decrypt.
+      finger = message + apsHeaderIndex;
+      (void)(*finger++); // APS frame control (cleartext)
+      switch (headerData->messageType) {
+        case SL_ZIGBEE_AF_INTER_PAN_MULTICAST:
+          headerData->groupId = HIGH_LOW_TO_INT(finger[1], finger[0]);
+          finger += 2;
+          break;
+        case SL_ZIGBEE_AF_INTER_PAN_UNICAST:
+        case SL_ZIGBEE_AF_INTER_PAN_BROADCAST:
+        default:
+          break;
+      }
+      headerData->clusterId = HIGH_LOW_TO_INT(finger[1], finger[0]);
+      finger += 2;
+      headerData->profileId = HIGH_LOW_TO_INT(finger[1], finger[0]);
+      finger += 2;
+    }
   }
 
   return (finger - message);
@@ -639,12 +740,59 @@ bool sli_zigbee_af_interpan_process_message(
                                        &messageLength,
                                        &headerData);
   if (payloadOffset == 0) {
+#if defined(ALLOW_FRAGMENTATION) && defined(ALLOW_APS_ENCRYPTED_MESSAGES)
+    if (sli_interpan_try_secure_ipmf_fragment(messageContents, messageLength)) {
+      return true;
+    }
+#endif // ALLOW_FRAGMENTATION && ALLOW_APS_ENCRYPTED_MESSAGES
     return false;
   }
   printMessage(passthroughType, &headerData);
 
   payload = messageContents + payloadOffset;
   payloadLength = messageLength - payloadOffset;
+
+#if defined(ALLOW_FRAGMENTATION)
+  // Handle IPMF data blocks and responses before isMessageAllowed(); the 3-byte
+  // response is not a permitted ZCL command and must not be rejected early.
+  if (SE_PROFILE_ID == headerData.profileId) {
+    if (isInterpanIpmfResponse(payload, payloadLength)) {
+      interpanFragmentationProcessIpmfResponse(headerData,
+                                               payload,
+                                               payloadLength);
+      return true;
+    }
+    if ((headerData.options & SL_ZIGBEE_AF_INTERPAN_OPTION_FRAGMENTATION)
+        && isInterpanFragmentDataPayload(payload, payloadLength)) {
+      uint8_t extFc = payload[INTERPAN_FRAGMENTATION_APS_EXTENDED_FC_INDEX];
+      uint8_t infoByte = payload[INTERPAN_FRAGMENTATION_APS_INFO_BYTE_INDEX];
+
+      switch (extFc & 0x03u) {
+        case INTERPAN_APS_EXTENDED_FC_FRAGMENT_FIRST:
+        case INTERPAN_APS_EXTENDED_FC_FRAGMENT_NEXT:
+        {
+          sl_status_t status = interpanFragmentationProcessIpmf(headerData,
+                                                                messageContents,
+                                                                messageLength);
+          uint8_t blockAck = ((extFc & 0x03u)
+                              == INTERPAN_APS_EXTENDED_FC_FRAGMENT_FIRST)
+                             ? 0u
+                             : infoByte;
+          interpanFragmentationSendIpmfResponse(headerData,
+                                                blockAck,
+                                                (SL_STATUS_OK == status)
+                                                ? INTERPAN_IPMF_RESPONSE_SUCCESS
+                                                : INTERPAN_IPMF_RESPONSE_FAILURE);
+        }
+        break;
+        default:
+          break;
+      }
+
+      return true;
+    }
+  }
+#endif // ALLOW_FRAGMENTATION
 
   if (sl_zigbee_af_interpan_pre_message_received_cb(&headerData,
                                                     payloadLength,
@@ -714,43 +862,6 @@ bool sli_zigbee_af_interpan_process_message(
       return false;
   }
 
-#if defined(ALLOW_FRAGMENTATION)
-  // If interpan fragment, intercept
-  if (SE_PROFILE_ID == headerData.profileId) {
-    if (isInterpanFragment(payload, payloadLength)) {
-      uint8_t fragNum = payload[INTERPAN_FRAGMENTATION_APS_INDEX_IPMF_INDEX];
-
-      switch (payload[INTERPAN_FRAGMENTATION_APS_CONTROL_BYTE_INDEX]) {
-        case INTERPAN_FRAGMENTATION_APS_CONTROL_BYTE_IPMF_VAL:
-        {
-          sl_status_t status = interpanFragmentationProcessIpmf(headerData,
-                                                                messageContents,
-                                                                messageLength);
-          interpanFragmentationSendIpmfResponse(headerData,
-                                                fragNum,
-                                                SL_STATUS_OK == status
-                                                ? INTERPAN_IPMF_RESPONSE_SUCCESS
-                                                : INTERPAN_IPMF_RESPONSE_FAILURE);
-        }
-        break;
-        case INTERPAN_FRAGMENTATION_APS_CONTROL_BYTE_IPMF_RESPONSE_VAL:
-        {
-          // This function will also send the next fragment if response is OK
-          interpanFragmentationProcessIpmfResponse(headerData,
-                                                   payload,
-                                                   payloadLength);
-        }
-        break;
-        default:
-          break;
-      }
-
-      // All inter-PAN fragments are consumed
-      return true;
-    }
-  }
-#endif // ALLOW_FRAGMENTATION
-
   return sl_zigbee_af_process_message(&apsFrame,
                                       type,
                                       payload,
@@ -777,6 +888,13 @@ static bool isMessageAllowed(sl_zigbee_af_interpan_header_t *headerData,
   if (headerData->options & SL_ZIGBEE_AF_INTERPAN_OPTION_APS_ENCRYPT) {
     return APS_ENCRYPTION_ALLOWED;
   }
+
+  #if defined (ALLOW_FRAGMENTATION)
+  if ((headerData->profileId == SE_PROFILE_ID)
+      && (headerData->options & SL_ZIGBEE_AF_INTERPAN_OPTION_FRAGMENTATION)) {
+    return true;
+  }
+  #endif // ALLOW_FRAGMENTATION
 
   // Only the first bit is used for ZCL Frame type
   if (messageContents[0] & BIT(1)) {
@@ -805,15 +923,6 @@ static bool isMessageAllowed(sl_zigbee_af_interpan_header_t *headerData,
   } else {
     commandId = messageContents[2];
   }
-
-#if defined (ALLOW_FRAGMENTATION)
-  // If interpan fragmentation is enabled, we allow all messages of
-  // SE profile ID, appropriate control byte value, and appropriate lengths
-  if ((headerData->profileId == SE_PROFILE_ID)
-      && isInterpanFragment(messageContents, messageLength)) {
-    return true;
-  }
-#endif // ALLOW_FRAGMENTATION
 
   uint8_t messages_count = sizeof(messages) / sizeof(messages[0]);
   for (uint8_t i = 0; i < messages_count; i++) {
@@ -934,37 +1043,32 @@ sl_status_t sl_zigbee_af_interpan_send_message_cb(sl_zigbee_af_interpan_header_t
 
 #if defined(ALLOW_FRAGMENTATION)
 
-// This function checks if packet is an inter-PAN fragment. It must do length
-// checks as well since ZCL default responses come in with APS payload byte 1
-// 0x00, which is also an inter-PAN IPMF control byte value.
-static bool isInterpanFragment(uint8_t* payload, uint8_t payloadLen)
+// IPMF response: 3-byte APS payload, APS FC bit 7 clear on the wire.
+static bool isInterpanIpmfResponse(uint8_t* payload, uint8_t payloadLen)
 {
+  return (payload
+          && (SL_ZIGBEE_APS_INTERPAN_FRAGMENTATION_RESPONSE_LEN == payloadLen)
+          && (payload[0] == INTERPAN_FRAGMENTATION_APS_CONTROL_BYTE_IPMF_RESPONSE_VAL));
+}
+
+// Data block payload after cluster/profile; caller must verify APS FC bit 7 first.
+static bool isInterpanFragmentDataPayload(uint8_t* payload, uint8_t payloadLen)
+{
+  uint8_t extFc;
+
   if (!payload || (payloadLen < SL_ZIGBEE_APS_INTERPAN_FRAGMENT_MIN_LEN)) {
     return false;
   }
 
-  switch (payload[INTERPAN_FRAGMENTATION_APS_CONTROL_BYTE_INDEX]) {
-    case INTERPAN_FRAGMENTATION_APS_CONTROL_BYTE_IPMF_VAL:
-    {
-      if ((payloadLen >= SL_ZIGBEE_APS_INTERPAN_FRAGMENTATION_OVERHEAD)
-          && (payload[INTERPAN_FRAGMENTATION_APS_LEN_IPMF_INDEX]
-              == (payloadLen - SL_ZIGBEE_APS_INTERPAN_FRAGMENTATION_OVERHEAD))) {
-        return true;
-      }
-    }
-    break;
-    case INTERPAN_FRAGMENTATION_APS_CONTROL_BYTE_IPMF_RESPONSE_VAL:
-    {
-      if (SL_ZIGBEE_APS_INTERPAN_FRAGMENTATION_RESPONSE_LEN == payloadLen) {
-        return true;
-      }
-    }
-    break;
-    default:
-      break;
-  }
+  extFc = payload[INTERPAN_FRAGMENTATION_APS_EXTENDED_FC_INDEX];
 
-  return false;
+  switch (extFc & 0x03u) {
+    case INTERPAN_APS_EXTENDED_FC_FRAGMENT_FIRST:
+    case INTERPAN_APS_EXTENDED_FC_FRAGMENT_NEXT:
+      return (payloadLen > SL_ZIGBEE_APS_INTERPAN_FRAGMENTATION_OVERHEAD);
+    default:
+      return false;
+  }
 }
 
 // Helper function to find a free buffer used to store a message sent via frags
@@ -1069,6 +1173,141 @@ static sli_zigbee_rx_fragmented_interpan_packet_t* rxPacketLookUp(sl_802154_long
   return NULL;
 }
 
+#if defined(ALLOW_FRAGMENTATION) && defined(ALLOW_APS_ENCRYPTED_MESSAGES)
+static bool sli_interpan_peek_wire_prefix(const uint8_t *message,
+                                          uint8_t messageLength,
+                                          sl_zigbee_af_interpan_header_t *headerOut,
+                                          uint8_t *apsHeaderIndexOut,
+                                          uint8_t *apsFrameControlOut)
+{
+  const uint8_t *finger = message;
+  uint16_t macFrameControl;
+
+  memset(headerOut, 0, sizeof(sl_zigbee_af_interpan_header_t));
+
+  if (messageLength < INTERPAN_MAC_FRAME_CONTROL_FIELD_SIZE) {
+    return false;
+  }
+
+  macFrameControl = HIGH_LOW_TO_INT(finger[1], finger[0])
+                    & (uint16_t) ~(MAC_ACK_REQUIRED);
+
+  if (macFrameControl == LONG_DEST_FRAME_CONTROL) {
+    if (messageLength < INTERPAN_MIN_PEEK_LONG_DEST_MESSAGE_SIZE) {
+      return false;
+    }
+    finger += INTERPAN_MAC_LONG_DEST_PREFIX_SIZE;
+  } else if (macFrameControl == SHORT_DEST_FRAME_CONTROL) {
+    if (messageLength < INTERPAN_MIN_PEEK_SHORT_DEST_MESSAGE_SIZE) {
+      return false;
+    }
+    finger += INTERPAN_MAC_SHORT_DEST_PREFIX_SIZE;
+  } else {
+    return false;
+  }
+
+  headerOut->panId = HIGH_LOW_TO_INT(finger[1], finger[0]);
+  finger += INTERPAN_MAC_PAN_ID_FIELD_SIZE;
+  headerOut->options |= SL_ZIGBEE_AF_INTERPAN_OPTION_MAC_HAS_LONG_ADDRESS;
+  memmove(headerOut->longAddress, finger, INTERPAN_MAC_LONG_ADDRESS_FIELD_SIZE);
+  finger += INTERPAN_MAC_LONG_ADDRESS_FIELD_SIZE;
+
+  {
+    uint8_t remainingLength = messageLength - (uint8_t)(finger - message);
+    if (remainingLength < (STUB_NWK_SIZE + MIN_STUB_APS_SIZE)) {
+      return false;
+    }
+
+    if (HIGH_LOW_TO_INT(finger[1], finger[0]) != STUB_NWK_FRAME_CONTROL) {
+      return false;
+    }
+    finger += STUB_NWK_SIZE;
+    *apsHeaderIndexOut = (uint8_t)(finger - message);
+    remainingLength -= STUB_NWK_SIZE;
+
+    *apsFrameControlOut = *finger;
+
+    if ((*apsFrameControlOut & ~(INTERPAN_APS_FRAME_DELIVERY_MODE_MASK
+                                 | INTERPAN_APS_FRAME_SECURITY
+                                 | INTERPAN_APS_FRAME_EXTENDED_FC))
+        != INTERPAN_APS_FRAME_CONTROL_NO_DELIVERY_MODE) {
+      return false;
+    }
+
+    headerOut->messageType = (sl_zigbee_af_interpan_message_type_t)
+                             (*apsFrameControlOut & INTERPAN_APS_FRAME_DELIVERY_MODE_MASK);
+
+    switch (headerOut->messageType) {
+      case SL_ZIGBEE_AF_INTER_PAN_UNICAST:
+      case SL_ZIGBEE_AF_INTER_PAN_BROADCAST:
+        if (remainingLength < INTERPAN_APS_UNICAST_SIZE) {
+          return false;
+        }
+        break;
+      case SL_ZIGBEE_AF_INTER_PAN_MULTICAST:
+        if (remainingLength < INTERPAN_APS_MULTICAST_SIZE) {
+          return false;
+        }
+        break;
+      default:
+        return false;
+    }
+  }
+
+  return true;
+}
+
+static bool sli_interpan_try_secure_ipmf_fragment(uint8_t *messageContents,
+                                                  uint8_t messageLength)
+{
+  sl_zigbee_af_interpan_header_t hdr;
+  uint8_t apsHdrIdxIgnored;
+  uint8_t apsFc;
+  const uint8_t *ipmfBase;
+  uint8_t fragNum;
+  sl_status_t status;
+
+  if (!sli_interpan_peek_wire_prefix(messageContents,
+                                     messageLength,
+                                     &hdr,
+                                     &apsHdrIdxIgnored,
+                                     &apsFc)) {
+    return false;
+  }
+  (void)apsHdrIdxIgnored;
+  if ((apsFc & INTERPAN_APS_FRAME_SECURITY) == 0U) {
+    return false;
+  }
+  if (hdr.messageType == SL_ZIGBEE_AF_INTER_PAN_MULTICAST) {
+    return false;
+  }
+  if (!sli_interpan_is_secure_ipmf_wire_fragment(messageContents, messageLength)) {
+    return false;
+  }
+
+  hdr.profileId = SE_PROFILE_ID;
+  hdr.clusterId = 0;
+  hdr.options |= (SL_ZIGBEE_AF_INTERPAN_OPTION_MAC_HAS_LONG_ADDRESS
+                  | SL_ZIGBEE_AF_INTERPAN_OPTION_APS_ENCRYPT);
+
+  ipmfBase = messageContents + INTERPAN_UNICAST_HEADER_SIZE;
+  {
+    uint8_t extFc = ipmfBase[INTERPAN_FRAGMENTATION_APS_EXTENDED_FC_INDEX];
+    uint8_t infoByte = ipmfBase[INTERPAN_FRAGMENTATION_APS_INFO_BYTE_INDEX];
+    fragNum = ((extFc & 0x03u) == INTERPAN_APS_EXTENDED_FC_FRAGMENT_FIRST)
+              ? 0u
+              : infoByte;
+  }
+  status = interpanFragmentationProcessIpmf(hdr, messageContents, messageLength);
+  interpanFragmentationSendIpmfResponse(hdr,
+                                        fragNum,
+                                        (SL_STATUS_OK == status)
+                                        ? INTERPAN_IPMF_RESPONSE_SUCCESS
+                                        : INTERPAN_IPMF_RESPONSE_FAILURE);
+  return true;
+}
+#endif // ALLOW_FRAGMENTATION && ALLOW_APS_ENCRYPTED_MESSAGES
+
 // This function sends a whole message. It takes care of the fragmenting.
 static sl_status_t interpanFragmentationSendUnicast(sl_zigbee_af_interpan_header_t* header,
                                                     uint8_t* message,
@@ -1093,8 +1332,7 @@ static sl_status_t interpanFragmentationSendUnicast(sl_zigbee_af_interpan_header
     return SL_STATUS_ZIGBEE_MAX_MESSAGE_LIMIT_REACHED;
   }
 
-  // No interpan frag APS encryption allowed (payload assumed already encrypted)
-  header->options &= ~SL_ZIGBEE_AF_INTERPAN_OPTION_APS_ENCRYPT;
+  header->options |= SL_ZIGBEE_AF_INTERPAN_OPTION_FRAGMENTATION;
 
   // Build a big packet
   status = makeInterPanMessage(header,
@@ -1155,10 +1393,12 @@ static sl_status_t interpanFragmentationSendIpmf(sli_zigbee_tx_fragmented_interp
   messageToBeSentLen =  messageLeftLen >= txPacket->fragmentMaxLen
                        ? txPacket->fragmentMaxLen : messageLeftLen;
 
-  *finger++ = INTERPAN_FRAGMENTATION_APS_CONTROL_BYTE_IPMF_VAL;
-  *finger++ = txPacket->fragmentNum;
-  *finger++ = txPacket->numFragments;
-  *finger++ = messageToBeSentLen;
+  *finger++ = (txPacket->fragmentNum == 0)
+              ? INTERPAN_APS_EXTENDED_FC_FRAGMENT_FIRST
+              : INTERPAN_APS_EXTENDED_FC_FRAGMENT_NEXT;
+  *finger++ = (txPacket->fragmentNum == 0)
+              ? txPacket->numFragments
+              : txPacket->fragmentNum;
   memmove(finger,
           (txPacket->buffer + headerLen + messageSentLen),
           messageToBeSentLen);
@@ -1183,6 +1423,8 @@ static sl_status_t interpanFragmentationProcessIpmf(sl_zigbee_af_interpan_header
                                                     uint8_t *message, uint8_t messageLen)
 {
   uint8_t* finger;
+  uint8_t extFc;
+  uint8_t infoByte;
   uint8_t fragNum, numFrags, fragLen, headerLen = INTERPAN_UNICAST_HEADER_SIZE;
   sli_zigbee_rx_fragmented_interpan_packet_t *rxPacket;
 
@@ -1190,13 +1432,34 @@ static sl_status_t interpanFragmentationProcessIpmf(sl_zigbee_af_interpan_header
     return SL_STATUS_INVALID_PARAMETER;
   }
 
-  finger = message + headerLen;
-  finger++;   // Skip the control byte
-  fragNum  = *finger++;
-  numFrags = *finger++;
-  fragLen  = *finger++;
+  if (messageLen < (headerLen + SL_ZIGBEE_APS_INTERPAN_FRAGMENTATION_OVERHEAD)) {
+    return SL_STATUS_INVALID_PARAMETER;
+  }
 
-  sl_zigbee_af_app_println("Receiving inter-PAN fragment %d of %d", fragNum, numFrags - 1);
+  finger = message + headerLen;
+  extFc = *finger++;
+  infoByte = *finger++;
+
+  switch (extFc & 0x03u) {
+    case INTERPAN_APS_EXTENDED_FC_FRAGMENT_FIRST:
+      numFrags = infoByte;
+      fragNum = 0;
+      break;
+    case INTERPAN_APS_EXTENDED_FC_FRAGMENT_NEXT:
+      fragNum = infoByte;
+      numFrags = 0;
+      break;
+    default:
+      return SL_STATUS_INVALID_PARAMETER;
+  }
+
+  fragLen = (uint8_t)(messageLen - headerLen - SL_ZIGBEE_APS_INTERPAN_FRAGMENTATION_OVERHEAD);
+
+  if ((extFc & 0x03u) == INTERPAN_APS_EXTENDED_FC_FRAGMENT_FIRST) {
+    if (infoByte == 0) {
+      return SL_STATUS_INVALID_PARAMETER;
+    }
+  }
 
   // See if we already have an entry for this fragment transmission
   rxPacket = rxPacketLookUp(header.longAddress);
@@ -1230,6 +1493,14 @@ static sl_status_t interpanFragmentationProcessIpmf(sl_zigbee_af_interpan_header
     return SL_STATUS_ZIGBEE_MAX_MESSAGE_LIMIT_REACHED;
   }
 
+  if (fragNum != 0) {
+    numFrags = rxPacket->numFragments;
+  }
+
+  sl_zigbee_af_app_println("Receiving inter-PAN fragment %d of %d",
+                           fragNum,
+                           (numFrags > 0) ? (numFrags - 1) : 0);
+
   // We received an IPMF, so turn off the timer for now
   sl_zigbee_af_event_set_inactive(rxPacket->event);
 
@@ -1249,13 +1520,6 @@ static sl_status_t interpanFragmentationProcessIpmf(sl_zigbee_af_interpan_header
       freeRxPacketEntry(rxPacket, IPMF_RX_BAD_RESPONSE);
       return SL_STATUS_INVALID_INDEX;
     }
-    if (rxPacket->numFragments != numFrags) {
-      sl_zigbee_af_app_println("ERR: expecting total number of IPMFs %d, but received"
-                               " %d in IPMF fragment %d",
-                               rxPacket->numFragments, numFrags, fragNum);
-      freeRxPacketEntry(rxPacket, IPMF_RX_BAD_RESPONSE);
-      return SL_STATUS_INVALID_INDEX;
-    }
     // Note that we allow sequential fragments to specify different lengths.
     // In theory, frags 0 to n-1 should be of the same maximum length, and the
     // last fragment n should be of shorter length. For now, we'll allow that
@@ -1268,6 +1532,46 @@ static sl_status_t interpanFragmentationProcessIpmf(sl_zigbee_af_interpan_header
   rxPacket->lastFragmentNumReceived = fragNum;
 
   if (rxPacket->lastFragmentNumReceived == (rxPacket->numFragments - 1)) {
+    sl_zigbee_af_interpan_header_t cbHeader = header;
+
+    // Reassemble-then-decrypt: secured stub APS must be verified over the full PDU.
+#if defined(ALLOW_APS_ENCRYPTED_MESSAGES)
+    {
+      uint8_t *wire = rxPacket->buffer;
+      uint8_t apsWireStart = INTERPAN_STUB_APS_FC_INDEX;
+
+      if ((wire[apsWireStart] & INTERPAN_APS_FRAME_SECURITY) != 0U) {
+        if (cbHeader.messageType == SL_ZIGBEE_AF_INTER_PAN_MULTICAST) {
+          freeRxPacketEntry(rxPacket, IPMF_RX_BAD_RESPONSE);
+          return SL_STATUS_INVALID_CONFIGURATION;
+        }
+        {
+          uint8_t encLen = (uint8_t)(rxPacket->bufLen - apsWireStart);
+          sl_status_t ds = handleApsSecurity(false,
+                                               wire + apsWireStart,
+                                               INTERPAN_APS_UNICAST_SIZE,
+                                               &encLen,
+                                               0,
+                                               &cbHeader);
+          if (ds != SL_STATUS_OK) {
+            freeRxPacketEntry(rxPacket, IPMF_RX_BAD_RESPONSE);
+            return ds;
+          }
+          rxPacket->bufLen = (uint16_t)(apsWireStart + encLen);
+        }
+        {
+          const uint8_t *fp = wire + apsWireStart;
+          (void)(*fp++); // cleartext APS frame control
+          cbHeader.clusterId = HIGH_LOW_TO_INT(fp[1], fp[0]);
+          fp += 2;
+          cbHeader.profileId = HIGH_LOW_TO_INT(fp[1], fp[0]);
+          fp += 2;
+        }
+        cbHeader.options |= SL_ZIGBEE_AF_INTERPAN_OPTION_APS_ENCRYPT;
+      }
+    }
+#endif // ALLOW_APS_ENCRYPTED_MESSAGES
+
     // Full message received
     sl_zigbee_af_app_print("T%08X:Inter-PAN RX (%d B, %d fragments) [",
                            sl_zigbee_af_get_current_time(),
@@ -1281,7 +1585,7 @@ static sl_status_t interpanFragmentationProcessIpmf(sl_zigbee_af_interpan_header
 
     // User callback: all frags received, message reconstructed
     sl_zigbee_af_interpan_message_received_over_fragments_cb(
-      &header,
+      &cbHeader,
       rxPacket->bufLen - headerLen,
       rxPacket->buffer + headerLen);
 
@@ -1306,6 +1610,11 @@ static void interpanFragmentationSendIpmfResponse(sl_zigbee_af_interpan_header_t
     return;
   }
 
+  // IPMF responses are not fragmented: no APS FC bit 7 / extended FC shim.
+  // Do not encrypt the stub APS over the trailing 3-byte IPMF response payload.
+  header.options &= (uint16_t)~SL_ZIGBEE_AF_INTERPAN_OPTION_APS_ENCRYPT;
+  header.options &= (uint16_t)~SL_ZIGBEE_AF_INTERPAN_OPTION_FRAGMENTATION;
+
   // Construct a new IPMF message, but no payload
   status = makeInterPanMessage(&header,
                                message,
@@ -1317,7 +1626,7 @@ static void interpanFragmentationSendIpmfResponse(sl_zigbee_af_interpan_header_t
     return;
   }
 
-  // Move past the header and write the IPMF response payload
+  // IPMF response shim in the APS payload (not APS extended FC / bit 7).
   finger = message + messageLength;
   *finger++ = INTERPAN_FRAGMENTATION_APS_CONTROL_BYTE_IPMF_RESPONSE_VAL;
   *finger++ = fragNum;
@@ -1346,7 +1655,7 @@ static void interpanFragmentationProcessIpmfResponse(sl_zigbee_af_interpan_heade
     return;
   }
 
-  uint8_t fragmentNumAcked = payload[INTERPAN_FRAGMENTATION_APS_INDEX_IPMF_INDEX];
+  uint8_t fragmentNumAcked = payload[INTERPAN_FRAGMENTATION_APS_INFO_BYTE_INDEX];
   uint8_t response = payload[INTERPAN_FRAGMENTATION_APS_IPMF_RESPONSE_INDEX];
 
   sli_zigbee_tx_fragmented_interpan_packet_t* txPacket = txPacketLookUp(header.longAddress);

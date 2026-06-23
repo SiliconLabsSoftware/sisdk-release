@@ -13,6 +13,7 @@ provides:
 
 requires:
 - name: clock_manager_runtime
+- name: interrupt_manager
 - name: code_classification
 - name: device
 - name: device_has_lpwaes
@@ -27,6 +28,10 @@ source:
 - path: src/keyref.c
 - path: src/aead.c
 - path: src/cmac.c
+- path: src/chachapoly.c
+  condition: [device_generic_family_sixx353]
+- path: src/chachapoly.c
+  condition: [device_family_sixg300xiwifi74000]
 - path: src/hmac.c
 - path: src/mac.c
 - path: src/hash.c
@@ -42,6 +47,10 @@ include:
   - path: sxsymcrypt/channel.h
   - path: sxsymcrypt/cmac.h
   - path: sxsymcrypt/cmmask.h
+  - path: sxsymcrypt/chachapoly.h
+    condition: [device_generic_family_sixx353]
+  - path: sxsymcrypt/chachapoly.h
+    condition: [device_family_sixg300xiwifi74000]
   - path: sxsymcrypt/hmac.h
   - path: sxsymcrypt/mac.h
   - path: sxsymcrypt/blkcipher.h
@@ -77,12 +86,19 @@ define:
 - name: SL_CODE_COMPONENT_SXSYMCRYPT
   value: sxsymcrypt
 - name: SX_HASH_DIGESTSZ_MAX
-  value: 0
+  value: "0"
 - name: SX_HASH_BLOCKSZ_MAX
-  value: 0
+  value: "0"
 - name: SX_KEYREF_MAX_ID
-  value: 32
+  value: "32"
   condition: [device_generic_family_sixx301]
+- name: SX_KEYREF_MAX_ID
+  value: "48"
+  condition: [device_generic_family_sixx353]
+
+  
+  # Silicon Labs defeature list
+- name: _SILICON_LABS_DEFEATURE_SHA3
 
 template_contribution:
 - name: code_classification_components

@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include "sl_rail.h"
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "app_process.h"
 #include "sl_rail_util_init.h"
@@ -100,14 +101,14 @@ void app_process_action(void)
       break;
     case S_RX_PACKET_ERROR:
       // Handle Rx error
-      app_log_error("Radio RX Error occurred\nEvents: %lld\n", current_rail_err_tmp);
+      app_log_error("Radio RX Error occurred\nEvents: 0x%" PRIX64 "\n", current_rail_err_tmp);
       state = S_IDLE;
 #if defined(SL_CATALOG_KERNEL_PRESENT)
       app_task_notify();
 #endif
       break;
     case S_CALIBRATION_ERROR:
-      app_log_warning("Radio Calibration Error occurred\nEvents: %lld\nsl_rail_calibrate() result:%ld\n",
+      app_log_warning("Radio Calibration Error occurred\nEvents: 0x%" PRIX64 "\nsl_rail_calibrate() result: 0x%08" PRIX32 "\n",
                       current_rail_err_tmp,
                       calibration_status);
       state = S_IDLE;
@@ -165,13 +166,13 @@ static void print_blocks(const uint8_t *buffer, uint16_t length)
 {
   for (uint8_t i = 0; i < length; i++) {
     if (i % 16 == 0) {
-      app_log_info("[0x%02X ", buffer[i]);
+      app_log_info("[0x%02" PRIX8 " ", buffer[i]);
     } else if (i % 16 == 8) {
-      app_log_info("| 0x%02X ", buffer[i]);
+      app_log_info("| 0x%02" PRIX8 " ", buffer[i]);
     } else if (i % 16 == 15 || i == length - 1) {
-      app_log_info("0x%02X]\n", buffer[i]);
+      app_log_info("0x%02" PRIX8 "]\n", buffer[i]);
     } else {
-      app_log_info("0x%02X ", buffer[i]);
+      app_log_info("0x%02" PRIX8 " ", buffer[i]);
     }
   }
 }
@@ -194,7 +195,7 @@ static void print_rx_packets(sl_rail_handle_t rail_handle)
     }
     rail_status = sl_rail_release_rx_packet(rail_handle, rx_packet_handle);
     if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-      app_log_warning("sl_rail_release_rx_packet() result: %lu\n", rail_status);
+      app_log_warning("sl_rail_release_rx_packet() result: 0x%08" PRIX32 "\n", rail_status);
     }
 
     if (packet_info.packet_bytes <= SL_RAIL_SDK_RX_FIFO_SIZE) {
@@ -203,25 +204,25 @@ static void print_rx_packets(sl_rail_handle_t rail_handle)
 
       char mField[3];
       sl_rail_sdk_wmbus_frame_mfield_to_chars(dll_header->address.detailed.manufacturer, mField);
-      app_log_info("RX:[Time:%lu]\n", packet_details.time_received.packet_time);
-      app_log_info("Block-1:[L:%d,C:0x%02X,M:%c%c%c,ID:%08X,Version:0x%02X,devType:0x%02X]\n",
+      app_log_info("RX:[Time:%" PRIu32 "]\n", packet_details.time_received.packet_time);
+      app_log_info("Block-1:[L:%" PRIu8 ",C:0x%02" PRIX8 ",M:%c%c%c,ID:0x%08" PRIX32 ",Version:0x%02" PRIX8 ",devType:0x%02" PRIX8 "]\n",
                    dll_header->lField,
                    dll_header->c_field.raw,
                    mField[0], mField[1], mField[2],
-                   (unsigned int)dll_header->address.detailed.id,
-                   (unsigned int)dll_header->address.detailed.version,
-                   (unsigned int)dll_header->address.detailed.device_type);
+                   dll_header->address.detailed.id,
+                   dll_header->address.detailed.version,
+                   dll_header->address.detailed.device_type);
       if (stl_header->ci_field == WMBUS_CI_EN13757_3_APPLICATION_SHORT) {
         uint8_t *payload_start = rx_buffer + sizeof(sl_rail_sdk_wmbus_dll_header_t) + sizeof(sl_rail_sdk_wmbus_stl_header_t);
         uint16_t payload_len = dll_header->lField - sizeof(sl_rail_sdk_wmbus_dll_header_t) - sizeof(sl_rail_sdk_wmbus_stl_header_t) + 1;
-        app_log_info("AppHeader:[CI:0x%02X,AccessNr:%d,Status:0x%02X,encMode:%d,Accessibility:%02X,encBlocks:%d,sync:%d]\n",
+        app_log_info("AppHeader:[CI:0x%02" PRIX8 ",AccessNr:%" PRIu8 ",Status:0x%02" PRIX8 ",encMode:%" PRIu8 ",Accessibility:0x%02" PRIX8 ",encBlocks:%" PRIu8 ",sync:%s]\n",
                      stl_header->ci_field,
                      stl_header->access_number,
                      stl_header->status,
                      stl_header->conf_word.mode_0_5.mode,
-                     stl_header->conf_word.mode_0_5.accessibility,
+                     (uint8_t)stl_header->conf_word.mode_0_5.accessibility,
                      stl_header->conf_word.mode_0_5.num_of_enc_blocks,
-                     stl_header->conf_word.mode_0_5.synchronized);
+                     stl_header->conf_word.mode_0_5.synchronized ? "ON" : "OFF");
         if (stl_header->conf_word.mode_0_5.mode == 5) {
           uint8_t iv[16];
           //with long transport layer header, the address from the header should be used

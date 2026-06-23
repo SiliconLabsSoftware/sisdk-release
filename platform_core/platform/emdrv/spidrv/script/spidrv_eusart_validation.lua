@@ -13,6 +13,14 @@ for k, v in pairs(spidrv.instances) do
     local config_control = slc.config(str_cs_control)
     local config_cs = slc.config(str_cs_port)
 
+    if config_control ~= nil and config_control.value == "spidrvCsControlAuto" and config_cs == nil then
+        validation.error(
+            instance .. " : SPIDRV is configured to control CS, but no CS pin is selected",
+            validation.target_for_defines({ str_cs_port }),
+            "CS must be controlled by the application, or a CS pin must be configured",
+            nil)
+    end
+
     if spi_mode == "spidrvMaster" then
         if spi_bitrate > 20000000 then
             validation.warning(
@@ -72,12 +80,4 @@ for k, v in pairs(spidrv.instances) do
             end
         end
     end
-end
-
-if config_control ~=nil and (config_control.value == "spidrvCsControlAuto") and config_cs == nil then
-    local msg = instance .. " : SPIDRV is configured to control CS, but no CS pin is selected"
-    validation.error(msg,
-                    validation.target_for_defines({str_cs_port}),
-                    "CS must be controlled by the application, or a CS pin must be configured",
-                    nil)
 end

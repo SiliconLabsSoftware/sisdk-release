@@ -13,6 +13,7 @@ category: Bluetooth|Bluetooth Host (Stack)|Additional Features
 quality: "production"
 requires:
 - name: "bluetooth_stack"
+- name: "bluetooth_feature_system"
 - name: "micriumos_enable_task_exit_garbage_collect"
   condition: [micriumos_kernel]
 provides:

@@ -20,6 +20,7 @@
 #include "token.h"
 #endif
 #include "sl_token_manager.h"
+#include "sl_token_manager_api.h"
 #include "sl_zigbee_token.h"
 #include "sl_zigbee_types.h"
 
@@ -36,8 +37,8 @@ uint32_t sli_zigbee_stack_get_token_count(void)
   return TOKEN_COUNT;
 }
 
-sl_status_t sl_zigbee_get_token_default(uint32_t token,
-                                        uint8_t *default_token_value)
+sl_status_t sli_zigbee_stack_get_token_default(uint32_t token,
+                                               uint8_t *default_token_value)
 {
   for (uint32_t token_idx = 0; token_idx < TOKEN_COUNT; token_idx++) {
     if (token == tokenNvm3Keys[token_idx]) {
@@ -99,13 +100,14 @@ sl_status_t sli_zigbee_stack_set_token_data(uint32_t token,
  * initializing functions to do anything, since token initialization is handled
  * by sl_token_def.c
  */
-sl_status_t sl_zigbee_initialize_app_tokens(void)
+sl_status_t sli_zigbee_stack_initialize_app_tokens(void)
 {
   return SL_STATUS_OK;
 }
-sl_status_t sl_zigbee_initialize_basic_token(uint32_t token,
-                                             void *default_token_value,
-                                             uint32_t token_size)
+
+sl_status_t sli_zigbee_stack_initialize_basic_token(uint32_t token,
+                                                    void *default_token_value,
+                                                    uint32_t token_size)
 {
   (void)token;
   (void)default_token_value;
@@ -113,9 +115,9 @@ sl_status_t sl_zigbee_initialize_basic_token(uint32_t token,
   return SL_STATUS_OK;
 }
 
-sl_status_t sl_zigbee_initialize_counter_token(uint32_t token,
-                                               void *default_token_value,
-                                               uint32_t token_size)
+sl_status_t sli_zigbee_stack_initialize_counter_token(uint32_t token,
+                                                      void *default_token_value,
+                                                      uint32_t token_size)
 {
   (void)token;
   (void)default_token_value;
@@ -123,14 +125,28 @@ sl_status_t sl_zigbee_initialize_counter_token(uint32_t token,
   return SL_STATUS_OK;
 }
 
-sl_status_t sl_zigbee_initialize_index_token(uint32_t token_base,
-                                             void *default_token_value,
-                                             uint32_t token_size,
-                                             uint8_t token_index_size)
+sl_status_t sli_zigbee_stack_initialize_index_token(uint32_t token_base,
+                                                    void *default_token_value,
+                                                    uint32_t token_size,
+                                                    uint8_t token_index_size)
 {
   (void)token_base;
   (void)default_token_value;
   (void)token_size;
   (void)token_index_size;
   return SL_STATUS_OK;
+}
+
+sl_status_t slxi_zigbee_stack_token_manager_get_data(uint32_t token,
+                                                      void *data,
+                                                      uint32_t length)
+{
+  return sl_token_manager_get_data(token, data, length);
+}
+
+sl_status_t slx_zigbee_token_manager_set_data(uint32_t token,
+                                              void *data,
+                                              uint32_t length)
+{
+  return sl_token_manager_set_data(token, data, length);
 }

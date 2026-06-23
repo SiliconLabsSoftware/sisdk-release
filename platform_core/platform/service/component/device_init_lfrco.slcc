@@ -27,6 +27,12 @@ config_file:
 - path: config/s2/sl_device_init_lfrco_config.h
   file_id: device_init_lfrco_config
   condition: [device_sdid_240]
+- path: config/s2/sl_device_init_lfrco_config.h
+  file_id: device_init_lfrco_config
+  condition: [device_sdid_250]
+- path: config/s2/sl_device_init_lfrco_config.h
+  file_id: device_init_lfrco_config
+  condition: [device_sdid_265]
 include:
 - path: inc
   file_list:

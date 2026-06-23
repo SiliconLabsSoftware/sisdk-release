@@ -122,7 +122,11 @@ class MultiPHYConfig(object):
 
     def _preprocess_model(self, model):
         # clear out some non-compatible object types before serialization
-        processed_model = copy.deepcopy(model)
+        processed_model = copy.copy(model)
+        processed_model.base_channel_configurations = copy.copy(model.base_channel_configurations)
+        processed_model.base_channel_configurations.base_channel_configuration = [
+            copy.copy(c) for c in model.base_channel_configurations.base_channel_configuration
+        ]
 
         # Loop through each base channel configuration
         for base_channel_configuration in processed_model.base_channel_configurations.base_channel_configuration:
@@ -141,6 +145,11 @@ class MultiPHYConfig(object):
                 for register_name, regsiter_obj in phy_config_delta_subtract_dict.items():
                     phy_config_delta_subtract.add_register(self._conver_register_obj_to_xml(regsiter_obj))
                 base_channel_configuration.phy_config_delta_subtract = phy_config_delta_subtract
+
+            base_channel_configuration.channel_config_entries = copy.copy(base_channel_configuration.channel_config_entries)
+            base_channel_configuration.channel_config_entries.channel_config_entry = [
+                copy.copy(c) for c in base_channel_configuration.channel_config_entries.channel_config_entry
+            ]
 
             # Loop through each channel config entry
             for channel_config_entry in base_channel_configuration.channel_config_entries.channel_config_entry:

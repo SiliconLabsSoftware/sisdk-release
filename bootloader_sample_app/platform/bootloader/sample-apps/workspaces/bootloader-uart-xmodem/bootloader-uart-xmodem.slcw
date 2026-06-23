@@ -1,7 +1,7 @@
 label: bootloader-uart-xmodem-workspace
 quality: production
 description: >
-  TrustZone is used to split into a Secure and Non-Secure bootloader. This workspace contains the secure and non-secure part of the bootloader and builds them together.
+  Demonstrates how to build a TrustZone-split bootloader as a unified workspace, combining the Secure and Non-Secure parts into a single dual-image build.
 project:
   - path: bootloader-uart-xmodem-secure.slcp
     id: bootloader-uart-xmodem-secure

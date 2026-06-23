@@ -31,6 +31,8 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
+
 #include PLATFORM_HEADER
 #include "stack/include/ember.h"
 #include "em_system.h"
@@ -153,7 +155,7 @@ void emberAfMessageSentCallback(EmberStatus status,
 {
   (void) message;
   if (status != EMBER_SUCCESS) {
-    app_log_error("Transmit failed: 0x%02X\n", status);
+    app_log_error("Transmit failed: 0x%02" PRIX8 "\n", status);
   }
 }
 
@@ -174,7 +176,7 @@ void emberAfStackStatusCallback(EmberStatus status)
       app_log_info("Network down\n");
       break;
     default:
-      app_log_info("Stack status: 0x%02X\n", status);
+      app_log_info("Stack status: 0x%02" PRIX8 "\n", status);
       break;
   }
 }
@@ -292,9 +294,9 @@ bool set_security_key(uint8_t* key, size_t key_length)
                           &security_key_id);
 
   if (status == PSA_SUCCESS) {
-    app_log_info("Security key import successful, key id: %lu\n", security_key_id);
+    app_log_info("Security key import successful, key id: %" PRIu32 "\n", security_key_id);
   } else {
-    app_log_info("Security Key import failed: 0x%02lx\n", status);
+    app_log_info("Security Key import failed: %" PRId32 "\n", status);
   }
 
   emstatus = emberSetPsaSecurityKey(security_key_id);
@@ -303,7 +305,7 @@ bool set_security_key(uint8_t* key, size_t key_length)
     app_log_info("Security key set successful\n");
     success = true;
   } else {
-    app_log_info("Security key set failed 0x%02X\n", emstatus);
+    app_log_info("Security key set failed 0x%02" PRIX8 "\n", emstatus);
   }
 
   return success;
@@ -326,9 +328,9 @@ static void handle_network_form(void)
   parameters.panId = sl_get_pan_id();
   status = emberFormNetwork(&parameters);
   if (status == EMBER_SUCCESS) {
-    app_log_info("network formed, radio_channel: %d PAN ID: 0x%04X\n", parameters.radioChannel, parameters.panId);
+    app_log_info("network formed, radio_channel: %" PRIu16 " PAN ID: 0x%04" PRIX16 "\n", parameters.radioChannel, parameters.panId);
   } else {
-    app_log_error("network form unsuccessful, error code: 0x%02X\n", status);
+    app_log_error("network form unsuccessful, error code: 0x%02" PRIX8 "\n", status);
   }
   emberPermitJoining(UNLIMITED_CONNECTION_TIME);
 }
@@ -347,7 +349,7 @@ static void process_message(void)
       switch_endianness_switch_id[i] = ((message_from_connect[i + 1] >> 4) & 0x0F) | ((message_from_connect[i + 1] << 4) & 0xF0);
     }
     notify_connected_ble_device(SL_DIRECTION_PROPRIETARY, &switch_endianness_switch_id[0]);
-    app_log_info("Toggle message from node: %d, light is %s\n", incoming_message.source,
+    app_log_info("Toggle message from node: %" PRIu16 ", light is %s\n", incoming_message.source,
                  (sl_get_light_state() == DEMO_LIGHT_ON)
                  ? "on"
                  : "off");

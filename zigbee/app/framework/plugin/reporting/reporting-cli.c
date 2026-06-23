@@ -30,31 +30,31 @@ void sli_zigbee_af_reporting_cli_print(sl_cli_command_arg_t *arguments)
   for (i = 0; i < sli_zigbee_af_reporting_num_entries(); i++) {
     sl_zigbee_af_plugin_reporting_entry_t entry;
     sli_zigbee_af_reporting_get_entry(i, &entry);
-    sl_zigbee_af_reporting_print("%02X:", i);
+    sl_zigbee_af_cli_print("%02X:", i);
     if (entry.endpoint != SL_ZIGBEE_AF_PLUGIN_REPORTING_UNUSED_ENDPOINT_ID) {
-      sl_zigbee_af_reporting_print("ep %02X clus %04X attr %04X svr %c",
-                                   entry.endpoint,
-                                   entry.clusterId,
-                                   entry.attributeId,
-                                   (entry.mask == CLUSTER_MASK_SERVER ? 'y' : 'n'));
+      sl_zigbee_af_cli_print("ep %02X clus %04X attr %04X svr %c",
+                             entry.endpoint,
+                             entry.clusterId,
+                             entry.attributeId,
+                             (entry.mask == CLUSTER_MASK_SERVER ? 'y' : 'n'));
       if (entry.manufacturerCode != SL_ZIGBEE_AF_NULL_MANUFACTURER_CODE) {
-        sl_zigbee_af_reporting_print(" mfg %02X", entry.manufacturerCode);
+        sl_zigbee_af_cli_print(" mfg %02X", entry.manufacturerCode);
       }
       if (entry.direction == SL_ZIGBEE_ZCL_REPORTING_DIRECTION_REPORTED) {
-        sl_zigbee_af_reporting_print(" report min %04X max %04X rpt-chg %08X",
-                                     entry.data.reported.minInterval,
-                                     entry.data.reported.maxInterval,
-                                     entry.data.reported.reportableChange);
-        sl_zigbee_af_reporting_flush();
+        sl_zigbee_af_cli_print(" report min %04X max %04X rpt-chg %08X",
+                               entry.data.reported.minInterval,
+                               entry.data.reported.maxInterval,
+                               entry.data.reported.reportableChange);
+        sl_zigbee_af_cli_flush();
       } else {
-        sl_zigbee_af_reporting_print(" receive from %04X ep %02X timeout %04X",
-                                     entry.data.received.source,
-                                     entry.data.received.endpoint,
-                                     entry.data.received.timeout);
+        sl_zigbee_af_cli_print(" receive from %04X ep %02X timeout %04X",
+                               entry.data.received.source,
+                               entry.data.received.endpoint,
+                               entry.data.received.timeout);
       }
     }
-    sl_zigbee_af_reporting_println("");
-    sl_zigbee_af_reporting_flush();
+    sl_zigbee_af_cli_println("");
+    sl_zigbee_af_cli_flush();
     // EMZIGBEE-5125: apps with lot's of endpoints/reporting table configs will
     // watchdog when printing
     halResetWatchdog();
@@ -66,14 +66,14 @@ void sli_zigbee_af_reporting_cli_clear(sl_cli_command_arg_t *arguments)
 {
   (void)arguments;
   sl_status_t status = sl_zigbee_af_clear_report_table_cb();
-  sl_zigbee_af_reporting_println("%s 0x%02X", "clear", status);
+  sl_zigbee_af_cli_println("%s 0x%02X", "clear", status);
 }
 
 // plugin reporting remove <index:1>
 void sli_zigbee_af_reporting_cli_remove(sl_cli_command_arg_t *arguments)
 {
   sl_status_t status = sli_zigbee_af_reporting_remove_entry(sl_cli_get_argument_uint16(arguments, 0));
-  sl_zigbee_af_reporting_println("%s 0x%02X", "remove", status);
+  sl_zigbee_af_cli_println("%s 0x%02X", "remove", status);
 }
 
 // plugin reporting add <endpoint:1> <cluster id:2> <attribute id:2> ...
@@ -97,7 +97,7 @@ void sli_zigbee_af_reporting_cli_add(sl_cli_command_arg_t *arguments)
   UNUSED_VAR(status);
   status = sl_zigbee_af_reporting_configure_reported_attribute(&entry);
 
-  sl_zigbee_af_reporting_println("%s 0x%02X", "add", status);
+  sl_zigbee_af_cli_println("%s 0x%02X", "add", status);
 }
 
 // plugin reporting add clear-last-report-time
@@ -108,7 +108,7 @@ void sli_zigbee_af_reporting_cli_clear_last_report_time(sl_cli_command_arg_t *ar
   for (i = 0; i < REPORT_TABLE_SIZE; i++) {
     sli_zigbee_af_report_volatile_data[i].lastReportTimeMs = halCommonGetInt32uMillisecondTick();
   }
-  sl_zigbee_af_reporting_println("clearing last report time of all attributes");
+  sl_zigbee_af_cli_println("clearing last report time of all attributes");
 }
 
 void sl_zigbee_af_reporting_init_cb(uint8_t init_level);
@@ -130,24 +130,24 @@ void sli_zigbee_af_reporting_cli_test_timing(sl_cli_command_arg_t *arguments)
 {
   (void)arguments;
   uint32_t before, after;
-  sl_zigbee_af_reporting_println("testing timing of various reporting operations");
-  sl_zigbee_af_reporting_println("-----------------------------------------------");
+  sl_zigbee_af_cli_println("testing timing of various reporting operations");
+  sl_zigbee_af_cli_println("-----------------------------------------------");
 
-  sl_zigbee_af_reporting_println("--table reads - full table--");
+  sl_zigbee_af_cli_println("--table reads - full table--");
   before = halCommonGetInt32uMillisecondTick();
   rawTableScan(REPORT_TABLE_SIZE);
   after = halCommonGetInt32uMillisecondTick();
-  sl_zigbee_af_reporting_println("result = %d ms", after - before);
+  sl_zigbee_af_cli_println("result = %d ms", after - before);
 
-  sl_zigbee_af_reporting_println("--init / schedule tick---");
+  sl_zigbee_af_cli_println("--init / schedule tick---");
   before = halCommonGetInt32uMillisecondTick();
   sl_zigbee_af_reporting_init_cb(SL_ZIGBEE_INIT_LEVEL_LOCAL_DATA);
   after = halCommonGetInt32uMillisecondTick();
-  sl_zigbee_af_reporting_println("result = %d ms", after - before);
+  sl_zigbee_af_cli_println("result = %d ms", after - before);
 
-  sl_zigbee_af_reporting_println("--load configuration defaults--");
+  sl_zigbee_af_cli_println("--load configuration defaults--");
   before = halCommonGetInt32uMillisecondTick();
   sl_zigbee_af_reporting_load_reporting_config_defaults();
   after = halCommonGetInt32uMillisecondTick();
-  sl_zigbee_af_reporting_println("result = %d ms", after - before);
+  sl_zigbee_af_cli_println("result = %d ms", after - before);
 }

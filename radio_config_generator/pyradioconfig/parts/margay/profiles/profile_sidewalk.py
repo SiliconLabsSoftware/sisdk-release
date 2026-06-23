@@ -23,3 +23,24 @@ class ProfileSidewalkMargay(ProfileSidewalkOcelot):
         buildCrcOutputs(model, profile)
         buildWhiteOutputs(model, profile)
         buildFecOutputs(model, profile)
+        self.build_metadata_profile_inputs(model, profile)
+
+
+
+    def build_metadata_profile_inputs(self, model, profile):
+        self.make_metadata_input(profile, model.vars.chcfg_base_frequency_hz, "metadata",
+                                 readable_name="Channel Config Base Channel Frequency", value_limit_min=100000000,
+                                 value_limit_max=2500000000, units_multiplier=UnitsMultiplier.MEGA)
+        self.make_metadata_input(profile, model.vars.chcfg_channel_spacing_hz, "metadata",
+                                 readable_name="Channel Config Channel Spacing", value_limit_min=0,
+                                 value_limit_max=10000000,
+                                 units_multiplier=UnitsMultiplier.KILO)
+        self.make_metadata_input(profile, model.vars.chcfg_channel_number_start, 'metadata',
+                                 readable_name='Channel Config Start channel index',
+                                 value_limit_min=0, value_limit_max=9999)
+        self.make_metadata_input(profile, model.vars.chcfg_channel_number_end, 'metadata',
+                                 readable_name='Channel Config Last channel index',
+                                 value_limit_min=0, value_limit_max=9999)
+        self.make_metadata_input(profile, model.vars.chcfg_physical_channel_offset, 'metadata',
+                                 readable_name='Channel Config Physical channel offset',
+                                 value_limit_min=0, value_limit_max=9999)

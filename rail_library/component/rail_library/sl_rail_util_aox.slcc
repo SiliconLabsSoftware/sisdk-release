@@ -46,6 +46,11 @@ config_file:
   condition:
   - device_series_2
   - device_sdid_240
+- path: plugin/sl_rail_util_aox/config/efr32xg2b/sl_rail_util_aox_config.h
+  file_id: rail_util_aox_config
+  condition:
+  - device_series_2
+  - device_sdid_250
 - path: plugin/sl_rail_util_aox/config/sixg301/sl_rail_util_aox_config.h
   file_id: rail_util_aox_config
   condition:

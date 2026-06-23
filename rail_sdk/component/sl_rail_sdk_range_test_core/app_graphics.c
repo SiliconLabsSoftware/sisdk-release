@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <string.h>
+#include <inttypes.h>
 #include "dmd.h"
 #include "glib.h"
 #include "printf.h"
@@ -240,9 +241,9 @@ void graphics_draw_init_screen(void)
   }
 
   snprintf(buff, sizeof(buff),
-           "EFR32 %03luMHz %+idBm",
-           (base_frequency / 1000000UL),
-           (power / 10));
+           "EFR32 %" PRIu32 "MHz %+" PRId16 "dBm",
+           (uint32_t)(base_frequency / 1000000UL),
+           (int16_t)(power / 10));
   GLIB_drawStringOnLine(&glib_context, buff, 10, GLIB_ALIGN_CENTER, 0, 0, false);
 
   DMD_updateDisplay();
@@ -580,12 +581,12 @@ static inline uint8_t graphics_draw_constants_info(uint8_t row)
     // Check if frequency has fractional part in MHz scale
     if (0U < (base_frequency % 1000000UL)) {
       snprintf(buff, sizeof(buff),
-               "%u.%02uMHz",
-               (uint16_t) (base_frequency / 1000000UL),
-               (uint16_t) ((base_frequency % 1000000UL) / 10000U));
+               "%" PRIu16 ".%" PRIu16 "MHz",
+               (uint16_t)(base_frequency / 1000000UL),
+               (uint16_t)((base_frequency % 1000000UL) / 10000U));
     } else {
       snprintf(buff, sizeof(buff),
-               "%uMHz",
+               "%" PRIu16 "MHz",
                (uint16_t) (base_frequency / 1000000UL));
     }
 
@@ -593,12 +594,12 @@ static inline uint8_t graphics_draw_constants_info(uint8_t row)
     GLIB_drawString(&glib_context, ptr, safe_strlen(ptr), 1U, row, false);
     row += GRAPHICS_FONT_HEIGHT;
 
-    snprintf(buff, sizeof(buff), "%ukHz", (uint16_t) (channel_spacing / 1000U));
+    snprintf(buff, sizeof(buff), "%" PRIu16 "kHz", (uint16_t) (channel_spacing / 1000U));
     ptr = menu_print_aligned("Ch. spacing:", buff, 21U);
     GLIB_drawString(&glib_context, ptr, safe_strlen(ptr), 1U, row, false);
     row += GRAPHICS_FONT_HEIGHT;
 
-    snprintf(buff, sizeof(buff), "%u", range_test_settings.channel);
+    snprintf(buff, sizeof(buff), "%" PRIu16 "", range_test_settings.channel);
     ptr = menu_print_aligned("Ch. number:", buff, 21U);
     GLIB_drawString(&glib_context, ptr, safe_strlen(ptr), 1U, row, false);
     row += GRAPHICS_FONT_HEIGHT;
@@ -607,21 +608,21 @@ static inline uint8_t graphics_draw_constants_info(uint8_t row)
     reqpower = range_test_settings.tx_power;
     // Since power is coming in 0.1 dBm units, integer and fraction digits are split
     snprintf(buff, sizeof(buff),
-             "%+i.%d/%+i.%ddBm",
-             (reqpower / 10),
-             ((reqpower > 0 ? reqpower : -reqpower) % 10),
-             (power / 10),
-             ((power > 0 ? power : -power) % 10));
+             "%+" PRId16 ".%" PRId16 "/%+" PRId16 ".%" PRId16 "dBm",
+             (int16_t)(reqpower / 10),
+             (int16_t)((reqpower > 0 ? reqpower : -reqpower) % 10),
+             (int16_t)(power / 10),
+             (int16_t)((power > 0 ? power : -power) % 10));
     ptr = menu_print_aligned("Power:", buff, 21U);
     GLIB_drawString(&glib_context, ptr, safe_strlen(ptr), 1U, row, false);
     row += GRAPHICS_FONT_HEIGHT;
 
-    snprintf(buff, sizeof(buff), "%u", range_test_settings.source_id);
+    snprintf(buff, sizeof(buff), "%" PRIu8, range_test_settings.source_id);
     ptr = menu_print_aligned("Source ID:", buff, 21U);
     GLIB_drawString(&glib_context, ptr, safe_strlen(ptr), 1U, row, false);
     row += GRAPHICS_FONT_HEIGHT;
 
-    snprintf(buff, sizeof(buff), "%u", range_test_settings.destination_id);
+    snprintf(buff, sizeof(buff), "%" PRIu8, range_test_settings.destination_id);
     ptr = menu_print_aligned("Remote ID:", buff, 21U);
     GLIB_drawString(&glib_context, ptr, safe_strlen(ptr), 1U, row, false);
     row += GRAPHICS_FONT_HEIGHT;
@@ -634,26 +635,26 @@ static inline uint8_t graphics_draw_constants_info(uint8_t row)
       // Check if frequency has fractional part in MHz scale
       if (0U < base_frequency % 1000000UL) {
         snprintf(buff, sizeof(buff),
-                 "F:%uM%02u",
-                 (uint16_t) (base_frequency / 1000000UL),
-                 (uint16_t) ((base_frequency % 1000000UL) / 10000U));
+                 "F:%" PRIu16 "M%" PRIu16,
+                 (uint16_t)(base_frequency / 1000000UL),
+                 (uint16_t)((base_frequency % 1000000UL) / 10000U));
       } else {
         snprintf(buff, sizeof(buff),
-                 "F:%uMHz",
-                 (uint16_t) (base_frequency / 1000000UL));
+                 "F:%" PRIu16 "MHz",
+                 (uint16_t)(base_frequency / 1000000UL));
       }
 
       GLIB_drawString(&glib_context, buff, safe_strlen(buff), 1U, row, false);
       row += GRAPHICS_FONT_HEIGHT;
     }
     snprintf(buff, sizeof(buff),
-             "Fch:%4ukHz  Ch#: %3u",
-             (uint16_t) (channel_spacing / 1000U),
+             "Fch:%" PRIu16 "kHz  Ch#: %" PRIu16,
+             (uint16_t)(channel_spacing / 1000U),
              range_test_settings.channel);
     GLIB_drawString(&glib_context, buff, safe_strlen(buff), 1U, row, false);
     row += GRAPHICS_FONT_HEIGHT;
 
-    snprintf(buff, sizeof(buff), "src: %3u     dst: %3u", srcID, destID);
+    snprintf(buff, sizeof(buff), "src: %" PRIu8 "     dst: %" PRIu8, srcID, destID);
     GLIB_drawString(&glib_context, buff, safe_strlen(buff), 1U, row, false);
     row += GRAPHICS_FONT_HEIGHT;
   }
@@ -680,7 +681,7 @@ static uint8_t graphics_draw_volatile_info(uint8_t row)
   uint16_t pktsSent = range_test_measurement.packets_sent;
 
   if (RADIO_MODE_TX == radioMode) {
-    snprintf(buff, sizeof(buff), "%5u", pktsSent);
+    snprintf(buff, sizeof(buff), "%" PRIu16, pktsSent);
     ptr = menu_print_aligned("Transmitted:", buff, 21U);
     GLIB_drawString(&glib_context, ptr, safe_strlen(ptr), 1U, row, false);
     row += GRAPHICS_FONT_HEIGHT;
@@ -695,7 +696,7 @@ static uint8_t graphics_draw_volatile_info(uint8_t row)
     if (RANGETEST_PACKET_COUNT_INVALID == pktsRcvd) {
       snprintf(buff, sizeof(buff), "---.- dBm");
     } else {
-      snprintf(buff, sizeof(buff), "% 3d dBm", (int8_t)rssiLatch);
+      snprintf(buff, sizeof(buff), "%" PRId8 " dBm", (int8_t)rssiLatch);
     }
     ptr = menu_print_aligned("RSSI:", buff, 21U);
     GLIB_drawString(&glib_context, ptr, safe_strlen(ptr), 1U, row, false);
@@ -705,7 +706,7 @@ static uint8_t graphics_draw_volatile_info(uint8_t row)
       // No packet received yet.
       snprintf(buff, sizeof(buff), "  -- / -- ");
     } else {
-      snprintf(buff, sizeof(buff), "%5u/%5u", pktsRcvd, pktsCnt);
+      snprintf(buff, sizeof(buff), "%" PRIu16 "/%" PRIu16, pktsRcvd, pktsCnt);
     }
 
     ptr = menu_print_aligned("Rx:", buff, 21U);
@@ -802,11 +803,11 @@ static uint8_t graphics_draw_rssi_chart_frame(int16_t x, int16_t y)
                  (y + GRAPHICS_CHART_HEIGHT),
                  GRAPHICS_MAX_X);
 
-  snprintf(buff, sizeof(buff), "% 3d", rssi_chart_axis[0U]);
+  snprintf(buff, sizeof(buff), "%" PRId8, rssi_chart_axis[0U]);
   GLIB_drawString(&glib_context, buff, safe_strlen(buff), x, (y + GRAPHICS_CHART_SIG_0_OFFSET - 3U), false);
-  snprintf(buff, sizeof(buff), "% 3d", rssi_chart_axis[1U]);
+  snprintf(buff, sizeof(buff), "%" PRId8, rssi_chart_axis[1U]);
   GLIB_drawString(&glib_context, buff, safe_strlen(buff), x, (y + GRAPHICS_CHART_SIG_1_OFFSET - 3U), false);
-  snprintf(buff, sizeof(buff), "% 3d", rssi_chart_axis[2U]);
+  snprintf(buff, sizeof(buff), "%" PRId8, rssi_chart_axis[2U]);
   GLIB_drawString(&glib_context, buff, safe_strlen(buff), x, (y + 3U * GRAPHICS_FONT_HEIGHT), false);
 
   return (y + GRAPHICS_CHART_HEIGHT); // End row

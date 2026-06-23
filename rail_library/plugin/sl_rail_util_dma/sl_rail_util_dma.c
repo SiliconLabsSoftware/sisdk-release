@@ -28,13 +28,10 @@
  *
  ******************************************************************************/
 #include "em_device.h"
-#ifndef _SILICON_LABS_32B_SERIES_2
 #include "sl_hal_ldma.h"
-#else
-#include "em_ldma.h"
-#endif
 
-#include "dmadrv.h"
+#include "sl_dma_manager.h"
+#include "sl_status.h"
 #include "sl_rail.h"
 #include "sl_rail_util_dma.h"
 #include "sl_rail_util_dma_config.h"
@@ -43,18 +40,22 @@ void sl_rail_util_dma_init(void)
 {
 #if SL_RAIL_UTIL_DMA_ENABLE
 #if SL_RAIL_UTIL_DMA_DMADRV_ENABLE
-  Ecode_t dmaError = DMADRV_Init();
-  if ((dmaError == ECODE_EMDRV_DMADRV_ALREADY_INITIALIZED)
-      || (dmaError == ECODE_EMDRV_DMADRV_OK)) {
-    unsigned int channel;
-    dmaError = DMADRV_AllocateChannel(&channel, NULL);
-    if (dmaError == ECODE_EMDRV_DMADRV_OK) {
+  sl_status_t dma_status = sl_dma_manager_init(NULL, NULL);
+  if ((dma_status == SL_STATUS_OK)
+      || (dma_status == SL_STATUS_ALREADY_INITIALIZED)) {
+    uint8_t channel;
+    dma_status = sl_dma_manager_allocate_channel(NULL, &channel);
+    if (dma_status == SL_STATUS_OK) {
       (void) sl_rail_use_dma(SL_RAIL_EFR32_HANDLE, channel);
     }
   }
 #else // !SL_RAIL_UTIL_DMA_DMADRV_ENABLE
-  LDMA_Init_t ldmaInit = LDMA_INIT_DEFAULT;
-  LDMA_Init(&ldmaInit);
+  sl_hal_ldma_init_t ldmaInit = SL_HAL_LDMA_INIT_DEFAULT;
+#if defined(_SILICON_LABS_32B_SERIES_3)
+  sl_hal_ldma_init(LDMA0, &ldmaInit);
+#else
+  sl_hal_ldma_init(LDMA, &ldmaInit);
+#endif
   (void) sl_rail_use_dma(SL_RAIL_EFR32_HANDLE, SL_RAIL_UTIL_DMA_CHANNEL);
 #endif // SL_RAIL_UTIL_DMA_DMADRV_ENABLE
 #endif // SL_RAIL_UTIL_DMA_ENABLE

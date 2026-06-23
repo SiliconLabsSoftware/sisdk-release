@@ -3,7 +3,7 @@
  * @brief callback event handlers for trust-center
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -29,6 +29,10 @@ void sli_zigbee_stack_trust_center_post_join_handler(sl_802154_short_addr_t newN
                                                      sl_802154_short_addr_t parentOfNewNode)
 {
   sl_zigbee_stack_cb_event_t *cb_event = (sl_zigbee_stack_cb_event_t *) malloc(sizeof(sl_zigbee_stack_cb_event_t));
+  if (cb_event == NULL) {
+    assert(false); // "ipc callback event allocation failed
+    return;
+  }
   cb_event->data.trust_center_post_join_handler.newNodeId = newNodeId;
 
   if (newNodeEui64 != NULL) {

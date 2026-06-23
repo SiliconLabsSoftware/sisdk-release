@@ -702,7 +702,7 @@ void sli_ot_radio_events_update_config(sl_rail_events_t mask, sl_rail_events_t v
 
             if (status != SL_RAIL_STATUS_NO_ERROR)
             {
-                otLogWarnPlat("Failed to configure radio events: %lu", status);
+                otLogWarnPlat("Failed to configure radio events: %lu", static_cast<unsigned long>(status));
             }
             sCurrentEventConfig = newEventConfig;
         }
@@ -1202,7 +1202,8 @@ template <typename EventCallback> static void efr32ConfigInit(EventCallback aEve
 
     sli_init_power_manager();
 
-    OT_ASSERT(sli_ot_radio_interface_rail_init(commonConfig) != nullptr);
+    sl_rail_handle_t handle = sli_ot_radio_interface_rail_init(commonConfig);
+    OT_ASSERT(handle != nullptr);
 
     sli_ot_radio_events_update_config(SL_RAIL_EVENTS_ALL,
                                       (0 | SL_RAIL_EVENT_RX_ACK_TIMEOUT | SL_RAIL_EVENT_RX_PACKET_RECEIVED
@@ -1996,6 +1997,8 @@ static bool writeIeee802154EnhancedAck(sl_rail_handle_t          aRailHandle,
 
     sAckIeDataLength = generateAckIeData(instance, dataPtr, linkMetricsDataLen, &receivedFrame);
 
+    // Set the radioType to 0 to let mac know that this frame is intended for a 802.15.4 radio
+    enhAckFrame.mRadioType = 0;
     otEXPECT(otMacFrameGenerateEnhAck(&receivedFrame, setFramePending, sAckIeData, sAckIeDataLength, &enhAckFrame)
              == OT_ERROR_NONE);
 
@@ -2605,10 +2608,12 @@ static rxBuffer *prepareNextRxPacketforCb(void)
     return rxPacketBuf;
 }
 
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 static inline bool isRxPacketBroadcast(void)
 {
     return (sReceive.instance == nullptr);
 }
+#endif // OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 static void deliverRxPacketToInstance(otInstance *aInstance)
 {

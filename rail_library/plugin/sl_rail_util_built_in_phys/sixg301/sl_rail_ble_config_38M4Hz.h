@@ -2,7 +2,7 @@
  * @brief RAIL Configuration
  * @details
  *   WARNING: Auto-Generated Radio Config Header  -  DO NOT EDIT
- *   Radio Configurator Version: 2504.4.6
+ *   Radio Configurator Version: 2602.5.0
  *   RAIL Adapter Version: 2.4.33
  *   RAIL Compatibility: 2.x
  *******************************************************************************
@@ -43,7 +43,7 @@ extern const uint32_t sl_rail_ble_phy_1Mbps_viterbi_38M4Hz_modemConfigBase[];
 extern const uint32_t sl_rail_ble_phy_1Mbps_viterbi_38M4Hz_modemConfig[];
 extern const uint32_t sl_rail_ble_phy_2Mbps_viterbi_38M4Hz_0_34_modemConfig[];
 extern const uint32_t sl_rail_ble_phy_125kbps_38M4Hz_modemConfig[];
-extern const uint32_t sl_rail_ble_phy_500kbps_38M4Hz_modemConfig[];
+extern const uint32_t sl_rail_ble_lr_dsa_500kb_38M4Hz_modemConfig[];
 extern const uint32_t sl_rail_ble_phy_simulscan_38M4Hz_modemConfig[];
 
 #define RAIL0_SL_RAIL_BLE_PHY_1MBPS_VITERBI_38M4HZ_PHY_BLUETOOTH_1M_AOX_PROD

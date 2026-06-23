@@ -16,6 +16,11 @@
  ******************************************************************************/
 #include "gpd-components-common.h"
 #include "gpd-apps-cb.h"
+
+// Global variable to hold the next RX channel
+static uint8_t gpdNextRxChannel = 11;
+static uint8_t gpdSecondNextRxChannel = 11;
+
 // Build commissioning frame based on the GPD configuration.
 // most of the fields are compile time configuration.
 static uint8_t gpdBuildCommissioningCommand(sl_zigbee_gpd_t_t * gpd,
@@ -343,8 +348,8 @@ static void gpdCommissioningChannelRequestStateOnAllChannel(sl_zigbee_gpd_t_t * 
     for (int i = 0; i < SL_ZIGBEE_AF_PLUGIN_APPS_APP_CHANNEL_SET_LENGTH; i++) {
       gpd->channel = channel[i];
       sendChannelRequest(gpd,
-                         SL_ZIGBEE_AP_PLUGIN_APPS_APP_NEXT_RX_CHANNEL,
-                         SL_ZIGBEE_AP_PLUGIN_APPS_APP_SECOND_NEXT_RX_CHANNEL);
+                         gpdNextRxChannel,
+                         gpdSecondNextRxChannel);
     }
   }
 }
@@ -357,10 +362,10 @@ static void gpdCommissioningChannelRequestOnRxChannel(sl_zigbee_gpd_t_t * gpd)
   gpd->rxAfterTx = true;
   gpd->autoCommissioning = false;
   for (int i = 0; i < SL_ZIGBEE_AF_PLUGIN_APPS_GPD_APP_NUMBER_OF_CHANNEL_REQUEST_PER_CHANNEL; i++) {
-    gpd->channel = SL_ZIGBEE_AP_PLUGIN_APPS_APP_NEXT_RX_CHANNEL;
+    gpd->channel = gpdNextRxChannel;
     sendChannelRequest(gpd,
-                       SL_ZIGBEE_AP_PLUGIN_APPS_APP_NEXT_RX_CHANNEL,
-                       SL_ZIGBEE_AP_PLUGIN_APPS_APP_SECOND_NEXT_RX_CHANNEL);
+                       gpdNextRxChannel,
+                       gpdSecondNextRxChannel);
     if (gpd->gpdState == SL_ZIGBEE_GPD_APP_STATE_CHANNEL_RECEIVED) {
       return;
     }
@@ -541,4 +546,10 @@ void sl_zigbee_gpd_af_plugin_commission(sl_zigbee_gpd_t_t * gpd)
 #else
   sendUndirCommissioningRequest(gpd);
 #endif
+}
+
+void sl_zigbee_gpd_af_plugin_set_next_channel(uint8_t nextChannel, uint8_t secondNextChannel)
+{
+  gpdNextRxChannel = nextChannel;
+  gpdSecondNextRxChannel = secondNextChannel;
 }

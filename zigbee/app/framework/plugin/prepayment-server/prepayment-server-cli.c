@@ -34,13 +34,13 @@ typedef uint8_t  sli_zigbee_friendly_credit_t;
 
 static void print_af_time(sl_zigbee_af_time_struct_t *pafTime)
 {
-  sl_zigbee_af_prepayment_cluster_println("== AF TIME ==");
-  sl_zigbee_af_prepayment_cluster_println("  Year=%d", pafTime->year);
-  sl_zigbee_af_prepayment_cluster_println("  Month=%d", pafTime->month);
-  sl_zigbee_af_prepayment_cluster_println("  Day=%d", pafTime->day);
-  sl_zigbee_af_prepayment_cluster_println("  Hour=%d", pafTime->hours);
-  sl_zigbee_af_prepayment_cluster_println("  Min=%d", pafTime->minutes);
-  sl_zigbee_af_prepayment_cluster_println("  Sec=%d", pafTime->seconds);
+  sl_zigbee_af_cli_println("== AF TIME ==");
+  sl_zigbee_af_cli_println("  Year=%d", pafTime->year);
+  sl_zigbee_af_cli_println("  Month=%d", pafTime->month);
+  sl_zigbee_af_cli_println("  Day=%d", pafTime->day);
+  sl_zigbee_af_cli_println("  Hour=%d", pafTime->hours);
+  sl_zigbee_af_cli_println("  Min=%d", pafTime->minutes);
+  sl_zigbee_af_cli_println("  Sec=%d", pafTime->seconds);
 }
 
 #define SECONDS_PER_DAY (3600 * 24)
@@ -73,7 +73,7 @@ void sli_zigbee_af_prepayment_server_cli_write_attribute(sl_cli_command_arg_t *a
 
   status = sl_zigbee_af_write_attribute(endpoint, ZCL_PREPAYMENT_CLUSTER_ID, attributeId,
                                         CLUSTER_MASK_SERVER, (uint8_t *)&value, attributeType);
-  sl_zigbee_af_prepayment_cluster_println("Write Attribute status=0x%02X", status);
+  sl_zigbee_af_cli_println("Write Attribute status=0x%02X", status);
 }
 
 void sli_zigbee_af_prepayment_server_cli_verify_payment_mode(sl_cli_command_arg_t *arguments)
@@ -91,9 +91,9 @@ void sli_zigbee_af_prepayment_server_cli_verify_payment_mode(sl_cli_command_arg_
                                        (uint8_t *)&readPaymentControlConfiguration, 2, &dataType);
 
   if ( (status == SL_ZIGBEE_ZCL_STATUS_SUCCESS) && (expectedPaymentControlConfiguration == readPaymentControlConfiguration) ) {
-    sl_zigbee_af_prepayment_cluster_println("Payment Mode Match Success - %d", readPaymentControlConfiguration);
+    sl_zigbee_af_cli_println("Payment Mode Match Success - %d", readPaymentControlConfiguration);
   } else {
-    sl_zigbee_af_prepayment_cluster_println("Payment Mode Failed Match, status=0x%02X, read=%d, exp=%d", status, readPaymentControlConfiguration, expectedPaymentControlConfiguration);
+    sl_zigbee_af_cli_println("Payment Mode Failed Match, status=0x%02X, read=%d, exp=%d", status, readPaymentControlConfiguration, expectedPaymentControlConfiguration);
   }
 }
 
@@ -117,9 +117,9 @@ void sli_zigbee_af_prepayment_server_cli_verify_attribute(sl_cli_command_arg_t *
                                        (uint8_t *)&readAttributeValue, attributeSize, &dataType);
 
   if ( (status == SL_ZIGBEE_ZCL_STATUS_SUCCESS) && (expectedAttributeValue == readAttributeValue) ) {
-    sl_zigbee_af_prepayment_cluster_println("Attribute Read Match Success - %d", status);
+    sl_zigbee_af_cli_println("Attribute Read Match Success - %d", status);
   } else {
-    sl_zigbee_af_prepayment_cluster_println("Attribute Read Failed Match status=0x%02X, read=%d, exp=%d", status, readAttributeValue, expectedAttributeValue);
+    sl_zigbee_af_cli_println("Attribute Read Failed Match status=0x%02X, read=%d, exp=%d", status, readAttributeValue, expectedAttributeValue);
   }
 }
 
@@ -144,7 +144,7 @@ void sli_zigbee_af_prepayment_server_cli_add_snapshot_event(sl_cli_command_arg_t
 
   endpoint = sl_cli_get_argument_uint8(arguments, 0);
   snapshotCause = sl_cli_get_argument_uint32(arguments, 1);
-  sl_zigbee_af_prepayment_cluster_println("CLI Add Snapshot Event, endpoint=%d cause=0x%08X", endpoint, snapshotCause);
+  sl_zigbee_af_cli_println("CLI Add Snapshot Event, endpoint=%d cause=0x%08X", endpoint, snapshotCause);
 
   sl_zigbee_af_prepayment_snapshot_storage_take_snapshot(endpoint, snapshotCause);
 }
@@ -187,9 +187,9 @@ void sli_zigbee_af_prepayment_check_calendar_cli(sl_cli_command_arg_t *arguments
 
   calcUtcTime = sl_zigbee_af_get_utc_from_time_struct(&afTime);
   if ( calcUtcTime == utcTime ) {
-    sl_zigbee_af_prepayment_cluster_println("= UTC Times Match, 0x%08X", calcUtcTime);
+    sl_zigbee_af_cli_println("= UTC Times Match, 0x%08X", calcUtcTime);
   } else {
-    sl_zigbee_af_prepayment_cluster_println(" ERROR: UTC Times Don't Match, 0x%08X != 0x%08X", utcTime, calcUtcTime);
+    sl_zigbee_af_cli_println(" ERROR: UTC Times Don't Match, 0x%08X != 0x%08X", utcTime, calcUtcTime);
   }
 }
 
@@ -200,7 +200,7 @@ void sli_zigbee_af_prepayment_get_weekday_cli(sl_cli_command_arg_t *arguments)
 
   utcTime = sl_cli_get_argument_uint32(arguments, 0);
   weekday = sl_zigbee_af_get_weekday_from_utc(utcTime);
-  sl_zigbee_af_prepayment_cluster_println("UTC Time=0x%08X, Weekday=%d", utcTime, weekday);
+  sl_zigbee_af_cli_println("UTC Time=0x%08X, Weekday=%d", utcTime, weekday);
 }
 
 void sli_zigbee_af_prepayment_schedule_debt_repayment_cli(sl_cli_command_arg_t *arguments)
@@ -228,7 +228,7 @@ void sli_zigbee_af_prepayment_schedule_debt_repayment_cli(sl_cli_command_arg_t *
 
   // After calling the ScheduleDebtRepayment() function, verify a couple things.
   if ( debtType >= 3 ) {
-    sl_zigbee_af_prepayment_cluster_println("Debt type out of bounds");
+    sl_zigbee_af_cli_println("Debt type out of bounds");
   } else {
     i = debtType;
     if ( (DebtSchedule[i].firstCollectionTimeSec >= startTime)
@@ -237,15 +237,15 @@ void sli_zigbee_af_prepayment_schedule_debt_repayment_cli(sl_cli_command_arg_t *
          && (DebtSchedule[i].nextCollectionTimeUtc >= startTime)
          && ((DebtSchedule[i].nextCollectionTimeUtc % SECONDS_PER_DAY) == collectionTimeSec)
          && ((DebtSchedule[i].firstCollectionTimeSec % SECONDS_PER_DAY) == collectionTimeSec) ) {
-      sl_zigbee_af_prepayment_cluster_println("Valid Debt Schedule");
+      sl_zigbee_af_cli_println("Valid Debt Schedule");
     } else {
-      sl_zigbee_af_prepayment_cluster_println("INVALID Debt Schedule");
-      sl_zigbee_af_prepayment_cluster_println("  first=%d, startTime=%d", DebtSchedule[i].firstCollectionTimeSec, startTime);
-      sl_zigbee_af_prepayment_cluster_println("  issuerEvtId=%d, %d", DebtSchedule[i].issuerEventId, issuerEventId);
-      sl_zigbee_af_prepayment_cluster_println("  collFreq=%d, %d", DebtSchedule[i].collectionFrequency, collectionFrequency);
-      sl_zigbee_af_prepayment_cluster_println("  nextColl=%d, startTime=%d", DebtSchedule[i].nextCollectionTimeUtc, startTime);
-      sl_zigbee_af_prepayment_cluster_println("  nextMOD=%d, collectTimeSec=%d", (DebtSchedule[i].nextCollectionTimeUtc % SECONDS_PER_DAY), collectionTimeSec);
-      sl_zigbee_af_prepayment_cluster_println("  firstMOD=%d, collectTimeSec=%d", (DebtSchedule[i].firstCollectionTimeSec % SECONDS_PER_DAY), collectionTimeSec);
+      sl_zigbee_af_cli_println("INVALID Debt Schedule");
+      sl_zigbee_af_cli_println("  first=%d, startTime=%d", DebtSchedule[i].firstCollectionTimeSec, startTime);
+      sl_zigbee_af_cli_println("  issuerEvtId=%d, %d", DebtSchedule[i].issuerEventId, issuerEventId);
+      sl_zigbee_af_cli_println("  collFreq=%d, %d", DebtSchedule[i].collectionFrequency, collectionFrequency);
+      sl_zigbee_af_cli_println("  nextColl=%d, startTime=%d", DebtSchedule[i].nextCollectionTimeUtc, startTime);
+      sl_zigbee_af_cli_println("  nextMOD=%d, collectTimeSec=%d", (DebtSchedule[i].nextCollectionTimeUtc % SECONDS_PER_DAY), collectionTimeSec);
+      sl_zigbee_af_cli_println("  firstMOD=%d, collectTimeSec=%d", (DebtSchedule[i].firstCollectionTimeSec % SECONDS_PER_DAY), collectionTimeSec);
     }
   }
 }

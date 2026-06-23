@@ -33,7 +33,7 @@ void sli_zigbee_af_tunneling_server_cli_transfer(sl_cli_command_arg_t *arguments
   sl_zigbee_af_status_t status = sl_zigbee_af_tunneling_server_transfer_data(tunnelIndex,
                                                                              data,
                                                                              dataLen);
-  sl_zigbee_af_tunneling_cluster_println("%s 0x%02X", "transfer", status);
+  sl_zigbee_af_cli_println("%s 0x%02X", "transfer", status);
 }
 
 void sl_zigbee_af_tunneling_server_toggle_busy_cli_command(sl_cli_command_arg_t *arguments)

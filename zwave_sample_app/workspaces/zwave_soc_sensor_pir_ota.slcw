@@ -1,3 +1,4 @@
+workspace_name: zwave_soc_sensor_pir_ota
 label: ZWave_SoC_SensorPIR_Solution
 description: >
   Demonstrates passive infrared (PIR) sensor application combined with OTA bootloader.

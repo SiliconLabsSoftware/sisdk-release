@@ -31,6 +31,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include "sl_rail_sdk_packet_assistant.h"
 #include "sl_cli.h"
 
@@ -135,7 +136,7 @@ void cli_get_wisun_ofdm_scrambler(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
 #if defined(SL_CATALOG_APP_LOG_PRESENT)
-  app_log_info("Wi-SUN OFDM scrambler setting is 0x%X\n", get_wisun_ofdm_scrambler());
+  app_log_info("Wi-SUN OFDM scrambler setting is 0x%02" PRIX8 "\n", get_wisun_ofdm_scrambler());
 #endif
 }
 
@@ -147,7 +148,7 @@ void cli_set_wisun_ofdm_scrambler(sl_cli_command_arg_t *arguments)
   uint8_t new_scrambler = sl_cli_get_argument_uint8(arguments, 0);
   if (set_wisun_ofdm_scrambler(new_scrambler)) {
 #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_info("Wi-SUN OFDM scrambler setting is 0x%X\n", get_wisun_ofdm_scrambler());
+    app_log_info("Wi-SUN OFDM scrambler setting is 0x%02" PRIX8 "\n", get_wisun_ofdm_scrambler());
 #endif
   }
 }
@@ -159,7 +160,7 @@ void cli_get_wisun_ofdm_rate(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
 #if defined(SL_CATALOG_APP_LOG_PRESENT)
-  app_log_info("Wi-SUN OFDM rate setting is 0x%X\n", get_wisun_ofdm_rate());
+  app_log_info("Wi-SUN OFDM rate setting is 0x%02" PRIX8 "\n", get_wisun_ofdm_rate());
 #endif
 }
 
@@ -171,7 +172,7 @@ void cli_set_wisun_ofdm_rate(sl_cli_command_arg_t *arguments)
   uint8_t new_rate = sl_cli_get_argument_uint8(arguments, 0);
   if (set_wisun_ofdm_rate(new_rate)) {
 #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_info("Wi-SUN OFDM rate setting is 0x%X\n", get_wisun_ofdm_rate());
+    app_log_info("Wi-SUN OFDM rate setting is 0x%02" PRIX8 "\n", get_wisun_ofdm_rate());
 #endif
   }
 }
@@ -207,7 +208,7 @@ void cli_get_sun_oqpsk_rate_mode(sl_cli_command_arg_t *arguments)
 {
   (void) arguments;
 #if defined(SL_CATALOG_APP_LOG_PRESENT)
-  app_log_info("Sun OQPSK rate mode setting is 0x%X\n", get_sun_oqpsk_rate_mode());
+  app_log_info("Sun OQPSK rate mode setting is %" PRIu8 "\n", get_sun_oqpsk_rate_mode());
 #endif
 }
 
@@ -219,7 +220,7 @@ void cli_set_sun_oqpsk_rate_mode(sl_cli_command_arg_t *arguments)
   uint8_t new_rate_mode = sl_cli_get_argument_uint8(arguments, 0);
   if (set_sun_oqpsk_rate_mode(new_rate_mode)) {
 #if defined(SL_CATALOG_APP_LOG_PRESENT)
-    app_log_info("Sun OQPSK rate mode setting is 0x%X\n", get_sun_oqpsk_rate_mode());
+    app_log_info("Sun OQPSK rate mode setting is %" PRIu8 "\n", get_sun_oqpsk_rate_mode());
 #endif
   }
 }

@@ -50,6 +50,6 @@
         <read authenticated="false" bonded="false" encrypted="false"/>
       </properties>
     </characteristic>
-    </service>	
+    </service>
   </gatt>
 </project>

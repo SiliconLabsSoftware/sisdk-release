@@ -93,7 +93,7 @@ ZW_ADD_CMD(FUNC_ID_RADIO_DEBUG_ENABLE)
 
       // Only PTI (protocol value 0) is supported
       if (debug_interface_protocol != DEBUG_INTERFACE_PROTOCOL_SILABS_PTI) {
-        DoRespond(0);
+        DoRespond(SAPI_COMMAND_STATUS_FAILURE);
         return;
       }
 
@@ -153,6 +153,6 @@ ZW_ADD_CMD(FUNC_ID_RADIO_DEBUG_STATUS)
 
   DoRespond_workbuf(3);
 #else
-  DoRespond(0);
+  DoRespond(SAPI_COMMAND_STATUS_FAILURE);
 #endif
 }

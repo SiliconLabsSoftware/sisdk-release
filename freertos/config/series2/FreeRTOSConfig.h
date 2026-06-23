@@ -64,6 +64,12 @@
 #define traceTASK_SWITCHED_IN() sli_ccv_task_switched_in()
 #endif
 
+#if defined(SL_CATALOG_WATCHDOG_MANAGER_PRESENT)
+#include "sl_watchdog_manager.h"
+#include "sli_watchdog_manager.h"
+#define portTASK_SWITCH_HOOK(pxTCB) sli_watchdog_manager_platform_feed()
+#endif
+
 //-------- <<< Use Configuration Wizard in Context Menu >>> --------------------
 
 //  <o>Minimal stack size [words] <0-65535>
@@ -345,4 +351,11 @@
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS (configNUM_USER_THREAD_LOCAL_STORAGE_POINTERS \
                                                  + configNUM_SDK_THREAD_LOCAL_STORAGE_POINTERS)
 
+/* When Watchdog Manager is used with an RTOS, enable the idle hook so the
+ * platform default watchdog can be fed from vApplicationIdleHook (see
+ * sl_watchdog_manager_platform.c). Complements portTASK_SWITCH_HOOK. */
+ #if defined(SL_CATALOG_WATCHDOG_MANAGER_PRESENT)
+ #undef configUSE_IDLE_HOOK
+ #define configUSE_IDLE_HOOK 1
+ #endif                                                 
 #endif /* FREERTOS_CONFIG_H */

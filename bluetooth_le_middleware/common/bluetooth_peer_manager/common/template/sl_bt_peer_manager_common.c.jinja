@@ -1,0 +1,27 @@
+#include "sl_bt_peer_manager_common.h"
+
+{# Collect event handlers -#}
+{% set includes = [] -%}
+{% set all_handlers = [] -%}
+{% for eh in sl_bt_peer_manager_event_handler -%}
+  {% if all_handlers.append(eh) %}{% endif -%}
+  {% if 'include' in eh and eh['include'] not in includes -%}
+    {% if includes.append(eh['include']) %}{% endif -%}
+  {% endif -%}
+{% endfor -%}
+{# Collect event handlers - legacy -#}
+{% for eh in ble_peer_manager_event_handler -%}
+  {% if all_handlers.append(eh) %}{% endif -%}
+  {% if 'include' in eh and eh['include'] not in includes -%}
+    {% if includes.append(eh['include']) %}{% endif -%}
+  {% endif -%}
+{% endfor -%}
+{%- for include in includes -%}
+#include "{{include}}"
+{% endfor %}
+void sl_bt_peer_manager_on_event(sl_bt_peer_manager_evt_type_t* event)
+{
+{%- for eh in all_handlers %}
+  {{ eh['handler'] }}(event);
+{% endfor %}
+}

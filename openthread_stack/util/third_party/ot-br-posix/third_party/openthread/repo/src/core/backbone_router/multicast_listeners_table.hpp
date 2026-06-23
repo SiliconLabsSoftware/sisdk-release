@@ -31,8 +31,8 @@
  *   This file includes definitions for Multicast Listeners Table.
  */
 
-#ifndef MULTICAST_LISTENERS_TABLE_HPP
-#define MULTICAST_LISTENERS_TABLE_HPP
+#ifndef OT_CORE_BACKBONE_ROUTER_MULTICAST_LISTENERS_TABLE_HPP_
+#define OT_CORE_BACKBONE_ROUTER_MULTICAST_LISTENERS_TABLE_HPP_
 
 #include "openthread-core-config.h"
 
@@ -149,6 +149,16 @@ public:
     uint16_t Count(void) const { return mNumValidListeners; }
 
     /**
+     * Indicates whether or not the Multicast Listeners Table contains the given address.
+     *
+     * @param[in] aAddress  The Multicast Listener address.
+     *
+     * @retval True   If the Multicast Listeners Table contains the given address.
+     * @retval False  If the Multicast Listeners Table does not contain the given address.
+     */
+    bool Has(const Ip6::Address &aAddress) const;
+
+    /**
      * Enables range-based `for` loop iteration over all Multicast Listeners.
      *
      * Should be used as follows:
@@ -231,4 +241,4 @@ DefineMapEnum(otBackboneRouterMulticastListenerEvent, BackboneRouter::MulticastL
 
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 
-#endif // MULTICAST_LISTENERS_TABLE_HPP
+#endif // OT_CORE_BACKBONE_ROUTER_MULTICAST_LISTENERS_TABLE_HPP_

@@ -36,6 +36,5 @@ post_build:
   - path: ../postbuild_profile/bt_dfu_btl.slpb
 
 tag:
-  - toolchain:gcc
   - companion:application
   - hwfilter:device:device_series_2

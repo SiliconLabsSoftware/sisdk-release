@@ -39,7 +39,7 @@ void sli_zigbee_af_tunneling_client_cli_request(sl_cli_command_arg_t *arguments)
                                                                                                       protocolId,
                                                                                                       manufacturerCode,
                                                                                                       flowControlSupport);
-  sl_zigbee_af_tunneling_cluster_println("%s 0x%02X", "request", status);
+  sl_zigbee_af_cli_println("%s 0x%02X", "request", status);
 }
 
 // plugin tunneling-client transfer <tunnel index:1> <data>
@@ -51,7 +51,7 @@ void sli_zigbee_af_tunneling_client_cli_transfer(sl_cli_command_arg_t *arguments
   sl_zigbee_af_status_t status = sl_zigbee_af_tunneling_client_transfer_data(tunnelIndex,
                                                                              data,
                                                                              dataLen);
-  sl_zigbee_af_tunneling_cluster_println("%s 0x%02X", "transfer", status);
+  sl_zigbee_af_cli_println("%s 0x%02X", "transfer", status);
 }
 
 // plugin tunneling-client close <tunnel index:1>
@@ -59,5 +59,5 @@ void sli_zigbee_af_tunneling_client_cli_close(sl_cli_command_arg_t *arguments)
 {
   uint8_t tunnelIndex = sl_cli_get_argument_uint8(arguments, 0);
   sl_zigbee_af_status_t status = sl_zigbee_af_tunneling_client_close_tunnel(tunnelIndex);
-  sl_zigbee_af_tunneling_cluster_println("%s 0x%02X", "close", status);
+  sl_zigbee_af_cli_println("%s 0x%02X", "close", status);
 }

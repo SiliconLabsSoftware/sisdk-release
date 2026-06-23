@@ -74,6 +74,7 @@ static const zpal_soft_reset_info_t ZPAL_RESET_UNHANDLED_RADIO_EVENT = 0x0001;
 static const zpal_soft_reset_info_t ZPAL_RESET_RADIO_ASSERT          = 0x0002;
 static const zpal_soft_reset_info_t ZPAL_RESET_ASSERT_PTR            = 0x0003;
 static const zpal_soft_reset_info_t ZPAL_RESET_EVENT_FLUSH_MEMORY    = 0x0004;
+static const zpal_soft_reset_info_t ZPAL_RESET_RADIO_RECONFIGURE     = 0x0005;
 static const zpal_soft_reset_info_t ZPAL_RESET_INFO_DEFAULT          = 0xFFFF;
 
 /**
@@ -84,16 +85,6 @@ static const zpal_soft_reset_info_t ZPAL_RESET_INFO_DEFAULT          = 0xFFFF;
  */
 void zpal_reboot_with_info(const zpal_soft_reset_mfid_t manufacturer_id,
                            const zpal_soft_reset_info_t reset_info);
-
-/**
- * @brief Prepare for shutdown handler.
- */
-void zpal_initiate_shutdown_handler(void);
-
-/**
- * @brief Shutdown handler.
- */
-void zpal_shutdown_handler(void);
 
 /**
  * @brief Get serial number length.

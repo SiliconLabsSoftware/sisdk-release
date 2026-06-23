@@ -105,7 +105,7 @@ void GPIOINT_CallbackRegister(uint8_t intNo, GPIOINT_IrqCallbackPtr_t callbackPt
 {
   sl_gpio_t gpio;
   gpio.port = SL_GPIO_PORT_INTERRUPT;
-  gpio.pin = -1;
+  gpio.pin = 0;
   int32_t int_no = intNo;
   if (int_no <= GPIO_PIN_MAX) {
     sl_gpio_configure_external_interrupt(&gpio, &int_no, false, gpioint_map_callback, (void *)callbackPtr);
@@ -151,7 +151,7 @@ unsigned int GPIOINT_EM4WUCallbackRegisterExt(GPIO_Port_TypeDef port,
   int32_t intNo = INTERRUPT_UNAVAILABLE;
   sl_gpio_t gpio;
   gpio.port = SL_GPIO_PORT_INTERRUPT;
-  gpio.pin = -1;
+  gpio.pin = 0;
 
   if (false) {
     /* Check all the EM4WU Pins and check if given pin matches any of them. */
@@ -196,7 +196,7 @@ unsigned int GPIOINT_EM4WUCallbackRegisterExt(GPIO_Port_TypeDef port,
   sl_status_t status = sl_gpio_configure_wakeup_em4_interrupt(&gpio, &intNo, false, (sl_gpio_irq_callback_t)callbackPtr, callbackCtx);
 
   if (status == SL_STATUS_OK) {
-    return intNo;
+    return (unsigned int)intNo;
   } else {
     return INTERRUPT_UNAVAILABLE;
   }
@@ -230,7 +230,7 @@ unsigned int GPIOINT_CallbackRegisterExt(uint8_t pin, GPIOINT_IrqCallbackPtrExt_
   int32_t intNo = SL_GPIO_INTERRUPT_UNAVAILABLE;
   sl_status_t status = sl_gpio_configure_external_interrupt(&gpio, &intNo, false, (sl_gpio_irq_callback_t)callbackPtr, callbackCtx);
   if (status == SL_STATUS_OK) {
-    return intNo;
+    return (unsigned int)intNo;
   } else {
     return INTERRUPT_UNAVAILABLE;
   }

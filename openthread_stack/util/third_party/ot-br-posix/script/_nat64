@@ -29,13 +29,134 @@
 #   Description:
 #       This script manipulates nat64 configuration.
 #
+#   NAT64_SERVICE selects the dataplane translator when NAT64=1:
+#     - openthread: OpenThread POSIX NAT64 translator (default); tayga_* are skipped.
+#     - tayga:      userspace TAYGA on the host; requires /etc/default/tayga and /etc/tayga.conf.
+#
+#   NAT64_SERVICE is defined in script/_otbr (default openthread) before this file is sourced.
+#
 
+TAYGA_DEFAULT=/etc/default/tayga
+TAYGA_CONF=/etc/tayga.conf
+TAYGA_IPV4_ADDR=192.168.255.1
+TAYGA_IPV6_ADDR=fdaa:bb:1::1
+TAYGA_TUN_V6_ADDR=fdaa:bb:1::2
+NAT64_PREFIX=64:ff9b::/96
+DYNAMIC_POOL="${NAT64_DYNAMIC_POOL:-192.168.255.0/24}"
 NAT44_SERVICE=/etc/init.d/otbr-nat44
 WLAN_IFNAMES="${INFRA_IF_NAME:-eth0}"
 THREAD_IF="${THREAD_IF:-wpan0}"
 
+# Read `tun-device` from tayga.conf (first match). Default matches distro examples.
+tayga_tun_device()
+{
+    local dev
+    dev=$(grep -m1 -E '^tun-device[[:space:]]+' "$TAYGA_CONF" 2>/dev/null | awk '{print $2}')
+    echo "${dev:-nat64}"
+}
+
+# Ensure exactly one active tayga.conf directive line (idempotent across setup re-runs).
+tayga_conf_ensure_line()
+{
+    local key="$1"
+    local value="$2"
+    local commented_marker="##${key}"
+
+    # Drop prior OTBR/active lines for this key (setup runs uninstall then install).
+    sudo sed -i "/^${key}[[:space:]]/d" "$TAYGA_CONF"
+    sudo sed -i "/^${commented_marker}[[:space:]]/d" "$TAYGA_CONF"
+    echo "${key} ${value}" | sudo tee -a "$TAYGA_CONF" >/dev/null
+}
+
+tayga_install()
+{
+    local tayga_tun otbr_tayga_dropin otbr_tayga_sysctl
+
+    test -f $TAYGA_DEFAULT -a -f $TAYGA_CONF || die 'Cannot find tayga configuration file!'
+    tayga_tun=$(tayga_tun_device)
+    otbr_tayga_dropin=/etc/systemd/system/tayga.service.d/otbr-tayga.conf
+    otbr_tayga_sysctl=/etc/sysctl.d/99-otbr-tayga-nat64.conf
+
+    sudo sed -i 's/^RUN="no"/RUN="yes"/' $TAYGA_DEFAULT
+    sudo sed -i 's/^IPV4_TUN_ADDR=""/IPV4_TUN_ADDR="'$TAYGA_IPV4_ADDR'"/' $TAYGA_DEFAULT
+    sudo sed -i 's/^IPV6_TUN_ADDR=""/IPV6_TUN_ADDR="'$TAYGA_TUN_V6_ADDR'"/' $TAYGA_DEFAULT
+    tayga_conf_ensure_line prefix "$NAT64_PREFIX"
+    tayga_conf_ensure_line ipv6-addr "$TAYGA_IPV6_ADDR"
+    tayga_conf_ensure_line dynamic-pool "$DYNAMIC_POOL"
+
+    if have systemctl; then
+        sudo mkdir -p "$(dirname "$otbr_tayga_dropin")"
+        # Type=simple overrides any distro-packaged Type=forking; without it systemctl restart hangs
+        # waiting for a fork that --nodetach prevents. ExecStart= clears inherited value; ExecStartPost polls TUN.
+        sudo tee "$otbr_tayga_dropin" >/dev/null <<OTBR_TAYGA_UNIT
+[Service]
+Type=simple
+ExecStart=
+ExecStart=/usr/sbin/tayga --nodetach --config ${TAYGA_CONF}
+ExecStartPost=/bin/bash -c "TUN=${tayga_tun}; for i in \$(seq 1 50); do ip link show dev \"\$TUN\" >/dev/null 2>&1 && break; sleep 0.05; done; ip link set dev \"\$TUN\" up; ip route replace ${DYNAMIC_POOL} dev \"\$TUN\"; ip -6 route replace ${NAT64_PREFIX} dev \"\$TUN\" metric 256"
+OTBR_TAYGA_UNIT
+        sudo tee "$otbr_tayga_sysctl" >/dev/null <<OTBR_TAYGA_SYSCTL
+# Installed by OTBR script/_nat64 (tayga). Strict rp_filter on the TUN drops translated IPv4 before MASQUERADE.
+net.ipv4.conf.${tayga_tun}.rp_filter=0
+OTBR_TAYGA_SYSCTL
+        sudo systemctl daemon-reload
+        sudo sysctl -p "$otbr_tayga_sysctl" || true
+        sudo systemctl restart tayga || die 'Unable to restart tayga service!'
+        sudo systemctl enable tayga || die 'Unable to enable tayga service!'
+    fi
+}
+
+tayga_uninstall()
+{
+    local otbr_tayga_dropin otbr_tayga_sysctl
+
+    otbr_tayga_dropin=/etc/systemd/system/tayga.service.d/otbr-tayga.conf
+    otbr_tayga_sysctl=/etc/sysctl.d/99-otbr-tayga-nat64.conf
+
+    if have systemctl; then
+        sudo systemctl stop tayga || true
+        sudo rm -f "$otbr_tayga_dropin"
+        sudo rmdir /etc/systemd/system/tayga.service.d 2>/dev/null || true
+        sudo rm -f "$otbr_tayga_sysctl"
+        sudo systemctl daemon-reload
+    fi
+
+    sudo sed -i 's/^RUN="yes"/RUN="no"/' $TAYGA_DEFAULT
+    sudo sed -i 's/^IPV4_TUN_ADDR="'$TAYGA_IPV4_ADDR'"/IPV4_TUN_ADDR=""/' $TAYGA_DEFAULT
+    sudo sed -i "/^prefix[[:space:]]${NAT64_PREFIX//\//\\/}/d" "$TAYGA_CONF"
+    sudo sed -i "/^dynamic-pool[[:space:]]${DYNAMIC_POOL//\//\\/}/d" "$TAYGA_CONF"
+    sudo sed -i "/^ipv6-addr[[:space:]]${TAYGA_IPV6_ADDR}\$/d" "$TAYGA_CONF"
+}
+
+tayga_start()
+{
+    if with DOCKER; then
+        service tayga start || die 'Failed to start tayga'
+    elif have systemctl; then
+        sudo systemctl start tayga || die 'Failed to start tayga!'
+        sudo systemctl enable tayga || die 'Failed to enable tayga!'
+    fi
+}
+
+tayga_stop()
+{
+    if with DOCKER; then
+        service tayga stop || true
+    elif have systemctl; then
+        sudo systemctl stop tayga || true
+    fi
+}
+
 nat44_install()
 {
+    local tayga_tun_nat44
+
+    tayga_tun_nat44=
+    if [ "${NAT64_SERVICE:-openthread}" = tayga ]; then
+        test -f "$TAYGA_CONF" || die 'tayga.conf missing for nat44_install'
+        tayga_tun_nat44=$(tayga_tun_device)
+    fi
+
     sudo tee $NAT44_SERVICE <<EOF
 #! /bin/sh
 #
@@ -84,13 +205,27 @@ nat44_install()
 case "\$1" in
     start)
 EOF
-    # Just a random fwmark bits.
-    echo "        iptables -t mangle -A PREROUTING -i $THREAD_IF -j MARK --set-mark 0x1001" | sudo tee -a $NAT44_SERVICE
-    echo "        iptables -t nat -A POSTROUTING -m mark --mark 0x1001 -j MASQUERADE" | sudo tee -a $NAT44_SERVICE
-    for IFNAME in $WLAN_IFNAMES; do
-        echo "        iptables -t filter -A FORWARD -o $IFNAME -j ACCEPT" | sudo tee -a $NAT44_SERVICE
-        echo "        iptables -t filter -A FORWARD -i $IFNAME -j ACCEPT" | sudo tee -a $NAT44_SERVICE
-    done
+    if [ "${NAT64_SERVICE:-openthread}" = tayga ]; then
+        # Although Tayga itself also configures a NAT44 iptables route, this iptables route is used with Tayga
+        # due to some history reason. It might be removed when native NAT64 service is ready.
+        for IFNAME in $WLAN_IFNAMES; do
+            echo "        iptables -t nat -A POSTROUTING -o $IFNAME -j MASQUERADE" | sudo tee -a $NAT44_SERVICE
+        done
+        for IFNAME in $WLAN_IFNAMES; do
+            echo "        iptables -t filter -A FORWARD -i $THREAD_IF -o $IFNAME -j ACCEPT" | sudo tee -a $NAT44_SERVICE
+            echo "        iptables -t filter -A FORWARD -i $IFNAME -o $THREAD_IF -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT" | sudo tee -a $NAT44_SERVICE
+            echo "        iptables -t filter -A FORWARD -i $tayga_tun_nat44 -o $IFNAME -j ACCEPT" | sudo tee -a $NAT44_SERVICE
+            echo "        iptables -t filter -A FORWARD -i $IFNAME -o $tayga_tun_nat44 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT" | sudo tee -a $NAT44_SERVICE
+        done
+    else
+        # Just a random fwmark bits.
+        echo "        iptables -t mangle -A PREROUTING -i $THREAD_IF -j MARK --set-mark 0x1001" | sudo tee -a $NAT44_SERVICE
+        echo "        iptables -t nat -A POSTROUTING -m mark --mark 0x1001 -j MASQUERADE" | sudo tee -a $NAT44_SERVICE
+        for IFNAME in $WLAN_IFNAMES; do
+            echo "        iptables -t filter -A FORWARD -o $IFNAME -j ACCEPT" | sudo tee -a $NAT44_SERVICE
+            echo "        iptables -t filter -A FORWARD -i $IFNAME -j ACCEPT" | sudo tee -a $NAT44_SERVICE
+        done
+    fi
     sudo tee -a $NAT44_SERVICE <<EOF
         ;;
     restart|reload|force-reload)
@@ -148,6 +283,10 @@ nat64_install()
 {
     with NAT64 || return 0
 
+    if [ "${NAT64_SERVICE:-openthread}" = tayga ]; then
+        tayga_install
+    fi
+
     nat44_install
 }
 
@@ -156,6 +295,11 @@ nat64_uninstall()
     with NAT64 || return 0
 
     nat64_stop
+
+    if [ "${NAT64_SERVICE:-openthread}" = tayga ]; then
+        tayga_uninstall
+    fi
+
     nat44_uninstall
 }
 
@@ -163,12 +307,20 @@ nat64_start()
 {
     with NAT64 || return 0
 
+    if [ "${NAT64_SERVICE:-openthread}" = tayga ]; then
+        tayga_start
+    fi
+
     nat44_start
 }
 
 nat64_stop()
 {
     with NAT64 || return 0
+
+    if [ "${NAT64_SERVICE:-openthread}" = tayga ]; then
+        tayga_stop
+    fi
 
     nat44_stop
 }

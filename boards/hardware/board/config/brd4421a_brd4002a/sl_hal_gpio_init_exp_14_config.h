@@ -41,8 +41,8 @@
 
 // <gpio> SL_HAL_GPIO_INIT_EXP_14
 // $[GPIO_SL_HAL_GPIO_INIT_EXP_14]
-#define SL_HAL_GPIO_INIT_EXP_14_PORT             SL_GPIO_PORT_A
-#define SL_HAL_GPIO_INIT_EXP_14_PIN              6
+#define SL_HAL_GPIO_INIT_EXP_14_PORT             SL_GPIO_PORT_B
+#define SL_HAL_GPIO_INIT_EXP_14_PIN              3
 
 // [GPIO_SL_HAL_GPIO_INIT_EXP_14]$
 

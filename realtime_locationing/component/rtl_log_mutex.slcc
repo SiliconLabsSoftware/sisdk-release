@@ -1,0 +1,43 @@
+id: rtl_log_mutex
+label: RTL Library Log Mutex
+package: realtime_locationing
+description: >
+  Mutex implementation for rtl_log callback serialization. Compiles the CMSIS-OS2
+  backend when an RTOS kernel is present, otherwise a no-op stub for bare metal.
+category: Bluetooth|Direction Finding
+quality: production
+metadata:
+  sbom:
+    license: MSLA
+root_path: realtime_locationing/.
+provides:
+- name: rtl_log_mutex
+requires:
+- name: component_catalog
+define:
+- name: RTL_EFR_BUILD
+  condition:
+  - device_cortexm
+include:
+- path: clib/log/inc
+  file_list:
+  - path: rtl_log_mutex.h
+source:
+- path: clib/log/src/rtl_log_mutex_stub.c
+  condition:
+  - device_cortexm
+  unless:
+  - kernel
+- path: clib/log/src/rtl_log_mutex_cmsis_os2.c
+  condition:
+  - freertos
+- path: clib/log/src/rtl_log_mutex_cmsis_os2.c
+  condition:
+  - micriumos_kernel
+template_contribution:
+- name: component_catalog
+  value: rtl_log_mutex
+
+documentation:
+  docset: rtl-lib
+  document: modules

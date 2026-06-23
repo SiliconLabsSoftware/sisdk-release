@@ -130,28 +130,38 @@ void MulticastListenersTable::Expire(void)
     CheckInvariants();
 }
 
+bool MulticastListenersTable::Has(const Ip6::Address &aAddress) const
+{
+    bool has = false;
+
+    for (uint16_t i = 0; i < mNumValidListeners; i++)
+    {
+        if (mListeners[i].GetAddress() == aAddress)
+        {
+            has = true;
+            ExitNow();
+        }
+    }
+
+exit:
+    return has;
+}
+
 #if OT_SHOULD_LOG_AT(OT_LOG_LEVEL_DEBG)
 void MulticastListenersTable::Log(Action              aAction,
                                   const Ip6::Address &aAddress,
                                   TimeMilli           aExpireTime,
                                   Error               aError) const
 {
-    static const char *const kActionStrings[] = {
-        "Add",    // (0) kAdd
-        "Remove", // (1) kRemove
-        "Expire", // (2) kExpire
-    };
+#define ActionMapList(_) \
+    _(kAdd, "Add")       \
+    _(kRemove, "Remove") \
+    _(kExpire, "Expire")
 
-    struct EnumCheck
-    {
-        InitEnumValidatorCounter();
-        ValidateNextEnum(kAdd);
-        ValidateNextEnum(kRemove);
-        ValidateNextEnum(kExpire);
-    };
+    DefineEnumStringArray(ActionMapList);
 
-    LogDebg("%s %s expire %lu: %s", kActionStrings[aAction], aAddress.ToString().AsCString(),
-            ToUlong(aExpireTime.GetValue()), ErrorToString(aError));
+    LogDebg("%s %s expire %lu: %s", kStrings[aAction], aAddress.ToString().AsCString(), ToUlong(aExpireTime.GetValue()),
+            ErrorToString(aError));
 }
 #else
 void MulticastListenersTable::Log(Action, const Ip6::Address &, TimeMilli, Error) const {}

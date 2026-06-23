@@ -60,6 +60,10 @@ config_file:
   condition:
   - device_series_2
   - device_sdid_240
+- path: plugin/sl_rail_util_init/config/efr32xg2b/sl_rail_util_init_{{instance}}_config.h
+  condition:
+  - device_series_2
+  - device_sdid_250
 - path: plugin/sl_rail_util_init/config/efr32xg2d/sl_rail_util_init_{{instance}}_config.h
   condition:
   - device_series_2

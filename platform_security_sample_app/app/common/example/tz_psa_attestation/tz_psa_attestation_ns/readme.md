@@ -1,53 +1,78 @@
-# TrustZone PSA Attestation (Non-secure application)
+# TrustZone PSA Attestation (Non-secure Application)
 
-This example uses the PSA attestation API to fetch the PSA attestation token on the supported device.
+Demonstrates how to generate and print PSA Attestation tokens from the Non-secure side of a TrustZone-split application, using Secure-world PSA Crypto and Attestation services.
 
-The example also demonstrates how the PSA attestation token can be parsed and printed in a human-readable format. Parsing and printing the PSA attestation token on the chip might not be a typical use case. But it can showcase the structure and capabilities of the PSA attestation token.
+## Table of Contents
 
-An attestation token is a token that contains cryptographically signed claims about the device. In other words, it provides a way to securely attest certain device information, such as the serial number and security configuration. The PSA attestation token is a COSE_Sign1 structure that encapsulates the signed CBOR Web Token containing the claims.
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-The example redirects standard I/O to the virtual serial port (VCOM) of the kit. By default, the serial port setting is 115200 bps and 8-N-1 configuration.
+## Purpose / Scope
 
-The example has been instrumented with code to count the number of clock cycles spent in different operations. The results are printed on the VCOM serial port console. This feature can be disabled by defining `PSA_CRYPTO_PRINT=0` (default is 1) in the IDE setting (`Preprocessor->Defined symbols`).
+This is the **Non-secure** half of the TrustZone PSA Attestation example. It must be built as part of the `tz_psa_attestation_ws` workspace alongside `tz_psa_attestation_s` (the Secure half) — see [`../readme.md`](../readme.md) for the workspace overview, Secure-side architecture, and Secure Boot signing flow.
 
-## PSA attestation API
+On startup the Non-secure application:
 
-The following PSA attestation APIs are used in this example:
+1. Initializes the kit's clocks, IOStream/VCOM, and the Non-secure side of PSA Crypto.
+2. Requests a PSA Initial Attestation Token from the Secure world by calling the attestation veneer published through the Non-secure Callable (NSC).
+3. Receives the signed token (claims about the device's Secure Boot state, SE firmware version, instance ID, and challenge) back from the Secure side.
+4. Prints the token in a human-readable format over VCOM, so the user can inspect each attestation claim.
 
-* `psa_initial_attest_get_token_size`
-* `psa_initial_attest_get_token`
-* `sl_tz_attestation_get_public_key` (Silicon Labs custom API)
+All of the heavy lifting — key access, signing, claim collection — happens in the Secure world; the Non-secure side only formats and prints the result. Because the attestation key never leaves the Secure world (and is rooted in Secure Boot OTP keys), the token is trustworthy even if the Non-secure application is compromised.
 
-## Getting Started
+### Non-secure-side Configuration
 
-The Non-secure application needs to work with the Secure application on a workspace (see readme in `tz_psa_attestation_ws`).
+The Non-secure project (`tz_psa_attestation_ns.slcp`) brings in:
 
-## Additional Information
+- `trustzone_nonsecure` — the TrustZone wrapper that wires NSC calls and starts the Non-secure runtime after the Secure side hands off.
+- `tz_secure_key_library` — pulls in the Secure-side veneer headers so the Non-secure code can call `Attestation`, `PSA Crypto`, `PSA ITS`, `SE Manager`, etc., as plain function calls.
+- `nvm3_default`, `psa_its`, and `psa_crypto_*` components for the curves used in attestation (`secp192r1`, `secp256r1`, `secp384r1`, `secp521r1`, `curve25519`, and `curve448` on Secure Vault parts).
+- `printf`, `iostream_retarget_stdio`, `iostream_recommended_stream` — for the human-readable token dump on VCOM.
+- A flash layout that places the Non-secure application at `0x2C000` (immediately after the Secure half), with `memory_flash_size = 0x54000` (336 KB) and `memory_ram_size = 0x5000` (20 KB) starting at `0x20003000` (just after the Secure-side RAM region).
+- `SL_BOARD_ENABLE_VCOM = 1` to bring up the board-controller UART bridge for console output.
 
-1. The Silicon Labs custom API `sl_tz_attestation_get_public_key()` is used to get the Public Attestation Key.
-2. The Series 2 device will generate the PSA attestation token by request unless the SE OTP is uninitialized or the `SECURE_BOOT_ENABLE` option in SE OTP is disabled.
-3. The default optimization level is `Optimize for debugging (-Og)` on Simplicity IDE and `None` on IAR Embedded Workbench.
+### Post-build Profile
+
+- `tz_nonsecure_application` — produces the Non-secure half of the image and consumes the Secure-side veneer object (`artifact/trustzone_secure_library.o`). The workspace then runs `tz_application_sign` to combine + sign the two halves.
+
+## Prerequisites / Setup Requirements
+
+### Hardware
+
+- The same Series 2 Secure Vault kit used by the workspace — see [`../readme.md#hardware`](../readme.md#hardware) for the full hardware list and the AEM-switch reminder.
+
+### Software
+
+- The same software requirements as the workspace — see [`../readme.md#software`](../readme.md#software).
+- This Non-secure project must be **created and built from the workspace**, not standalone. Studio's project picker exposes the workspace; selecting just this `.slcp` will fail to link because the Secure-side veneer object will not be available.
+
+## Steps to Run Demo
+
+Build and run this project as part of the workspace; see [`../readme.md#steps-to-run-demo`](../readme.md#steps-to-run-demo) for the full Update Firmware → Provision Secure Boot → Create projects → Build Secure → Build Non-secure → Flash combined image → Open VCOM → Run sequence.
+
+The Non-secure project specifically is the one you press **Build** / **Debug** / **Flash** on; the workspace orchestration ensures the Secure half is already built and that the combined image is signed by `tz_application_sign`.
 
 ## Troubleshooting
 
-### Serial Port Settings
-
-Be sure to select the following settings to see the serial output of this example:
-
-* 115200 Baud Rate 
-* 8-N-1 configuration
-* Line terminator should be set to "None" if using Device Console in Simplicity Studio
-
-### Programming the Radio Board
-
-Before programming the radio board mounted on the mainboard, make sure the power supply switch is in the AEM position (right side) as shown below.
-
-![Radio board power supply switch](image/readme_img0.png)
+- **Linker errors about `trustzone_secure_library.o` or missing veneers** — the Secure project (`tz_psa_attestation_s`) was not built before this Non-secure project, or its build failed. Build the Secure project first.
+- **Attestation veneer call returns `PSA_ERROR_INVALID_SIGNATURE` or `PSA_ERROR_INVALID_ARGUMENT`** — the device's Secure Boot public key does not match `example_signing_key.pem`, or `SECURE_BOOT_ENABLE` is not set in SE OTP. PSA Attestation refuses to operate without a verified Secure Boot chain — see the workspace troubleshooting in [`../readme.md`](../readme.md).
+- **Token prints but the contents look wrong** — confirm 115200 baud, 8-N-1, line terminator `None`. Garbled UART output frequently looks like corrupted CBOR/COSE-Sign1 to readers.
+- **Stack overflow in Non-secure** — raise the Non-secure project's stack (`SL_STACK_SIZE`) in the project configurator; large attestation tokens (many software-component claims) push usage if you add to the demo.
+- **Non-secure project not visible in the Studio picker** — Studio exposes this `.slcp` through the workspace; pick **TrustZone PSA Attestation** from the workspace list and Studio will create both projects together.
+- For any issue that isn't Non-secure-specific (Secure Boot provisioning, SE firmware version, programming the radio board, etc.), see [`../readme.md#troubleshooting`](../readme.md#troubleshooting).
 
 ## Resources
 
-[AN1374: Series 2 TrustZone](https://www.silabs.com/documents/public/application-notes/an1374-trustzone.pdf)
+- [`../readme.md`](../readme.md) — workspace and Secure-side architecture, Secure Boot signing flow.
+- [AN1374: Series 2 TrustZone](https://www.silabs.com/documents/public/application-notes/an1374-trustzone.pdf)
+- [PSA Attestation API specification (Arm)](https://arm-software.github.io/psa-api/attestation/)
+- [AN1311: Integrating Crypto Functionality Using PSA Crypto Compared to Mbed TLS](https://www.silabs.com/documents/public/application-notes/an1311-mbedtls-psa-crypto-porting-guide.pdf)
 
 ## Report Bugs & Get Support
 
 You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://community.silabs.com/).
+

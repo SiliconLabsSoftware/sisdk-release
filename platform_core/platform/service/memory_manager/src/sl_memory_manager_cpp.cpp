@@ -57,6 +57,9 @@
  ******************************************************************************/
 static void sl_memory_preinit(void) {
   sl_memory_init();
+#if defined(SL_CATALOG_MEMORY_MANAGER_DTCM_PRESENT)
+  sl_memory_init_dtcm();
+#endif
 }
 
 __attribute__((used, section(".preinit_array")))

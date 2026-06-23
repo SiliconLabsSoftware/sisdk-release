@@ -31,6 +31,7 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
 #ifdef SL_COMPONENT_CATALOG_PRESENT
@@ -203,16 +204,16 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
     ///////////////////////////////////////////////////////////////////////////
     case sl_bt_evt_system_boot_id:
       connection_handler = 0xFF;
-      app_log_info("[info] [B] Booted: v%d.%d.%d+%08lx\n",
+      app_log_info("[info] [B] Booted: v%" PRIu16 ".%" PRIu16 ".%" PRIu16 "+%" PRIu32 "\n",
                    evt->data.evt_system_boot.major,
                    evt->data.evt_system_boot.minor,
                    evt->data.evt_system_boot.patch,
                    evt->data.evt_system_boot.hash);
 
       bt_status = sl_bt_system_get_identity_address(&bluetooth_address, &bluetooth_address_type);
-      app_assert_status_f(bt_status, "sl_bt_system_get_identity_address failed with %#lX\n", bt_status);
+      app_assert_status_f(bt_status, "sl_bt_system_get_identity_address failed with 0x%08" PRIX32 "\n", bt_status);
 
-      app_log_info("[info] [B] Bluetooth %s address: %02X:%02X:%02X:%02X:%02X:%02X\n",
+      app_log_info("[info] [B] Bluetooth %s address: %02" PRIX8 ":%02" PRIX8 ":%02" PRIX8 ":%02" PRIX8 ":%02" PRIX8 ":%02" PRIX8 "\n",
                    bluetooth_address_type ? "static random" : "public device",
                    bluetooth_address.addr[5],
                    bluetooth_address.addr[4],
@@ -221,10 +222,10 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
                    bluetooth_address.addr[1],
                    bluetooth_address.addr[0]);
 
-      snprintf(buf, 5, "%04x", *(uint16_t*)(bluetooth_address.addr));
+      snprintf(buf, 5, "%" PRIu16, *(uint16_t*)(bluetooth_address.addr));
 
       bt_status = sl_bt_advertiser_create_set(&advertising_set_handle);
-      app_assert_status_f(bt_status, "sl_bt_advertiser_create_set failed with %#lX\n", bt_status);
+      app_assert_status_f(bt_status, "sl_bt_advertiser_create_set failed with 0x%08" PRIX32 "\n", bt_status);
 
       bt_status = sl_bt_gatt_server_write_attribute_value(
         gattdb_serial_number_string,
@@ -233,7 +234,7 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
         (uint8_t *)buf);
 
       if (bt_status != SL_STATUS_OK) {
-        app_log_error("sl_bt_gatt_server_write_attribute_value failed with %#lX\n", bt_status);
+        app_log_error("sl_bt_gatt_server_write_attribute_value failed with 0x%08" PRIX32 "\n", bt_status);
       }
 
       update_phy_channel_range();
@@ -291,7 +292,7 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
             gattdb_phy,
             0);
           if (bt_status != SL_STATUS_OK) {
-            app_log_error("sl_bt_gatt_server_send_user_write_response failed with %#lX\n", bt_status);
+            app_log_error("sl_bt_gatt_server_send_user_write_response failed with 0x%08" PRIX32 "\n", bt_status);
           }
           update_needed = true;
           apply_new_phy(false);
@@ -304,7 +305,7 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
             gattdb_phy,
             0xFF);
           if (bt_status != SL_STATUS_OK) {
-            app_log_error("sl_bt_gatt_server_send_user_write_response failed with %#lX\n", bt_status);
+            app_log_error("sl_bt_gatt_server_send_user_write_response failed with 0x%08" PRIX32 "\n", bt_status);
           }
         }
       } else if (gattdb_radioMode == evt->data.evt_gatt_server_user_write_request.characteristic) {
@@ -353,7 +354,7 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
         app_log_info("[warning] [B] Unhandled characteristic write!\n");
       }
 
-      app_log_info("[info] [B] GATT write: %u\n", evt->data.evt_gatt_server_user_read_request.characteristic);
+      app_log_info("[info] [B] GATT write: %" PRIu16 "\n", evt->data.evt_gatt_server_user_read_request.characteristic);
 
       if (update_needed) {
         request_refresh_screen();
@@ -415,7 +416,7 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
       } else {
         app_log_info("[warning] [B] Unhandled characteristic read!\n");
       }
-      app_log_info("[info] [B] GATT read: %u\n", evt->data.evt_gatt_server_user_read_request.characteristic);
+      app_log_info("[info] [B] GATT read: %" PRIu16 "\n", evt->data.evt_gatt_server_user_read_request.characteristic);
       break;
 
     case sl_bt_evt_gatt_server_characteristic_status_id:
@@ -462,7 +463,7 @@ void deactivate_bluetooth(void)
   // close connection
   if (connection_handler != 0xFF) {
     bt_status = sl_bt_connection_close(connection_handler);
-    app_assert_status_f(bt_status, "sl_bt_connection_close failed with %#lX\n", bt_status);
+    app_assert_status_f(bt_status, "sl_bt_connection_close failed with 0x%08" PRIX32 "\n", bt_status);
     connection_closed_reason = deactivated;
   }
   // stop advertisement
@@ -492,7 +493,7 @@ void advertise_received_data(int8_t rssi, uint16_t packet_count, uint16_t receiv
   buf[i++] = 0x01;            // Type of field: Flags
   buf[i++] = 0x04 | 0x02;     // Flags: BR/EDR is disabled, LE General Discoverable Mode
   // AD Structure: Shortened Local Name, e.g.: DMP1234
-  snprintf(&series_local_name[3], 5, "%04X", *(uint16_t*)(bluetooth_address.addr));
+  snprintf(&series_local_name[3], 5, "%" PRIu16, *(uint16_t*)(bluetooth_address.addr));
   buf[i++] = 1 + sizeof(series_local_name) - 1;  // Length of field: Type + Shortened Local Name
   buf[i++] = 0x08;            // Shortened Local Name
   memcpy(&buf[i], (uint8_t*)series_local_name, sizeof(series_local_name) - 1); i += (sizeof(series_local_name) - 1);
@@ -509,7 +510,7 @@ void advertise_received_data(int8_t rssi, uint16_t packet_count, uint16_t receiv
   buf[i++] = (uint8_t)((received_packets >> 8) & 0x00FF);   // Number of received packets
 
   bt_status = sl_bt_legacy_advertiser_set_data(advertising_set_handle, sl_bt_advertiser_advertising_data_packet, i, buf);
-  app_assert_status_f(bt_status, "sl_bt_legacy_advertiser_set_data failed with %#lX\n", bt_status);
+  app_assert_status_f(bt_status, "sl_bt_legacy_advertiser_set_data failed with 0x%08" PRIX32 "\n", bt_status);
 
   // Configure advertising to send out only 1 packet.
   bt_status = sl_bt_advertiser_set_timing(
@@ -518,13 +519,13 @@ void advertise_received_data(int8_t rssi, uint16_t packet_count, uint16_t receiv
     32,           // max. adv. interval (milliseconds * 1.6)
     0,             // adv. duration
     1);            // max. num. adv. events
-  app_assert_status_f(bt_status, "sl_bt_advertiser_set_timing failed with %#lX\n", bt_status);
+  app_assert_status_f(bt_status, "sl_bt_advertiser_set_timing failed with 0x%08" PRIX32 "\n", bt_status);
 
   // Start advertising.
   bt_status = sl_bt_legacy_advertiser_start(
     advertising_set_handle,                    // advertising set handle
     sl_bt_legacy_advertiser_non_connectable);     // connectable mode
-  app_assert_status_f(bt_status, "sl_bt_legacy_advertiser_start failed with %#lX\n", bt_status);
+  app_assert_status_f(bt_status, "sl_bt_legacy_advertiser_start failed with 0x%08" PRIX32 "\n", bt_status);
 //  APP_LOG("[info] [B] Advertise RSSI\n");
 }
 
@@ -570,7 +571,7 @@ void send_bluetooth_indications(void)
             uint16_t per = (uint16_t)(range_test_measurement.PER * 10);
             bt_status = sl_bt_gatt_server_send_indication(connection_handler, characteristic, 2, (uint8_t*)&per);
             if (bt_status != SL_STATUS_OK) {
-              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%04lX\n", bt_status);
+              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%08" PRIX32 "\n", bt_status);
             }
             indication_is_under_way = true;
           }
@@ -580,7 +581,7 @@ void send_bluetooth_indications(void)
             uint16_t moving_average = (uint16_t)(range_test_measurement.moving_average * 10);
             bt_status = sl_bt_gatt_server_send_indication(connection_handler, characteristic, 2, (uint8_t*)&moving_average);
             if (bt_status != SL_STATUS_OK) {
-              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%04lX\n", bt_status);
+              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%08" PRIX32 "\n", bt_status);
             }
             indication_is_under_way = true;
           }
@@ -588,42 +589,42 @@ void send_bluetooth_indications(void)
           case gattdb_pktsSent:
             bt_status = sl_bt_gatt_server_send_indication(connection_handler, characteristic, 2, (uint8_t*)&range_test_measurement.packets_sent);
             if (bt_status != SL_STATUS_OK) {
-              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%04lX\n", bt_status);
+              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%08" PRIX32 "\n", bt_status);
             }
             indication_is_under_way = true;
             break;
           case gattdb_pktsCnt:
             bt_status = sl_bt_gatt_server_send_indication(connection_handler, characteristic, 2, (uint8_t*)&range_test_measurement.packets_received_counter);
             if (bt_status != SL_STATUS_OK) {
-              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%04lX\n", bt_status);
+              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%08" PRIX32 "\n", bt_status);
             }
             indication_is_under_way = true;
             break;
           case gattdb_pktsRcvd:
             bt_status = sl_bt_gatt_server_send_indication(connection_handler, characteristic, 2, (uint8_t*)&range_test_measurement.packets_received_correctly);
             if (bt_status != SL_STATUS_OK) {
-              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%04lX\n", bt_status);
+              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%08" PRIX32 "\n", bt_status);
             }
             indication_is_under_way = true;
             break;
           case gattdb_pktsReq:
             bt_status = sl_bt_gatt_server_send_indication(connection_handler, characteristic, 2, (uint8_t*)&range_test_settings.packets_repeat_number);
             if (bt_status != SL_STATUS_OK) {
-              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%04lX\n", bt_status);
+              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%08" PRIX32 "\n", bt_status);
             }
             indication_is_under_way = true;
             break;
           case gattdb_channel:
             bt_status = sl_bt_gatt_server_send_indication(connection_handler, characteristic, 2, (uint8_t*)&range_test_settings.channel);
             if (bt_status != SL_STATUS_OK) {
-              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%04lX\n", bt_status);
+              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%08" PRIX32 "\n", bt_status);
             }
             indication_is_under_way = true;
             break;
           case gattdb_phy:
             bt_status = sl_bt_gatt_server_send_indication(connection_handler, characteristic, 1, (uint8_t*)&range_test_settings.current_phy);
             if (bt_status != SL_STATUS_OK) {
-              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%04lX\n", bt_status);
+              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%08" PRIX32 "\n", bt_status);
             }
             indication_is_under_way = true;
             update_phy_channel_range();
@@ -633,56 +634,56 @@ void send_bluetooth_indications(void)
           case gattdb_radioMode:
             bt_status = sl_bt_gatt_server_send_indication(connection_handler, characteristic, 1, (uint8_t*)&range_test_settings.radio_mode);
             if (bt_status != SL_STATUS_OK) {
-              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%04lX\n", bt_status);
+              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%08" PRIX32 "\n", bt_status);
             }
             indication_is_under_way = true;
             break;
           case gattdb_txPower:
             bt_status = sl_bt_gatt_server_send_indication(connection_handler, characteristic, 2, (uint8_t*)&range_test_settings.tx_power);
             if (bt_status != SL_STATUS_OK) {
-              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%04lX\n", bt_status);
+              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%08" PRIX32 "\n", bt_status);
             }
             indication_is_under_way = true;
             break;
           case gattdb_destID:
             bt_status = sl_bt_gatt_server_send_indication(connection_handler, characteristic, 1, (uint8_t*)&range_test_settings.destination_id);
             if (bt_status != SL_STATUS_OK) {
-              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%04lX\n", bt_status);
+              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%08" PRIX32 "\n", bt_status);
             }
             indication_is_under_way = true;
             break;
           case gattdb_srcID:
             bt_status = sl_bt_gatt_server_send_indication(connection_handler, characteristic, 1, (uint8_t*)&range_test_settings.source_id);
             if (bt_status != SL_STATUS_OK) {
-              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%04lX\n", bt_status);
+              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%08" PRIX32 "\n", bt_status);
             }
             indication_is_under_way = true;
             break;
           case gattdb_payload:
             bt_status = sl_bt_gatt_server_send_indication(connection_handler, characteristic, 1, (uint8_t*)&range_test_settings.payload_length);
             if (bt_status != SL_STATUS_OK) {
-              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%04lX\n", bt_status);
+              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%08" PRIX32 "\n", bt_status);
             }
             indication_is_under_way = true;
             break;
           case gattdb_maSize:
             bt_status = sl_bt_gatt_server_send_indication(connection_handler, characteristic, 1, (uint8_t*)&range_test_settings.moving_average_window_size);
             if (bt_status != SL_STATUS_OK) {
-              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%04lX\n", bt_status);
+              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%08" PRIX32 "\n", bt_status);
             }
             indication_is_under_way = true;
             break;
           case gattdb_log:
             bt_status = sl_bt_gatt_server_send_indication(connection_handler, characteristic, 1, (uint8_t*)&range_test_settings.usart_log_enable);
             if (bt_status != SL_STATUS_OK) {
-              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%04lX\n", bt_status);
+              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%08" PRIX32 "\n", bt_status);
             }
             indication_is_under_way = true;
             break;
           case gattdb_isRunning:
             bt_status = sl_bt_gatt_server_send_indication(connection_handler, characteristic, 1, (uint8_t*)&range_test_measurement.tx_is_running);
             if (bt_status != SL_STATUS_OK) {
-              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%04lX\n", bt_status);
+              app_log_error("sl_bt_gatt_server_send_indication failed with 0x%08" PRIX32 "\n", bt_status);
             }
             indication_is_under_way = true;
             break;
@@ -748,7 +749,7 @@ static void start_advertising(void)
   buf[i++] = 0x01;              // Type of field: Flags
   buf[i++] = 0x04 | 0x02;       // Flags: BR/EDR is disabled, LE General Discoverable Mode
   // AD Structure: Shortened Local Name, e.g.: DMP1234
-  snprintf(&series_local_name[3], 5, "%04X", *(uint16_t*)(bluetooth_address.addr));
+  snprintf(&series_local_name[3], 5, "%" PRIu16, *(uint16_t*)(bluetooth_address.addr));
   buf[i++] = 1 + sizeof(series_local_name) - 1;    // Length of field: Type + Shortened Local Name
   buf[i++] = 0x08;              // Shortened Local Name
   memcpy(&buf[i], (uint8_t*)series_local_name, sizeof(series_local_name) - 1); i += (sizeof(series_local_name) - 1);
@@ -758,7 +759,7 @@ static void start_advertising(void)
   memcpy(&buf[i], uuid, sizeof(uuid)); i += sizeof(uuid);
 
   bt_status = sl_bt_legacy_advertiser_set_data(advertising_set_handle, sl_bt_advertiser_advertising_data_packet, i, buf);
-  app_assert_status_f(bt_status, "sl_bt_legacy_advertiser_set_data failed with %#lX\n", bt_status);
+  app_assert_status_f(bt_status, "sl_bt_legacy_advertiser_set_data failed with 0x%08" PRIX32 "\n", bt_status);
 
   // Set advertising interval to 100ms.
   bt_status = sl_bt_advertiser_set_timing(
@@ -767,13 +768,13 @@ static void start_advertising(void)
     160,         // max. adv. interval (milliseconds * 1.6)
     0,           // adv. duration
     0);          // max. num. adv. events
-  app_assert_status_f(bt_status, "sl_bt_advertiser_set_timing failed with %#lX\n", bt_status);
+  app_assert_status_f(bt_status, "sl_bt_advertiser_set_timing failed with 0x%08" PRIX32 "\n", bt_status);
 
   // Start advertising and enable connections.
   bt_status = sl_bt_legacy_advertiser_start(
     advertising_set_handle,                    // advertising set handle
     sl_bt_legacy_advertiser_connectable);         // connectable mode
-  app_assert_status_f(bt_status, "sl_bt_legacy_advertiser_start failed with %#lX\n", bt_status);
+  app_assert_status_f(bt_status, "sl_bt_legacy_advertiser_start failed with 0x%08" PRIX32 "\n", bt_status);
 
   app_log_info("[info] [B] Start advertising\n");
 }
@@ -785,7 +786,7 @@ static void stop_advertising(void)
 {
   sl_status_t bt_status = 0;
   bt_status = sl_bt_advertiser_stop(advertising_set_handle);
-  app_assert_status_f(bt_status, "sl_bt_advertiser_stop failed with %#lX\n", bt_status);
+  app_assert_status_f(bt_status, "sl_bt_advertiser_stop failed with 0x%08" PRIX32 "\n", bt_status);
   app_log_info("[info] [B] Stop advertising\n");
   ble_needs_restart = true;
 }
@@ -808,7 +809,7 @@ static bool answer_read_request(uint8_t* answer_value, uint8_t value_length, sl_
     answer_value,
     &sent_len);
   if (bt_status != SL_STATUS_OK) {
-    app_log_error("sl_bt_gatt_server_send_user_read_response failed with 0x%04lX\n", bt_status);
+    app_log_error("sl_bt_gatt_server_send_user_read_response failed with 0x%08" PRIX32 "\n", bt_status);
   }
   if (bt_status == SL_STATUS_OK) {
     return true;
@@ -836,7 +837,7 @@ static bool check_and_write_uint8_value(uint8_t *update_value_byte, uint16_t ran
 
   bt_status = sl_bt_gatt_server_read_attribute_value(range_attribute, 0, range_max_size, &read_length, range_buff);
   if (bt_status != SL_STATUS_OK) {
-    app_log_error("sl_bt_gatt_server_read_attribute_value failed with 0x%04lX\n", bt_status);
+    app_log_error("sl_bt_gatt_server_read_attribute_value failed with 0x%08" PRIX32 "\n", bt_status);
   }
 
   min_range = range_buff[0];
@@ -850,7 +851,7 @@ static bool check_and_write_uint8_value(uint8_t *update_value_byte, uint16_t ran
       evt->data.evt_gatt_server_user_write_request.characteristic,
       0);
     if (bt_status != SL_STATUS_OK) {
-      app_log_error("sl_bt_gatt_server_send_user_write_response failed with 0x%04lX\n", bt_status);
+      app_log_error("sl_bt_gatt_server_send_user_write_response failed with 0x%08" PRIX32 "\n", bt_status);
     }
     success = true;
   } else {
@@ -859,7 +860,7 @@ static bool check_and_write_uint8_value(uint8_t *update_value_byte, uint16_t ran
       evt->data.evt_gatt_server_user_write_request.characteristic,
       0xFF);
     if (bt_status != SL_STATUS_OK) {
-      app_log_warning("sl_bt_gatt_server_send_user_write_response failed with 0x%04lX\n", bt_status);
+      app_log_warning("sl_bt_gatt_server_send_user_write_response failed with 0x%08" PRIX32 "\n", bt_status);
     }
   }
   return success;
@@ -884,7 +885,7 @@ static bool check_and_write_uint16_value(uint16_t *update_value_byte, uint16_t r
 
   bt_status = sl_bt_gatt_server_read_attribute_value(range_attribute, 0, range_max_size, &read_length, range_buff);
   if (bt_status != SL_STATUS_OK) {
-    app_log_error("sl_bt_gatt_server_read_attribute_value failed with 0x%04lX\n", bt_status);
+    app_log_error("sl_bt_gatt_server_read_attribute_value failed with 0x%08" PRIX32 "\n", bt_status);
   }
 
   min_range = *(uint16_t*)&range_buff[0];
@@ -898,7 +899,7 @@ static bool check_and_write_uint16_value(uint16_t *update_value_byte, uint16_t r
       evt->data.evt_gatt_server_user_write_request.characteristic,
       0);
     if (bt_status != SL_STATUS_OK) {
-      app_log_error("sl_bt_gatt_server_send_user_write_response failed with 0x%04lX\n", bt_status);
+      app_log_error("sl_bt_gatt_server_send_user_write_response failed with 0x%08" PRIX32 "\n", bt_status);
     }
     success = true;
   } else {
@@ -907,7 +908,7 @@ static bool check_and_write_uint16_value(uint16_t *update_value_byte, uint16_t r
       evt->data.evt_gatt_server_user_write_request.characteristic,
       0xFF);
     if (bt_status != SL_STATUS_OK) {
-      app_log_error("sl_bt_gatt_server_send_user_write_response failed with 0x%04lX\n", bt_status);
+      app_log_error("sl_bt_gatt_server_send_user_write_response failed with 0x%08" PRIX32 "\n", bt_status);
     }
   }
   return success;
@@ -932,7 +933,7 @@ static bool check_and_write_int16_value(int16_t *update_value_byte, uint16_t ran
 
   bt_status = sl_bt_gatt_server_read_attribute_value(range_attribute, 0, range_max_size, &read_length, range_buff);
   if (bt_status != SL_STATUS_OK) {
-    app_log_error("sl_bt_gatt_server_read_attribute_value failed with 0x%04lX\n", bt_status);
+    app_log_error("sl_bt_gatt_server_read_attribute_value failed with 0x%08" PRIX32 "\n", bt_status);
   }
 
   min_range = *(int16_t*)&range_buff[0];
@@ -946,7 +947,7 @@ static bool check_and_write_int16_value(int16_t *update_value_byte, uint16_t ran
       evt->data.evt_gatt_server_user_write_request.characteristic,
       0);
     if (bt_status != SL_STATUS_OK) {
-      app_log_error("sl_bt_gatt_server_send_user_write_response failed with 0x%04lX\n", bt_status);
+      app_log_error("sl_bt_gatt_server_send_user_write_response failed with 0x%08" PRIX32 "\n", bt_status);
     }
     success = true;
   } else {
@@ -955,7 +956,7 @@ static bool check_and_write_int16_value(int16_t *update_value_byte, uint16_t ran
       evt->data.evt_gatt_server_user_write_request.characteristic,
       0xFF);
     if (bt_status != SL_STATUS_OK) {
-      app_log_error("sl_bt_gatt_server_send_user_write_response failed with 0x%04lX\n", bt_status);
+      app_log_error("sl_bt_gatt_server_send_user_write_response failed with 0x%08" PRIX32 "\n", bt_status);
     }
   }
   return success;
@@ -1060,7 +1061,7 @@ static void update_phy_channel_range(void)
   bt_status = sl_bt_gatt_server_write_attribute_value(gattdb_channel_valid_range, 0, 4, (uint8_t*)buf);
 
   if (bt_status != SL_STATUS_OK) {
-    app_log_error("sl_bt_gatt_server_write_attribute_value failed with %#lX\n", bt_status);
+    app_log_error("sl_bt_gatt_server_write_attribute_value failed with 0x%08" PRIX32 "\n", bt_status);
   }
 }
 
@@ -1082,7 +1083,7 @@ static void update_phy_payload_range(void)
   bt_status = sl_bt_gatt_server_write_attribute_value(gattdb_payload_valid_range, 0, 2, (uint8_t*)buf);
 
   if (bt_status != SL_STATUS_OK) {
-    app_log_error("sl_bt_gatt_server_write_attribute_value failed with %#lX\n", bt_status);
+    app_log_error("sl_bt_gatt_server_write_attribute_value failed with 0x%08" PRIX32 "\n", bt_status);
   }
 }
 
@@ -1106,7 +1107,7 @@ static void update_phy_power_range(void)
   bt_status = sl_bt_gatt_server_write_attribute_value(gattdb_txPower_valid_range, 0, 4, (uint8_t*)buf);
 
   if (bt_status != SL_STATUS_OK) {
-    app_log_error("sl_bt_gatt_server_write_attribute_value failed with %#lX\n", bt_status);
+    app_log_error("sl_bt_gatt_server_write_attribute_value failed with 0x%08" PRIX32 "\n", bt_status);
   }
 }
 

@@ -1,51 +1,48 @@
-# Segment LCD Update with LDMA
+# Segment LCD LDMA
 
-## Summary
+This project shows how to use the LCD segment peripheral with the LDMA to update the segment LCD in EM2.
 
-This project shows how to use the LCD peripheral with the LDMA 
+## Table of Contents
 
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-## Connections Required
+## Purpose / Scope
 
-Connect the board via a micro-USB cable to your PC to flash the example.
+This example uses the segment LCD driver with the LDMA so the display updates in EM2 without CPU intervention. The LCD frame counter triggers a DMA request every second; the LDMA uses linked descriptors to copy a display buffer to the LCD segment registers. The display cycles 00000 → 11111 → … → 99999. Use it to learn low-power segment LCD updates with LDMA.
 
-## Setup
+## Prerequisites / Setup Requirements
 
-Clone the repository with this project from GitHub onto your local machine.
+**Hardware**
+- Silicon Labs board with segment LCD (see project or board documentation for supported boards).
 
-From within the Simplicity Studio IDE, select Import -> MCU Project... from the Project menu. Click the Browse button and navigate to the local repository folder, then to the SimplicityStudio folder, select the .sls file for the board, click the Next button twice, and then click Finish.
+**Software**
+- Simplicity Studio 5 (or later).
 
-Build and flash the hex image onto the board. Reset board and observe the segment LCD displaying 00000 -> 11111 -> 22222 -> ... -> 99999 -> 00000 -> ..., updating every second.
+## Steps to Run Demo
 
-## How It Works
+1. Open the project in Simplicity Studio and build it.
+2. Connect the board via USB, flash the application, and reset the board.
+3. Observe the segment LCD displaying 00000 → 11111 → … → 99999, updating every second. The device can remain in EM2 while the LDMA updates the display.
 
-The LCD peripheral is configured to send a DMA request on an LCD Frame Counter
-event, which occurs every 1 second. The LDMA uses looping linked-list
-descriptors to update the LCD_SEGn registers. A display buffer contains the
-desired values to write to the LCD_SEGn registers.
+## Troubleshooting
 
-The LCD_SEGn registers are clocked by a different clock domain and must be
-synchronized in order for the register writes to take effect. The LCD
-peripheral is configured so the LCD_SEGn registers are automatically synced
-once the LCD_SEG3 register is written to.
+- **LCD not updating:** Verify segment LCD and LDMA configuration; ensure the correct board/part is selected and LCD pins match the board.
+- **Wrong digits or no display:** Check display buffer content and LCD segment register mapping for your board.
+- **Build errors:** Ensure the target part has segment LCD and LDMA; verify board support.
 
-The 1st descriptor sets the starting address of the display buffer as the base
-source address of the LDMA channel. The 2nd desciptor is loaded and waits for a
-DMA request.
+## Resources
 
-The 2nd descriptor transfers the contents in the display buffer to the LCD_SEGn
-registers. This descriptor loops 9 times, and then the 3rd descriptor is
-loaded.
+- [Simplicity Studio 5 User's Guide](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/)
+- [Gecko Platform Documentation](https://docs.silabs.com/gecko-platform/latest/)
+- [Silicon Labs Community](https://www.silabs.com/community)
 
-The 3rd descriptor updates the loop counter back to 9, and then loads the 1st
-descriptor.
+## Report Bugs & Get Support
 
-This example does not require processor intervention once entering EM2.
+You are encouraged to report issues and get help from the community:
 
-## How to Port to Another Part
-
-Right click on the project and select "Properties" and navigate to "C/C++
-Build" then "Board/Part/SDK". Select the new board or part to target and apply
-the changes. There may be some dependencies that need to be resolved when
-changing the target architecture. This project can only work out of the box
-on the boards listed in the Hardware Required section of this readme.
+- [Silicon Labs Community](https://www.silabs.com/community)

@@ -45,26 +45,26 @@ void sli_zigbee_af_ota_print_all_images(sl_cli_command_arg_t *arguments)
     sl_zigbee_af_ota_header_t header;
     sl_zigbee_af_tag_data_t tagInfo[SL_ZIGBEE_AF_PLUGIN_OTA_STORAGE_COMMON_MAX_TAGS_IN_OTA_FILE];
     uint16_t totalTags;
-    otaPrintln("Image %d", i);
+    sl_zigbee_af_cli_println("Image %d", i);
     if (SL_ZIGBEE_AF_OTA_STORAGE_SUCCESS
         != sl_zigbee_af_ota_storage_get_full_header_cb(&id,
                                                        &header)) {
-      otaPrintln("  ERROR: Could not get full header!");
+      sl_zigbee_af_cli_println("  ERROR: Could not get full header!");
     } else {
-      otaPrintln("  Header Version: 0x%04X", header.headerVersion);
-      otaPrintln("  Header Length:  %d bytes", header.headerLength);
-      otaPrintln("  Field Control:  0x%04X", header.fieldControl);
-      sl_zigbee_af_ota_bootload_cluster_flush();
-      otaPrintln("  Manuf ID:       0x%04X", header.manufacturerId);
-      otaPrintln("  Image Type:     0x%04X", header.imageTypeId);
-      otaPrintln("  Version:        0x%08X", header.firmwareVersion);
-      sl_zigbee_af_ota_bootload_cluster_flush();
-      otaPrintln("  Zigbee Version: 0x%04X", header.zigbeeStackVersion);
-      otaPrintln("  Header String:  %s", header.headerString);
-      otaPrintln("  Image Size:     %ld bytes", header.imageSize);
-      sl_zigbee_af_ota_bootload_cluster_flush();
+      sl_zigbee_af_cli_println("  Header Version: 0x%04X", header.headerVersion);
+      sl_zigbee_af_cli_println("  Header Length:  %d bytes", header.headerLength);
+      sl_zigbee_af_cli_println("  Field Control:  0x%04X", header.fieldControl);
+      sl_zigbee_af_cli_flush();
+      sl_zigbee_af_cli_println("  Manuf ID:       0x%04X", header.manufacturerId);
+      sl_zigbee_af_cli_println("  Image Type:     0x%04X", header.imageTypeId);
+      sl_zigbee_af_cli_println("  Version:        0x%08X", header.firmwareVersion);
+      sl_zigbee_af_cli_flush();
+      sl_zigbee_af_cli_println("  Zigbee Version: 0x%04X", header.zigbeeStackVersion);
+      sl_zigbee_af_cli_println("  Header String:  %s", header.headerString);
+      sl_zigbee_af_cli_println("  Image Size:     %ld bytes", header.imageSize);
+      sl_zigbee_af_cli_flush();
       if (headerHasSecurityCredentials(&header)) {
-        otaPrintln("  Security Cred:  0x%02X", header.securityCredentials);
+        sl_zigbee_af_cli_println("  Security Cred:  0x%02X", header.securityCredentials);
       }
       if (headerHasUpgradeFileDest(&header)) {
         sl_zigbee_af_ota_bootload_cluster_print("  Upgrade Dest:   ");
@@ -73,34 +73,34 @@ void sli_zigbee_af_ota_print_all_images(sl_cli_command_arg_t *arguments)
         } else {
           sl_zigbee_af_ota_bootload_cluster_print_buffer((uint8_t *)&header.upgradeFileDestination, sizeof(header.upgradeFileDestination), true);
         }
-        sl_zigbee_af_ota_bootload_cluster_flush();
-        otaPrintln("");
+        sl_zigbee_af_cli_flush();
+        sl_zigbee_af_cli_println("");
       }
       if (headerHasHardwareVersions(&header)) {
-        otaPrintln("  Min. HW Ver:    0x%04X", header.minimumHardwareVersion);
-        otaPrintln("  Max. HW Ver:    0x%04X", header.maximumHardwareVersion);
-        sl_zigbee_af_ota_bootload_cluster_flush();
+        sl_zigbee_af_cli_println("  Min. HW Ver:    0x%04X", header.minimumHardwareVersion);
+        sl_zigbee_af_cli_println("  Max. HW Ver:    0x%04X", header.maximumHardwareVersion);
+        sl_zigbee_af_cli_flush();
       }
       if (SL_ZIGBEE_AF_OTA_STORAGE_SUCCESS == sli_zigbee_af_ota_storage_read_all_tag_info(&id,
                                                                                           tagInfo,
                                                                                           SL_ZIGBEE_AF_PLUGIN_OTA_STORAGE_COMMON_MAX_TAGS_IN_OTA_FILE,
                                                                                           &totalTags)) {
         uint16_t i;
-        otaPrintln("  Total Tags: %d", totalTags);
+        sl_zigbee_af_cli_println("  Total Tags: %d", totalTags);
         for (i = 0; i < SL_ZIGBEE_AF_PLUGIN_OTA_STORAGE_COMMON_MAX_TAGS_IN_OTA_FILE && i < totalTags; i++) {
-          otaPrintln("    Tag: 0x%04X", tagInfo[i].id);
-          otaPrintln("      Length: %ld", tagInfo[i].length);
+          sl_zigbee_af_cli_println("    Tag: 0x%04X", tagInfo[i].id);
+          sl_zigbee_af_cli_println("      Length: %ld", tagInfo[i].length);
         }
-        sl_zigbee_af_ota_bootload_cluster_flush();
+        sl_zigbee_af_cli_flush();
       } else {
-        otaPrintln("Error: Could not obtain tag info from image.");
+        sl_zigbee_af_cli_println("Error: Could not obtain tag info from image.");
       }
     }
     id = sl_zigbee_af_ota_storage_iterator_next_cb();
     i++;
   }
 
-  otaPrintln("\n%d images in OTA storage.", sl_zigbee_af_ota_storage_get_count_cb());
+  sl_zigbee_af_cli_println("\n%d images in OTA storage.", sl_zigbee_af_ota_storage_get_count_cb());
 }
 
 sl_zigbee_af_ota_image_id_t sli_zigbee_af_ota_find_image_id_by_index(uint8_t index)
@@ -127,13 +127,13 @@ void sli_zigbee_af_ota_image_delete(sl_cli_command_arg_t *arguments)
   status = sl_zigbee_af_ota_storage_delete_image_cb(&id);
   if (SL_ZIGBEE_AF_OTA_STORAGE_SUCCESS == status
       || SL_ZIGBEE_AF_OTA_STORAGE_OPERATION_IN_PROGRESS == status) {
-    otaPrintln("Image delete%s.",
-               (SL_ZIGBEE_AF_OTA_STORAGE_OPERATION_IN_PROGRESS == status
-                ? " in progress"
-                : "d"));
+    sl_zigbee_af_cli_println("Image delete%s.",
+                             (SL_ZIGBEE_AF_OTA_STORAGE_OPERATION_IN_PROGRESS == status
+                              ? " in progress"
+                              : "d"));
     return;
   }
-  otaPrintln("Error: Failed to delete image.");
+  sl_zigbee_af_cli_println("Error: Failed to delete image.");
 }
 
 void sli_zigbee_af_ota_reload_storage_device(sl_cli_command_arg_t *arguments)
@@ -163,7 +163,7 @@ void sli_zigbee_af_ota_storage_data_print(sl_cli_command_arg_t *arguments)
                                                                                          data,
                                                                                          &actualLength);
   if (status) {
-    otaPrintln("Error:  Could not read block: 0x%02X.\n", status);
+    sl_zigbee_af_cli_println("Error:  Could not read block: 0x%02X.\n", status);
     return;
   }
 

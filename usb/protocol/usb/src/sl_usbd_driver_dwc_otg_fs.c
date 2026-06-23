@@ -29,16 +29,25 @@
 #include "sl_udelay.h"
 
 #include "em_device.h"
+#if __has_include("em_core.h")
 #include "em_core.h"
+#else
+#include "sl_core.h"
+#endif
 #include "sl_clock_manager.h"
+#include "sl_assert.h"
 
 #include "sl_usbd_core.h"
 
 #include "sli_usbd_core.h"
 #include "sli_usbd_driver.h"
 
-#if defined(_SILICON_LABS_32B_SERIES_2)
+#if defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #include "sl_usbd_driver_config.h"
+#endif
+
+#if defined(_SILICON_LABS_32B_SERIES_3)
+#include "sl_usbd_driver_dwc_bcd.h"
 #endif
 
 #include "sl_gpio.h"
@@ -69,12 +78,18 @@
 
 #define DIEP_REG       DIEP
 #define DOEP_REG       DOEP
-#elif defined(_SILICON_LABS_32B_SERIES_2)
+#elif defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define USB_REG        USBAHB_AHBS
 #define USB_APBS_REG   USB_APBS
 
 #define DIEP_REG       DEVINEP
 #define DOEP_REG       DEVOUTEP
+#endif
+
+#if defined(_SILICON_LABS_32B_SERIES_3)
+#define USB_DEVICE_IRQn USB0_IRQn
+#else
+#define USB_DEVICE_IRQn USB_IRQn
 #endif
 
 // With Buffer DMA, data buffers must be 32 bits aligned
@@ -120,7 +135,7 @@
 #define  TXFIFO_EP4_SIZE                     64u
 #define  TXFIFO_EP5_SIZE                     64u
 
-#if defined(_SILICON_LABS_32B_SERIES_2)
+#if defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define  TXFIFO_EP6_SIZE                     64u
 #define  TXFIFO_EP7_SIZE                     64u
 #define  TXFIFO_EP8_SIZE                     64u
@@ -163,7 +178,7 @@
 #define  GINTSTS_BIT_RXFLVL            USB_GINTSTS_RXFLVL
 #define  GINTSTS_BIT_OTGINT            USB_GINTSTS_OTGINT
 #define  GINTSTS_BIT_MMIS              USB_GINTSTS_MODEMIS
-#elif defined(_SILICON_LABS_32B_SERIES_2)
+#elif defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define  GINTSTS_BIT_WKUPINT           USBAHB_GINTSTS_WKUPINT
 #define  GINTSTS_BIT_SRQINT            USBAHB_GINTSTS_SESSREQINT
 #define  GINTSTS_BIT_RESETDET          USBAHB_GINTSTS_RESETDET
@@ -180,14 +195,14 @@
 
 #if defined(_SILICON_LABS_32B_SERIES_0) || defined(_SILICON_LABS_32B_SERIES_1)
 #define  GUSBCFG_TRDT_MASK             _USB_GUSBCFG_USBTRDTIM_MASK
-#elif defined(_SILICON_LABS_32B_SERIES_2)
+#elif defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define  GUSBCFG_TRDT_MASK             _USBAHB_GUSBCFG_USBTRDTIM_MASK
 #endif
 
 #if defined(_SILICON_LABS_32B_SERIES_0) || defined(_SILICON_LABS_32B_SERIES_1)
 #define  GAHBCFG_BIT_GLBLINTRMSK           USB_GAHBCFG_GLBLINTRMSK
 #define  GAHBCFG_BIT_DMAEN                 USB_GAHBCFG_DMAEN
-#elif defined(_SILICON_LABS_32B_SERIES_2)
+#elif defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define  GAHBCFG_BIT_GLBLINTRMSK           USBAHB_GAHBCFG_GLBLINTRMSK
 #define  GAHBCFG_BIT_DMAEN                 USBAHB_GAHBCFG_DMAEN
 #endif
@@ -198,7 +213,7 @@
 #define  GRSTCTL_BIT_CSFTRST           USB_GRSTCTL_CSFTRST
 #define  GRSTCTL_BIT_AHBIDLE           USB_GRSTCTL_AHBIDLE
 #define  GRSTCTL_TXFNUM_SHIFT          _USB_GRSTCTL_TXFNUM_SHIFT
-#elif defined(_SILICON_LABS_32B_SERIES_2)
+#elif defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define  GRSTCTL_BIT_TXFFLSH           USBAHB_GRSTCTL_TXFFLSH
 #define  GRSTCTL_BIT_RXFFLSH           USBAHB_GRSTCTL_RXFFLSH
 #define  GRSTCTL_BIT_CSFTRST           USBAHB_GRSTCTL_CSFTRST
@@ -210,7 +225,7 @@
 #define  DCTL_BIT_CGINAK               USB_DCTL_CGNPINNAK
 #define  DCTL_BIT_SDIS                 USB_DCTL_SFTDISCON
 #define  DCTL_BIT_RWUSIG               USB_DCTL_RMTWKUPSIG
-#elif defined(_SILICON_LABS_32B_SERIES_2)
+#elif defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define  DCTL_BIT_CGINAK               USBAHB_DCTL_CGNPINNAK
 #define  DCTL_BIT_SDIS                 USBAHB_DCTL_SFTDISCON
 #define  DCTL_BIT_RWUSIG               USBAHB_DCTL_RMTWKUPSIG
@@ -224,7 +239,7 @@
 #define  DxEPCTLx_BIT_CNAK             USB_DIEP_CTL_CNAK       // Same as USB_DOEP_CTL_CNAK
 #define  DxEPCTLx_BIT_STALL            USB_DIEP_CTL_STALL      // Same as USB_DOEP_CTL_STALL
 #define  DxEPCTLx_BIT_USBAEP           USB_DIEP_CTL_USBACTEP   // Same as USB_DOEP_CTL_USBACTEP
-#elif defined(_SILICON_LABS_32B_SERIES_2)
+#elif defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define  DxEPCTLx_BIT_EPENA            USBAHB_DEVINEP_CTL_EPENA      // Same as USBAHB_DEVOUTEP_CTLO_EPENA
 #define  DxEPCTLx_BIT_EPDIS            USBAHB_DEVINEP_CTL_EPDIS      // Same as USBAHB_DEVOUTEP_CTLO_EPDIS
 #define  DxEPCTLx_BIT_SD0PID           USBAHB_DEVINEP_CTL_SETD0PIDEF // Same as USBAHB_DEVOUTEP_CTLO_SETD0PIDEF
@@ -247,7 +262,7 @@
 #define  GINTMSK_BIT_USBSUSPM          USB_GINTMSK_USBSUSPMSK
 #define  GINTMSK_BIT_RXFLVLM           USB_GINTMSK_RXFLVLMSK
 #define  GINTMSK_BIT_OTGINT            USB_GINTMSK_OTGINTMSK
-#elif defined(_SILICON_LABS_32B_SERIES_2)
+#elif defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define  GINTMSK_BIT_WUIM              USBAHB_GINTMSK_WKUPINTMSK
 #define  GINTMSK_BIT_RESETDET          USBAHB_GINTMSK_RESETDETMSK
 #define  GINTMSK_BIT_OEPINT            USBAHB_GINTMSK_OEPINTMSK
@@ -268,7 +283,7 @@
 #define  GRXSTSx_PKTSTS_MASK           _USB_GRXSTSR_PKTSTS_MASK
 #define  GRXSTSx_EPNUM_MASK            _USB_GRXSTSR_CHNUM_MASK
 #define  GRXSTSx_BCNT_MASK             _USB_GRXSTSR_BCNT_MASK
-#elif defined(_SILICON_LABS_32B_SERIES_2)
+#elif defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define  GRXSTSx_PKTSTS_OUT_NAK        0x00000001UL
 #define  GRXSTSx_PKTSTS_OUT_RX         0x00000002UL
 #define  GRXSTSx_PKTSTS_OUT_COMPL      0x00000003UL
@@ -284,7 +299,7 @@
 #define  PCGCCTL_BIT_PWRCLMP           USB_PCGCCTL_PWRCLMP
 #define  PCGCCTL_BIT_GATEHCLK          USB_PCGCCTL_GATEHCLK
 #define  PCGCCTL_BIT_STOPPCLK          USB_PCGCCTL_STOPPCLK
-#elif defined(_SILICON_LABS_32B_SERIES_2)
+#elif defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define  PCGCCTL_BIT_RSTPDWNMODULE     USBAHB_PCGCCTL_RSTPDWNMODULE
 #define  PCGCCTL_BIT_PWRCLMP           USBAHB_PCGCCTL_PWRCLMP
 #define  PCGCCTL_BIT_GATEHCLK          USBAHB_PCGCCTL_GATEHCLK
@@ -294,7 +309,7 @@
 #if defined(_SILICON_LABS_32B_SERIES_0) || defined(_SILICON_LABS_32B_SERIES_1)
 #define  DOEPMSK_BIT_STUPM             USB_DOEPMSK_SETUPMSK
 #define  DOEPMSK_BIT_XFRCM             USB_DOEPMSK_XFERCOMPLMSK
-#elif defined(_SILICON_LABS_32B_SERIES_2)
+#elif defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define  DOEPMSK_BIT_STUPM             USBAHB_DOEPMSK_SETUPMSK
 #define  DOEPMSK_BIT_XFRCM             USBAHB_DOEPMSK_XFERCOMPPLMSK
 #endif
@@ -303,7 +318,7 @@
 #define  DIEPINTx_BIT_INEPNE           USB_DIEP_INT_INEPNAKEFF
 #define  DIEPINTx_BIT_EPDISD           USB_DIEP_INT_EPDISBLD
 #define  DIEPINTx_BIT_XFRC             USB_DIEP_INT_XFERCOMPL
-#elif defined(_SILICON_LABS_32B_SERIES_2)
+#elif defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define  DIEPINTx_BIT_INEPNE           USBAHB_DIEP0INT_INEPNAKEFF
 #define  DIEPINTx_BIT_EPDISD           USBAHB_DIEP0INT_EPDISBLD
 #define  DIEPINTx_BIT_XFRC             USBAHB_DIEP0INT_XFERCOMPL
@@ -311,7 +326,7 @@
 
 #if defined(_SILICON_LABS_32B_SERIES_0) || defined(_SILICON_LABS_32B_SERIES_1)
 #define  DIEPTSIZx_XFRSIZ_MSK          _USB_DIEP_TSIZ_XFERSIZE_MASK
-#elif defined(_SILICON_LABS_32B_SERIES_2)
+#elif defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define  DIEPTSIZx_XFRSIZ_MSK          0x7FFFFUL   // _USBAHB_DIEP0TSIZ_XFERSIZE_MASK = 0x7FUL
 #endif
 
@@ -321,7 +336,7 @@
 #define  DOEPTSIZx_PKTCNT_MSK          _USB_DOEP_TSIZ_PKTCNT_MASK
 #define  DOEPTSIZx_SUPCNT_MSK          _USB_DOEP0TSIZ_SUPCNT_MASK
 #define  DOEPTSIZx_SUPCNT_SHIFT        _USB_DOEP0TSIZ_SUPCNT_SHIFT
-#elif defined(_SILICON_LABS_32B_SERIES_2)
+#elif defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define  DOEPTSIZx_STUPCNT_3_PKT       _USBAHB_DEVOUTEP_TSIZ_RXDPIDSUPCNT_MASK
 #define  DOEPTSIZx_XFRSIZ_MSK          _USBAHB_DEVOUTEP_TSIZ_XFERSIZE_MASK
 #define  DOEPTSIZx_PKTCNT_MSK          _USBAHB_DEVOUTEP_TSIZ_PKTCNT_MASK
@@ -336,7 +351,7 @@
 #define  DOEPINTx_BIT_XFRC             USB_DOEP_INT_XFERCOMPL
 #define  DOEPINTx_BIT_STUPPKTRCVD      USB_DOEP_INT_STUPPKTRCVD
 #define  DOEPINTx_BIT_BACK2BACKSETUP   USB_DOEP_INT_BACK2BACKSETUP
-#elif defined(_SILICON_LABS_32B_SERIES_2)
+#elif defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define  DOEPINTx_BIT_STUP             USBAHB_DOEP0INT_SETUP
 #define  DOEPINTx_BIT_XFRC             USBAHB_DOEP0INT_XFERCOMPL
 #define  DOEPINTx_BIT_STUPPKTRCVD      USBAHB_DOEP0INT_STUPPKTRCVD
@@ -346,7 +361,7 @@
 #if defined(_SILICON_LABS_32B_SERIES_0) || defined(_SILICON_LABS_32B_SERIES_1)
 #define  DIEPMSK_BIT_XFRCM             USB_DIEPMSK_XFERCOMPLMSK
 #define  DIEPMSK_BIT_TIMEOUTMSK        USB_DIEPMSK_TIMEOUTMSK
-#elif defined(_SILICON_LABS_32B_SERIES_2)
+#elif defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define  DIEPMSK_BIT_XFRCM             USBAHB_DIEPMSK_XFERCOMPLMSK
 #define  DIEPMSK_BIT_TIMEOUTMSK        USBAHB_DIEPMSK_TIMEOUTMSK
 #endif
@@ -354,7 +369,7 @@
 #if defined(_SILICON_LABS_32B_SERIES_0) || defined(_SILICON_LABS_32B_SERIES_1)
 #define  DAINTMSK_BIT_IEPINT_EP0       USB_DAINTMSK_INEPMSK0
 #define  DAINTMSK_BIT_OEPINT_EP0       USB_DAINTMSK_OUTEPMSK0
-#elif defined(_SILICON_LABS_32B_SERIES_2)
+#elif defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define  DAINTMSK_BIT_IEPINT_EP0       USBAHB_DAINTMSK_INEPMSK0
 #define  DAINTMSK_BIT_OEPINT_EP0       USBAHB_DAINTMSK_OUTEPMSK0
 #endif
@@ -364,7 +379,7 @@
 #define  DSTS_BIT_SUSPSTS              USB_DSTS_SUSPSTS
 #define  DSTS_FNSOF_MASK               _USB_DSTS_SOFFN_MASK
 #define  DSTS_FNSOF_SHIFT              _USB_DSTS_SOFFN_SHIFT
-#elif defined(_SILICON_LABS_32B_SERIES_2)
+#elif defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define  DSTS_ENUMSPD_FS_PHY_48MHZ     _USBAHB_DSTS_ENUMSPD_MASK
 #define  DSTS_BIT_SUSPSTS              USBAHB_DSTS_SUSPSTS
 #define  DSTS_FNSOF_MASK               _USBAHB_DSTS_SOFFN_MASK
@@ -374,7 +389,7 @@
 #if defined(_SILICON_LABS_32B_SERIES_0) || defined(_SILICON_LABS_32B_SERIES_1)
 #define  DCFG_DEVADDR_MASK             _USB_DCFG_DEVADDR_MASK
 #define  DCFG_DEVADDR_SHIFT            _USB_DCFG_DEVADDR_SHIFT
-#elif defined(_SILICON_LABS_32B_SERIES_2)
+#elif defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #define  DCFG_DEVADDR_MASK             _USBAHB_DCFG_DEVADDR_MASK
 #define  DCFG_DEVADDR_SHIFT            _USBAHB_DCFG_DEVADDR_SHIFT
 #endif
@@ -436,12 +451,12 @@
  *******************************************************************************************************/
 
 typedef struct {                                         // ------ DEVICE ENDPOINT DATA STRUCTURE ------
-  uint16_t  EP_MaxPktSize[NBR_EPS_PHY_MAX];              // Max pkt size of opened EPs.
-  uint16_t  EP_PktXferLen[NBR_EPS_PHY_MAX];              // EPs current xfer len.
+  volatile uint16_t  EP_MaxPktSize[NBR_EPS_PHY_MAX];     // Max pkt size of opened EPs.
+  volatile uint16_t  EP_PktXferLen[NBR_EPS_PHY_MAX];     // EPs current xfer len.
   uint8_t  *EP_AppBufPtr[NBR_EPS_PHY_MAX];               // Ptr to endpoint app buffer.
-  uint16_t  EP_AppBufLen[NBR_EPS_PHY_MAX];               // Lenght of endpoint app buffer.
+  volatile uint16_t  EP_AppBufLen[NBR_EPS_PHY_MAX];      // Lenght of endpoint app buffer.
   uint32_t  EP_SetupBuf[(3 * SETUP_PACKET_SIZE) / 4];    // Buffer that contains setup pkt.
-  bool EnumDone;                                         // Indicates if EnumDone ISR occurred.
+  volatile bool EnumDone;                                // Indicates if EnumDone ISR occurred.
 } sli_usbd_driver_endpoint_data_t;
 
 sli_usbd_driver_endpoint_data_t usbd_driver_data = { 0 };
@@ -450,7 +465,7 @@ sli_usbd_driver_endpoint_data_t usbd_driver_data = { 0 };
  *                                             DEVICE CONFIGS
  *******************************************************************************************************/
 
-#if defined(_SILICON_LABS_32B_SERIES_2)
+#if defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 //---------- USB DEVICE ENDPOINTS INFO TBL -----------
 static sli_usbd_driver_endpoint_info_t usbd_endpoint_info_table[] = {
   { SL_USBD_ENDPOINT_INFO_TYPE_CTRL                                                   | SL_USBD_ENDPOINT_INFO_DIR_OUT, 0u, 64u },
@@ -504,6 +519,17 @@ static void DWC_EP_OutProcess(void);
 
 static void DWC_EP_InProcess(void);
 
+#if defined(_SILICON_LABS_32B_SERIES_3)
+__WEAK void sli_usbd_bcd_trigger_event(sl_usbd_bcd_type_t detection_type)
+{
+  (void)detection_type;
+}
+__WEAK bool sli_usbd_bcd_is_deactivated(void)
+{
+  return false;
+}
+#endif
+
 /********************************************************************************************************
  ********************************************************************************************************
  *                                       DRIVER INTERFACE FUNCTIONS
@@ -519,7 +545,7 @@ sl_status_t sli_usbd_driver_init(void)
   uint32_t           reg_to;
   volatile uint32_t  ctrl_reg;
 
-#if defined(_SILICON_LABS_32B_SERIES_2)
+#if defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
   // Make sure the HCLK has at least a 30MHz frequency
   uint32_t hclk_freq = SystemHCLKGet();
   EFM_ASSERT(hclk_freq >= 30000000);
@@ -533,10 +559,15 @@ sl_status_t sli_usbd_driver_init(void)
       .pin = SL_USBD_DRIVER_VBUS_SENSE_PIN
   };
   sl_gpio_set_pin_mode(&gpio_usbd_driver, SL_GPIO_MODE_INPUT, 0);
+#if defined(_SILICON_LABS_32B_SERIES_3)
+  GPIO->DBUSUSBROUTE.USBVBUSSENSEROUTE = (SL_USBD_DRIVER_VBUS_SENSE_PORT << _GPIO_DBUSUSB_USBVBUSSENSEROUTE_PORT_SHIFT)
+                                         | (SL_USBD_DRIVER_VBUS_SENSE_PIN << _GPIO_DBUSUSB_USBVBUSSENSEROUTE_PIN_SHIFT);
+#else
   GPIO->USBROUTE.USBVBUSSENSEROUTE = (SL_USBD_DRIVER_VBUS_SENSE_PORT << _GPIO_USB_USBVBUSSENSEROUTE_PORT_SHIFT)
                                      | (SL_USBD_DRIVER_VBUS_SENSE_PIN << _GPIO_USB_USBVBUSSENSEROUTE_PIN_SHIFT);
+#endif
 
-#else //defined(_SILICON_LABS_32B_SERIES_2)
+#else //defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 #if defined(USBC_MEM_BASE)
   // GG
   CMU->HFCORECLKEN0 |= CMU_HFCORECLKEN0_USB | CMU_HFCORECLKEN0_USBC;
@@ -580,12 +611,12 @@ sl_status_t sli_usbd_driver_init(void)
 #endif // defined(USBC_MEM_BASE)
 
   USB_REG->ROUTE = USB_ROUTE_VBUSENPEN | USB_ROUTE_PHYPEN;
-#endif // defined(_SILICON_LABS_32B_SERIES_2)
+#endif // defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
 
   // Disable USB Interrupt
-  NVIC_DisableIRQ(USB_IRQn);
+  NVIC_DisableIRQ(USB_DEVICE_IRQn);
 
-#if defined(_SILICON_LABS_32B_SERIES_2)
+#if defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
   // Enable the USB IP prior to setting other registers.
   USB_APBS->EN_SET = USB_EN_EN;
   // Ensure PLL0 is stable.
@@ -611,7 +642,7 @@ sl_status_t sli_usbd_driver_init(void)
     reg_to--;
   }
 
-#if !defined(_SILICON_LABS_32B_SERIES_2)
+#if !defined(_SILICON_LABS_32B_SERIES_2) && !defined(_SILICON_LABS_32B_SERIES_3)
   // Enable Sessions Request protocol capabilities.
   USB_REG->GUSBCFG |= USB_GUSBCFG_HNPCAP | USB_GUSBCFG_SRPCAP;
   // Force the core to device mode
@@ -632,7 +663,7 @@ sl_status_t sli_usbd_driver_init(void)
   SL_SET_BIT(USB_REG->DATTRIM1, DATTRIM1_BIT_ENDLYPULLUP);
 #endif
 
-#if defined(_SILICON_LABS_32B_SERIES_2)
+#if defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
   // 80% of the frame interval
   USB_REG->DCFG = USBAHB_DCFG_PERFRINT_DEFAULT
                   // Default to full-speed device
@@ -706,7 +737,7 @@ sl_status_t sli_usbd_driver_init(void)
   // Disable all interrupts
   USB_REG->GINTMSK = 0x00u;
 
-#if defined(_SILICON_LABS_32B_SERIES_2)
+#if defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
   USB_APBS->IEN_CLR = USB_IEN_DWCOTG | USB_IEN_VBUS;
 #endif
 
@@ -771,13 +802,13 @@ sl_status_t sli_usbd_driver_start(void)
                      | GINTMSK_BIT_USBRST
                      | GINTMSK_BIT_ENUMDNEM
                      | GINTMSK_BIT_WUIM
-#if !defined(_SILICON_LABS_32B_SERIES_2)
+#if !defined(_SILICON_LABS_32B_SERIES_2) && !defined(_SILICON_LABS_32B_SERIES_3)
                      | GINTMSK_BIT_SRQIM
                      | GINTMSK_BIT_OTGINT
 #endif
                      | GINTMSK_BIT_RESETDET;
 
-#if defined(_SILICON_LABS_32B_SERIES_2)
+#if defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
   USB_APBS->CTRL_CLR = USB_CTRL_BYPSVREG;   // Enable internal voltage regulator.
   USB_APBS->CTRL_SET = USB_CTRL_VBSSNSHEN;  // Enable VBUS sense high to detect connection.
   USB_APBS->CTRL_CLR = USB_CTRL_VBSSNSLEN;  // Ensure VBUS sense low is disabled.
@@ -791,7 +822,7 @@ sl_status_t sli_usbd_driver_start(void)
   // Enable Global Interrupt
   SL_SET_BIT(USB_REG->GAHBCFG, GAHBCFG_BIT_GLBLINTRMSK);
 
-  NVIC_EnableIRQ(USB_IRQn);
+  NVIC_EnableIRQ(USB_DEVICE_IRQn);
 
   SLI_USBD_DRV_PHY_SUSPEND();
 
@@ -810,7 +841,7 @@ sl_status_t sli_usbd_driver_stop(void)
 
   SLI_USBD_DRV_PHY_RESUME();
 
-  NVIC_DisableIRQ(USB_IRQn);
+  NVIC_DisableIRQ(USB_DEVICE_IRQn);
 
   // Disable all interrupts and clear any pending interrupt.
   USB_REG->GINTMSK = 0x00u;
@@ -1373,7 +1404,7 @@ sl_status_t sli_usbd_driver_irq_handler(void)
   // Read global interrupt status register
   int_stat = USB_REG->GINTSTS;
 
-#if defined(_SILICON_LABS_32B_SERIES_2)
+#if defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
   uint32_t int_status_wrapper = USB_APBS->IF;
 
   //------------------ VBUS INTERRUPT ------------------
@@ -1382,7 +1413,11 @@ sl_status_t sli_usbd_driver_irq_handler(void)
     USB_APBS->IF_CLR = USB_IF_VBUS;
 
     // Detect VBUS high event.
+#if defined(_SILICON_LABS_32B_SERIES_3)
+    if (SL_IS_BIT_SET(USB_APBS->VBUSSTATUS, _USB_VBUSSTATUS_VBUSVALID_MASK) == true) {
+#else
     if (SL_IS_BIT_SET(USB_APBS->STATUS, _USB_STATUS_VBUSVALID_MASK) == true) {
+#endif
       SLI_USBD_DRV_PHY_RESUME();
 
       USB_APBS->CTRL_CLR = USB_CTRL_VBSSNSHEN;  // Disable VBUS sense high.
@@ -1401,6 +1436,97 @@ sl_status_t sli_usbd_driver_irq_handler(void)
       SLI_USBD_DRV_PHY_SUSPEND();
     }
   }
+
+#if defined(_SILICON_LABS_32B_SERIES_3)
+  //------------------- BCD INTERRUPTS -------------------
+  if (((int_status_wrapper & (_USB_IF_DCDCIF_MASK
+                              | _USB_IF_PDCIF_MASK
+                              | _USB_IF_SDCIF_MASK
+                              | _USB_IF_DCDDBNCIF_MASK)) != 0u)
+      && (SL_IS_BIT_SET(USB_APBS->CDFLOWSTATUS, _USB_CDFLOWSTATUS_ERR_MASK) == true)) {
+    // Handle BCD errors before dispatching phase results to avoid
+    // publishing an invalid port type or advancing to the next phase.
+    USB_APBS->IEN_CLR = (USB_IEN_DCDCIEN
+                         | USB_IEN_PDCIEN
+                         | USB_IEN_SDCIEN
+                         | USB_IEN_DCDDBNCIEN);
+    USB_APBS->IF_CLR = (USB_IF_DCDCIF
+                        | USB_IF_PDCIF
+                        | USB_IF_SDCIF
+                        | USB_IF_DCDDBNCIF);
+    USB_APBS->CDCTRL_CLR = (_USB_CDCTRL_DCDEN_MASK
+                            | USB_CDCTRL_PDEN
+                            | USB_CDCTRL_SDEN);
+    USB_APBS->CDCTRL_SET = USB_CDCTRL_STOPCD;
+    sli_usbd_bcd_trigger_event(SL_USBD_BCD_DETECTION_ERROR);
+  } else {
+    if (SL_IS_BIT_SET(int_status_wrapper, _USB_IF_DCDCIF_MASK) == true) {
+      USB_APBS->IF_CLR = USB_IF_DCDCIF;
+
+      if (SL_IS_BIT_SET(USB_APBS->CDSTATUS, _USB_CDSTATUS_DCDTO_MASK) == true) {
+        sli_usbd_bcd_trigger_event(SL_USBD_BCD_DETECTION_DCD_TIMEOUT);
+      } else if (SL_IS_BIT_SET(USB_APBS->CDFLOWSTATUS, _USB_CDFLOWSTATUS_DCDC_MASK) == true) {
+        sli_usbd_bcd_trigger_event(SL_USBD_BCD_DATA_CONTACT_DETECTION);
+      }
+
+      USB_APBS->CDCTRL_CLR = _USB_CDCTRL_DCDEN_MASK;
+      if (sli_usbd_bcd_is_deactivated() == false) {
+        USB_APBS->CDCTRL_SET = USB_CDCTRL_PDEN;
+      }
+    }
+
+    if (SL_IS_BIT_SET(int_status_wrapper, _USB_IF_PDCIF_MASK) == true) {
+      USB_APBS->IF_CLR = USB_IF_PDCIF;
+
+      // PDCIF indicates primary detection completed; CDSTATUS indicates the result.
+      // Read CDSTATUS before clearing PDEN; hardware may invalidate CDSTATUS when
+      // PDEN is deasserted (consistent with DCDCIF/SDCIF ordering).
+      if (SL_IS_BIT_SET(USB_APBS->CDSTATUS, _USB_CDSTATUS_SDPD_MASK) == true) {
+        USB_APBS->CDCTRL_CLR = USB_CDCTRL_PDEN;
+        sli_usbd_bcd_trigger_event(SL_USBD_BCD_STD_DOWNSTREAM_PORT);
+        USB_APBS->IEN_CLR = (USB_IEN_DCDCIEN
+                             | USB_IEN_PDCIEN
+                             | USB_IEN_SDCIEN
+                             | USB_IEN_DCDDBNCIEN);
+        USB_APBS->CDCTRL_SET = USB_CDCTRL_STOPCD;
+        if (sli_usbd_bcd_is_deactivated() == false) {
+          sli_usbd_bcd_trigger_event(SL_USBD_BCD_DETECTION_COMPLETED);
+        }
+      } else {
+        USB_APBS->CDCTRL_CLR = USB_CDCTRL_PDEN;
+        if (sli_usbd_bcd_is_deactivated() == false) {
+          USB_APBS->CDCTRL_SET = USB_CDCTRL_SDEN;
+        }
+      }
+    }
+
+    if (SL_IS_BIT_SET(int_status_wrapper, _USB_IF_SDCIF_MASK) == true) {
+      USB_APBS->IF_CLR = USB_IF_SDCIF;
+
+      if (SL_IS_BIT_SET(USB_APBS->CDFLOWSTATUS, _USB_CDFLOWSTATUS_SDC_MASK) == true) {
+        if (SL_IS_BIT_SET(USB_APBS->CDSTATUS, _USB_CDSTATUS_CDPD_MASK) == true) {
+          sli_usbd_bcd_trigger_event(SL_USBD_BCD_CHARGING_DOWNSTREAM_PORT);
+        } else if (SL_IS_BIT_SET(USB_APBS->CDSTATUS, _USB_CDSTATUS_DCPD_MASK) == true) {
+          sli_usbd_bcd_trigger_event(SL_USBD_BCD_DEDICATED_CHARGING_PORT);
+        }
+      }
+
+      USB_APBS->CDCTRL_CLR = USB_CDCTRL_SDEN;
+      USB_APBS->IEN_CLR = (USB_IEN_DCDCIEN
+                           | USB_IEN_PDCIEN
+                           | USB_IEN_SDCIEN
+                           | USB_IEN_DCDDBNCIEN);
+      USB_APBS->CDCTRL_SET = USB_CDCTRL_STOPCD;
+      if (sli_usbd_bcd_is_deactivated() == false) {
+        sli_usbd_bcd_trigger_event(SL_USBD_BCD_DETECTION_COMPLETED);
+      }
+    }
+
+    if (SL_IS_BIT_SET(int_status_wrapper, _USB_IF_DCDDBNCIF_MASK) == true) {
+      USB_APBS->IF_CLR = USB_IF_DCDDBNCIF;
+    }
+  }
+#endif
 #else
   //-------------- SESSION REQ DETECTION ---------------
   if (SL_IS_BIT_SET(int_stat, GINTSTS_BIT_SRQINT) == true) {
@@ -1479,7 +1605,7 @@ sl_status_t sli_usbd_driver_irq_handler(void)
     USB_REG->DIEPTXF4 = (TXFIFO_EPx_SIZE << 16u) | (RXFIFO_SIZE + (4u * TXFIFO_EPx_SIZE));
     USB_REG->DIEPTXF5 = (TXFIFO_EPx_SIZE << 16u) | (RXFIFO_SIZE + (5u * TXFIFO_EPx_SIZE));
     USB_REG->DIEPTXF6 = (TXFIFO_EPx_SIZE << 16u) | (RXFIFO_SIZE + (6u * TXFIFO_EPx_SIZE));
-#if defined(_SILICON_LABS_32B_SERIES_2)
+#if defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
     USB_REG->DIEPTXF7 = (TXFIFO_EPx_SIZE << 16u) | (RXFIFO_SIZE + (7u * TXFIFO_EPx_SIZE));
     USB_REG->DIEPTXF8 = (TXFIFO_EPx_SIZE << 16u) | (RXFIFO_SIZE + (8u * TXFIFO_EPx_SIZE));
     USB_REG->DIEPTXF9 = (TXFIFO_EPx_SIZE << 16u) | (RXFIFO_SIZE + (9u * TXFIFO_EPx_SIZE));
@@ -1556,7 +1682,7 @@ sl_status_t sli_usbd_driver_irq_handler(void)
     sli_usbd_core_resume_event();
   }
 
-#if defined(_SILICON_LABS_32B_SERIES_2)
+#if defined(_SILICON_LABS_32B_SERIES_2) || defined(_SILICON_LABS_32B_SERIES_3)
   if (SL_IS_BIT_SET(int_status_wrapper, _USB_IF_DWCOTG_MASK) == true) {
     // Clear main interrupt.
     USB_APBS->IF_CLR = USB_IF_DWCOTG;
@@ -1577,9 +1703,13 @@ sl_status_t sli_usbd_driver_irq_handler(void)
  *
  * Note(s)     : None.
  *******************************************************************************************************/
+#if defined(_SILICON_LABS_32B_SERIES_3)
+void USB0_IRQHandler(void)
+#else
 void USB_IRQHandler(void)
+#endif
 {
-#if !defined(_SILICON_LABS_32B_SERIES_2) && !defined(USBC_MEM_BASE)
+#if !defined(_SILICON_LABS_32B_SERIES_2) && !defined(_SILICON_LABS_32B_SERIES_3) && !defined(USBC_MEM_BASE)
   if (SL_IS_BIT_SET(USB->IF, USB_IF_VBUSDETH)) {
     SL_SET_BIT(USB->IFC, USB_IFC_VBUSDETH);
 

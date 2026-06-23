@@ -33,8 +33,8 @@ void sl_zigbee_gp_get_token_wrapper(uint32_t token, void *data, uint32_t length)
 
 #else // (SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_TOKEN_SYSTEM == 1)
 
-#define sl_zigbee_gp_set_token(token, data, length) (void)sl_token_manager_set_data(token, data, length)
-#define sl_zigbee_gp_get_token(token, data, length) (void)sl_token_manager_get_data(token, data, length)
+#define sl_zigbee_gp_set_token(token, data, length) (void)slx_zigbee_token_manager_set_data(token, data, length)
+#define sl_zigbee_gp_get_token(token, data, length) (void)slx_zigbee_token_manager_get_data(token, data, length)
 
 #endif // (SL_ZIGBEE_AF_PLUGIN_GREEN_POWER_ADAPTER_USE_CUSTOM_TOKEN_SYSTEM == 1)
 

@@ -113,6 +113,7 @@ Modules</h2></td></tr>
 Enumerations</h2></td></tr>
 <tr class="memitem:ga4d6dbc6ce7a4dfc5ba8e473253161d30"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__sl__bt__sync.html#ga4d6dbc6ce7a4dfc5ba8e473253161d30">sl_bt_sync_reporting_mode_t</a> { <a class="el" href="group__sl__bt__sync.html#gga4d6dbc6ce7a4dfc5ba8e473253161d30adb0e697ad0134cd6ccaa1afbbaf27260">sl_bt_sync_report_none</a> = 0x0
 , <a class="el" href="group__sl__bt__sync.html#gga4d6dbc6ce7a4dfc5ba8e473253161d30aac59b61bf5411ed41d7079f22c122f8b">sl_bt_sync_report_all</a> = 0x1
+, <a class="el" href="group__sl__bt__sync.html#gga4d6dbc6ce7a4dfc5ba8e473253161d30aef07a9c632badbc00fd6bde07fc770cb">sl_bt_sync_report_non_duplicate</a> = 0x2
  }</td></tr>
 <tr class="memdesc:ga4d6dbc6ce7a4dfc5ba8e473253161d30"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specifies the mode for periodic advertising reports.  <a href="group__sl__bt__sync.html#ga4d6dbc6ce7a4dfc5ba8e473253161d30">More...</a><br /></td></tr>
 <tr class="separator:ga4d6dbc6ce7a4dfc5ba8e473253161d30"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -161,6 +162,8 @@ Functions</h2></td></tr>
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="gga4d6dbc6ce7a4dfc5ba8e473253161d30adb0e697ad0134cd6ccaa1afbbaf27260" name="gga4d6dbc6ce7a4dfc5ba8e473253161d30adb0e697ad0134cd6ccaa1afbbaf27260"></a>sl_bt_sync_report_none&#160;</td><td class="fielddoc"><p >(0x0) Data received in periodic advertising trains is not reported to the application. </p>
 </td></tr>
 <tr><td class="fieldname"><a id="gga4d6dbc6ce7a4dfc5ba8e473253161d30aac59b61bf5411ed41d7079f22c122f8b" name="gga4d6dbc6ce7a4dfc5ba8e473253161d30aac59b61bf5411ed41d7079f22c122f8b"></a>sl_bt_sync_report_all&#160;</td><td class="fielddoc"><p >(0x1) Data received in periodic advertising trains is reported to the application. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="gga4d6dbc6ce7a4dfc5ba8e473253161d30aef07a9c632badbc00fd6bde07fc770cb" name="gga4d6dbc6ce7a4dfc5ba8e473253161d30aef07a9c632badbc00fd6bde07fc770cb"></a>sl_bt_sync_report_non_duplicate&#160;</td><td class="fielddoc"><p >(0x2) Data received in periodic advertising trains is reported to the application, but only if the advertisement is not a duplicate of an already received periodic advertisement. A periodic advertisement is considered a duplicate if it included Advertising Data Information (ADI) with the same Advertising Set ID (SID) and Advertising Data ID (DID) as a previously received periodic advertisement on the same periodic advertising train. </p>
 </td></tr>
 </table>
 
@@ -233,6 +236,7 @@ Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">reporting_mode</td><td>Enum <a class="el" href="group__sl__bt__sync.html#ga4d6dbc6ce7a4dfc5ba8e473253161d30">sl_bt_sync_reporting_mode_t</a>. Specifies the mode for reporting data received in the periodic advertising train. Values:<ul>
 <li><b>sl_bt_sync_report_none (0x0):</b> Data received in periodic advertising trains is not reported to the application.</li>
 <li><b>sl_bt_sync_report_all (0x1):</b> Data received in periodic advertising trains is reported to the application.</li>
+<li><b>sl_bt_sync_report_non_duplicate (0x2):</b> Data received in periodic advertising trains is reported to the application, but only if the advertisement is not a duplicate of an already received periodic advertisement. A periodic advertisement is considered a duplicate if it included Advertising Data Information (ADI) with the same Advertising Set ID (SID) and Advertising Data ID (DID) as a previously received periodic advertisement on the same periodic advertising train.</li>
 </ul>
 </td></tr>
   </table>

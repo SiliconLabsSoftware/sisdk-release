@@ -19,7 +19,7 @@ description: >
   Selecting this component will include the I2C Core component,
   which is the implementation of the I2C driver itself.
 category: Platform|Driver|I2C
-quality: evaluation
+quality: production
 metadata:
   sbom:
     license: Zlib

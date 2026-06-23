@@ -56,21 +56,21 @@ static UNUSED void printBackup(const sl_zigbee_af_trust_center_backup_data_t* ba
 {
   uint8_t i = 0;
 
-  sl_zigbee_af_security_print("Extended PAN ID: ");
+  sl_zigbee_af_cli_print("Extended PAN ID: ");
   sl_zigbee_af_print_ieee_line(backup->extendedPanId);
 
-  sl_zigbee_af_security_println("Index  EUI64                Hashed Key");
+  sl_zigbee_af_cli_println("Index  EUI64                Hashed Key");
   //123456 (>)0123456789ABCDEF
 
   for (i = 0; i < backup->keyListLength; i++) {
-    sl_zigbee_af_security_flush();
-    sl_zigbee_af_security_print("%d      ", i);
+    sl_zigbee_af_cli_flush();
+    sl_zigbee_af_cli_print("%d      ", i);
     sl_zigbee_af_print_big_endian_eui64(backup->keyList[i].deviceId);
-    sl_zigbee_af_security_print("  ");
+    sl_zigbee_af_cli_print("  ");
     sl_zigbee_af_print_zigbee_key(sl_zigbee_key_contents(&(backup->keyList[i].key)));
   }
-  sl_zigbee_af_security_flush();
-  sl_zigbee_af_security_println("\n%d keys in backup", i);
+  sl_zigbee_af_cli_flush();
+  sl_zigbee_af_cli_println("\n%d keys in backup", i);
 }
 
 #ifdef SL_CLI_TYPES_H
@@ -86,7 +86,7 @@ void printExportDataCommand(sl_cli_command_arg_t *arguments)
   status = sl_zigbee_trust_center_export_backup_data(&export);
 
   if (status != SL_STATUS_OK) {
-    sl_zigbee_af_security_println("%s: Failed to get TC backup data.", "Error");
+    sl_zigbee_af_cli_println("%s: Failed to get TC backup data.", "Error");
     return;
   }
 
@@ -119,16 +119,16 @@ void importKeyCommand(sl_cli_command_arg_t *arguments)
   sl_zigbee_copy_key_arg((arguments), 2, &newKey);
 
   if (0 == memcmp(sl_zigbee_af_null_eui64, partnerEUI64, EUI64_SIZE)) {
-    sl_zigbee_af_security_println("%s: EUI64 cannot be all zeroes.",
-                                  "Error");
+    sl_zigbee_af_cli_println("%s: EUI64 cannot be all zeroes.",
+                             "Error");
     return;
   }
 
   if (index > MAX_CLI_SIZE) {
-    sl_zigbee_af_security_println("%s: index %d is greater than max import limit of %d.",
-                                  "Error",
-                                  index,
-                                  MAX_CLI_SIZE);
+    sl_zigbee_af_cli_println("%s: index %d is greater than max import limit of %d.",
+                             "Error",
+                             index,
+                             MAX_CLI_SIZE);
     return;
   }
 
@@ -154,17 +154,17 @@ void restoreFromBackupCommand(sl_cli_command_arg_t *arguments)
   if (0 == memcmp(importData.extendedPanId,
                   sl_zigbee_af_null_eui64,
                   EUI64_SIZE)) {
-    sl_zigbee_af_security_println("%s: Import contains NULL extended PAN ID",
-                                  "Error");
+    sl_zigbee_af_cli_println("%s: Import contains NULL extended PAN ID",
+                             "Error");
     return;
   }
 
   status = sl_zigbee_trust_center_import_backup_and_start_network(&importData);
   if (status != SL_STATUS_OK) {
-    sl_zigbee_af_security_println("%s: Failed to import backup data and form network.",
-                                  "Error");
+    sl_zigbee_af_cli_println("%s: Failed to import backup data and form network.",
+                             "Error");
     return;
   }
-  sl_zigbee_af_security_println("Import successful.");
+  sl_zigbee_af_cli_println("Import successful.");
 }
 #endif //SL_CLI_TYPES_H

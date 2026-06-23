@@ -33,13 +33,13 @@ void findMaskCommand(sl_cli_command_arg_t *arguments)
     case SL_STATUS_OK:
       break;
     case SL_STATUS_TRANSMIT_INVALID_CHANNEL:
-      sl_zigbee_af_core_println("Invalid channel page %d", page);
+      sl_zigbee_af_cli_println("Invalid channel page %d", page);
       break;
     case SL_STATUS_INVALID_CHANNEL_MASK:
-      sl_zigbee_af_core_println("Invalid mask for channel page %d", page);
+      sl_zigbee_af_cli_println("Invalid mask for channel page %d", page);
       break;
     default:
-      sl_zigbee_af_core_println("Error 0x%02X", status);
+      sl_zigbee_af_cli_println("Error 0x%02X", status);
       break;
   }
 }
@@ -50,7 +50,7 @@ void findModeCommand(sl_cli_command_arg_t *arguments)
 
   const sl_status_t status = sl_zigbee_af_set_form_and_join_search_mode(mode);
   if (status != SL_STATUS_OK) {
-    sl_zigbee_af_core_println("Error 0x%02X", status);
+    sl_zigbee_af_cli_println("Error 0x%02X", status);
   }
 }
 
@@ -66,25 +66,25 @@ void findPrintCommand(sl_cli_command_arg_t *arguments)
   for (page = 0; page <= 31; ++page) {
     const uint32_t mask = sl_zigbee_af_get_form_and_join_channel_mask(page);
     if (mask != 0xFFFFFFFFU) {
-      sl_zigbee_af_core_print("Page %d mask 0x%08X, %s", page, mask, "channels: ");
-      sl_zigbee_af_core_debug_exec(sl_zigbee_af_print_channel_list_from_mask(mask));
-      sl_zigbee_af_core_println("");
+      sl_zigbee_af_cli_print("Page %d mask 0x%08X, %s", page, mask, "channels: ");
+      sl_zigbee_af_cli_exec(sl_zigbee_af_print_channel_list_from_mask(mask));
+      sl_zigbee_af_cli_println("");
     }
   }
 
   mode = sl_zigbee_af_get_form_and_join_search_mode();
-  sl_zigbee_af_core_println("%s%s scan is %sABLED",
-                            "2.4 ",
-                            "GHz",
-                            (mode & FIND_AND_JOIN_MODE_ALLOW_2_4_GHZ) ? "EN" : "DIS");
-  sl_zigbee_af_core_println("%s%s scan is %sABLED",
-                            "Sub-",
-                            "GHz",
-                            (mode & FIND_AND_JOIN_MODE_ALLOW_SUB_GHZ) ? "EN" : "DIS");
+  sl_zigbee_af_cli_println("%s%s scan is %sABLED",
+                           "2.4 ",
+                           "GHz",
+                           (mode & FIND_AND_JOIN_MODE_ALLOW_2_4_GHZ) ? "EN" : "DIS");
+  sl_zigbee_af_cli_println("%s%s scan is %sABLED",
+                           "Sub-",
+                           "GHz",
+                           (mode & FIND_AND_JOIN_MODE_ALLOW_SUB_GHZ) ? "EN" : "DIS");
 
   allowAllChannels = sl_zigbee_af_network_find_get_enable_scanning_all_channels_cb();
-  sl_zigbee_af_core_println("%s%s scan is %sABLED",
-                            "Fallback on ",
-                            "all channels",
-                            allowAllChannels ? "EN" : "DIS");
+  sl_zigbee_af_cli_println("%s%s scan is %sABLED",
+                           "Fallback on ",
+                           "all channels",
+                           allowAllChannels ? "EN" : "DIS");
 }

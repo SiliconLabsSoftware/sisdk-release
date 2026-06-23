@@ -125,7 +125,9 @@ zw_cc_multilevel_sensor:
         - <SENSOR_SCALE_*>
 ```
 
-### zw_cc_multilevel_sensor
+For the list of valid sensor names and scales, refer to `CC_MultilevelSensor_SensorHandlerTypes.h`.
+
+### zw_cc_configuration
 
 The Command Class Configuration configurator is defined as follows:
 

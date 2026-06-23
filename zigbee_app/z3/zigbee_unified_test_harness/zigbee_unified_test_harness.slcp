@@ -1,5 +1,5 @@
 project_name: zigbee_unified_test_harness
-label: Zigbee - UnifiedTestHarness
+label: Zigbee - SoC Unified Test Harness
 package: zigbee
 category: Zigbee Application
 quality: production
@@ -56,8 +56,13 @@ component:
   - id: zigbee_zll_on_off_server
   - id: bootloader_interface
   - id: clock_manager
-  # Platform - enable LTO for gcc
+  # Platform - enable LTO for gcc and llvm
   - id: toolchain_gcc_lto
+    condition:
+      - toolchain_gcc
+  - id: toolchain_llvm_lto
+    condition:
+      - toolchain_llvm
   - id: zigbee_pro_stack_mac_test_cmds
   - id: zigbee_pro_compliance
   - id: zigbee_mac_address_filtering
@@ -217,6 +222,9 @@ tag:
   - hwfilter:device:device_supports_zigbee
   - hwfilter:board:zb_zuth_supported_boards
   - hwfilter:device:zb_zuth_supported_parts
+  - toolchain:gcc
+  - toolchain:iar
+  - toolchain:llvm
 
 readme:
   - path: ./readme.md

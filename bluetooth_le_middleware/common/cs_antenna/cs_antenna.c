@@ -30,6 +30,7 @@
 
 #include <stdint.h>
 #include "cs_antenna.h"
+#include "cs_antenna_config.h"
 #include "sl_bt_api.h"
 #include "sl_rail_util_cs_antenna_offset_config.h"
 
@@ -43,4 +44,16 @@ sl_status_t cs_antenna_configure(bool wired)
   const int16_t *antenna_offset = wired ? cs_antenna_offset_wired_cm : cs_antenna_offset_wireless_cm;
   return sl_bt_cs_set_antenna_configuration((SL_RAIL_UTIL_CS_ANTENNA_COUNT * sizeof(int16_t)),
                                             (uint8_t *)antenna_offset);
+}
+
+bool cs_antenna_on_bt_event(sl_bt_msg_t *evt)
+{
+#if defined(CS_ANTENNA_CONFIG_SET_ON_BOOT) && (CS_ANTENNA_CONFIG_SET_ON_BOOT == 1)
+  if (SL_BT_MSG_ID(evt->header) == sl_bt_evt_system_boot_id) {
+    (void)cs_antenna_configure((bool)CS_ANTENNA_CONFIG_DEFAULT_ANTENNA_OFFSET);
+  }
+#else
+  (void)evt;
+#endif
+  return false;
 }

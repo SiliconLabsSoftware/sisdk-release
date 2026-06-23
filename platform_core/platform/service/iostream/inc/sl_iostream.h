@@ -255,15 +255,14 @@ sl_status_t sl_iostream_getchar(sl_iostream_t *stream,
  *
  * @return  Status result
  ******************************************************************************/
+/// @cond
+#if defined(__GNUC__)
+__attribute__((format(printf, 2, 0)))
+#endif
+/// @endcond
 sl_status_t sl_iostream_vprintf(sl_iostream_t *stream,
                                 const char *format,
                                 va_list argp);
-/// @cond
-#if defined(__GNUC__)
-__attribute__((format(printf, 2, 3)))
-#endif
-/// @endcond
-
 /***************************************************************************//**
  * Print a formated string on stream.
  *
@@ -278,6 +277,11 @@ __attribute__((format(printf, 2, 3)))
  *
  * @return  Status result
  ******************************************************************************/
+/// @cond
+#if defined(__GNUC__)
+__attribute__((format(printf, 2, 3)))
+#endif
+/// @endcond
 sl_status_t sl_iostream_printf(sl_iostream_t *stream,
                                const char *format,
                                ...);

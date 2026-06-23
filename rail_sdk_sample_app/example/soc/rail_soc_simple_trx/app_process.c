@@ -32,6 +32,7 @@
 //                                   Includes
 // -----------------------------------------------------------------------------
 #include <stdint.h>
+#include <inttypes.h>
 #include "sl_component_catalog.h"
 #include "sl_rail_sdk_simple_assistance.h"
 #include "sl_rail.h"
@@ -64,12 +65,12 @@
 
 /// State machine of simple_trx
 typedef enum {
-  S_PACKET_RECEIVED,
-  S_PACKET_SENT,
-  S_RX_PACKET_ERROR,
-  S_TX_PACKET_ERROR,
-  S_CALIBRATION_ERROR,
-  S_IDLE,
+  S_PACKET_RECEIVED = 1,
+  S_PACKET_SENT = 2,
+  S_RX_PACKET_ERROR = 3,
+  S_TX_PACKET_ERROR = 4,
+  S_CALIBRATION_ERROR = 5,
+  S_IDLE = 6
 } state_t;
 
 // -----------------------------------------------------------------------------
@@ -91,7 +92,7 @@ volatile bool rx_requested = true;
 static volatile state_t state = S_IDLE;
 
 /// Contains the last RAIL Rx/Tx error events
-static volatile uint64_t error_code = 0;
+static volatile uint64_t radio_events = 0;
 
 /// Contains the status of RAIL Calibration
 static volatile sl_rail_status_t calibration_status = 0;
@@ -164,7 +165,7 @@ void app_process_action(void)
         uint16_t packet_size = unpack_packet(rail_handle, rx_buffer, &packet_info, &start_of_packet);
         rail_status = sl_rail_release_rx_packet(rail_handle, rx_packet_handle);
         if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-          app_log_warning("sl_rail_release_rx_packet() result: %lu\n", rail_status);
+          app_log_warning("sl_rail_release_rx_packet() result: 0x%08" PRIX32 "\n", rail_status);
         }
         if (rx_requested) {
           printf_rx_packet(start_of_packet, packet_size);
@@ -188,12 +189,12 @@ void app_process_action(void)
       break;
     case S_RX_PACKET_ERROR:
       // Handle Rx error
-      app_log_error("Radio RX Error occurred\nEvents: %llX\n", error_code);
+      app_log_error("Radio RX Error occurred\nEvents: 0x%" PRIX64 "\n", radio_events);
       state = S_IDLE;
       break;
     case S_TX_PACKET_ERROR:
       // Handle Tx error
-      app_log_error("Radio TX Error occurred\nEvents: %llX\n", error_code);
+      app_log_error("Radio TX Error occurred\nEvents: 0x%" PRIX64 "\n", radio_events);
       state = S_IDLE;
       break;
     case S_IDLE:
@@ -201,7 +202,7 @@ void app_process_action(void)
         prepare_packet(rail_handle, out_packet, sizeof(out_packet));
         rail_status = sl_rail_start_tx(rail_handle, get_selected_channel(), SL_RAIL_TX_OPTIONS_DEFAULT, NULL);
         if (rail_status != SL_RAIL_STATUS_NO_ERROR) {
-          app_log_warning("sl_rail_start_tx() result: %lu\n ", rail_status);
+          app_log_warning("sl_rail_start_tx() result: 0x%08" PRIX32 "\n ", rail_status);
         }
         tx_requested = false;
       }
@@ -209,8 +210,8 @@ void app_process_action(void)
     case S_CALIBRATION_ERROR:
       #if defined(SL_CATALOG_APP_LOG_PRESENT)
       calibration_status_buff = calibration_status;
-      app_log_error("Radio Calibration Error occurred\nEvents: %llX\nRAIL_Calibrate() result:%ld\n",
-                    error_code,
+      app_log_error("Radio Calibration Error occurred\nEvents: 0x%" PRIX64 "\nRAIL_Calibrate() result: 0x%08" PRIX32 "\n",
+                    radio_events,
                     calibration_status_buff);
       #endif
       state = S_IDLE;
@@ -227,7 +228,7 @@ void app_process_action(void)
  *****************************************************************************/
 SL_CODE_RAM void sl_rail_util_on_event(sl_rail_handle_t rail_handle, sl_rail_events_t events)
 {
-  error_code = events;
+  radio_events = events;
   // Handle Rx events
   if ( events & SL_RAIL_EVENTS_RX_COMPLETION ) {
     if (events & SL_RAIL_EVENT_RX_PACKET_RECEIVED) {

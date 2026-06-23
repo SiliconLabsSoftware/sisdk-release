@@ -4,7 +4,7 @@ package: platform_core
 description: >
   The core implementation for the Direct Memory Access (DMA) driver.
 category: Platform|Driver
-quality: production
+quality: deprecated
 metadata:
   sbom:
     license: Zlib
@@ -12,7 +12,27 @@ ui_hints:
   visibility: never
 provides:
 - name: dmadrv_core
-  condition: [device_series_2]
+  condition: [device_sdid_200]
+- name: dmadrv_core
+  condition: [device_sdid_205]
+- name: dmadrv_core
+  condition: [device_sdid_210]
+- name: dmadrv_core
+  condition: [device_sdid_215]
+- name: dmadrv_core
+  condition: [device_sdid_220]
+- name: dmadrv_core
+  condition: [device_sdid_225]
+- name: dmadrv_core
+  condition: [device_sdid_230]
+- name: dmadrv_core
+  condition: [device_sdid_235]
+- name: dmadrv_core
+  condition: [device_sdid_240]
+- name: dmadrv_core
+  condition: [device_generic_family_efr32xg2b]
+- name: dmadrv_core
+  condition: [device_sdid_260]
 - name: dmadrv_core
   condition: [device_generic_family_sixx301]
 requires:
@@ -25,4 +45,6 @@ requires:
 - name: enum
 - name: sl_core
 - name: code_classification
+- name: dma_manager
+- name: sl_common
 root_path: platform_core

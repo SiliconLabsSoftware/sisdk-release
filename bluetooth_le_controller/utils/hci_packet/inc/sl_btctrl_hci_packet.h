@@ -37,6 +37,7 @@
 
 #define hci_command_header_size     3   // opcode (2 bytes), length (1 byte)
 #define hci_acl_data_header_size    4   // handle (2 bytes), length (2 bytes)
+#define hci_iso_data_header_size    4   // handle (2 bytes), length (2 bytes)
 
 SL_PACK_START(1)
 typedef struct {
@@ -50,6 +51,13 @@ typedef struct {
   uint16_t conn_handle; /* ACL connection handle */
   uint16_t length; /* Length of packet */
 } SL_ATTRIBUTE_PACKED acl_packet_t;
+SL_PACK_END()
+
+SL_PACK_START(1)
+typedef struct {
+  uint16_t conn_handle; /* ISO connection handle */
+  uint16_t length; /* Length of packet */
+} SL_ATTRIBUTE_PACKED iso_packet_t;
 SL_PACK_END()
 
 enum hci_packet_type {
@@ -73,6 +81,7 @@ typedef struct {
   union {
     hci_command_t hci_cmd;
     acl_packet_t acl_pkt;
+    iso_packet_t iso_pkt;
   };
 } SL_ATTRIBUTE_PACKED hci_packet_t;
 SL_PACK_END()

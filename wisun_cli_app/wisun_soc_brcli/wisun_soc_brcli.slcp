@@ -461,7 +461,7 @@ template_contribution:
         - name: "cd"
       argument:
         - type: uint8
-          help: "enable: 0=disabled, 1=enabled"
+          help: "enable: 0=disabled, greater than 0=enabled"
   - name: "cli_command"
     value:
       group: "wisun"
@@ -563,6 +563,29 @@ template_contribution:
       help: "Reset the duty cycle counters"
       shortcuts:
         - name: "rdc"
+  - name: "cli_command"
+    value:
+      group: "wisun"
+      name: "set_option"
+      handler: "app_set_option"
+      help: "set Wi-SUN option"
+      shortcuts:
+        - name: "sopt"
+      argument:
+        - type: uint32
+          help: "Wi-SUN option ID"
+        - type: uint32
+          help: "Option value"
+        - type: uint16
+          help: "Option length in bytes"
+  - name: "cli_command"
+    value:
+      group: "wisun"
+      name: "reset_parameters"
+      handler: "app_reset_parameters"
+      help: "reset Wi-SUN parameters"
+      shortcuts:
+        - name: "rstpar"
 
 # -------------------------------
   - name: cli_group
@@ -585,8 +608,35 @@ template_contribution:
       help: Disconnect from Wi-FI AP
     condition: [wisun_br_wifi]
 
+# -------------------------------
+  - name: "cli_group"
+    value:
+      name: "util"
+      help: "Utility commands"
+      shortcuts:
+        - name: "u"
+  - name: "cli_command"
+    value:
+      group: "util"
+      name: "fill_heap"
+      handler: "app_util_fill_heap"
+      help: "Fill the heap with fixed-size blocks: u fh <block_size>"
+      argument:
+        - type: uint16
+          help: "block size"
+      shortcuts:
+        - name: "fh"
+  - name: "cli_command"
+    value:
+      group: "util"
+      name: "release_heap"
+      handler: "app_util_release_heap"
+      help: "Release previously filled heap: u rh"
+      shortcuts:
+        - name: "rh"
+
 readme:
-  - path: doc/readme.md
+  - path: readme.md
 
 other_file:
   - path: doc/readme_img0.png
@@ -601,7 +651,7 @@ toolchain_settings:
 
 ui_hints:
   highlight:
-    - path: doc/readme.md
+    - path: readme.md
       focus: true
 
 tag:

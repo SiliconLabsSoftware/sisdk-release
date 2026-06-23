@@ -18,6 +18,10 @@ source:
 - path: source/gnu/armv7m_lib_mem.S
   condition:
   - toolchain_gcc
+# llvm
+- path: source/gnu/armv7m_lib_mem.S
+  condition:
+  - toolchain_llvm
 provides:
 - name: lib_mem_port_armv7m
 - name: lib_mem_port

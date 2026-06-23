@@ -53,6 +53,8 @@ typedef uint32_t TxOptions_t;  ///< The universal TX-Option flag count.
 #define TRANSMIT_OPTION_AUTO_ROUTE              0x04  ///< Request retransmission via repeater nodes
 #define TRANSMIT_OPTION_NO_ROUTE                0x10  ///< Do not use response route - Even if available
 #define TRANSMIT_OPTION_EXPLORE                 0x20  ///< Use explore frame if needed
+/* TODO: for now it's just a proposal but it would need to be specified to be accepted */
+#define TRANSMIT_OPTION_URGENT                  0x08  ///< Urgent frame - go to the front of the queue
 /// @}
 
 /**
@@ -153,6 +155,8 @@ typedef struct _TX_STATUS_TYPE_{
   int8_t bDestinationAckUsedTxPower;
   int8_t bDestinationAckMeasuredRSSI;
   int8_t bDestinationAckMeasuredNoiseFloor;
+  /** Application session id: carried unchanged through all stack layers from the transmit request (constant along the path) so it appears in the transmit status report. */
+  uint8_t app_session_id;
 } TX_STATUS_TYPE;
 
 typedef struct _RECEIVE_OPTIONS_TYPE{

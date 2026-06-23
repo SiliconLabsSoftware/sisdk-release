@@ -32,28 +32,21 @@
 #include "sl_core.h"
 #include "sl_mpa_manager.h"
 #include "sl_mpu.h"
+#include "sl_hal_system.h"
 
 #include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
 
+#if defined(SL_COMPONENT_CATALOG_PRESENT)
+#include "sl_component_catalog.h"
+#endif
+
 /*******************************************************************************
  *********************************   DEFINES   *********************************
  ******************************************************************************/
-
-#if defined(__ICCARM__)
-// iccarm
-#pragma section = "text_ram"
-#define RAMFUNC_SECTION_BEGIN             ((uint32_t)(uint32_t *)__section_begin("text_ram"))
-#define RAMFUNC_SECTION_END               ((uint32_t)(uint32_t *)__section_end("text_ram"))
-#define RAMFUNC_SECTION_SIZE              __section_size("text_ram")
-#define RAMFUNC_SECTION_NON_ALIASED_BEGIN RAMFUNC_SECTION_BEGIN
-#define SRAM_END                          (SRAM_BASE + SRAM_SIZE)
-
-// In the case of IAR, the RAM code is in DMEM non-aliased.
-#define RAMFUNC_SECTION_IS_IN_DMEM_ALIAS  0
-
-#elif defined(__GNUC__)
+#if !defined(SL_RAM_LINKER)
+#if defined(__GNUC__)
 // armgcc
 extern uint32_t __vma_ramfuncs_start__;
 extern uint32_t __vma_ramfuncs_end__;
@@ -62,20 +55,77 @@ extern uint32_t __ramfuncs_start__;
 #define RAMFUNC_SECTION_END               ((uint32_t) &__vma_ramfuncs_end__)
 #define RAMFUNC_SECTION_SIZE              (RAMFUNC_SECTION_END - RAMFUNC_SECTION_BEGIN)
 #define RAMFUNC_SECTION_NON_ALIASED_BEGIN ((uint32_t) &__ramfuncs_start__)
-#define SRAM_END                          (SRAM_BASE + SRAM_SIZE)
-#define SRAM_ALIAS_END                    (SRAM_ALIAS_BASE + SRAM_SIZE)
 
+#if defined(SRAM_ALIAS_BASE)
 #define RAMFUNC_SECTION_IS_IN_DMEM_ALIAS  1
-
-#endif
-
-#if defined(SL_TRUSTZONE_SECURE)
-  #define SRAM_ALIAS_ALTERNATE_TZ_BASE SRAM_ALIAS_NS_BASE
-  #define SRAM_ALTERNATE_TZ_BASE       SRAM_NS_BASE
 #else
-  #define SRAM_ALIAS_ALTERNATE_TZ_BASE SRAM_ALIAS_S_BASE
-  #define SRAM_ALTERNATE_TZ_BASE       SRAM_S_BASE
+#define RAMFUNC_SECTION_IS_IN_DMEM_ALIAS  0
 #endif
+
+#elif defined(__ICCARM__)
+// iccarm
+#pragma section = "text_ram"
+#define RAMFUNC_SECTION_BEGIN             ((uint32_t)(uint32_t *)__section_begin("text_ram"))
+#define RAMFUNC_SECTION_END               ((uint32_t)(uint32_t *)__section_end("text_ram"))
+#define RAMFUNC_SECTION_SIZE              __section_size("text_ram")
+#define RAMFUNC_SECTION_NON_ALIASED_BEGIN RAMFUNC_SECTION_BEGIN
+
+// In the case of IAR, the RAM code is in DMEM non-aliased.
+#define RAMFUNC_SECTION_IS_IN_DMEM_ALIAS  0
+
+#else
+
+#error "Unsupported compiler"
+
+#endif
+#endif /* !defined(SL_RAM_LINKER) */
+
+#if defined(SRAM_NS_BASE)
+ #if defined(SL_TRUSTZONE_SECURE)
+  #define SRAM_ALTERNATE_TZ_BASE        SRAM_NS_BASE
+ #else
+  #define SRAM_ALTERNATE_TZ_BASE        SRAM_S_BASE
+ #endif
+ #define SRAM_END                       (SRAM_BASE + SRAM_SIZE)
+#endif /* defined(SRAM_NS_BASE) */
+
+#if defined(SRAM_ALIAS_NS_BASE)
+ #if defined(SL_TRUSTZONE_SECURE)
+  #define SRAM_ALIAS_ALTERNATE_TZ_BASE  SRAM_ALIAS_NS_BASE
+ #else
+  #define SRAM_ALIAS_ALTERNATE_TZ_BASE  SRAM_ALIAS_S_BASE
+ #endif
+ #define SRAM_ALIAS_END                 (SRAM_ALIAS_BASE + SRAM_SIZE)
+#endif /* defined(SRAM_ALIAS_NS_BASE) */
+
+#if defined(DMEM0_MEM_BASE)
+#define DMEM_MEM_NS_BASE   DMEM0_MEM_NS_BASE
+#define DMEM_MEM_S_BASE    DMEM0_MEM_S_BASE
+#endif
+
+#if defined(DMEM_MEM_NS_BASE)
+ #if defined(SL_TRUSTZONE_SECURE)
+  #define DMEM_MEM_ALTERNATE_TZ_BASE    DMEM_MEM_NS_BASE
+ #else
+  #define DMEM_MEM_ALTERNATE_TZ_BASE    DMEM_MEM_S_BASE
+ #endif
+#endif /* defined(DMEM_MEM_NS_BASE) */
+
+#if defined(ITCM_NS_BASE)
+ #if defined(SL_TRUSTZONE_SECURE)
+  #define ITCM_ALTERNATE_TZ_BASE        ITCM_NS_BASE
+ #else
+  #define ITCM_ALTERNATE_TZ_BASE        ITCM_S_BASE
+ #endif
+#endif /* defined(ITCM_NS_BASE) */
+
+#if defined(DTCM_NS_BASE)
+ #if defined(SL_TRUSTZONE_SECURE)
+  #define DTCM_ALTERNATE_TZ_BASE        DTCM_NS_BASE
+ #else
+  #define DTCM_ALTERNATE_TZ_BASE        DTCM_S_BASE
+ #endif
+#endif /* defined(DTCM_NS_BASE) */
 
 /*******************************************************************************
  **************************   GLOBAL FUNCTIONS   *******************************
@@ -144,7 +194,40 @@ void sl_mpu_disable_execute_from_ram(void)
   sl_status_t status = SL_STATUS_OK;
   sl_mpa_manager_region_t* temp_region_handle = NULL;
 
-  #if (RAMFUNC_SECTION_IS_IN_DMEM_ALIAS == 1)
+  #if defined(__CM55_REV)
+  size_t dmem_size = (size_t)sl_hal_system_get_dmem_size() * 1024U;
+  size_t itcm_size = (size_t)sl_hal_system_get_itcm_size() * 1024U;
+  size_t dtcm_size = (size_t)sl_hal_system_get_dtcm_size() * 1024U;
+
+  // Configure DMEM as fully non-executable.
+  status = sl_mpa_manager_alloc_region_handle(&temp_region_handle);
+  EFM_ASSERT(status == SL_STATUS_OK);
+  status = sl_mpa_manager_configure_region(temp_region_handle,
+                                           (void*)DMEM_MEM_BASE,
+                                           (size_t)dmem_size,
+                                           SL_MPA_MANAGER_ATTRIBUTE_NON_EXECUTABLE);
+  EFM_ASSERT(status == SL_STATUS_OK);
+
+  // Configure the ITCM as read-only, since it is possible to modify RAMFuncs
+  // in ITCM to conduct code injection attacks.
+  status = sl_mpa_manager_alloc_region_handle(&temp_region_handle);
+  EFM_ASSERT(status == SL_STATUS_OK);
+  status = sl_mpa_manager_configure_region(temp_region_handle,
+                                           (void*)ITCM_BASE,
+                                           (size_t)itcm_size,
+                                           SL_MPA_MANAGER_ATTRIBUTE_READ_ONLY);
+  EFM_ASSERT(status == SL_STATUS_OK);
+
+  // Configure DTCM as fully non-executable.
+  status = sl_mpa_manager_alloc_region_handle(&temp_region_handle);
+  EFM_ASSERT(status == SL_STATUS_OK);
+  status = sl_mpa_manager_configure_region(temp_region_handle,
+                                           (void*)DTCM_BASE,
+                                           (size_t)dtcm_size,
+                                           SL_MPA_MANAGER_ATTRIBUTE_NON_EXECUTABLE);
+  EFM_ASSERT(status == SL_STATUS_OK);
+
+  #elif (RAMFUNC_SECTION_IS_IN_DMEM_ALIAS == 1)
   if ( RAMFUNC_SECTION_SIZE > 0 ) {
     // Configure address range before the RAMFUNC section as non-executable.
     status = sl_mpa_manager_alloc_region_handle(&temp_region_handle);
@@ -237,6 +320,7 @@ void sl_mpu_disable_execute_from_ram(void)
     EFM_ASSERT(status == SL_STATUS_OK);
   }
 
+  #if defined(SRAM_ALIAS_BASE)
   // Configure DMEM_ALIAS as fully non-executable.
   status = sl_mpa_manager_alloc_region_handle(&temp_region_handle);
   EFM_ASSERT(status == SL_STATUS_OK);
@@ -245,8 +329,10 @@ void sl_mpu_disable_execute_from_ram(void)
                                            (size_t)SRAM_SIZE,
                                            SL_MPA_MANAGER_ATTRIBUTE_NON_EXECUTABLE);
   EFM_ASSERT(status == SL_STATUS_OK);
+  #endif /* defined(SRAM_ALIAS_BASE) */
   #endif /* RAMFUNC_SECTION_IS_IN_DMEM_ALIAS == 1 */
 
+  #if defined(SRAM_ALTERNATE_TZ_BASE)
   // Configure alternate TrustZone address space of DMEM as fully
   // non-executable.
   status = sl_mpa_manager_alloc_region_handle(&temp_region_handle);
@@ -256,7 +342,9 @@ void sl_mpu_disable_execute_from_ram(void)
                                            (size_t)SRAM_SIZE,
                                            SL_MPA_MANAGER_ATTRIBUTE_NON_EXECUTABLE);
   EFM_ASSERT(status == SL_STATUS_OK);
+  #endif /* defined(SRAM_ALTERNATE_TZ_BASE) */
 
+  #if defined(SRAM_ALIAS_ALTERNATE_TZ_BASE)
   // Configure alternate TrustZone address space of DMEM_ALIAS as fully
   // non-executable.
   status = sl_mpa_manager_alloc_region_handle(&temp_region_handle);
@@ -266,6 +354,44 @@ void sl_mpu_disable_execute_from_ram(void)
                                            (size_t)SRAM_SIZE,
                                            SL_MPA_MANAGER_ATTRIBUTE_NON_EXECUTABLE);
   EFM_ASSERT(status == SL_STATUS_OK);
+  #endif /* defined(SRAM_ALIAS_ALTERNATE_TZ_BASE) */
+
+  #if defined(DMEM_MEM_ALTERNATE_TZ_BASE)
+  // Configure alternate TrustZone address space of DMEM as fully
+  // non-executable.
+  status = sl_mpa_manager_alloc_region_handle(&temp_region_handle);
+  EFM_ASSERT(status == SL_STATUS_OK);
+  status = sl_mpa_manager_configure_region(temp_region_handle,
+                                           (void*)DMEM_MEM_ALTERNATE_TZ_BASE,
+                                           (size_t)dmem_size,
+                                           SL_MPA_MANAGER_ATTRIBUTE_NON_EXECUTABLE);
+  EFM_ASSERT(status == SL_STATUS_OK);
+  #endif /* defined(DMEM_MEM_ALTERNATE_TZ_BASE) */
+
+  #if defined(ITCM_ALTERNATE_TZ_BASE)
+  // Configure alternate TrustZone address space of ITCM as fully
+  // non-executable.
+  status = sl_mpa_manager_alloc_region_handle(&temp_region_handle);
+  EFM_ASSERT(status == SL_STATUS_OK);
+  status = sl_mpa_manager_configure_region(temp_region_handle,
+                                           (void*)ITCM_ALTERNATE_TZ_BASE,
+                                           (size_t)itcm_size,
+                                           SL_MPA_MANAGER_ATTRIBUTE_NON_EXECUTABLE);
+  EFM_ASSERT(status == SL_STATUS_OK);
+  #endif /* defined(ITCM_ALTERNATE_TZ_BASE) */
+
+  #if defined(DTCM_ALTERNATE_TZ_BASE)
+  // Configure alternate TrustZone address space of DTCM as fully
+  // non-executable.
+  status = sl_mpa_manager_alloc_region_handle(&temp_region_handle);
+  EFM_ASSERT(status == SL_STATUS_OK);
+  status = sl_mpa_manager_configure_region(temp_region_handle,
+                                           (void*)DTCM_ALTERNATE_TZ_BASE,
+                                           (size_t)dtcm_size,
+                                           SL_MPA_MANAGER_ATTRIBUTE_NON_EXECUTABLE);
+  EFM_ASSERT(status == SL_STATUS_OK);
+
+  #endif /* defined(DTCM_ALTERNATE_TZ_BASE) */
 #endif /* !defined(SL_RAM_LINKER) */
 }
 
@@ -305,6 +431,7 @@ sl_status_t sl_mpu_disable_execute(uint32_t address_begin,
 }
 
 #if __CORTEX_M != (0u)
+#if !defined(SL_CATALOG_CRASH_MANAGER_COMPONENT_PRESENT)
 /**************************************************************************//**
  * MemManage default exception handler. Reset target.
  *****************************************************************************/
@@ -321,4 +448,5 @@ void MemManage_Handler(void)
 {
   mpu_fault_handler();
 }
+#endif
 #endif

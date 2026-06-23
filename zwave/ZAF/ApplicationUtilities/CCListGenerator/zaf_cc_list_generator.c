@@ -10,6 +10,7 @@
 #include <ZAF_CC_Invoker.h>
 #include <FreeRTOS.h>
 #include <zaf_config_api.h>
+#include "ZW_wake_on_critical_message.h"
 
 typedef struct zaf_endpoint_cc_lists {
   zaf_cc_list_t unsecure_included_ccs;
@@ -93,6 +94,7 @@ static bool add_to_lists(uint8_t endpoint, uint8_t cc)
     case COMMAND_CLASS_INCLUSION_CONTROLLER:
     case COMMAND_CLASS_MULTI_CMD:
     case COMMAND_CLASS_TIME:
+    case COMMAND_CLASS_WAKE_ON_CRITICAL_MESSAGE:
       unsecure_included_cc->cc_list[unsecure_included_cc->list_size++] = cc;
       secure_included_unsecure_cc->cc_list[secure_included_unsecure_cc->list_size++] = cc;
       break;

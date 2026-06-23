@@ -82,7 +82,7 @@ void otTrelResetCounters(otInstance *aInstance) { AsCoreType(aInstance).Get<Trel
 
 uint16_t otTrelGetUdpPort(otInstance *aInstance) { return AsCoreType(aInstance).Get<Trel::Interface>().GetUdpPort(); }
 
-void otTrelSetStateChangeCallback(otInstance *aInstance, otTrelStateChangeCallback aCallback, void *aContext)
+void otTrelSetStateChangedCallback(otInstance *aInstance, otTrelStateChangeCallback aCallback, void *aContext)
 {
     AsCoreType(aInstance).Get<Trel::Interface>().SetStateChangeCallback(aCallback, aContext);
 }

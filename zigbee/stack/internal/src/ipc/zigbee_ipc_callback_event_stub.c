@@ -3,7 +3,7 @@
  * @brief stub implementations of callback dispatch
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -17,6 +17,11 @@
 // automatically generated from stack headers.  Do not manually edit
 #include "sl_common.h"
 #include "stack/internal/src/ipc/zigbee_ipc_callback_events.h"
+
+SL_WEAK void sli_zigbee_sl_zigbee_rail_mux_aux_raw_process_ipc_event(sl_zigbee_stack_cb_event_t *cb_event)
+{
+  (void) cb_event;
+}
 
 SL_WEAK void sli_zigbee_binding_table_process_ipc_event(sl_zigbee_stack_cb_event_t *cb_event)
 {

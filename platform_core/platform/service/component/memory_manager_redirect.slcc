@@ -32,6 +32,7 @@ provides:
 - name: memory_manager
   condition: [device_host]
 requires:
+- name: bit
 - name: sl_core
 - name: sl_common
 - name: status

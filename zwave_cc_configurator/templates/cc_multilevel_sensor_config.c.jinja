@@ -7,6 +7,7 @@
 #include <cc_multilevel_sensor_config.h>
 
 #include <cc_multilevel_sensor_config_api.h>
+#include <cc_multilevel_sensor_support_config.h>
 #include <CC_MultilevelSensor_SensorHandler.h>
 #include <CC_MultilevelSensor_SensorHandlerTypes.h>
 #include <ZW_typedefs.h>
@@ -18,6 +19,10 @@
   {% endfor %}
 {% endfor %}
 #define MULTILEVEL_SENSORS_NUM       ({{_sensor_num.value}})
+
+#if MULTILEVEL_SENSORS_NUM > MULTILEVEL_SENSOR_REGISTERED_SENSOR_NUMBER_LIMIT
+#pragma message ("Number of configured sensors in cc_config exceeds MULTILEVEL_SENSOR_REGISTERED_SENSOR_NUMBER_LIMIT. Sensors above the limit will be ignored.")
+#endif
 
 static sensor_interface_t cc_multilevel_sensors[MULTILEVEL_SENSORS_NUM] = {
 {% for _endpoint in endpoints %}

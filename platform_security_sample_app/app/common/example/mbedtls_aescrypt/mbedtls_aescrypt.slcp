@@ -28,6 +28,8 @@ ui_hints:
    highlight: readme.md
 tag:
   - hardware:device:ram:8
+  - hwfilter:ram:8k
+  - hwfilter:device:device_series_2
 component:
    - id: mbedtls_aes
    - id: mbedtls_hash

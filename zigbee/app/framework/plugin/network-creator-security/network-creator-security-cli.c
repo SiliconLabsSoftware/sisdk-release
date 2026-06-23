@@ -33,10 +33,10 @@ void sli_zigbee_af_network_creator_security_open_or_close_network_command(sl_cli
             ? sl_zigbee_af_network_creator_security_open_network()
             : sl_zigbee_af_network_creator_security_close_network());
 
-  sl_zigbee_core_debug_println("%s: %s network: 0x%02X",
-                               SL_ZIGBEE_AF_PLUGIN_NETWORK_CREATOR_SECURITY_PLUGIN_NAME,
-                               (open ? "Open" : "Close"),
-                               status);
+  sl_zigbee_af_cli_println("%s: %s network: 0x%02X",
+                           SL_ZIGBEE_AF_PLUGIN_NETWORK_CREATOR_SECURITY_PLUGIN_NAME,
+                           (open ? "Open" : "Close"),
+                           status);
 }
 
 extern sl_zigbee_key_data_t distributedKey;
@@ -58,10 +58,10 @@ void sli_zigbee_af_network_creator_security_set_joining_link_key_command(sl_cli_
   status = sl_zigbee_sec_man_import_transient_key(eui64,
                                                   &keyData);
 
-  sl_zigbee_af_core_println("%s: %s: 0x%02X",
-                            SL_ZIGBEE_AF_PLUGIN_NETWORK_CREATOR_SECURITY_PLUGIN_NAME,
-                            "Set joining link key",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%02X",
+                           SL_ZIGBEE_AF_PLUGIN_NETWORK_CREATOR_SECURITY_PLUGIN_NAME,
+                           "Set joining link key",
+                           status);
 }
 
 void sli_zigbee_af_network_creator_security_clear_joining_link_key_command(sl_cli_command_arg_t *arguments)
@@ -69,10 +69,10 @@ void sli_zigbee_af_network_creator_security_clear_joining_link_key_command(sl_cl
   (void)arguments;
   sl_zigbee_clear_transient_link_keys();
 
-  sl_zigbee_af_core_println("%s: %s: 0x%02X",
-                            SL_ZIGBEE_AF_PLUGIN_NETWORK_CREATOR_SECURITY_PLUGIN_NAME,
-                            "Clear joining link keys",
-                            SL_STATUS_OK);
+  sl_zigbee_af_cli_println("%s: %s: 0x%02X",
+                           SL_ZIGBEE_AF_PLUGIN_NETWORK_CREATOR_SECURITY_PLUGIN_NAME,
+                           "Clear joining link keys",
+                           SL_STATUS_OK);
 }
 
 void sli_zigbee_af_network_creator_security_open_network_with_key_command(sl_cli_command_arg_t *arguments)
@@ -89,9 +89,9 @@ void sli_zigbee_af_network_creator_security_open_network_with_key_command(sl_cli
 
   status = sl_zigbee_af_network_creator_security_open_network_with_key_pair(eui64, keyData);
 
-  sl_zigbee_af_core_println("%s: Open network: 0x%02X",
-                            SL_ZIGBEE_AF_PLUGIN_NETWORK_CREATOR_SECURITY_PLUGIN_NAME,
-                            status);
+  sl_zigbee_af_cli_println("%s: Open network: 0x%02X",
+                           SL_ZIGBEE_AF_PLUGIN_NETWORK_CREATOR_SECURITY_PLUGIN_NAME,
+                           status);
 }
 
 void sli_zigbee_af_network_creator_security_configure_distributed_key(sl_cli_command_arg_t *arguments)
@@ -106,29 +106,29 @@ void sli_zigbee_af_network_creator_security_set_install_code_require(sl_cli_comm
 {
   bool enable = sl_cli_get_argument_uint8(arguments, 0);
   sl_zigbee_set_join_uses_install_code(enable);
-  sl_zigbee_af_core_println("%s: %s: %s",
-                            SL_ZIGBEE_AF_PLUGIN_NETWORK_CREATOR_SECURITY_PLUGIN_NAME,
-                            "Require install code",
-                            (enable) ? "enabled" : "disabled");
+  sl_zigbee_af_cli_println("%s: %s: %s",
+                           SL_ZIGBEE_AF_PLUGIN_NETWORK_CREATOR_SECURITY_PLUGIN_NAME,
+                           "Require install code",
+                           (enable) ? "enabled" : "disabled");
 }
 
 void sli_zigbee_af_network_creator_security_allow_tc_rejoin_wellknown_key(sl_cli_command_arg_t *arguments)
 {
   allowTCRejoinWithWellknownKey = sl_cli_get_argument_uint8(arguments, 0);
   sl_zigbee_set_tc_rejoins_using_well_known_key_allowed(allowTCRejoinWithWellknownKey);
-  sl_zigbee_af_core_println("%s: %s: %s",
-                            SL_ZIGBEE_AF_PLUGIN_NETWORK_CREATOR_SECURITY_PLUGIN_NAME,
-                            "Allow TC rejoin using well-known link key",
-                            (allowTCRejoinWithWellknownKey) ? "enabled" : "disabled");
+  sl_zigbee_af_cli_println("%s: %s: %s",
+                           SL_ZIGBEE_AF_PLUGIN_NETWORK_CREATOR_SECURITY_PLUGIN_NAME,
+                           "Allow TC rejoin using well-known link key",
+                           (allowTCRejoinWithWellknownKey) ? "enabled" : "disabled");
 }
 
 void sli_zigbee_af_network_creator_security_set_tc_rejoin_wellknown_key_time_out(sl_cli_command_arg_t *arguments)
 {
   allowTCRejoinWithWellknownKeyTimeOut = sl_cli_get_argument_uint16(arguments, 0);
   sl_zigbee_set_tc_rejoins_using_well_known_key_timeout_sec(allowTCRejoinWithWellknownKeyTimeOut);
-  sl_zigbee_af_core_println("%s: %s: %d %s",
-                            SL_ZIGBEE_AF_PLUGIN_NETWORK_CREATOR_SECURITY_PLUGIN_NAME,
-                            "Allow TC rejoin using well-known link key for ",
-                            allowTCRejoinWithWellknownKeyTimeOut,
-                            "seconds");
+  sl_zigbee_af_cli_println("%s: %s: %d %s",
+                           SL_ZIGBEE_AF_PLUGIN_NETWORK_CREATOR_SECURITY_PLUGIN_NAME,
+                           "Allow TC rejoin using well-known link key for ",
+                           allowTCRejoinWithWellknownKeyTimeOut,
+                           "seconds");
 }

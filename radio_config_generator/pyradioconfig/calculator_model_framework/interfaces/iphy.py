@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import inspect
+import sys
 import types
 from pycalcmodel.core.phy import ModelPhy
 import os
@@ -86,25 +87,42 @@ class IPhy(object):
 
     def __highest_caller_phy(self):
         #Get the call stack and go through it in reverse order, looking for any entry with PHY_ in its name
-        stack = inspect.stack()
-        for entry in reversed(stack):
-            caller_name = entry[3]
-            if caller_name.startswith("PHY_"):
-                return caller_name #Return the highest level caller with PHY_ in its name
+        # Use sys._getframe() for much faster stack traversal
+        frame = sys._getframe()
+        phy_callers = []
+        try:
+            while frame is not None:
+                caller_name = frame.f_code.co_name
+                if caller_name.startswith("PHY_"):
+                    phy_callers.append(caller_name)
+                frame = frame.f_back
+        except:
+            pass
+        
+        if phy_callers:
+            return phy_callers[-1]  #Return the highest level caller with PHY_ in its name
 
         #If we did not find a caller name then raise an exception
         raise AssertionError('Did not find a PHY method to name the PHY, check that the method is named correctly')
 
     def __highest_caller_group(self):
         #Get the call stack and go through it in reverse order, looking for any entry with PHY_ in its name
-        stack = inspect.stack()
-        for entry in reversed(stack):
-            caller_name = entry[3]
-            if caller_name.startswith("PHY_"):
-                file_path = entry[1]
-                file_name = os.path.basename(file_path)
-                file_name_no_ext = os.path.splitext(file_name)[0]
-                return file_name_no_ext #Return the file name of the highest level caller with PHY_ in its name
+        # Use sys._getframe() for much faster stack traversal
+        frame = sys._getframe()
+        phy_file_path = None
+        try:
+            while frame is not None:
+                caller_name = frame.f_code.co_name
+                if caller_name.startswith("PHY_"):
+                    phy_file_path = frame.f_code.co_filename
+                frame = frame.f_back
+        except:
+            pass
+        
+        if phy_file_path:
+            file_name = os.path.basename(phy_file_path)
+            file_name_no_ext = os.path.splitext(file_name)[0]
+            return file_name_no_ext #Return the file name of the highest level caller with PHY_ in its name
 
         #If we did not find a caller name then raise an exception
         raise AssertionError('Did not find a PHY method to name the PHY group, check that the method is named correctly')
@@ -121,10 +139,16 @@ class IPhy(object):
         highest_phy_frame = None
 
         while lowest_phy_frame is None or highest_phy_frame is None:
-            if stack_frame.f_code.co_name.startswith("PHY_"):
+            frame_name = stack_frame.f_code.co_name
+            frame_file = stack_frame.f_code.co_filename
+            # Decorator wrapper frames (e.g. concurrent_phy, phy_guid) have co_name=="wrapped"
+            # but originate from phy_decorators.py.  Treat them as transparent so they don't
+            # break the contiguous PHY-frame detection.
+            is_decorator_frame = frame_name == "wrapped" and "phy_decorators" in frame_file
+            if frame_name.startswith("PHY_"):
                 if lowest_phy_frame is None:
                     lowest_phy_frame = stack_frame
-            else:
+            elif not is_decorator_frame:
                 if lowest_phy_frame is not None:
                     highest_phy_frame = last_frame
             try:
@@ -157,15 +181,25 @@ class IPhy(object):
 
     def __get_points_to_phy(self):
         # Get the call stack and go through it in reverse order, looking for a PROD PHY
+        # Use sys._getframe() for much faster stack traversal
+        frame = sys._getframe()
+        phy_callers = []
+        try:
+            while frame is not None:
+                caller_name = frame.f_code.co_name
+                if caller_name.startswith("PHY_"):
+                    phy_callers.append(caller_name)
+                frame = frame.f_back
+        except:
+            pass
+        
         found_prod_phy = False
-        stack = inspect.stack()
-        for entry in reversed(stack):
-            caller_name = entry[3]
-            if caller_name.startswith("PHY_") and "_prod" in caller_name.lower():
+        for caller_name in reversed(phy_callers):
+            if "_prod" in caller_name.lower():
                 #We found a PROD PHY
                 found_prod_phy = True
-            elif caller_name.startswith("PHY_") and found_prod_phy:
+            elif found_prod_phy:
                 #If we previously found a PROD PHY, then the next PHY down in the stack is the "points to" PHY
-               return caller_name
+                return caller_name
 
         return None

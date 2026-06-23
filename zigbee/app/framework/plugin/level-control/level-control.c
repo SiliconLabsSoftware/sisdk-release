@@ -89,6 +89,11 @@ static void moveHandler(uint8_t commandId,
                         uint8_t rate,
                         uint8_t optionMask,
                         uint8_t optionOverride);
+static sl_zigbee_af_status_t configureStepMoveToLevel(EmberAfLevelControlState *state,
+                                                      uint8_t stepMode,
+                                                      uint8_t stepSize,
+                                                      uint8_t currentLevel,
+                                                      uint8_t *actualStepSize);
 static void stepHandler(uint8_t commandId,
                         uint8_t stepMode,
                         uint8_t stepSize,
@@ -696,7 +701,7 @@ static void moveHandler(uint8_t commandId, uint8_t moveMode, uint8_t rate, uint8
     goto send_default_response;
   }
 
-  if (!shouldExecuteIfOff(endpoint, commandId, optionMask, optionOverride)) {
+  if (rate == 0 || !shouldExecuteIfOff(endpoint, commandId, optionMask, optionOverride)) {
     status = SL_ZIGBEE_ZCL_STATUS_SUCCESS;
     goto send_default_response;
   }
@@ -793,6 +798,37 @@ static void moveHandler(uint8_t commandId, uint8_t moveMode, uint8_t rate, uint8
   sl_zigbee_af_send_immediate_default_response(status);
 }
 
+static sl_zigbee_af_status_t configureStepMoveToLevel(EmberAfLevelControlState *state,
+                                                      uint8_t stepMode,
+                                                      uint8_t stepSize,
+                                                      uint8_t currentLevel,
+                                                      uint8_t *actualStepSize)
+{
+  switch (stepMode) {
+    case SL_ZIGBEE_ZCL_STEP_MODE_UP:
+      state->increasing = true;
+      if (MAX_LEVEL - currentLevel < stepSize) {
+        state->moveToLevel = MAX_LEVEL;
+        *actualStepSize = (MAX_LEVEL - currentLevel);
+      } else {
+        state->moveToLevel = currentLevel + stepSize;
+      }
+      break;
+    case SL_ZIGBEE_ZCL_STEP_MODE_DOWN:
+      state->increasing = false;
+      if (currentLevel - MIN_LEVEL < stepSize) {
+        state->moveToLevel = MIN_LEVEL;
+        *actualStepSize = (currentLevel - MIN_LEVEL);
+      } else {
+        state->moveToLevel = currentLevel - stepSize;
+      }
+      break;
+    default:
+      return SL_ZIGBEE_ZCL_STATUS_INVALID_FIELD;
+  }
+  return SL_ZIGBEE_ZCL_STATUS_SUCCESS;
+}
+
 static void stepHandler(uint8_t commandId,
                         uint8_t stepMode,
                         uint8_t stepSize,
@@ -811,7 +847,7 @@ static void stepHandler(uint8_t commandId,
     goto send_default_response;
   }
 
-  if (!shouldExecuteIfOff(endpoint, commandId, optionMask, optionOverride)) {
+  if (stepSize == 0 || !shouldExecuteIfOff(endpoint, commandId, optionMask, optionOverride)) {
     status = SL_ZIGBEE_ZCL_STATUS_SUCCESS;
     goto send_default_response;
   }
@@ -833,28 +869,9 @@ static void stepHandler(uint8_t commandId,
 
   // Step commands cause the device to move from its current level to a new
   // level over the specified transition time.
-  switch (stepMode) {
-    case SL_ZIGBEE_ZCL_STEP_MODE_UP:
-      state->increasing = true;
-      if (MAX_LEVEL - currentLevel < stepSize) {
-        state->moveToLevel = MAX_LEVEL;
-        actualStepSize = (MAX_LEVEL - currentLevel);
-      } else {
-        state->moveToLevel = currentLevel + stepSize;
-      }
-      break;
-    case SL_ZIGBEE_ZCL_STEP_MODE_DOWN:
-      state->increasing = false;
-      if (currentLevel - MIN_LEVEL < stepSize) {
-        state->moveToLevel = MIN_LEVEL;
-        actualStepSize = (currentLevel - MIN_LEVEL);
-      } else {
-        state->moveToLevel = currentLevel - stepSize;
-      }
-      break;
-    default:
-      status = SL_ZIGBEE_ZCL_STATUS_INVALID_FIELD;
-      goto send_default_response;
+  status = configureStepMoveToLevel(state, stepMode, stepSize, currentLevel, &actualStepSize);
+  if (status != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
+    goto send_default_response;
   }
 
   // If the level is decreasing, the On/Off attribute is left unchanged.  This

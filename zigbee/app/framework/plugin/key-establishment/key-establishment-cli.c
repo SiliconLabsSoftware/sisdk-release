@@ -24,14 +24,14 @@ void sli_zigbee_af_key_establishment_start_command(sl_cli_command_arg_t *argumen
   sl_status_t status;
   sl_802154_short_addr_t newPartnerId = (sl_802154_short_addr_t)sl_cli_get_argument_uint16(arguments, 0);
   uint8_t endpoint = sl_cli_get_argument_uint8(arguments, 1);
-  sl_zigbee_af_core_println("Starting %sment w/ 0x%04X, EP: 0x%02X", \
-                            "Key Establish",
-                            newPartnerId,
-                            endpoint);
-  sl_zigbee_af_core_flush();
+  sl_zigbee_af_cli_println("Starting %sment w/ 0x%04X, EP: 0x%02X", \
+                           "Key Establish",
+                           newPartnerId,
+                           endpoint);
+  sl_zigbee_af_cli_flush();
 
   status = sl_zigbee_af_initiate_key_establishment(newPartnerId, endpoint);
-  sl_zigbee_af_core_println("%s", (status == SL_STATUS_OK ? "Success" : "Error"));
+  sl_zigbee_af_cli_println("%s", (status == SL_STATUS_OK ? "Success" : "Error"));
 }
 
 void sli_zigbee_af_key_establishment_interpan_command(sl_cli_command_arg_t *arguments)
@@ -41,11 +41,11 @@ void sli_zigbee_af_key_establishment_interpan_command(sl_cli_command_arg_t *argu
   sl_status_t status;
   sl_zigbee_copy_eui64_arg(arguments, 1, eui64, true);
 
-  sl_zigbee_af_core_print("Starting %sment w/ ", "Key Establish");
-  sl_zigbee_af_core_debug_exec(sl_zigbee_af_print_big_endian_eui64(eui64));
-  sl_zigbee_af_core_println("");
-  sl_zigbee_af_core_flush();
+  sl_zigbee_af_cli_print("Starting %sment w/ ", "Key Establish");
+  sl_zigbee_af_cli_exec(sl_zigbee_af_print_big_endian_eui64(eui64));
+  sl_zigbee_af_cli_println("");
+  sl_zigbee_af_cli_flush();
 
   status = sl_zigbee_af_initiate_inter_pan_key_establishment(panId, eui64);
-  sl_zigbee_af_core_println("%s", (status == SL_STATUS_OK ? "Success" : "Error"));
+  sl_zigbee_af_cli_println("%s", (status == SL_STATUS_OK ? "Success" : "Error"));
 }

@@ -178,7 +178,7 @@ static void send_data(sl_bt_l2cap_transfer_transfer_t *transfer);
 /******************************************************************************
  * Process incoming data
  *
- * @param[in] data Incoming data - contaning connection handle, CID and the data
+ * @param[in] data Incoming data - containing connection handle, CID and the data
  *
  * @return SL_STATUS_OK if successful. Error code otherwise.
  *****************************************************************************/
@@ -289,7 +289,7 @@ void sli_bt_l2cap_transfer_on_bt_event(sl_bt_msg_t *evt)
 #endif // SL_BT_L2CAP_TRANSFER_CONFIG_ACCEPT_PRIOR_CHANNELS == 1
     case sl_bt_evt_connection_closed_id:
       ADAPTATION_IF_ACQUIRED() {
-        // Remove conections
+        // Remove connections
         close_all_by_connection(evt->data.evt_connection_closed.connection,
                                 evt->data.evt_connection_closed.reason);
         ADAPTATION_PROCEED();
@@ -850,7 +850,7 @@ static sl_status_t process_received_data(sl_bt_evt_l2cap_channel_data_t *data)
                                              transfer->cid,
                                              credit);
         if (sc != SL_STATUS_OK) {
-          // An error has occured, finish transfer
+          // An error has occurred, finish transfer
           transfer->channel_error = sc;
           (void)sl_bt_l2cap_close_channel(transfer->connection, transfer->cid);
         }

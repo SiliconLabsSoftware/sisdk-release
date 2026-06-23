@@ -27,6 +27,7 @@
 #include "app/ezsp-host/ezsp-host-ui.h"
 #include "app/ezsp-host/ash/ash-host-ui.h"
 #include "app/util/ezsp/serial-interface.h"
+#include "em2xx-reset-defs.h"
 
 //------------------------------------------------------------------------------
 // Preprocessor definitions

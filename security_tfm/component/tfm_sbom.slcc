@@ -9,6 +9,7 @@ ui_hints:
 
 metadata:
   sbom:
+    id: tfm_sbom
     license: "BSD-3-Clause"
     upstream:
       name: "TrustedFirmware-M (TF-M)"

@@ -79,7 +79,7 @@ void app_concurrent_detection(const sl_cli_command_arg_t *arguments)
       printf("[Concurrent detection feature not supported on this chip]\n");
       break;
     default:
-      printf("[Concurrent detection failure %lu]\n", status);
+      printf("[Concurrent detection failure %"PRIu32"]\n", status);
       break;
   }
 }

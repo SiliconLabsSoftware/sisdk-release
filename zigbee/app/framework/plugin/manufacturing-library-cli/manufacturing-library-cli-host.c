@@ -88,13 +88,17 @@ bool sl_zigbee_af_mfglib_enabled(void)
   uint8_t enabled = false;
 
 #ifndef SL_ZIGBEE_TEST
-  (void)sl_token_manager_get_data(COMMON_TOKEN_MFG_LIB_ENABLED, &enabled, sizeof(uint8_t));
+  sl_status_t status = slx_zigbee_token_manager_get_data(COMMON_TOKEN_MFG_LIB_ENABLED, &enabled, sizeof(uint8_t));
+  if (status != SL_STATUS_OK) {
+    sl_zigbee_af_cli_println("Failed to get MFG_LIB_ENABLED, status: 0x%08X", status);
+    return false;
+  }
 #else
   // no op
   enabled = true;
 #endif
 
-  sl_zigbee_core_debug_print("MFG_LIB Enabled %02X\r\n", enabled);
+  sl_zigbee_af_cli_println("MFG_LIB Enabled %02X\r\n", enabled);
 
   return enabled;
 }
@@ -225,10 +229,10 @@ void sli_zigbee_af_mfglib_start_command(SL_CLI_COMMAND_ARG)
 void sl_zigbee_af_mfglib_stop(void)
 {
   sl_status_t status = mfglibInternalEnd();
-  sl_zigbee_af_core_println("%s end, status 0x%08X",
-                            PLUGIN_NAME,
-                            status);
-  sl_zigbee_af_core_println("rx %d packets while in mfg mode", mfgTotalPacketCounter);
+  sl_zigbee_af_cli_println("%s end, status 0x%08X",
+                           PLUGIN_NAME,
+                           status);
+  sl_zigbee_af_cli_println("rx %d packets while in mfg mode", mfgTotalPacketCounter);
   if (status == SL_STATUS_OK) {
     mfgLibRunning = false;
   }
@@ -248,7 +252,7 @@ void sli_zigbee_af_mfglib_tone_start_command(SL_CLI_COMMAND_ARG)
   (void)arguments;
   #endif // SL_CATALOG_CLI_PRESENT
   sl_status_t status = mfglibInternalStartTone();
-  sl_zigbee_af_core_println("%s start tone 0x%08X", PLUGIN_NAME, status);
+  sl_zigbee_af_cli_println("%s start tone 0x%08X", PLUGIN_NAME, status);
   if (status == SL_STATUS_OK) {
     mfgToneTestRunning = true;
   }
@@ -260,7 +264,7 @@ void sli_zigbee_af_mfglib_tone_stop_command(SL_CLI_COMMAND_ARG)
   (void)arguments;
   #endif // SL_CATALOG_CLI_PRESENT
   sl_status_t status = mfglibInternalStopTone();
-  sl_zigbee_af_core_println("%s stop tone 0x%08X", PLUGIN_NAME, status);
+  sl_zigbee_af_cli_println("%s stop tone 0x%08X", PLUGIN_NAME, status);
   if (status == SL_STATUS_OK) {
     mfgToneTestRunning = false;
   }
@@ -272,7 +276,7 @@ void sli_zigbee_af_mfglib_stream_start_command(SL_CLI_COMMAND_ARG)
   (void)arguments;
   #endif // SL_CATALOG_CLI_PRESENT
   sl_status_t status = mfglibInternalStartStream();
-  sl_zigbee_af_core_println("%s start stream 0x%08X", PLUGIN_NAME, status);
+  sl_zigbee_af_cli_println("%s start stream 0x%08X", PLUGIN_NAME, status);
   if (status == SL_STATUS_OK) {
     mfgStreamTestRunning = true;
   }
@@ -284,7 +288,7 @@ void sli_zigbee_af_mfglib_stream_stop_command(SL_CLI_COMMAND_ARG)
   (void)arguments;
   #endif // SL_CATALOG_CLI_PRESENT
   sl_status_t status = mfglibInternalStopStream();
-  sl_zigbee_af_core_println("%s stop stream 0x%08X", PLUGIN_NAME, status);
+  sl_zigbee_af_cli_println("%s stop stream 0x%08X", PLUGIN_NAME, status);
   if (status == SL_STATUS_OK) {
     mfgStreamTestRunning = false;
   }
@@ -311,7 +315,7 @@ static sl_status_t sendPacket(uint8_t *buffer, uint16_t numPackets)
 
     // print an error on failure
     if (status != SL_STATUS_OK) {
-      sl_zigbee_af_core_println("mfg send err 0x%02X index 0x%02X\r\n\r\n", status, i);
+      sl_zigbee_af_cli_println("mfg send err 0x%02X index 0x%02X\r\n\r\n", status, i);
       if (returnStatus == SL_STATUS_OK) {
         returnStatus = status;
       }
@@ -329,19 +333,19 @@ void sli_zigbee_af_mfglib_send_command(SL_CLI_COMMAND_ARG)
   uint8_t length = sl_cli_get_argument_uint8(arguments, 1);
 
   if (length > MAX_BUFFER_SIZE) {
-    sl_zigbee_af_core_println("Error: Length cannot be bigger than %d", MAX_BUFFER_SIZE);
+    sl_zigbee_af_cli_println("Error: Length cannot be bigger than %d", MAX_BUFFER_SIZE);
     return;
   }
 
   if (numPackets == 0) {
-    sl_zigbee_af_core_println("Error: Number of packets cannot be 0.");
+    sl_zigbee_af_cli_println("Error: Number of packets cannot be 0.");
     return;
   }
 
   fillBuffer(sendBuff, length, random);
 
   sl_status_t status = sendPacket(sendBuff, numPackets);
-  sl_zigbee_af_core_println("%s send packet, status 0x%02X", PLUGIN_NAME, status);
+  sl_zigbee_af_cli_println("%s send packet, status 0x%02X", PLUGIN_NAME, status);
 }
 
 void sli_zigbee_af_mfglib_send_message_command(SL_CLI_COMMAND_ARG)
@@ -351,24 +355,24 @@ void sli_zigbee_af_mfglib_send_message_command(SL_CLI_COMMAND_ARG)
   uint16_t numPackets = sl_cli_get_argument_uint16(arguments, 1);
 
   if (length < MIN_CLI_MESSAGE_SIZE) {
-    sl_zigbee_af_core_println("Error: Minimum length is %d bytes.", MIN_CLI_MESSAGE_SIZE);
+    sl_zigbee_af_cli_println("Error: Minimum length is %d bytes.", MIN_CLI_MESSAGE_SIZE);
     return;
   }
 
   if (length > MAX_CLI_MESSAGE_SIZE) {
-    sl_zigbee_af_core_println("Error: Maximum length is %d bytes.", MAX_CLI_MESSAGE_SIZE);
+    sl_zigbee_af_cli_println("Error: Maximum length is %d bytes.", MAX_CLI_MESSAGE_SIZE);
     return;
   }
 
   if (numPackets == 0) {
-    sl_zigbee_af_core_println("Error: Number of packets cannot be 0.");
+    sl_zigbee_af_cli_println("Error: Number of packets cannot be 0.");
     return;
   }
 
   sendBuff[0] = length + 2; // message length plus 2-byte CRC
   memmove(sendBuff + 1, message, length);
   sl_status_t status = sendPacket(sendBuff, numPackets);
-  sl_zigbee_af_core_println("%s send message, status 0x%08X", PLUGIN_NAME, status);
+  sl_zigbee_af_cli_println("%s send message, status 0x%08X", PLUGIN_NAME, status);
 }
 
 void sli_zigbee_af_mfglib_status_command(SL_CLI_COMMAND_ARG)
@@ -382,21 +386,21 @@ void sli_zigbee_af_mfglib_status_command(SL_CLI_COMMAND_ARG)
   sl_zigbee_ezsp_get_configuration_value(SL_ZIGBEE_EZSP_CONFIG_TX_POWER_MODE, &powerMode);
   uint8_t optionsLength, options = 0;
   sl_zigbee_ezsp_get_value(SL_ZIGBEE_EZSP_VALUE_MFGLIB_OPTIONS, &optionsLength, &options);
-  sl_zigbee_af_core_println("Channel: %d", channel);
-  sl_zigbee_af_core_println("Power: %d", power);
-  sl_zigbee_af_core_println("Power Mode: 0x%04X", powerMode);
-  sl_zigbee_af_core_println("Options: 0x%02X", options);
-  sl_zigbee_af_core_println("%s running: %s", PLUGIN_NAME, (mfgLibRunning ? "yes" : "no"));
-  sl_zigbee_af_core_println("%s tone test running: %s", PLUGIN_NAME, (mfgToneTestRunning ? "yes" : "no"));
-  sl_zigbee_af_core_println("%s stream test running: %s", PLUGIN_NAME, (mfgStreamTestRunning ? "yes" : "no"));
-  sl_zigbee_af_core_println("Total %s packets received: %d", PLUGIN_NAME, mfgTotalPacketCounter);
+  sl_zigbee_af_cli_println("Channel: %d", channel);
+  sl_zigbee_af_cli_println("Power: %d", power);
+  sl_zigbee_af_cli_println("Power Mode: 0x%04X", powerMode);
+  sl_zigbee_af_cli_println("Options: 0x%02X", options);
+  sl_zigbee_af_cli_println("%s running: %s", PLUGIN_NAME, (mfgLibRunning ? "yes" : "no"));
+  sl_zigbee_af_cli_println("%s tone test running: %s", PLUGIN_NAME, (mfgToneTestRunning ? "yes" : "no"));
+  sl_zigbee_af_cli_println("%s stream test running: %s", PLUGIN_NAME, (mfgStreamTestRunning ? "yes" : "no"));
+  sl_zigbee_af_cli_println("Total %s packets received: %d", PLUGIN_NAME, mfgTotalPacketCounter);
 }
 
 void sli_zigbee_af_mfglib_set_channel_command(SL_CLI_COMMAND_ARG)
 {
   uint8_t channel = sl_cli_get_argument_uint8(arguments, 0);
   sl_status_t status = mfglibInternalSetChannel(channel);
-  sl_zigbee_af_core_println("%s set channel, status 0x%08X", PLUGIN_NAME, status);
+  sl_zigbee_af_cli_println("%s set channel, status 0x%08X", PLUGIN_NAME, status);
 }
 
 void sli_zigbee_af_mfglib_set_power_and_mode_command(SL_CLI_COMMAND_ARG)
@@ -404,13 +408,13 @@ void sli_zigbee_af_mfglib_set_power_and_mode_command(SL_CLI_COMMAND_ARG)
   int8_t power = sl_cli_get_argument_int8(arguments, 0);
   uint16_t mode = sl_cli_get_argument_uint16(arguments, 1);
   sl_status_t status = mfglibInternalSetPower(mode, power);
-  sl_zigbee_af_core_println("%s set power and mode, status 0x%08X", PLUGIN_NAME, status);
+  sl_zigbee_af_cli_println("%s set power and mode, status 0x%08X", PLUGIN_NAME, status);
 }
 
 void sli_zigbee_af_mfglib_sleep_command(SL_CLI_COMMAND_ARG)
 {
   UNUSED_VAR(arguments);
-  sl_zigbee_af_core_println("%s sleep not supported", PLUGIN_NAME);
+  sl_zigbee_af_cli_println("%s sleep not supported", PLUGIN_NAME);
 }
 
 // Function to program a custom EUI64 into the chip.
@@ -437,7 +441,11 @@ void sli_zigbee_af_mfglib_enable_mfglib(SL_CLI_COMMAND_ARG)
 #ifndef SL_ZIGBEE_TEST
   uint8_t enabled = sl_cli_get_argument_uint8(arguments, 0);
 
-  (void)sl_token_manager_set_data(COMMON_TOKEN_MFG_LIB_ENABLED, (void *)&enabled, sizeof(uint8_t));
+  sl_status_t status = slx_zigbee_token_manager_set_data(COMMON_TOKEN_MFG_LIB_ENABLED, (void *)&enabled, sizeof(uint8_t));
+  if (status != SL_STATUS_OK) {
+    sl_zigbee_af_cli_println("Failed to set MFG_LIB_ENABLED, status: 0x%08X", status);
+    return;
+  }
 #endif
 }
 
@@ -445,14 +453,14 @@ void sli_zigbee_af_mfglib_set_options(SL_CLI_COMMAND_ARG)
 {
   uint8_t options = sl_cli_get_argument_uint8(arguments, 0);
   sl_status_t status = sl_zigbee_ezsp_set_value(SL_ZIGBEE_EZSP_VALUE_MFGLIB_OPTIONS, 1, &options);
-  sl_zigbee_af_core_println("%s set options, status 0x%08X", PLUGIN_NAME, status);
+  sl_zigbee_af_cli_println("%s set options, status 0x%08X", PLUGIN_NAME, status);
 }
 
 void sli_zigbee_af_mfglib_set_ctune_command(SL_CLI_COMMAND_ARG)
 {
   uint16_t ctune = sl_cli_get_argument_uint16(arguments, 0);
   sl_status_t status = sl_zigbee_ezsp_set_configuration_value(SL_ZIGBEE_EZSP_CONFIG_CTUNE_VALUE, ctune);
-  sl_zigbee_af_core_println("%s set ctune, status 0x%02X", PLUGIN_NAME, status);
+  sl_zigbee_af_cli_println("%s set ctune, status 0x%02X", PLUGIN_NAME, status);
 }
 
 void sli_zigbee_af_mfglib_get_ctune_command(SL_CLI_COMMAND_ARG)
@@ -462,5 +470,5 @@ void sli_zigbee_af_mfglib_get_ctune_command(SL_CLI_COMMAND_ARG)
   #endif // SL_CATALOG_CLI_PRESENT
   uint16_t ctune = 0;
   sl_status_t status = sl_zigbee_ezsp_get_configuration_value(SL_ZIGBEE_EZSP_CONFIG_CTUNE_VALUE, &ctune);
-  sl_zigbee_af_core_println("%s get ctune value: %d, status 0x%02X", PLUGIN_NAME, ctune, status);
+  sl_zigbee_af_cli_println("%s get ctune value: %d, status 0x%02X", PLUGIN_NAME, ctune, status);
 }

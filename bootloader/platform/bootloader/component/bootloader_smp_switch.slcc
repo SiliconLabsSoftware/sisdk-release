@@ -1,0 +1,32 @@
+id: bootloader_smp_switch
+label: Bootloader SMP Switch
+package: bootloader
+description: >
+  Enables SMP (Switch Multi-Protocol) two-page switch record for dual-application
+  bootloader configurations. The bootloader reads a switch record from two dedicated
+  flash pages and boots the selected application (App 1 or App 2). This allows two
+  independent applications to share the same device with the bootloader managing which
+  one runs at boot. Applications can use the Flash API to request switching to the other
+  application on next boot. If secure boot verification fails for the selected app, the
+  bootloader automatically attempts to boot the alternate app as a fallback.
+  Configure page base addresses, application base addresses, and default app in
+  btl_smp_cfg.h.
+category: Platform|Bootloader|Core
+quality: production
+metadata:
+  sbom:
+    license: MSLA
+provides:
+- name: bootloader_smp_switch
+requires:
+- name: bootloader_interface_common
+  # Record header is owned by bootloader package (see bootloader_s2_smp_record_header).
+- name: bootloader_s2_smp_record_header
+root_path: bootloader/platform/bootloader
+config_file:
+- path: config/btl_smp_cfg.h
+source:
+- path: core/smp_switch/btl_smp_switch_record.c
+define:
+- name: BTL_SMP_SUPPORT
+  value: 1

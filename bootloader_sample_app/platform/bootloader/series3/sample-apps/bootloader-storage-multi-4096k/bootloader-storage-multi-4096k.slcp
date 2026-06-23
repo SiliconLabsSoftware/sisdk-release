@@ -3,7 +3,7 @@ package: bootloader
 quality: production
 label: Bootloader - SoC Storage (Multiple OTA images of size 756kB for 4MB flash)
 description: >
-  This sample configuration of the Gecko bootloader configures the bootloader to use the flash to store firmware update images to store up to two firmware update images at a time, in two storage slots. The storage slots are configured to start at address 0x011FA000 and 0x12B7000 of the flash respectively, and have a size of 756kB. This can be configured on the "Storage" tab.
+   Demonstrates how to configure the Gecko Bootloader to store firmware update images in flash, in a dual-slot setup with two 756 kB slots starting at 0x011FA000 and 0x12B7000.
 
 category: Example|Bootloader
 filter:

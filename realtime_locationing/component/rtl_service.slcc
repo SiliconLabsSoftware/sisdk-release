@@ -1,0 +1,40 @@
+id: rtl_service
+label: Real-Time Locationing Library Service
+package: realtime_locationing
+description: >
+  Thread-safe service layer for the Silicon Labs Real-Time Locationing (RTL)
+  library, providing Bluetooth Channel Sounding (CS) distance estimation in
+  both RTOS and bare-metal environments. Built on app_rta, the component
+  manages a dedicated processing context with a mutex guard, signal, and
+  optional separate runtime thread. Applications create one or more CS
+  instances within a context, submit CS or RAS procedure data for
+  asynchronous processing, and receive distance estimates through a result
+  callback. Configurable parameters include task priority, stack size, guard
+  timeout, and maximum instance count.
+category: Bluetooth|Direction Finding
+quality: production
+metadata:
+  sbom:
+    license: MSLA
+provides:
+- name: rtl_service
+requires:
+- name: rtllib
+- name: app_rta
+- name: memory_manager
+root_path: realtime_locationing/rtl_service
+config_file:
+- path: "config/sl_rtl_service_config.h"
+include:
+- path: inc
+  file_list:
+  - path: sl_rtl_service.h
+source:
+- path: src/sl_rtl_service.c
+template_contribution:
+- name: component_catalog
+  value: rtl_service
+- name: app_rta_init
+  value:
+    include: sl_rtl_service.h
+    handler: sl_rtl_service_rta_init_cs

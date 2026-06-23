@@ -38,7 +38,9 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup IEEE802154_FAST_CHANNEL_SWITCHING_API IEEE802.15.4 Fast Channel Switching
+ * @addtogroup IEEE802154_FAST_CHANNEL_SWITCHING_API IEEE 802.15.4 Fast Channel Switching
+ * @ingroup IEEE802_15_4
+ * @brief APIs related to \ref rail_util_ieee802154_fast_channel_switching component.
  * @{
  */
 

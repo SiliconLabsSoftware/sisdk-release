@@ -1,0 +1,23 @@
+id: "bluetooth_feature_connection_analyzer_llcp_report"
+label: "Bluetooth connection analyzer LLCP reporting"
+package: bluetooth_le_controller
+description: >
+  Enables per-connection LLCP reporting via the Event Info Reporting
+  framework (0xFC36 / 0xF2). When enabled at runtime for a connection, the
+  controller reports intercepted LL_CONNECTION_UPDATE_IND and LL_CHANNEL_MAP_IND
+  PDUs to the host so they can be forwarded to a connection analyser.
+category: Bluetooth|Bluetooth LE Controller (Link Layer)|Additional Features
+quality: "production"
+requires:
+- name: "bluetooth_controller"
+- name: "bluetooth_feature_connection"
+- name: "bluetooth_feature_event_info_reporting"
+provides:
+- name: "bluetooth_feature_connection_analyzer_llcp_report"
+template_contribution:
+- name: component_catalog
+  value: bluetooth_feature_connection_analyzer_llcp_report
+metadata:
+  sbom:
+    license: Zlib AND MSLA
+root_path: bluetooth_le_controller

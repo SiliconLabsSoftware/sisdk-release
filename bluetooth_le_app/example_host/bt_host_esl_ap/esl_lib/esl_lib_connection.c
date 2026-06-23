@@ -399,11 +399,11 @@ sl_status_t esl_lib_initiate_connection(esl_lib_command_list_cmd_t *cmd)
       }
     }
 
-    // Search for re-usable esl_lib_connection_t type connection handle, ignore status
+    // Search for reusable esl_lib_connection_t type connection handle, ignore status
     (void)esl_lib_connection_find(SL_BT_INVALID_CONNECTION_HANDLE, &conn);
     // Adjust retry count on every actual connection request
     --(cmd->data.cmd_connect.retries_left);
-    // Check PAwR presense to decide connection method
+    // Check PAwR presence to decide connection method
     if (find_tlv(cmd, ESL_LIB_CONNECT_DATA_TYPE_PAWR, &tlv)) {
       // Connect using PAwR
       esl_lib_pawr_subevent_t *pawr_sub = (esl_lib_pawr_subevent_t *)tlv->data.data;
@@ -428,7 +428,7 @@ sl_status_t esl_lib_initiate_connection(esl_lib_command_list_cmd_t *cmd)
                                  sl_bt_gap_phy_1m,
                                  &connection_handle);
     } else {
-      // Defer connection by adding the request to the Filter Acccept List
+      // Defer connection by adding the request to the Filter Accept List
       esl_lib_log_connection_debug("Accept connection to " ESL_LIB_LOG_ADDR_FORMAT APP_LOG_NL,
                                    ESL_LIB_LOG_ADDR(*address));
       // Go to a different code path when requesting to connect in auto mode!
@@ -886,7 +886,7 @@ void esl_lib_connection_on_bt_event(sl_bt_msg_t *evt)
                                      conn->connection_handle,
                                      // Following parameter is 8 bytes in LE order according to in Bluetooth Core Vol 6, Part B, 4.6.
                                      *((uint64_t *)(evt->data.evt_connection_remote_used_features.features.data)));
-        // search for re-usable connection handle object
+        // search for reusable connection handle object
         (void)esl_lib_connection_find(SL_BT_INVALID_CONNECTION_HANDLE, &reuseable_handle);
         (void)esl_lib_initiate_auto_connection(reuseable_handle);
       } else {
@@ -926,9 +926,14 @@ void esl_lib_connection_on_bt_event(sl_bt_msg_t *evt)
           (void)esl_lib_connection_remove_ptr(conn);
           conn = ESL_LIB_INVALID_HANDLE;
         } else if (conn->command != NULL) {
+          // PAwR: if connection_opened never ran, automatic retry usually wastes time (out of sync with the train).
+          const bool pawr_pre_open_no_retry =
+            (conn->state == ESL_LIB_CONNECTION_STATE_CONNECTING)
+            && find_tlv(conn->command, ESL_LIB_CONNECT_DATA_TYPE_PAWR, &tlv);
           // Not connected, check if a retry is required (link issue or bonding issue)
           if ((conn->command->cmd_code == ESL_LIB_CMD_CONNECT)
               && (conn->command->data.cmd_connect.retries_left)
+              && !pawr_pre_open_no_retry
               && ((reason == SL_STATUS_BT_CTRL_CONNECTION_FAILED_TO_BE_ESTABLISHED)
                   || (conn->state == ESL_LIB_CONNECTION_STATE_BONDING_RECOVERY))) {
             esl_lib_log_connection_debug(CONN_FMT "Connection retry scheduled, connection handle = %u" APP_LOG_NL,
@@ -994,13 +999,16 @@ void esl_lib_connection_on_bt_event(sl_bt_msg_t *evt)
               conn->command_complete = true;
               esl_lib_core_connection_complete();
             }
+            if (pawr_pre_open_no_retry && conn->command->cmd_code == ESL_LIB_CMD_CONNECT) {
+              conn->command->data.cmd_connect.retries_left = 0;
+            }
           }
           // And also remove connection from the list in the end.
           (void)esl_lib_connection_remove_ptr(conn);
           conn = ESL_LIB_INVALID_HANDLE;
         } else {
           if (pending_connect && filter_accept_list_get_size(auto_initiator_list)) {
-            esl_lib_log_connection_debug(CONN_FMT "Mass timeout occured on closed handle = %u!" APP_LOG_NL,
+            esl_lib_log_connection_debug(CONN_FMT "Mass timeout occurred on closed handle = %u!" APP_LOG_NL,
                                          ESL_LIB_LOG_PTR(conn),
                                          conn->connection_handle);
             (void)sl_bt_accept_list_remove_all_devices();
@@ -1010,7 +1018,7 @@ void esl_lib_connection_on_bt_event(sl_bt_msg_t *evt)
           (void)esl_lib_connection_remove_ptr(conn);
           conn = ESL_LIB_INVALID_HANDLE;
         }
-        // Try consuming a re-usable object
+        // Try consuming a reusable object
         (void)esl_lib_connection_find(SL_BT_INVALID_CONNECTION_HANDLE, &conn);
         (void)esl_lib_initiate_auto_connection(conn);
         conn = ESL_LIB_INVALID_HANDLE;
@@ -1662,7 +1670,7 @@ void esl_lib_connection_on_bt_event(sl_bt_msg_t *evt)
                 break;
               case ESL_LIB_CONNECTION_STATE_ESL_SUBSCRIBE:
                 (void)app_timer_stop(&conn->gatt_timer);
-                // Check presense of OTS service
+                // Check presence of OTS service
                 if (conn->gattdb_handles.services.ots != ESL_LIB_INVALID_SERVICE_HANDLE) {
                   esl_lib_log_connection_debug(CONN_FMT "Initializing Image Transfer - OTS, connection handle = %u" APP_LOG_NL,
                                                ESL_LIB_LOG_PTR(conn),
@@ -2602,7 +2610,7 @@ static void gatt_timeout(app_timer_t *timer,
                                  ESL_LIB_LOG_PTR(conn),
                                  conn->connection_handle);
     if (conn->command == NULL) {
-      esl_lib_log_connection_debug(CONN_FMT "Close connection due GATT timout during discovery phase!" APP_LOG_NL,
+      esl_lib_log_connection_debug(CONN_FMT "Close connection due GATT timeout during discovery phase!" APP_LOG_NL,
                                    ESL_LIB_LOG_PTR(conn));
     } else if (conn->command->cmd_code == ESL_LIB_CMD_WRITE_CONTROL_POINT) {
       // Send event
@@ -2615,7 +2623,7 @@ static void gatt_timeout(app_timer_t *timer,
       (void)send_att_response(conn,
                               ESL_LIB_EVT_CONFIGURE_TAG_RESPONSE,
                               SL_STATUS_TIMEOUT);
-      esl_lib_log_connection_debug(CONN_FMT "Close connection due GATT timout during configuring phase!" APP_LOG_NL,
+      esl_lib_log_connection_debug(CONN_FMT "Close connection due GATT timeout during configuring phase!" APP_LOG_NL,
                                    ESL_LIB_LOG_PTR(conn));
     }
     // Close connection as GATT errors during configuration phase are unrecoverable
@@ -2633,7 +2641,7 @@ static void reconnect_timeout(app_timer_t *timer,
   sl_status_t sc;
   esl_lib_connection_t *conn = (esl_lib_connection_t *)data;
 
-  esl_lib_log_connection_debug(CONN_FMT "Reconnect timer rised" APP_LOG_NL,
+  esl_lib_log_connection_debug(CONN_FMT "Reconnect timer raised" APP_LOG_NL,
                                ESL_LIB_LOG_PTR(conn));
 
   if (esl_lib_connection_contains(conn)) {
@@ -3199,7 +3207,7 @@ static void *close_broken_connection(esl_lib_connection_t **conn, esl_lib_addres
                                  ESL_LIB_LOG_PTR(*conn),
                                  (*conn)->connection_handle);
     esl_lib_command_list_cleanup(&(*conn)->command_list);
-    // Fill up backup adress if needed
+    // Fill up backup address if needed
     if (backup != NULL) {
       backup->address_type = (*conn)->address_type;
       memcpy(backup->address.addr, (*conn)->address.addr, sizeof(backup->address.addr));

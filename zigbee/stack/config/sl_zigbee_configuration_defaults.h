@@ -770,9 +770,8 @@
 #endif
 
 //Allows the aps acks for APSME commands to be turned off or on
-//This should be "true" by default but to keep it consistend with the current stack behaviour this is "false" by default.
 #ifndef SL_ZIGBEE_ENABLE_APS_ACKS_FOR_COMMANDS
-  #define SL_ZIGBEE_ENABLE_APS_ACKS_FOR_COMMANDS (false)
+  #define SL_ZIGBEE_ENABLE_APS_ACKS_FOR_COMMANDS (true)
 #endif
 
 #ifndef SL_ZIGBEE_CUSTOM_MAC_FILTER_TABLE_SIZE

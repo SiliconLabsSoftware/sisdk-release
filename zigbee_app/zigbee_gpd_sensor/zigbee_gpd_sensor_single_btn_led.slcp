@@ -1,5 +1,5 @@
-project_name: zigbee_gpd_sensor
-label: Zigbee - GPD Sensor
+project_name: zigbee_gpd_sensor_single_btn_led
+label: Zigbee - SoC GPD Sensor Single Btn LED
 package: zigbee
 category: Zigbee Application
 quality: production
@@ -47,8 +47,13 @@ component:
   - id: zigbee_gpd_application_support
   - id: zigbee_gpd_network_support
   - id: clock_manager
-  # Platform - enable LTO for gcc
+  # Platform - enable LTO for gcc and llvm
   - id: toolchain_gcc_lto
+    condition:
+      - toolchain_gcc
+  - id: toolchain_llvm_lto
+    condition:
+      - toolchain_llvm
 
 configuration:
   - name: SL_RAIL_UTIL_INIT_GPDRAIL_ENABLE
@@ -212,3 +217,6 @@ tag:
   - hwfilter:device:device_supports_zigbee
   - hwfilter:!device:device_is_module
   - hwfilter:!device:device_series_3
+  - toolchain:gcc
+  - toolchain:iar
+  - toolchain:llvm

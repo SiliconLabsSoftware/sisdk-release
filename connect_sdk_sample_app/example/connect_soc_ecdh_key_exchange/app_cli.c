@@ -31,6 +31,8 @@
 // -----------------------------------------------------------------------------
 //                                   Includes
 // -----------------------------------------------------------------------------
+#include <inttypes.h>
+
 #include "sl_component_catalog.h"
 #include "sl_cli.h"
 #include "app_framework_common.h"
@@ -82,18 +84,18 @@ void cli_info(sl_cli_command_arg_t *arguments)
   char* is_high_prio = ((tx_options & EMBER_OPTIONS_HIGH_PRIORITY) ? ENABLED : DISABLED);
 
   app_log_info("Info:\n");
-  app_log_info("         MCU Id: 0x%016llX\n", SYSTEM_GetUnique());
-  app_log_info("  Network state: 0x%02X\n", emberNetworkState());
-  app_log_info("      Node type: 0x%02X\n", emberGetNodeType());
+  app_log_info("         MCU Id: 0x%016" PRIX64 "\n", SYSTEM_GetUnique());
+  app_log_info("  Network state: 0x%02" PRIX8 "\n", emberNetworkState());
+  app_log_info("      Node type: 0x%02" PRIX8 "\n", emberGetNodeType());
   app_log_info("          eui64: 0x");
   for (uint8_t i = 0; i < EUI64_SIZE; i++) {
-    app_log_info("%02X", emberGetEui64()[i]);
+    app_log_info("%02" PRIX8, emberGetEui64()[i]);
   }
   app_log_info("\n");
-  app_log_info("        Node id: 0x%04X\n", emberGetNodeId());
-  app_log_info("         Pan id: 0x%04X\n", emberGetPanId());
-  app_log_info("        Channel: %d\n", (uint16_t)emberGetRadioChannel());
-  app_log_info("          Power: %d\n", (int16_t)emberGetRadioPower());
+  app_log_info("        Node id: 0x%04" PRIX16 "\n", emberGetNodeId());
+  app_log_info("         Pan id: 0x%04" PRIX16 "\n", emberGetPanId());
+  app_log_info("        Channel: %" PRIu16 "\n", emberGetRadioChannel());
+  app_log_info("          Power: %" PRId16 "\n", emberGetRadioPower());
   app_log_info("     TX options: MAC acks %s, security %s, priority %s\n", is_ack, is_security, is_high_prio);
 }
 
@@ -123,7 +125,7 @@ void cli_commission(sl_cli_command_arg_t *arguments)
   if (status == EMBER_SUCCESS) {
     app_log_info("Connect: address commission succeed\n");
   } else {
-    app_log_error("Connect: address commission failed (status: %ld)\n", status);
+    app_log_error("Connect: address commission failed (status: %" PRIu8 ")\n", status);
   }
 }
 
@@ -141,7 +143,7 @@ void cli_send(sl_cli_command_arg_t *arguments)
                    (EmberMessageLength)message_length,
                    message,
                    tx_options);
-  app_log_info("Message queued (length: %u)\n", message_length);
+  app_log_info("Message queued (length: %zu)\n", message_length);
 }
 
 /******************************************************************************
@@ -181,7 +183,7 @@ void cli_generate_random_network_key(sl_cli_command_arg_t *arguments)
   psa_status = psa_generate_random(connect_network_key.contents, EMBER_ENCRYPTION_KEY_SIZE);
   if (psa_status == PSA_SUCCESS) {
     app_log_info("PSA: generate random network key succeed\n");
-    app_log_info("PSA: random network key length: %u\n", EMBER_ENCRYPTION_KEY_SIZE);
+    app_log_info("PSA: random network key length: %d\n", EMBER_ENCRYPTION_KEY_SIZE);
     app_log_info("PSA: random network key: ");
     app_log_hexdump_info(connect_network_key.contents, EMBER_ENCRYPTION_KEY_SIZE);
     app_log_append_info("\n");
@@ -191,7 +193,7 @@ void cli_generate_random_network_key(sl_cli_command_arg_t *arguments)
       app_log_error("Connect: set the random key as network key failed\n");
     }
   } else {
-    app_log_error("PSA: generate random network key (status: %ld)\n", psa_status);
+    app_log_error("PSA: generate random network key (status: %" PRId32 ")\n", psa_status);
   }
 }
 
@@ -213,9 +215,9 @@ void cli_request_network_key(sl_cli_command_arg_t *arguments)
   psa_status = sl_connect_ecdh_key_exchange_generate_key_pair(&requestor_key_pair);
 
   if (psa_status == PSA_SUCCESS) {
-    app_log_info("PSA: generated key ID: %lu\n", requestor_key_pair);
+    app_log_info("PSA: generated key ID: %" PRIu32 "\n", requestor_key_pair);
   } else {
-    app_log_error("PSA: key pair generation and public key export failed (status: %ld)\n", psa_status);
+    app_log_error("PSA: key pair generation and public key export failed (status: %" PRId32 ")\n", psa_status);
     return;
   }
 
@@ -228,12 +230,12 @@ void cli_request_network_key(sl_cli_command_arg_t *arguments)
 
   if (psa_status == PSA_SUCCESS) {
     app_log_info("PSA: public key export succeed\n");
-    app_log_info("PSA: public key length: %u\n", public_key_length);
+    app_log_info("PSA: public key length: %zu\n", public_key_length);
     app_log_info("PSA: public key: ");
     app_log_hexdump_info(public_key, public_key_length);
     app_log_append_info("\n");
   } else {
-    app_log_error("PSA: export public key failed (status: %ld)\n", psa_status);
+    app_log_error("PSA: export public key failed (status: %" PRId32 ")\n", psa_status);
     return;
   }
 
@@ -252,7 +254,7 @@ void cli_request_network_key(sl_cli_command_arg_t *arguments)
   memcpy(ecdh_message, &ecdh_state, sizeof(ecdh_state));
   memcpy(ecdh_message + sizeof(ecdh_state), &public_key_length, sizeof(public_key_length));
   memcpy(ecdh_message + sizeof(ecdh_state) + sizeof(public_key_length), public_key, public_key_length);
-  app_log_info("Connect: requestor message length %u\n", ecdh_message_length);
+  app_log_info("Connect: requestor message length %zu\n", ecdh_message_length);
 
   app_log_info("Connect: sending public key\n");
   EmberStatus em_status = emberMessageSend(
@@ -265,7 +267,7 @@ void cli_request_network_key(sl_cli_command_arg_t *arguments)
     // shared yet
     tx_options & ~EMBER_OPTIONS_SECURITY_ENABLED);
   if (em_status != EMBER_SUCCESS) {
-    app_log_error("Connect: message send failed (status: %u)\n", em_status);
+    app_log_error("Connect: message send failed (status: %" PRIu8 ")\n", em_status);
   }
 }
 
@@ -281,9 +283,9 @@ void cli_generate_key_pair(sl_cli_command_arg_t *arguments)
   psa_status = sl_connect_ecdh_key_exchange_generate_key_pair(&key_id);
 
   if (psa_status == PSA_SUCCESS) {
-    app_log_info("PSA: generated key ID: %lu\n", key_id);
+    app_log_info("PSA: generated key ID: %" PRIu32 "\n", key_id);
   } else {
-    app_log_error("PSA: key pair generation and public key export failed (status: %ld)\n", psa_status);
+    app_log_error("PSA: key pair generation and public key export failed (status: %" PRId32 ")\n", psa_status);
   }
 }
 
@@ -306,12 +308,12 @@ void cli_export_public_key(sl_cli_command_arg_t *arguments)
 
   if (psa_status == PSA_SUCCESS) {
     app_log_info("PSA: public key export succeed\n");
-    app_log_info("PSA: public key length: %u\n", public_key_length);
+    app_log_info("PSA: public key length: %zu\n", public_key_length);
     app_log_info("PSA: public key: ");
     app_log_hexdump_info(public_key, public_key_length);
     app_log_append_info("\n");
   } else {
-    app_log_error("PSA: export public key failed (status: %ld)\n", psa_status);
+    app_log_error("PSA: export public key failed (status: %" PRId32 ")\n", psa_status);
   }
 }
 
@@ -334,9 +336,9 @@ void cli_generate_shared_key(sl_cli_command_arg_t *arguments)
     &hkdf_id);
   if (psa_status == PSA_SUCCESS) {
     app_log_info("PSA: generate shared key succeed\n");
-    app_log_info("PSA: generated shared key ID: %lu\n", hkdf_id);
+    app_log_info("PSA: generated shared key ID: %" PRIu32 "\n", hkdf_id);
   } else {
-    app_log_error("PSA: generate shared key failed (status: %ld)\n", psa_status);
+    app_log_error("PSA: generate shared key failed (status: %" PRId32 ")\n", psa_status);
   }
 }
 
@@ -377,7 +379,7 @@ void cli_encrypt_message(sl_cli_command_arg_t *arguments)
     app_log_hexdump_info(cipher_text, cipher_text_length);
     app_log_append_info("\n");
   } else {
-    app_log_info("PSA: encrypt failed (status: %ld)\n", psa_status);
+    app_log_info("PSA: encrypt failed (status: %" PRId32 ")\n", psa_status);
   }
 }
 
@@ -414,7 +416,7 @@ void cli_decrypt_message(sl_cli_command_arg_t *arguments)
     app_log_hexdump_info(plain_text, plain_text_length);
     app_log_append_info("\n");
   } else {
-    app_log_error("PSA: encrypt failed (status: %ld)\n", psa_status);
+    app_log_error("PSA: encrypt failed (status: %" PRId32 ")\n", psa_status);
   }
 }
 
@@ -431,7 +433,7 @@ void cli_destroy_key(sl_cli_command_arg_t *arguments)
   if (psa_status == PSA_SUCCESS) {
     app_log_info("PSA: destroy key succeed\n");
   } else {
-    app_log_info("PSA: destroy key failed (status: %ld)\n", psa_status);
+    app_log_info("PSA: destroy key failed (status: %" PRId32 ")\n", psa_status);
   }
 }
 
@@ -445,7 +447,7 @@ void cli_set_pan_id(sl_cli_command_arg_t *arguments)
 
   if (network_state == EMBER_NO_NETWORK) {
     sl_connect_ecdh_key_exchange_set_pan_id(pan_id);
-    app_log_info("Pan id set to 0x%04X\n", sl_connect_ecdh_key_exchange_get_pan_id());
+    app_log_info("Pan id set to 0x%04" PRIX16 "\n", sl_connect_ecdh_key_exchange_get_pan_id());
   } else {
     app_log_info("Leave the network before setting pan id\n");
   }
@@ -460,9 +462,9 @@ void cli_set_channel(sl_cli_command_arg_t *arguments)
   EmberStatus status = emberSetRadioChannelExtended(channel, false);
 
   if (status == EMBER_SUCCESS) {
-    app_log_info("Channel set to %d\n", (uint16_t)emberGetRadioChannel());
+    app_log_info("Channel set to %" PRIu16 "\n", emberGetRadioChannel());
   } else {
-    app_log_info("Channel set failed, status: 0x%02X\n", (uint8_t)status);
+    app_log_info("Channel set failed, status: 0x%02" PRIX8 "\n", status);
   }
 }
 
@@ -475,9 +477,9 @@ void cli_set_power(sl_cli_command_arg_t *arguments)
   EmberStatus status = emberSetRadioPower(power, false);
 
   if (status == EMBER_SUCCESS) {
-    app_log_info("Tx power set to %d\n", (int16_t)emberGetRadioPower());
+    app_log_info("Tx power set to %" PRId16 "\n", emberGetRadioPower());
   } else {
-    app_log_info("Tx power set failed, status: 0x%02X\n", (uint8_t)status);
+    app_log_info("Tx power set failed, status: 0x%02" PRIX8 "\n", status);
   }
 }
 

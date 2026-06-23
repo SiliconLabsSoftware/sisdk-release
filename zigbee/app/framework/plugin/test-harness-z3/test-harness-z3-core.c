@@ -531,9 +531,9 @@ void sli_zigbee_af_test_harness_z3_printing_command(SL_CLI_COMMAND_ARG)
     CLEARBITS(printingMask, mask);
   }
 
-  sl_zigbee_af_core_println("%successfully %s printing.",
-                            (mask == 0xFF ? "Uns" : "S"),
-                            (enabled ? "enabled" : "disabled"));
+  sl_zigbee_af_cli_println("%successfully %s printing.",
+                           (mask == 0xFF ? "Uns" : "S"),
+                           (enabled ? "enabled" : "disabled"));
 }
 
 // -----------------------------------------------------------------------------
@@ -621,19 +621,19 @@ void sli_zigbee_af_test_harness_z3_reset_command(SL_CLI_COMMAND_ARG)
   // without waiting for a network down.
   sl_zigbee_af_zll_reset_to_factory_new();
 
-  sl_zigbee_af_core_println("%s: %s: 0x%02X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Reset",
-                            SL_STATUS_OK);
+  sl_zigbee_af_cli_println("%s: %s: 0x%02X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Reset",
+                           SL_STATUS_OK);
   // Allow time for the println.
   sl_zigbee_af_event_set_delay_ms(&sl_zigbee_af_test_harness_z3_reset_event_control, 100);
 #ifdef SL_CATALOG_ZIGBEE_DYNAMIC_COMMISSIONING_PRESENT
   sl_status_t status = slx_zigbee_set_trust_center_additional_info(0);
   if (status != SL_STATUS_OK) {
-    sl_zigbee_af_core_println("%s: %s: 0x%02X",
-                              TEST_HARNESS_Z3_PRINT_NAME,
-                              "Reset TC additional info",
-                              status);
+    sl_zigbee_af_cli_println("%s: %s: 0x%02X",
+                             TEST_HARNESS_Z3_PRINT_NAME,
+                             "Reset TC additional info",
+                             status);
   }
 #endif // SL_CATALOG_ZIGBEE_DYNAMIC_COMMISSIONING_PRESENT
 }
@@ -651,7 +651,7 @@ void sli_zigbee_af_test_harness_z3_set_device_mode_command(SL_CLI_COMMAND_ARG)
   sl_status_t status = SL_STATUS_INVALID_PARAMETER;
 
   sli_zigbee_af_test_harness_z3_device_mode_type mode = sl_cli_get_argument_uint8(arguments, 0);
-  sl_zigbee_af_core_println("mode = %d", mode);
+  sl_zigbee_af_cli_println("mode = %d", mode);
   if (mode <= EM_AF_PLUGIN_TEST_HARNESS_Z3_DEVICE_MODE_MAX) {
     status = SL_STATUS_OK;
     sli_zigbee_af_test_harness_z3_device_mode = mode;
@@ -672,7 +672,7 @@ void sli_zigbee_af_test_harness_z3_set_device_mode_command(SL_CLI_COMMAND_ARG)
   #endif
     }
 
-    sl_zigbee_af_core_println("Device mode = %d, node type = %d", sli_zigbee_af_test_harness_z3_device_mode, nodeType);
+    sl_zigbee_af_cli_println("Device mode = %d, node type = %d", sli_zigbee_af_test_harness_z3_device_mode, nodeType);
 
     // Update the ZLL node type for incoming scan requests, and
     // outgoing requests via the Zll Comm plugin.
@@ -691,20 +691,20 @@ void sli_zigbee_af_test_harness_z3_set_device_mode_command(SL_CLI_COMMAND_ARG)
     }
     sl_zigbee_zll_set_token_stack_zll_data(&token);
   }
-  sl_zigbee_af_core_println("%s: %s: 0x%02X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Set device mode",
-                            status);
+  sl_zigbee_af_cli_println("%s: %s: 0x%02X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Set device mode",
+                           status);
 }
 
 // plugin test-harness z3 set-short-address
 void sli_zigbee_af_test_harness_z3_set_short_address_command(SL_CLI_COMMAND_ARG)
 {
   UNUSED_VAR(arguments);
-  sl_zigbee_af_core_println("%s: %s: 0x%02X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Set short address",
-                            SL_STATUS_INVALID_STATE);
+  sl_zigbee_af_cli_println("%s: %s: 0x%02X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Set short address",
+                           SL_STATUS_INVALID_STATE);
 }
 
 // plugin test-harness z3 legacy-profile-id
@@ -722,15 +722,15 @@ void sli_zigbee_af_test_harness_set_network_creator_pan_id(SL_CLI_COMMAND_ARG)
 #ifdef SL_CATALOG_ZIGBEE_ZLL_COMMISSIONING_CLIENT_PRESENT
   sli_zigbee_af_zll_set_pan_id(panId);
 #endif // SL_CATALOG_ZIGBEE_ZLL_COMMISSIONING_CLIENT_PRESENT
-  sl_zigbee_af_core_println("Network Creator PAN ID = 0x%04X", panId);
+  sl_zigbee_af_cli_println("Network Creator PAN ID = 0x%04X", panId);
 }
 
 // plugin test-harness z3 platform
 void sli_zigbee_af_test_harness_z3_platform_command(SL_CLI_COMMAND_ARG)
 {
   UNUSED_VAR(arguments);
-  sl_zigbee_af_core_println("Platform: Silicon Labs");
-  sl_zigbee_af_core_print("EmberZNet ");
+  sl_zigbee_af_cli_println("Platform: Silicon Labs");
+  sl_zigbee_af_cli_print("EmberZNet ");
   sli_zigbee_af_cli_version_command();
 }
 
@@ -756,12 +756,12 @@ void sli_zigbee_af_test_harness_z3_install_code_clear_or_set_command(SL_CLI_COMM
 
     if (SL_STATUS_OK != status) {
       if (SL_STATUS_INVALID_CONFIGURATION == status) {
-        sl_zigbee_app_debug_println("ERR: Calculated CRC does not match -len");
+        sl_zigbee_af_cli_println("ERR: Calculated CRC does not match -len");
       } else if (SL_STATUS_INVALID_PARAMETER == status) {
-        sl_zigbee_app_debug_println("ERR: Install Code must be 8, 10, 14, or 18 bytes in "
-                                    "length");
+        sl_zigbee_af_cli_println("ERR: Install Code must be 8, 10, 14, or 18 bytes in "
+                                 "length");
       } else {
-        sl_zigbee_app_debug_println("ERR: AES-MMO hash failed: 0x%02X", status);
+        sl_zigbee_af_cli_println("ERR: AES-MMO hash failed: 0x%02X", status);
       }
       return;
     }
@@ -769,24 +769,24 @@ void sli_zigbee_af_test_harness_z3_install_code_clear_or_set_command(SL_CLI_COMM
     // Add the key to transient key.
     sl_status_t key_status = sl_zigbee_sec_man_import_transient_key(eui64, (sl_zigbee_sec_man_key_t*)&key);
     status = ((key_status == SL_STATUS_OK) ? SL_STATUS_OK : SL_STATUS_ALLOCATION_FAILED);
-    sl_zigbee_af_app_debug_exec(sli_zigbee_af_print_status("Set joining link key", status));
-    sl_zigbee_app_debug_println("");
-    sl_zigbee_af_app_flush();
+    sl_zigbee_af_cli_exec(sli_zigbee_af_print_status("Set joining link key", status));
+    sl_zigbee_af_cli_println("");
+    sl_zigbee_af_cli_flush();
   } else {
     // We currently clear all the transient keys.
     sl_zigbee_clear_transient_link_keys();
-    sl_zigbee_app_debug_println("Success: Clear joining link key");
+    sl_zigbee_af_cli_println("Success: Clear joining link key");
   }
 #else
   UNUSED_VAR(doClear);
-  sl_zigbee_app_debug_println("Security Core Library must be included to use this command.");
+  sl_zigbee_af_cli_println("Security Core Library must be included to use this command.");
 #endif
 #else
-  sl_zigbee_af_core_println("%s: %s %s: 0x%02X",
-                            TEST_HARNESS_Z3_PRINT_NAME,
-                            "Install code",
-                            (doClear ? "clear" : "set"),
-                            SL_STATUS_INVALID_STATE);
+  sl_zigbee_af_cli_println("%s: %s %s: 0x%02X",
+                           TEST_HARNESS_Z3_PRINT_NAME,
+                           "Install code",
+                           (doClear ? "clear" : "set"),
+                           SL_STATUS_INVALID_STATE);
 #endif
 }
 
@@ -832,8 +832,8 @@ void sli_zigbee_test_harness_z3_layer_select(SL_CLI_COMMAND_ARG)
     CLEARBITS(confirmationMask, tempCfmMask);
   }
 
-  sl_zigbee_af_core_println("layer-select-cfm 0x%02X 0x%02X 0x%02X",
-                            dropMask, indicationMask, confirmationMask);
+  sl_zigbee_af_cli_println("layer-select-cfm 0x%02X 0x%02X 0x%02X",
+                           dropMask, indicationMask, confirmationMask);
 }
 static void printApsdeCfm(uint8_t dstMode,
                           uint8_t * dstAddrStr,
@@ -946,7 +946,7 @@ void sl_zigbee_test_harness_z3_apsde_data_request(SL_CLI_COMMAND_ARG)
                                 aliasSequence); //uint8_t sequence);
   }
   // Synchronous confirm to ensure packet is submitted to network successfully.
-  sl_zigbee_af_core_println("apsde-syncfm 0x%02X", status);
+  sl_zigbee_af_cli_println("apsde-syncfm 0x%02X", status);
   // In case of a send submission failure the confirm is called here immediately
   if (status != SL_STATUS_OK) {
     printApsdeCfm(dstMode, dstAddrStr, dstAddr, &apsFrame, status);
@@ -1191,7 +1191,7 @@ void sl_zigbee_test_harness_z3_nlde_data_request(SL_CLI_COMMAND_ARG)
                                           &messageTag, //uint16_t *messageTag,
                                           aliasSrcAddr, //sl_802154_short_addr_t alias,
                                           aliasSeqNo); //uint8_t sequence);
-  sl_zigbee_af_core_println("nlde-syncfm 0x%02X 0x%02X", nsduHandle, status); // Synchronous confirm to ensure packet is submitted to network successfully.
+  sl_zigbee_af_cli_println("nlde-syncfm 0x%02X 0x%02X", nsduHandle, status);                                         // Synchronous confirm to ensure packet is submitted to network successfully.
   UNUSED_VAR(dstAddrMode);
   UNUSED_VAR(nonmemberRadius);
   UNUSED_VAR(securityEnable);
@@ -1287,7 +1287,7 @@ void sl_zigbee_test_harness_z3_mcps_data_request(SL_CLI_COMMAND_ARG)
     }
   }
 #endif
-  sl_zigbee_af_core_println("mcpsd-syncfm 0x%02X 0x%02X", msduHandle, status); // Synchronous confirm to ensure packet is submitted to network successfully.
+  sl_zigbee_af_cli_println("mcpsd-syncfm 0x%02X 0x%02X", msduHandle, status); // Synchronous confirm to ensure packet is submitted to network successfully.
 }
 
 //NWK Layer Attribute Get
@@ -1331,10 +1331,10 @@ void sl_zigbee_test_harness_z3_nwk_pib_get_request(SL_CLI_COMMAND_ARG)
         break;
     }
   }
-  sl_zigbee_af_core_println("");
-  sl_zigbee_af_core_print("nlme-get-cfm 0x%02X 0x%02X 0x%02X {", status, pibNumber, pibValueLength);
-  sl_zigbee_af_core_print_buffer(pibValue, pibValueLength, false);
-  sl_zigbee_af_core_println("}");
+  sl_zigbee_af_cli_println("");
+  sl_zigbee_af_cli_print("nlme-get-cfm 0x%02X 0x%02X 0x%02X {", status, pibNumber, pibValueLength);
+  sl_zigbee_af_cli_print_buffer(pibValue, pibValueLength, false);
+  sl_zigbee_af_cli_println("}");
 }
 // MAC Layer Attribute Get
 void sl_zigbee_test_harness_z3_mac_pib_get_request(SL_CLI_COMMAND_ARG)
@@ -1343,10 +1343,10 @@ void sl_zigbee_test_harness_z3_mac_pib_get_request(SL_CLI_COMMAND_ARG)
   uint8_t pibNumber = (uint8_t)sl_cli_get_argument_uint8(arguments, 0);
   uint8_t pibValueLength = 0;
   uint8_t pibValue[20] = { 0 };
-  sl_zigbee_af_core_println("");
-  sl_zigbee_af_core_print("mlme-get-cfm 0x%02X 0x%02X 0x%02X {", status, pibNumber, pibValueLength);
-  sl_zigbee_af_core_print_buffer(pibValue, pibValueLength, false);
-  sl_zigbee_af_core_println("}");
+  sl_zigbee_af_cli_println("");
+  sl_zigbee_af_cli_print("mlme-get-cfm 0x%02X 0x%02X 0x%02X {", status, pibNumber, pibValueLength);
+  sl_zigbee_af_cli_print_buffer(pibValue, pibValueLength, false);
+  sl_zigbee_af_cli_println("}");
 }
 extern void sl_mac_set_next_sequence(uint8_t seq_num);
 
@@ -1384,7 +1384,7 @@ void sli_zigbee_test_harness_z3_mac_pib_set_request(SL_CLI_COMMAND_ARG)
     default:
       break;
   }
-  sl_zigbee_af_core_println("mlme-set-cfm 0x%02X 0x%02X", status, pibNumber);
+  sl_zigbee_af_cli_println("mlme-set-cfm 0x%02X 0x%02X", status, pibNumber);
 }
 
 // PHY Layer Attribute Get
@@ -1403,10 +1403,10 @@ void sli_zigbee_test_harness_z3_pib_get_request(SL_CLI_COMMAND_ARG)
     default:
       break;
   }
-  sl_zigbee_af_core_println("");
-  sl_zigbee_af_core_print("plme-get-cfm 0x%02X 0x%02X 0x%02X {", status, pibNumber, pibValueLength);
-  sl_zigbee_af_core_print_buffer(pibValue, pibValueLength, false);
-  sl_zigbee_af_core_println("}");
+  sl_zigbee_af_cli_println("");
+  sl_zigbee_af_cli_print("plme-get-cfm 0x%02X 0x%02X 0x%02X {", status, pibNumber, pibValueLength);
+  sl_zigbee_af_cli_print_buffer(pibValue, pibValueLength, false);
+  sl_zigbee_af_cli_println("}");
 }
 // PHY Layer Attribute Set
 void sli_zigbee_test_harness_z3_pib_set_request(SL_CLI_COMMAND_ARG)
@@ -1429,7 +1429,7 @@ void sli_zigbee_test_harness_z3_pib_set_request(SL_CLI_COMMAND_ARG)
     default:
       break;
   }
-  sl_zigbee_af_core_println("plme-set-cfm 0x%02X 0x%02X", status, pibNumber);
+  sl_zigbee_af_cli_println("plme-set-cfm 0x%02X 0x%02X", status, pibNumber);
 }
 // Does the indication printing and return TRUE if the packet need to be dropped
 static bool layeredHandlingMode(sl_zigbee_zigbee_packet_type_t packetType,
@@ -1685,7 +1685,7 @@ void zdoUserCommand(sl_cli_command_arg_t *args)
   sl_802154_short_addr_t target = (sl_802154_short_addr_t)sl_cli_get_argument_uint16(args, 0);
   sl_status_t status = sl_zigbee_user_descriptor_request(target,
                                                          SL_ZIGBEE_AF_DEFAULT_APS_OPTIONS);
-  sl_zigbee_app_debug_println("ZDO user desc req %02X", status);
+  sl_zigbee_af_cli_println("ZDO user desc req %02X", status);
 }
 
 #define APP_ZDO_BUFFER_SIZE 32
@@ -1701,7 +1701,7 @@ void zdoRawCommand(sl_cli_command_arg_t *args)
                                                       SL_ZIGBEE_AF_DEFAULT_APS_OPTIONS,
                                                       zdoRawBuffer,
                                                       size + 1); // incl overhead (seq no)
-  sl_zigbee_app_debug_println("ZDO raw req %02X, %d bytes", status, size);
+  sl_zigbee_af_cli_println("ZDO raw req %02X, %d bytes", status, size);
 }
 
 sl_status_t sl_zigbee_user_descriptor_request(sl_802154_short_addr_t target,

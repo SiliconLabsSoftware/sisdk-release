@@ -28,10 +28,9 @@
  *
  ******************************************************************************/
 
+#include "cpc_transport.hpp"
 #include "platform-posix.h"
 #include "vendor_interface.hpp"
-
-#include "sl_cpc.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -108,7 +107,7 @@ public:
      *
      * @retval OT_ERROR_NONE     Successfully encoded and sent the spinel frame.
      * @retval OT_ERROR_BUSY     Failed due to another operation is on going.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space available to encode the frame.
+     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to send (e.g. CPC TX buffer full / would-block).
      * @retval OT_ERROR_FAILED   Failed to call the SPI driver to send the frame.
      *
      */
@@ -180,12 +179,6 @@ public:
         return (strncmp(aInterfaceName, kInterfaceName, strlen(kInterfaceName)) == 0);
     }
 
-    /**
-     * This method is called reinitialise the CPC interface if sCpcResetReq indicates that a restart
-     * is required.
-     */
-    void CheckAndReInitCpc(void);
-
 private:
     /**
      * This method instructs `CpcInterface` to read data from radio over the socket.
@@ -194,31 +187,6 @@ private:
      *
      */
     void Read(uint64_t aTimeoutUs);
-
-    /**
-     * This method waits for the socket file descriptor associated with the HDLC interface to become writable within
-     * `kMaxWaitTime` interval.
-     *
-     * @retval OT_ERROR_NONE   Socket is writable.
-     * @retval OT_ERROR_FAILED Socket did not become writable within `kMaxWaitTime`.
-     *
-     */
-    otError WaitForWritable(void);
-
-    /**
-     * This method writes a given frame to the socket.
-     *
-     * This is blocking call, i.e., if the socket is not writable, this method waits for it to become writable for
-     * up to `kMaxWaitTime` interval.
-     *
-     * @param[in] aFrame  A pointer to buffer containing the frame to write.
-     * @param[in] aLength The length (number of bytes) in the frame.
-     *
-     * @retval OT_ERROR_NONE    Frame was written successfully.
-     * @retval OT_ERROR_FAILED  Failed to write due to socket not becoming writable within `kMaxWaitTime`.
-     *
-     */
-    otError Write(const uint8_t *aFrame, uint16_t aLength);
 
     /**
      * This method generates and sends a reset response back to OT.
@@ -231,12 +199,8 @@ private:
 
     enum
     {
-        kMaxFrameSize = SL_CPC_READ_MINIMUM_SIZE,
-        kMaxWaitTime  = 2000, ///< Maximum wait time in Milliseconds for socket to become writable (see `SendFrame`).
-        kMaxSleepDuration   = 100000, ///< Sleep duration in micro seconds before restarting cpc connection/endpoint.
-        kMaxRestartAttempts = 300,
-        kResetCMDSize       = 4,
-        kCpcBusSpeed        = 115200,
+        kResetCMDSize = 4,
+        kCpcBusSpeed  = 115200,
     };
 
     ReceiveFrameCallback mReceiveFrameCallback;
@@ -244,22 +208,26 @@ private:
     RxFrameBuffer       *mReceiveFrameBuffer;
     const Url::Url      &mRadioUrl;
 
-    int            mSockFd;
-    cpc_handle_t   mHandle;
-    cpc_endpoint_t mEndpoint;
-    uint32_t       mCpcBusSpeed;
+    uint32_t mCpcBusSpeed;
 
-    static void HandleSecondaryReset(void);
-    static void SetCpcResetReq(bool state) { sCpcResetReq = state; }
+    friend void OnCpcFrame(const uint8_t *aFrame, uint16_t aLength, void *aContext);
+
+    struct TransportContext
+    {
+        ReceiveFrameCallback callback;
+        void                *context;
+        RxFrameBuffer       *frameBuffer;
+    };
+    TransportContext mTransportContext;
+    CpcTransport     mTransport;
 
     // Hard Coded Reset Response
     // 0x72 -> STATUS_RESET_SOFTWARE
     uint8_t mResetResponse[kResetCMDSize] = {0x80, 0x06, 0x00, 0x72};
 
-    const uint8_t                mId = SL_CPC_ENDPOINT_15_4;
-    typedef uint8_t              cpcError;
-    static volatile sig_atomic_t sCpcResetReq;
-    static bool                  sIsCpcInitialized;
+    const uint8_t   mId = SL_CPC_ENDPOINT_15_4;
+    typedef uint8_t cpcError;
+    static bool     sIsCpcInitialized;
 
     otRcpInterfaceMetrics mInterfaceMetrics;
 

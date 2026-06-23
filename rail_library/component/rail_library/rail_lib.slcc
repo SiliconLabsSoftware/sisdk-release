@@ -33,30 +33,31 @@ requires:
 - name: hal_generic_prs
 - name: hal_generic_system
 
+- name: sl_rail_util_built_in_phys
 - name: fem_util
   condition: [device_is_module]
 - name: fem_util
   condition: [hardware_board_has_fem]
-- name: rail_util_sequencer
+- name: sl_rail_util_sequencer
   condition: [device_sdid_215]
-- name: rail_util_sequencer
+- name: sl_rail_util_sequencer
   condition: [device_sdid_225]
 - name: rail_util_features
-- name: rail_util_power_manager_init
+- name: sl_rail_util_power_manager_init
   condition: [power_manager]
-- name: rail_util_sfm_sequencer
+- name: sl_rail_util_sfm_sequencer
   condition: [device_sdid_220]
-- name: rail_util_ble_cs
+- name: sl_rail_util_ble_cs
   condition: [hardware_board_supports_cs]
-- name: rail_util_load_devinfo
+- name: sl_rail_util_load_devinfo
   condition: [device_series_3]
 
-  # Note: In the future, this rail_util_rf_path dependency needs to be required by a more generic component.
-- name: rail_util_rf_path
+  # Note: In the future, this sl_rail_util_rf_path dependency needs to be required by a more generic component.
+- name: sl_rail_util_rf_path
   condition:
   - device_sdid_200     # efr32xg21 has a chip-internal rf path selection
   - device_init
-- name: rail_util_rf_path_switch
+- name: sl_rail_util_rf_path_switch
   condition:
   - hardware_board_has_rfswitch_to_ground
 - name: device_init_hfxo
@@ -71,21 +72,13 @@ requires:
 - name: emlib_timer
   condition:
   - device_sdid_215     # Needed for BLE channel sounding
-- name: emlib_ldma
+  # sl_hal_ldma is required on every device with an LDMA (Series 2 and
+  # Series 3). RAIL features that depend on it include IEEE 802.15.4 RX
+  # channel switching, BLE channel sounding antenna switching, and the
+  # sl_rail_util_dma plugin.
+- name: hal_ldma
   condition:
-  - device_sdid_210     # Needed for TrustZone
-- name: emlib_ldma
-  condition:
-  - device_sdid_215     # Needed for IEEE802154 RX channel switching & BLE channel sounding
-- name: emlib_ldma
-  condition:
-  - device_sdid_225     # Needed for IEEE802154 RX channel switching
-- name: emlib_ldma
-  condition:
-  - device_sdid_235     # Needed for TrustZone
-- name: emlib_ldma
-  condition:
-  - device_sdid_260     # Needed for TrustZone
+  - device_has_ldma
 - name: se_manager
   condition:
   - device_generic_family_sixx301

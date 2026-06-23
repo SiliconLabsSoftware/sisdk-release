@@ -31,6 +31,9 @@
 #endif
 
 // #define PLUGIN_DEBUG
+#ifdef SL_CATALOG_ZIGBEE_SIMULATION_PRESENT
+  #define PLUGIN_DEBUG 1
+#endif
 #if defined(PLUGIN_DEBUG)
   #define debug_print(...) sl_zigbee_af_core_println(__VA_ARGS__)
 #else

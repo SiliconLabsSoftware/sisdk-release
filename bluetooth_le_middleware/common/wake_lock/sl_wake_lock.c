@@ -27,7 +27,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  *
  ******************************************************************************/
-// Define module name for Power Manager debuging feature.
+// Define module name for Power Manager debugging feature.
 #define CURRENT_MODULE_NAME    "APP_BLUETOOTH_EXAMPLE_WAKE_LOCK"
 
 #include "em_gpio.h"

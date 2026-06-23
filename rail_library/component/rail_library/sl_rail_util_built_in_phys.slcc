@@ -1,8 +1,8 @@
 id: sl_rail_util_built_in_phys
 label: RAIL Utility, Built-in PHYs Across HFXO Frequencies (RAIL 3)
 description: >
-  Utility to include built-in PHYs to work with different HFXO frequencies. On
-  EFR32XG24 and EFR32XG26 parts, 38.4 MHz, 39 MHz, and 40 Mhz HFXO support is provided by
+  Utility to include built-in (Standards based) PHYs. On EFR32XG24, EFR32XG26
+  and SixG301 parts, 38.4 MHz, 39 MHz, and 40 Mhz HFXO support is provided by
   this component.
 package: rail_library
 category: Platform|Radio
@@ -22,14 +22,44 @@ requires:
 - name: rail_lib
 - name: device
 - name: device_init_hfxo
+  condition: [device_sdid_215]
+- name: device_init_hfxo
+  condition: [device_sdid_225]
+- name: device_init_hfxo
+  condition: [device_generic_family_sixx301]
 - name: component_catalog
 - name: code_classification
 recommends:
 - id: device_init_hfxo
-  condition:
-  - device_series_2
+  condition: [device_sdid_215]
+  vendor: silabs
+- id: device_init_hfxo
+  condition: [device_sdid_225]
   vendor: silabs
 include:
+- path: common
+  file_list:
+  - path: sl_rail_features.h
+- path: plugin/sl_rail_util_built_in_phys/efr32xg21
+  condition: [device_sdid_200]
+  unless: [device_is_module]
+  file_list:
+  - path: sl_rail_ble_config.h
+  - path: sl_rail_ieee802154_config.h
+- path: plugin/sl_rail_util_built_in_phys/efr32xg22
+  condition: [device_sdid_205]
+  unless: [device_is_module]
+  file_list:
+  - path: sl_rail_ble_config.h
+  - path: sl_rail_ieee802154_config.h
+  - path: sl_rail_rfsense_ook_config.h
+- path: plugin/sl_rail_util_built_in_phys/efr32xg23
+  condition: [device_sdid_210]
+  unless: [device_is_module]
+  file_list:
+  - path: sl_rail_ieee802154_config.h
+  - path: sl_rail_sidewalk_config.h
+  - path: sl_rail_zwave_config.h
 - path: plugin/sl_rail_util_built_in_phys/efr32xg24
   condition: [device_sdid_215]
   unless: [device_is_module]
@@ -43,6 +73,11 @@ include:
   - path: sl_rail_ble_config_40MHz.h
   - path: sl_rail_ieee802154_config_40MHz.h
   - path: sl_rail_rfsense_ook_config_40MHz.h
+- path: plugin/sl_rail_util_built_in_phys/efr32xg25
+  condition: [device_sdid_220]
+  unless: [device_is_module]
+  file_list:
+  - path: sl_rail_ieee802154_config.h
 - path: plugin/sl_rail_util_built_in_phys/efr32xg26
   condition: [device_sdid_225]
   unless: [device_is_module]
@@ -56,6 +91,41 @@ include:
   - path: sl_rail_ble_config_40MHz.h
   - path: sl_rail_ieee802154_config_40MHz.h
   - path: sl_rail_rfsense_ook_config_40MHz.h
+- path: plugin/sl_rail_util_built_in_phys/efr32xg27
+  condition: [device_sdid_230]
+  unless: [device_is_module]
+  file_list:
+  - path: sl_rail_ieee802154_config.h
+  - path: sl_rail_ble_config.h
+  - path: sl_rail_rfsense_ook_config.h
+- path: plugin/sl_rail_util_built_in_phys/efr32xg28
+  condition: [device_sdid_235]
+  unless: [device_is_module]
+  file_list:
+  - path: sl_rail_ieee802154_config.h
+  - path: sl_rail_sidewalk_config.h
+  - path: sl_rail_zwave_config.h
+  - path: sl_rail_ble_config.h
+- path: plugin/sl_rail_util_built_in_phys/efr32xg29
+  condition: [device_sdid_240]
+  unless: [device_is_module]
+  file_list:
+  - path: sl_rail_ieee802154_config.h
+  - path: sl_rail_rfsense_ook_config.h
+  - path: sl_rail_ble_config.h
+- path: plugin/sl_rail_util_built_in_phys/efr32xg2b
+  condition: [device_sdid_250]
+  unless: [device_is_module]
+  file_list:
+  - path: sl_rail_ble_config.h
+  - path: sl_rail_ieee802154_config.h
+  - path: sl_rail_rfsense_ook_config.h
+- path: plugin/sl_rail_util_built_in_phys/efr32xg2d
+  condition: [device_sdid_260]
+  unless: [device_is_module]
+  file_list:
+  - path: sl_rail_ieee802154_config.h
+  - path: sl_rail_sidewalk_config.h
 - path: plugin/sl_rail_util_built_in_phys/sixg301
   condition: [device_generic_family_sixx301]
   unless: [device_is_module]
@@ -67,7 +137,40 @@ include:
   - path: sl_rail_ieee802154_config_39MHz.h
   - path: sl_rail_ieee802154_config_40MHz.h
 source:
-- path: plugin/sl_rail_util_built_in_phys/sl_rail_phy_overrides.c
+- path: plugin/sl_rail_util_built_in_phys/sl_rail_util_built_in_phys.c
+  condition: [device_sdid_200]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg21/sl_rail_ble_config.c
+  condition: [device_sdid_200]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg21/sl_rail_ieee802154_config.c
+  condition: [device_sdid_200]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/sl_rail_util_built_in_phys.c
+  condition: [device_sdid_205]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg22/sl_rail_ble_config.c
+  condition: [device_sdid_205]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg22/sl_rail_ieee802154_config.c
+  condition: [device_sdid_205]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg22/sl_rail_rfsense_ook_config.c
+  condition: [device_sdid_205]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/sl_rail_util_built_in_phys.c
+  condition: [device_sdid_210]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg23/sl_rail_ieee802154_config.c
+  condition: [device_sdid_210]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg23/sl_rail_sidewalk_config.c
+  condition: [device_sdid_210]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg23/sl_rail_zwave_config.c
+  condition: [device_sdid_210]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/sl_rail_util_built_in_phys.c
   condition: [device_sdid_215]
   unless: [device_is_module]
 - path: plugin/sl_rail_util_built_in_phys/efr32xg24/sl_rail_ble_config_38M4Hz.c
@@ -97,7 +200,13 @@ source:
 - path: plugin/sl_rail_util_built_in_phys/efr32xg24/sl_rail_rfsense_ook_config_40MHz.c
   condition: [device_sdid_215]
   unless: [device_is_module]
-- path: plugin/sl_rail_util_built_in_phys/sl_rail_phy_overrides.c
+- path: plugin/sl_rail_util_built_in_phys/sl_rail_util_built_in_phys.c
+  condition: [device_sdid_220]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg25/sl_rail_ieee802154_config.c
+  condition: [device_sdid_220]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/sl_rail_util_built_in_phys.c
   condition: [device_sdid_225]
   unless: [device_is_module]
 - path: plugin/sl_rail_util_built_in_phys/efr32xg26/sl_rail_ble_config_38M4Hz.c
@@ -127,7 +236,67 @@ source:
 - path: plugin/sl_rail_util_built_in_phys/efr32xg26/sl_rail_rfsense_ook_config_40MHz.c
   condition: [device_sdid_225]
   unless: [device_is_module]
-- path: plugin/sl_rail_util_built_in_phys/sl_rail_phy_overrides.c
+- path: plugin/sl_rail_util_built_in_phys/sl_rail_util_built_in_phys.c
+  condition: [device_sdid_230]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg27/sl_rail_ieee802154_config.c
+  condition: [device_sdid_230]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg27/sl_rail_ble_config.c
+  condition: [device_sdid_230]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg27/sl_rail_rfsense_ook_config.c
+  condition: [device_sdid_230]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/sl_rail_util_built_in_phys.c
+  condition: [device_sdid_235]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg28/sl_rail_ieee802154_config.c
+  condition: [device_sdid_235]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg28/sl_rail_ble_config.c
+  condition: [device_sdid_235]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg28/sl_rail_sidewalk_config.c
+  condition: [device_sdid_235]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg28/sl_rail_zwave_config.c
+  condition: [device_sdid_235]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/sl_rail_util_built_in_phys.c
+  condition: [device_sdid_240]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg29/sl_rail_ieee802154_config.c
+  condition: [device_sdid_240]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg29/sl_rail_rfsense_ook_config.c
+  condition: [device_sdid_240]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg29/sl_rail_ble_config.c
+  condition: [device_sdid_240]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/sl_rail_util_built_in_phys.c
+  condition: [device_sdid_250]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg2b/sl_rail_ble_config.c
+  condition: [device_sdid_250]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg2b/sl_rail_ieee802154_config.c
+  condition: [device_sdid_250]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg2b/sl_rail_rfsense_ook_config.c
+  condition: [device_sdid_250]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/sl_rail_util_built_in_phys.c
+  condition: [device_sdid_260]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg2d/sl_rail_ieee802154_config.c
+  condition: [device_sdid_260]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/efr32xg2d/sl_rail_sidewalk_config.c
+  condition: [device_sdid_260]
+  unless: [device_is_module]
+- path: plugin/sl_rail_util_built_in_phys/sl_rail_util_built_in_phys.c
   condition: [device_generic_family_sixx301]
   unless: [device_is_module]
 - path: plugin/sl_rail_util_built_in_phys/sixg301/sl_rail_ble_config_38M4Hz.c

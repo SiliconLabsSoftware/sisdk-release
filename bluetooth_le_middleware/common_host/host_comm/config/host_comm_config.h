@@ -3,7 +3,7 @@
  * @brief Host communication application module config.
  *******************************************************************************
  * # License
- * <b>Copyright 2021 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -50,8 +50,16 @@
 // <i> Defines the size of the receive and transmit buffer for host
 // <i> Default: 8192
 #ifndef DEFAULT_HOST_BUFLEN
-#define DEFAULT_HOST_BUFLEN     8192
+#define DEFAULT_HOST_BUFLEN            8192
 #endif
+
+// <e VERIFY_BGAPI_PAYLOAD_SIZES> Verify BGAPI payload sizes
+// <i> Verify BGAPI message limits between the NCP host and target.
+// <i> Note: If enabled, please add the "BGAPI Service System APIs" component to the NCP target project as well.
+// <i> Default: 0
+#define VERIFY_BGAPI_PAYLOAD_SIZES     0
+
+// </e>
 
 // </h> End Receive / Transmit buffer configuration
 

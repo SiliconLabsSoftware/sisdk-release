@@ -1,0 +1,32 @@
+id: mbedtls_ssl_tls
+package: platform_core
+label: SSL TLS generic
+description: >-
+  This component Enable the generic SSL/TLS code in Mbed TLS.
+category: Platform|Security|Mbed TLS|Upper Layer
+quality: production
+provides:
+- name: mbedtls_ssl_tls
+requires:
+  # requires MBEDTLS_USE_PSA_CRYPTO ( in psa_crypto )
+- name: psa_crypto
+  # requires at least one MBEDTLS_SSL_PROTO_XXX 
+- name: mbedtls_ssl_proto
+  # requires SHA-256 or SHA-384 (running handshake hash) 
+- name: psa_crypto_hash
+
+recommends:
+- id: mbedtls_ssl_proto_tls12
+  vendor: silabs
+- id: psa_crypto_sha256
+
+  vendor: silabs
+template_contribution:
+- name: mbedtls_config
+  value: MBEDTLS_SSL_TLS_C
+documentation:
+  url: https://mbed-tls.readthedocs.io/projects/api/en/development/api/file/mbedtls__config_8h/#c.MBEDTLS_SSL_TLS_C
+metadata:
+  sbom:
+    reference: mbedtls_sbom
+root_path: platform_core

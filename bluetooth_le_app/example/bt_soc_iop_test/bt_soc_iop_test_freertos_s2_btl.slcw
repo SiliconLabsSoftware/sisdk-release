@@ -7,7 +7,7 @@ description: >
   Connect mobile app, through the "Interoperability Test" tile on the Develop
   view of the app.
   Combined solution with application and bootloader projects.
-quality: experimental
+quality: production
 project:
   - path: bt_soc_iop_test_freertos.slcp
     id: application

@@ -814,7 +814,7 @@ static char pinForOFDMPRSSignal[OFDM_PRS_SIGNAL_COUNT][5];
 #define PRESENT_SYNCSENT_PRS_SIGNAL_AVAILABLE         '\0'
 
 // Set and clear addresses for MODEM_PRSCTRL register
-#if ((_SILICON_LABS_32B_SERIES_2_CONFIG == 7) || (_SILICON_LABS_32B_SERIES_2_CONFIG == 9))
+#if ((_SILICON_LABS_32B_SERIES_2_CONFIG == 7) || (_SILICON_LABS_32B_SERIES_2_CONFIG == 9) || (_SILICON_LABS_32B_SERIES_2_CONFIG == 11))
 static uint32_t *prsctrlAddress = (uint32_t*)0xB8014240UL,
                 *prsctrlSetAddress = (uint32_t*)0xB8015240UL,
                 *prsctrlClrAddress = (uint32_t*)0xB8016240UL;

@@ -411,7 +411,7 @@ static int32_t uartOpenSerial(int8_t *device, uint32_t bps, uint32_t dataBits,
   return serial;
 
   // Failure
-error:
+  error:
   if (serial != -1) {
     close(serial);
   }

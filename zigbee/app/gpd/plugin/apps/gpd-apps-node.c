@@ -15,7 +15,7 @@
  *
  ******************************************************************************/
 #include "gpd-components-common.h"
-
+#include "gpd-cb.h"
 // GPD Instance
 static sl_zigbee_gpd_t_t gpdNode = { 0 };
 

@@ -2,6 +2,7 @@ from pyradioconfig.parts.lynx.calculators.calc_demodulator import CALC_Demodulat
 from enum import Enum
 from pycalcmodel.core.variable import ModelVariableFormat, CreateModelVariableEnum
 from math import log2, floor
+from py_2_and_3_compatibility import *
 
 class calc_demodulator_leopard(CALC_Demodulator_lynx):
 
@@ -20,6 +21,17 @@ class calc_demodulator_leopard(CALC_Demodulator_lynx):
 
         self._addModelActual(model, 'adc_clock_mode', Enum, ModelVariableFormat.DECIMAL)
         model.vars.adc_clock_mode_actual.var_enum = model.vars.adc_clock_mode.var_enum
+        self._addModelVariable(model, 'adc_xo_mult', int, ModelVariableFormat.DECIMAL)
+        self._addModelVariable(model, 'enable_high_mod_trecs', int, ModelVariableFormat.DECIMAL)
+        self._addModelActual(model, 'adc_xo_mult', int, ModelVariableFormat.DECIMAL)
+        self._addModelVariable(model, 'lo_target_freq', long, ModelVariableFormat.DECIMAL)
+        self._addModelVariable(model, 'adc_target_freq', int, ModelVariableFormat.DECIMAL)
+        self._addModelActual(model, 'adc_vco_div', int, ModelVariableFormat.DECIMAL)
+        self._addModelVariable(model, 'adc_vco_div', int, ModelVariableFormat.DECIMAL)
+        self._addModelActual(model, 'a_divider', int, ModelVariableFormat.DECIMAL)
+        self._addModelActual(model, 'b_divider', int, ModelVariableFormat.DECIMAL)
+        self._addModelActual(model, 'c_divider', int, ModelVariableFormat.DECIMAL)
+        self._addModelVariable(model, 'adc_freq_error', float, ModelVariableFormat.DECIMAL)
 
     # Helper calculation for FW calulation of SRC2
     # These are phy specific calculations that is easier to do here
@@ -41,7 +53,6 @@ class calc_demodulator_leopard(CALC_Demodulator_lynx):
             # This does not include the 8x downsampling polyphase filter after IFADC. Handled in RAIL code
             src2_calcDenominator = int(datarate * dec0 * dec1 * dec2 * osr)
 
-        # Load local variables back into model variables
         model.vars.src2_calcDenominator.value = src2_calcDenominator
 
     def calc_fxo_or_fdec8(self, model):
@@ -78,3 +89,7 @@ class calc_demodulator_leopard(CALC_Demodulator_lynx):
 
         #Adjustment determined based on char data
         model.vars.rssi_rf_adjust_db.value = -12.35
+
+    def calc_adc_freq_actual(self, model):
+        # moved to calc_synth for leopard to follow Ocelot
+        pass

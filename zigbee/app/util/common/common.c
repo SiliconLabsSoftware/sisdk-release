@@ -72,7 +72,7 @@ sli_zigbee_event_queue_t event_queue;
 
 #ifdef ZIGBEE_PRO_COMPLIANCE_ON_HOST
 // If we run pro-compliance on host, it has a definition conflict
-// with the serialPort defined in app/projects/zigbeed/serial_adapter.c
+// with the serialPort defined in zigbee_app/zigbeed/serial_adapter.c
 uint8_t sl_zigbee_serial_port = 1;
 #define serialPort sl_zigbee_serial_port
 #else

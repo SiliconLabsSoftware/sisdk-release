@@ -6,6 +6,10 @@ var group__sl__bt__cs =
     [ "sl_bt_evt_cs_result", "group__sl__bt__evt__cs__result.html", "group__sl__bt__evt__cs__result" ],
     [ "sl_bt_evt_cs_result_continue", "group__sl__bt__evt__cs__result__continue.html", "group__sl__bt__evt__cs__result__continue" ],
     [ "sl_bt_evt_cs_read_remote_supported_capabilities_complete", "group__sl__bt__evt__cs__read__remote__supported__capabilities__complete.html", "group__sl__bt__evt__cs__read__remote__supported__capabilities__complete" ],
+    [ "sl_bt_evt_cs_handover_sync_established", "group__sl__bt__evt__cs__handover__sync__established.html", "group__sl__bt__evt__cs__handover__sync__established" ],
+    [ "sl_bt_evt_cs_handover_complete", "group__sl__bt__evt__cs__handover__complete.html", "group__sl__bt__evt__cs__handover__complete" ],
+    [ "sl_bt_evt_cs_handover_result", "group__sl__bt__evt__cs__handover__result.html", "group__sl__bt__evt__cs__handover__result" ],
+    [ "sl_bt_evt_cs_handover_result_continue", "group__sl__bt__evt__cs__handover__result__continue.html", "group__sl__bt__evt__cs__handover__result__continue" ],
     [ "sl_bt_cs_role_t", "group__sl__bt__cs.html#gab16efa17cdb87c4313b5e15b9261aaf9", [
       [ "sl_bt_cs_role_initiator", "group__sl__bt__cs.html#ggab16efa17cdb87c4313b5e15b9261aaf9aaf73d968e07229751c606ffd11765112", null ],
       [ "sl_bt_cs_role_reflector", "group__sl__bt__cs.html#ggab16efa17cdb87c4313b5e15b9261aaf9ac48303f1d3ee7f11542edd8c6d794aca", null ]
@@ -17,6 +21,14 @@ var group__sl__bt__cs =
     [ "sl_bt_cs_procedure_state_t", "group__sl__bt__cs.html#ga8fd875965cf4e392514a5f4f7769bb3d", [
       [ "sl_bt_cs_procedure_state_disabled", "group__sl__bt__cs.html#gga8fd875965cf4e392514a5f4f7769bb3da4eeadc432c438018a20be6b27a29ba44", null ],
       [ "sl_bt_cs_procedure_state_enabled", "group__sl__bt__cs.html#gga8fd875965cf4e392514a5f4f7769bb3da61c67251f887bd52c618ef6106176cd7", null ]
+    ] ],
+    [ "sl_bt_cs_handover_handle_type_t", "group__sl__bt__cs.html#ga1dc74f64ec915490815e1628b118d2b5", [
+      [ "sl_bt_cs_handover_handle_type_connection", "group__sl__bt__cs.html#gga1dc74f64ec915490815e1628b118d2b5afb3359772b7ae46cd288c31cbb0d2255", null ],
+      [ "sl_bt_cs_handover_handle_type_analyzer", "group__sl__bt__cs.html#gga1dc74f64ec915490815e1628b118d2b5a1d5945e7d48e4cfef53216ba555f7344", null ]
+    ] ],
+    [ "sl_bt_cs_handover_complete_reason_t", "group__sl__bt__cs.html#ga8850c7bbb087a73a571cfd280a2a1a93", [
+      [ "sl_bt_cs_handover_complete_reason_max_procedure_count_reached", "group__sl__bt__cs.html#gga8850c7bbb087a73a571cfd280a2a1a93a0d72aa29c1c395c8393692a651bc32a6", null ],
+      [ "sl_bt_cs_handover_complete_reason_sync_lost", "group__sl__bt__cs.html#gga8850c7bbb087a73a571cfd280a2a1a93a9a6b5e860561286bea8a6474b756de18", null ]
     ] ],
     [ "sl_bt_cs_mode_t", "group__sl__bt__cs.html#ga631ba2f05b0fb5daf637468c2f0d7dc3", [
       [ "sl_bt_cs_mode_rtt", "group__sl__bt__cs.html#gga631ba2f05b0fb5daf637468c2f0d7dc3a32778ba18934123ad7132ca191192edb", null ],
@@ -62,5 +74,10 @@ var group__sl__bt__cs =
     [ "sl_bt_cs_procedure_enable", "group__sl__bt__cs.html#ga2d98ac43233c5db0d7903400b2cadd2e", null ],
     [ "sl_bt_cs_set_antenna_configuration", "group__sl__bt__cs.html#ga76ba2c01277740fd6844392fedc571aa", null ],
     [ "sl_bt_cs_read_local_supported_capabilities", "group__sl__bt__cs.html#ga179e5b1dd30a811c3d3f53c64acf9e47", null ],
-    [ "sl_bt_cs_read_remote_supported_capabilities", "group__sl__bt__cs.html#ga8c0052901c17a4c427f2b25d3c484bc7", null ]
+    [ "sl_bt_cs_read_remote_supported_capabilities", "group__sl__bt__cs.html#ga8c0052901c17a4c427f2b25d3c484bc7", null ],
+    [ "sl_bt_cs_handover_get_procedure_parameters", "group__sl__bt__cs.html#ga2ba75f26352698b6c8cb752c16b342f7", null ],
+    [ "sl_bt_cs_handover_set_procedure_parameters", "group__sl__bt__cs.html#ga7be074a19c9a267769c4325feeb4b720", null ],
+    [ "sl_bt_cs_handover_create_sync", "group__sl__bt__cs.html#ga980aaeacdecec62c35335dd2ceb39727", null ],
+    [ "sl_bt_cs_handover_enable_procedure", "group__sl__bt__cs.html#ga3757cf65977fcfec697aa5229ec953ed", null ],
+    [ "sl_bt_cs_handover_remove_procedure", "group__sl__bt__cs.html#ga8166fe81e523a4fa446c954a87a548bc", null ]
 ];

@@ -119,15 +119,11 @@ class ImportISCFiles(object):
 
         output_lines.append('}')
 
+        output_string = '\n'.join(output_lines) + '\n'
         if isc_filename is not None:
             outputfile = open(isc_filename, 'w')
-            for line in output_lines:
-                output_string += '%s\n' % line
-                outputfile.write('%s\n' % line)
+            outputfile.write(output_string)
             outputfile.close()
-        else:
-            for line in output_lines:
-                output_string += '%s\n' % line
 
         #print(output_string)
         return output_string

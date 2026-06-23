@@ -55,6 +55,10 @@ config_file:
   condition:
   - device_series_2
   - device_sdid_240
+- path: plugin/sl_rail_util_protocol/config/efr32xg2b/sl_rail_util_protocol_config.h
+  condition:
+  - device_series_2
+  - device_sdid_250
 - path: plugin/sl_rail_util_protocol/config/efr32xg2d/sl_rail_util_protocol_config.h
   condition:
   - device_series_2

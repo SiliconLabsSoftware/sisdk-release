@@ -1,0 +1,18 @@
+id: btlinfo
+label: Bootloader Bootload Info Extension Component
+package: bootloader
+description: >
+  Extension component providing bootload info functionality for
+  bootloader.
+category: Platform|Bootloader|Utils
+quality: production
+source:
+- path: "platform/bootloader/storage/bootloadinfo/btl_storage_bootloadinfo.c"
+provides:
+- name: btlinfo
+metadata:
+  sbom:
+    license: MSLA
+ui_hints:
+  visibility: never
+root_path: bootloader

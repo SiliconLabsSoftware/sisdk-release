@@ -4,6 +4,8 @@
  * @copyright 2022 Silicon Laboratories Inc.
  */
 #include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <AppTimer.h>
 #include <EventDistributor.h>
 #include <SizeOf.h>
@@ -28,25 +30,15 @@
 #include <CC_Indicator.h>
 #include "zpal_log.h"
 
-/**
- * This is the first of the registered app handlers
- */
-extern const zaf_event_distributor_cc_event_handler_map_latest_t __start_zw_zaf_event_distributor_cc_event_handler;
-#define cc_event_handler_start __start_zw_zaf_event_distributor_cc_event_handler
-/**
- * This marks the end of the handlers. The element
- * after the last element. This means that this element
- * is not valid.
- */
-extern const zaf_event_distributor_cc_event_handler_map_latest_t __stop_zw_zaf_event_distributor_cc_event_handler;
-#define cc_event_handler_stop __stop_zw_zaf_event_distributor_cc_event_handler
+/* Linker: section zw_zaf_event_distributor_cc_event_handler in .rodata (see zaf_event_distributor_soc.slcc). */
+/* __start_ / __stop_ are address symbols (range of N entries), not sized C array objects; “extern T name[]” is the incomplete-type idiom for a pointer to T. */
+extern const zaf_event_distributor_cc_event_handler_map_entry_t __start_zw_zaf_event_distributor_cc_event_handler[];
+extern const zaf_event_distributor_cc_event_handler_map_entry_t __stop_zw_zaf_event_distributor_cc_event_handler[];
 
 /**
- * Callback type for zaf_event_distributor_cc_event_handler_for_each().
- *
- * The ZAF Event Distributor Handler Map must always be the latest available version.
+ * Callback for cc_handlers_for_each: receives one @ref zaf_event_distributor_cc_event_handler_map_entry_t from the table.
  */
-typedef void (*cc_event_handler_invoker_callback_t)(zaf_event_distributor_cc_event_handler_map_latest_t const * const handler_entry, void* args);
+typedef void (*cc_event_handler_invoker_callback_t)(zaf_event_distributor_cc_event_handler_map_entry_t const * const handler_entry, void const *args);
 
 // Event distributor object
 static SEventDistributor g_EventDistributor = { 0 };
@@ -116,6 +108,9 @@ EventHandlerZwRx(void)
     ZPAL_LOG_DEBUG(ZPAL_LOG_ZAF_EVENT_DISTRIBUTOR, "Incoming Rx msg\r\n");
 
     switch (RxPackage.eReceiveType) {
+      case EZWAVERECEIVETYPE_SINGLE_URGENT:
+        ZPAL_LOG_DEBUG(ZPAL_LOG_ZAF_EVENT_DISTRIBUTOR, "Urgent Rx msg\r\n");
+        __attribute__((fallthrough));
       case EZWAVERECEIVETYPE_SINGLE:
         ZAF_CP_CommandPublish(ZAF_getCPHandle(), (void *) &RxPackage);
         break;
@@ -324,23 +319,21 @@ EventHandlerApp(void)
  * @param[in] handler_entry An entry in the map
  * @param[in] args Arguments passed to the handler. See \ref context_t.
  */
-static void
-call_handler(zaf_event_distributor_cc_event_handler_map_latest_t const * const handler_entry, void* args)
+static void call_handler(zaf_event_distributor_cc_event_handler_map_entry_t const * const handler_entry, void const *args)
 {
-  event_cc_t *event_cc;
-
-  event_cc = (event_cc_t*)args;
+  event_cc_t const *event_cc = (event_cc_t const *)args;
   if (handler_entry->command_class == event_cc->command_class && handler_entry->handler) {
     handler_entry->handler(event_cc->event, event_cc->data);
   }
 }
 
-static void
-cc_handlers_for_each(cc_event_handler_invoker_callback_t callback, void* args)
+static void cc_handlers_for_each(cc_event_handler_invoker_callback_t callback, void const *args)
 {
-  zaf_event_distributor_cc_event_handler_map_latest_t const * iter = &cc_event_handler_start;
-  for (; iter < &cc_event_handler_stop; ++iter) {
-    callback(iter, args);
+  zaf_event_distributor_cc_event_handler_map_entry_t const * const start = __start_zw_zaf_event_distributor_cc_event_handler;
+  zaf_event_distributor_cc_event_handler_map_entry_t const * const end = __stop_zw_zaf_event_distributor_cc_event_handler;
+
+  for (zaf_event_distributor_cc_event_handler_map_entry_t const *p = start; p < end; p++) {
+    callback(p, args);
   }
 }
 

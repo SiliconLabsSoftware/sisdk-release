@@ -23,6 +23,10 @@ library:
   condition:
   - "toolchain_gcc"
   - device_series_2
+- path: "libs/libconnect-psa-security-library-efr32xg2x-llvm.a"
+  condition:
+  - "toolchain_llvm"
+  - device_series_2
 template_contribution:
 - name: component_catalog
   value: connect_psa_encryption

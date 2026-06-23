@@ -17,7 +17,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" line="82" column="12" bodyfile="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="82" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="82" column="12" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="82" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structbyte__array__s_1ae5525d168cf501592f2aae9cfa295044" prot="public" static="no" mutable="no">
         <type>uint8_t</type>
@@ -32,7 +32,7 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" line="83" column="12" bodyfile="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="83" bodyend="-1"/>
+        <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="83" column="12" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="83" bodyend="-1"/>
       </memberdef>
       </sectiondef>
     <briefdescription>
@@ -40,7 +40,7 @@
     </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" line="81" column="1" bodyfile="/var/lib/jenkins/github@2/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="81" bodyend="84"/>
+    <location file="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" line="81" column="1" bodyfile="/var/lib/jenkins/github/bgapi_protocol/protocol/inc/sl_bgapi.h" bodystart="81" bodyend="84"/>
     <listofallmembers>
       <member refid="structbyte__array__s_1ae5525d168cf501592f2aae9cfa295044" prot="public" virt="non-virtual"><scope>byte_array_s</scope><name>data</name></member>
       <member refid="structbyte__array__s_1a5bfb9ef637d707bab6dd8b6754c925a8" prot="public" virt="non-virtual"><scope>byte_array_s</scope><name>len</name></member>

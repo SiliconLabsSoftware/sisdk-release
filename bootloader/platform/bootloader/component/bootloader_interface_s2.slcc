@@ -1,0 +1,80 @@
+id: bootloader_interface_s2
+label: Bootloader Application Interface Series 2 (with app properties)
+package: bootloader
+description: >
+  Series-2 interface bundle: default linker bootloader_size, SMP switch Flash API
+  (btl_smp_switch_flash_api). Does not require bootloader_app_properties: bootloader images
+  define sl_app_properties in btl_main (or secure entry), and application projects obtain
+  bootloader_app_properties from bootloader_interface (or add it explicitly when using this
+  bundle without the top-level interface). Always requires bootloader_interface_common.
+  Use bootloader_interface_common alone when sl_app_properties is supplied elsewhere (e.g.
+  btl_main) and this image does not need default linker bootloader_size or SMP Flash API; use
+  bootloader_interface_s2 when the full bundle is required.
+category: Platform|Bootloader
+quality: production
+ui_hints:
+  visibility: never
+source:
+- path: platform/bootloader/core/smp_switch/btl_smp_switch_flash_api.c
+include:
+- path: platform/bootloader/core/smp_switch
+  file_list:
+  - path: btl_smp_switch_flash_api.h
+provides:
+- name: bootloader_interface_s2
+requires:
+- name: bootloader_interface_common
+- name: bootloader_s2_smp_record_header
+template_contribution:
+- name: bootloader_size
+  value: 16384
+  condition: [device_sdid_200]
+  unless: [apploader, trustzone_secure, trustzone_nonsecure, test_btl_core]
+- name: bootloader_size
+  value: 24576
+  condition: [device_sdid_205]
+  unless: [apploader, trustzone_secure, trustzone_nonsecure, test_btl_core]
+- name: bootloader_size
+  value: 24576
+  condition: [device_sdid_210]
+  unless: [apploader, trustzone_secure, trustzone_nonsecure, test_btl_core]
+- name: bootloader_size
+  value: 24576
+  condition: [device_sdid_215]
+  unless: [apploader, trustzone_secure, trustzone_nonsecure, test_btl_core]
+- name: bootloader_size
+  value: 24576
+  condition: [device_sdid_220]
+  unless: [apploader, trustzone_secure, trustzone_nonsecure, test_btl_core]
+- name: bootloader_size
+  value: 24576
+  condition: [device_sdid_225]
+  unless: [apploader, trustzone_secure, trustzone_nonsecure, test_btl_core]
+- name: bootloader_size
+  value: 24576
+  condition: [device_sdid_230]
+  unless: [apploader, trustzone_secure, trustzone_nonsecure, test_btl_core]
+- name: bootloader_size
+  value: 24576
+  condition: [device_sdid_235]
+  unless: [apploader, trustzone_secure, trustzone_nonsecure, test_btl_core]
+- name: bootloader_size
+  value: 24576
+  condition: [device_sdid_240]
+  unless: [apploader, trustzone_secure, trustzone_nonsecure, test_btl_core]
+- name: bootloader_size
+  value: 24576
+  condition: [device_sdid_260]
+  unless: [apploader, trustzone_secure, trustzone_nonsecure, test_btl_core]
+- name: bootloader_size
+  value: 73728
+  condition: [apploader]
+  unless: [trustzone_secure, trustzone_nonsecure, test_btl_core]
+- name: bootloader_size
+  value: 24576
+  condition: [device_sdid_250]
+  unless: [apploader, trustzone_secure, trustzone_nonsecure, test_btl_core]
+metadata:
+  sbom:
+    license: MSLA
+root_path: bootloader

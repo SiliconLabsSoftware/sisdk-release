@@ -343,13 +343,13 @@ static uint16_t retryTimeoutMs(sl_802154_short_addr_t nodeId)
   nodeType = sli_zigbee_af_current_zigbee_pro_network->nodeType;
 #endif
   if (SL_STATUS_OK == status && SL_ZIGBEE_SLEEPY_END_DEVICE <= nodeType) {
-    retryTimeoutMs += sl_zigbee_mac_indirect_timeout;
+    retryTimeoutMs += sl_zigbee_sleepy_target_mac_timeout_increase;
   }
 #endif //SL_CATALOG_ZIGBEE_ZCL_FRAMEWORK_CORE_PRESENT
 
   if (sl_zigbee_lookup_eui64_by_node_id(nodeId, eui64) == SL_STATUS_OK
       && (sl_zigbee_get_extended_timeout(eui64) == SL_STATUS_OK)) {
-    retryTimeoutMs += sl_zigbee_mac_indirect_timeout;
+    retryTimeoutMs += sl_zigbee_sleepy_target_mac_timeout_increase;
   }
   return retryTimeoutMs;
 }

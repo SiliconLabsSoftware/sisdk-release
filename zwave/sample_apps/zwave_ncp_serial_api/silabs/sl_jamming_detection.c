@@ -483,14 +483,9 @@ zpal_status_t sl_jamming_detection_default_config(sl_jamming_detection_config_t 
 
 zpal_status_t sl_jamming_detection_enable_collection(uint16_t periods)
 {
-  zpal_status_t status = ZPAL_STATUS_FAIL;
+  collection_duration = periods;
 
-  if (periods > 0) {
-    collection_duration = periods;
-    status = ZPAL_STATUS_OK;
-  }
-
-  return status;
+  return ZPAL_STATUS_OK;
 }
 
 zpal_status_t sl_jamming_detection_set_report_interval_sec(uint16_t interval_sec)

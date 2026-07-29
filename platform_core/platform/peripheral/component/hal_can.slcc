@@ -1,0 +1,26 @@
+id: hal_can
+label: CAN
+package: platform_core
+description: >
+  CAN Peripheral API
+category: Platform|Peripheral
+quality: evaluation
+metadata:
+  sbom:
+    license: Zlib
+source:
+- path: "src/sl_hal_can.c"
+include:
+- path: "inc"
+  file_list:
+  - path: "sl_hal_can.h"
+provides:
+- name: hal_can
+requires:
+- name: device
+- name: device_has_can
+- name: hal_common
+- name: cmsis_core
+- name: enum
+- name: log_none
+root_path: platform_core/platform/peripheral

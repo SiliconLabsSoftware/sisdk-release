@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform Security - SoC SE Manager Block Cipher
 description: >
-  This example project demonstrates the block cipher API of SE Manager.
+  Demonstrates how to encrypt and decrypt data with the SE Manager Block Cipher API, exercising AES ECB/CTR/CBC/CFB/CCM/GCM, CMAC, HMAC, and ChaCha20-Poly1305 on Secure Vault devices.
 category: Example|Platform
 filter:
   - name: "Device Type"

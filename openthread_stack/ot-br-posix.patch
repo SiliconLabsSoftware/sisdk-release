@@ -11,7 +11,7 @@ index 9d4eeb89cfd5a5fcc643708d0ffd90d3bad5862e..c0c97efe51fad458fda7cafc591e4e57
  	path = third_party/cJSON/repo
  	url = https://github.com/DaveGamble/cJSON.git
 diff --git a/etc/cmake/options.cmake b/etc/cmake/options.cmake
-index 1339b3b20b32bee4a6debce96df04bcd2161ea42..b3229f87cb3d11f5fedc0ca8dfa16cd40806dfcc 100644
+index 1339b3b20b32bee4a6debce96df04bcd2161ea42..0dacc1335b8c851348703ae278fbfad8ed55156a 100644
 --- a/etc/cmake/options.cmake
 +++ b/etc/cmake/options.cmake
 @@ -205,6 +205,16 @@ else()
@@ -31,6 +31,23 @@ index 1339b3b20b32bee4a6debce96df04bcd2161ea42..b3229f87cb3d11f5fedc0ca8dfa16cd4
  option(OTBR_VENDOR_INFRA_LINK_SELECT "Enable Vendor-specific infrastructure link selection rules" OFF)
  if(OTBR_VENDOR_INFRA_LINK_SELECT)
      target_compile_definitions(otbr-config INTERFACE OTBR_ENABLE_VENDOR_INFRA_LINK_SELECT=1)
+@@ -265,6 +275,16 @@ else()
+     target_compile_definitions(otbr-config INTERFACE OTBR_ENABLE_DNSSD_PLAT=0)
+ endif()
+ 
++option(OTBR_NCP_DNS_UPSTREAM "Enable NCP DNS upstream Spinel bridge on the host" OFF)
++if (OTBR_NCP_DNS_UPSTREAM)
++    target_compile_definitions(otbr-config INTERFACE OTBR_ENABLE_NCP_DNS_UPSTREAM=1)
++endif()
++
++option(OTBR_NCP_DNS_UPSTREAM_BIND_TO_INFRA "Bind NCP upstream DNS sockets to the infra interface" OFF)
++if (OTBR_NCP_DNS_UPSTREAM_BIND_TO_INFRA)
++    target_compile_definitions(otbr-config INTERFACE OTBR_ENABLE_NCP_DNS_UPSTREAM_BIND_TO_INFRA=1)
++endif()
++
+ set(OTBR_MULTI_AIL_DEFAULT OFF)
+ if (OTBR_BORDER_ROUTING)
+     set(OTBR_MULTI_AIL_DEFAULT ON)
 diff --git a/etc/docker/test/Dockerfile b/etc/docker/test/Dockerfile
 index 341efda163756fe22fad6e58c853505012aa8b3d..f3ac5d18bc40ca958bcc49b43913a699c38f648f 100644
 --- a/etc/docker/test/Dockerfile
@@ -584,28 +601,59 @@ index 24f3f0f105239af2bd2d850f0270b53400c66c9a..df2702c568dc5be7b300b87d94c3eef4
  #endif
  #if OTBR_ENABLE_SRP_ADVERTISING_PROXY
      std::unique_ptr<AdvertisingProxy> mAdvertisingProxy;
+diff --git a/src/host/CMakeLists.txt b/src/host/CMakeLists.txt
+index 31eec858c0e13f3d2b205963926b1ff3ea82ea33..24203ee1d53ab4e5fccda3b369b68db69a2021a0 100644
+--- a/src/host/CMakeLists.txt
++++ b/src/host/CMakeLists.txt
+@@ -36,6 +36,8 @@ add_library(otbr-host
+     ncp_host.hpp
+     ncp_spinel.cpp
+     ncp_spinel.hpp
++    ncp_upstream_dns_resolver.cpp
++    ncp_upstream_dns_resolver.hpp
+     rcp_host.cpp
+     rcp_host.hpp
+     thread_helper.cpp
 diff --git a/src/host/ncp_host.cpp b/src/host/ncp_host.cpp
-index ebf1a4520cbb98278466ee34a556999f2639a73c..39b9ddd201838366b97a554a44ed6653e001c757 100644
+index ebf1a4520cbb98278466ee34a556999f2639a73c..0de857f43552f898290db8548bed6ffc28072fa3 100644
 --- a/src/host/ncp_host.cpp
 +++ b/src/host/ncp_host.cpp
-@@ -38,6 +38,7 @@
+@@ -33,13 +33,18 @@
+ #include <memory>
+ 
+ #include <openthread/error.h>
++#include <openthread/nat64.h>
+ #include <openthread/thread.h>
+ 
  #include <openthread/openthread-system.h>
  
  #include "host/async_task.hpp"
 +#include "host/posix/firewall_ingress.hpp"
  #include "lib/spinel/spinel_driver.hpp"
  
++#include "common/code_utils.hpp"
++#include "common/logging.hpp"
++
  namespace otbr {
-@@ -146,6 +147,8 @@ void NcpHost::Init(void)
+ namespace Host {
+ 
+@@ -145,6 +150,15 @@ void NcpHost::Init(void)
+ 
  #if OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
      mNcpSpinel.BorderRoutingSetDhcp6PdEnabled(true);
- #endif
++#endif
 +    // NAT64 prefix management on NCP is enabled after SPINEL_PROP_INFRA_IF_STATE is first set
 +    // (see NcpSpinel::SetInfraIf) so the NCP sees infra before BORDER_ROUTER_NAT64_ENABLE.
++#if OTBR_ENABLE_NCP_DNS_UPSTREAM
++    mDnsUpstreamResolver.Init(mConfig.mBackboneInterfaceName);
++    mNcpSpinel.SetDnsUpstreamResolver(&mDnsUpstreamResolver);
++    mDnsUpstreamResolver.SetResponseCallback([this](uint8_t aTxnIndex, const uint8_t *aData, uint16_t aLength) {
++        IgnoreError(mNcpSpinel.SendDnsUpstreamResponse(aTxnIndex, aData, aLength));
++    });
+ #endif
      mIsInitialized = true;
  }
- 
-@@ -393,13 +396,36 @@ void NcpHost::SetMdnsPublisher(Mdns::Publisher *aPublisher)
+@@ -393,13 +407,36 @@ void NcpHost::SetMdnsPublisher(Mdns::Publisher *aPublisher)
  }
  #endif
  
@@ -643,7 +691,7 @@ index ebf1a4520cbb98278466ee34a556999f2639a73c..39b9ddd201838366b97a554a44ed6653
  otbrError NcpHost::UdpForward(const uint8_t      *aUdpPayload,
                                uint16_t            aLength,
                                const otIp6Address &aRemoteAddr,
-@@ -443,6 +469,11 @@ otbrError NcpHost::Ip6Send(const uint8_t *aData, uint16_t aLength)
+@@ -443,6 +480,11 @@ otbrError NcpHost::Ip6Send(const uint8_t *aData, uint16_t aLength)
      return mNcpSpinel.Ip6Send(aData, aLength);
  }
  
@@ -656,10 +704,10 @@ index ebf1a4520cbb98278466ee34a556999f2639a73c..39b9ddd201838366b97a554a44ed6653
  {
      return mNcpSpinel.Ip6MulAddrUpdateSubscription(aAddress, aIsAdded);
 diff --git a/src/host/ncp_host.hpp b/src/host/ncp_host.hpp
-index 45ad7aea10cc945786d0453f54a5eb5982de739a..7f0ccdd2784a3973a881fd2bed1a9497167a504f 100644
+index 45ad7aea10cc945786d0453f54a5eb5982de739a..a9dd7de9a09a795323aced459a8b9b75d55381f6 100644
 --- a/src/host/ncp_host.hpp
 +++ b/src/host/ncp_host.hpp
-@@ -34,6 +34,8 @@
+@@ -34,11 +34,16 @@
  #ifndef OTBR_AGENT_NCP_HOST_HPP_
  #define OTBR_AGENT_NCP_HOST_HPP_
  
@@ -668,7 +716,15 @@ index 45ad7aea10cc945786d0453f54a5eb5982de739a..7f0ccdd2784a3973a881fd2bed1a9497
  #include "lib/spinel/coprocessor_type.h"
  #include "lib/spinel/spinel_driver.hpp"
  
-@@ -82,7 +84,7 @@ class NcpHost : public MainloopProcessor,
+ #include "common/mainloop.hpp"
+ #include "host/ncp_spinel.hpp"
++#if OTBR_ENABLE_NCP_DNS_UPSTREAM
++#include "host/ncp_upstream_dns_resolver.hpp"
++#endif
+ #include "host/thread_host.hpp"
+ #include "posix/cli_daemon.hpp"
+ #include "posix/infra_if.hpp"
+@@ -82,7 +87,7 @@ class NcpHost : public MainloopProcessor,
                  public NcpNetworkProperties,
                  public Netif::Dependencies,
                  public InfraIf::Dependencies
@@ -677,7 +733,7 @@ index 45ad7aea10cc945786d0453f54a5eb5982de739a..7f0ccdd2784a3973a881fd2bed1a9497
      ,
                  public Mdns::StateObserver
  #endif
-@@ -151,6 +153,14 @@ public:
+@@ -151,6 +156,14 @@ public:
      void SetMdnsPublisher(Mdns::Publisher *aPublisher);
  #endif
  
@@ -692,7 +748,7 @@ index 45ad7aea10cc945786d0453f54a5eb5982de739a..7f0ccdd2784a3973a881fd2bed1a9497
      void InitNetifCallbacks(Netif &aNetif);
      void InitInfraIfCallbacks(InfraIf &aInfraIf);
      void SetHostPowerState(uint8_t aPowerState, const AsyncResultReceiver &aReceiver);
-@@ -165,7 +175,7 @@ public:
+@@ -165,7 +178,7 @@ public:
  #endif
  
  private:
@@ -701,7 +757,7 @@ index 45ad7aea10cc945786d0453f54a5eb5982de739a..7f0ccdd2784a3973a881fd2bed1a9497
      void HandleMdnsState(Mdns::Publisher::State aState) override;
  #endif
      otbrError UdpForward(const uint8_t      *aUdpPayload,
-@@ -176,6 +186,7 @@ private:
+@@ -176,6 +189,7 @@ private:
  
      otbrError Ip6Send(const uint8_t *aData, uint16_t aLength) override;
      otbrError Ip6MulAddrUpdateSubscription(const otIp6Address &aAddress, bool aIsAdded) override;
@@ -709,31 +765,54 @@ index 45ad7aea10cc945786d0453f54a5eb5982de739a..7f0ccdd2784a3973a881fd2bed1a9497
      otbrError SetInfraIf(uint32_t                       aInfraIfIndex,
                           bool                           aIsRunning,
                           const std::vector<Ip6Address> &aIp6Addresses) override;
+@@ -191,8 +205,11 @@ private:
+     ot::Spinel::SpinelDriver &mSpinelDriver;
+     otPlatformConfig          mConfig;
+     NcpSpinel                 mNcpSpinel;
+-    TaskRunner                mTaskRunner;
+-    CliDaemon                 mCliDaemon;
++#if OTBR_ENABLE_NCP_DNS_UPSTREAM
++    NcpUpstreamDnsResolver mDnsUpstreamResolver;
++#endif
++    TaskRunner mTaskRunner;
++    CliDaemon  mCliDaemon;
+ };
+ 
+ } // namespace Host
 diff --git a/src/host/ncp_spinel.cpp b/src/host/ncp_spinel.cpp
-index c95237f43e5b8339271fd0803b6c4193a6db99ab..8899ce6c7f1e39d2d7e08e96f94a61686ffb2c4a 100644
+index c95237f43e5b8339271fd0803b6c4193a6db99ab..584140a0f4feefa867116b52ba12c2ebbdc65e5b 100644
 --- a/src/host/ncp_spinel.cpp
 +++ b/src/host/ncp_spinel.cpp
-@@ -42,6 +42,9 @@
+@@ -41,7 +41,15 @@
+ 
  #include "common/code_utils.hpp"
  #include "common/logging.hpp"
++#include "common/time.hpp"
  #include "host/posix/dnssd.hpp"
 +#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_NAT64_TAYGA
 +#include "host/posix/nat64_tayga_host.hpp"
 +#endif
++#if OTBR_ENABLE_NCP_DNS_UPSTREAM
++#include "host/ncp_upstream_dns_resolver.hpp"
++#include "lib/spinel/spinel_prop_codec.hpp"
++#endif
  #include "lib/spinel/spinel.h"
  #include "lib/spinel/spinel_decoder.hpp"
  #include "lib/spinel/spinel_driver.hpp"
-@@ -68,6 +71,9 @@ NcpSpinel::NcpSpinel(void)
+@@ -68,6 +76,12 @@ NcpSpinel::NcpSpinel(void)
  #if OTBR_ENABLE_DNSSD_PLAT
      , mDiscoveryProxyId(0)
  #endif
 +#if OTBR_ENABLE_TREL
 +    , mTrelThreadUdpPort(0)
 +#endif
++#if OTBR_ENABLE_NCP_DNS_UPSTREAM
++    , mDnsUpstreamResolver(nullptr)
++#endif
  {
      std::fill_n(mWaitingKeyTable, SPINEL_PROP_LAST_STATUS, sizeof(mWaitingKeyTable));
      memset(mCmdTable, 0, sizeof(mCmdTable));
-@@ -274,6 +280,9 @@ void NcpSpinel::SrpServerSetEnabled(bool aEnabled)
+@@ -274,6 +288,9 @@ void NcpSpinel::SrpServerSetEnabled(bool aEnabled)
      }
  }
  
@@ -743,7 +822,7 @@ index c95237f43e5b8339271fd0803b6c4193a6db99ab..8899ce6c7f1e39d2d7e08e96f94a6168
  void NcpSpinel::DnssdSetState(Mdns::Publisher::State aState)
  {
      otError          error;
-@@ -286,7 +295,46 @@ void NcpSpinel::DnssdSetState(Mdns::Publisher::State aState)
+@@ -286,7 +303,46 @@ void NcpSpinel::DnssdSetState(Mdns::Publisher::State aState)
          otbrLogWarning("Failed to call DnssdSetState, %s", otThreadErrorToString(error));
      }
  }
@@ -791,7 +870,15 @@ index c95237f43e5b8339271fd0803b6c4193a6db99ab..8899ce6c7f1e39d2d7e08e96f94a6168
  
  void NcpSpinel::SetBorderAgentMeshCoPServiceChangedCallback(const BorderAgentMeshCoPServiceChangedCallback &aCallback)
  {
-@@ -530,6 +578,7 @@ void NcpSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, ui
+@@ -463,6 +519,7 @@ void NcpSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, ui
+         mPropsObserver->SetDeviceRole(deviceRole);
+ 
+         otbrLogInfo("Device role changed to %s", otThreadDeviceRoleToString(deviceRole));
++
+         break;
+     }
+ 
+@@ -530,6 +587,7 @@ void NcpSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, ui
      }
  
      case SPINEL_PROP_STREAM_NET:
@@ -799,16 +886,47 @@ index c95237f43e5b8339271fd0803b6c4193a6db99ab..8899ce6c7f1e39d2d7e08e96f94a6168
      {
          const uint8_t *data;
          uint16_t       dataLen;
-@@ -614,13 +663,40 @@ void NcpSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, ui
+@@ -614,13 +672,71 @@ void NcpSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, ui
          break;
      }
  
++#if OTBR_ENABLE_NCP_DNS_UPSTREAM
++    case SPINEL_PROP_DNS_UPSTREAM_RDNSS_SERVERS:
++    {
++        ot::Spinel::Decoder decoder;
++        otIp6Address        servers[NcpUpstreamDnsResolver::kMaxRecursiveServerCount];
++        uint8_t             numServers = 0;
++
++        decoder.Init(aBuffer, aLength);
++        SuccessOrExit(ot::Spinel::DecodeDnsUpstreamRdnssServers(decoder, servers, numServers,
++                                                                NcpUpstreamDnsResolver::kMaxRecursiveServerCount),
++                      error = OTBR_ERROR_PARSE);
++
++        if (mDnsUpstreamResolver != nullptr)
++        {
++            mDnsUpstreamResolver->SetRecursiveDnsServers(servers, numServers);
++            IgnoreError(DnsUpstreamSetAvailable(mDnsUpstreamResolver->IsAvailable()));
++        }
++        break;
++    }
++#endif // OTBR_ENABLE_NCP_DNS_UPSTREAM
++
 +#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_NAT64_TAYGA
 +    case SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX:
 +    {
 +        otIp6Prefix prefix;
 +
-+        SuccessOrExit(ParseNat64FavoredPrefix(aBuffer, aLength, prefix) == OT_ERROR_NONE, error = OTBR_ERROR_PARSE);
++        if (aLength == 0)
++        {
++            break;
++        }
++
++        if (ParseNat64FavoredPrefix(aBuffer, aLength, prefix) != OT_ERROR_NONE)
++        {
++            error = OTBR_ERROR_PARSE;
++            ExitNow();
++        }
++
 +        SyncNat64Tayga(prefix);
 +        break;
 +    }
@@ -841,7 +959,7 @@ index c95237f43e5b8339271fd0803b6c4193a6db99ab..8899ce6c7f1e39d2d7e08e96f94a6168
      return;
  }
  
-@@ -676,7 +752,7 @@ void NcpSpinel::HandleValueInserted(spinel_prop_key_t aKey, const uint8_t *aBuff
+@@ -676,7 +792,7 @@ void NcpSpinel::HandleValueInserted(spinel_prop_key_t aKey, const uint8_t *aBuff
          otPlatDnssdService           service;
          Mdns::Publisher::SubTypeList subTypeList;
          const char                  *subTypeArray[kMaxSubTypes];
@@ -850,7 +968,7 @@ index c95237f43e5b8339271fd0803b6c4193a6db99ab..8899ce6c7f1e39d2d7e08e96f94a6168
          Mdns::Publisher::TxtData     txtData;
          otPlatDnssdRequestId         requestId;
          const uint8_t               *callbackData;
-@@ -684,7 +760,8 @@ void NcpSpinel::HandleValueInserted(spinel_prop_key_t aKey, const uint8_t *aBuff
+@@ -684,7 +800,8 @@ void NcpSpinel::HandleValueInserted(spinel_prop_key_t aKey, const uint8_t *aBuff
          std::vector<uint8_t>         callbackDataCopy;
  
          SuccessOrExit(ot::Spinel::DecodeDnssdService(decoder, service, subTypeArray, subTypeCount, requestId,
@@ -860,7 +978,7 @@ index c95237f43e5b8339271fd0803b6c4193a6db99ab..8899ce6c7f1e39d2d7e08e96f94a6168
          for (uint16_t i = 0; i < subTypeCount; i++)
          {
              subTypeList.push_back(subTypeArray[i]);
-@@ -734,7 +811,81 @@ void NcpSpinel::HandleValueInserted(spinel_prop_key_t aKey, const uint8_t *aBuff
+@@ -734,10 +851,108 @@ void NcpSpinel::HandleValueInserted(spinel_prop_key_t aKey, const uint8_t *aBuff
                                                       [this, callbackDataCopy](const otPlatDnssdBrowseResult &aResult) {
                                                           SendDnssdBrowseResult(aResult, callbackDataCopy);
                                                       },
@@ -943,7 +1061,34 @@ index c95237f43e5b8339271fd0803b6c4193a6db99ab..8899ce6c7f1e39d2d7e08e96f94a6168
          break;
      }
  #endif // OTBR_ENABLE_DNSSD_PLAT
-@@ -788,18 +939,19 @@ void NcpSpinel::HandleValueRemoved(spinel_prop_key_t aKey, const uint8_t *aBuffe
++    case SPINEL_PROP_DNS_UPSTREAM_QUERY:
++    {
++        uint8_t        txnIndex;
++        const uint8_t *query;
++        uint16_t       queryLen;
++
++        SuccessOrExit(ot::Spinel::DecodeDnsUpstreamWireMessage(decoder, txnIndex, query, queryLen),
++                      error = OTBR_ERROR_PARSE);
++#if OTBR_ENABLE_NCP_DNS_UPSTREAM
++        if (mDnsUpstreamResolver != nullptr)
++        {
++            mDnsUpstreamResolver->Query(txnIndex, query, queryLen);
++        }
++        else
++        {
++            otbrLogWarning("DNS upstream query txn %u failed; resolver not initialized", txnIndex);
++            IgnoreError(SendDnsUpstreamResponse(txnIndex, nullptr, 0));
++        }
++#else
++        otbrLogWarning("DNS upstream query ignored (txn %u, len %u); build with OTBR_NCP_DNS_UPSTREAM=ON", txnIndex,
++                       queryLen);
++#endif
++        break;
++    }
+     case SPINEL_PROP_BACKBONE_ROUTER_MULTICAST_LISTENER:
+     {
+         const otIp6Address *addr;
+@@ -788,18 +1003,19 @@ void NcpSpinel::HandleValueRemoved(spinel_prop_key_t aKey, const uint8_t *aBuffe
      {
          otPlatDnssdService   service;
          const char          *subTypeArray[kMaxSubTypes];
@@ -966,7 +1111,7 @@ index c95237f43e5b8339271fd0803b6c4193a6db99ab..8899ce6c7f1e39d2d7e08e96f94a6168
                  OT_UNUSED_VARIABLE(SendDnssdResult(requestId, callbackDataCopy, OtbrErrorToOtError(aError)));
              });
          break;
-@@ -821,6 +973,100 @@ void NcpSpinel::HandleValueRemoved(spinel_prop_key_t aKey, const uint8_t *aBuffe
+@@ -821,6 +1037,119 @@ void NcpSpinel::HandleValueRemoved(spinel_prop_key_t aKey, const uint8_t *aBuffe
          break;
      }
  #endif // OTBR_ENABLE_SRP_ADVERTISING_PROXY
@@ -1064,10 +1209,29 @@ index c95237f43e5b8339271fd0803b6c4193a6db99ab..8899ce6c7f1e39d2d7e08e96f94a6168
 +        break;
 +    }
 +#endif // OTBR_ENABLE_DNSSD_PLAT
++    case SPINEL_PROP_DNS_UPSTREAM_CANCEL:
++    {
++        uint8_t txnIndex;
++
++        SuccessOrExit(ot::Spinel::DecodeDnsUpstreamCancel(decoder, txnIndex), error = OTBR_ERROR_PARSE);
++#if OTBR_ENABLE_NCP_DNS_UPSTREAM
++        if (mDnsUpstreamResolver != nullptr)
++        {
++            mDnsUpstreamResolver->Cancel(txnIndex);
++        }
++        else
++        {
++            otbrLogWarning("DNS upstream cancel txn %u ignored; resolver not initialized", txnIndex);
++        }
++#else
++        otbrLogWarning("DNS upstream cancel ignored (txn %u); build with OTBR_NCP_DNS_UPSTREAM=ON", txnIndex);
++#endif
++        break;
++    }
      case SPINEL_PROP_BACKBONE_ROUTER_MULTICAST_LISTENER:
      {
          const otIp6Address *addr;
-@@ -865,6 +1111,31 @@ otbrError NcpSpinel::HandleResponseForPropGet(spinel_tid_t      aTid,
+@@ -865,6 +1194,20 @@ otbrError NcpSpinel::HandleResponseForPropGet(spinel_tid_t      aTid,
          SafeInvoke(mBorderAgentMeshCoPServiceChangedCallback, isActive, port, data, dataLen);
          break;
      }
@@ -1085,21 +1249,10 @@ index c95237f43e5b8339271fd0803b6c4193a6db99ab..8899ce6c7f1e39d2d7e08e96f94a6168
 +        break;
 +    }
 +#endif
-+
-+#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_NAT64_TAYGA
-+    case SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX:
-+    {
-+        otIp6Prefix prefix;
-+
-+        SuccessOrExit(ParseNat64FavoredPrefix(aData, aLength, prefix) == OT_ERROR_NONE, error = OTBR_ERROR_PARSE);
-+        SyncNat64Tayga(prefix);
-+        break;
-+    }
-+#endif
  
      default:
          VerifyOrExit(aKey == mWaitingKeyTable[aTid], error = OTBR_ERROR_INVALID_STATE);
-@@ -927,6 +1198,7 @@ otbrError NcpSpinel::HandleResponseForPropSet(spinel_tid_t      aTid,
+@@ -927,6 +1270,7 @@ otbrError NcpSpinel::HandleResponseForPropSet(spinel_tid_t      aTid,
          break;
  
      case SPINEL_PROP_STREAM_NET:
@@ -1107,7 +1260,20 @@ index c95237f43e5b8339271fd0803b6c4193a6db99ab..8899ce6c7f1e39d2d7e08e96f94a6168
          break;
  
      case SPINEL_PROP_STREAM_CLI:
-@@ -971,7 +1243,15 @@ otbrError NcpSpinel::HandleResponseForPropSet(spinel_tid_t      aTid,
+@@ -936,6 +1280,12 @@ otbrError NcpSpinel::HandleResponseForPropSet(spinel_tid_t      aTid,
+         VerifyOrExit(aKey == SPINEL_PROP_LAST_STATUS, error = OTBR_ERROR_INVALID_STATE);
+         SuccessOrExit(error = SpinelDataUnpack(aData, aLength, SPINEL_DATATYPE_UINT_PACKED_S, &status));
+         otbrLogInfo("Infra If state update result: %s", spinel_status_to_cstr(status));
++#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_BORDER_ROUTING
++        if (status == SPINEL_STATUS_OK)
++        {
++            BorderRoutingSetNat64Enabled(true);
++        }
++#endif
+         break;
+ 
+     case SPINEL_PROP_INFRA_IF_RECV_ICMP6:
+@@ -971,7 +1321,15 @@ otbrError NcpSpinel::HandleResponseForPropSet(spinel_tid_t      aTid,
          break;
  
      default:
@@ -1124,7 +1290,7 @@ index c95237f43e5b8339271fd0803b6c4193a6db99ab..8899ce6c7f1e39d2d7e08e96f94a6168
          break;
      }
  
-@@ -1255,6 +1535,28 @@ exit:
+@@ -1255,6 +1613,28 @@ exit:
      return error;
  }
  
@@ -1153,7 +1319,7 @@ index c95237f43e5b8339271fd0803b6c4193a6db99ab..8899ce6c7f1e39d2d7e08e96f94a6168
  otError NcpSpinel::ParseOperationalDatasetTlvs(const uint8_t            *aBuf,
                                                 uint16_t                  aLen,
                                                 otOperationalDatasetTlvs &aDatasetTlvs)
-@@ -1360,6 +1662,80 @@ otError NcpSpinel::SendDnssdBrowseResult(const otPlatDnssdBrowseResult &aResult,
+@@ -1360,6 +1740,80 @@ otError NcpSpinel::SendDnssdBrowseResult(const otPlatDnssdBrowseResult &aResult,
  
      return error;
  }
@@ -1234,18 +1400,89 @@ index c95237f43e5b8339271fd0803b6c4193a6db99ab..8899ce6c7f1e39d2d7e08e96f94a6168
  #endif
  
  otbrError NcpSpinel::SetInfraIf(uint32_t aInfraIfIndex, bool aIsRunning, const std::vector<Ip6Address> &aIp6Addresses)
-@@ -1380,6 +1756,10 @@ otbrError NcpSpinel::SetInfraIf(uint32_t aInfraIfIndex, bool aIsRunning, const s
+@@ -1380,10 +1834,81 @@ otbrError NcpSpinel::SetInfraIf(uint32_t aInfraIfIndex, bool aIsRunning, const s
  
      SuccessOrExit(SetProperty(SPINEL_PROP_INFRA_IF_STATE, encodingFunc), error = OTBR_ERROR_OPENTHREAD);
  
-+#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_BORDER_ROUTING
-+    BorderRoutingSetNat64Enabled(true);
++#if OTBR_ENABLE_NCP_DNS_UPSTREAM
++    if (mDnsUpstreamResolver != nullptr)
++    {
++        EnableDnsUpstreamOnNcp();
++    }
 +#endif
 +
  exit:
      return error;
  }
-@@ -1608,5 +1988,20 @@ exit:
+ 
++#if OTBR_ENABLE_NCP_DNS_UPSTREAM
++void NcpSpinel::SetDnsUpstreamResolver(NcpUpstreamDnsResolver *aResolver)
++{
++    mDnsUpstreamResolver = aResolver;
++
++    if (mDnsUpstreamResolver != nullptr)
++    {
++        mDnsUpstreamResolver->SetAvailabilityChangedCallback(
++            [this](bool aAvailable) { IgnoreError(DnsUpstreamSetAvailable(aAvailable)); });
++    }
++}
++
++otError NcpSpinel::SendDnsUpstreamResponse(uint8_t aTxnIndex, const uint8_t *aData, uint16_t aLength)
++{
++    otError      error        = OT_ERROR_NONE;
++    EncodingFunc encodingFunc = [aTxnIndex, aData, aLength](ot::Spinel::Encoder &aEncoder) {
++        return ot::Spinel::EncodeDnsUpstreamWireMessage(aEncoder, aTxnIndex, aData, aLength);
++    };
++
++    error = SetProperty(SPINEL_PROP_DNS_UPSTREAM_RESPONSE, encodingFunc);
++    if (error != OT_ERROR_NONE)
++    {
++        otbrLogWarning("Failed to send DNS upstream response (txn %u): %s", aTxnIndex, otThreadErrorToString(error));
++    }
++
++    return error;
++}
++
++otError NcpSpinel::DnsUpstreamSetEnabled(bool aEnabled)
++{
++    otError      error        = OT_ERROR_NONE;
++    EncodingFunc encodingFunc = [aEnabled](ot::Spinel::Encoder &aEncoder) { return aEncoder.WriteBool(aEnabled); };
++
++    error = SetProperty(SPINEL_PROP_DNS_UPSTREAM_ENABLED, encodingFunc);
++    if (error != OT_ERROR_NONE)
++    {
++        otbrLogWarning("Failed to set DNS upstream enabled (%d): %s", aEnabled, otThreadErrorToString(error));
++    }
++
++    return error;
++}
++
++otError NcpSpinel::DnsUpstreamSetAvailable(bool aAvailable)
++{
++    otError      error        = OT_ERROR_NONE;
++    EncodingFunc encodingFunc = [aAvailable](ot::Spinel::Encoder &aEncoder) { return aEncoder.WriteBool(aAvailable); };
++
++    error = SetProperty(SPINEL_PROP_DNS_UPSTREAM_AVAILABLE, encodingFunc);
++    if (error != OT_ERROR_NONE)
++    {
++        otbrLogWarning("Failed to set DNS upstream available (%d): %s", aAvailable, otThreadErrorToString(error));
++    }
++
++    return error;
++}
++
++void NcpSpinel::EnableDnsUpstreamOnNcp(void)
++{
++    mDnsUpstreamResolver->RefreshDnsServers();
++    IgnoreError(DnsUpstreamSetEnabled(true));
++    IgnoreError(DnsUpstreamSetAvailable(mDnsUpstreamResolver->IsAvailable()));
++}
++#endif // OTBR_ENABLE_NCP_DNS_UPSTREAM
++
+ otbrError NcpSpinel::HandleIcmp6Nd(uint32_t          aInfraIfIndex,
+                                    const Ip6Address &aIp6Address,
+                                    const uint8_t    *aData,
+@@ -1608,5 +2133,20 @@ exit:
  }
  #endif // OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
  
@@ -1267,7 +1504,7 @@ index c95237f43e5b8339271fd0803b6c4193a6db99ab..8899ce6c7f1e39d2d7e08e96f94a6168
  } // namespace Host
  } // namespace otbr
 diff --git a/src/host/ncp_spinel.hpp b/src/host/ncp_spinel.hpp
-index 6e18d40476c298473299833c1a4822cfd72757d8..c0c9cdc65edf9fabcf51ae5cb9af20dce882c38d 100644
+index 6e18d40476c298473299833c1a4822cfd72757d8..8156f662a348805a59a4cad536305b1cf68bbfb0 100644
 --- a/src/host/ncp_spinel.hpp
 +++ b/src/host/ncp_spinel.hpp
 @@ -35,10 +35,13 @@
@@ -1284,7 +1521,46 @@ index 6e18d40476c298473299833c1a4822cfd72757d8..c0c9cdc65edf9fabcf51ae5cb9af20dc
  #include <openthread/backbone_router_ftd.h>
  #include <openthread/border_agent.h>
  #if OTBR_ENABLE_DHCP6_PD && OTBR_ENABLE_BORDER_ROUTING
-@@ -347,13 +350,16 @@ public:
+@@ -64,6 +67,11 @@
+ #include "mdns/mdns.hpp"
+ 
+ namespace otbr {
++
++#if OTBR_ENABLE_NCP_DNS_UPSTREAM
++class NcpUpstreamDnsResolver;
++#endif
++
+ namespace Host {
+ 
+ /**
+@@ -141,6 +149,26 @@ public:
+      */
+     void Init(ot::Spinel::SpinelDriver &aSpinelDriver, PropsObserver &aObserver);
+ 
++#if OTBR_ENABLE_NCP_DNS_UPSTREAM
++    /**
++     * Sets the NCP DNS upstream resolver used to forward queries to infra nameservers.
++     *
++     * @param[in] aResolver  A pointer to the resolver (may be nullptr to detach).
++     */
++    void SetDnsUpstreamResolver(NcpUpstreamDnsResolver *aResolver);
++
++    /**
++     * Sends a DNS upstream response to the NCP.
++     *
++     * @param[in] aTxnIndex  The transaction index from the NCP query.
++     * @param[in] aData        DNS wire response payload (may be nullptr when @p aLength is 0).
++     * @param[in] aLength      DNS wire response length in bytes.
++     *
++     * @retval OT_ERROR_NONE  The response was sent successfully.
++     */
++    otError SendDnsUpstreamResponse(uint8_t aTxnIndex, const uint8_t *aData, uint16_t aLength);
++#endif
++
+     /**
+      * Do the de-initialization.
+      */
+@@ -347,13 +375,16 @@ public:
       */
      void SrpServerSetAutoEnableMode(bool aEnabled);
  
@@ -1302,7 +1578,7 @@ index 6e18d40476c298473299833c1a4822cfd72757d8..c0c9cdc65edf9fabcf51ae5cb9af20dc
  
  #if OTBR_ENABLE_MDNS
      /**
-@@ -380,6 +386,18 @@ public:
+@@ -380,6 +411,18 @@ public:
       */
      void AddEphemeralKeyStateChangedCallback(const EphemeralKeyStateChangedCallback &aCallback);
  
@@ -1321,7 +1597,7 @@ index 6e18d40476c298473299833c1a4822cfd72757d8..c0c9cdc65edf9fabcf51ae5cb9af20dc
      /**
       * This method forwards a UDP packet to the NCP.
       *
-@@ -489,6 +507,20 @@ public:
+@@ -489,6 +532,20 @@ public:
      otbrError BorderRoutingProcessDhcp6PdPrefix(const otBorderRoutingPrefixTableEntry *aPrefixInfo);
  #endif
  
@@ -1342,7 +1618,7 @@ index 6e18d40476c298473299833c1a4822cfd72757d8..c0c9cdc65edf9fabcf51ae5cb9af20dc
  private:
      using FailureHandler = std::function<void(otError)>;
  
-@@ -580,9 +612,19 @@ private:
+@@ -580,9 +637,25 @@ private:
                                    const otIp6Address *&aPeerAddr,
                                    uint16_t            &aPeerPort,
                                    uint16_t            &aLocalPort);
@@ -1360,10 +1636,16 @@ index 6e18d40476c298473299833c1a4822cfd72757d8..c0c9cdc65edf9fabcf51ae5cb9af20dc
 +                                    const std::vector<uint8_t>     &aCallbackData);
 +    uint64_t AllocateDnssdStableId(const std::vector<uint8_t> &aCallbackData);
 +    bool     ReleaseDnssdStableId(const std::vector<uint8_t> &aCallbackData, uint64_t &aStableIdOut);
++#endif
++
++#if OTBR_ENABLE_NCP_DNS_UPSTREAM
++    otError DnsUpstreamSetEnabled(bool aEnabled);
++    otError DnsUpstreamSetAvailable(bool aAvailable);
++    void    EnableDnsUpstreamOnNcp(void);
  #endif
  
      ot::Spinel::SpinelDriver *mSpinelDriver;
-@@ -606,7 +648,8 @@ private:
+@@ -606,7 +679,8 @@ private:
      otbr::Mdns::Publisher *mPublisher;
  #endif
  #if OTBR_ENABLE_DNSSD_PLAT
@@ -1373,7 +1655,7 @@ index 6e18d40476c298473299833c1a4822cfd72757d8..c0c9cdc65edf9fabcf51ae5cb9af20dc
  #endif
  
      AsyncTaskPtr mDatasetSetActiveTask;
-@@ -629,6 +672,11 @@ private:
+@@ -629,6 +703,14 @@ private:
      BackboneRouterStateChangedCallback       mBackboneRouterStateChangedCallback;
      BackboneRouterMulticastListenerCallback  mBackboneRouterMulticastListenerCallback;
      EphemeralKeyStateChangedCallback         mEphemeralKeyStateChangedCallback;
@@ -1382,9 +1664,710 @@ index 6e18d40476c298473299833c1a4822cfd72757d8..c0c9cdc65edf9fabcf51ae5cb9af20dc
 +    /// TREL stack UDP port on the NCP (from `SPINEL_PROP_TREL_STATE`); 0 when TREL is off or not yet known.
 +    uint16_t mTrelThreadUdpPort;
 +#endif
++#if OTBR_ENABLE_NCP_DNS_UPSTREAM
++    NcpUpstreamDnsResolver *mDnsUpstreamResolver;
++#endif
  };
  
  } // namespace Host
+diff --git a/src/host/ncp_upstream_dns_resolver.cpp b/src/host/ncp_upstream_dns_resolver.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..0b4065ddbb3f90d928618004d7893205181cc89b
+--- /dev/null
++++ b/src/host/ncp_upstream_dns_resolver.cpp
+@@ -0,0 +1,504 @@
++/*
++ *  Copyright (c) 2026, The OpenThread Authors.
++ *  All rights reserved.
++ *
++ *  Redistribution and use in source and binary forms, with or without
++ *  modification, are permitted provided that the following conditions are met:
++ *  1. Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *  2. Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in the
++ *     documentation and/or other materials provided with the distribution.
++ *  3. Neither the name of the copyright holder nor the
++ *     names of its contributors may be used to endorse or promote products
++ *     derived from this software without specific prior written permission.
++ *
++ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ *  POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#define OTBR_LOG_TAG "NcpDnsUpstream"
++
++#include "host/ncp_upstream_dns_resolver.hpp"
++
++#include <algorithm>
++#include <arpa/inet.h>
++#include <errno.h>
++#include <fstream>
++#include <net/if.h>
++#include <string>
++#include <sys/socket.h>
++#include <unistd.h>
++
++#include <openthread/nat64.h>
++
++#include "common/code_utils.hpp"
++#include "common/logging.hpp"
++
++namespace otbr {
++namespace {
++
++constexpr char                 kResolvConfFullPath[] = "/etc/resolv.conf";
++constexpr char                 kNameserverItem[]     = "nameserver";
++constexpr std::chrono::minutes kDnsServerListCacheTimeout{10};
++constexpr std::chrono::minutes kDnsServerListNullCacheTimeout{1};
++
++bool TryAppendNameserver(const char   *aAddressString,
++                         otIp6Address *aServerList,
++                         uint32_t     &aServerCount,
++                         uint32_t      aMaxServerCount)
++{
++    otIp4Address ip4Address;
++    otIp6Address ip6Address;
++    bool         appended = false;
++
++    VerifyOrExit(aAddressString != nullptr && aAddressString[0] != '\0');
++    VerifyOrExit(aServerCount < aMaxServerCount);
++
++    if (inet_pton(AF_INET, aAddressString, &ip4Address) == 1)
++    {
++        otIp4ToIp4MappedIp6Address(&ip4Address, &ip6Address);
++    }
++    else if (inet_pton(AF_INET6, aAddressString, &ip6Address) != 1)
++    {
++        ExitNow();
++    }
++
++    aServerList[aServerCount] = ip6Address;
++    aServerCount++;
++    appended = true;
++
++exit:
++    return appended;
++}
++
++void AppendNameserversFromLine(const std::string &aLine,
++                               otIp6Address      *aServerList,
++                               uint32_t          &aServerCount,
++                               uint32_t           aMaxServerCount)
++{
++    size_t start = aLine.find_first_not_of(" \t");
++
++    VerifyOrExit(start != std::string::npos);
++    VerifyOrExit(aLine[start] != '#');
++    VerifyOrExit(aLine.compare(start, sizeof(kNameserverItem) - 1, kNameserverItem) == 0);
++
++    start += sizeof(kNameserverItem) - 1;
++    start = aLine.find_first_not_of(" \t", start);
++    VerifyOrExit(start != std::string::npos);
++    TryAppendNameserver(aLine.c_str() + start, aServerList, aServerCount, aMaxServerCount);
++
++exit:
++    return;
++}
++
++bool IsIp6AddressLinkLocal(const otIp6Address &aAddress)
++{
++    return (aAddress.mFields.m8[0] == 0xfe) && ((aAddress.mFields.m8[1] & 0xc0) == 0x80);
++}
++
++} // namespace
++
++NcpUpstreamDnsResolver::NcpUpstreamDnsResolver(void)
++    : mInfraIfName(nullptr)
++    , mIsResolvConfEnabled(true)
++    , mIsAvailable(false)
++    , mRecursiveDnsServerCount(0)
++    , mUpstreamDnsServerCount(0)
++    , mUpstreamDnsServerListFreshness(std::chrono::steady_clock::now())
++{
++    for (Transaction &txn : mTransactions)
++    {
++        txn.mInUse    = false;
++        txn.mTxnIndex = 0;
++        txn.mUdpFd4   = -1;
++        txn.mUdpFd6   = -1;
++    }
++}
++
++void NcpUpstreamDnsResolver::Init(const char *aInfraIfName)
++{
++    mInfraIfName = aInfraIfName;
++    LoadDnsServerListFromConf();
++    NotifyAvailabilityChanged();
++}
++
++void NcpUpstreamDnsResolver::SetResponseCallback(ResponseCallback aCallback)
++{
++    mResponseCallback = std::move(aCallback);
++}
++
++void NcpUpstreamDnsResolver::SetAvailabilityChangedCallback(AvailabilityCallback aCallback)
++{
++    mAvailabilityChangedCallback = std::move(aCallback);
++}
++
++bool NcpUpstreamDnsResolver::IsAvailable(void) const
++{
++    return mIsAvailable;
++}
++
++void NcpUpstreamDnsResolver::RefreshDnsServers(void)
++{
++    LoadDnsServerListFromConf();
++    NotifyAvailabilityChanged();
++}
++
++void NcpUpstreamDnsResolver::SetResolvConfEnabled(bool aEnabled)
++{
++    mIsResolvConfEnabled = aEnabled;
++    TryRefreshDnsServerList();
++    NotifyAvailabilityChanged();
++}
++
++void NcpUpstreamDnsResolver::SetUpstreamDnsServers(const otIp6Address *aUpstreamDnsServers, uint32_t aNumServers)
++{
++    mUpstreamDnsServerCount = std::min(aNumServers, static_cast<uint32_t>(kMaxUpstreamServerCount));
++    memcpy(mUpstreamDnsServerList, aUpstreamDnsServers, mUpstreamDnsServerCount * sizeof(otIp6Address));
++    mUpstreamDnsServerListFreshness = std::chrono::steady_clock::now();
++    NotifyAvailabilityChanged();
++}
++
++void NcpUpstreamDnsResolver::SetRecursiveDnsServers(const otIp6Address *aRecursiveDnsServers, uint32_t aNumServers)
++{
++    mRecursiveDnsServerCount = std::min(aNumServers, static_cast<uint32_t>(kMaxRecursiveServerCount));
++    memcpy(mRecursiveDnsServerList, aRecursiveDnsServers, mRecursiveDnsServerCount * sizeof(otIp6Address));
++    NotifyAvailabilityChanged();
++}
++
++void NcpUpstreamDnsResolver::TryRefreshDnsServerList(void)
++{
++    const auto now = std::chrono::steady_clock::now();
++
++    if (now > mUpstreamDnsServerListFreshness + kDnsServerListCacheTimeout ||
++        (mUpstreamDnsServerCount == 0 && now > mUpstreamDnsServerListFreshness + kDnsServerListNullCacheTimeout))
++    {
++        LoadDnsServerListFromConf();
++        NotifyAvailabilityChanged();
++    }
++}
++
++void NcpUpstreamDnsResolver::LoadDnsServerListFromConf(void)
++{
++    std::string   line;
++    std::ifstream fp;
++
++    VerifyOrExit(mIsResolvConfEnabled);
++
++    mUpstreamDnsServerCount = 0;
++
++    fp.open(kResolvConfFullPath);
++
++    while (fp.good() && std::getline(fp, line) && mUpstreamDnsServerCount < kMaxUpstreamServerCount)
++    {
++        AppendNameserversFromLine(line, mUpstreamDnsServerList, mUpstreamDnsServerCount, kMaxUpstreamServerCount);
++    }
++
++    if (mUpstreamDnsServerCount == 0)
++    {
++        otbrLogWarning("No upstream DNS servers found in %s", kResolvConfFullPath);
++    }
++
++    mUpstreamDnsServerListFreshness = std::chrono::steady_clock::now();
++
++exit:
++    return;
++}
++
++void NcpUpstreamDnsResolver::NotifyAvailabilityChanged(void)
++{
++    bool available = mRecursiveDnsServerCount > 0 || mUpstreamDnsServerCount > 0;
++
++    if (available != mIsAvailable)
++    {
++        mIsAvailable = available;
++
++        if (mAvailabilityChangedCallback)
++        {
++            mAvailabilityChangedCallback(mIsAvailable);
++        }
++    }
++}
++
++int NcpUpstreamDnsResolver::CreateUdpSocket(sa_family_t aFamily)
++{
++    int fd = -1;
++
++    VerifyOrExit(mInfraIfName != nullptr && mInfraIfName[0] != '\0', otbrLogDebug("No infra interface configured"));
++    fd = socket(aFamily, SOCK_DGRAM, IPPROTO_UDP);
++    VerifyOrExit(fd >= 0, otbrLogDebug("Failed to create UDP socket: %s", strerror(errno)));
++#if OTBR_ENABLE_NCP_DNS_UPSTREAM_BIND_TO_INFRA
++    if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, mInfraIfName, strlen(mInfraIfName)) < 0)
++    {
++        otbrLogDebug("Failed to bind UDP socket to %s: %s", mInfraIfName, strerror(errno));
++        close(fd);
++        fd = -1;
++        ExitNow();
++    }
++#endif
++
++exit:
++    return fd;
++}
++
++bool NcpUpstreamDnsResolver::SendQueryToServer(Transaction        *aTxn,
++                                               const otIp6Address &aServerAddress,
++                                               const uint8_t      *aPacket,
++                                               uint16_t            aLength)
++{
++    otIp4Address ip4Addr;
++    sockaddr_in  serverAddr4  = {};
++    sockaddr_in6 serverAddr6  = {};
++    bool         sent         = false;
++    unsigned int infraIfIndex = 0;
++    char         addrStr[INET6_ADDRSTRLEN];
++
++    if (mInfraIfName != nullptr)
++    {
++        infraIfIndex = if_nametoindex(mInfraIfName);
++    }
++
++    if (otIp4FromIp4MappedIp6Address(&aServerAddress, &ip4Addr) == OT_ERROR_NONE)
++    {
++        memcpy(&serverAddr4.sin_addr.s_addr, &ip4Addr, sizeof(otIp4Address));
++        serverAddr4.sin_family = AF_INET;
++        serverAddr4.sin_port   = htons(53);
++        sent = (sendto(aTxn->mUdpFd4, aPacket, aLength, MSG_DONTWAIT, reinterpret_cast<sockaddr *>(&serverAddr4),
++                       sizeof(serverAddr4)) > 0);
++        if (!sent)
++        {
++            otbrLogWarning("sendto IPv4 DNS server failed: %s", strerror(errno));
++        }
++    }
++    else
++    {
++        memcpy(&serverAddr6.sin6_addr, &aServerAddress, sizeof(otIp6Address));
++        serverAddr6.sin6_family = AF_INET6;
++        serverAddr6.sin6_port   = htons(53);
++        if (IsIp6AddressLinkLocal(aServerAddress) && infraIfIndex != 0)
++        {
++            serverAddr6.sin6_scope_id = infraIfIndex;
++        }
++        sent = (sendto(aTxn->mUdpFd6, aPacket, aLength, MSG_DONTWAIT, reinterpret_cast<sockaddr *>(&serverAddr6),
++                       sizeof(serverAddr6)) > 0);
++        if (!sent && inet_ntop(AF_INET6, &aServerAddress, addrStr, sizeof(addrStr)) != nullptr)
++        {
++            otbrLogWarning("sendto [%s] scope=%u failed: %s", addrStr, serverAddr6.sin6_scope_id, strerror(errno));
++        }
++    }
++
++    return sent;
++}
++
++NcpUpstreamDnsResolver::Transaction *NcpUpstreamDnsResolver::AllocateTransaction(uint8_t aTxnIndex)
++{
++    Transaction *ret = nullptr;
++
++    for (Transaction &txn : mTransactions)
++    {
++        if (!txn.mInUse)
++        {
++            int fd4 = CreateUdpSocket(AF_INET);
++            int fd6 = CreateUdpSocket(AF_INET6);
++
++            if (fd4 < 0 || fd6 < 0)
++            {
++                if (fd4 >= 0)
++                {
++                    close(fd4);
++                }
++                if (fd6 >= 0)
++                {
++                    close(fd6);
++                }
++                break;
++            }
++
++            txn.mInUse    = true;
++            txn.mTxnIndex = aTxnIndex;
++            txn.mUdpFd4   = fd4;
++            txn.mUdpFd6   = fd6;
++            ret           = &txn;
++            break;
++        }
++    }
++
++    return ret;
++}
++
++NcpUpstreamDnsResolver::Transaction *NcpUpstreamDnsResolver::GetTransaction(uint8_t aTxnIndex)
++{
++    Transaction *ret = nullptr;
++
++    for (Transaction &txn : mTransactions)
++    {
++        if (txn.mInUse && txn.mTxnIndex == aTxnIndex)
++        {
++            ret = &txn;
++            break;
++        }
++    }
++
++    return ret;
++}
++
++void NcpUpstreamDnsResolver::CloseTransaction(Transaction *aTxn)
++{
++    if (aTxn->mUdpFd4 >= 0)
++    {
++        close(aTxn->mUdpFd4);
++        aTxn->mUdpFd4 = -1;
++    }
++    if (aTxn->mUdpFd6 >= 0)
++    {
++        close(aTxn->mUdpFd6);
++        aTxn->mUdpFd6 = -1;
++    }
++    aTxn->mInUse = false;
++}
++
++void NcpUpstreamDnsResolver::ReportQueryFailure(uint8_t aTxnIndex)
++{
++    if (mResponseCallback != nullptr)
++    {
++        mResponseCallback(aTxnIndex, nullptr, 0);
++    }
++}
++
++void NcpUpstreamDnsResolver::Query(uint8_t aTxnIndex, const uint8_t *aQuery, uint16_t aLength)
++{
++    Transaction *txn         = nullptr;
++    uint32_t     serverCount = 0;
++    uint32_t     i;
++    bool         failed = false;
++
++    if (aQuery == nullptr || aLength == 0 || aLength > kMaxDnsMessageSize)
++    {
++        failed = true;
++        ExitNow();
++    }
++
++    {
++        Transaction *existingTxn = GetTransaction(aTxnIndex);
++
++        if (existingTxn != nullptr)
++        {
++            CloseTransaction(existingTxn);
++        }
++    }
++
++    txn = AllocateTransaction(aTxnIndex);
++    if (txn == nullptr)
++    {
++        failed = true;
++        ExitNow();
++    }
++
++    if (mRecursiveDnsServerCount > 0)
++    {
++        for (i = 0; i < mRecursiveDnsServerCount; i++)
++        {
++            if (SendQueryToServer(txn, mRecursiveDnsServerList[i], aQuery, aLength))
++            {
++                serverCount++;
++            }
++        }
++    }
++    else
++    {
++        TryRefreshDnsServerList();
++
++        for (i = 0; i < mUpstreamDnsServerCount; i++)
++        {
++            if (SendQueryToServer(txn, mUpstreamDnsServerList[i], aQuery, aLength))
++            {
++                serverCount++;
++            }
++        }
++    }
++
++    if (serverCount == 0)
++    {
++        otbrLogWarning("txn %u: failed to forward DNS query (%u RDNSS, %u resolv.conf servers configured)", aTxnIndex,
++                       mRecursiveDnsServerCount, mUpstreamDnsServerCount);
++        CloseTransaction(txn);
++        failed = true;
++    }
++
++exit:
++    if (failed)
++    {
++        ReportQueryFailure(aTxnIndex);
++    }
++}
++
++void NcpUpstreamDnsResolver::Cancel(uint8_t aTxnIndex)
++{
++    Transaction *txn = GetTransaction(aTxnIndex);
++
++    if (txn != nullptr)
++    {
++        CloseTransaction(txn);
++    }
++}
++
++void NcpUpstreamDnsResolver::ForwardResponse(Transaction *aTxn, int aFd)
++{
++    uint8_t response[kMaxDnsMessageSize];
++    ssize_t readSize = -1;
++
++    VerifyOrExit((readSize = read(aFd, response, sizeof(response))) > 0);
++
++    if (mResponseCallback)
++    {
++        mResponseCallback(aTxn->mTxnIndex, response, static_cast<uint16_t>(readSize));
++    }
++
++exit:
++    return;
++}
++
++void NcpUpstreamDnsResolver::Update(MainloopContext &aMainloop)
++{
++    for (const Transaction &txn : mTransactions)
++    {
++        if (txn.mInUse)
++        {
++            aMainloop.AddFdToSet(txn.mUdpFd4, MainloopContext::kReadFdSet | MainloopContext::kErrorFdSet);
++            aMainloop.AddFdToSet(txn.mUdpFd6, MainloopContext::kReadFdSet | MainloopContext::kErrorFdSet);
++        }
++    }
++}
++
++void NcpUpstreamDnsResolver::Process(const MainloopContext &aMainloop)
++{
++    for (Transaction &txn : mTransactions)
++    {
++        if (!txn.mInUse)
++        {
++            continue;
++        }
++
++        if (FD_ISSET(txn.mUdpFd4, &aMainloop.mErrorFdSet) || FD_ISSET(txn.mUdpFd4, &aMainloop.mReadFdSet))
++        {
++            ForwardResponse(&txn, txn.mUdpFd4);
++            CloseTransaction(&txn);
++        }
++        else if (FD_ISSET(txn.mUdpFd6, &aMainloop.mErrorFdSet) || FD_ISSET(txn.mUdpFd6, &aMainloop.mReadFdSet))
++        {
++            ForwardResponse(&txn, txn.mUdpFd6);
++            CloseTransaction(&txn);
++        }
++    }
++}
++
++} // namespace otbr
+diff --git a/src/host/ncp_upstream_dns_resolver.hpp b/src/host/ncp_upstream_dns_resolver.hpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..b4ef09c7719cdf31584833e8ca05d789149ad633
+--- /dev/null
++++ b/src/host/ncp_upstream_dns_resolver.hpp
+@@ -0,0 +1,182 @@
++/*
++ *  Copyright (c) 2026, The OpenThread Authors.
++ *  All rights reserved.
++ *
++ *  Redistribution and use in source and binary forms, with or without
++ *  modification, are permitted provided that the following conditions are met:
++ *  1. Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *  2. Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in the
++ *     documentation and/or other materials provided with the distribution.
++ *  3. Neither the name of the copyright holder nor the
++ *     names of its contributors may be used to endorse or promote products
++ *     derived from this software without specific prior written permission.
++ *
++ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ *  POSSIBILITY OF SUCH DAMAGE.
++ */
++
++/**
++ * @file
++ *   Standalone infra DNS upstream resolver for NCP border router host.
++ */
++
++#ifndef OTBR_HOST_NCP_UPSTREAM_DNS_RESOLVER_HPP_
++#define OTBR_HOST_NCP_UPSTREAM_DNS_RESOLVER_HPP_
++
++#include <openthread-br/config.h>
++
++#include <chrono>
++#include <cstdint>
++#include <functional>
++
++#include <sys/socket.h>
++
++#include <openthread/ip6.h>
++
++#include "common/mainloop.hpp"
++
++namespace otbr {
++
++/**
++ * Forwards DNS wire payloads to upstream nameservers for NCP Spinel bridging.
++ *
++ * Does not depend on a host `otInstance` or `otPlatDns*` platform hooks.
++ */
++class NcpUpstreamDnsResolver : public MainloopProcessor
++{
++public:
++    static constexpr uint16_t kMaxDnsMessageSize       = 512;
++    static constexpr uint8_t  kMaxConcurrentQueries    = 32;
++    static constexpr uint8_t  kMaxUpstreamServerCount  = 3;
++    static constexpr uint8_t  kMaxRecursiveServerCount = 3;
++
++    using ResponseCallback     = std::function<void(uint8_t aTxnIndex, const uint8_t *aData, uint16_t aLength)>;
++    using AvailabilityCallback = std::function<void(bool aAvailable)>;
++
++    NcpUpstreamDnsResolver(void);
++
++    /**
++     * Initializes the resolver.
++     *
++     * @param[in] aInfraIfName  Infrastructure interface name for UDP bind (may be nullptr).
++     */
++    void Init(const char *aInfraIfName);
++
++    /**
++     * Sets the callback invoked when a DNS response is received.
++     *
++     * @param[in] aCallback  The response callback.
++     */
++    void SetResponseCallback(ResponseCallback aCallback);
++
++    /**
++     * Sets the callback invoked when upstream resolver availability changes.
++     *
++     * @param[in] aCallback  The availability callback.
++     */
++    void SetAvailabilityChangedCallback(AvailabilityCallback aCallback);
++
++    /**
++     * Indicates whether at least one upstream nameserver is configured.
++     */
++    bool IsAvailable(void) const;
++
++    /**
++     * Reloads upstream nameservers and notifies listeners if availability changed.
++     */
++    void RefreshDnsServers(void);
++
++    /**
++     * Sets whether to load nameservers from `/etc/resolv.conf`.
++     *
++     * @param[in] aEnabled  TRUE to enable loading from resolv.conf.
++     */
++    void SetResolvConfEnabled(bool aEnabled);
++
++    /**
++     * Sets explicit upstream DNS servers.
++     *
++     * @param[in] aUpstreamDnsServers  IPv6 or IPv4-mapped IPv6 server addresses.
++     * @param[in] aNumServers          Number of servers.
++     */
++    void SetUpstreamDnsServers(const otIp6Address *aUpstreamDnsServers, uint32_t aNumServers);
++
++    /**
++     * Sets recursive DNS servers learned from NCP Border Routing (RDNSS).
++     *
++     * When non-empty, queries are forwarded to these servers instead of `/etc/resolv.conf`.
++     *
++     * @param[in] aRecursiveDnsServers  IPv6 recursive DNS server addresses.
++     * @param[in] aNumServers           Number of servers.
++     */
++    void SetRecursiveDnsServers(const otIp6Address *aRecursiveDnsServers, uint32_t aNumServers);
++
++    /**
++     * Forwards a DNS query to upstream nameservers.
++     *
++     * @param[in] aTxnIndex  Opaque transaction index from the NCP.
++     * @param[in] aQuery     DNS wire query payload.
++     * @param[in] aLength    DNS wire query length.
++     */
++    void Query(uint8_t aTxnIndex, const uint8_t *aQuery, uint16_t aLength);
++
++    /**
++     * Cancels a pending query.
++     *
++     * @param[in] aTxnIndex  Opaque transaction index from the NCP.
++     */
++    void Cancel(uint8_t aTxnIndex);
++
++    void Update(MainloopContext &aMainloop) override;
++    void Process(const MainloopContext &aMainloop) override;
++
++private:
++    struct Transaction
++    {
++        bool    mInUse;
++        uint8_t mTxnIndex;
++        int     mUdpFd4;
++        int     mUdpFd6;
++    };
++
++    int          CreateUdpSocket(sa_family_t aFamily);
++    void         TryRefreshDnsServerList(void);
++    void         LoadDnsServerListFromConf(void);
++    void         NotifyAvailabilityChanged(void);
++    bool         SendQueryToServer(Transaction        *aTxn,
++                                   const otIp6Address &aServerAddress,
++                                   const uint8_t      *aPacket,
++                                   uint16_t            aLength);
++    void         ForwardResponse(Transaction *aTxn, int aFd);
++    void         CloseTransaction(Transaction *aTxn);
++    void         ReportQueryFailure(uint8_t aTxnIndex);
++    Transaction *AllocateTransaction(uint8_t aTxnIndex);
++    Transaction *GetTransaction(uint8_t aTxnIndex);
++
++    const char                           *mInfraIfName;
++    bool                                  mIsResolvConfEnabled;
++    bool                                  mIsAvailable;
++    uint32_t                              mRecursiveDnsServerCount;
++    otIp6Address                          mRecursiveDnsServerList[kMaxRecursiveServerCount];
++    uint32_t                              mUpstreamDnsServerCount;
++    otIp6Address                          mUpstreamDnsServerList[kMaxUpstreamServerCount];
++    std::chrono::steady_clock::time_point mUpstreamDnsServerListFreshness;
++    Transaction                           mTransactions[kMaxConcurrentQueries];
++    ResponseCallback                      mResponseCallback;
++    AvailabilityCallback                  mAvailabilityChangedCallback;
++};
++
++} // namespace otbr
++
++#endif // OTBR_HOST_NCP_UPSTREAM_DNS_RESOLVER_HPP_
 diff --git a/src/host/posix/CMakeLists.txt b/src/host/posix/CMakeLists.txt
 index 7742934b094966dda1d710137cc04bcf9a4b924e..3244c58b06068669939bda50002c93ab9e463b54 100644
 --- a/src/host/posix/CMakeLists.txt
@@ -1414,10 +2397,44 @@ index 7742934b094966dda1d710137cc04bcf9a4b924e..3244c58b06068669939bda50002c93ab
 +    target_compile_definitions(otbr-posix PRIVATE OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE=1)
 +endif()
 diff --git a/src/host/posix/dnssd.cpp b/src/host/posix/dnssd.cpp
-index 0e9857247ffdfb0fa8f0f0abe54cd9e33c878995..2a1b6ea668e6591a062b805a6f1ea454cd271cc9 100644
+index 0e9857247ffdfb0fa8f0f0abe54cd9e33c878995..c2dead977ce2845d2ea2dc93c61e126804877de0 100644
 --- a/src/host/posix/dnssd.cpp
 +++ b/src/host/posix/dnssd.cpp
-@@ -550,6 +550,8 @@ void DnssdPlatform::ProcessIpAddrResolvers(const std::string
+@@ -396,9 +396,14 @@ void DnssdPlatform::StopServiceResolver(const SrvResolver &aSrvResolver, const S
+ 
+ void DnssdPlatform::StartTxtResolver(const TxtResolver &aTxtResolver, TxtCallbackPtr aCallbackPtr)
+ {
+-    auto &entryList = mTxtResolversMap[DnsServiceName(aTxtResolver.mServiceInstance, aTxtResolver.mServiceType)];
++    DnsServiceName serviceName(aTxtResolver.mServiceInstance, aTxtResolver.mServiceType);
+ 
+-    entryList.AddIfAbsent(aTxtResolver.mInfraIfIndex, std::move(aCallbackPtr));
++    mTxtResolversMap[serviceName].AddIfAbsent(aTxtResolver.mInfraIfIndex, std::move(aCallbackPtr));
++
++    if (mServiceNameSubscriptions.find(serviceName) != mServiceNameSubscriptions.end())
++    {
++        ReplayResolvedServiceTxtIfAny(serviceName);
++    }
+ 
+     PostServiceSubscriptionUpdateTask();
+ }
+@@ -454,9 +459,13 @@ void DnssdPlatform::HandleMdnsState(Mdns::Publisher::State aState)
+ void DnssdPlatform::HandleDiscoveredService(const std::string                             &aType,
+                                             const Mdns::Publisher::DiscoveredInstanceInfo &aInfo)
+ {
+-    otbr::DnssdPlatform::Get().ProcessServiceBrowsers(aType, aInfo);
+-    otbr::DnssdPlatform::Get().ProcessServiceResolvers(aType, aInfo);
+-    otbr::DnssdPlatform::Get().ProcessTxtResolvers(aType, aInfo);
++    std::string instanceName = DnsUtils::UnescapeInstanceName(aInfo.mName);
++
++    Get().mResolvedServiceInfoCache[DnsServiceName(instanceName, aType)] = aInfo;
++
++    Get().ProcessServiceBrowsers(aType, aInfo);
++    Get().ProcessServiceResolvers(aType, aInfo);
++    Get().ProcessTxtResolvers(aType, aInfo);
+ }
+ 
+ void DnssdPlatform::HandleDiscoveredHost(const std::string &aHostName, const Mdns::Publisher::DiscoveredHostInfo &aInfo)
+@@ -550,6 +559,8 @@ void DnssdPlatform::ProcessIpAddrResolvers(const std::string
      std::vector<otPlatDnssdAddressAndTtl> addressAndTtls;
      auto                                  it = mIpAddrResolversMap.find(aHostName);
  
@@ -1426,7 +2443,7 @@ index 0e9857247ffdfb0fa8f0f0abe54cd9e33c878995..2a1b6ea668e6591a062b805a6f1ea454
      VerifyOrExit(mState == kStateReady);
  
      VerifyOrExit(it != mIpAddrResolversMap.end());
-@@ -573,11 +575,28 @@ exit:
+@@ -573,11 +584,45 @@ exit:
      return;
  }
  
@@ -1445,19 +2462,60 @@ index 0e9857247ffdfb0fa8f0f0abe54cd9e33c878995..2a1b6ea668e6591a062b805a6f1ea454
 +    return;
 +}
 +
++void DnssdPlatform::ReplayResolvedServiceTxtIfAny(const DnsServiceName &aServiceName)
++{
++    auto cacheIt = mResolvedServiceInfoCache.find(aServiceName);
++
++    VerifyOrExit(mState == kStateReady);
++    VerifyOrExit(cacheIt != mResolvedServiceInfoCache.end());
++    VerifyOrExit(mServiceNameSubscriptions.find(aServiceName) != mServiceNameSubscriptions.end());
++
++    ProcessTxtResolvers(aServiceName.GetType(), cacheIt->second);
++
++exit:
++    return;
++}
++
  void DnssdPlatform::StartAddressResolver(const AddressResolver &aAddressResolver, AddressCallbackPtr aCallbackPtr)
  {
 -    auto &entryList = mIpAddrResolversMap[DnsName(aAddressResolver.mHostName)];
 +    DnsName dnsName(aAddressResolver.mHostName);
-+
-+    mIpAddrResolversMap[dnsName].AddIfAbsent(aAddressResolver.mInfraIfIndex, std::move(aCallbackPtr));
  
 -    entryList.AddIfAbsent(aAddressResolver.mInfraIfIndex, std::move(aCallbackPtr));
-+    ReplayResolvedHostAddressesIfAny(dnsName);
++    mIpAddrResolversMap[dnsName].AddIfAbsent(aAddressResolver.mInfraIfIndex, std::move(aCallbackPtr));
++
++    if (mHostSubscriptions.find(dnsName) != mHostSubscriptions.end())
++    {
++        ReplayResolvedHostAddressesIfAny(dnsName);
++    }
  
      PostHostSubscriptionUpdateTask();
  }
-@@ -690,6 +709,7 @@ void DnssdPlatform::ExecuteHostSubscriptionUpdate(void)
+@@ -638,6 +683,7 @@ void DnssdPlatform::ExecuteServiceSubscriptionUpdate(void)
+             mTxtResolversMap.find(*iter) == mTxtResolversMap.end())
+         {
+             mPublisher.UnsubscribeService(iter->GetType(), iter->GetInstance());
++            mResolvedServiceInfoCache.erase(*iter);
+             iter = mServiceNameSubscriptions.erase(iter);
+         }
+         else
+@@ -655,6 +701,7 @@ void DnssdPlatform::ExecuteServiceSubscriptionUpdate(void)
+         {
+             mServiceNameSubscriptions.insert(serviceName);
+             mPublisher.SubscribeService(serviceName.GetType(), serviceName.GetInstance());
++            ReplayResolvedServiceTxtIfAny(serviceName);
+         }
+     }
+     for (const auto &entry : mTxtResolversMap)
+@@ -665,6 +712,7 @@ void DnssdPlatform::ExecuteServiceSubscriptionUpdate(void)
+         {
+             mServiceNameSubscriptions.insert(serviceName);
+             mPublisher.SubscribeService(serviceName.GetType(), serviceName.GetInstance());
++            ReplayResolvedServiceTxtIfAny(serviceName);
+         }
+     }
+ }
+@@ -690,6 +738,7 @@ void DnssdPlatform::ExecuteHostSubscriptionUpdate(void)
          if (mIpAddrResolversMap.find(dnsName) == mIpAddrResolversMap.end())
          {
              mPublisher.UnsubscribeHost(dnsName.GetName());
@@ -1465,8 +2523,16 @@ index 0e9857247ffdfb0fa8f0f0abe54cd9e33c878995..2a1b6ea668e6591a062b805a6f1ea454
              iter = mHostSubscriptions.erase(iter);
          }
          else
+@@ -707,6 +756,7 @@ void DnssdPlatform::ExecuteHostSubscriptionUpdate(void)
+         {
+             mHostSubscriptions.insert(dnsName);
+             mPublisher.SubscribeHost(dnsName.GetName());
++            ReplayResolvedHostAddressesIfAny(dnsName);
+         }
+     }
+ }
 diff --git a/src/host/posix/dnssd.hpp b/src/host/posix/dnssd.hpp
-index 9c22f9cc3ef32fbe085409f773de428f75bf4c24..80863954ce6172aaac052945ebac958e139647c7 100644
+index 9c22f9cc3ef32fbe085409f773de428f75bf4c24..2a1eac1aa9bb79e18e1d772064ddad4abd1114a8 100644
 --- a/src/host/posix/dnssd.hpp
 +++ b/src/host/posix/dnssd.hpp
 @@ -343,13 +343,48 @@ private:
@@ -1531,25 +2597,27 @@ index 9c22f9cc3ef32fbe085409f773de428f75bf4c24..80863954ce6172aaac052945ebac958e
          using IteratorType = typename std::vector<RequestType>::iterator;
  
          IteratorType FindEntry(uint64_t aInfraIfIndex, const CallbackType &aCallback)
-@@ -388,6 +428,7 @@ private:
+@@ -388,6 +428,8 @@ private:
      void ProcessServiceResolvers(const std::string &aType, const Mdns::Publisher::DiscoveredInstanceInfo &aInfo);
      void ProcessTxtResolvers(const std::string &aType, const Mdns::Publisher::DiscoveredInstanceInfo &aInfo);
      void ProcessIpAddrResolvers(const std::string &aHostName, const Mdns::Publisher::DiscoveredHostInfo &aInfo);
 +    void ReplayResolvedHostAddressesIfAny(const DnsName &aDnsName);
++    void ReplayResolvedServiceTxtIfAny(const DnsServiceName &aServiceName);
  
      void StartAddressResolver(const AddressResolver &aAddressResolver, AddressCallbackPtr aCallbackPtr);
      void StopAddressResolver(const AddressResolver &aAddressResolver, const AddressCallback &aCallback);
-@@ -413,9 +454,10 @@ private:
+@@ -413,9 +455,11 @@ private:
      std::map<DnsServiceName, EntryList<TxtEntry>>    mTxtResolversMap;
      std::map<DnsName, EntryList<AddressEntry>>       mIpAddrResolversMap;
  
 -    std::set<DnsServiceType> mServiceTypeSubscriptions;
 -    std::set<DnsServiceName> mServiceNameSubscriptions;
 -    std::set<DnsName>        mHostSubscriptions;
-+    std::set<DnsServiceType>                               mServiceTypeSubscriptions;
-+    std::set<DnsServiceName>                               mServiceNameSubscriptions;
-+    std::set<DnsName>                                      mHostSubscriptions;
-+    std::map<DnsName, Mdns::Publisher::DiscoveredHostInfo> mResolvedHostInfoCache;
++    std::set<DnsServiceType>                                          mServiceTypeSubscriptions;
++    std::set<DnsServiceName>                                          mServiceNameSubscriptions;
++    std::set<DnsName>                                                 mHostSubscriptions;
++    std::map<DnsName, Mdns::Publisher::DiscoveredHostInfo>            mResolvedHostInfoCache;
++    std::map<DnsServiceName, Mdns::Publisher::DiscoveredInstanceInfo> mResolvedServiceInfoCache;
  };
  
  } // namespace otbr
@@ -1726,10 +2794,10 @@ index 0000000000000000000000000000000000000000..f35bcd66afb8d3fde20cebc6e2b49e41
 +#endif // OTBR_AGENT_POSIX_FIREWALL_INGRESS_HPP_
 diff --git a/src/host/posix/nat64_tayga_host.cpp b/src/host/posix/nat64_tayga_host.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..d7bfb95f7195039ffaa1a66a26b0b502be4462aa
+index 0000000000000000000000000000000000000000..a2e5867b1d7d8665dd75b37593a5840fe69a7f07
 --- /dev/null
 +++ b/src/host/posix/nat64_tayga_host.cpp
-@@ -0,0 +1,305 @@
+@@ -0,0 +1,306 @@
 +/*
 + *  Copyright (c) 2026, The OpenThread Authors.
 + *  All rights reserved.
@@ -1999,7 +3067,8 @@ index 0000000000000000000000000000000000000000..d7bfb95f7195039ffaa1a66a26b0b502
 +    char prefixBuf[OT_IP6_PREFIX_STRING_SIZE];
 +    bool confChanged;
 +
-+    VerifyOrExit(aPrefix.mLength == kNat64PrefixLength);
++    VerifyOrExit(aPrefix.mLength == kNat64PrefixLength,
++                 otbrLogWarning("Ignoring NAT64 prefix with invalid length %u", aPrefix.mLength));
 +
 +    TaygaHostCommands::ConfigureRpFilter();
 +

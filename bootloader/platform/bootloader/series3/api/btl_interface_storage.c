@@ -16,6 +16,7 @@
  ******************************************************************************/
 #include "string.h"
 #include "btl_interface.h"
+#include "sl_common.h"
 #include "sl_se_manager.h"
 #include "sl_se_manager_extmem.h"
 #include "btl_storage_bootloadinfo.h"
@@ -627,7 +628,10 @@ int32_t bootloader_verifyImage(uint32_t                   slotId,
                                BootloaderParserCallback_t metadataCallback)
 {
   int32_t retVal;
-  uint8_t context[BOOTLOADER_STORAGE_VERIFICATION_CONTEXT_SIZE];
+#if !defined(__GNUC__)
+  SL_ALIGN(8)
+#endif
+  uint8_t context[BOOTLOADER_STORAGE_VERIFICATION_CONTEXT_SIZE] SL_ATTRIBUTE_ALIGN(8);
 
   retVal = bootloader_initVerifyImage(slotId,
                                       context,
@@ -653,7 +657,10 @@ int32_t bootloader_getImageInfo(uint32_t          slotId,
                                 uint32_t          *bootloaderVersion)
 {
   int32_t retVal;
-  uint8_t context[BOOTLOADER_STORAGE_VERIFICATION_CONTEXT_SIZE];
+#if !defined(__GNUC__)
+  SL_ALIGN(8)
+#endif
+  uint8_t context[BOOTLOADER_STORAGE_VERIFICATION_CONTEXT_SIZE] SL_ATTRIBUTE_ALIGN(8);
   BootloaderParserContext_t *ctx = (BootloaderParserContext_t*)(&context);
 
   bool receivedData = false;

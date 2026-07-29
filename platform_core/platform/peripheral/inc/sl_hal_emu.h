@@ -1193,10 +1193,7 @@ __INLINE void sl_hal_emu_clear_reset_cause(void)
  *   A reset cause mask. See the reference manual for a description
  *   of the reset cause mask.
  ******************************************************************************/
-__INLINE uint32_t sl_hal_emu_get_reset_cause(void)
-{
-  return EMU->RSTCAUSE;
-}
+uint32_t sl_hal_emu_get_reset_cause(void);
 
 /***************************************************************************//**
  * @brief

@@ -1,0 +1,23 @@
+id: tfm_crypto_defs
+package: security_tfm
+label: TF-M Crypto Definitions
+description: >-
+  Provides tfm_crypto_defs.h as a separate component so the broader
+  TF-M psa/*.h headers in interface/include are not exposed by default.
+  Breaking out this single header prevents circular inclusion when the
+  mbedtls and TF-M PSA headers coexist in TrustZone builds (notably
+  with IAR).
+category: Platform|Security|TrustZone
+quality: production
+ui_hints:
+  visibility: never
+provides:
+- name: tfm_crypto_defs
+include:
+- path: interface/include
+  file_list:
+  - path: tfm_crypto_defs.h
+metadata:
+  sbom:
+    reference: tfm_sbom
+root_path: security_tfm

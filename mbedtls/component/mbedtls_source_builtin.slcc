@@ -1,0 +1,106 @@
+id: mbedtls_source_builtin
+package: mbedtls
+label: Source Code (Builtin Drivers)
+description: Legacy crypto primitives used as PSA builtin drivers (future TF-PSA-Crypto drivers/builtin/). Secure / Unaware only.
+category: Platform|Security|Mbed TLS
+quality: production
+ui_hints:
+  visibility: never
+provides:
+- name: mbedtls_source_builtin
+conflicts:
+- name: trustzone_nonsecure
+requires:
+- name: mbedtls_crypto_platform_api
+source:
+- path: library/aes.c
+  condition:
+  - mbedtls_aes
+- path: library/block_cipher.c
+  condition:
+  - mbedtls_cipher
+- path: library/ccm.c
+  condition:
+  - mbedtls_ccm
+- path: library/chacha20.c
+  condition:
+  - mbedtls_chacha20
+- path: library/chacha20.c
+  condition: [mbedtls_cipher, psa_crypto_cipher_chacha20]
+- path: library/chacha20.c
+  condition: [mbedtls_cipher, psa_crypto_chachapoly]
+- path: library/chachapoly.c
+  condition:
+  - mbedtls_chachapoly
+- path: library/cipher.c
+  condition:
+  - mbedtls_cipher
+- path: library/cipher_wrap.c
+  condition:
+  - mbedtls_cipher
+- path: library/cmac.c
+  condition:
+  - mbedtls_cmac
+- path: library/ctr_drbg.c
+  condition:
+  - mbedtls_random
+- path: library/ecdh.c
+  condition:
+  - mbedtls_ecdh
+- path: library/ecjpake.c
+  condition:
+  - mbedtls_jpake
+- path: library/entropy.c
+  condition:
+  - mbedtls_random
+- path: library/entropy_poll.c
+  condition:
+  - mbedtls_random
+- path: library/gcm.c
+  condition:
+  - mbedtls_gcm
+- path: library/hkdf.c
+  condition:
+  - mbedtls_hkdf
+- path: library/hmac_drbg.c
+  condition:
+  - mbedtls_random
+- path: library/md.c
+  condition:
+  - mbedtls_hash
+- path: library/md5.c
+  condition:
+  - mbedtls_md5
+- path: library/poly1305.c
+  condition:
+  - mbedtls_poly1305
+- path: library/sha1.c
+  condition:
+  - mbedtls_sha1
+- path: library/sha256.c
+  condition:
+  - mbedtls_sha256
+- path: library/sha256.c
+  condition:
+  - mbedtls_sha224
+- path: library/sha3.c
+- path: library/sha512.c
+  condition:
+  - mbedtls_sha512
+- path: library/sha512.c
+  condition:
+  - mbedtls_sha384
+include:
+- path: library
+  file_list:
+  - path: aesni.h
+  - path: block_cipher_internal.h
+  - path: cipher_invasive.h
+  - path: cipher_wrap.h
+  - path: ctr.h
+  - path: entropy_poll.h
+  - path: padlock.h
+metadata:
+  sbom:
+    reference: mbedtls_sbom
+root_path: mbedtls

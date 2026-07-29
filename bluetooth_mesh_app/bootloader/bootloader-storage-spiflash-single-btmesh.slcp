@@ -44,7 +44,6 @@ tag:
   - companion:application
   - hwfilter:board:hardware_board_has_spiflash
   - hwfilter:!flash:1M
-  - toolchain:gcc
 
 post_build:
   path: ../postbuild_profile/btmesh_dfu_btl.slpb

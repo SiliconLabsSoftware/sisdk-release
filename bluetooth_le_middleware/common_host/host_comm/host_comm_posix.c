@@ -28,6 +28,8 @@
  *
  ******************************************************************************/
 
+#include <errno.h>
+#include <time.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
@@ -103,6 +105,11 @@ pthread_t thread_tx;
 
 static pthread_mutex_t rx_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t tx_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t  rx_cond  = PTHREAD_COND_INITIALIZER;
+static bool data_available      = false;
+
+static host_comm_recv_ctx_t recv_ctx = { 0 };
+static host_comm_send_ctx_t send_ctx = { 0 };
 
 /******************************************************************************
  * Initialize low level connection.
@@ -161,7 +168,35 @@ sl_status_t host_comm_init(void)
 
   host_comm_buffers_init(&rx_buffer, &tx_buffer);
 
-  return host_comm_threads_create(&thread_rx, &thread_tx, msg_recv_func, msg_send_func);
+  if (!IS_EMPTY_STRING(uart_port)) {
+    // uartFinishOpen() is a no-op on POSIX, returning always zero
+    (void)host_comm_uart_finish_open(handle_ptr,
+                                     uart_flow_control,
+                                     &rx_buffer,
+                                     &rx_mutex,
+                                     &rx_cond,
+                                     &data_available);
+  }
+
+  recv_ctx.start_routine   = msg_recv_func;
+  recv_ctx.rx_buffer       = &rx_buffer;
+  recv_ctx.rx_mutex        = &rx_mutex;
+  recv_ctx.rx_cond         = &rx_cond;
+  recv_ctx.data_available  = &data_available;
+  recv_ctx.host_comm_pk    = host_comm_pk;
+  recv_ctx.host_comm_input = host_comm_input;
+  recv_ctx.handle_ptr      = handle_ptr;
+  recv_ctx.run             = &run;
+  recv_ctx.wait_for_data   = NULL;
+  recv_ctx.wait_ctx        = NULL;
+
+  send_ctx.start_routine    = msg_send_func;
+  send_ctx.tx_buffer        = &tx_buffer;
+  send_ctx.tx_mutex         = &tx_mutex;
+  send_ctx.host_comm_output = host_comm_output;
+  send_ctx.handle_ptr       = handle_ptr;
+
+  return host_comm_threads_create(&thread_rx, &thread_tx, &recv_ctx, &send_ctx);
 }
 
 /******************************************************************************
@@ -299,9 +334,53 @@ int32_t host_comm_rx(uint32_t len, uint8_t* data)
  *****************************************************************************/
 int32_t host_comm_peek(void)
 {
-  int32_t len = 0;
+  // Deadline for each timedwait is taken under rx_mutex so mutex contention
+  // cannot make pthread_cond_timedwait return ETIMEDOUT immediately.
+  const long cond_wait_ms = 2;
+
   pthread_mutex_lock(&rx_mutex);
+
+  int32_t len = (int32_t)host_comm_ringbuf_data_size(&rx_buffer);
+  if (len > 0) {
+    data_available = true;
+    pthread_mutex_unlock(&rx_mutex);
+    return len;
+  }
+
+  while (!data_available) {
+    struct timespec ts;
+    if (clock_gettime(CLOCK_REALTIME, &ts) != 0) {
+      pthread_mutex_unlock(&rx_mutex);
+      return 0;
+    }
+    ts.tv_nsec += cond_wait_ms * 1000000L;
+    if (ts.tv_nsec >= 1000000000L) {
+      ts.tv_sec += 1;
+      ts.tv_nsec -= 1000000000L;
+    }
+
+    int rc;
+    do {
+      rc = pthread_cond_timedwait(&rx_cond, &rx_mutex, &ts);
+    } while (rc == EINTR);
+
+    if (rc == ETIMEDOUT) {
+      len = (int32_t)host_comm_ringbuf_data_size(&rx_buffer);
+      data_available = !!len;
+      pthread_mutex_unlock(&rx_mutex);
+      return len;
+    }
+    if (rc != 0) {
+      len = (int32_t)host_comm_ringbuf_data_size(&rx_buffer);
+      data_available = !!len;
+      pthread_mutex_unlock(&rx_mutex);
+      return len;
+    }
+  }
+
   len = (int32_t)host_comm_ringbuf_data_size(&rx_buffer);
+  data_available = !!len;
+
   pthread_mutex_unlock(&rx_mutex);
   return len;
 }
@@ -311,10 +390,7 @@ int32_t host_comm_peek(void)
  *****************************************************************************/
 void *msg_recv_func(void *ptr)
 {
-  // unused variable
-  (void)ptr;
-
-  return msg_recv_func_shared(&rx_buffer, &rx_mutex, host_comm_pk, host_comm_input, handle_ptr);
+  return msg_recv_func_shared(ptr);
 }
 
 /******************************************************************************
@@ -322,8 +398,5 @@ void *msg_recv_func(void *ptr)
  *****************************************************************************/
 void *msg_send_func(void *ptr)
 {
-  // unused variable
-  (void)ptr;
-
-  return msg_send_func_shared(&tx_buffer, &tx_mutex, host_comm_output, handle_ptr);
+  return msg_send_func_shared(ptr);
 }

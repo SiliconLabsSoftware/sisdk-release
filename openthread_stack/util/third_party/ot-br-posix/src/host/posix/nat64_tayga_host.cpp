@@ -267,7 +267,8 @@ void SyncNat64Tayga(const otIp6Prefix &aPrefix)
     char prefixBuf[OT_IP6_PREFIX_STRING_SIZE];
     bool confChanged;
 
-    VerifyOrExit(aPrefix.mLength == kNat64PrefixLength);
+    VerifyOrExit(aPrefix.mLength == kNat64PrefixLength,
+                 otbrLogWarning("Ignoring NAT64 prefix with invalid length %u", aPrefix.mLength));
 
     TaygaHostCommands::ConfigureRpFilter();
 

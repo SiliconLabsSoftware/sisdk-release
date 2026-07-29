@@ -7,16 +7,14 @@ ui_hints:
 quality: production
 provides:
 - name: tfm_tz_service_psa_crypto
+requires:
+- name: tfm_crypto_defs
+  condition: [trustzone_secure]
 include:
   # Add third_party as include path in order to redirect
   # inclusion of the PSA Crypto headers to the mbedtls submodule (when the
   # corresponding headers in third_party/trusted-firmware-m/interface/include are used).
 - path: .
-
-- path: interface/include
-  condition: [trustzone_secure]
-  file_list:
-  - path: tfm_crypto_defs.h
 
 - path: secure_fw/partitions/crypto
   condition: [trustzone_secure]

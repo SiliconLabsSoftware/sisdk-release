@@ -38,4 +38,3 @@ post_build:
 tag:
   - companion:application
   - hwfilter:flash:1M
-  - toolchain:gcc

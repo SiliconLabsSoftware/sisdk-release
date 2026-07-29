@@ -527,7 +527,8 @@
 <tr><td>SL_ZIGBEE_EZSP_VALUE_MAX_NWK_RETRIES</td><td>0x46</td><td>The maximum number of NWK retries that will be attempted.</td></tr>
 <tr><td>SL_ZIGBEE_EZSP_VALUE_REJOIN_MODE</td><td>0x47</td><td>Policies for allowing/disallowing rejoins.</td></tr>
 <tr><td>SL_ZIGBEE_EZSP_VALUE_JOIN_USE_INSTALL_CODE_ENABLE</td><td>0x48</td><td>Controls whether devices must use an install code when joining.</td></tr>
-<tr><td>SL_ZIGBEE_EZSP_VALUE_STACK_REVISION</td><td>0x49</td><td>The stack revision.</td></tr></table><br>
+<tr><td>SL_ZIGBEE_EZSP_VALUE_STACK_REVISION</td><td>0x49</td><td>The stack revision.</td></tr>
+<tr><td>SL_ZIGBEE_EZSP_CONFIG_SLEEPY_TARGET_MAC_TIMEOUT_INCREASE</td><td>0x50</td><td>The extra milliseconds added to the APS retry and Fragmentation retry timeout for known sleepy destinations.</td></tr></table><br>
   <table class="borders"><col width="300"><col width="100"><col width="300">
   <tr class="heading">
   <td colspan="3"><b>sl_zigbee_ezsp_extended_value_id_t</b></td>
@@ -1790,18 +1791,6 @@
     <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b></td></tr>
 
     <tr><td>sl_802154_radio_priorities_t priorities</td><td colspan="2">The current priorities.</td></tr>
-</table><br>
-
-    <table class="outline"><col width="300"><col width="200"><col width="200">
-    <tr class="heading">
-    <td><b>Name:</b> radioSetSchedulerPriorities</td><td><b>ID:</b> 0x012B</td><td></td></tr>
-<tr><td colspan="3" style="border-top: solid black 1px;"><b>Description:</b> Set the current scheduler priorities for radio operations</td></tr>
-
-    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Command Parameters:</b></td></tr>
-
-    <tr><td>sl_802154_radio_priorities_t priorities</td><td colspan="2">The current priorities.</td></tr>
-
-    <tr><td colspan="3" style="border-top: solid black 1px;"><b>Response Parameters:</b> None</td></tr>
 </table><br>
 
     <table class="outline"><col width="300"><col width="200"><col width="200">
@@ -6397,7 +6386,6 @@ source route at <i>index</i>.</td></tr>
 <tr><td>proxyNextBroadcastFromLong</td><td>0x0066</td></tr>
 <tr><td>radioGetSchedulerPriorities</td><td>0x012A</td></tr>
 <tr><td>radioGetSchedulerSliptime</td><td>0x012C</td></tr>
-<tr><td>radioSetSchedulerPriorities</td><td>0x012B</td></tr>
 <tr><td>radioSetSchedulerSliptime</td><td>0x012D</td></tr>
 <tr><td>rawTransmitCompleteHandler</td><td>0x0098</td></tr>
 <tr><td>readAndClearCounters</td><td>0x0065</td></tr>
@@ -6846,7 +6834,7 @@ source route at <i>index</i>.</td></tr>
 <tr><td>0x0128</td><td bgcolor="white">setIncomingTcLinkKeyFrameCounter</td></tr>
 <tr><td>0x0129</td><td bgcolor="white">apsCryptMessage</td></tr>
 <tr><td>0x012A</td><td bgcolor="white">radioGetSchedulerPriorities</td></tr>
-<tr><td>0x012B</td><td bgcolor="white">radioSetSchedulerPriorities</td></tr>
+<tr><td>0x012B</td><td bgcolor="lightgray">-- unassigned --</td></tr>
 <tr><td>0x012C</td><td bgcolor="white">radioGetSchedulerSliptime</td></tr>
 <tr><td>0x012D</td><td bgcolor="white">radioSetSchedulerSliptime</td></tr>
 <tr><td>0x012E</td><td bgcolor="white">getEndpoint</td></tr>

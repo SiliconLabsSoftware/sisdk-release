@@ -672,7 +672,7 @@ sl_status_t sl_dma_channel_abort(sl_dma_channel_handle_t *handle)
   __DMB();
 
   sl_hal_ldma_enable_channel(ldma, ch);
-  while (sl_hal_ldma_channel_is_active(ldma, ch)) ;
+  while (sl_hal_ldma_channel_is_active(ldma, ch));
   sl_hal_ldma_disable_channel(ldma, ch);
 
   sl_hal_ldma_enable_interrupts(ldma, 1UL << ch);
@@ -994,12 +994,33 @@ sl_status_t sl_dma_channel_update_active_transfer(sl_dma_channel_handle_t *handl
 
   // Check if we've already transferred more than the new size
   if (already_transferred_units > new_unit_count) {
+    sl_hal_ldma_enable_channel(ldma, ch);
     CORE_EXIT_ATOMIC();
     return SL_STATUS_INVALID_PARAMETER;
   }
 
   // Calculate new remaining count: new_total_size - already_transferred
   uint32_t new_remaining_units = new_unit_count - already_transferred_units;
+
+  if (new_remaining_units == 0) {
+    // The size update has completed the active descriptor.
+    if (get_next_descriptor(active_desc) != NULL) {
+      // The descriptor list has more descriptors, start the next one. This will also cause the
+      // DMA to resume, no need to call sl_hal_ldma_enable_channel.
+      sl_hal_ldma_start_transfer(ldma, ch);
+    } else {
+      // The descriptor list has no more descriptors, stop the channel so `process_completed_descriptors`
+      // processes the completed descriptor. From this point on, the DMA will remain disabled until
+      // a new transfer is submitted.
+      ldma->CHDONE_SET = 1UL << ch;
+    }
+
+    // Set the interrupt flag to cause the driver to process the completed descriptor.
+    ldma->IF_SET = 1UL << ch;
+
+    CORE_EXIT_ATOMIC();
+    return SL_STATUS_OK;
+  }
 
   // Encode new remaining count (0-based) for writing to registers
 #if defined(SL_DMA_CHANNEL_HAS_EXTENDED_DESCRIPTORS)

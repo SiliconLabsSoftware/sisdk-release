@@ -114,6 +114,8 @@ extern "C" {
 // -------------------------------
 // Connection parameters default settings definition
 
+#define ESL_LIB_CONNECTION_RETRY_COUNT_MAX  3
+
 #ifndef ESL_LIB_CONN_INTERVAL_MIN_DEFAULT
 // Overridable at compile time with 'make "CFLAGS=-DESL_LIB_CONN_INTERVAL_MIN_DEFAULT=X"'
  #define ESL_LIB_CONN_INTERVAL_MIN_DEFAULT        (ESL_LIB_PAWR_SUBEVENT_INTERVAL_DEFAULT / 3)
@@ -135,6 +137,15 @@ typedef enum esl_lib_bool_e {
   ESL_LIB_FALSE = 0,
   ESL_LIB_TRUE  = 1
 } esl_lib_bool_t;
+
+/// Advertisement deduplication configuration (field order tuned for minimal padding)
+typedef struct esl_lib_adv_dedup_config_s {
+  esl_lib_bool_t enabled;               ///< Enable / disable advertisement deduplication filtering
+  uint32_t       refresh_ms;            ///< Periodic tag_found refresh interval [ms]
+  uint32_t       default_watchdog_ms;   ///< Absence watchdog for new / unlearned tags [ms]
+  float          period_multiplier;     ///< Adaptive watchdog: adv. period count multiplier
+  uint16_t       cache_size_max;        ///< Limit max cached advertisers
+} esl_lib_adv_dedup_config_t;
 
 /// Node identification type
 typedef enum esl_lib_node_id_type_e {
@@ -863,6 +874,22 @@ sl_status_t esl_lib_write_image(esl_lib_connection_handle_t connection_handle,
  *****************************************************************************/
 sl_status_t esl_lib_get_image_type(esl_lib_connection_handle_t connection_handle,
                                    uint8_t                     img_index);
+
+// -------------------------------
+// Advertisement deduplication for scanning
+
+/**************************************************************************//**
+ * Configure ESL service advertisement deduplication at runtime.
+ *
+ * @param[in] config Configuration pointer. NULL applies all compile-time
+ *                   defaults (see esl_lib_adv_dedup_config.h). No need to
+ *                   invoke at startup manually when ESL_LIB_ADV_DEDUP_ENABLE
+ *                   is enabled - unless a config change is required at
+ *                   runtime.
+ *
+ * @return Status code.
+ *****************************************************************************/
+sl_status_t esl_lib_adv_dedup_configure(const esl_lib_adv_dedup_config_t *config);
 
 // -------------------------------
 // Scanning

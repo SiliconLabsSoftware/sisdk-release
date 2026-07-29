@@ -1,9 +1,12 @@
 # PSA Crypto ECDH
 
-Demonstrates how to perform ECDH key agreement between two peers with the PSA Crypto API, exercising SECP and Montgomery (X25519/X448) curves.
+## High-Level Overview
+
+Demonstrates how to perform ECDH key agreement between two peers with the PSA Crypto API, in a platform security SoC example exercising SECP and Montgomery (X25519/X448) curves.
 
 ## Table of Contents
 
+- [High-Level Overview](#high-level-overview)
 - [Purpose / Scope](#purpose--scope)
 - [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
 - [Steps to Run Demo](#steps-to-run-demo)

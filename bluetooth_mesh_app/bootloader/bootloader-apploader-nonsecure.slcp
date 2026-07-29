@@ -28,6 +28,5 @@ tag:
   - companion:bootloader-apploader-secure
   - hwfilter:device:device_supports_bluetooth
   - hwfilter:device:device_series_2
-  - toolchain:gcc
 post_build:
   path: ../postbuild_profile/bootloader_trustzone_nonsecure.slpb

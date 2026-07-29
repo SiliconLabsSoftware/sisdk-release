@@ -91,6 +91,10 @@ void sli_bt_peer_security_init(void)
 {
   confirm_process_state = SL_BT_PEER_SECURITY_PROCESS_IDLE;
   confirm_conn_handle = SL_BT_INVALID_CONNECTION_HANDLE;
+#if defined(SL_BT_PEER_SECURITY_REQUEST_DEBUG_KEYS) && (SL_BT_PEER_SECURITY_REQUEST_DEBUG_KEYS == 1)
+  peer_security_log_info("Requesting debug keys enabled." NL_SEC);
+  (void)sl_bt_sm_set_debug_mode();
+#endif // defined(SL_BT_PEER_SECURITY_REQUEST_DEBUG_KEYS) &&0(SL_BT_PEER_SECURITY_REQUEST_DEBUG_KEYS == 1)
 }
 
 sl_status_t sli_bt_peer_security_on_bt_event(const sl_bt_msg_t *evt)

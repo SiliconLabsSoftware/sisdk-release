@@ -33,6 +33,7 @@
 #include <memory>
 
 #include <openthread/error.h>
+#include <openthread/nat64.h>
 #include <openthread/thread.h>
 
 #include <openthread/openthread-system.h>
@@ -40,6 +41,9 @@
 #include "host/async_task.hpp"
 #include "host/posix/firewall_ingress.hpp"
 #include "lib/spinel/spinel_driver.hpp"
+
+#include "common/code_utils.hpp"
+#include "common/logging.hpp"
 
 namespace otbr {
 namespace Host {
@@ -149,6 +153,13 @@ void NcpHost::Init(void)
 #endif
     // NAT64 prefix management on NCP is enabled after SPINEL_PROP_INFRA_IF_STATE is first set
     // (see NcpSpinel::SetInfraIf) so the NCP sees infra before BORDER_ROUTER_NAT64_ENABLE.
+#if OTBR_ENABLE_NCP_DNS_UPSTREAM
+    mDnsUpstreamResolver.Init(mConfig.mBackboneInterfaceName);
+    mNcpSpinel.SetDnsUpstreamResolver(&mDnsUpstreamResolver);
+    mDnsUpstreamResolver.SetResponseCallback([this](uint8_t aTxnIndex, const uint8_t *aData, uint16_t aLength) {
+        IgnoreError(mNcpSpinel.SendDnsUpstreamResponse(aTxnIndex, aData, aLength));
+    });
+#endif
     mIsInitialized = true;
 }
 

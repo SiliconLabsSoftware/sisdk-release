@@ -139,11 +139,11 @@ define:
   - name: OS_CFG_COMPAT_INIT
 
 readme:
-  - path: ./readme-zigbee_ncp-ot_rcp-uart.md
+  - path: ./readme-mp-zb-ncp-ot-rcp-uart.md
 
 ui_hints:
   highlight:
-    - path: readme-zigbee_ncp-ot_rcp-uart.md
+    - path: readme-mp-zb-ncp-ot-rcp-uart.md
       focus: false
 
 filter:

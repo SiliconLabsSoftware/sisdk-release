@@ -54,8 +54,8 @@
 
 #if defined(SL_TRUSTZONE_SECURE)
 
-/* The Secure library must use the standard crypto_struct.h from the mbedtls repo. */
-#include "psa/crypto_struct.h"
+/* The Secure library must use the crypto_struct.h from the mbedtls repo. */
+#include <include/psa/crypto_struct.h>
 
 #else /* SL_TRUSTZONE_SECURE */
 
@@ -76,9 +76,13 @@ extern "C" {
  */
 #include "psa/build_info.h"
 
-/* Include the context definition for the compiled-in drivers for the primitive
- * algorithms. */
-#include "psa/crypto_driver_contexts_primitives.h"
+/* In NS, multi-part operation structs are opaque handles to the secure
+ * crypto service reached via TF-M veneers; the driver context unions
+ * live on the S side with mbedtls and are not needed here. The full
+ * upstream <mbedtls/md.h> is pulled in via the TrustZone NS mbedtls
+ * header/component selection to keep mbedtls_md_type_t visible for
+ * upstream <mbedtls/psa_util.h> inline helpers consumed on the NS side. */
+#include "mbedtls/md.h"
 
 struct psa_hash_operation_s {
     mbedtls_psa_client_handle_t handle;
@@ -101,10 +105,6 @@ static inline struct psa_cipher_operation_s psa_cipher_operation_init(void)
     const struct psa_cipher_operation_s v = PSA_CIPHER_OPERATION_INIT;
     return v;
 }
-
-/* Include the context definition for the compiled-in drivers for the composite
- * algorithms. */
-#include "psa/crypto_driver_contexts_composites.h"
 
 struct psa_mac_operation_s {
     mbedtls_psa_client_handle_t handle;
@@ -129,10 +129,6 @@ static inline struct psa_aead_operation_s psa_aead_operation_init(void)
     const struct psa_aead_operation_s v = PSA_AEAD_OPERATION_INIT;
     return v;
 }
-
-/* Include the context definition for the compiled-in drivers for the key
- * derivation algorithms. */
-#include "psa/crypto_driver_contexts_key_derivation.h"
 
 struct psa_key_derivation_s {
     mbedtls_psa_client_handle_t handle;

@@ -48,12 +48,6 @@
 // Default parameter values.
 #define MAX_OPT_LEN                   255
 
-#if PEEK_US_SLEEP == 0
-#define MSG_RECV_TIMEOUT_COUNT        10000
-#else
-#define MSG_RECV_TIMEOUT_COUNT        MSG_RECV_TIMEOUT_MS * 1000 / PEEK_US_SLEEP
-#endif
-
 #if defined(SECURITY) && SECURITY == 1
 #define SEC_BGAPI_RSP_BASE            4
 #define SEC_BGAPI_RSP_BASE_LEN        4
@@ -88,7 +82,6 @@ static int32_t ncp_host_peek_timeout(uint32_t len, uint32_t timeout);
 #if defined(SECURITY) && SECURITY == 1
 static void ncp_sec_host_command_handler(buf_ncp_host_t *buf);
 #endif // defined(SECURITY) && SECURITY == 1
-static int32_t ncp_host_lazy_peek(void);
 static int32_t ncp_host_get_msg(void);
 static int32_t ncp_host_get_boot_event(void);
 static void on_boot_timer_expire(app_timer_t *timer, void *data);
@@ -100,7 +93,7 @@ sl_status_t ncp_host_init(void)
 {
   sl_status_t sc;
 
-  sc = sl_bt_api_initialize_nonblock(ncp_host_tx, ncp_host_rx, ncp_host_lazy_peek);
+  sc = sl_bt_api_initialize_nonblock(ncp_host_tx, ncp_host_rx, host_comm_peek);
 
   if (sc == SL_STATUS_OK) {
     sc = host_comm_init();
@@ -245,37 +238,83 @@ void ncp_host_reboot_dfu(void)
   (void)host_comm_tx(sizeof(reboot_dfu_command), reboot_dfu_command);
 }
 
-/******************************************************************************
- * Check if any data is available in receive buffer, sleep if empty
- *****************************************************************************/
-static int32_t ncp_host_lazy_peek(void)
+static uint32_t get_monotonic_ms(void)
 {
-  int32_t ret = host_comm_peek();
+#if defined(_WIN32)
+  LARGE_INTEGER freq, counter;
+  QueryPerformanceFrequency(&freq);
+  QueryPerformanceCounter(&counter);
+  uint64_t ms = (counter.QuadPart * 1000ULL) / freq.QuadPart;
+  return (uint32_t)ms;
 
-  if (ret < 1) {
-    app_sleep_us(PEEK_US_SLEEP);
+#elif defined(__APPLE__)
+  static mach_timebase_info_data_t timebase = { 0 };
+  if (timebase.denom == 0) {
+    mach_timebase_info(&timebase);
   }
-  return ret;
-}
+  uint64_t t = mach_absolute_time();
+  uint64_t ns = t * timebase.numer / timebase.denom;
+  return (uint32_t)(ns / 1000000ULL);
 
+#else
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  uint64_t ms = (uint64_t)ts.tv_sec * 1000ULL + ts.tv_nsec / 1000000ULL;
+  return (uint32_t)ms;
+#endif
+}
 /******************************************************************************
  * Check if given amount of data is available in receive buffer within timeout
  *****************************************************************************/
 static int32_t ncp_host_peek_timeout(uint32_t len, uint32_t timeout)
 {
+  uint32_t end = get_monotonic_ms() + timeout;
+  uint32_t now;
   int32_t ret;
-  uint32_t timeout_counter = 0;
 
   do {
     ret = host_comm_peek();
-
-    if (ret < (int64_t)len) {
-      timeout_counter++;
+    now = get_monotonic_ms();
+#if defined(PEEK_US_SLEEP) && (PEEK_US_SLEEP != 0)
+    if ((ret < (int32_t)len) && (now < end) && (ret > 0)) {
       app_sleep_us(PEEK_US_SLEEP);
     }
-  } while ((ret < (int64_t)len) && (timeout_counter < timeout));
+#endif
+  } while ((ret < (int32_t)len) && (now < end));
 
   return ret;
+}
+
+/******************************************************************************
+ * Read exactly len bytes from the host RX ring buffer. Waits until at least
+ * that many bytes are available (peek_timeout) and loops host_comm_rx because
+ * each call may return fewer than requested when data arrives in chunks.
+ *****************************************************************************/
+static int32_t ncp_host_read_exact(uint8_t *buf, uint32_t len, uint32_t peek_timeout)
+{
+  uint32_t got = 0;
+  int32_t ret;
+
+  if (len == 0) {
+    return 0;
+  }
+
+  while (got < len) {
+    uint32_t need = len - got;
+
+    ret = ncp_host_peek_timeout(need, peek_timeout);
+    if (ret < (int32_t)need) {
+      return -1;
+    }
+
+    ret = host_comm_rx(need, buf + got);
+    if (ret <= 0) {
+      return -1;
+    }
+    got += (uint32_t)ret;
+  }
+
+  return (int32_t)len;
 }
 
 /******************************************************************************
@@ -287,14 +326,13 @@ static int32_t ncp_host_get_msg(void)
   int32_t ret;
   uint32_t msg_header;
 
-  msg_len = ncp_host_lazy_peek();
   // wait for the full header before attempting to decode it
-  if (msg_len < SL_BGAPI_MSG_HEADER_LEN) {
+  ret = ncp_host_read_exact(&buf_ncp_raw.buf[0],
+                            SL_BGAPI_MSG_HEADER_LEN,
+                            MSG_RECV_TIMEOUT_MS);
+  if (ret < 0) {
     return 0;
   }
-
-  // Read the header
-  (void)host_comm_rx(SL_BGAPI_MSG_HEADER_LEN, &buf_ncp_raw.buf[0]);
   msg_header = buf_ncp_raw.header;
   msg_len = SL_BGAPI_MSG_LEN(msg_header);
   // Check if length will fit to buffer
@@ -302,18 +340,13 @@ static int32_t ncp_host_get_msg(void)
     app_log_error("Invalid message length: %d, the BGAPI data stream may become corrupted." APP_LOG_NL, msg_len);
     return -1;
   }
-  ret = ncp_host_peek_timeout(msg_len, MSG_RECV_TIMEOUT_COUNT * msg_len);
-  if (ret < 0) {
-    app_log_error("Message reveice timeout occurred, the BGAPI data stream has been corrupted!" APP_LOG_NL);
-    return -1;
-  }
   // Read the rest of the message
-  ret = host_comm_rx(msg_len, (void *)&buf_ncp_raw.buf[SL_BGAPI_MSG_HEADER_LEN]);
+  ret = ncp_host_read_exact(&buf_ncp_raw.buf[SL_BGAPI_MSG_HEADER_LEN],
+                            (uint32_t)msg_len,
+                            MSG_RECV_TIMEOUT_MS * (uint32_t)msg_len);
   if (ret < 0) {
-    app_log_error("Message receive failed, expected %d, return value %d!" APP_LOG_NL, msg_len, ret);
+    app_log_error("Message receive timeout occurred, the BGAPI data stream has been corrupted!" APP_LOG_NL);
     return -1;
-  } else if (ret != msg_len) {
-    app_log_warning("Message length mismatch, expected %d, received %d!" APP_LOG_NL, msg_len, ret);
   }
   // add the header length to the whole message size in the end
   msg_len += SL_BGAPI_MSG_HEADER_LEN;
@@ -335,6 +368,20 @@ static int32_t ncp_host_get_msg(void)
   return msg_len;
 }
 
+static bool ncp_host_is_system_boot_header(uint32_t hdr)
+{
+  if ((hdr & 0xf8) != (uint32_t)(sl_bgapi_dev_type_bt | sl_bgapi_msg_type_evt)) {
+    return false;
+  }
+  if (SL_BT_MSG_ID(hdr) != sl_bt_evt_system_boot_id) {
+    return false;
+  }
+  if (SL_BGAPI_MSG_LEN(hdr) != sizeof(sl_bt_evt_system_boot_t)) {
+    return false;
+  }
+  return true;
+}
+
 /******************************************************************************
  * Receive until boot event arrives
  *
@@ -343,22 +390,18 @@ static int32_t ncp_host_get_msg(void)
  *****************************************************************************/
 static int32_t ncp_host_get_boot_event(void)
 {
-  // This event header is equivalent with sl_bt_evt_system_boot
-  static const uint32_t boot_event_header = 0x000112a0;
   uint32_t shift_counter = 0;
   int32_t ret, msg_len;
 
-  ret = ncp_host_lazy_peek();
-  if (ret < SL_BGAPI_MSG_HEADER_LEN) {
-    return -1;
-  }
   // Read header
-  ret = host_comm_rx(SL_BGAPI_MSG_HEADER_LEN, &buf_ncp_in.buf[0]);
+  ret = ncp_host_read_exact(&buf_ncp_in.buf[0],
+                            SL_BGAPI_MSG_HEADER_LEN,
+                            MSG_RECV_TIMEOUT_MS);
   if (ret < 0) {
     return -1;
   }
-  // Read bytes one by one until a valid boot event header is received.
-  while (buf_ncp_in.header != boot_event_header) {
+  // Read bytes one by one until a valid system boot event header is received.
+  while (!ncp_host_is_system_boot_header(buf_ncp_in.header)) {
     if (accept_dfu_boot && buf_ncp_in.header == 0x000004a0) {
       break;                                    // DFU boot header - keep it as is, exit before further shifting
     }
@@ -369,22 +412,19 @@ static int32_t ncp_host_get_boot_event(void)
     }
     shift_counter++;
     buf_ncp_in.header >>= 8;
-    ret = ncp_host_peek_timeout(1, MSG_RECV_TIMEOUT_COUNT);
-    if (ret < 0) {
-      return -1;
-    }
-    ret = host_comm_rx(1, (void *)&buf_ncp_in.buf[3]);
+    // The shift above zeroes the MSB (buf[3]). If the next byte is not actually
+    // consumed from the wire, a falsified header could coincidentally pass the
+    // checks above (MSB is 0x00) and misalign the subsequent payload read.
+    ret = ncp_host_read_exact(&buf_ncp_in.buf[3], 1, MSG_RECV_TIMEOUT_MS);
     if (ret < 0) {
       return -1;
     }
   }
   // Get boot event payload
   msg_len = SL_BGAPI_MSG_LEN(buf_ncp_in.header);
-  ret = ncp_host_peek_timeout(msg_len, MSG_RECV_TIMEOUT_COUNT * msg_len);
-  if (ret < 0) {
-    return -1;
-  }
-  ret = host_comm_rx(msg_len, (void *)&buf_ncp_in.buf[SL_BGAPI_MSG_HEADER_LEN]);
+  ret = ncp_host_read_exact(&buf_ncp_in.buf[SL_BGAPI_MSG_HEADER_LEN],
+                            (uint32_t)msg_len,
+                            MSG_RECV_TIMEOUT_MS * (uint32_t)msg_len);
   if (ret < 0) {
     return -1;
   }
@@ -511,7 +551,7 @@ static void ncp_sec_host_command_handler(buf_ncp_host_t *buf)
       security_reset();
       // Wait for the security handshake response (80 bytes length)
       ret = ncp_host_peek_timeout(SEC_BGAPI_RSP_MSG_LEN,
-                                  MSG_RECV_TIMEOUT_COUNT * SEC_BGAPI_RSP_MSG_LEN);
+                                  MSG_RECV_TIMEOUT_MS * SEC_BGAPI_RSP_MSG_LEN);
       if (ret < 0) {
         return;
       }

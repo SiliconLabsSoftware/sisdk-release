@@ -122,8 +122,9 @@ typedef struct {
   sl_rail_tx_repeat_config_t tx_repeat_config;
 } sl_rail_mux_context_t;
 
-// System-wide initialization callback
+// System-wide initialization callbacks
 void sli_rail_mux_local_init(void);
+void sli_rail_mux_stack_init_callback(void);
 
 sl_rail_status_t sl_rail_mux_yield_radio(sl_rail_handle_t railHandle);
 
@@ -483,6 +484,44 @@ uint16_t sl_rail_mux_get_tx_fifo_space_available(sl_rail_handle_t railHandle);
 sl_rail_status_t sl_rail_mux_ieee802154_accept_frames(sl_rail_handle_t railHandle,
                                                      uint8_t framesMask);
 sl_rail_status_t sl_rail_mux_util_ieee802154_config_radio(sl_rail_handle_t railHandle);
+
+/**
+ * @brief Runtime RX duty-cycling PHY selection for IEEE 802.15.4 PHY feature queries.
+ *
+ * When enabled, sl_rail_util_ieee802154_get_fast_channel_switching_phy_features()
+ * requests the RX duty-cycling PHY on single-channel RX (DC/FCS+HDR). When disabled,
+ * single-channel RX uses standard 2.4 GHz; multi-channel RX always uses FCS.
+ *
+ * get-active-phy reports SL_RAIL_IEEE802154_PHY_2P4_GHZ_RX_DUTY_CYCLING only while
+ * HDR is disabled (high_speed PHY features are 2P4_GHZ). With HDR enabled, phy_select
+ * integrates duty cycling into the HDR PHY (RX_DC + 1/2 MBPS) and get-active-phy
+ * shows 2P4_GHZ_1_MBPS_FEC or 2P4_GHZ_2_MBPS instead.
+ *
+ * Evaluated on each PHY feature query. sl_rail_mux_set_rx_duty_cycling_phy_select_enabled()
+ * reapplies the active radio configuration when the mux is already running.
+ */
+bool sl_rail_mux_get_rx_duty_cycling_phy_select_enabled(void);
+void sl_rail_mux_set_rx_duty_cycling_phy_select_enabled(bool enabled);
+
+/**
+ * @brief Product hook to select DC/FCS+HDR vs Standard/FCS+HDR at boot.
+ *
+ * Called from sli_rail_mux_stack_init_callback() after sli_rail_mux_token_init()
+ * registers the NVM default. The default weak implementation reads
+ * COMMON_TOKEN_RAIL_MUX_RXDC_PHY_SELECT; override to use different product config.
+ * Return true for legislation DC/FCS+HDR, false for Standard/FCS+HDR.
+ */
+bool sl_rail_mux_get_rx_duty_cycling_phy_select_from_product_config(void);
+
+/**
+ * @brief Product hook to persist the RXDC PHY profile selected at runtime.
+ *
+ * sl_rail_mux_set_rx_duty_cycling_phy_select_enabled() calls this so a reboot
+ * restores the profile through get_rx_duty_cycling_phy_select_from_product_config().
+ * The default weak implementation writes COMMON_TOKEN_RAIL_MUX_RXDC_PHY_SELECT.
+ */
+void sl_rail_mux_store_rx_duty_cycling_phy_select_to_product_config(bool enabled);
+
 sl_rail_status_t sl_rail_mux_ieee802154_config_2_mbps_rx_channel(sl_rail_handle_t railHandle,
                                                                  uint16_t channel);
 sl_rail_status_t sl_rail_mux_ieee802154_config_2p4_ghz_radio_ant_div_coex(sl_rail_handle_t railHandle);

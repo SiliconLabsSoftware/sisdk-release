@@ -1,7 +1,7 @@
 upgrade:
   - sdk:
       id: multiprotocol
-      version: 1.1.0
+      version: 1.1.1
     configuration:
       - script: multiprotocol/component/scripts/upgrade_mp_bltctrl_rtos_link_layer_task_stack_size.lua
         description: >

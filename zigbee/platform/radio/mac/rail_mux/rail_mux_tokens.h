@@ -1,9 +1,9 @@
 /***************************************************************************//**
- * @file app.c
- * @brief Application code
+ * @file rail_mux_tokens.h
+ * @brief Tokens for RAIL multiplexer runtime configuration.
  *******************************************************************************
  * # License
- * <b>Copyright 2019 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -15,17 +15,8 @@
  *
  ******************************************************************************/
 
-#include <stdio.h>
-#include <string.h>
-#include "SEGGER_RTT.h"
+#include "sl_token_manager_defines.h"
 
-/*******************************************************************************
- **************************   GLOBAL FUNCTIONS   *******************************
- ******************************************************************************/
-
-/* Redirect printf output to SEGGER RTT stream. Mandatory for IAR */
-int __write(int handle, const unsigned char * buffer, int size)
-{
-    (void)handle;
-    return (int)SEGGER_RTT_Write (0, buffer, size);
-}
+// 0 = Standard/FCS+HDR, 1 = DC/FCS+HDR. Default registered in sli_rail_mux_token_init().
+#define COMMON_TOKEN_RAIL_MUX_RXDC_PHY_SELECT \
+  SL_TOKEN_GET_DYNAMIC_TOKEN((SL_TOKEN_NVM3_REGION_ZIGBEE | 0x8730), 0)

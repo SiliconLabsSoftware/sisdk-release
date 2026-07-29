@@ -23,6 +23,13 @@
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
+#if defined(__GNUC__)
+#define APP_ALIGN4_PREFIX
+#define APP_ALIGN4_SUFFIX  __attribute__((aligned(4)))
+#else
+#define APP_ALIGN4_PREFIX  SL_ALIGN(4)
+#define APP_ALIGN4_SUFFIX
+#endif
 
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
@@ -73,10 +80,10 @@ static state_t app_state = SE_MANAGER_INIT;
 static uint8_t example_string[] = "SE Manager Key Provisioning Example";
 
 /// Key buffer and response buffer of executed command
-SL_ALIGN(4) static uint8_t resp_buf[RESP_BUF_SIZE];
+APP_ALIGN4_PREFIX static uint8_t resp_buf[RESP_BUF_SIZE] APP_ALIGN4_SUFFIX;
 
 /// Public sign key
-SL_ALIGN(4) static const uint8_t public_sign_key[PUB_KEY_SIZE] = {
+APP_ALIGN4_PREFIX static const uint8_t public_sign_key[PUB_KEY_SIZE] APP_ALIGN4_SUFFIX = {
   0xc4, 0xaf, 0x4a, 0xc6, 0x9a, 0xab, 0x95, 0x12,
   0xdb, 0x50, 0xf7, 0xa2, 0x6a, 0xe5, 0xb4, 0x80,
   0x11, 0x83, 0xd8, 0x54, 0x17, 0xe7, 0x29, 0xa5,
@@ -88,7 +95,7 @@ SL_ALIGN(4) static const uint8_t public_sign_key[PUB_KEY_SIZE] = {
 };
 
 /// Public command key
-SL_ALIGN(4) static const uint8_t public_command_key[PUB_KEY_SIZE] = {
+APP_ALIGN4_PREFIX static const uint8_t public_command_key[PUB_KEY_SIZE] APP_ALIGN4_SUFFIX = {
   0xb1, 0xbc, 0x6f, 0x6f, 0xa5, 0x66, 0x40, 0xed,
   0x52, 0x2b, 0x2e, 0xe0, 0xf5, 0xb3, 0xcf, 0x7e,
   0x5d, 0x48, 0xf6, 0x0b, 0xe8, 0x14, 0x8f, 0x0d,
@@ -101,7 +108,7 @@ SL_ALIGN(4) static const uint8_t public_command_key[PUB_KEY_SIZE] = {
 
 #if !defined(CRYPTOACC_PRESENT)
 /// 128-bit AES key
-SL_ALIGN(4) static const uint8_t aes_key[16] = {
+APP_ALIGN4_PREFIX static const uint8_t aes_key[16] APP_ALIGN4_SUFFIX = {
   0x81, 0xa5, 0xe2, 0x1f, 0xa1, 0x52, 0x86, 0xf1,
   0xdf, 0x44, 0x5c, 0x2c, 0xc1, 0x20, 0xfa, 0x3f
 };

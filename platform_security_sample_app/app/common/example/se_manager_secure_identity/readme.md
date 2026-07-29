@@ -1,67 +1,102 @@
-# SE Manager Secure Identity
+# Platform Security - SoC SE Manager Secure Identity
 
-This example uses the SE Manager API and Mbed TLS to perform the secure identity operation on the supported Secure Vault High device.
+Demonstrates how to read on-chip device certificates, verify an X.509 chain, and sign a challenge with the private device key using SE Manager and mbed TLS on Secure Vault High.
 
-This example uses the CRYPTO engine in the SE to accelerate the X.509 API functions of Mbed TLS. The Private Device Key in the Secure Key Storage on the chip is used to sign the challenge from the remote device.
+## Table of Contents
 
-The CRYPTO hardware acceleration on Mbed TLS can be switched off by defining the `NO_CRYPTO_ACCELERATION` symbol in the IDE setting (`Preprocessor->Defined symbols`). Increase the heap size to 10240 (`sl_memory_config.h`) to use this option in IAR Embedded Workbench.
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-The example redirects standard I/O to the virtual serial port (VCOM) of the kit. By default, the serial port setting is 115200 bps and 8-N-1 configuration.
+## Purpose / Scope
 
-The example has been instrumented with code to count the number of clock cycles spent in different operations. The results are printed on the VCOM serial port console. This feature can be disabled by defining `SE_MANAGER_PRINT=0` (default is 1) in the IDE setting (`Preprocessor->Defined symbols`).
+This example models **device authentication** for **Secure Vault High** parts: read factory-programmed **device** and **batch** certificates from the SE, parse and verify an **X.509 certificate chain** with **mbed TLS** (accelerated by the SE crypto engine via `mbedtls_slcrypto`), then perform a **challenge–response** proof using the **private device key** in Secure Key Storage.
+The demo runs **automatically** on reset (no serial menu). Progress and optional certificate dumps print on **VCOM**. **Clock-cycle counts** print when `SE_MANAGER_PRINT=1` (default).
 
-The certificates are printed on the VCOM serial port console. This feature can be disabled by defining `SE_MANAGER_PRINT_CERT=0` (default is 1) in the IDE setting (`Preprocessor->Defined symbols`).
+### Flow (high level)
 
-## Getting Started
+1. **On-chip (Vault High device)**
+   - Read certificate sizes and **device** / **batch** certificates from SE OTP
+   - Parse device certificate (DER); extract **public device key**
+2. **Remote device (simulated in firmware)**
+   - Parse embedded **factory** and **root** certificates (PEM)
+   - Verify chain: device → batch → factory → root
+3. **Remote authentication**
+   - Generate random **challenge** (`SL_SE_CHALLENGE_SIZE` bytes)
+   - **Sign** challenge with `SL_SE_APPLICATION_ATTESTATION_KEY` (private device key — never exported)
+   - **Verify** signature on-chip and again using the public key from the parsed device certificate
 
-1. Upgrade the kit’s firmware to the latest version (see `Adapter Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in the Simplicity Studio 5 User's Guide).
-2. Upgrade the device’s SE firmware to the latest version (see `Secure Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in the Simplicity Studio 5 User's Guide).
-3. Open any terminal program and connect to the kit’s VCOM port.
-4. Create this platform example project in the Simplicity IDE (see [Examples](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-getting-started/start-a-project#examples) in the Simplicity Studio 5 User's Guide).
-5. Build the example and download it to the kit (see [Simple Build](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/building#simple-build) and [Flash Programmer](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/flashing#flash-programmer) in the Simplicity Studio 5 User's Guide).
-6. Run the example and the console should display the process steps of this example.
+### Configuration notes
 
-## Additional Information
+| Symbol | Default | Effect |
+|--------|---------|--------|
+| `SE_MANAGER_PRINT` | `1` | Cycle counts per operation |
+| `SE_MANAGER_PRINT_CERT` | `1` | Print parsed certificates on VCOM |
+| `NO_CRYPTO_ACCELERATION` | undefined | Define to use software mbed TLS crypto only; increase `SL_HEAP_SIZE` to **10240** (e.g. in `sl_memory_config.h`) for IAR |
+| `SL_HEAP_SIZE` | `7504` | Set in `.slcp` for accelerated path |
+**Requires:** `device_security_vault` (**Secure Vault High**).
+**Components:** `se_manager`, `mbedtls_core`, `mbedtls_x509`, `mbedtls_ecdsa`, `mbedtls_ccm`, `mbedtls_slcrypto`, VCOM stdio.
 
-1. The default optimization level is `Optimize for debugging (-Og)` on Simplicity IDE and `None` on IAR Embedded Workbench.
+### SE Manager APIs exercised
 
-### SE Manager API
+`sl_se_init`, `sl_se_deinit`, `sl_se_init_command_context`, `sl_se_deinit_command_context`, `sl_se_get_random`, `sl_se_read_cert_size`, `sl_se_read_cert`, `sl_se_ecc_sign`, `sl_se_read_pubkey`, `sl_se_ecc_verify`.
 
-The following SE Manager APIs are used in this example:
+## Prerequisites / Setup Requirements
 
-* `sl_se_init`
-* `sl_se_deinit`
-* `sl_se_init_command_context`
-* `sl_se_deinit_command_context`
-* `sl_se_get_random`
-* `sl_se_read_cert_size`
-* `sl_se_read_cert`
-* `sl_se_ecc_sign`
-* `sl_se_read_pubkey`
-* `sl_se_ecc_verify`
+### Hardware Requirements
+
+- **Secure Vault High** development kit (device and batch certificates must be present in SE).
+- USB for programming and VCOM.
+- **AEM** power when programming.
+
+
+### Software Requirements
+
+- **Simplicity Studio 5**, latest adapter and **SE firmware**.
+- VCOM: **115200** 8-N-1, line terminator **None** (Device Console).
+
+### Before you run
+
+- Use a part that ships with **Silicon Labs identity certificates** programmed (typical Vault High dev boards).
+- Embedded **factory** and **root** PEM blobs in `app_mbedtls_x509.c` must match your device’s certificate hierarchy for chain verification to succeed.
+
+## Steps to Run Demo
+
+1. Create and build the project for a **Vault High** target.
+2. Flash to the kit and open VCOM (115200 8-N-1, line terminator **None**).
+3. Reset the board and watch the log through deinitialization.
+Expected sections on the console:
+- `Secure Vault High device:` — read/parse device and batch certs
+- `Remote device:` — parse factory/root, verify chain
+- `Remote authentication:` — challenge, sign, dual verify
+Success ends with signature verification OK on both local and “remote” paths.
+
+### Optional build tweaks
+
+- **`SE_MANAGER_PRINT=0`** — disable cycle timing prints
+- **`SE_MANAGER_PRINT_CERT=0`** — suppress certificate text (verification step message still prints when certs are hidden)
+- **`NO_CRYPTO_ACCELERATION`** — software-only mbed TLS; increase heap as noted above
 
 ## Troubleshooting
 
-### Serial Port Settings
-
-Be sure to select the following settings to see the serial output of this example:
-
-* 115200 Baud Rate 
-* 8-N-1 configuration
-* Line terminator should be set to "None" if using Device Console in Simplicity Studio
-
-### Programming the Radio Board
-
-Before programming the radio board mounted on the mainboard, make sure the power supply switch is in the AEM position (right side) as shown below.
-
-![Radio board power supply switch](image/readme_img0.png)
+| Symptom | What to check |
+|--------|----------------|
+| No serial output | VCOM settings; `SL_BOARD_ENABLE_VCOM=1` |
+| Read cert **failed** | Not Vault High or certificates not provisioned on device |
+| Parse / chain verify **failed** | Wrong or missing on-chip certs; factory/root PEM mismatch |
+| Sign or verify **failed** | Attestation key or cert/key inconsistency |
+| Heap / malloc failures with `NO_CRYPTO_ACCELERATION` | Raise `SL_HEAP_SIZE` to **10240** |
+| Garbled output | Line terminator must be **None** in Device Console |
 
 ## Resources
 
-[SE Manager API](https://docs.silabs.com/gecko-platform/latest/service/api/group-sl-se-manager)
-
-[AN1268: Authenticating Silicon Labs Devices Using Device Certificates](https://www.silabs.com/documents/public/application-notes/an1268-efr32-secure-identity.pdf)
+- [SE Manager API documentation](https://docs.silabs.com/gecko-platform/latest/service/api/group-sl-se-manager)
+- [AN1268: Authenticating Silicon Labs Devices Using Device Certificates](https://www.silabs.com/documents/public/application-notes/an1268-efr32-secure-identity.pdf)
+- [mbed TLS X.509 documentation](https://tls.mbed.org/api/)
 
 ## Report Bugs & Get Support
 
-You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://community.silabs.com/).
+You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://www.silabs.com/community).

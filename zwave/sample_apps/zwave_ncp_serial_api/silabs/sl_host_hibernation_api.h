@@ -50,6 +50,14 @@ void keep_alive_init(void);
 void gpio_wakeup_host_init(void);
 
 /**
+ * @brief Assert the host-wake signal to wake the host from hibernation.
+ *
+ * Drives the GPIO low when @c zw_host_wakeup_gpio is present, otherwise sends
+ * an unsolicited SerialAPI frame (0xFE).
+ */
+void gpio_wakeup_host(void);
+
+/**
  * @brief Update the S2 message count for a given node
  * @param node_id node ID
  * @param payload S2 message payload

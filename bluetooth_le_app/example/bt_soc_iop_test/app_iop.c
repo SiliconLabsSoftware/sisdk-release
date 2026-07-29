@@ -3,7 +3,7 @@
  * @brief Helper functions for BLE interoperability test.
  *******************************************************************************
  * # License
- * <b>Copyright 2024 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -42,10 +42,14 @@
 
 #ifdef SL_CATALOG_APP_OTA_DFU_PRESENT
 #include "sl_bt_app_ota_dfu.h"
+#include "sl_sleeptimer.h"
 
 // Status indication frequency in ms
 #define DOWNLOAD_IND_FREQ        1000u
-#define VERIFICATION_IND_FREQ    2500u
+#define VERIFICATION_IND_FREQ    100u
+
+// Time to let the serial output drain before resetting the device, in ms.
+#define LOG_DRAIN_DELAY_MS       50u
 
 // Returns a data blocks percentage based on a byte position.
 #define GET_DATA_PERCENTAGE(storage_size, actual_byte_pos) \
@@ -114,7 +118,22 @@ static uint8_t iop_connection_arr[11];
 
 //--------------------------------
 // Security level request from the tester.
-security_level_t security_level = SECURITY_LEVEL_NONE;
+security_config_t security_config = SECURITY_CONFIG_NONE;
+
+// Indicates that the LE Privacy 1.2 (RPA) test case (Test 7.6) is ongoing:
+// the device has been configured to let a bonded peer reconnect through a
+// resolvable private address. It is set when the privacy reconnection is set
+// up and cleared once the test is evaluated as passed.
+bool privacy_test_in_progress = false;
+
+// Set when the bonded peer actually reconnects with an address that the
+// controller resolved from an RPA. The bonded notification subscription may
+// only be accepted as a privacy test pass when this is true, otherwise
+// enabling notifications on a link that was not established via RPA
+// resolution (e.g. an already-open or non-resolved connection) could be
+// reported as a false pass. It reflects the most recent reconnection and is
+// re-evaluated on every connection while the test is in progress.
+bool privacy_rpa_resolved = false;
 
 // Encryption key for pairing and bonding.
 uint32_t passkey = 123456;
@@ -431,7 +450,7 @@ sl_status_t handle_user_write(sl_bt_evt_gatt_server_user_write_request_t *user_w
       // The request is handled in either the "In-Place OTA DFU" or in the "Application OTA DFU" component.
       // Test 6.1 (IOP Test OTA update with ACK) takes place now.
       // Test 6.2 (IOP Test OTA update without ACK) takes place now.
-      app_log_info("OTA-DFU." APP_LOG_NL);
+      app_log_info("OTA-DFU operation requested." APP_LOG_NL);
       set_display(DISPLAY_STATE_OTA_DFU, NULL);
       break;
 
@@ -456,16 +475,16 @@ sl_status_t handle_user_write(sl_bt_evt_gatt_server_user_write_request_t *user_w
         break;
       }
 
-      security_level = (security_level_t)user_write_req->value.data[1];
+      security_config = (security_config_t)user_write_req->value.data[1];
       app_log_info("Mobile OS: [0x%02x], Requesting security level: [0x%02x]." APP_LOG_NL,
                    user_write_req->value.data[0],
-                   security_level);
-      if (security_level > SECURITY_LEVEL_PRIVACY) {
+                   security_config);
+      if (security_config > SECURITY_CONFIG_PRIVACY) {
         // Map invalid values to NONE
-        security_level = SECURITY_LEVEL_NONE;
+        security_config = SECURITY_CONFIG_NONE;
       }
 
-      if (security_level != SECURITY_LEVEL_NONE) {
+      if (security_config != SECURITY_CONFIG_NONE) {
         sc = sl_bt_connection_close(user_write_req->connection);
         if (sc == SL_STATUS_IDLE) {
           app_log_info("Connection kept open." APP_LOG_NL);
@@ -584,6 +603,29 @@ sl_status_t handle_timer_start(sl_bt_evt_gatt_server_characteristic_status_t *ch
     case gattdb_iop_test_bonded:
       app_log_info("Test bonded CCC status: %d" APP_LOG_NL,
                    char_stat->client_config_flags);
+      // The bonded characteristic only permits notifications over an
+      // encrypted, bonded link. During the LE Privacy 1.2 (RPA) test the peer
+      // reconnects through a resolvable private address. Enabling the
+      // notification here proves that the bonded GATT access works, but it is
+      // only a privacy test pass if the current connection was actually
+      // established via an RPA that the controller resolved (tracked by
+      // privacy_rpa_resolved on the connection_opened event). Without that
+      // gate, enabling notifications on a link that was not established
+      // through RPA resolution would be reported as a false pass.
+      if (privacy_test_in_progress
+          && (char_stat->client_config_flags == sl_bt_gatt_notification)) {
+        if (privacy_rpa_resolved) {
+          app_log_info("BLE Privacy (LE Privacy 1.2, RPA) test case PASSED: "
+                       "bonded peer reconnected via a resolved private address "
+                       "and re-enabled notifications over the bonded link." APP_LOG_NL);
+          privacy_test_in_progress = false;
+          privacy_rpa_resolved = false;
+        } else {
+          app_log_warning("LE Privacy test: bonded notifications were enabled "
+                          "but the current connection was not established via a "
+                          "resolved RPA. Not treating this as a pass." APP_LOG_NL);
+        }
+      }
       break;
 
     default:
@@ -648,14 +690,21 @@ static void timer_cb(app_timer_t *handle, void *data)
     if (app_ota_dfu_status == SL_BT_APP_OTA_DFU_DOWNLOAD_BEGIN) {
       time_elapsed++;
       uint8_t percentage = GET_DATA_PERCENTAGE(slot_size, write_position);
-      app_log_info("Received packets: %u, storage used: %u%%.(%lu kbps)" APP_LOG_NL,
+      app_log_info("Downloading: received %u packets, storage used %u%% "
+                   "(%lu kbps)." APP_LOG_NL,
                    datablock_idx,
                    percentage,
                    GET_TRANSFER_SPEED_KBPS(write_position, time_elapsed));
       set_display(DISPLAY_STATE_OTA_DFU, &percentage);
     } else {
-      app_log_info("Verified %u%% of the new image.(%u block)" APP_LOG_NL,
-                   GET_DATA_PERCENTAGE(write_position, verify_position),
+      // The last verification block may push the byte count slightly past the
+      // downloaded size, so clamp the reported progress to 100%.
+      uint8_t percentage = GET_DATA_PERCENTAGE(write_position, verify_position);
+      if (percentage > 100u) {
+        percentage = 100u;
+      }
+      app_log_info("Verifying: %u%% done (%u blocks checked)." APP_LOG_NL,
+                   percentage,
                    datablock_idx);
     }
 #endif // SL_CATALOG_APP_OTA_DFU_PRESENT
@@ -839,10 +888,28 @@ static void app_ota_dfu_on_status_change(sl_bt_app_ota_dfu_status_t curr_sts,
       app_log_error("Disconnected by the target device." APP_LOG_NL);
       break;
 
+    case SL_BT_APP_OTA_DFU_READ_FLASH:
+      // Checking whether the download slot already holds data.
+      app_log_info("Checking if download storage slot is dirty..." APP_LOG_NL);
+      break;
+
+    case SL_BT_APP_OTA_DFU_ERASE:
+      // Erasing a dirty slot can take a few seconds, so let the user know
+      // the firmware is busy and not stuck.
+      app_log_info("Erasing the download storage slot, please wait..." APP_LOG_NL);
+      break;
+
+    case SL_BT_APP_OTA_DFU_READY:
+      // Nothing else to do until the client triggers the transfer: report
+      // that the firmware is idle and waiting for the upload to begin.
+      app_log_info("Application OTA is ready."  APP_LOG_NL);
+      break;
+
     case SL_BT_APP_OTA_DFU_DOWNLOAD_BEGIN:
       datablock_idx = 0;
       time_elapsed = 0;
-      app_log_info("Download started." APP_LOG_NL);
+      app_log_info("Download started. Progress is reported every %u ms." APP_LOG_NL,
+                   DOWNLOAD_IND_FREQ);
       sc = app_timer_start(&timer_ota,
                            DOWNLOAD_IND_FREQ,
                            timer_cb,
@@ -856,29 +923,41 @@ static void app_ota_dfu_on_status_change(sl_bt_app_ota_dfu_status_t curr_sts,
       time_elapsed = 0;
       app_assert_status(sc);
       app_log_info("Download finished. Received %lu bytes." APP_LOG_NL, write_position);
-      app_log_info("Press END button in Simplicity Connect app!" APP_LOG_NL);
+      // Image verification only starts once the client closes the connection,
+      // so make the action the firmware is waiting on explicit.
+      app_log_info("Waiting for connection close: press the END button in the "
+                   "Simplicity Connect app to start image verification." APP_LOG_NL);
       break;
 
     case SL_BT_APP_OTA_DFU_VERIFY:
       datablock_idx = 0u;
       time_elapsed = 0;
-      app_log_info("Verify downloaded image..." APP_LOG_NL);
+      app_log_info("Image verification started. Progress is reported every "
+                   "%u ms." APP_LOG_NL,
+                   VERIFICATION_IND_FREQ);
       sc = app_timer_start(&timer_ota,
                            VERIFICATION_IND_FREQ,
                            timer_cb,
                            NULL,
                            true);
+      app_assert_status(sc);
       break;
 
     case SL_BT_APP_OTA_DFU_FINALIZE:
       sc = app_timer_stop(&timer_ota);
-      app_log_info("Verified %u%% of the new image." APP_LOG_NL,
-                   GET_DATA_PERCENTAGE(write_position, verify_position));
-      app_log_info("Set image to bootload." APP_LOG_NL);
+      app_assert_status(sc);
+      // This state is only reached after the bootloader verified the whole
+      // image, so the result is always a full 100%.
+      app_log_info("Image verification finished successfully (100%%)." APP_LOG_NL);
+      app_log_info("New image set for bootloading." APP_LOG_NL);
       break;
 
     case SL_BT_APP_OTA_DFU_WAIT_FOR_REBOOT:
-      app_log_info("Rebooting..." APP_LOG_NL);
+      app_log_info("OTA DFU complete. Rebooting into the new image..." APP_LOG_NL);
+      // app_log/iostream offer no flush API: the VCOM UART FIFO and shift
+      // register may still hold the last bytes when the reset hits, so wait
+      // briefly to let the serial output drain before rebooting.
+      sl_sleeptimer_delay_millisecond(LOG_DRAIN_DELAY_MS);
       sl_bt_app_ota_dfu_reboot();
       break;
 

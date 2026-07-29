@@ -153,11 +153,7 @@ void app_remove_meter(const sl_cli_command_arg_t * arguments)
     return;
   }
 
-  if (sl_wisun_coap_collector_remove_meter(&meter_addr) == SL_STATUS_OK) {
-    printf("[%s meter has been removed]\n", meter_ip);
-  } else {
-    printf("[Failed: meter is not registered]\n");
-  }
+  sl_wisun_coap_collector_remove_meter(&meter_addr);
 }
 
 /* CLI app async request handler */

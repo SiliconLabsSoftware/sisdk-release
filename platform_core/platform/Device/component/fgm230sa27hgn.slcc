@@ -12,6 +12,10 @@
     unless:
     - device_content_override
     value: system
+  - name: HFXO_FREQ
+    unless:
+    - device_content_override
+    value: 39000000
 - source:
   - path: platform/Device/SiliconLabs/FGM23/Source/startup_fgm23.c
     unless:

@@ -32,6 +32,7 @@ other_file:
   - path: ap_core.py
   - path: ap_core_commands.py
   - path: ap_core_pawr.py
+  - path: ap_core_adv_dedup.py
   - path: ap_core_tag_commands.py
   - path: ap_core_utils.py
   - path: ap_core_event_handlers_auto.py

@@ -29,6 +29,7 @@
  ******************************************************************************/
 
 #include "em_device.h"
+#include "sl_common.h"
 #include "sl_core.h"
 #include "sl_assert.h"
 #include "sli_interrupt_manager.h"
@@ -56,8 +57,24 @@
 #define LOWEST_NVIC_PRIORITY    ((1U << __NVIC_PRIO_BITS) - 1U)
 #define SL_INTERRUPT_MANAGER_DEFAULT_PRIORITY 5U
 
-// Use same alignement as IAR
-#define VECTOR_TABLE_ALIGNMENT  (512)
+// Calculate the vector table alignment.
+#if defined(__ICCARM__)
+// For some earlier versions of IAR, it is not possible to use 
+// SL_CEILING_POW2_U32 macro to calculate the VECTOR_TABLE_ALIGNMENT.
+#if ((TOTAL_INTERRUPTS * 4U) <= 128U)
+#define VECTOR_TABLE_ALIGNMENT 128U
+#elif ((TOTAL_INTERRUPTS * 4U) <= 256U)
+#define VECTOR_TABLE_ALIGNMENT 256U
+#elif ((TOTAL_INTERRUPTS * 4U) <= 512U)
+#define VECTOR_TABLE_ALIGNMENT 512U
+#elif ((TOTAL_INTERRUPTS * 4U) <= 1024U)
+#define VECTOR_TABLE_ALIGNMENT 1024U
+#else
+#error Unsupported vector table alignment
+#endif
+#else
+#define VECTOR_TABLE_ALIGNMENT SL_CEILING_POW2_U32(TOTAL_INTERRUPTS * 4U)
+#endif
 
 // Interrupt vector placement is in RAM
 #if defined(SL_CATALOG_INTERRUPT_MANAGER_VECTOR_TABLE_IN_RAM_PRESENT)

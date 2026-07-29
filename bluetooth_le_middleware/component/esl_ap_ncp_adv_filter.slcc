@@ -1,0 +1,35 @@
+id: esl_ap_ncp_adv_filter
+label: ESL AP NCP Advertisement Filter
+package: bluetooth_le_middleware
+description: >
+  Filters legacy and extended BLE advertisement reports on the ESL Access Point
+  NCP before forwarding them to the host, reducing VCOM traffic in noisy radio
+  environments with many Bluetooth LE advertisers.
+category: Bluetooth|NCP Interface
+metadata:
+  sbom:
+    license: Zlib
+quality: production
+root_path: bluetooth_le_middleware/common/esl_ap_ncp_adv_filter
+include:
+- path: inc/
+  file_list:
+  - path: esl_ap_ncp_adv_filter.h
+config_file:
+- path: config/esl_ap_ncp_adv_filter_config.h
+source:
+- path: src/esl_ap_ncp_adv_filter.c
+requires:
+- name: ncp
+- name: bluetooth_feature_legacy_scanner
+- name: bluetooth_feature_extended_scanner
+provides:
+- name: esl_ap_ncp_adv_filter
+template_contribution:
+- name: ncp_local_evt_process
+  value:
+    include: esl_ap_ncp_adv_filter.h
+    handler: esl_ap_ncp_adv_filter_on_event
+  priority: 50
+  condition:
+  - ncp

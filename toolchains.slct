@@ -78,6 +78,8 @@ schema:
     type: str
   llvm_assembler_option:
     type: str
+  iar_assembler_option:
+    type: str
   gcc_linker_option:
     type: str
   llvm_linker_option:
@@ -491,6 +493,11 @@ exporter:
           option: misc
           action: append
           value: "{{value}}"
+      iar_assembler_option:
+        - tool: makefile.arm.iar.assembler
+          option: misc
+          action: append
+          value: "{{value}}"
       gcc_linker_option:
         - tool: makefile.arm.gcc.linker
           option: misc
@@ -514,6 +521,10 @@ exporter:
           action: append
           value: "{{value}}"
       iar_compiler_option:
+        - tool: makefile.arm.iar.compiler
+          option: misc
+          action: append
+          value: "{{value}}"
         - tool: iar.ewp.arm.compiler
           option: IExtraOptions
           action: append
@@ -523,6 +534,10 @@ exporter:
           action: append
           value: "{{value}}"
       iar_linker_option:
+        - tool: makefile.arm.iar.linker
+          option: misc
+          action: append
+          value: "{{value}}"
         - tool: iar.ewp.arm.linker
           option: IlinkUseExtraOptions
           value: "1"

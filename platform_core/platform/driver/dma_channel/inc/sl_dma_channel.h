@@ -310,7 +310,7 @@ typedef struct sl_dma_channel_transfer {
   bool increment_destination;                   ///< Increment destination pointer per unit
   bool block_handshake_mode;                    ///< Transfer one block per DMA channel request if true
   bool callback_on_complete;                    ///< Generate callback when this transfer completes
-  bool cacheable;                               ///< If requires cacheable attribute (Everest/XDMA)
+  bool cacheable;                               ///< If requires cacheable attribute (XDMA)
   sl_dma_channel_xfer_descriptor_t *descriptor; ///< HW Descriptor buffer (Dynamically allocated if NULL)
   struct sl_dma_channel_transfer *next;         ///< Next in list (NULL = end or forms loop)
 } sl_dma_channel_transfer_t;
@@ -400,10 +400,10 @@ sl_status_t sl_dma_channel_resume(const sl_dma_channel_handle_t *handle);
  *
  * @param[out] status Pointer to status structure to populate with channel status.
  *                    The following fields are populated:
- *                    - enabled: Whether the channel is enabled in hardware
- *                    - active: Whether a transfer list is currently active
- *                    - bytes_completed: Bytes completed in the current (head)
- *                      descriptor only
+ *                    - enabled: Whether the DMA is active in hardware, meaning the transfer list
+ *                      is not empty.
+ *                    - active: Whether the DMA is actively transferring data over the memory bus
+ *                    - bytes_completed: Bytes completed in the current (head) descriptor only
  *
  * @return SL_STATUS_OK on success.
  *

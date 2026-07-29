@@ -41,4 +41,8 @@ ui_hints:
   highlight: readme.md
 tag:
   - hardware:component:exp_header:spi
+  - hardware:device:ram:20
   - hwfilter:board:hardware:has:exp_header:spi
+  - hwfilter:device:device_has_eusart
+  - hwfilter:ram:20k
+  - hwfilter:device:device_series_2

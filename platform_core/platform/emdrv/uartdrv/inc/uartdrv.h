@@ -235,14 +235,14 @@ typedef struct {
     .size = qSize,                     \
   }
 
-#if (defined(UART_COUNT) && (UART_COUNT > 0)) || (defined(USART_COUNT) && (USART_COUNT > 0))
+#if (defined(UART_COUNT) && (UART_COUNT > 0)) || (defined(USART_COUNT) && (USART_COUNT > 0)) || defined(DOXYGEN)
 /**
  * @struct UARTDRV_InitUart_t
  * @brief A UART driver instance initialization structure.
  *   LEUART driver instance initialization structure.
  *   Contains a number of UARTDRV configuration options.
  *   It is required for driver instance initialization.
- *   This structure is passed to @ref UARTDRV_Init() when initializing a UARTDRV
+ *   This structure is passed to @ref UARTDRV_InitUart() when initializing a UARTDRV
  *   instance.
  */
 typedef struct {
@@ -398,7 +398,7 @@ typedef struct UARTDRV_HandleData{
 /// Handle pointer
 typedef UARTDRV_HandleData_t * UARTDRV_Handle_t;
 
-#if (defined(UART_COUNT) && (UART_COUNT > 0)) || (defined(USART_COUNT) && (USART_COUNT > 0))
+#if (defined(UART_COUNT) && (UART_COUNT > 0)) || (defined(USART_COUNT) && (USART_COUNT > 0)) || defined(DOXYGEN)
 Ecode_t UARTDRV_InitUart(UARTDRV_Handle_t handle,
                          const UARTDRV_InitUart_t * initData);
 #endif

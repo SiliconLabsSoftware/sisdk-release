@@ -15,6 +15,9 @@ provides:
 requires:
 - name: psa_crypto_config
 - name: psa_crypto_common_source
+  condition: [trustzone_unaware]
+- name: psa_crypto_common_source
+  condition: [trustzone_secure]
 
 metadata:
   sbom:

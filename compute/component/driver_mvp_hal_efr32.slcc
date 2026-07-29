@@ -8,6 +8,9 @@ description: >
   The API of this component is marked as internal.
 category: Compute
 quality: production
+documentation:
+  docset: compute
+  document: compute-reference-guide
 root_path: compute/driver/mvp
 metadata:
   sbom:

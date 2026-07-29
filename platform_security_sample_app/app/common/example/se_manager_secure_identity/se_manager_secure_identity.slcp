@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform Security - SoC SE Manager Secure Identity
 description: >
-  This example project demonstrates the secure identity of Secure Vault High device.
+  Demonstrates how to read on-chip device certificates, verify an X.509 chain, and sign a challenge with the private device key using SE Manager and mbed TLS on Secure Vault High.
 category: Example|Platform
 filter:
   - name: "Device Type"

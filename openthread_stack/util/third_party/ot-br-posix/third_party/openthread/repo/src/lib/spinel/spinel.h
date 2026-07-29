@@ -4995,11 +4995,12 @@ enum
 
     /// DNS-SD IPv6 Address Resolution Result
     /**
-     * Format: `ULt(A(6)L)D`: Set
+     * Format: `ULS(A(6L))D`: Set
      *
      * `U`: Host name.
      * `L`: Infrastructure interface index.
-     * `t(A(6)L)`: Array of (`A(6)` IPv6 address, `L` TTL) entries.
+     * `S`: Number of (`6` address, `L` TTL) pairs.
+     * `A(6L)`: Concatenated IPv6 address and TTL pairs (no per-entry struct wrapper).
      * `D`: Callback context (`sizeof(otPlatDnssdAddressCallback)`).
      */
     SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT = SPINEL_PROP_DNSSD__BEGIN + 13,
@@ -5015,6 +5016,63 @@ enum
      * Format: Same as `SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT`.
      */
     SPINEL_PROP_DNSSD_IP4_ADDRESS_RESULT = SPINEL_PROP_DNSSD__BEGIN + 15,
+
+    /// DNS upstream query (NCP to host).
+    /**
+     * Format: `CS` + *n* bytes - Inserted (NCP to host).
+     *
+     * `C`: Transaction index (`0` to `31`).
+     * `S`: DNS wire query length *n* in bytes.
+     * Payload: *n* raw bytes immediately following (`EncodeDnsUpstreamWireMessage` / `DecodeDnsUpstreamWireMessage`).
+     *          Length is taken from `S` only; this is not a Spinel `d` type (no second length prefix).
+     */
+    SPINEL_PROP_DNS_UPSTREAM_QUERY = 0x940,
+
+    /// DNS upstream query response (host to NCP).
+    /**
+     * Format: `CS` + *n* bytes - Set (host to NCP).
+     *
+     * `C`: Transaction index (`0` to `31`).
+     * `S`: DNS wire response length *n* in bytes (zero indicates failure; no payload bytes follow).
+     * Payload: *n* raw bytes immediately following when `S` > 0 (same encoding as QUERY).
+     */
+    SPINEL_PROP_DNS_UPSTREAM_RESPONSE = 0x941,
+
+    /// DNS upstream query cancel (NCP to host).
+    /**
+     * Format: `C` - Removed (NCP to host).
+     *
+     * `C`: Transaction index (`0` to `31`).
+     */
+    SPINEL_PROP_DNS_UPSTREAM_CANCEL = 0x942,
+
+    /// Enablement of DNS upstream forwarding on the NCP DNS-SD server.
+    /**
+     * Format: `b` - Set (host to NCP).
+     *
+     * `b`: Whether to enable or disable upstream DNS forwarding (`otDnssdUpstreamQuerySetEnabled`).
+     */
+    SPINEL_PROP_DNS_UPSTREAM_ENABLED = 0x943,
+
+    /// Host DNS upstream resolver availability (host to NCP).
+    /**
+     * Format: `b` - Set (host to NCP).
+     *
+     * `b`: Whether the host has at least one upstream DNS nameserver configured.
+     */
+    SPINEL_PROP_DNS_UPSTREAM_AVAILABLE = 0x944,
+
+    /// Discovered RDNSS upstream DNS servers (NCP to host).
+    /**
+     * Format: `C6` - Get and unsolicited notifications (`VALUE_IS`).
+     *
+     * `C`: Number of recursive DNS server addresses (0 to 3).
+     * `6`: IPv6 address of each server (repeated `C` times).
+     *
+     * Emitted when Border Routing learns or updates RDNSS entries on the infrastructure link.
+     * The host uses these addresses for `NcpUpstreamDnsResolver` forwarding (DH 11.3 / RDNSS selection).
+     */
+    SPINEL_PROP_DNS_UPSTREAM_RDNSS_SERVERS = 0x945,
 
     SPINEL_PROP_DNSSD__END = 0x950,
 

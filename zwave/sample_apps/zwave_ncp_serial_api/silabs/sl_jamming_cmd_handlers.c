@@ -19,15 +19,15 @@ ZW_ADD_CMD(FUNC_ID_PROP_JAMMING_DETECTION_COMMAND)
 
   switch (subcmd) {
     case FUNC_ID_PROP_JAMMING_SUBCOMMAND_COLLECTION:
-      /* Payload: [0]=subcmd, [1]=duration LSB, [2]=duration MSB. Duration in 100 ms periods; 0xFFFF = forever. */
+      /* Payload: [0]=subcmd, [1]=duration MSB, [2]=duration LSB. Duration in 100 ms periods; 0xFFFF = forever. */
       if (3 == frame_payload_len(frame)) {
-        uint16_t duration = (uint16_t)(((uint16_t)frame->payload[2] << 8) | (uint16_t)frame->payload[1]);
+        uint16_t duration = (uint16_t)(((uint16_t)frame->payload[1] << 8) | (uint16_t)frame->payload[2]);
         status = sl_jamming_detection_enable_collection(duration);
         if (ZPAL_STATUS_OK == status) {
-          /* ZW_Module -> Host: 0xF1 |  0x01 | duration LSB | duration MSB | */
+          /* ZW_Module -> Host: 0xF1 |  0x01 | duration MSB | duration LSB | */
           compl_workbuf[0] = FUNC_ID_PROP_JAMMING_SUBCOMMAND_COLLECTION;
-          compl_workbuf[1] = (uint8_t)(duration & 0xFF);
-          compl_workbuf[2] = (uint8_t)(duration >> 8);
+          compl_workbuf[1] = (uint8_t)(duration >> 8);
+          compl_workbuf[2] = (uint8_t)(duration & 0xFF);
           DoRespond_workbuf(3);
         }
       }
@@ -56,16 +56,16 @@ ZW_ADD_CMD(FUNC_ID_PROP_JAMMING_DETECTION_COMMAND)
       break;
 
     case FUNC_ID_PROP_JAMMING_SUBCOMMAND_REPORT_CONFIGURATION:
-      /* Payload: [0]=subcmd, [1]=duration LSB, [2]=duration MSB. Duration in seconds */
+      /* Payload: [0]=subcmd, [1]=interval MSB, [2]=interval LSB. Interval in seconds */
       if (3 == frame_payload_len(frame)) {
-        uint16_t interval = (uint16_t)(((uint16_t)frame->payload[2] << 8) | (uint16_t)frame->payload[1]);
+        uint16_t interval = (uint16_t)(((uint16_t)frame->payload[1] << 8) | (uint16_t)frame->payload[2]);
         status = sl_jamming_detection_set_report_interval_sec(interval);
 
         if (ZPAL_STATUS_OK == status) {
-          /* ZW_Module -> Host: 0xF1 |  0x03 | duration LSB | duration MSB | */
+          /* ZW_Module -> Host: 0xF1 |  0x03 | interval MSB | interval LSB | */
           compl_workbuf[0] = FUNC_ID_PROP_JAMMING_SUBCOMMAND_REPORT_CONFIGURATION;
-          compl_workbuf[1] = (uint8_t)(interval & 0xFF);
-          compl_workbuf[2] = (uint8_t)(interval >> 8);
+          compl_workbuf[1] = (uint8_t)(interval >> 8);
+          compl_workbuf[2] = (uint8_t)(interval & 0xFF);
           DoRespond_workbuf(3);
         }
       }

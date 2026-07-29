@@ -1,3 +1,5 @@
+workspace_name: bootloader-uart-bgapi-workspace
+package: bootloader_sample_app
 label: bootloader-uart-bgapi-workspace
 quality: production
 description: >

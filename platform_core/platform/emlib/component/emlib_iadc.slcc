@@ -17,7 +17,7 @@ include:
 provides:
 - name: emlib_iadc
 - name: hal_generic_adc
-  condition: [device_series_2]
+  condition: [device_series_2, device_has_iadc]
 requires:
 - name: device
 - name: device_has_iadc

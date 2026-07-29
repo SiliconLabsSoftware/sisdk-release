@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform Security - SoC TrustZone PSA Crypto ECDH (Secure application)
 description: >
-  Demonstrates how to implement the Secure part of a TrustZone-split PSA Crypto ECDH application, providing PSA Crypto and Attestation services in the Secure world via NSC veneers.
+  Demonstrates how to implement the Secure part of a TrustZone-split PSA Crypto ECDH app, in a TrustZone Secure-world PSA Crypto ECDH example providing PSA Crypto services via NSC veneers.
 category: Example|Platform
 filter:
   - name: "Device Type"
@@ -16,7 +16,9 @@ filter:
 readme:
   - path: readme.md
 ui_hints:
-  highlight: readme.md
+  highlight:
+    - path: readme.md
+      focus: true
 
 component:
   - id: trustzone_secure

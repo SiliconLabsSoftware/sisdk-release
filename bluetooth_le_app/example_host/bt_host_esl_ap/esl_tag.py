@@ -499,9 +499,11 @@ class Tag:
             for cb in self._observers:
                 cb(self, field, old, new)
 
-    def reset(self, keep_esl_address=False):
+    def reset(self, keep_esl_address=False, old_esl_state_override=None):
         """Reset object states"""
-        old_esl_state = self.esl_state
+        old_esl_state = (
+            self.esl_state if old_esl_state_override is None else old_esl_state_override
+        )
         keys = [
             elw.ESL_LIB_DATA_TYPE_GATT_AP_SYNC_KEY,
             elw.ESL_LIB_DATA_TYPE_GATT_RESPONSE_KEY,
@@ -581,8 +583,15 @@ class Tag:
 
     def unassociate(self):
         """Unassociate tag object"""
+        old_esl_address = self.esl_address
+        old_esl_state = self.esl_state
         self.gatt_values = {}
-        self.reset()
+
+
+        if old_esl_address is not None:
+            self._notify("esl_address", old_esl_address, None)
+
+        self.reset(old_esl_state_override=old_esl_state)
 
     def unsynchronize(self):
         """Clear the BASIC_STATE_FLAG_SYNCHRONIZED flag internally to consider a tag unsynced"""
@@ -1154,9 +1163,10 @@ class Tag:
         key_type: int = elw.ESL_LIB_KEY_TYPE_NO_KEY,
         key: bytes = None,
         timeout: int = None,
+        ignore_tag_state: bool = False
     ):
         """Connect to the tag"""
-        if self.state != TagState.IDLE:
+        if self.state != TagState.IDLE and not ignore_tag_state:
             raise InvalidTagStateError(
                 f"Invalid ESL object state: {self._state} at address {self.ble_address}"
             )

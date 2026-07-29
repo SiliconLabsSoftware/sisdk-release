@@ -374,6 +374,9 @@ sl_status_t sl_high_datarate_phy_transmit_scheduled(uint8_t *payload, sl_rail_ti
   return sl_mac_send_raw_high_datarate_phy_scheduled_message(sli_zigbee_get_current_network_index(), payload, timestamp);
 }
 
+// HDR enabled by default (2 MBPS). MUX+FCS Standard vs RXDC comes from rail_mux;
+// switch_phy 0 disables HDR (2P4_GHZ) so get-active-phy can show standalone
+// RX_DUTY_CYCLING. With HDR on, duty cycling is integrated into FEC/2_MBPS PHYs.
 static sl_rail_ieee802154_phy_features_t desired_phy_features = SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_2_MBPS;
 
 sl_rail_ieee802154_phy_features_t sl_rail_util_ieee802154_get_high_speed_phy_features(void)

@@ -280,6 +280,10 @@ NcpBase::NcpBase(Instance *aInstance)
     , mDiscoveryScanEnableFiltering(false)
     , mDiscoveryScanPanId(0xffff)
     , mUpdateChangedPropsTask(*aInstance, NcpBase::UpdateChangedProps)
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && \
+    OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
+    , mNotifyNat64FavoredPrefixTask(*aInstance, NcpBase::HandleNotifyNat64FavoredPrefixTask)
+#endif
     , mThreadChangedFlags(0)
     , mHostPowerState(SPINEL_HOST_POWER_STATE_ONLINE)
     , mHostPowerReplyFrameTag(Spinel::Buffer::kInvalidTag)
@@ -327,6 +331,12 @@ NcpBase::NcpBase(Instance *aInstance)
 #endif
 #if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
     , mDnssdState(OT_PLAT_DNSSD_STOPPED)
+#endif
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    , mDnsUpstreamAvailable(false)
+#endif
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    , mDnsUpstreamRdnssCallbackRegistered(false)
 #endif
 #endif
 #if OPENTHREAD_CONFIG_DIAG_ENABLE

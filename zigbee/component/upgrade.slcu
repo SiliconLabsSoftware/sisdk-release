@@ -162,3 +162,11 @@ upgrade:
         description: >-
           The SL_ZIGBEE_AF_PLUGIN_OTA_CLIENT_POLICY_EBL_VERIFICATION configuration item has been renamed to SL_ZIGBEE_AF_PLUGIN_OTA_CLIENT_POLICY_GBL_VERIFICATION in line with the long-removed EBL file format.
           SL_ZIGBEE_AF_PLUGIN_OTA_CLIENT_POLICY_GBL_VERIFICATION is functionally the same as SL_ZIGBEE_AF_PLUGIN_OTA_CLIENT_POLICY_EBL_VERIFICATION. No action is needed.
+
+  - sdk:
+      id: simplicity_sdk
+      version: 2026.6.1
+    configuration:
+      - script: zigbee/component/scripts/upgrade_zigbee_end_device_configuration.lua
+        description: >
+          Introduced a new configuration parameter SL_ZIGBEE_AF_PLUGIN_END_DEVICE_SUPPORT_MOVE_DELAY_SECONDS that allows configuring the delay time (in seconds) for scheduling end device moves as part of the end device support component.

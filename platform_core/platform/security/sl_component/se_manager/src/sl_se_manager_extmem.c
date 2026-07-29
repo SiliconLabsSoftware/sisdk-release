@@ -57,6 +57,8 @@
 #define MTP_QSPI_REGION_METADATA_LOCKED_SHIFT  15
 #define MTP_QSPI_REGION_METADATA_LOCKED        (0x1UL << 15)
 
+#define SLI_SE_CODE_REGION_SIZE_GRANULARITY    (32U * 1024U)
+
 // -----------------------------------------------------------------------------
 // Local functions
 
@@ -90,7 +92,7 @@ sl_status_t sl_se_code_region_get_config(sl_se_command_context_t *cmd_ctx,
 {
   sli_se_mailbox_command_t *se_cmd;
   sl_status_t sl_status;
-  uint16_t region_metadata[SL_SE_MAX_CODE_REGIONS];
+  volatile uint16_t region_metadata[SL_SE_MAX_CODE_REGIONS];
 
   if (cmd_ctx == NULL || region_array == NULL || region_array_size == 0
       || start_region_idx >= SL_SE_MAX_CODE_REGIONS
@@ -126,7 +128,7 @@ sl_status_t sl_se_code_region_get_config(sl_se_command_context_t *cmd_ctx,
 
       region_array[i - start_region_idx].region_size =
         ((region_metadata[i] & MTP_QSPI_REGION_METADATA_SIZE_MASK)
-         >> MTP_QSPI_REGION_METADATA_SIZE_SHIFT) * 32 * 1024;
+         >> MTP_QSPI_REGION_METADATA_SIZE_SHIFT) * SLI_SE_CODE_REGION_SIZE_GRANULARITY;
 
       region_array[i - start_region_idx].bank_swapping_enabled =
         region_metadata[i] & MTP_QSPI_REGION_METADATA_SWAPPED ? true : false;
@@ -147,7 +149,7 @@ sl_status_t sl_se_code_region_apply_config(sl_se_command_context_t *cmd_ctx,
                                            unsigned int region_array_size)
 {
   sli_se_mailbox_command_t *se_cmd;
-  uint16_t region_metadata[SL_SE_MAX_CODE_REGIONS];
+  volatile uint16_t region_metadata[SL_SE_MAX_CODE_REGIONS];
 
   if (cmd_ctx == NULL || region_array == NULL || region_array_size == 0
       || start_region_idx >= SL_SE_MAX_CODE_REGIONS
@@ -176,13 +178,13 @@ sl_status_t sl_se_code_region_apply_config(sl_se_command_context_t *cmd_ctx,
     }
 
     // Validate region size, must be a multiple of 32KiBytes
-    if (region_array[i].region_size % (32 * 1024)) {
+    if (region_array[i].region_size % SLI_SE_CODE_REGION_SIZE_GRANULARITY) {
       return SL_STATUS_INVALID_PARAMETER;
     }
 
     // Set size
     region_metadata[i] |=
-      ( (region_array[i].region_size / (32 * 1024) ) << MTP_QSPI_REGION_METADATA_SIZE_SHIFT)
+      ( (region_array[i].region_size / SLI_SE_CODE_REGION_SIZE_GRANULARITY) << MTP_QSPI_REGION_METADATA_SIZE_SHIFT)
       & MTP_QSPI_REGION_METADATA_SIZE_MASK;
 
     // Set bank swapped bit

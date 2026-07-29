@@ -44,6 +44,15 @@
 #include "sl_host_hibernation_api.h"
 #endif
 
+#ifdef SL_CATALOG_ZW_JAMMING_DETECTION_PRESENT
+#include "sl_jamming_detection.h"
+#include "sl_jamming_cmd_handlers.h"
+
+/* forward declarations for the jamming detection callbacks */
+static zpal_status_t application_jamming_detected_callback(const sl_jamming_detection_statistics_t *report);
+static zpal_status_t application_rssi_collection_callback(const sl_jamming_detection_collection_t *collection);
+#endif
+
 #include <assert.h>
 
 #if (!defined(SL_CATALOG_SILICON_LABS_ZWAVE_APPLICATION_PRESENT) && !defined(UNIT_TEST))
@@ -56,11 +65,6 @@
 
 #ifdef SL_CATALOG_ZW_SHUTDOWN_MANAGER_PRESENT
 #include "zw_shutdown_manager.h"
-#endif
-
-#ifdef SL_CATALOG_ZW_JAMMING_DETECTION_PRESENT
-#include "sl_jamming_detection.h"
-#include "sl_jamming_cmd_handlers.h"
 #endif
 
 /* Basic level definitions */
@@ -526,6 +530,24 @@ ApplicationTask(SApplicationHandles* pAppHandles)
   gpio_wakeup_host_init();
 #endif
 
+#ifdef SL_CATALOG_ZW_JAMMING_DETECTION_PRESENT
+  sl_jamming_detection_config_t config = { 0 };
+
+  // set the default configuration for the jamming detection
+  if ( ZPAL_STATUS_OK == sl_jamming_detection_default_config(&config)) {
+    // set the callback function to be called when jamming is detected
+    config.report_callback = application_jamming_detected_callback;
+    config.collection_callback = application_rssi_collection_callback;
+
+    /*with or without jamming detection, the rest of the application runs as usual.*/
+    if (ZPAL_STATUS_OK != sl_jamming_detection_init(&config)) {
+      assert(false);
+    }
+  } else {
+    assert(false);
+  }
+#endif /* SL_CATALOG_ZW_JAMMING_DETECTION_PRESENT */
+
   set_state_and_notify(stateStartup);
   // Wait for and process events
   ZPAL_LOG_DEBUG(ZPAL_LOG_APP, "SerialApi Event processor Started\r\n");
@@ -822,6 +844,7 @@ ApplicationInitSW(void)
   cmds_power_management_init();
 }
 
+#ifdef SL_CATALOG_ZW_JAMMING_DETECTION_PRESENT
 /**
  * @brief Callback from rssi collection:
  * - send proprietary Serial API frame 0xF1 to host.
@@ -834,7 +857,6 @@ ApplicationInitSW(void)
  *     rssi[3] rssi on channel LR Channel A
  *     rssi[4] rssi on channel LR Channel B
  */
-#ifdef SL_CATALOG_ZW_JAMMING_DETECTION_PRESENT
 static zpal_status_t application_rssi_collection_callback(const sl_jamming_detection_collection_t *collection)
 {
   zpal_status_t status = ZPAL_STATUS_FAIL;
@@ -873,7 +895,21 @@ static zpal_status_t application_jamming_detected_callback(const sl_jamming_dete
     .payload = *report
   };
 
-  status = RequestUnsolicited(FUNC_ID_PROP_JAMMING_DETECTION_COMMAND, (uint8_t *)&jamming_packet, sizeof(jamming_packet)) ? ZPAL_STATUS_OK : ZPAL_STATUS_FAIL;
+#ifdef SL_CATALOG_ZW_HOST_HIBERNATION_PRESENT
+  if (true == is_host_sleeping()) {
+    gpio_wakeup_host();
+
+    /* copy the notification message so we can send it when the host is awake */
+    store_jamming_report(report);
+
+    /* hack the status to indicate success */
+    status = ZPAL_STATUS_OK;
+  } else
+ #endif
+  {
+    status = RequestUnsolicited(FUNC_ID_PROP_JAMMING_DETECTION_COMMAND, (uint8_t *)&jamming_packet, sizeof(jamming_packet)) ? ZPAL_STATUS_OK : ZPAL_STATUS_FAIL;
+  }
+
   return status;
 }
 #endif /* SL_CATALOG_ZW_JAMMING_DETECTION_PRESENT */
@@ -895,24 +931,6 @@ ApplicationInit(
   // enable the watchdog at init of application
   zpal_watchdog_init();
   zpal_enable_watchdog(true);
-
-#ifdef SL_CATALOG_ZW_JAMMING_DETECTION_PRESENT
-  sl_jamming_detection_config_t config = { 0 };
-
-  // set the default configuration for the jamming detection
-  if ( ZPAL_STATUS_OK == sl_jamming_detection_default_config(&config)) {
-    // set the callback function to be called when jamming is detected
-    config.report_callback = application_jamming_detected_callback;
-    config.collection_callback = application_rssi_collection_callback;
-
-    /*with or without jamming detection, the rest of the application runs as usual.*/
-    if (ZPAL_STATUS_OK != sl_jamming_detection_init(&config)) {
-      assert(false);
-    }
-  } else {
-    assert(false);
-  }
-#endif /* SL_CATALOG_ZW_JAMMING_DETECTION_PRESENT */
 
   // Serial API can control hardware with information
   // set in the file system therefore it should be the first

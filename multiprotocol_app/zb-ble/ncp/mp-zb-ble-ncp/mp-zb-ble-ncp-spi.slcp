@@ -117,11 +117,11 @@ define:
   - name: OS_CFG_COMPAT_INIT
 
 readme:
-  - path: ./readme-zigbee_ncp-ble_ncp-spi.md
+  - path: ./readme-mp-zb-ble-ncp-spi.md
 
 ui_hints:
   highlight:
-    - path: readme-zigbee_ncp-ble_ncp-spi.md
+    - path: readme-mp-zb-ble-ncp-spi.md
       focus: false
 
 filter:

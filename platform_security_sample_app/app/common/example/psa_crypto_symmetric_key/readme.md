@@ -1,9 +1,12 @@
 # PSA Crypto Symmetric Key
 
-Demonstrates how to generate, import, export, copy, and destroy symmetric keys using the PSA Crypto API, with plain and Secure Vault wrapped key storage.
+## High-Level Overview
+
+Demonstrates how to generate, import, export, copy, and destroy symmetric keys using the PSA Crypto API, in a platform security SoC example with plain and Secure Vault wrapped key storage.
 
 ## Table of Contents
 
+- [High-Level Overview](#high-level-overview)
 - [Purpose / Scope](#purpose--scope)
 - [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
 - [Steps to Run Demo](#steps-to-run-demo)
@@ -121,7 +124,3 @@ When the macro is disabled, PSA functions make defensive `malloc`/`memcpy`/`free
 ## Report Bugs & Get Support
 
 You are always encouraged and welcome to report any issues you find via the [Silicon Labs Community](https://community.silabs.com/).
-
-## Report Bugs & Get Support
-
-You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://community.silabs.com/).

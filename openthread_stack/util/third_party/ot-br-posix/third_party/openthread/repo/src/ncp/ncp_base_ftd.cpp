@@ -47,11 +47,20 @@
 #include <openthread/dataset_ftd.h>
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
-#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE || \
+    (OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE)
 #include <openthread/border_routing.h>
 #endif
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE || OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
+#include <openthread/ip6.h>
+#include <openthread/logging.h>
 #include <openthread/nat64.h>
+#endif
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+#include <openthread/dnssd_server.h>
+#include <openthread/udp.h>
+#include <openthread/platform/dns.h>
+#include "core/net/dnssd_server.hpp"
 #endif
 #include <openthread/ncp.h>
 #include <openthread/thread_ftd.h>
@@ -1538,11 +1547,18 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_INFRA_IF_STATE>(void)
         IgnoreError(otBorderRoutingSetEnabled(mInstance, /* aEnabled */ false));
         SuccessOrExit(error = otBorderRoutingInit(mInstance, mInfraIfIndex, isInfraRunning));
         SuccessOrExit(error = otBorderRoutingSetEnabled(mInstance, /* aEnabled */ true));
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+        DnsUpstreamRegisterRdnssCallback();
+#endif
     }
     else
     {
         SuccessOrExit(error = otPlatInfraIfStateChanged(mInstance, mInfraIfIndex, isInfraRunning));
     }
+
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
+    mNotifyNat64FavoredPrefixTask.Post();
+#endif
 
 exit:
     return error;
@@ -1706,11 +1722,31 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_BORDER_ROUTER_NAT64_E
     SuccessOrExit(error = mDecoder.ReadBool(enabled));
     otNat64SetEnabled(mInstance, enabled);
 
+#if OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
+    if (enabled)
+    {
+        mNotifyNat64FavoredPrefixTask.Post();
+    }
+#endif
+
 exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && (OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE ||
        // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE)
+
+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
+void NcpBase::HandleNotifyNat64FavoredPrefixTask(Tasklet &aTasklet)
+{
+    OT_UNUSED_VARIABLE(aTasklet);
+    GetNcpInstance()->NotifyNat64FavoredPrefix();
+}
+
+void NcpBase::NotifyNat64FavoredPrefix(void)
+{
+    mInstance->Get<BorderRouter::RoutingManager>().NotifyNat64FavoredPrefix();
+}
+#endif
 
 #if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
 void NcpBase::HandleNat64FavoredPrefixChanged(void)
@@ -1732,6 +1768,11 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_BORDER_ROUTER_NAT64_F
     SuccessOrExit(error = mEncoder.WriteUint8(prefix.mLength));
 
 exit:
+    if (error != OT_ERROR_NONE)
+    {
+        error = mEncoder.OverwriteWithLastStatusError(ThreadErrorToSpinelStatus(error));
+    }
+
     return error;
 }
 #endif
@@ -1988,6 +2029,330 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+
+otError NcpBase::DnsUpstreamEmitQuery(uint8_t aTxnIndex, const uint8_t *aQuery, uint16_t aQueryLen)
+{
+    otError          error  = OT_ERROR_NONE;
+    uint8_t          header = SPINEL_HEADER_FLAG | SPINEL_HEADER_TX_NOTIFICATION_IID;
+    spinel_command_t cmd    = SPINEL_CMD_PROP_VALUE_INSERTED;
+
+    VerifyOrExit(aQuery != nullptr, error = OT_ERROR_INVALID_ARGS);
+
+    SuccessOrExit(error = mEncoder.BeginFrame(header, cmd, SPINEL_PROP_DNS_UPSTREAM_QUERY));
+    SuccessOrExit(error = Spinel::EncodeDnsUpstreamWireMessage(mEncoder, aTxnIndex, aQuery, aQueryLen));
+    SuccessOrExit(error = mEncoder.EndFrame());
+
+exit:
+    return error;
+}
+
+void NcpBase::DnsUpstreamEmitCancel(uint8_t aTxnIndex)
+{
+    uint8_t          header = SPINEL_HEADER_FLAG | SPINEL_HEADER_TX_NOTIFICATION_IID;
+    spinel_command_t cmd    = SPINEL_CMD_PROP_VALUE_REMOVED;
+
+    SuccessOrExit(mEncoder.BeginFrame(header, cmd, SPINEL_PROP_DNS_UPSTREAM_CANCEL));
+    SuccessOrExit(mEncoder.WriteUint8(aTxnIndex));
+    SuccessOrExit(mEncoder.EndFrame());
+
+exit:
+    return;
+}
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+static bool RdnssEntryHasHigherPriority(const otBorderRoutingRdnssAddrEntry &aEntry,
+                                        const otBorderRoutingRdnssAddrEntry &aOther)
+{
+    bool result = false;
+
+    if (aEntry.mLifetime != aOther.mLifetime)
+    {
+        result = aEntry.mLifetime > aOther.mLifetime;
+    }
+    else
+    {
+        for (uint8_t i = 0; i < sizeof(otIp6Address); i++)
+        {
+            if (aEntry.mAddress.mFields.m8[i] != aOther.mAddress.mFields.m8[i])
+            {
+                result = aEntry.mAddress.mFields.m8[i] > aOther.mAddress.mFields.m8[i];
+                break;
+            }
+        }
+    }
+
+    return result;
+}
+
+static void SortRdnssEntriesByPriority(otBorderRoutingRdnssAddrEntry *aEntries, uint32_t aNumEntries)
+{
+    for (uint32_t i = 1; i < aNumEntries; i++)
+    {
+        otBorderRoutingRdnssAddrEntry entry = aEntries[i];
+        uint32_t                      j     = i;
+
+        while (j > 0 && RdnssEntryHasHigherPriority(entry, aEntries[j - 1]))
+        {
+            aEntries[j] = aEntries[j - 1];
+            j--;
+        }
+
+        aEntries[j] = entry;
+    }
+}
+
+void NcpBase::HandleBorderRoutingRdnssChanged(void *aContext)
+{
+    static_cast<NcpBase *>(aContext)->DnsUpstreamEmitRdnssServers();
+}
+
+void NcpBase::DnsUpstreamRegisterRdnssCallback(void)
+{
+    if (!mDnsUpstreamRdnssCallbackRegistered)
+    {
+        otBorderRoutingSetRdnssAddrCallback(mInstance, HandleBorderRoutingRdnssChanged, this);
+        mDnsUpstreamRdnssCallbackRegistered = true;
+    }
+
+    DnsUpstreamEmitRdnssServers();
+}
+
+void NcpBase::DnsUpstreamEmitRdnssServers(void)
+{
+    static constexpr uint8_t kMaxRdnssServers = 3;
+
+    uint8_t                            header = SPINEL_HEADER_FLAG | SPINEL_HEADER_TX_NOTIFICATION_IID;
+    spinel_command_t                   cmd    = SPINEL_CMD_PROP_VALUE_IS;
+    otBorderRoutingPrefixTableIterator iterator;
+    otBorderRoutingRdnssAddrEntry      entry;
+    otBorderRoutingRdnssAddrEntry      rdnssEntries[kMaxRdnssServers + 1];
+    otIp6Address                       rdnssServers[kMaxRdnssServers];
+    uint32_t                           numEntries = 0;
+    uint8_t                            numServers = 0;
+
+    otBorderRoutingPrefixTableInitIterator(mInstance, &iterator);
+
+    while (otBorderRoutingGetNextRdnssAddrEntry(mInstance, &iterator, &entry) == OT_ERROR_NONE)
+    {
+        uint32_t i = 0;
+
+        for (; i < numEntries; ++i)
+        {
+            if (otIp6IsAddressEqual(&entry.mAddress, &rdnssEntries[i].mAddress))
+            {
+                rdnssEntries[i].mLifetime = OT_MAX(rdnssEntries[i].mLifetime, entry.mLifetime);
+                break;
+            }
+        }
+
+        if (i == numEntries)
+        {
+            rdnssEntries[numEntries++] = entry;
+            SortRdnssEntriesByPriority(rdnssEntries, numEntries);
+            numEntries = OT_MIN(numEntries, kMaxRdnssServers);
+        }
+    }
+
+    for (uint32_t i = 0; i < numEntries; i++)
+    {
+        rdnssServers[i] = rdnssEntries[i].mAddress;
+    }
+    numServers = static_cast<uint8_t>(numEntries);
+
+    SuccessOrExit(mEncoder.BeginFrame(header, cmd, SPINEL_PROP_DNS_UPSTREAM_RDNSS_SERVERS));
+    SuccessOrExit(Spinel::EncodeDnsUpstreamRdnssServers(mEncoder, rdnssServers, numServers));
+    SuccessOrExit(mEncoder.EndFrame());
+
+exit:
+    return;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DNS_UPSTREAM_RDNSS_SERVERS>(void)
+{
+    static constexpr uint8_t kMaxRdnssServers = 3;
+
+    otError                            error = OT_ERROR_NONE;
+    otBorderRoutingPrefixTableIterator iterator;
+    otBorderRoutingRdnssAddrEntry      entry;
+    otBorderRoutingRdnssAddrEntry      rdnssEntries[kMaxRdnssServers + 1];
+    otIp6Address                       rdnssServers[kMaxRdnssServers];
+    uint32_t                           numEntries = 0;
+    uint8_t                            numServers = 0;
+
+    otBorderRoutingPrefixTableInitIterator(mInstance, &iterator);
+
+    while (otBorderRoutingGetNextRdnssAddrEntry(mInstance, &iterator, &entry) == OT_ERROR_NONE)
+    {
+        uint32_t i = 0;
+
+        for (; i < numEntries; ++i)
+        {
+            if (otIp6IsAddressEqual(&entry.mAddress, &rdnssEntries[i].mAddress))
+            {
+                rdnssEntries[i].mLifetime = OT_MAX(rdnssEntries[i].mLifetime, entry.mLifetime);
+                break;
+            }
+        }
+
+        if (i == numEntries)
+        {
+            rdnssEntries[numEntries++] = entry;
+            SortRdnssEntriesByPriority(rdnssEntries, numEntries);
+            numEntries = OT_MIN(numEntries, kMaxRdnssServers);
+        }
+    }
+
+    for (uint32_t i = 0; i < numEntries; i++)
+    {
+        rdnssServers[i] = rdnssEntries[i].mAddress;
+    }
+    numServers = static_cast<uint8_t>(numEntries);
+
+    SuccessOrExit(error = Spinel::EncodeDnsUpstreamRdnssServers(mEncoder, rdnssServers, numServers));
+
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        error = mEncoder.OverwriteWithLastStatusError(ThreadErrorToSpinelStatus(error));
+    }
+
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+void NcpBase::DnsUpstreamQueryStart(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
+{
+    static constexpr uint16_t kMaxDnsWireSize = 512;
+
+    otError                                                  error  = OT_ERROR_NONE;
+    Dns::ServiceDiscovery::Server                           &server = mInstance->Get<Dns::ServiceDiscovery::Server>();
+    Dns::ServiceDiscovery::Server::UpstreamQueryTransaction *txn;
+    uint8_t                                                  txnIndex;
+    uint8_t                                                  buffer[kMaxDnsWireSize];
+    uint16_t                                                 length;
+
+    VerifyOrExit(aTxn != nullptr && aQuery != nullptr, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(mDnsUpstreamAvailable, error = OT_ERROR_INVALID_STATE);
+
+    txn      = &AsCoreType(aTxn);
+    txnIndex = server.GetUpstreamQueryTransactionIndex(*txn);
+    length   = otMessageRead(aQuery, 0, buffer, sizeof(buffer));
+    VerifyOrExit(length > 0 && length == otMessageGetLength(aQuery), error = OT_ERROR_INVALID_ARGS);
+
+    SuccessOrExit(error = DnsUpstreamEmitQuery(txnIndex, buffer, length));
+
+exit:
+    if (error != OT_ERROR_NONE && aTxn != nullptr)
+    {
+        otPlatDnsUpstreamQueryDone(mInstance, aTxn, nullptr);
+    }
+}
+
+void NcpBase::DnsUpstreamQueryCancel(otPlatDnsUpstreamQuery *aTxn)
+{
+    Dns::ServiceDiscovery::Server                           &server = mInstance->Get<Dns::ServiceDiscovery::Server>();
+    Dns::ServiceDiscovery::Server::UpstreamQueryTransaction *txn;
+    uint8_t                                                  txnIndex;
+
+    VerifyOrExit(aTxn != nullptr);
+
+    txn      = &AsCoreType(aTxn);
+    txnIndex = server.GetUpstreamQueryTransactionIndex(*txn);
+
+    DnsUpstreamEmitCancel(txnIndex);
+    otPlatDnsUpstreamQueryDone(mInstance, aTxn, nullptr);
+
+exit:
+    return;
+}
+
+void NcpBase::DnsUpstreamResponseReceived(uint8_t aTxnIndex, const uint8_t *aResponse, uint16_t aResponseLen)
+{
+    Dns::ServiceDiscovery::Server                           &server = mInstance->Get<Dns::ServiceDiscovery::Server>();
+    Dns::ServiceDiscovery::Server::UpstreamQueryTransaction *txn;
+    otMessage                                               *otMessagePtr    = nullptr;
+    otMessageSettings                                        messageSettings = {true, OT_MESSAGE_PRIORITY_NORMAL};
+    otError                                                  error           = OT_ERROR_NONE;
+    bool                                                     queryDone       = false;
+
+    txn = server.GetUpstreamQueryTransactionAt(aTxnIndex);
+    VerifyOrExit(txn != nullptr && txn->IsValid());
+
+    if (aResponseLen == 0)
+    {
+        otPlatDnsUpstreamQueryDone(mInstance, txn, nullptr);
+        queryDone = true;
+        ExitNow();
+    }
+
+    otMessagePtr = otUdpNewMessage(mInstance, &messageSettings);
+    VerifyOrExit(otMessagePtr != nullptr, error = OT_ERROR_NO_BUFS);
+    SuccessOrExit(error = AsCoreType(otMessagePtr).AppendBytes(aResponse, aResponseLen));
+
+    otPlatDnsUpstreamQueryDone(mInstance, txn, otMessagePtr);
+    otMessagePtr = nullptr;
+    queryDone    = true;
+
+exit:
+    if (otMessagePtr != nullptr)
+    {
+        otMessageFree(otMessagePtr);
+    }
+
+    if (!queryDone && txn != nullptr && txn->IsValid())
+    {
+        otPlatDnsUpstreamQueryDone(mInstance, txn, nullptr);
+    }
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNS_UPSTREAM_RESPONSE>(void)
+{
+    otError        error = OT_ERROR_NONE;
+    uint8_t        txnIndex;
+    const uint8_t *response;
+    uint16_t       responseLen;
+
+    SuccessOrExit(error = DecodeDnsUpstreamWireMessage(mDecoder, txnIndex, response, responseLen));
+    DnsUpstreamResponseReceived(txnIndex, response, responseLen);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNS_UPSTREAM_ENABLED>(void)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enabled;
+
+    SuccessOrExit(error = mDecoder.ReadBool(enabled));
+    otDnssdUpstreamQuerySetEnabled(mInstance, enabled);
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    if (enabled)
+    {
+        DnsUpstreamRegisterRdnssCallback();
+    }
+#endif
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNS_UPSTREAM_AVAILABLE>(void)
+{
+    otError error = OT_ERROR_NONE;
+    bool    available;
+
+    SuccessOrExit(error = mDecoder.ReadBool(available));
+    DnsUpstreamSetAvailable(available);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 

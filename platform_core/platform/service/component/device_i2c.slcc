@@ -5,7 +5,7 @@ description: >
   The Device Manager I2C component abstracts device-specific
   I2C attributes.
 category: Services|Device Manager
-quality: evaluation
+quality: production
 metadata:
   sbom:
     license: Zlib

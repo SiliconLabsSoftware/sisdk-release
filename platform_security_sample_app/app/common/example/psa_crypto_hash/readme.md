@@ -1,9 +1,12 @@
 # PSA Crypto Hash
 
-Demonstrates how to compute message digests with the PSA Crypto Hash API, exercising SHA-1 and SHA-2 (SHA-224/256/384/512) in single-part and multi-part modes.
+## High-Level Overview
+
+Demonstrates how to compute message digests with the PSA Crypto Hash API, in a platform security SoC example exercising SHA-1 and SHA-2 (SHA-224/256/384/512) in single-part and multi-part modes.
 
 ## Table of Contents
 
+- [High-Level Overview](#high-level-overview)
 - [Purpose / Scope](#purpose--scope)
 - [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
 - [Steps to Run Demo](#steps-to-run-demo)
@@ -103,11 +106,3 @@ You are always encouraged and welcome to report any issues you find via the [Sil
 Before programming the radio board mounted on the mainboard, make sure the power supply switch is in the AEM position (right side) as shown below.
 
 ![Radio board power supply switch](image/readme_img0.png)
-
-## Resources
-
-[AN1311: Integrating Crypto Functionality Using PSA Crypto Compared to Mbed TLS](https://www.silabs.com/documents/public/application-notes/an1311-mbedtls-psa-crypto-porting-guide.pdf)
-
-## Report Bugs & Get Support
-
-You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://community.silabs.com/).

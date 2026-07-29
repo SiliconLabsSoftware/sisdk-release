@@ -14,12 +14,6 @@ source:
 - path: tests/src/certs.c
 - path: tests/src/psa_test_wrappers.c
 - path: tests/src/test_helpers/ssl_helpers.c
-- path: library/memory_buffer_alloc.c
-  condition:
-  - trustzone_secure
-- path: library/memory_buffer_alloc.c
-  condition:
-  - trustzone_unaware
 include:
 - path: tests/include
   file_list:

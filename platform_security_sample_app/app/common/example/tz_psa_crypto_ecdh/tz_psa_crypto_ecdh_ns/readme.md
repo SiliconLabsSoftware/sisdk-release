@@ -1,9 +1,12 @@
 # TrustZone PSA Crypto ECDH (Non-secure Application)
 
-Demonstrates how to perform ECDH key agreement from the Non-secure side of a TrustZone-split application via the Secure world.
+## High-Level Overview
+
+Demonstrates how to perform ECDH key agreement from the Non-secure side, in a TrustZone Non-secure PSA Crypto ECDH example using Secure-world PSA Crypto services.
 
 ## Table of Contents
 
+- [High-Level Overview](#high-level-overview)
 - [Purpose / Scope](#purpose--scope)
 - [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
 - [Steps to Run Demo](#steps-to-run-demo)
@@ -79,4 +82,4 @@ The Non-secure project specifically is the one you press **Build** / **Debug** /
 
 ## Report Bugs & Get Support
 
-You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://community.silabs.com/).
+You are always encouraged and welcome to report any issues you find via the [Silicon Labs Community](https://community.silabs.com/).

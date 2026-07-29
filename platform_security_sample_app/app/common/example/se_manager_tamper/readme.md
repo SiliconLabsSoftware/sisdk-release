@@ -1,234 +1,126 @@
-# SE Manager Tamper
+# Platform Security - SoC SE Manager Tamper
 
-This example uses the SE Manager API to demonstrate the tamper feature on the supported Series 2 Secure Vault High device.
+Demonstrates how to provision tamper OTP settings, trigger tamper via kit buttons, and temporarily disable tamper with a signed SE Manager token on Secure Vault High.
 
-The tamper settings used in this example are only for demonstration purposes and should not be considered a recommendation.
+## Table of Contents
 
-For demonstration purposes, a private command key is stored in the device's memory to sign the access certificate for tamper disable. The device's public command key in the SE OTP must match with the public key of this private command key to disable tamper responses.
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-The default private command key (`cmd-unsafe-privkey.pem`) in PEM format can be found in the Windows folder below.
+## Purpose / Scope
 
-_C:\SiliconLabs\SimplicityStudio\v5\developer\adapter_packs\secmgr\scripts\offline_
+This example demonstrates **anti-tamper** on **Secure Vault High** devices using SE Manager: read reset/tamper cause, inspect or **one-time provision** OTP tamper configuration, run a **normal** tamper exercise with kit buttons (**PB0** / **PB1**), and optionally submit a **signed tamper-disable token** (command key + challenge/certificate flow in `app_se_manager_tamper_disable.c`).
+Tamper levels and PRS wiring in `app_se_manager_tamper.c` are **for lab demonstration only** — not a production recommendation.
+Output and **clock-cycle counts** print on **VCOM** (`SE_MANAGER_PRINT=1` by default).
+**Requires:** `device_security_vault` (Vault **High**), `simple_button` (PB0/PB1), PRS.
 
-The public key of `cmd-unsafe-privkey.pem` in text format is:
+### Tamper response levels
 
-`X - B1BC6F6FA56640ED522B2EE0F5B3CF7E5D48F60BE8148F0DC08440F0A4E1DCA4`
+| Level | Response |
+|-------|----------|
+| 0 | Ignore |
+| 1 | Interrupt (`SETAMPERHOST`) |
+| 2 | Filter (increment filter counter) |
+| 4 | Reset |
+| 7 | Erase OTP (device and wrapped secrets unrecoverable) |
+Per-source default and example levels differ by **Series 2 vs Series 3** and part configuration; see **AN1247** and the tables in the legacy readme / `app_se_manager_tamper.c` for your target.
 
-`Y - 7C04119ED6A1BE31B7707E5F9D001A659A051003E95E1B936F05C37EA793AD63`
+### Critical warnings
 
-If the device does not have public command key in the SE OTP, the program will prompt the user to program the public key above to the device.
+- **OTP tamper configuration** and **public command key** programming are **one-time only** and **irrevocable**.
+- **Disconnect the debugger** when running tamper tests.
+- This example does **not** enable secure boot when provisioning tamper OTP.
+- Hard-coded **private command key** in firmware is **insecure** for production — use protected key storage and signed certificates in real products.
+- Level **7** (erase OTP) can permanently destroy the device.
 
-If the device already has a public command ky provisioned in the SE OTP, the user can change the private command key (`private_command_key[]`) in `app_se_manager_tamper_disable.c` to match with the device's public command key.
+### SE Manager APIs exercised
 
-The example redirects standard I/O to the virtual serial port (VCOM) of the kit. By default, the serial port setting is 115200 bps and 8-N-1 configuration.
+`sl_se_init`, `sl_se_deinit`, `sl_se_init_command_context`, `sl_se_deinit_command_context`, `sl_se_get_reset_cause`, `sl_se_get_status`, `sl_se_read_otp`, `sl_se_init_otp`, `sl_se_validate_key`, `sl_se_get_storage_size`, `sl_se_generate_key`, `sl_se_export_public_key`, `sl_se_read_pubkey`, `sl_se_init_otp_key`, `sl_se_get_serialnumber`, `sl_se_get_challenge`, `sl_se_ecc_sign`, `sl_se_disable_tamper`, `sl_se_roll_challenge`.
 
-The example has been instrumented with code to count the number of clock cycles spent in different operations. The results are printed on the VCOM serial port console. This feature can be disabled by defining `SE_MANAGER_PRINT=0` (default is 1) in the IDE setting (`Properties->Settings->Preprocessor->Defined symbols`).
+## Prerequisites / Setup Requirements
 
-## Getting Started
+### Hardware Requirements
 
-1. Upgrade the kit's firmware to the latest version (see `Adapter Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in Simplicity Studio 5 Users Guide).
-2. Upgrade the device's SE firmware to the latest version (see `Secure Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in Simplicity Studio 5 Users Guide).
-3. Open any terminal program and connect to the kit's VCOM port (if using `Device Console` in Simplicity Studio 5, `Line terminator:` must be set to `None`).
-4. Create this platform example project in the Simplicity IDE (see [Examples](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-getting-started/start-a-project#examples) in the Simplicity Studio 5 User's Guide).
-5. Build the example and download it to the kit (see [Simple Build](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/building#simple-build) and [Flash Programmer](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/flashing#flash-programmer) in Simplicity Studio 5 Users Guide).
-6. Run the example and follow the instructions shown on the console.
+- **Secure Vault High** kit with **two push buttons** (PB0, PB1) routed for tamper/PRS demo.
+- USB for VCOM; **AEM** power when programming.
+![Radio board power supply switch](image/readme_img0.png)
 
-## Additional Information
+### Software Requirements
 
-1. The hard-coded private command key is an insecure method so the user should find a way to import the signed access certificate for tamper disable.
-2. This example does not enable secure boot when provisioning the tamper configuration in `app_se_manager_tamper.c`.
-3. The device should disconnect from the debugger when running this example.
-4. **Warning:** Loading the tamper configuration and a public command key into the SE are a **ONE-TIME-ONLY** process. Both of these assignment operations are irrevocable and persist for the life of the device.
-5. The default optimization level is `Optimize for debugging (-Og)` on Simplicity IDE and `None` on IAR Embedded Workbench.
+- **Simplicity Studio 5**, latest adapter and **SE firmware** (tamper reset-cause API needs sufficiently new SE FW on supported parts).
+- VCOM: **115200** 8-N-1, line terminator **None**.
+- Optional reference key: `cmd-unsafe-privkey.pem` under SE Manager pack `scripts/offline`.
 
-### Tamper Responses
+### Before you run
 
-| Level | Responses | Description |
-| --- | --- | --- |
-| 0 | Ignore | No action is taken |
-| 1 | Interrupt | The SETAMPERHOST interrupt on the host is triggered |
-| 2 | Filter | A counter in the tamper filter is increased |
-| 4 | Reset | The device is reset |
-| 7 | Erase OTP | Erases the OTP configuration of the device (make the device and all wrapped secrets unrecoverable) |
+- OTP must match this example’s expected tamper layout, or you must **provision** OTP once (irreversible) and **reset** to activate.
+- If OTP has no **public command key**, the app can program the test key (matches `cmd-unsafe-privkey.pem`) or you update `private_command_key[]` in `app_se_manager_tamper_disable.c` to match your OTP key.
 
-### Tamper Sources (EFR32xG21B Device)
+## Steps to Run Demo
 
-| Number | Name | Default level | User level in this example |
-| --- | --- | --- | --- |
-| 0 | Reserved | — | — |
-| 1 | Filter Counter | 0 | 1 |
-| 2 | SE Watchdog | 4 | 4 |
-| 3 | Reserved | — | — |
-| 4 | SE RAM CRC | 4 | 4 |
-| 5 | SE Hardfault | 4 | 4 |
-| 6 | Reserved | — | — |
-| 7 | Software Assertion | 4 | 4 |
-| 8 | SE CodeAuth | 4 | 4 |
-| 9 | UserCodeAuth | 0 | 0 |
-| 10 | MailboxAuth | 0 | 1 |
-| 11 | DCIAuth | 0 | 0 |
-| 12 | OTP Read | 4 | 4 |
-| 13 | Reserved | — | — |
-| 14 | Self-test | 4 | 4 |
-| 15 | TRNG Monitor | 0 | 1 |
-| 16 | PRS0 | 0 | 1 (PRS source: Push button PB0) |
-| 17 | PRS1 | 0 | 1 (PRS source: None) |
-| 18 | PRS2 | 0 | 2 (PRS source: Push button PB0) |
-| 19 | PRS3 | 0 | 2 (PRS source: None) |
-| 20 | PRS4 | 0 | 4 (PRS source: Push button PB1) |
-| 21 | PRS5 | 0 | 4 (PRS source: Software) |
-| 22 | PRS6 | 0 | 7 (PRS source: None) |
-| 23 | PRS7 | 0 | 7 (PRS source: None) |
-| 24 | DECOUPLE BOD | 4 | 4 |
-| 25 | TempSensor | 0 | 2 |
-| 26 | VGlitch Falling | 0 | 2 |
-| 27 | VGlitch Rising | 0 | 2 |
-| 28 | SecureLock | 4 | 4 |
-| 29 | SE Debug | 0 | 0 |
-| 30 | Digital glitch | 0 | 2 |
-| 31 | SE ICACHE | 4 | 4 |
+1. Build, flash, and open VCOM (115200 8-N-1, line terminator **None**).
+2. Reset and follow the log.
 
-### Tamper Sources (Other Series 2 Secure Vault High Devices)
+### Startup
 
-| Number | Name | Default level | User level in this example |
-| --- | --- | --- | --- |
-| 0 | Reserved | — | — |
-| 1 | Filter Counter | 0 | 1 |
-| 2 | SE Watchdog | 4 | 4 |
-| 3 | Reserved | — | — |
-| 4 | SE RAM ECC 2 | 4 | 4 |
-| 5 | SE Hardfault | 4 | 4 |
-| 6 | Reserved | — | — |
-| 7 | Software Assertion | 4 | 4 |
-| 8 | SE CodeAuth | 4 | 4 |
-| 9 | UserCodeAuth | 0 | 0 |
-| 10 | MailboxAuth | 0 | 1 |
-| 11 | DCIAuth | 0 | 0 |
-| 12 | OTP Read | 4 | 4 |
-| 13 | Reserved | — | — |
-| 14 | Self-test | 4 | 4 |
-| 15 | TRNG Monitor | 0 | 1 |
-| 16 | SecureLock | 4 | 4 |
-| 17 | DGlitch | 0 | 2 |
-| 18 | VGlitch | 0 | 2 |
-| 19 | SE ICACHE | 4 | 4 |
-| 20 | SE RAM ECC 1 | 0 | 1 |
-| 21 | BOD | 4 | 4 |
-| 22 | TempSensor | 0 | 2 |
-| 23 | DPLL Fall | 0 | 2 |
-| 24 | DPLL Rise | 0 | 2 |
-| -/25 | ETAMPDET | 0 | 2 |
-| 25/26 | PRS0 | 0 | 1 (PRS source: None) |
-| 26/27 | PRS1 | 0 | 1 (PRS source: Push button PB0) |
-| 27/28 | PRS2 | 0 | 2 (PRS source: Push button PB0) |
-| 28/29 | PRS3 | 0 | 2 (PRS source: None) |
-| 29/30 | PRS4 | 0 | 4 (PRS source: Push button PB1) |
-| 30/31 | PRS5 | 0 | 4 (PRS source: Software) |
-| 31/- | PRS6 | 0 | 7 (PRS source: None) |
+- Read **tamper/reset cause** (SE tamper reset cause when supported, else EMU `RSTCAUSE`).
+- Read **OTP tamper configuration**; if missing, **ENTER** twice to confirm **one-time** OTP init → **power-on or pin reset** required.
+- If OTP config does not match this example’s expected levels, the app exits with a mismatch message.
 
-HSE-SVH devices with ETAMPDET (e.g. EFR32xG25B) only have PRS0 to PRS5.
+### Choose test mode
 
-### Tamper Sources (Series 3 Devices)
+| Input | Action |
+|-------|--------|
+| **SPACE** | Toggle **NORMAL** vs **TAMPER DISABLE** |
+| **ENTER** | Run selected test |
 
-| Number | Name | Default level | User level in this example |
-| --- | --- | --- | --- |
-| 0 | Reserved | — | — |
-| 1 | Filter Counter | 0 | 1 |
-| 2 | SE Watchdog | 4 | 4 |
-| 3 | Crypto Error | 4 | 4 |
-| 4 | SE RAM ECC 2 | 4 | 4 |
-| 5 | Reserved | — | — |
-| 6 | SE Major Fault | 4 | 4 |
-| 7 | L2ICache | 4 | 4 |
-| 8 | Reserved | — | — |
-| 9 | UserCodeAuth | 0 | 0 |
-| 10 | MailboxAuth | 0 | 0 |
-| 11 | DCIAuth | 0 | 0 |
-| 12 | Software Assertion | 4 | 4 |
-| 13 | Reserved | — | — |
-| 14 | Self-test | 4 | 4 |
-| 15 | TRNG Monitor | 0 | 0 |
-| 16 | SecureLock | 4 | 4 |
-| 17 | Glitch | 0 | 0 |
-| 18 | OTP | 0 | 4 |
-| 19 | SE ICACHE | 4 | 4 |
-| 20 | SE RAM ECC 1 | 0 | 1 |
-| 21 | BOD | 4 | 4 |
-| 22 | TempSensor | 0 | 0 |
-| 23 | DPLL | 0 | 0 |
-| 24 | SOCPLL | 0 | 0 |
-| 25 | ETAMPDET | 0 | 0 |
-| 26 | KSU ECC 1 | 0 | 0 |
-| 27 | KSU ECC 2 | 0 | 4 |
-| 28 | QSPI | 0 | 4 |
-| 29 | PRS0 | 0 | 0 (PRS source: Push button PB0) |
-| 30 | PRS1 | 0 | 0 (PRS source: Push button PB1) |
-| 31 | PRS2 | 0 | 0 (PRS source: Software) |
+### NORMAL tamper test
 
-The disable tamper command reverts all masked tamper sources (`TAMPER_DISABLE_MASK` in `app_se_manager_tamper_disable.h`) to the hardcoded configuration (default levels in tables above).
+1. Console prints instructions.
+2. **PB0** — filter counter / tamper status (interrupt path); PRS may issue reset when threshold reached within filter period.
+3. **PB1** — tamper **reset** (per PRS mapping in firmware).
+4. Tamper status registers print on interrupt.
 
-For EFR32xG21B devices, the default value of `TAMPER_DISABLE_MASK` is `0x00fa0000`. It restores PRS7, PRS6, PRS5, PRS4, PRS3, and PRS1 to the default level 0 (Ignore) after running the disable tamper command.
+### TAMPER DISABLE test
 
-For EFR32xG25B devices, the default value of `TAMPER_DISABLE_MASK` is `0xE4000000`. It restores PRS5, PRS4, PRS3, and PRS0 to the default level 0 (Ignore) after running the disable tamper command.
+1. Verify or program **public command key** in OTP (same flow as secure debug example).
+2. **ENTER** to build and submit **tamper disable token** (`sl_se_disable_tamper`).
+3. On success: PB0/PB1 no longer cause configured resets until **power-on/pin reset** re-enables tamper.
+4. Optional: **ENTER** to **roll challenge** (invalidates disable token after reset).
 
-For other Series 2 Secure Vault High devices, the default value of `TAMPER_DISABLE_MASK` is `0xf2000000`. It restores PRS6, PRS5, PRS4, PRS3, and PRS0 to the default level 0 (Ignore) after running the disable tamper command.
+### Command key reference (test vector)
 
-### Tamper Settings
+Public key coordinates for `cmd-unsafe-privkey.pem` (also embedded in disable source):
+- X: `B1BC6F6FA56640ED522B2EE0F5B3CF7E5D48F60BE8148F0DC08440F0A4E1DCA4`
+- Y: `7C04119ED6A1BE31B7707E5F9D001A659A051003E95E1B936F05C37EA793AD63`
 
-| Setting | User value in this example |
-| --- | --- |
-| Filter - trigger threshold | 4 |
-| Filter - reset period | ~33 seconds |
-| Flag | Digital Glitch Detector Always On: Disabled |
-| Flag (not available on EFR32xG21B devices) | Keep Tamper Alive During Sleep: Disabled |
-| Reset threshold | 5 |
+### Optional: disable timing prints
 
-### SE Manager API
-
-The following SE Manager APIs are used in this example:
-
-* `sl_se_init`
-* `sl_se_deinit`
-* `sl_se_init_command_context`
-* `sl_se_deinit_command_context`
-* `sl_se_get_reset_cause`
-* `sl_se_get_status`
-* `sl_se_read_otp`
-* `sl_se_init_otp`
-* `sl_se_validate_key`
-* `sl_se_get_storage_size`
-* `sl_se_generate_key`
-* `sl_se_export_public_key`
-* `sl_se_read_pubkey`
-* `sl_se_init_otp_key`
-* `sl_se_get_serialnumber`
-* `sl_se_get_challenge`
-* `sl_se_ecc_sign`
-* `sl_se_disable_tamper`
-* `sl_se_roll_challenge`
+Define **`SE_MANAGER_PRINT=0`** in preprocessor symbols.
 
 ## Troubleshooting
 
-### Serial Port Settings
-
-Be sure to select the following settings to see the serial output of this example:
-
-* 115200 Baud Rate 
-* 8-N-1 configuration
-* Line terminator should be set to "None" if using Device Console in Simplicity Studio
-
-### Programming the Radio Board
-
-Before programming the radio board mounted on the mainboard, make sure the power supply switch is in the AEM position (right side) as shown below.
-
-![Radio board power supply switch](image/readme_img0.png)
+| Symptom | What to check |
+|--------|----------------|
+| No serial output | VCOM; line terminator **None** |
+| Config does not match | OTP already provisioned with different levels — use fresh dev part or AN1247 procedure |
+| Cannot init OTP | Already written (one-time) |
+| Disable tamper **Failed** | Command key mismatch; challenge stale |
+| Unexpected reset | NORMAL mode — expected for PB1/PRS; disable mode — reset to re-arm tamper |
+| No tamper reset cause API | Upgrade SE firmware per app version check |
+| Buttons no effect | Board must expose PB0/PB1 per `simple_button` config |
+| Debugger attached | Disconnect for tamper testing |
 
 ## Resources
 
-[SE Manager API](https://docs.silabs.com/gecko-platform/latest/platform-security-api/sl-se-manager)<br>
-
-[AN1247: Anti-Tamper Protection Configuration and Use](https://www.silabs.com/documents/public/application-notes/an1247-efr32-secure-vault-tamper.pdf)
+- [SE Manager API documentation](https://docs.silabs.com/gecko-platform/latest/service/api/group-sl-se-manager)
+- [AN1247: Anti-Tamper Protection Configuration and Use](https://www.silabs.com/documents/public/application-notes/an1247-efr32-secure-vault-tamper.pdf)
+- [Key Provisioning example](https://github.com/SiliconLabs/platform-sample-apps/tree/main/app/common/example/se_manager_key_provisioning) (OTP tamper + command key)
 
 ## Report Bugs & Get Support
 
-You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://community.silabs.com/).
+You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://www.silabs.com/community).

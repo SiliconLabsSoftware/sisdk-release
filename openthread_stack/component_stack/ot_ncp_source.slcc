@@ -48,7 +48,9 @@ source:
 - path: ncp/ncp_base_radio.cpp
 - path: ncp/ncp_hdlc.cpp
 - path: ncp/ncp_spi.cpp
+- path: ncp/platform/border_routing.cpp
 - path: ncp/platform/dnssd.cpp
+- path: ncp/platform/dns.cpp
 - path: ncp/platform/infra_if.cpp
 - path: ncp/platform/mdns_socket.cpp
 - path: ncp/platform/trel.cpp

@@ -419,6 +419,11 @@ sli_cpc_instance_t* sli_cpc_get_instance(uint8_t ep_id)
     return SL_CPC_INSTANCE_PTR(SL_CPC_ENDPOINT_NVM3_INSTANCE);
   }
   #endif
+  #if (SLI_CPC_ENDPOINT_MATTER_ENABLED >= 1) && defined(SL_CPC_ENDPOINT_MATTER_INSTANCE)
+  else if (ep_id == SL_CPC_ENDPOINT_MATTER) {
+    return SL_CPC_INSTANCE_PTR(SL_CPC_ENDPOINT_MATTER_INSTANCE);
+  }
+  #endif
   #if defined(SL_CPC_ENDPOINT_USER_INSTANCE)
   else if (ep_id >= SL_CPC_ENDPOINT_USER_ID_0) {
     return SL_CPC_INSTANCE_PTR(SL_CPC_ENDPOINT_USER_INSTANCE);

@@ -23,6 +23,15 @@
 // -----------------------------------------------------------------------------
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
+// SE mailbox APIs (e.g. sl_se_read_pubkey) require word-aligned buffers.
+// SL_ALIGN is a no-op on GCC/Clang; use the same pattern as PSEC-7524.
+#if defined(__GNUC__)
+#define APP_ALIGN4_PREFIX
+#define APP_ALIGN4_SUFFIX  __attribute__((aligned(4)))
+#else
+#define APP_ALIGN4_PREFIX  SL_ALIGN(4)
+#define APP_ALIGN4_SUFFIX
+#endif
 
 // -----------------------------------------------------------------------------
 //                          Static Function Declarations
@@ -42,16 +51,16 @@ static sl_se_command_context_t cmd_ctx;
 static sl_se_cert_size_type_t cert_size_buf;
 
 /// Challenge buffer
-static uint8_t challenge_buf[SL_SE_CHALLENGE_SIZE];
+APP_ALIGN4_PREFIX static uint8_t challenge_buf[SL_SE_CHALLENGE_SIZE] APP_ALIGN4_SUFFIX;
 
-/// Certificate buffer
-static uint8_t cert_buf[CERT_SIZE];
+/// Certificate buffer (also used as output for sl_se_read_pubkey)
+APP_ALIGN4_PREFIX static uint8_t cert_buf[CERT_SIZE] APP_ALIGN4_SUFFIX;
 
 /// Public device key buffer
-static uint8_t pub_device_key_buf[SL_SE_CERT_KEY_SIZE];
+APP_ALIGN4_PREFIX static uint8_t pub_device_key_buf[SL_SE_CERT_KEY_SIZE] APP_ALIGN4_SUFFIX;
 
 /// Signature buffer
-static uint8_t signature_buf[SL_SE_CERT_SIGN_SIZE];
+APP_ALIGN4_PREFIX static uint8_t signature_buf[SL_SE_CERT_SIGN_SIZE] APP_ALIGN4_SUFFIX;
 
 // -----------------------------------------------------------------------------
 //                          Public Function Definitions

@@ -49,7 +49,7 @@
 // <i> Default: BSP_HF_CLK_HFXO
 #define  BSP_HF_CLK_SEL                                     BSP_HF_CLK_HFXO
 
-// <o BSP_HF_CLK_SEL> Low frequency clock select
+// <o BSP_LF_CLK_SEL> Low frequency clock select
 // <i> Default: BSP_LF_CLK_LFRCO
 #define  BSP_LF_CLK_SEL                                     BSP_LF_CLK_LFRCO
 

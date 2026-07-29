@@ -57,7 +57,7 @@ void gpio_wakeup_host_init(void)
 #endif
 }
 
-static void gpio_wakeup_host(void)
+void gpio_wakeup_host(void)
 {
 #ifdef SL_CATALOG_ZW_HOST_WAKEUP_GPIO_PRESENT
   (void)sl_gpio_clear_pin(&host_wake_gpio);
@@ -105,7 +105,19 @@ static host_sleep_context_t host_sleep_context = {
   .has_lost_devices = false,
   .important_devices = { { 0 } },
   .wakeup_frame_package = { 0 },
+#ifdef SL_CATALOG_ZW_JAMMING_DETECTION_PRESENT
+  .has_pending_jamming_report = false,
+  .jamming_report = { 0 },
+#endif
 };
+
+#ifdef SL_CATALOG_ZW_JAMMING_DETECTION_PRESENT
+void store_jamming_report(const sl_jamming_detection_statistics_t *report)
+{
+  memcpy(&host_sleep_context.jamming_report, report, sizeof(sl_jamming_detection_statistics_t));
+  host_sleep_context.has_pending_jamming_report = true;
+}
+#endif
 
 static bool is_important_device(const node_id_t node_id)
 {
@@ -349,6 +361,10 @@ static void host_sleep_subcommand_notify_host_state(const comm_interface_frame_p
     case NOTIFY_HOST_STATE_SLEEPING:
       app_set_controller_severity_level(severity_level); // If SLEEPING, byte 3 is the severity level, ignored if host state is AWAKE
       host_sleep_context.has_pending_wakeup_frame = false;
+      host_sleep_context.has_lost_devices = false;
+#ifdef SL_CATALOG_ZW_JAMMING_DETECTION_PRESENT
+      host_sleep_context.has_pending_jamming_report = false;
+#endif
       set_host_state(true);
       set_urgent_app_callback(urgent_wakeup_callback);
       set_keep_alive_callback(keep_alive_update_node);
@@ -371,6 +387,21 @@ static void host_sleep_subcommand_zw_module_capabilities_report(__attribute__((u
   DoRespond_workbuf(3);
 }
 
+#ifdef SL_CATALOG_ZW_JAMMING_DETECTION_PRESENT
+static void host_sleep_subcommand_jamming_report(void)
+{
+  struct __attribute__((packed)) {
+    uint8_t sub_command;
+    sl_jamming_detection_statistics_t payload;
+  } jamming_packet = {
+    .sub_command   = FUNC_ID_PROP_JAMMING_SUBCOMMAND_REPORT,
+    .payload = host_sleep_context.jamming_report
+  };
+
+  RequestUnsolicited(FUNC_ID_PROP_JAMMING_DETECTION_COMMAND, (uint8_t *)&jamming_packet, sizeof(jamming_packet));
+}
+#endif
+
 static void host_sleep_subcommand_request_wakeup_report(void)
 {
   if (host_sleep_context.has_pending_wakeup_frame) {
@@ -384,7 +415,15 @@ static void host_sleep_subcommand_request_wakeup_report(void)
 
   if (host_sleep_context.has_lost_devices) {
     host_sleep_subcommand_device_lost_report();
+    host_sleep_context.has_lost_devices = false;
   }
+
+#ifdef SL_CATALOG_ZW_JAMMING_DETECTION_PRESENT
+  if (host_sleep_context.has_pending_jamming_report) {
+    host_sleep_context.has_pending_jamming_report = false;
+    host_sleep_subcommand_jamming_report();
+  }
+#endif
 }
 
 /**

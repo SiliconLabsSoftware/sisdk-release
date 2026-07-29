@@ -292,6 +292,60 @@ otError DecodeDnssdAddressResult(Decoder                  &aDecoder,
                                  uint16_t                  aMaxAddresses,
                                  const uint8_t           *&aCallbackData,
                                  uint16_t                 &aCallbackDataLen);
+
+/**
+ * Encodes a DNS upstream query or response payload (`CSd` format).
+ *
+ * @param[in] aEncoder     A reference to the encoder object.
+ * @param[in] aTxnIndex    The transaction index.
+ * @param[in] aData        A pointer to the DNS wire payload.
+ * @param[in] aDataLength  The DNS wire payload length in bytes.
+ */
+otError EncodeDnsUpstreamWireMessage(Encoder &aEncoder, uint8_t aTxnIndex, const uint8_t *aData, uint16_t aDataLength);
+
+/**
+ * Decodes a DNS upstream query or response payload (`CSd` format).
+ *
+ * @param[in]  aDecoder      A reference to the decoder object.
+ * @param[out] aTxnIndex     A reference to the transaction index.
+ * @param[out] aData         A reference to the pointer to the DNS wire payload.
+ * @param[out] aDataLength    A reference to the DNS wire payload length in bytes.
+ */
+otError DecodeDnsUpstreamWireMessage(Decoder        &aDecoder,
+                                     uint8_t        &aTxnIndex,
+                                     const uint8_t *&aData,
+                                     uint16_t       &aDataLength);
+
+/**
+ * Decodes a DNS upstream cancel payload (`C` format).
+ *
+ * @param[in]  aDecoder   A reference to the decoder object.
+ * @param[out] aTxnIndex  A reference to the transaction index.
+ */
+otError DecodeDnsUpstreamCancel(Decoder &aDecoder, uint8_t &aTxnIndex);
+
+/**
+ * Encodes a DNS upstream RDNSS server list (`C6` format).
+ *
+ * @param[in] aEncoder      A reference to the encoder object.
+ * @param[in] aServers      IPv6 recursive DNS server addresses.
+ * @param[in] aNumServers   Number of servers (max 3).
+ */
+otError EncodeDnsUpstreamRdnssServers(Encoder &aEncoder, const otIp6Address *aServers, uint8_t aNumServers);
+
+/**
+ * Decodes a DNS upstream RDNSS server list (`C6` format).
+ *
+ * @param[in]  aDecoder      A reference to the decoder object.
+ * @param[out] aServers      Output array for IPv6 server addresses.
+ * @param[out] aNumServers   Number of servers read.
+ * @param[in]  aMaxServers   Capacity of @p aServers.
+ */
+otError DecodeDnsUpstreamRdnssServers(Decoder      &aDecoder,
+                                      otIp6Address *aServers,
+                                      uint8_t      &aNumServers,
+                                      uint8_t       aMaxServers);
+
 } // namespace Spinel
 } // namespace ot
 

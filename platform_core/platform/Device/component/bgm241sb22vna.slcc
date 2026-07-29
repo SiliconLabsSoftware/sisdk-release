@@ -12,6 +12,10 @@
     unless:
     - device_content_override
     value: system
+  - name: HFXO_FREQ
+    unless:
+    - device_content_override
+    value: 40000000
 - source:
   - path: platform/Device/SiliconLabs/BGM24/Source/startup_bgm24.c
     unless:

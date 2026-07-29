@@ -29,6 +29,11 @@
 #include "sl_host_hibernation_api.h"
 #include "zw_host_hibernation_config.h"
 
+#ifdef SL_CATALOG_ZW_JAMMING_DETECTION_PRESENT
+#include "sl_jamming_detection.h"
+#include "sl_jamming_cmd_handlers.h"
+#endif
+
 #include "SerialAPI.h"
 
 #define FUNC_ID_HOST_SLEEP FUNC_ID_PROPRIETARY_0  /* 0xF0 - Host Hibernation commands */
@@ -90,6 +95,14 @@ typedef struct {
   bool has_lost_devices;
   important_device_t important_devices[ZW_MAX_IMPORTANT_DEVICES]; ///< this list must be packed. (first empty row must be the end of the list)
   SZwaveReceivePackage wakeup_frame_package;
+#ifdef SL_CATALOG_ZW_JAMMING_DETECTION_PRESENT
+  bool has_pending_jamming_report;
+  sl_jamming_detection_statistics_t jamming_report;
+#endif
 } host_sleep_context_t;
+
+#ifdef SL_CATALOG_ZW_JAMMING_DETECTION_PRESENT
+void store_jamming_report(const sl_jamming_detection_statistics_t *report);
+#endif
 
 #endif /* SL_HOST_HIBERNATION_CMD_HANDLERS_H_ */

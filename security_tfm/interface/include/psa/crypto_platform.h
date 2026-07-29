@@ -21,6 +21,16 @@
  * module implements.
  */
 
+#if defined(SL_TRUSTZONE_SECURE)
+
+/* The Secure library must use the crypto_platform.h from the mbedtls repo.
+ * Matches the redirect pattern used by the sibling NS PSA headers; defense
+ * in depth since psa_crypto_api_nonsecure (which exposes this file) already
+ * conflicts trustzone_secure. */
+#include <include/psa/crypto_platform.h>
+
+#else /* SL_TRUSTZONE_SECURE */
+
 #ifndef PSA_CRYPTO_PLATFORM_H
 #define PSA_CRYPTO_PLATFORM_H
 #include "mbedtls/private_access.h"
@@ -101,3 +111,5 @@ typedef struct {
 typedef uint32_t mbedtls_psa_client_handle_t;
 
 #endif /* PSA_CRYPTO_PLATFORM_H */
+
+#endif /* SL_TRUSTZONE_SECURE */

@@ -40,6 +40,9 @@ class ScanMixin:
                 self.exclusive_network.contains_address(tag.ble_address):
                     tag.unblock()
         if not self.scan_runs:
+            if self.adv_dedup_enabled:
+                # Starting a new scan cycle must re-emit nearby advertisers immediately.
+                self._adv_dedup_apply()
             self.lib.scan_configure(
                 active_mode=active,
                 interval_ms=SCAN_INTERVAL_DEFAULT_MS,

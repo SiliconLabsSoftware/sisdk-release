@@ -52,6 +52,41 @@
  *****************************************************************************/
 
 /**************************************************************************//**
+ * Callback type invoked when receive data is available on the UART.
+ * @param[in]  handle Descriptor handle (same as passed to uartOpen).
+ * @param[in]  user_ctx User context pointer passed to uartSetRxCallback().
+ *****************************************************************************/
+typedef void (*uart_rx_callback_t)(void *handle, void *user_ctx);
+
+/**************************************************************************//**
+ * Allocate internal handle structure for use with uartOpen and all other
+ * UART APIs. The caller must not assume size or layout of the internal state.
+ * @return  Handle pointer on success; NULL on allocation failure.
+ *****************************************************************************/
+void *uartHandleAlloc(void);
+
+/**************************************************************************//**
+ * Free the handle previously allocated by uartHandleAlloc().
+ * @note  Call uartClose(handle) before uartHandleFree(handle); the port must
+ *        be closed before freeing the handle.
+ * @param[in]  handle Handle returned by uartHandleAlloc(), or NULL (no-op).
+ *****************************************************************************/
+void uartHandleFree(void *handle);
+
+/**************************************************************************//**
+ * Register a callback to be invoked when receive data is available.
+ * @note  Optional; legacy implementations doesn't rely on asynchronous
+ *        RX notification.
+ *        When used, the callback is invoked from an internal thread when
+ *        data is ready to be read (e.g. after uartRxPeek() would return > 0).
+ * @param[in]  handle Descriptor handle from uartOpen().
+ * @param[in]  cb Callback function, or NULL to clear.
+ * @param[in]  user_ctx User context passed to the callback when invoked.
+ * @return  0 on success, -1 on failure (e.g. invalid handle).
+ *****************************************************************************/
+int32_t uartSetRxCallback(void *handle, uart_rx_callback_t cb, void *user_ctx);
+
+/**************************************************************************//**
  * Open the serial port.
  * @param[out]  handle Descriptor handle
  * @param[in]  port Serial port to use.
@@ -66,6 +101,14 @@ int32_t uartOpen(void *handle, int8_t *port, uint32_t baudRate,
                  uint32_t rtsCts, int32_t timeout);
 
 /**************************************************************************//**
+ * After uartOpen(), drain any pending RX into the host ring buffer, then call
+ * this to enable RTS/CTS handshake (Windows CDC bring-up) and start the
+ * internal RX notification thread. No-op on POSIX.
+ * @return  0 on success, -1 on failure.
+ *****************************************************************************/
+int32_t uartFinishOpen(void *handle, uint32_t rtsCts);
+
+/**************************************************************************//**
  * Flushes accumulated data.
  *
  * @param[in]  handle Descriptor handle
@@ -75,7 +118,8 @@ void uartFlush(void *handle);
 /**************************************************************************//**
  * Close the serial port.
  * @param[in]  handle Descriptor handle
- * @return  0 on success, -1 on failure.
+ * @return  0 on success, -1 on failure. Don't forget to call @ref
+ *          uartHandleFree after successful close.
  *****************************************************************************/
 int32_t uartClose(void *handle);
 

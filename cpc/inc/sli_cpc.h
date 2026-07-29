@@ -191,6 +191,12 @@
 #define SLI_CPC_ENDPOINT_NVM3_ENABLED  (0)
 #endif
 
+#if defined(SL_CATALOG_MATTER_NCP_PRESENT)
+#define SLI_CPC_ENDPOINT_MATTER_ENABLED  (1)
+#else
+#define SLI_CPC_ENDPOINT_MATTER_ENABLED  (0)
+#endif
+
 // Frame Flags
 // I-Frame is enabled by default; this flag MUST be set to disable the I-Frame support by the endpoint
 #define SL_CPC_ENDPOINT_FLAG_IFRAME_DISABLE             (0x01 << 0)
@@ -268,6 +274,9 @@ SL_ENUM(sl_cpc_service_endpoint_id_t){
 #if (SLI_CPC_ENDPOINT_NVM3_ENABLED >= 1)
   SL_CPC_ENDPOINT_NVM3 = 17,           ///< NVM3 endpoint
 #endif
+#if (SLI_CPC_ENDPOINT_MATTER_ENABLED >= 1)
+  SL_CPC_ENDPOINT_MATTER = 18,         ///< Matter endpoint
+#endif
   SL_CPC_ENDPOINT_LAST_ID_MARKER,      // DO NOT USE THIS ENDPOINT ID
 };
 
@@ -276,7 +285,7 @@ SL_ENUM(sl_cpc_service_endpoint_id_t){
                                                + SLI_CPC_ENDPOINT_CONNECT_ENABLED + SLI_CPC_ENDPOINT_GPIO_ENABLED + SLI_CPC_ENDPOINT_OPENTHREAD_ENABLED \
                                                + SLI_CPC_ENDPOINT_WISUN_ENABLED + SLI_CPC_ENDPOINT_WIFI_ENABLED + SLI_CPC_ENDPOINT_15_4_ENABLED         \
                                                + SLI_CPC_ENDPOINT_CLI_ENABLED + SLI_CPC_ENDPOINT_BLUETOOTH_RCP_ENABLED + SLI_CPC_ENDPOINT_ACP_ENABLED   \
-                                               + SLI_CPC_ENDPOINT_SE_ENABLED + SLI_CPC_ENDPOINT_NVM3_ENABLED)
+                                               + SLI_CPC_ENDPOINT_SE_ENABLED + SLI_CPC_ENDPOINT_NVM3_ENABLED + SLI_CPC_ENDPOINT_MATTER_ENABLED)
 
 #define SLI_CPC_SERVICE_ENDPOINT_ID_START     ((uint8_t)SL_CPC_ENDPOINT_SYSTEM)
 #define SLI_CPC_SERVICE_ENDPOINT_ID_END       ((uint8_t)SL_CPC_ENDPOINT_LAST_ID_MARKER - 1)

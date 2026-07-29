@@ -1,9 +1,12 @@
 # PSA Crypto MAC
 
-Demonstrates how to compute and verify MACs (HMAC, CMAC) with the PSA Crypto API, in single-part and multi-part modes.
+## High-Level Overview
+
+Demonstrates how to compute and verify MACs (HMAC, CMAC) with the PSA Crypto API, in a platform security SoC example in single-part and multi-part modes.
 
 ## Table of Contents
 
+- [High-Level Overview](#high-level-overview)
 - [Purpose / Scope](#purpose--scope)
 - [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
 - [Steps to Run Demo](#steps-to-run-demo)
@@ -121,7 +124,3 @@ When the macro is disabled, PSA functions make defensive `malloc`/`memcpy`/`free
 ## Report Bugs & Get Support
 
 You are always encouraged and welcome to report any issues you find via the [Silicon Labs Community](https://community.silabs.com/).
-
-## Report Bugs & Get Support
-
-You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://community.silabs.com/).

@@ -8,26 +8,21 @@ ui_hints:
 quality: production
 provides:
 - name: tfm_tz_ns_interface
+conflicts:
+- name: trustzone_secure
+- name: trustzone_unaware
+requires:
+- name: trustzone_nonsecure
+- name: tfm_crypto_defs
+- name: psa_crypto_api_nonsecure
 include:
 - path: interface/include
   file_list:
   - path: psa/client.h
-  - path: psa/crypto.h
-  - path: psa/crypto_client_struct.h
-  - path: psa/crypto_compat.h
-  - path: psa/crypto_driver_contexts_composites.h
-  - path: psa/crypto_driver_contexts_primitives.h
-  - path: psa/crypto_extra.h
-  - path: psa/crypto_sizes.h
-  - path: psa/crypto_struct.h
-  - path: psa/crypto_platform.h
-  - path: psa/crypto_types.h
-  - path: psa/crypto_values.h
   - path: psa/error.h
   - path: psa/storage_common.h
   - path: psa_config.h
   - path: tfm_api.h
-  - path: tfm_crypto_defs.h
   - path: tfm_ns_interface.h
 metadata:
   sbom:

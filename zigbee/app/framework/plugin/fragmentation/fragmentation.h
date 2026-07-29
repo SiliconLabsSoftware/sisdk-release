@@ -131,7 +131,7 @@ void sli_zigbee_af_fragmentation_abort_reception(sl_zigbee_af_event_t* control);
 
 extern uint8_t  sl_zigbee_fragment_window_size;
 
-extern uint16_t sl_zigbee_mac_indirect_timeout;
+extern uint16_t sl_zigbee_sleepy_target_mac_timeout_increase;
 #if defined(EZSP_HOST)
 extern uint16_t sl_zigbee_aps_ack_timeout_ms;
 #endif

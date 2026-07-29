@@ -33,7 +33,6 @@ include:
     - path: sl_wsncp_buffer.h
 
 source:
-  - path: app.c
   - path: ncp/sl_wsncp_task.c
   - path: ncp/sl_wsncp_buffer.c
 

@@ -15,5 +15,4 @@ provides:
 - name: linux_arch_x86
 tag:
 - device:opn:linux_32
-- device:opn:linux_x86_32
 root_path: platform_core

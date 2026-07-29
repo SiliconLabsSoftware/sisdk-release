@@ -93,7 +93,7 @@ post_build:
       - device_series_2
   - path: ../../postbuild_profile/bt_dfu_app_s3.slpb
     condition:
-      - device_has_euart
+      - device_series_3
 
 tag:
   - companion:bootloader

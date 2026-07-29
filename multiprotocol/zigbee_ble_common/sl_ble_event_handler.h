@@ -37,4 +37,11 @@ void zb_ble_dmp_set_source_address (sl_802154_long_addr_t set_address);
 void zb_ble_dmp_print_ble_address(uint8_t *address);
 void sli_ble_application_init(uint8_t init_level);
 
+/**
+ * Log GATT client discovery events to the application debug stream.
+ *
+ * @return true if @p evt was a handled GATT client event.
+ */
+bool sli_ble_handle_gatt_client_log_event(sl_bt_msg_t *evt);
+
 #endif //__SL_DMP_ZIGBEE_BLE_EVENT_HANDLER_H__

@@ -1657,6 +1657,27 @@ void Server::ResetUpstreamQueryTransaction(UpstreamQueryTransaction &aTxn, Error
     }
     aTxn.Reset();
 }
+
+uint8_t Server::GetUpstreamQueryTransactionIndex(const UpstreamQueryTransaction &aTxn) const
+{
+    ptrdiff_t index = &aTxn - mUpstreamQueryTransactions;
+
+    OT_ASSERT(index >= 0);
+    OT_ASSERT(index < static_cast<ptrdiff_t>(kMaxConcurrentUpstreamQueries));
+
+    return static_cast<uint8_t>(index);
+}
+
+Server::UpstreamQueryTransaction *Server::GetUpstreamQueryTransactionAt(uint8_t aIndex)
+{
+    UpstreamQueryTransaction *txn = nullptr;
+
+    VerifyOrExit(aIndex < kMaxConcurrentUpstreamQueries);
+    txn = &mUpstreamQueryTransactions[aIndex];
+
+exit:
+    return txn;
+}
 #endif
 
 #if OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE

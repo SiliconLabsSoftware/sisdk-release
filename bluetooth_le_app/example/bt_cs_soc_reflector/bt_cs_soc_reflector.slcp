@@ -117,6 +117,7 @@ tag:
   - toolchain:llvm
   - hwfilter:device:device_supports_bluetooth
   - hwfilter:device:device_generic_family_efr32xg24
+  - hwfilter:!device:device_wlcsp
   - hwfilter:board:hardware_board_has_hfxo_freq_40mhz
 
 ui_hints:

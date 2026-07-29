@@ -5,6 +5,9 @@ description: >
   This component provides some math features.
 category: Compute
 quality: production
+documentation:
+  docset: compute
+  document: platform-compute-math
 root_path: compute/math
 metadata:
   sbom:

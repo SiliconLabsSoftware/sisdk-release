@@ -107,6 +107,21 @@ template_contribution:
     name: aux-rx-callback-off
     handler: sl_zigbee_cli_rail_mux_aux_raw_rx_off
     help: Clears unified aux event observer so auxcount drain resumes (e.g. after tx-fixed-psdu).
+- name: cli_command
+  value:
+    group: rail-mux-aux
+    name: rxdc-phy-select-get
+    handler: sl_zigbee_cli_rail_mux_aux_rxdc_phy_select_get
+    help: Prints mux_rxdc_phy_select 0 (Standard/FCS+HDR) or 1 (DC/FCS+HDR) for MUX builds with RX duty cycling and FCS.
+- name: cli_command
+  value:
+    group: rail-mux-aux
+    name: rxdc-phy-select-set
+    handler: sl_zigbee_cli_rail_mux_aux_rxdc_phy_select_set
+    help: Set mux RXDC PHY profile for MUX FCS builds. 0 = Standard/FCS+HDR, 1 = DC/FCS+HDR. Prints mux_rxdc_phy_select after update.
+    argument:
+    - type: uint8
+      help: 0 = Standard/FCS+HDR, 1 = DC/FCS+HDR.
 
 metadata:
   sbom:

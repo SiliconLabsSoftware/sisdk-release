@@ -1,9 +1,12 @@
 # PSA Crypto Asymmetric Key
 
-Demonstrates how to generate, import, export, copy, and destroy asymmetric ECC keys using the PSA Crypto API, with plain and Secure Vault wrapped key storage.
+## High-Level Overview
+
+Demonstrates how to generate, import, export, copy, and destroy asymmetric ECC keys using the PSA Crypto API, in a platform security SoC example with plain and Secure Vault wrapped key storage.
 
 ## Table of Contents
 
+- [High-Level Overview](#high-level-overview)
 - [Purpose / Scope](#purpose--scope)
 - [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
 - [Steps to Run Demo](#steps-to-run-demo)

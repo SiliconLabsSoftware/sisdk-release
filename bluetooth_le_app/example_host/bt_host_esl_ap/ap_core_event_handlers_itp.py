@@ -25,17 +25,17 @@ ESL AP Core - image throughput stress test event handler extensions.
 
 Provides the image throughput stress test: iterates over synchronized ESL tags,
 connecting to one tag per PAwR group at a time (since only one device per
-subevent/group can be connected simultaneously).  Parallel connections across
+subevent/group can be connected simultaneously). Parallel connections across
 *different* groups are maintained up to the dynamic limit reported by the ESL
 library.
 
-Within each group, tags are visited sequentially.  Across groups, connection
+Within each group, tags are visited sequentially. Across groups, connection
 requests follow the closest-subevent-first order so that the PAwR schedule is
 respected.
 
 Each tag gets up to ``ITP_MAX_ATTEMPTS`` connection tries before being skipped.
 A tag that has been successfully processed is placed on the *done* set and
-will not be visited again in the same run.  When every tag has been either
+will not be visited again in the same run. When every tag has been either
 completed or permanently skipped, the AP reverts to its previous operating
 mode.
 """
@@ -91,7 +91,7 @@ class ImageThroughputState:
 class ImageThroughputEventHandlersMixin:
     """Image throughput event handler extensions.
 
-    Activated by the ``image_throughput`` CLI command.  Uses the ``itp_`` prefix so
+    Activated by the ``image_throughput`` CLI command. Uses the ``itp_`` prefix so
     that ``subscribe_event_handlers`` picks up methods named
     ``itp_esl_event_<event_name>``.
     """
@@ -178,6 +178,26 @@ class ImageThroughputEventHandlersMixin:
         """True if the tag has exhausted its retry budget."""
         return self._itp_attempt_count(tag) >= ITP_MAX_ATTEMPTS
 
+    def _itp_pawr_connect_blocked(self):
+        """True when the controller cannot accept a new PAwR connection request.
+
+        Advertisement-based establishment (unsynchronized tags, mandatory ESL
+        recovery, auto provisioning, etc.) monopolizes the stack until bonding
+        completes. Parallel PAwR requests are allowed only while every in-flight
+        connection is a synchronized PAwR request owned by this ITP run.
+        """
+        if (
+            self.lib_connection_mode == elw.ESL_LIB_CONNECTION_MODE_SINGLE
+            and not self.bonding_finished
+        ):
+            return True
+        for tag in self.tag_db.list_state(TagState.CONNECTING):
+            if tag.esl_state != EslState.SYNCHRONIZED:
+                return True
+            if tag not in self._itp_initiating:
+                return True
+        return False
+
     def _itp_tag_eligible_for_queue(self, tag, busy):
         """True if tag is eligible to be added to the work queue."""
         return (
@@ -261,10 +281,16 @@ class ImageThroughputEventHandlersMixin:
         """Initiate one connection per available group, up to system limit.
 
         A group is busy only if it has a connection initiation in progress (not
-        if it already has an active connection).  Groups are visited in
-        closest-subevent-first order.  The number of new connection requests
+        if it already has an active connection). Groups are visited in
+        closest-subevent-first order. The number of new connection requests
         per call is capped at ``_itp_pawr_data_count`` to avoid synchronisation
         loss on remote devices."""
+        if self._itp_pawr_connect_blocked():
+            self._itp_log.debug(
+                "Deferring PAwR connection requests: foreign connection establishment in progress.",
+            )
+            self._itp_request_fill_slots_async()
+            return
         busy_groups = {self._itp_group_id(t) for t in self._itp_initiating}
         ns = self.next_subevent
         sc = self.subevent_count
@@ -430,7 +456,7 @@ class ImageThroughputEventHandlersMixin:
 
         On *success* the ESL-spec-compliant Update Complete opcode is sent
         first so that the tag transitions back to Synchronized state before
-        the connection is closed by the library.  On failure a raw disconnect
+        the connection is closed by the library. On failure a raw disconnect
         is issued instead and the tag is re-queued for another attempt
         (subject to the retry budget)."""
         state = self._itp_active.pop(tag, None)
@@ -522,11 +548,13 @@ class ImageThroughputEventHandlersMixin:
 
     def itp_esl_event_bonding_finished(self, evt:esl_lib.EventBondingFinished):
         tag = self.tag_db.find(evt.address)
-        if tag is None or tag not in self._itp_initiating:
-            return
-        self._itp_initiating.discard(tag)
-        self._last_error = None # // safe to clear last error here
-        if not self.max_conn_count_reached:
+        if tag is not None and tag in self._itp_initiating:
+            self._itp_initiating.discard(tag)
+            self._last_error = None # // safe to clear last error here
+        if (
+            not self.max_conn_count_reached
+            and any(self._itp_group_queues.values())
+        ):
             self._itp_request_fill_slots_async()
 
     def itp_esl_event_connection_opened(self, evt: esl_lib.EventConnectionOpened):
@@ -675,7 +703,7 @@ class ImageThroughputEventHandlersMixin:
             return
         self._itp_xfer_end()
         self._itp_log.warning(
-            "OTS error for ESL at %s (slot %d): %s / %s — skipping to next slot",
+            "OTS error for ESL at %s (slot %d): %s / %s - skipping to next slot",
             tag.ble_address,
             state.current_slot,
             esl_lib.get_enum("ESL_LIB_STATUS_", evt.lib_status),
@@ -687,7 +715,7 @@ class ImageThroughputEventHandlersMixin:
         """Handle a connection error by re-queuing the tag for retry."""
         is_limit_error = evt.sl_status in _LIMIT_EXCEEDED_STATUSES
         self._itp_log.warning(
-            "Connection error for ESL at %s: %s / %s — %s",
+            "Connection error for ESL at %s: %s / %s - %s",
             tag.ble_address,
             esl_lib.get_enum("ESL_LIB_STATUS_", evt.lib_status),
             esl_lib.get_sl_status_str(evt.sl_status),

@@ -77,13 +77,13 @@ uint8_t sl_zigbee_af_ota_bootload_cb(const sl_zigbee_af_ota_image_id_t* id,
                                      uint16_t ncpUpgradeTagId)
 {
   bool success = true;
-  sl_zigbee_ezsp_status_t status;
+  sl_status_t launchStatus;
   bootloadPrintln("Launching standalone bootloader...");
 
-  status =
-    sl_zigbee_ezsp_launch_standalone_bootloader(true);
-  if (status != SL_STATUS_OK) {
-    bootloadPrintln("Launch failed: 0x%02X", status);
+  launchStatus = sl_zigbee_ezsp_launch_standalone_bootloader(true);
+  if (launchStatus != SL_STATUS_OK
+      && launchStatus != SL_STATUS_ZIGBEE_EZSP_ERROR) {
+    bootloadPrintln("Launch failed: 0x%02X", launchStatus);
     return 1;
   }
   sl_zigbee_ezsp_close();

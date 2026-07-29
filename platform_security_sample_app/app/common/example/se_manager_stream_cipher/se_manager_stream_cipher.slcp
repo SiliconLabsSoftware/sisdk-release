@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform Security - SoC SE Manager Stream Cipher
 description: >
-  This example project demonstrates the stream cipher API of SE Manager.
+  Demonstrates how to run streaming AES-CMAC, AES-GCM, and ChaCha20 self-tests with SE Manager starts/update/finish APIs and known test vectors on Secure Vault devices.
 category: Example|Platform
 filter:
   - name: "Device Type"

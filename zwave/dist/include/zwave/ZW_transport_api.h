@@ -159,6 +159,11 @@ typedef struct _TX_STATUS_TYPE_{
   uint8_t app_session_id;
 } TX_STATUS_TYPE;
 
+/**
+ * @brief Initialize a TX status report with default values and the given session id.
+ */
+void ZW_TxStatusReportInit(TX_STATUS_TYPE *pTxStatusReport, uint8_t app_session_id);
+
 typedef struct _RECEIVE_OPTIONS_TYPE{
   ///< Frame header info
   uint8_t  rxStatus;

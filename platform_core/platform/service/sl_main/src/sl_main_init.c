@@ -100,6 +100,10 @@
 #include "sl_interrupt_manager.h"
 #endif
 
+#if defined(SL_CATALOG_HFXO_MANAGER_PRESENT)
+#include "sl_hfxo_manager.h"
+#endif
+
 #if defined(SL_CATALOG_SLEEPTIMER_PRESENT)
 #include "sl_sleeptimer.h"
 #endif
@@ -286,6 +290,11 @@ void sl_main_init(void)
 #if defined(SL_CATALOG_INTERRUPT_MANAGER_PRESENT)
   sl_interrupt_manager_init();
   SLI_METRIC_EVENT_HANDLER_SAVE("sl_interrupt_manager_init");
+#endif
+
+#if defined(SL_CATALOG_HFXO_MANAGER_PRESENT)
+  sl_hfxo_manager_init_hardware();
+  SLI_METRIC_EVENT_HANDLER_SAVE("sl_hfxo_manager_init_hardware");
 #endif
 
 #if defined(SL_CATALOG_DEVICE_INIT_DCDC_PRESENT)

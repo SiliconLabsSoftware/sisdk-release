@@ -18,6 +18,7 @@
 #include "btl_interface.h"
 #include "btl_internal_flash.h"
 #include "btl_internal_flash_raw.h"
+#include "sl_common.h"
 #include <string.h>
 
 // -----------------------------------------------------------------------------
@@ -485,7 +486,10 @@ int32_t bootloader_verifyImage(uint32_t                   slotId,
                                BootloaderParserCallback_t metadataCallback)
 {
   int32_t retval;
-  uint8_t context[BOOTLOADER_STORAGE_VERIFICATION_CONTEXT_SIZE];
+#if !defined(__GNUC__)
+  SL_ALIGN(4)
+#endif
+  uint8_t context[BOOTLOADER_STORAGE_VERIFICATION_CONTEXT_SIZE] SL_ATTRIBUTE_ALIGN(4);
 
   if (!bootloader_pointerValid(mainBootloaderTable)) {
     return BOOTLOADER_ERROR_PARSE_STORAGE;
@@ -515,7 +519,10 @@ int32_t bootloader_getImageInfo(uint32_t          slotId,
                                 uint32_t          *bootloaderVersion)
 {
   int32_t retval;
-  uint8_t context[BOOTLOADER_STORAGE_VERIFICATION_CONTEXT_SIZE];
+#if !defined(__GNUC__)
+  SL_ALIGN(4)
+#endif
+  uint8_t context[BOOTLOADER_STORAGE_VERIFICATION_CONTEXT_SIZE] SL_ATTRIBUTE_ALIGN(4);
 
   if (!bootloader_pointerValid(mainBootloaderTable)
       || !bootloader_pointerValid(mainBootloaderTable->storage)) {

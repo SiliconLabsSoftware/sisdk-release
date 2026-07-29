@@ -1,63 +1,77 @@
-#  mbedTLS ECDH Example
+# Platform Security - SoC mbedTLS ECDH
 
- This example uses hardware accelerators of the supported devices to perform ECDH key derivation
- with mbedTLS. 
+Demonstrates how to perform ECDH key agreement between two peers with mbedTLS on SECP256R1 or SECP192R1, reporting hardware-accelerated key generation and shared-secret timing over UART.
 
-##  Getting Started
+## Table of Contents
 
-1. Upgrade the kit’s firmware to the latest version (see `Adapter Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in the Simplicity Studio 5 User's Guide).
-2. Upgrade the device’s SE firmware to the latest version (see `Secure Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in the Simplicity Studio 5 User's Guide).
-3. Open any terminal program and connect to the kit’s VCOM port (if using `Device Console` in Simplicity Studio 5, `Line terminator:` must be set to `None`).
-4. Create this platform example project in the Simplicity IDE (see [Examples](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-getting-started/start-a-project#examples) in the Simplicity Studio 5 User's Guide).
-5. Build the example and download it to the kit (see [Simple Build](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/building#simple-build) and [Flash Programmer](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/flashing#flash-programmer) in the Simplicity Studio 5 User's Guide).
-6. When the application starts, three options are presented for the three supported curves
- for the ECDH key derivation and sharing. Press 1 or 2, indicating
- which curve to use. If a valid option is chosen, the application will write to serial output when it has
- performed each step in the process. The example application is also programmed to measure the time spent
- in each calculation.
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-## Additional Information
+## Purpose / Scope
 
- The example uses the CTR-DRBG, a pseudo random number generator (PRNG) included in mbedTLS to generate random
- private keys for both peers (client and server) that will share the ECDH secret. If the example is
- running on a device that includes a TRNG hardware module (True Random Number Generator), the TRNG will be used as
- entropy source to seed the CTR-DRBG. If the device does not incorporate a TRNG, the example will use RAIL as the entropy source.
- If neither of them is incorporated, dummy data will be seeded to the CTR-DRBG. The entropy accumulator of mbedTLS will use SHA256 to hash the entropy data pool, which is filled with data from the entropy sources.
+This example simulates a **client** and **server** performing Elliptic-Curve Diffie-Hellman (ECDH) key agreement on a single device, using the mbedTLS ECDH API. Output is printed on the kit virtual COM port, including **timing measurements** for each major step.
+After reset, you choose one of two hardware-accelerated curves:
+- **SECP256R1** (`MBEDTLS_ECP_DP_SECP256R1`) — press **`1`**
+- **SECP192R1** (`MBEDTLS_ECP_DP_SECP192R1`) — press **`2`**
+The application then:
+1. Seeds **CTR-DRBG** from the mbedTLS entropy module (TRNG when available, otherwise RAIL, otherwise dummy entropy on devices without TRNG).
+2. Generates a **client key pair** and a **server key pair** (`mbedtls_ecdh_gen_public`).
+3. Exchanges public keys between client and server contexts.
+4. Computes the **shared secret** on both sides (`mbedtls_ecdh_compute_shared`).
+5. Verifies both secrets match and prints the shared secret in hex.
+**Hardware acceleration:** ECC, AES (CTR-DRBG), and SHA-256 (entropy accumulator) are accelerated by the device crypto hardware (Secure Engine on HSE devices, CRYPTOACC on VSE devices). You can disable acceleration in **Mbed TLS common functionality** to compare performance.
+**Components used:** `mbedtls_ecdh`, `mbedtls_random`, `mbedtls_slcrypto`, `mbedtls_ecc_secp256r1`, `mbedtls_ecc_secp192r1`, plus `sl_system`, `sleeptimer`, `device_init`, and VCOM stdio retargeting.
 
- The CTR-DRBG uses AES, which is accelerated by the CRYPTO AES accelerator.
+## Prerequisites / Setup Requirements
 
- The entropy accumulator of mbedTLS is set up to use SHA-256, which is accelerated by the
- CRYPTO SHA-256 accelerator.
+### Hardware Requirements
 
- The program asks the user to choose between three supported curves. The available
- curves with hardware acceleration support are:
+- A supported Silicon Labs development kit (see board compatibility in Simplicity Studio for `mbedtls_ecdh` / `mbedtls_ecdh_s3`).
+- **AEM** power selected on the radio/mainboard switch when programming (see image below).
+- USB connection for programming and virtual COM (VCOM).
 
-* SECP256R1
-* SECP192R1
+### Software Requirements
 
-###  Turning off the Hardware Acceleration
+- **Simplicity Studio 5** (current SDK matching the example).
+- A serial terminal (or **Device Console** in Studio) on the kit **VCOM** port:
+  - **115200** baud, **8-N-1**
+  - **Line terminator: None** (required for Device Console)
+- Latest **adapter firmware** and **Secure Engine (SE) firmware** on the kit (see Simplicity Studio **General Device Information**).
 
- To check the performance gain of the hardware acceleration, switch it off by
- switching the value of **Enable hardware acceleration of crypto operations** in the component *Mbed TLS
- common functionality*. This is found under the tab *SOFTWARE COMPONENTS* → *Platform
- → Security*. 
+## Steps to Run Demo
 
- **Useful tip:** Filter on *Configurable Components* and *Installed Components* to
- find the configuration file more easily. 
- 
+1. Update the kit **adapter firmware** and device **SE firmware** to the latest versions ([General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information)).
+2. Open a serial terminal on the kit **VCOM** port (115200 8-N-1; line terminator **None** if using Device Console).
+3. Create the **Platform Security - SoC mbedTLS ECDH** project in Simplicity Studio ([Examples](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-getting-started/start-a-project#examples)).
+4. Build and flash the project ([Simple Build](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/building#simple-build), [Flash Programmer](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/flashing#flash-programmer)).
+5. Reset the board. When prompted, type **`1`** for SECP256R1 or **`2`** for SECP192R1.
+6. Watch the serial log for each step:
+   - Random number generator seeding
+   - Client and server key-pair generation (with key size, tick count, and milliseconds)
+   - Server and client shared-secret computation (with timing)
+   - Secret equality check and printed **Shared Secret** hex value
+
 ## Troubleshooting
-### Serial Port Settings
-Be sure to select the following settings to see the serial output of this example:
 
-* 115200 Baud Rate 
-* 8-N-1 configuration
-* Line terminator should be set to "None" if using Device Console in Simplicity Studio
+| Symptom | What to check |
+|--------|----------------|
+| No serial output | VCOM port, 115200 8-N-1, line terminator **None**; `SL_BOARD_ENABLE_VCOM` enabled |
+| Invalid curve prompt repeats | Only **`1`** or **`2`** are accepted |
+| `mbedtls_ctr_drbg_seed` failed | SE firmware up to date; on devices without TRNG, ensure RAIL entropy or `dummy_entropy.c` is included (Series 2 uses dummy entropy path when needed) |
+| ECDH compute_shared failed | Board/part supports selected curve; try the other curve option |
+| Timings much slower than expected | Confirm hardware acceleration is enabled in Mbed TLS common functionality |
+| Programming fails | AEM switch position (see Prerequisites image) |
 
-### Programming the Radio Board
-Before programming the radio board mounted on the mainboard, make sure the power supply switch is in the AEM position (right side) as shown below.
+## Resources
 
-![Radio board power supply switch](image/readme_img0.png)
+- [Simplicity Studio 5 User's Guide — Examples](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-getting-started/start-a-project#examples)
+- [UG103.5: mbed TLS Support in Silicon Labs SDK](https://www.silabs.com/documents/public/user-guides/ug103-05-fundamentals-mbedtls.pdf)
+- [AN1311: Integrating Crypto Functionality into Applications](https://www.silabs.com/documents/public/application-notes/an1311-crypto-functionality-into-applications.pdf)
 
 ## Report Bugs & Get Support
 
-You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://community.silabs.com/).
+You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://www.silabs.com/community).

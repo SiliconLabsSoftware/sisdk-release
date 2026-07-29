@@ -1,94 +1,119 @@
-# SE Manager Secure Debug
+# Platform Security - SoC SE Manager Secure Debug
 
-This example uses the SE Manager API to perform secure debug on the supported device.
+Demonstrates how to enable secure debug, apply debug lock, and unlock the interface with a signed access certificate using SE Manager APIs on Secure Vault devices.
 
-For demonstration purposes, a private command key is stored in the device’s memory to sign the access certificate for secure debug unlock. The device’s public command key in the SE OTP must match with the public key of this private command key to perform secure debug unlock.
+## Table of Contents
 
-The default private command key (`cmd-unsafe-privkey.pem`) in PEM format can be found in the Windows folder below.
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-*C:\SiliconLabs\SimplicityStudio\v5\developer\adapter\_packs\secmgr\scripts\offline*
+## Purpose / Scope
 
-The public key of `cmd-unsafe-privkey.pem` in text format is:
+This example walks through **Secure Vault secure debug** using SE Manager: read debug/lock status, optionally provision the **public command key** in SE OTP, **enable secure debug**, **lock** the debug port, and **unlock** with a challenge-response **access certificate** signed by the matching private command key.
+Output is on the kit **VCOM** port. **Clock-cycle counts** print when `SE_MANAGER_PRINT=1` (default).
 
-`X - B1BC6F6FA56640ED522B2EE0F5B3CF7E5D48F60BE8148F0DC08440F0A4E1DCA4`
+### What the demo does
 
-`Y - 7C04119ED6A1BE31B7707E5F9D001A659A051003E95E1B936F05C37EA793AD63`
+After initialization, the app prints **SE firmware version**, **debug lock**, **device erase**, **secure debug**, **secure boot**, and TrustZone-related **debug option** config/state. It then branches based on current device state:
+| State | Console behavior |
+|-------|------------------|
+| **Normal**, secure debug **disabled** | Compare or program public command key → optionally **enable secure debug** → **lock** device |
+| **Normal**, secure debug **enabled** | Verify OTP public command key matches embedded test key → **lock** device |
+| **Secure debug lock** | Build signed **unlock token** (certificate + challenge signature) → **open debug** |
+| **Secure debug unlock** | Prompt for reset to re-lock; optional **challenge roll** |
+| **Standard debug lock** | Offer **mass erase** debug unlock (not certificate-based) |
+| **Permanent debug lock** | Device cannot be unlocked — exit |
+For lab use only, a **hard-coded private command key** in `app_se_manager_secure_debug.c` signs the access certificate. Production systems must **import** a properly protected private key and certificate (not store the private key in firmware).
+Default test key pair matches `cmd-unsafe-privkey.pem` from the SE Manager pack offline scripts (`secmgr` → `scripts/offline` in Simplicity Studio).
+**TrustZone debug options** (see `app_se_manager_secure_debug.h`):
+- `DEBUG_OPTIONS` = `0x0c` — lock secure invasive/non-invasive debug when applying lock
+- `DEBUG_MODE_REQUEST` = `0x3e` — unlock request for secure and non-secure debug/trace
 
-If the device does not have a public command key in the SE OTP, the program will prompt the user to program the public key above to the device.
+### Critical warnings
 
-The user can change the private command key (`private_command_key[]`) in `app_se_manager_secure_debug.c` to match with the device’s public command key in the SE OTP for the secure debug unlock test.
+- Programming the **public command key** to SE OTP is **one-time only** and **irrevocable**.
+- **Disable device erase** is a **one-time, permanent** operation when confirmed.
+- **Disconnect the debugger** before locking or unlocking the debug interface.
+- Use **development boards** only; incorrect lock/erase settings can brick units for debug.
+**Requires:** `device_has_semailbox` (Secure Vault).
 
-The example redirects standard I/O to the virtual serial port (VCOM) of the kit. By default, the serial port setting is 115200 bps and 8-N-1 configuration.
+### SE Manager APIs exercised
 
-The example has been instrumented with code to count the number of clock cycles spent in different operations. The results are printed on the VCOM serial port console. This feature can be disabled by defining `SE_MANAGER_PRINT=0` (default is 1) in the IDE setting (`Preprocessor->Defined symbols`).
+`sl_se_init`, `sl_se_deinit`, `sl_se_init_command_context`, `sl_se_deinit_command_context`, `sl_se_get_status`, `sl_se_get_debug_lock_status`, `sl_se_validate_key`, `sl_se_get_storage_size`, `sl_se_generate_key`, `sl_se_export_public_key`, `sl_se_read_pubkey`, `sl_se_init_otp_key`, `sl_se_apply_debug_lock`, `sl_se_erase_device`, `sl_se_enable_secure_debug`, `sl_se_disable_secure_debug`, `sl_se_disable_device_erase`, `sl_se_set_debug_options`, `sl_se_get_serialnumber`, `sl_se_get_challenge`, `sl_se_ecc_sign`, `sl_se_open_debug`, `sl_se_roll_challenge`.
 
-## Getting Started
+## Prerequisites / Setup Requirements
 
-1. Upgrade the kit’s firmware to the latest version (see `Adapter Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in the Simplicity Studio 5 User's Guide).
-2. Upgrade the device’s SE firmware to the latest version (see `Secure Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in the Simplicity Studio 5 User's Guide).
-3. Open any terminal program and connect to the kit’s VCOM port (if using `Device Console` in Simplicity Studio 5, `Line terminator:` must be set to `None`).
-4. Create this platform example project in the Simplicity IDE (see [Examples](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-getting-started/start-a-project#examples) in the Simplicity Studio 5 User's Guide).
-5. Build the example and download it to the kit (see [Simple Build](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/building#simple-build) and [Flash Programmer](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/flashing#flash-programmer) in the Simplicity Studio 5 User's Guide).
-6. Run the example and follow the instructions shown on the console.
+### Hardware Requirements
 
-## Additional Information
+- Secure Vault kit with SE mailbox (see template board compatibility).
+- **AEM** power when programming.
 
-1. The hard-coded private command key is an insecure method so the user should find a way to import the signed access certificate for secure debug unlock.
-2. The device should disconnect from the debugger when locking or unlocking the debug interface.
-3. For TrustZone-aware debugging, use the `DEBUG_OPTIONS` (default `0x0c`) and `DEBUG_MODE_REQUEST` (default `0x3e`) defined in `app_se_manager_secure_debug.h` to unlock the debug and trace features on Secure and Non-secure applications (refer to [AN1190](https://www.silabs.com/documents/public/application-notes/an1190-efr32-secure-debug.pdf) for details).
-4. **Warning:** Loading a public command key into the Secure Engine and disable the device erase are a **ONE-TIME-ONLY** process. Both of these assignment operations are irrevocable and persist for the life of the device.
-5. The default optimization level is `Optimize for debugging (-Og)` on Simplicity IDE and `None` on IAR Embedded Workbench.
+### Software Requirements
 
-## SE Manager API
+- **Simplicity Studio 5**, latest adapter and **SE firmware**.
+- VCOM: **115200** 8-N-1, line terminator **None**.
+- Optional: `cmd-unsafe-privkey.pem` from `secmgr` offline scripts for reference.
 
-The following SE Manager APIs are used in this example:
+### Before you run
 
-* `sl_se_init`
-* `sl_se_deinit`
-* `sl_se_init_command_context`
-* `sl_se_deinit_command_context`
-* `sl_se_get_status`
-* `sl_se_get_debug_lock_status`
-* `sl_se_validate_key`
-* `sl_se_get_storage_size`
-* `sl_se_generate_key`
-* `sl_se_export_public_key`
-* `sl_se_read_pubkey`
-* `sl_se_init_otp_key`
-* `sl_se_apply_debug_lock`
-* `sl_se_erase_device`
-* `sl_se_enable_secure_debug`
-* `sl_se_disable_secure_debug`
-* `sl_se_disable_device_erase`
-* `sl_se_set_debug_options`
-* `sl_se_get_serialnumber`
-* `sl_se_get_challenge`
-* `sl_se_ecc_sign`
-* `sl_se_open_debug`
-* `sl_se_roll_challenge`
+- If OTP has **no** public command key, the app can offer to program the test public key (matches `cmd-unsafe-privkey.pem`).
+- To test unlock on a device with a **different** OTP command key, update `private_command_key[]` in `app_se_manager_secure_debug.c` to match.
+- For certificate unlock tests, complete the **enable secure debug → lock** path first, or start from **secure debug lock** state.
+
+## Steps to Run Demo
+
+1. Build, flash, and open VCOM (115200 8-N-1, line terminator **None**).
+2. Reset and read the printed **SE status** block.
+3. Follow prompts for your device state (**ENTER** = confirm, **SPACE** = skip/exit).
+
+### Typical “green field” flow (secure debug disabled)
+
+1. App verifies or offers to **program public command key** to OTP (double ENTER to confirm — **irreversible**).
+2. **ENTER** to **enable secure debug**.
+3. **ENTER** to **lock** the device (sets `DEBUG_OPTIONS`, applies debug lock).
+4. Optionally **ENTER** to **disable device erase** (permanent — skip with SPACE if only testing).
+5. Reset; when in **secure debug lock**, **ENTER** to run **secure debug unlock** (certificate + challenge signing, `sl_se_open_debug`).
+6. On success, reconnect debugger; status shows **secure debug unlock** until power-on/pin reset.
+
+### Secure debug unlock sub-flow
+
+When locked with secure debug enabled, the app:
+1. Generates an ephemeral **certificate key pair**
+2. Builds an **access certificate** (serial number, authorizations, public cert key) signed with the **private command key**
+3. Fetches and signs the **challenge** with the certificate private key
+4. Submits the **unlock token** with `DEBUG_MODE_REQUEST`
+
+### Challenge roll
+
+In **secure debug unlock** state, **ENTER** requests and rolls the challenge; perform a **power-on or pin reset** to activate the new challenge (invalidates the prior unlock token).
+
+### Optional: disable timing prints
+
+Set **`SE_MANAGER_PRINT=0`** in preprocessor symbols.
 
 ## Troubleshooting
 
-### Serial Port Settings
-
-Be sure to select the following settings to see the serial output of this example:
-
-* 115200 Baud Rate 
-* 8-N-1 configuration
-* Line terminator should be set to "None" if using Device Console in Simplicity Studio
-
-### Programming the Radio Board
-
-Before programming the radio board mounted on the mainboard, make sure the power supply switch is in the AEM position (right side) as shown below.
-
-![Radio board power supply switch](image/readme_img0.png)
+| Symptom | What to check |
+|--------|----------------|
+| No serial output | VCOM 115200 8-N-1; terminator **None**; `SL_BOARD_ENABLE_VCOM=1` |
+| Public key compare **Failed** | OTP key does not match `private_command_key[]` — update source or reprovision OTP (one-time) |
+| Unlock **Failed** | Wrong command key, stale challenge, or debugger still attached |
+| **Permanent debug lock** | Device erase disabled and locked — cannot unlock |
+| Standard lock path only | Secure debug not enabled — certificate unlock not applicable |
+| Cannot program command key | Slot already provisioned |
+| Lock/unlock hangs or errors | Disconnect debugger during lock/unlock operations |
+| TrustZone debug partial | Adjust `DEBUG_OPTIONS` / `DEBUG_MODE_REQUEST` per AN1190 |
 
 ## Resources
 
-[SE Manager API](https://docs.silabs.com/gecko-platform/latest/service/api/group-sl-se-manager)
-
-[AN1190: Series 2 Secure Debug](https://www.silabs.com/documents/public/application-notes/an1190-efr32-secure-debug.pdf)
+- [SE Manager API documentation](https://docs.silabs.com/gecko-platform/latest/service/api/group-sl-se-manager)
+- [AN1190: Series 2 Secure Debug](https://www.silabs.com/documents/public/application-notes/an1190-efr32-secure-debug.pdf)
+- [Key Provisioning example](https://github.com/SiliconLabs/platform-sample-apps/tree/main/app/common/example/se_manager_key_provisioning) (OTP public command/sign keys)
 
 ## Report Bugs & Get Support
 
-You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://community.silabs.com/).
+You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://www.silabs.com/community).

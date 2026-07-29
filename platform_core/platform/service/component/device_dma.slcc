@@ -6,7 +6,7 @@ description: >
   components and tools without requiring inclusion of device-specific LDMA HAL
   headers.
 category: Services|Device Manager
-quality: evaluation
+quality: production
 metadata:
   sbom:
     license: Zlib

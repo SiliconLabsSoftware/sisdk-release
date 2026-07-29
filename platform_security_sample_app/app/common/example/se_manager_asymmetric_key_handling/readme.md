@@ -1,97 +1,101 @@
-# SE Manager Asymmetric Key Handling
+# Platform Security - SoC SE Manager Asymmetric Key Handling
 
-This example uses the SE Manager API to perform asymmetric key handling on the supported device.
+Demonstrates how to generate, import, export, transfer, and delete asymmetric ECC keys with the SE Manager API, using plain, wrapped, and volatile key storage on Secure Vault devices.
 
-In this example, SE Manager is used first to generate a public/private asymmetric key pair (plaintext, wrapped, and volatile) using a given Elliptic Curve Cryptography (ECC) curve. The public key is then exported from the key pair. It can be used to verify the public key after exporting or transferring a key in the Secure Vault device.
+## Table of Contents
 
-The example redirects standard I/O to the virtual serial port (VCOM) of the kit. By default, the serial port setting is 115200 bps and 8-N-1 configuration.
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-The example has been instrumented with code to count the number of clock cycles spent in different operations. The results are printed on the VCOM serial port console. This feature can be disabled by defining `SE_MANAGER_PRINT=0` (default is 1) in the IDE setting (`Preprocessor->Defined symbols`).
+## Purpose / Scope
 
-## Getting Started
+This example exercises the **SE Manager asymmetric key handling** APIs on a Secure Vault device. Standard I/O is redirected to the kit **VCOM** port. The application reports **clock-cycle counts** per operation when `SE_MANAGER_PRINT=1` (default).
+After reset, use the serial menu to choose an **ECC algorithm family** and curve, then the example runs automatically through the key-handling flows for that selection.
 
-1. Upgrade the kit’s firmware to the latest version (see `Adapter Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in the Simplicity Studio 5 User's Guide).
-2. Upgrade the device’s SE firmware to the latest version (see `Secure Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in the Simplicity Studio 5 User's Guide).
-3. Open any terminal program and connect to the kit’s VCOM port (if using `Device Console` in Simplicity Studio 5, `Line terminator:` must be set to `None`).
-4. Create this platform example project in the Simplicity IDE (see [Examples](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-getting-started/start-a-project#examples) in the Simplicity Studio 5 User's Guide).
-5. Build the example and download it to the kit (see [Simple Build](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/building#simple-build) and [Flash Programmer](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/flashing#flash-programmer) in the Simplicity Studio 5 User's Guide).
-6. Run the example and follow the instructions shown on the console.
+### Interactive menu
 
-## Additional Information
+- **SPACE** — cycle the current menu option (algorithm family or curve)
+- **ENTER (CR)** — confirm selection and proceed
+**Algorithm families:**
+| Family | Curves (device-dependent) |
+|--------|---------------------------|
+| **ECC Weierstrass Prime** | P192, P256; on Secure Vault High also P384, P521, and custom **secp256k1** |
+| **ECC Montgomery** | X25519; on Secure Vault High also X448 |
+| **ECC EdDSA** | Ed25519 |
 
-### Key Type
+### Key storage types
 
-The following key types are supported in this example:
+| Storage | Secure Vault Mid | Secure Vault High |
+|---------|------------------|-------------------|
+| **Plaintext key in RAM** | Yes | Yes |
+| **Wrapped key in RAM** | No | Yes |
+| **Volatile key in SE slot** | No | Yes |
 
-* Plaintext key in RAM
-* Wrapped key in RAM (Secure Vault High only)
-* Volatile key in SE (Secure Vault High only)
+### Operations demonstrated
 
-### Elliptic Curve Key
+**All supported devices (plain key path):**
+1. Generate a **plain asymmetric key pair** (`sl_se_generate_key`)
+2. Export the **public key** (`sl_se_export_public_key`)
+**Secure Vault High only (additional flows):**
+3. Import plain key into an **exportable wrapped** key (`sl_se_import_key`)
+4. Export wrapped key back to plain (`sl_se_export_key`) and **verify** public key matches
+5. Generate a **non-exportable wrapped** key and export its public key
+6. Generate a **volatile SE slot** key, export public key, then delete it (`sl_se_delete_key`)
+7. **Transfer** wrapped ↔ volatile keys (`sl_se_transfer_key`) and verify public key consistency
+**Components used:** `se_manager`, `sl_main`, `device_init`, `clock_manager`, VCOM stdio retargeting. Requires **`device_has_semailbox`**.
 
-The following elliptic curve keys are supported in this example:
+## Prerequisites / Setup Requirements
 
-##### `ECC Weierstrass Prime` :
+### Hardware Requirements
 
-* SECP192R1 - 192-bit
-* SECP256R1 - 256-bit
-* SECP384R1 - 384-bit (Secure Vault High only)
-* SECP521R1 - 521-bit (Secure Vault High only)
-* SECP256K1 - 256-bit (Custom, Secure Vault High only)
+- A **Secure Vault** development kit with SE mailbox support (see board compatibility in Simplicity Studio for `se_manager_asymmetric_key_handling` / `se_manager_asymmetric_key_handling_s3`).
+- **AEM** power selected on the radio/mainboard switch when programming (see image below).
+- USB connection for programming and VCOM.
 
-##### `ECC Montgomery` :
+### Software Requirements
 
-* x25519 - 255-bit (HSE only)
-* x448 - 448-bit (Secure Vault High only)
+- **Simplicity Studio 5** (current SDK matching the example).
+- A serial terminal (or **Device Console** in Studio) on the kit **VCOM** port:
+  - **115200** baud, **8-N-1**
+  - **Line terminator: None** (required for Device Console)
+- Latest **adapter firmware** and **Secure Engine (SE) firmware** on the kit ([General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information)).
+- For **X25519** and **Ed25519** on HSE Secure Vault Mid: SE firmware **v1.2.11+** (EFR32xG21) or **v2.1.7+** (other HSE devices).
 
-##### `ECC EdDSA` :
+## Steps to Run Demo
 
-* Ed25519 - 256-bit (HSE only)
-
-### SE Manager API
-
-The following SE Manager APIs are used in this example:
-
-* `sl_se_init`
-* `sl_se_deinit`
-* `sl_se_init_command_context`
-* `sl_se_deinit_command_context`
-* `sl_se_validate_key`
-* `sl_se_get_storage_size`
-* `sl_se_generate_key`
-* `sl_se_export_public_key`
-* `sl_se_import_key` (Secure Vault High only)
-* `sl_se_export_key` (Secure Vault High only)
-* `sl_se_delete_key` (Secure Vault High only)
-* `sl_se_transfer_key` (Secure Vault High only)
+1. Update kit **adapter firmware** and device **SE firmware** to the latest versions.
+2. Open a serial terminal on the kit **VCOM** port (115200 8-N-1; line terminator **None** if using Device Console).
+3. Create the **Platform Security - SoC SE Manager Asymmetric Key Handling** project in Simplicity Studio ([Examples](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-getting-started/start-a-project#examples)).
+4. Build and flash the project ([Simple Build](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/building#simple-build), [Flash Programmer](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/flashing#flash-programmer)).
+5. Reset the board and follow the console prompts:
+   - Press **SPACE** to choose **ECC Weierstrass Prime**, **ECC Montgomery**, or **ECC EdDSA (Ed25519)**.
+   - Press **ENTER** to open curve selection (Weierstrass / Montgomery) or run immediately (Ed25519).
+   - Press **SPACE** to cycle curves, then **ENTER** to start the demo.
+6. Watch the log for each step (`Generate…`, `Export…`, `Import…`, `Transfer…`, `Compare… OK`) and per-operation timing when `SE_MANAGER_PRINT` is enabled.
+7. On **Secure Vault High**, the full sequence runs through plain, wrapped, volatile, and transfer paths, then returns to the startup menu. On **Secure Vault Mid**, only the plain-key path runs, then the menu reappears.
 
 ## Troubleshooting
 
-### Serial Port Settings
-
-Be sure to select the following settings to see the serial output of this example:
-
-* 115200 Baud Rate 
-* 8-N-1 configuration
-* Line terminator should be set to "None" if using Device Console in Simplicity Studio
-
-### Programming the Radio Board
-
-Before programming the radio board mounted on the mainboard, make sure the power supply switch is in the AEM position (right side) as shown below.
-
-![Radio board power supply switch](image/readme_img0.png)
-
-## Additional Information
-
-1.  The HSE Secure Vault Mid devices require SE firmware v1.2.11 or higher (EFR32xG21) and v2.1.7 or higher (other HSE devices) to support hardware acceleration on `x25519` and `Ed25519`.
-2.  The default optimization level is `Optimize for debugging (-Og)` on Simplicity IDE and `None` on IAR Embedded Workbench.
+| Symptom | What to check |
+|--------|----------------|
+| No serial output | VCOM 115200 8-N-1, line terminator **None**; `SL_BOARD_ENABLE_VCOM=1` |
+| SE manager init failed | Latest SE firmware; board has Secure Vault + SE mailbox |
+| Wrapped / volatile / transfer steps missing | Expected on **Secure Vault Mid** — upgrade to Secure Vault High board for full flow |
+| X25519 or Ed25519 failures on Mid HSE | SE firmware version (see Prerequisites) |
+| `Compare export/transfer… Failed` | Rebuild and rerun; confirm no other app holds the volatile key slot |
+| Programming fails | AEM switch position (see Prerequisites image) |
+| Slow or debug-heavy build | Default optimization is **debug (-Og)** on GCC / **None** on IAR — intentional for this example |
 
 ## Resources
 
-[SE Manager API](https://docs.silabs.com/gecko-platform/latest/service/api/group-sl-se-manager)
-
-[AN1271: Secure Key Storage](https://www.silabs.com/documents/public/application-notes/an1271-efr32-secure-key-storage.pdf)
+- [SE Manager API documentation](https://docs.silabs.com/gecko-platform/latest/service/api/group-sl-se-manager)
+- [AN1271: Secure Key Storage](https://www.silabs.com/documents/public/application-notes/an1271-efr32-secure-key-storage.pdf)
+- [Simplicity Studio 5 User's Guide — Examples](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-getting-started/start-a-project#examples)
 
 ## Report Bugs & Get Support
 
-You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://community.silabs.com/).
+You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://www.silabs.com/community).

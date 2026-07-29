@@ -189,6 +189,12 @@ typedef struct EventQueue_s {
 void sli_zigbee_isr_event_marker(struct Event_s *event);
 
 /**
+ * Notifies the platform when an ISR event is newly armed on a queue.
+ * RTOS builds use this to wake the Application Framework task.
+ */
+void sli_zigbee_isr_event_armed_callback(void);
+
+/**
  * Initialize 'queue'.  This must be called before any use of 'queue'
  * or any of its events.
  */

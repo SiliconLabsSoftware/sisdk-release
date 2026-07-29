@@ -42,6 +42,7 @@
 #include "esl_lib_pawr.h"
 #include "esl_lib_storage.h"
 #include "esl_lib_memory.h"
+#include "esl_lib_adv_dedup.h"
 
 // -----------------------------------------------------------------------------
 // Definitions
@@ -55,6 +56,16 @@
 #define BONDING_TIMEOUT_MS    15000
 #define RECONNECT_TIMEOUT_MS  250
 #define GATT_TIMEOUT_MS       10000
+
+static void connection_forget_adv_dedup(const esl_lib_connection_t *conn)
+{
+  esl_lib_address_t address;
+
+  memset(&address, 0, sizeof(address));
+  address.address_type = conn->address_type;
+  memcpy(address.addr, conn->address.addr, sizeof(address.addr));
+  esl_lib_adv_dedup_forget_address(address);
+}
 
 // connection parameters for PAST
 #define PAST_CONN_INTERVAL_MIN       ESL_LIB_CONN_INTERVAL_MIN
@@ -140,6 +151,11 @@ static uint16_t get_handle_for_type(esl_lib_connection_t *conn,
                                     esl_lib_data_type_t  tag_info_type);
 static void clean_tag_info(esl_lib_connection_t *conn);
 static sl_status_t save_tag_info(esl_lib_connection_t *conn);
+static bool is_bonding_start_state(esl_lib_connection_state_t state);
+static sl_status_t start_post_bonding_flow(esl_lib_connection_t **conn,
+                                           esl_lib_status_t     *lib_status,
+                                           esl_lib_address_t    *addr_backup,
+                                           esl_lib_address_t    **addr_out);
 static sl_status_t write_value(esl_lib_connection_t *conn,
                                esl_lib_bool_t       response,
                                esl_lib_data_type_t  type,
@@ -152,6 +168,10 @@ static bool find_tlv(esl_lib_command_list_cmd_t  *cmd,
 static void *close_broken_connection(esl_lib_connection_t **conn, esl_lib_address_t *backup);
 static sl_status_t esl_lib_initiate_auto_connection(esl_lib_connection_t *handle);
 static void esl_lib_connection_emit_mass_errors(esl_lib_connection_t *conn);
+static void esl_lib_connection_recover_accept_list_stall(void);
+static void clear_pending_accept_list_request_for_address(esl_lib_command_list_cmd_t *cmd,
+                                                          bd_addr                    *addr,
+                                                          uint8_t                    address_type);
 // -----------------------------------------------------------------------------
 // Private variables
 
@@ -172,6 +192,12 @@ static bool foreign_initiator_id = false;
 
 // Last IO capability known to the Bluetooth stack
 static sl_bt_sm_io_capability_t last_io_capabilities = sl_bt_sm_io_capability_noinputnooutput;
+
+// Internal self-check state for automatic accept-list initiation.
+static size_t  accept_list_last_acceptance_size = 0;
+static size_t  accept_list_last_initiator_size = 0;
+static uint8_t accept_list_last_connections = 0;
+static bool    accept_list_stall_armed = false;
 
 // Service UUIDs
 static const esl_lib_connection_uuids_t uuid_map = {
@@ -238,6 +264,143 @@ esl_lib_connection_mode_t esl_lib_get_connection_mode_and_status(esl_lib_core_st
   }
 
   return connection_mode;
+}
+
+static void accept_list_governor_reset(void)
+{
+  accept_list_last_acceptance_size = 0;
+  accept_list_last_initiator_size = 0;
+  accept_list_last_connections = 0;
+  accept_list_stall_armed = false;
+}
+
+static void clear_pending_accept_list_request_for_address(esl_lib_command_list_cmd_t *cmd,
+                                                          bd_addr                    *addr,
+                                                          uint8_t                    address_type)
+{
+  filter_data_p pending_cmd;
+  sl_status_t sc;
+
+  if (cmd == NULL || addr == NULL) {
+    return;
+  }
+
+  pending_cmd = filter_accept_list_remove_command_by_address(auto_acceptance_list,
+                                                             addr,
+                                                             address_type);
+  if (pending_cmd != NULL && pending_cmd != cmd) {
+    esl_lib_memory_free(pending_cmd);
+  }
+
+  pending_cmd = filter_accept_list_remove_command_by_address(auto_initiator_list,
+                                                             addr,
+                                                             address_type);
+  if (pending_cmd != NULL && pending_cmd != cmd) {
+    esl_lib_memory_free(pending_cmd);
+  }
+
+  sc = sl_bt_accept_list_remove_device_by_address(*addr, address_type);
+  if (sc != SL_STATUS_OK && sc != SL_STATUS_BT_CTRL_INVALID_COMMAND_PARAMETERS) {
+    esl_lib_log_connection_warning("Failed to remove pending LL accept-list entry for "
+                                   ESL_LIB_LOG_ADDR_FORMAT ", sc = 0x%04x" APP_LOG_NL,
+                                   ESL_LIB_LOG_ADDR(cmd->data.cmd_connect.address),
+                                   sc);
+  }
+}
+
+static void accept_list_governor_step(void)
+{
+  esl_lib_core_state_t core_state;
+  esl_lib_connection_t *reuseable_handle = ESL_LIB_INVALID_HANDLE;
+  size_t acceptance_size_before;
+  size_t initiator_size_before;
+  size_t acceptance_size_after;
+  size_t initiator_size_after;
+  bool   initiator_busy = false;
+  uint8_t connections_before = 0;
+  uint8_t connections_after = 0;
+
+  if (connection_mode != ESL_LIB_CONNECTION_MODE_LIST
+      || auto_acceptance_list == NULL
+      || auto_initiator_list == NULL) {
+    accept_list_governor_reset();
+    return;
+  }
+
+  acceptance_size_before = filter_accept_list_get_size(auto_acceptance_list);
+  initiator_size_before = filter_accept_list_get_size(auto_initiator_list);
+  if (acceptance_size_before == 0 && initiator_size_before == 0) {
+    accept_list_governor_reset();
+    return;
+  }
+
+  (void)esl_lib_get_connection_mode_and_status(&core_state, &connections_before, &initiator_busy);
+  if (initiator_busy || core_state != ESL_LIB_CORE_STATE_IDLE || acceptance_size_before == 0 || connections_before != 0) {
+    accept_list_governor_reset();
+    return;
+  }
+
+  // Self-heal missing trigger paths by retrying accept-list initiation while idle.
+  (void)esl_lib_connection_find(SL_BT_INVALID_CONNECTION_HANDLE, &reuseable_handle);
+  (void)esl_lib_initiate_auto_connection(reuseable_handle);
+
+  acceptance_size_after = filter_accept_list_get_size(auto_acceptance_list);
+  initiator_size_after = filter_accept_list_get_size(auto_initiator_list);
+  (void)esl_lib_get_connection_mode_and_status(&core_state, &connections_after, NULL);
+
+  if ((acceptance_size_after == 0 && initiator_size_after == 0)
+      || core_state != ESL_LIB_CORE_STATE_IDLE
+      || acceptance_size_after != acceptance_size_before
+      || initiator_size_after != initiator_size_before
+      || connections_after != connections_before) {
+    accept_list_governor_reset();
+    return;
+  }
+
+  // Active non-initiating connections may legitimately block fresh initiations
+  // until a later close event frees resources.
+  if (connections_after != 0) {
+    accept_list_governor_reset();
+    return;
+  }
+
+  if (accept_list_stall_armed
+      && accept_list_last_acceptance_size == acceptance_size_after
+      && accept_list_last_initiator_size == initiator_size_after
+      && accept_list_last_connections == connections_after) {
+    esl_lib_log_connection_error("Connection initiating stalled while idle with %zu"
+                                 " acceptance-list and %zu initiator-list entr%s" APP_LOG_NL,
+                                 acceptance_size_after,
+                                 initiator_size_after,
+                                 (acceptance_size_after + initiator_size_after) == 1 ? "y" : "ies");
+    esl_lib_connection_recover_accept_list_stall();
+    accept_list_governor_reset();
+    return;
+  }
+
+  accept_list_last_acceptance_size = acceptance_size_after;
+  accept_list_last_initiator_size = initiator_size_after;
+  accept_list_last_connections = connections_after;
+  accept_list_stall_armed = true;
+}
+
+static void esl_lib_connection_recover_accept_list_stall(void)
+{
+  if (filter_accept_list_get_size(auto_acceptance_list) != 0) {
+    esl_lib_connection_emit_mass_errors(NULL);
+  }
+
+  if (filter_accept_list_get_size(auto_initiator_list) != 0) {
+    sl_status_t sc =  sl_bt_accept_list_remove_all_devices();
+
+    if (sc == SL_STATUS_OK) {
+      esl_lib_connection_t local_conn = { 0 };
+      local_conn.state = ESL_LIB_CONNECTION_STATE_CONNECTING;
+      esl_lib_connection_emit_mass_errors(&local_conn);
+    } else {
+      esl_lib_log_connection_error("Accept list cleanup request rejected, sc = 0x%04x" APP_LOG_NL, sc);
+    }
+  }
 }
 
 sl_status_t esl_lib_change_connection_mode(esl_lib_connection_mode_t mode)
@@ -420,6 +583,10 @@ sl_status_t esl_lib_initiate_connection(esl_lib_command_list_cmd_t *cmd)
     } else if (connection_mode == ESL_LIB_CONNECTION_MODE_SINGLE
                || io_capabilities == sl_bt_sm_io_capability_keyboardonly
                || identity != NULL) {
+      if (identity != NULL) {
+        // Recovery direct-connect requests must not compete with stale list-based pending entries.
+        clear_pending_accept_list_request_for_address(cmd, addr, address_type);
+      }
       // Connect using the address only
       esl_lib_log_connection_debug("Opening connection to " ESL_LIB_LOG_ADDR_FORMAT APP_LOG_NL,
                                    ESL_LIB_LOG_ADDR(*address));
@@ -714,6 +881,8 @@ void esl_lib_connection_step(void)
       }
     }
   }
+
+  accept_list_governor_step();
 }
 
 void esl_lib_connection_on_bt_event(sl_bt_msg_t *evt)
@@ -881,6 +1050,7 @@ void esl_lib_connection_on_bt_event(sl_bt_msg_t *evt)
       if (sc == SL_STATUS_OK && !conn->established) {
         esl_lib_connection_t *reuseable_handle = ESL_LIB_INVALID_HANDLE;
         conn->established = true;
+        connection_forget_adv_dedup(conn);
         esl_lib_log_connection_debug(CONN_FMT "Connection established, connection handle = %u, features: %014" PRIx64 APP_LOG_NL,
                                      ESL_LIB_LOG_PTR(conn),
                                      conn->connection_handle,
@@ -903,6 +1073,10 @@ void esl_lib_connection_on_bt_event(sl_bt_msg_t *evt)
       if (sc == SL_STATUS_OK) {
         sl_status_t reason = evt->data.evt_connection_closed.reason;
         const bool pending_connect = (conn->state == ESL_LIB_CONNECTION_STATE_CONNECTING);
+
+        if (!conn->established) {
+          connection_forget_adv_dedup(conn);
+        }
         // Stop connection / reconnection timer
         (void)app_timer_stop(&conn->timer);
         (void)app_timer_stop(&conn->gatt_timer);
@@ -1038,68 +1212,13 @@ void esl_lib_connection_on_bt_event(sl_bt_msg_t *evt)
                                      conn->security);
         // Bonding is considered finished when security has elevated.
         if (conn->security > sl_bt_connection_mode1_level1) {
-          if (conn->state == ESL_LIB_CONNECTION_STATE_BONDING
-              || conn->state == ESL_LIB_CONNECTION_STATE_APPLYING_LTK) {
+          if (is_bonding_start_state(conn->state)) {
             (void)app_timer_stop(&conn->timer);
             (void)send_bonding_finished(conn);
-            if (conn->gattdb_known == ESL_LIB_TRUE) {
-              esl_lib_log_connection_debug(CONN_FMT "GATTDB known, skipping discovery, connection handle = %u" APP_LOG_NL,
-                                           ESL_LIB_LOG_PTR(conn),
-                                           conn->connection_handle);
-              // Subscribe to characteristics
-              if (conn->gattdb_handles.esl_characteristics[ESL_LIB_CHARACTERISTIC_INDEX_ESL_CONTROL_POINT]
-                  != ESL_LIB_INVALID_CHARACTERISTIC_HANDLE) {
-                esl_lib_log_connection_debug(CONN_FMT "Subscribe to ESL CP notifications, connection handle = %u" APP_LOG_NL,
-                                             ESL_LIB_LOG_PTR(conn),
-                                             conn->connection_handle);
-                sc = sl_bt_gatt_set_characteristic_notification(conn->connection_handle,
-                                                                conn->gattdb_handles.esl_characteristics[ESL_LIB_CHARACTERISTIC_INDEX_ESL_CONTROL_POINT],
-                                                                sl_bt_gatt_notification);
-              } else {
-                sc = SL_STATUS_INVALID_HANDLE;
-              }
-              if (sc == SL_STATUS_OK) {
-                (void)app_timer_stop(&conn->gatt_timer);
-                conn->state = ESL_LIB_CONNECTION_STATE_ESL_SUBSCRIBE;
-                sc = app_timer_start(&conn->gatt_timer,
-                                     GATT_TIMEOUT_MS,
-                                     gatt_timeout,
-                                     conn,
-                                     false);
-              } else {
-                esl_lib_log_connection_error(CONN_FMT "ESL CP subscribe failed, connection handle = %u, sc = 0x%04x" APP_LOG_NL,
-                                             ESL_LIB_LOG_PTR(conn),
-                                             conn->connection_handle,
-                                             sc);
-                // Close connection, save address just in case
-                addr = close_broken_connection(&conn, &addr_backup);
-                lib_status = ESL_LIB_STATUS_CONN_SUBSCRIBE_FAILED;
-              }
-            } else {
-              esl_lib_log_connection_debug(CONN_FMT "Starting service discovery, connection handle = %u" APP_LOG_NL,
-                                           ESL_LIB_LOG_PTR(conn),
-                                           conn->connection_handle);
-
-              // No predefined GATT database, start service discovery
-              sc = sl_bt_gatt_discover_primary_services(conn->connection_handle);
-              if (sc == SL_STATUS_OK) {
-                (void)app_timer_stop(&conn->gatt_timer);
-                conn->state = ESL_LIB_CONNECTION_STATE_SERVICE_DISCOVERY;
-                sc = app_timer_start(&conn->gatt_timer,
-                                     GATT_TIMEOUT_MS,
-                                     gatt_timeout,
-                                     conn,
-                                     false);
-              } else {
-                esl_lib_log_connection_error(CONN_FMT "Error starting service discovery, connection handle = %u, sc = 0x%04x" APP_LOG_NL,
-                                             ESL_LIB_LOG_PTR(conn),
-                                             conn->connection_handle,
-                                             sc);
-                // Close connection
-                addr = close_broken_connection(&conn, &addr_backup);
-                lib_status = ESL_LIB_STATUS_CONN_DISCOVERY_FAILED;
-              }
-            }
+            sc = start_post_bonding_flow(&conn,
+                                         &lib_status,
+                                         &addr_backup,
+                                         &addr);
           } else if (conn->state == ESL_LIB_CONNECTION_STATE_PAST_INIT) {
             (void)app_timer_stop(&conn->timer);
             esl_lib_log_connection_debug(CONN_FMT "PAST transfer, connection handle = %u" APP_LOG_NL,
@@ -1272,21 +1391,52 @@ void esl_lib_connection_on_bt_event(sl_bt_msg_t *evt)
         esl_lib_log_connection_debug(CONN_FMT "Bonding data ready, connection handle = %u" APP_LOG_NL,
                                      ESL_LIB_LOG_PTR(conn),
                                      conn->connection_handle);
-        sc = sl_bt_sm_increase_security(conn->connection_handle);
-        if (sc == SL_STATUS_OK) {
-          conn->state = ESL_LIB_CONNECTION_STATE_BONDING;
+        if (conn->security > sl_bt_connection_mode1_level1) {
+          // Tolerate peer-initiated security increase, but keep AP-side flow control:
+          // continue with post-bonding steps from this event path.
+          if (is_bonding_start_state(conn->state)) {
+            (void)app_timer_stop(&conn->timer);
+            (void)send_bonding_finished(conn);
+            sc = start_post_bonding_flow(&conn,
+                                         &lib_status,
+                                         &addr_backup,
+                                         &addr);
+          } else {
+            esl_lib_log_connection_debug(CONN_FMT "Security already elevated in state %u, ignoring duplicate bonding-ready flow, connection handle = %u" APP_LOG_NL,
+                                         ESL_LIB_LOG_PTR(conn),
+                                         conn->state,
+                                         conn->connection_handle);
+          }
         } else {
-          esl_lib_log_level_t level = conn->established ? ESL_LIB_LOG_LEVEL_ERROR : ESL_LIB_LOG_LEVEL_WARNING;
-          // Close the connection in case of error.
-          (void)close_connection(conn);
-          conn->last_error = sc; // Override last_error from close_connection
-          lib_status = ESL_LIB_STATUS_BONDING_FAILED;
-          esl_lib_log(level, ESL_LIB_LOG_MODULE_CONNECTION,
-                      CONN_FMT "Increase security %s, connection handle = %u, sc = 0x%04x" APP_LOG_NL,
-                      ESL_LIB_LOG_PTR(conn),
-                      conn->established ? "failed" : "is not possible",
-                      conn->connection_handle,
-                      sc);
+          sc = sl_bt_sm_increase_security(conn->connection_handle);
+          if (sc == SL_STATUS_OK) {
+            if (is_bonding_start_state(conn->state)) {
+              conn->state = ESL_LIB_CONNECTION_STATE_BONDING;
+            }
+          } else if (sc == SL_STATUS_INVALID_STATE
+                     && is_bonding_start_state(conn->state)) {
+            // Conservative peers may initiate bonding/security first, making a local
+            // security increase request transiently invalid. Continue and wait for
+            // the next security level update event.
+            conn->state = ESL_LIB_CONNECTION_STATE_BONDING;
+            sc = SL_STATUS_OK;
+            lib_status = ESL_LIB_STATUS_NO_ERROR;
+            esl_lib_log_connection_debug(CONN_FMT "Increase security already in progress, connection handle = %u" APP_LOG_NL,
+                                         ESL_LIB_LOG_PTR(conn),
+                                         conn->connection_handle);
+          } else {
+            esl_lib_log_level_t level = conn->established ? ESL_LIB_LOG_LEVEL_ERROR : ESL_LIB_LOG_LEVEL_WARNING;
+            // Close the connection in case of error.
+            (void)close_connection(conn);
+            conn->last_error = sc; // Override last_error from close_connection
+            lib_status = ESL_LIB_STATUS_BONDING_FAILED;
+            esl_lib_log(level, ESL_LIB_LOG_MODULE_CONNECTION,
+                        CONN_FMT "Increase security %s, connection handle = %u, sc = 0x%04x" APP_LOG_NL,
+                        ESL_LIB_LOG_PTR(conn),
+                        conn->established ? "failed" : "is not possible",
+                        conn->connection_handle,
+                        sc);
+          }
         }
       } else {
         // Suppress error event for unknown connections
@@ -2768,6 +2918,87 @@ static uint16_t get_handle_for_type(esl_lib_connection_t *conn,
       break;
   }
   return char_handle;
+}
+
+static bool is_bonding_start_state(esl_lib_connection_state_t state)
+{
+  return (state == ESL_LIB_CONNECTION_STATE_CONNECTION_OPENED
+          || state == ESL_LIB_CONNECTION_STATE_APPLYING_LTK
+          || state == ESL_LIB_CONNECTION_STATE_NEW_BOND_REQUIRED
+          || state == ESL_LIB_CONNECTION_STATE_BONDING);
+}
+
+static sl_status_t start_post_bonding_flow(esl_lib_connection_t **conn,
+                                           esl_lib_status_t     *lib_status,
+                                           esl_lib_address_t    *addr_backup,
+                                           esl_lib_address_t    **addr_out)
+{
+  sl_status_t sc = SL_STATUS_NULL_POINTER;
+
+  if (conn == NULL || *conn == NULL || lib_status == NULL || addr_out == NULL) {
+    return sc;
+  }
+
+  if ((*conn)->gattdb_known == ESL_LIB_TRUE) {
+    esl_lib_log_connection_debug(CONN_FMT "GATTDB known, skipping discovery, connection handle = %u" APP_LOG_NL,
+                                 ESL_LIB_LOG_PTR(*conn),
+                                 (*conn)->connection_handle);
+    // Subscribe to characteristics
+    if ((*conn)->gattdb_handles.esl_characteristics[ESL_LIB_CHARACTERISTIC_INDEX_ESL_CONTROL_POINT]
+        != ESL_LIB_INVALID_CHARACTERISTIC_HANDLE) {
+      esl_lib_log_connection_debug(CONN_FMT "Subscribe to ESL CP notifications, connection handle = %u" APP_LOG_NL,
+                                   ESL_LIB_LOG_PTR(*conn),
+                                   (*conn)->connection_handle);
+      sc = sl_bt_gatt_set_characteristic_notification((*conn)->connection_handle,
+                                                      (*conn)->gattdb_handles.esl_characteristics[ESL_LIB_CHARACTERISTIC_INDEX_ESL_CONTROL_POINT],
+                                                      sl_bt_gatt_notification);
+    } else {
+      sc = SL_STATUS_INVALID_HANDLE;
+    }
+    if (sc == SL_STATUS_OK) {
+      (void)app_timer_stop(&(*conn)->gatt_timer);
+      (*conn)->state = ESL_LIB_CONNECTION_STATE_ESL_SUBSCRIBE;
+      sc = app_timer_start(&(*conn)->gatt_timer,
+                           GATT_TIMEOUT_MS,
+                           gatt_timeout,
+                           *conn,
+                           false);
+    } else {
+      esl_lib_log_connection_error(CONN_FMT "ESL CP subscribe failed, connection handle = %u, sc = 0x%04x" APP_LOG_NL,
+                                   ESL_LIB_LOG_PTR(*conn),
+                                   (*conn)->connection_handle,
+                                   sc);
+      // Close connection, save address just in case
+      *addr_out = close_broken_connection(conn, addr_backup);
+      *lib_status = ESL_LIB_STATUS_CONN_SUBSCRIBE_FAILED;
+    }
+  } else {
+    esl_lib_log_connection_debug(CONN_FMT "Starting service discovery, connection handle = %u" APP_LOG_NL,
+                                 ESL_LIB_LOG_PTR(*conn),
+                                 (*conn)->connection_handle);
+
+    // No predefined GATT database, start service discovery
+    sc = sl_bt_gatt_discover_primary_services((*conn)->connection_handle);
+    if (sc == SL_STATUS_OK) {
+      (void)app_timer_stop(&(*conn)->gatt_timer);
+      (*conn)->state = ESL_LIB_CONNECTION_STATE_SERVICE_DISCOVERY;
+      sc = app_timer_start(&(*conn)->gatt_timer,
+                           GATT_TIMEOUT_MS,
+                           gatt_timeout,
+                           *conn,
+                           false);
+    } else {
+      esl_lib_log_connection_error(CONN_FMT "Error starting service discovery, connection handle = %u, sc = 0x%04x" APP_LOG_NL,
+                                   ESL_LIB_LOG_PTR(*conn),
+                                   (*conn)->connection_handle,
+                                   sc);
+      // Close connection
+      *addr_out = close_broken_connection(conn, addr_backup);
+      *lib_status = ESL_LIB_STATUS_CONN_DISCOVERY_FAILED;
+    }
+  }
+
+  return sc;
 }
 
 static esl_lib_data_type_t get_next_type(esl_lib_data_type_t type)

@@ -52,6 +52,7 @@ from ap_core_tag_commands import TagCommandsMixin
 from ap_core_pawr_responses import PAWRResponsesMixin
 from ap_core_helpers import HelpersMixin
 from ap_core_scan import ScanMixin
+from ap_core_adv_dedup import AdvDedupMixin
 from ap_core_event_handlers_common import CommonEventHandlersMixin
 from ap_core_event_handlers_cli import CLIEventHandlersMixin
 from ap_core_event_handlers_auto import AutoEventHandlersMixin
@@ -82,6 +83,7 @@ class AccessPoint(
     # PAwR response handling and helpers
     PAWRResponsesMixin,
     ScanMixin,
+    AdvDedupMixin,
 ):
     """Access Point"""
 
@@ -115,6 +117,7 @@ class AccessPoint(
         else:
             self.log.warning("Starting with NCP encryption disabled!")
 
+        self._init_adv_dedup_state()
         self.lib = LibProxy(esl_lib.Lib(config), self)
 
         self.rssi_threshold = RSSI_THRESHOLD

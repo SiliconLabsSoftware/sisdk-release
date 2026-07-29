@@ -40,3 +40,5 @@ readme:
   - path: readme.md
 ui_hints:
   highlight: readme.md
+tag:
+  - hwfilter:device:device_generic_family_efr32xg2b

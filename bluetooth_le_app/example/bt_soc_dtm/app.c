@@ -64,8 +64,8 @@ void app_init(void)
   // equipment.
   config.stream = sl_iostream_get_default();
 
-  // Enable VCOM
-  sl_board_enable_vcom();
+  // Configure VCOM
+  sl_board_configure_vcom();
 
   testmode_init(&config);
 }

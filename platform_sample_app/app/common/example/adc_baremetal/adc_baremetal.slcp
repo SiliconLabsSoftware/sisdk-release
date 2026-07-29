@@ -51,6 +51,8 @@ ui_hints:
   highlight: readme.md
 tag:
   - hardware:component:led:1+
+  - hwfilter:device:device_has_adc
+  - hwfilter:device:device_series_2
 configuration:
   - name: SL_BOARD_ENABLE_VCOM
     value: 1

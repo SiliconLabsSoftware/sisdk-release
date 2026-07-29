@@ -12,7 +12,7 @@
 #if defined(SL_TRUSTZONE_SECURE)
 
 /* The Secure library must use the standard crypto.h from the mbedtls repo. */
-#include "psa/crypto.h"
+#include <include/psa/crypto.h>
 
 #else /* SL_TRUSTZONE_SECURE */
 

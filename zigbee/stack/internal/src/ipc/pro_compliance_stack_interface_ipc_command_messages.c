@@ -1219,13 +1219,18 @@ void slx_zigbee_insecure_debug_generate_trace(uint8_t msg_type,
   sli_zigbee_ipc_cmd_t msg = { 0, };
   msg.data.insecure_debug_generate_trace.request.msg_type = msg_type;
 
-  if (debug_data != NULL) {
-    memmove(msg.data.insecure_debug_generate_trace.request.debug_data, debug_data, sizeof(uint8_t) * MAX_IPC_VEC_ARG_CAPACITY);
+  if (SL_ZIGBEE_ENCRYPTION_KEY_SIZE > MAX_IPC_VEC_ARG_CAPACITY) {
+    assert(false); // "vector debug_data length exceeds expected maximum
+    return;
   }
 
+  memmove(msg.data.insecure_debug_generate_trace.request.debug_data, debug_data, sizeof(uint8_t) * SL_ZIGBEE_ENCRYPTION_KEY_SIZE);
   sli_zigbee_send_ipc_cmd(slxi_zigbee_stack_insecure_debug_generate_trace_process_ipc_command, &msg);
 
-  if (debug_data != NULL) {
-    memmove(debug_data, msg.data.insecure_debug_generate_trace.request.debug_data, sizeof(uint8_t) * MAX_IPC_VEC_ARG_CAPACITY);
+  if (SL_ZIGBEE_ENCRYPTION_KEY_SIZE > MAX_IPC_VEC_ARG_CAPACITY) {
+    assert(false); // "vector debug_data length exceeds expected maximum
+    return;
   }
+
+  memmove(debug_data, msg.data.insecure_debug_generate_trace.request.debug_data, sizeof(uint8_t) * SL_ZIGBEE_ENCRYPTION_KEY_SIZE);
 }

@@ -1,21 +1,19 @@
 id: psa_crypto_common_source
 package: mbedtls
 label: Common Source
-description: >-
-  This component provides the source implementation for PSA Crypto common
-  functionality.
+description: PSA Crypto client common (psa_crypto_client.c). Secure / Unaware only.
 category: Platform|Security|PSA Crypto
 quality: production
 ui_hints:
   visibility: never
 provides:
 - name: psa_crypto_common_source
+conflicts:
+- name: trustzone_nonsecure
 requires:
 - name: psa_crypto_api
 source:
 - path: library/psa_crypto_client.c
-  unless:
-  - trustzone_nonsecure
 include:
 - path: library
   file_list:

@@ -1206,6 +1206,45 @@ class Lib:
         status = elw.esl_lib_get_connection_mode()
         return (status,)
 
+    def adv_dedup_configure(
+        self,
+        enabled,
+        refresh_ms,
+        default_watchdog_ms,
+        cache_size_max,
+        period_multiplier,
+    ):
+        """Public wrapper for esl_lib_adv_dedup_configure"""
+        result = self._serialize_command(
+            "_adv_dedup_configure",
+            (
+                enabled,
+                refresh_ms,
+                default_watchdog_ms,
+                cache_size_max,
+                period_multiplier,
+            ),
+        )
+        return result[0]
+
+    def _adv_dedup_configure(
+        self,
+        enabled,
+        refresh_ms,
+        default_watchdog_ms,
+        cache_size_max,
+        period_multiplier,
+    ):
+        """Internal wrapper for esl_lib_adv_dedup_configure"""
+        cfg = elw.esl_lib_adv_dedup_config_t()
+        cfg.refresh_ms = refresh_ms
+        cfg.default_watchdog_ms = default_watchdog_ms
+        cfg.enabled = elw.ESL_LIB_TRUE if enabled else elw.ESL_LIB_FALSE
+        cfg.cache_size_max = cache_size_max
+        cfg.period_multiplier = period_multiplier
+        status = elw.esl_lib_adv_dedup_configure(byref(cfg))
+        return (status,)
+
     def general_command(self, cmd_code, data: bytes = None):
         """Public wrapper for esl_lib_general_cmd"""
         self._serialize_command("_general_command", (cmd_code, data))

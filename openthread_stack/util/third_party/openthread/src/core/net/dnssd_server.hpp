@@ -249,6 +249,24 @@ public:
      * @param[in]  aEnabled   A boolean to enable/disable forwarding DNS queries to upstream.
      */
     void SetUpstreamQueryEnabled(bool aEnabled) { mEnableUpstreamQuery = aEnabled; }
+
+    /**
+     * Returns the index of a given upstream query transaction.
+     *
+     * @param[in] aTxn  A reference to the upstream query transaction.
+     *
+     * @returns The index of @p aTxn.
+     */
+    uint8_t GetUpstreamQueryTransactionIndex(const UpstreamQueryTransaction &aTxn) const;
+
+    /**
+     * Returns the upstream query transaction at a given index.
+     *
+     * @param[in] aIndex  The transaction index.
+     *
+     * @returns A pointer to the transaction, or `nullptr` if @p aIndex is invalid.
+     */
+    UpstreamQueryTransaction *GetUpstreamQueryTransactionAt(uint8_t aIndex);
 #endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
 
     /**

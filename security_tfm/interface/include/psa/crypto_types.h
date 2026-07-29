@@ -22,8 +22,8 @@
 
 #if defined(SL_TRUSTZONE_SECURE)
 
-/* The Secure library must use the standard crypto_types.h from the mbedtls repo. */
-#include "psa/crypto_types.h"
+/* The Secure library must use the crypto_types.h from the mbedtls repo. */
+#include <include/psa/crypto_types.h>
 
 #else /* SL_TRUSTZONE_SECURE */
 

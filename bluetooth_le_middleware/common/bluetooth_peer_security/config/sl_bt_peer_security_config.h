@@ -81,6 +81,11 @@
 // <i> Default: 1
 #define SL_BT_PEER_SECURITY_REJECT_DEBUG_KEYS                1
 
+// <q SL_BT_PEER_SECURITY_REQUEST_DEBUG_KEYS> Request debug keys
+// <i> Enable to request debug keys by enabling Debug mode of Security Manager.
+// <i> Default: 0
+#define SL_BT_PEER_SECURITY_REQUEST_DEBUG_KEYS               0
+
 // <q SL_BT_PEER_SECURITY_DELETE_BONDINGS_ON_INIT> Delete all bondings on initialization
 // <i> When enabled, all bondings are erased at startup.
 // <i> Default: 0

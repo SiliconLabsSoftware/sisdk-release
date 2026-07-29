@@ -315,6 +315,8 @@ void sli_keyscan_driver_hal_stop_scan(void)
   sl_hal_keyscan_wait_sync();
 
   sl_hal_keyscan_disable();
+
+  sl_hal_keyscan_wait_ready();
 }
 
 /***************************************************************************//**

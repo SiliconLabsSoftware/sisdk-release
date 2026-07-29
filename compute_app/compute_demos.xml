@@ -1,61 +1,41 @@
 <?xml version="1.0"?>
 <demos xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.silabs.com/ss/Demo.ecore">
-  <demo name="brd2601b.demo.compute_soc_math_mvp_demo_efr32_gcc" label="Compute - SoC Math MVP EFR32">
-    <property key="demos.blurb" value="Compute - SoC Math MVP EFR32" />
+  <demo name="brd2601b.demo.compute_soc_math_mvp_demo" label="Compute - SoC Math MVP">
+    <property key="demos.blurb" value="Compute - SoC Math MVP" />
     <property key="core.partCompatibility" value=".*ef.32.g24.*" />
     <property key="core.boardCompatibility" value="brd2601b" />
-    <property key="core.readmeFiles" value="compute_soc_math_mvp_demo_efr32/readme.md" />
-    <property key="demos.imageFile" value="asset://extension.compute_6.0.0/compute_app/brd2601b/gcc/compute_soc_math_mvp_demo_efr32.s37" />
+    <property key="core.readmeFiles" value="compute_soc_math_mvp_demo/readme.md" />
+    <property key="demos.imageFile" value="asset://extension.compute_6.0.1/compute_app/brd2601b/compute_soc_math_mvp_demo.s37" />
     <property key="filters" value="Device Type|SoC MCU|32-bit\ MCU Project\ Difficulty|Advanced Capability|Compute" />
     <property key="core.quality" value="PRODUCTION" />
     <description>Demonstrates the Compute Math MVP API (vector and matrix operations).</description>
   </demo>
-  <demo name="brd2601b.demo.compute_soc_math_mvp_demo_efr32_iar" label="Compute - SoC Math MVP EFR32">
-    <property key="demos.blurb" value="Compute - SoC Math MVP EFR32" />
-    <property key="core.partCompatibility" value=".*ef.32.g24.*" />
-    <property key="core.boardCompatibility" value="brd2601b" />
-    <property key="core.readmeFiles" value="compute_soc_math_mvp_demo_efr32/readme.md" />
-    <property key="demos.imageFile" value="asset://extension.compute_6.0.0/compute_app/brd2601b/iar/compute_soc_math_mvp_demo_efr32.s37" />
+  <demo name="brd2605a.demo.compute_soc_math_mvp_demo" label="Compute - SoC Math MVP">
+    <property key="demos.blurb" value="Compute - SoC Math MVP" />
+    <property key="core.partCompatibility" value=".*" />
+    <property key="core.boardCompatibility" value="brd2605a" />
+    <property key="core.readmeFiles" value="compute_soc_math_mvp_demo/readme.md" />
+    <property key="demos.imageFile" value="asset://extension.compute_6.0.1/compute_app/brd2605a/compute_soc_math_mvp_demo.s37" />
     <property key="filters" value="Device Type|SoC MCU|32-bit\ MCU Project\ Difficulty|Advanced Capability|Compute" />
     <property key="core.quality" value="PRODUCTION" />
     <description>Demonstrates the Compute Math MVP API (vector and matrix operations).</description>
   </demo>
-  <demo name="brd2601b.demo.compute_soc_math_mvp_demo_efr32_llvm" label="Compute - SoC Math MVP EFR32">
-    <property key="demos.blurb" value="Compute - SoC Math MVP EFR32" />
-    <property key="core.partCompatibility" value=".*ef.32.g24.*" />
-    <property key="core.boardCompatibility" value="brd2601b" />
-    <property key="core.readmeFiles" value="compute_soc_math_mvp_demo_efr32/readme.md" />
-    <property key="demos.imageFile" value="asset://extension.compute_6.0.0/compute_app/brd2601b/llvm/compute_soc_math_mvp_demo_efr32.s37" />
-    <property key="filters" value="Device Type|SoC MCU|32-bit\ MCU Project\ Difficulty|Advanced Capability|Compute" />
-    <property key="core.quality" value="PRODUCTION" />
-    <description>Demonstrates the Compute Math MVP API (vector and matrix operations).</description>
-  </demo>
-  <demo name="brd2608a.demo.compute_soc_math_mvp_demo_efr32_gcc" label="Compute - SoC Math MVP EFR32">
-    <property key="demos.blurb" value="Compute - SoC Math MVP EFR32" />
+  <demo name="brd2608a.demo.compute_soc_math_mvp_demo" label="Compute - SoC Math MVP">
+    <property key="demos.blurb" value="Compute - SoC Math MVP" />
     <property key="core.partCompatibility" value=".*ef.32.g26.*" />
     <property key="core.boardCompatibility" value="brd2608a" />
-    <property key="core.readmeFiles" value="compute_soc_math_mvp_demo_efr32/readme.md" />
-    <property key="demos.imageFile" value="asset://extension.compute_6.0.0/compute_app/brd2608a/gcc/compute_soc_math_mvp_demo_efr32.s37" />
+    <property key="core.readmeFiles" value="compute_soc_math_mvp_demo/readme.md" />
+    <property key="demos.imageFile" value="asset://extension.compute_6.0.1/compute_app/brd2608a/compute_soc_math_mvp_demo.s37" />
     <property key="filters" value="Device Type|SoC MCU|32-bit\ MCU Project\ Difficulty|Advanced Capability|Compute" />
     <property key="core.quality" value="PRODUCTION" />
     <description>Demonstrates the Compute Math MVP API (vector and matrix operations).</description>
   </demo>
-  <demo name="brd2608a.demo.compute_soc_math_mvp_demo_efr32_iar" label="Compute - SoC Math MVP EFR32">
-    <property key="demos.blurb" value="Compute - SoC Math MVP EFR32" />
-    <property key="core.partCompatibility" value=".*ef.32.g26.*" />
-    <property key="core.boardCompatibility" value="brd2608a" />
-    <property key="core.readmeFiles" value="compute_soc_math_mvp_demo_efr32/readme.md" />
-    <property key="demos.imageFile" value="asset://extension.compute_6.0.0/compute_app/brd2608a/iar/compute_soc_math_mvp_demo_efr32.s37" />
-    <property key="filters" value="Device Type|SoC MCU|32-bit\ MCU Project\ Difficulty|Advanced Capability|Compute" />
-    <property key="core.quality" value="PRODUCTION" />
-    <description>Demonstrates the Compute Math MVP API (vector and matrix operations).</description>
-  </demo>
-  <demo name="brd2608a.demo.compute_soc_math_mvp_demo_efr32_llvm" label="Compute - SoC Math MVP EFR32">
-    <property key="demos.blurb" value="Compute - SoC Math MVP EFR32" />
-    <property key="core.partCompatibility" value=".*ef.32.g26.*" />
-    <property key="core.boardCompatibility" value="brd2608a" />
-    <property key="core.readmeFiles" value="compute_soc_math_mvp_demo_efr32/readme.md" />
-    <property key="demos.imageFile" value="asset://extension.compute_6.0.0/compute_app/brd2608a/llvm/compute_soc_math_mvp_demo_efr32.s37" />
+  <demo name="brd4338a.demo.compute_soc_math_mvp_demo" label="Compute - SoC Math MVP">
+    <property key="demos.blurb" value="Compute - SoC Math MVP" />
+    <property key="core.partCompatibility" value=".*ef.32.g2[468].* .*si917.* .*siwg917m111mgtba.* .*siwg917m141xgtba.* .*siwg917y111mgab.* .*siwg917y111mgnba.* .*siwg917y121mgnb.* .*siwg917m121xgtba.* .*siwg917m111xgtba.* .*siwg917m100mgtba.* .*siwg917m110lgtba.* .*siwg917y111mgnba.* .*siwg917y110lgnba.* .*siwg917y111xgnba.* .*siwg917y121mgnba.* .*siwg917y111mgaba.* .*siwg917y110lgaba.* .*siwg917y111xgaba.* .*siwg917y121mgaba.*" />
+    <property key="core.boardCompatibility" value="brd4338a" />
+    <property key="core.readmeFiles" value="compute_soc_math_mvp_demo/readme.md" />
+    <property key="demos.imageFile" value="asset://extension.compute_6.0.1/compute_app/brd4338a/compute_soc_math_mvp_demo.s37" />
     <property key="filters" value="Device Type|SoC MCU|32-bit\ MCU Project\ Difficulty|Advanced Capability|Compute" />
     <property key="core.quality" value="PRODUCTION" />
     <description>Demonstrates the Compute Math MVP API (vector and matrix operations).</description>

@@ -22,7 +22,7 @@
 //-----------------------------------------------------------------------------
 // Globals
 
-uint16_t sl_zigbee_mac_indirect_timeout = 0;
+uint16_t sl_zigbee_sleepy_target_mac_timeout_increase = 0;
 uint16_t sl_zigbee_aps_ack_timeout_ms    = 0;
 uint8_t  sl_zigbee_fragment_window_size = SL_ZIGBEE_AF_PLUGIN_FRAGMENTATION_RX_WINDOW_SIZE;
 
@@ -33,8 +33,8 @@ void sl_zigbee_af_fragmentation_ncp_init_cb(uint8_t init_level)
 {
   (void)init_level;
 
-  sl_zigbee_ezsp_get_configuration_value(SL_ZIGBEE_EZSP_CONFIG_INDIRECT_TRANSMISSION_TIMEOUT,
-                                         &sl_zigbee_mac_indirect_timeout);
+  sl_zigbee_ezsp_get_configuration_value(SL_ZIGBEE_EZSP_CONFIG_SLEEPY_TARGET_MAC_TIMEOUT_INCREASE,
+                                         &sl_zigbee_sleepy_target_mac_timeout_increase);
   sl_zigbee_ezsp_get_configuration_value(SL_ZIGBEE_EZSP_CONFIG_APS_ACK_TIMEOUT, &sl_zigbee_aps_ack_timeout_ms);
   sl_zigbee_af_set_ezsp_config_value(SL_ZIGBEE_EZSP_CONFIG_FRAGMENT_WINDOW_SIZE,
                                      sl_zigbee_fragment_window_size,

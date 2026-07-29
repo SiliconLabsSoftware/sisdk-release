@@ -145,12 +145,16 @@
 {%- if memory_ram_start is defined %}
   {%- set app_ram_start = memory_ram_start | first %}
   {%- if sram_alias_addr is defined %}
-  {%- set app_ram_alias_start = memory_ram_alias_start | first %}
+    {%- if memory_ram_alias_start is defined %}
+      {%- set app_ram_alias_start = memory_ram_alias_start | first %}
+    {%- else %}
+      {%- set app_ram_alias_start = sram_alias_addr + (app_ram_start - sram_addr) %}
+    {%- endif %}
   {%- endif %}
 {%- else %}
   {%- set app_ram_start = sram_addr %}
   {%- if sram_alias_addr is defined %}
-  {%- set app_ram_alias_start = sram_alias_addr %}
+    {%- set app_ram_alias_start = sram_alias_addr %}
   {%- endif %}
 {%- endif %}
 

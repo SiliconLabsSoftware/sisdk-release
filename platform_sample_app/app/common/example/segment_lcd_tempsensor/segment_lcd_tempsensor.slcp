@@ -35,8 +35,9 @@ ui_hints:
   highlight: readme.md
 tag:
   - hardware:component:segment_lcd_driver:cl010-1087-04
-  - hwfilter:board:hardware_board_has_segment_lcd
+  - hwfilter:board:hardware:has:segment_lcd_driver:cl010-1087-04
   - hwfilter:board:hardware_board_has_tempsensor
+  - hwfilter:!board:brd2506b
   - hwfilter:device:device_series_2
 configuration:
   - name: SL_BOARD_ENABLE_VCOM

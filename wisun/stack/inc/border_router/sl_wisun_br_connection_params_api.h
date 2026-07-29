@@ -276,14 +276,14 @@ static const sl_wisun_br_connection_params_t SL_WISUN_BR_PARAMS_PROFILE_TEST = {
   .version = SL_WISUN_BR_PARAMS_API_VERSION,
   .discovery = {
     .trickle_pa = {
-      .imin_s = 5,
+      .imin_s = 15,
       .imax_s = 60,
       .k = 3
     }
   },
   .configuration = {
     .trickle_pc = {
-      .imin_s = 5,
+      .imin_s = 15,
       .imax_s = 60,
       .k = 3
     }

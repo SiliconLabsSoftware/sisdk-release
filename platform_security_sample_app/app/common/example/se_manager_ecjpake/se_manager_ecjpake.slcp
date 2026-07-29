@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform Security - SoC SE Manager Key Agreement (ECJPAKE)
 description: >
-  This example project demonstrates the key agreement (ECJPAKE) API of SE Manager.
+  Demonstrates how to perform ECJPAKE password-authenticated key agreement between client and server peers with the SE Manager API on Secure Vault devices.
 category: Example|Platform
 filter:
   - name: "Device Type"

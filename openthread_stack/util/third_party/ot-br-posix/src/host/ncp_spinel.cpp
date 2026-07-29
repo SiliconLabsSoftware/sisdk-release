@@ -41,9 +41,14 @@
 
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
+#include "common/time.hpp"
 #include "host/posix/dnssd.hpp"
 #if OTBR_ENABLE_NAT64 && OTBR_ENABLE_NAT64_TAYGA
 #include "host/posix/nat64_tayga_host.hpp"
+#endif
+#if OTBR_ENABLE_NCP_DNS_UPSTREAM
+#include "host/ncp_upstream_dns_resolver.hpp"
+#include "lib/spinel/spinel_prop_codec.hpp"
 #endif
 #include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_decoder.hpp"
@@ -73,6 +78,9 @@ NcpSpinel::NcpSpinel(void)
 #endif
 #if OTBR_ENABLE_TREL
     , mTrelThreadUdpPort(0)
+#endif
+#if OTBR_ENABLE_NCP_DNS_UPSTREAM
+    , mDnsUpstreamResolver(nullptr)
 #endif
 {
     std::fill_n(mWaitingKeyTable, SPINEL_PROP_LAST_STATUS, sizeof(mWaitingKeyTable));
@@ -511,6 +519,7 @@ void NcpSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, ui
         mPropsObserver->SetDeviceRole(deviceRole);
 
         otbrLogInfo("Device role changed to %s", otThreadDeviceRoleToString(deviceRole));
+
         break;
     }
 
@@ -663,12 +672,43 @@ void NcpSpinel::HandleValueIs(spinel_prop_key_t aKey, const uint8_t *aBuffer, ui
         break;
     }
 
+#if OTBR_ENABLE_NCP_DNS_UPSTREAM
+    case SPINEL_PROP_DNS_UPSTREAM_RDNSS_SERVERS:
+    {
+        ot::Spinel::Decoder decoder;
+        otIp6Address        servers[NcpUpstreamDnsResolver::kMaxRecursiveServerCount];
+        uint8_t             numServers = 0;
+
+        decoder.Init(aBuffer, aLength);
+        SuccessOrExit(ot::Spinel::DecodeDnsUpstreamRdnssServers(decoder, servers, numServers,
+                                                                NcpUpstreamDnsResolver::kMaxRecursiveServerCount),
+                      error = OTBR_ERROR_PARSE);
+
+        if (mDnsUpstreamResolver != nullptr)
+        {
+            mDnsUpstreamResolver->SetRecursiveDnsServers(servers, numServers);
+            IgnoreError(DnsUpstreamSetAvailable(mDnsUpstreamResolver->IsAvailable()));
+        }
+        break;
+    }
+#endif // OTBR_ENABLE_NCP_DNS_UPSTREAM
+
 #if OTBR_ENABLE_NAT64 && OTBR_ENABLE_NAT64_TAYGA
     case SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX:
     {
         otIp6Prefix prefix;
 
-        SuccessOrExit(ParseNat64FavoredPrefix(aBuffer, aLength, prefix) == OT_ERROR_NONE, error = OTBR_ERROR_PARSE);
+        if (aLength == 0)
+        {
+            break;
+        }
+
+        if (ParseNat64FavoredPrefix(aBuffer, aLength, prefix) != OT_ERROR_NONE)
+        {
+            error = OTBR_ERROR_PARSE;
+            ExitNow();
+        }
+
         SyncNat64Tayga(prefix);
         break;
     }
@@ -889,6 +929,30 @@ void NcpSpinel::HandleValueInserted(spinel_prop_key_t aKey, const uint8_t *aBuff
         break;
     }
 #endif // OTBR_ENABLE_DNSSD_PLAT
+    case SPINEL_PROP_DNS_UPSTREAM_QUERY:
+    {
+        uint8_t        txnIndex;
+        const uint8_t *query;
+        uint16_t       queryLen;
+
+        SuccessOrExit(ot::Spinel::DecodeDnsUpstreamWireMessage(decoder, txnIndex, query, queryLen),
+                      error = OTBR_ERROR_PARSE);
+#if OTBR_ENABLE_NCP_DNS_UPSTREAM
+        if (mDnsUpstreamResolver != nullptr)
+        {
+            mDnsUpstreamResolver->Query(txnIndex, query, queryLen);
+        }
+        else
+        {
+            otbrLogWarning("DNS upstream query txn %u failed; resolver not initialized", txnIndex);
+            IgnoreError(SendDnsUpstreamResponse(txnIndex, nullptr, 0));
+        }
+#else
+        otbrLogWarning("DNS upstream query ignored (txn %u, len %u); build with OTBR_NCP_DNS_UPSTREAM=ON", txnIndex,
+                       queryLen);
+#endif
+        break;
+    }
     case SPINEL_PROP_BACKBONE_ROUTER_MULTICAST_LISTENER:
     {
         const otIp6Address *addr;
@@ -1067,6 +1131,25 @@ void NcpSpinel::HandleValueRemoved(spinel_prop_key_t aKey, const uint8_t *aBuffe
         break;
     }
 #endif // OTBR_ENABLE_DNSSD_PLAT
+    case SPINEL_PROP_DNS_UPSTREAM_CANCEL:
+    {
+        uint8_t txnIndex;
+
+        SuccessOrExit(ot::Spinel::DecodeDnsUpstreamCancel(decoder, txnIndex), error = OTBR_ERROR_PARSE);
+#if OTBR_ENABLE_NCP_DNS_UPSTREAM
+        if (mDnsUpstreamResolver != nullptr)
+        {
+            mDnsUpstreamResolver->Cancel(txnIndex);
+        }
+        else
+        {
+            otbrLogWarning("DNS upstream cancel txn %u ignored; resolver not initialized", txnIndex);
+        }
+#else
+        otbrLogWarning("DNS upstream cancel ignored (txn %u); build with OTBR_NCP_DNS_UPSTREAM=ON", txnIndex);
+#endif
+        break;
+    }
     case SPINEL_PROP_BACKBONE_ROUTER_MULTICAST_LISTENER:
     {
         const otIp6Address *addr;
@@ -1122,17 +1205,6 @@ otbrError NcpSpinel::HandleResponseForPropGet(spinel_tid_t      aTid,
         SuccessOrExit(decoder.ReadBool(enabled), error = OTBR_ERROR_PARSE);
         SuccessOrExit(decoder.ReadUint16(port), error = OTBR_ERROR_PARSE);
         SafeInvoke(mTrelStateChangedCallback, enabled, port);
-        break;
-    }
-#endif
-
-#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_NAT64_TAYGA
-    case SPINEL_PROP_BORDER_ROUTER_NAT64_FAVORED_PREFIX:
-    {
-        otIp6Prefix prefix;
-
-        SuccessOrExit(ParseNat64FavoredPrefix(aData, aLength, prefix) == OT_ERROR_NONE, error = OTBR_ERROR_PARSE);
-        SyncNat64Tayga(prefix);
         break;
     }
 #endif
@@ -1208,6 +1280,12 @@ otbrError NcpSpinel::HandleResponseForPropSet(spinel_tid_t      aTid,
         VerifyOrExit(aKey == SPINEL_PROP_LAST_STATUS, error = OTBR_ERROR_INVALID_STATE);
         SuccessOrExit(error = SpinelDataUnpack(aData, aLength, SPINEL_DATATYPE_UINT_PACKED_S, &status));
         otbrLogInfo("Infra If state update result: %s", spinel_status_to_cstr(status));
+#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_BORDER_ROUTING
+        if (status == SPINEL_STATUS_OK)
+        {
+            BorderRoutingSetNat64Enabled(true);
+        }
+#endif
         break;
 
     case SPINEL_PROP_INFRA_IF_RECV_ICMP6:
@@ -1756,13 +1834,80 @@ otbrError NcpSpinel::SetInfraIf(uint32_t aInfraIfIndex, bool aIsRunning, const s
 
     SuccessOrExit(SetProperty(SPINEL_PROP_INFRA_IF_STATE, encodingFunc), error = OTBR_ERROR_OPENTHREAD);
 
-#if OTBR_ENABLE_NAT64 && OTBR_ENABLE_BORDER_ROUTING
-    BorderRoutingSetNat64Enabled(true);
+#if OTBR_ENABLE_NCP_DNS_UPSTREAM
+    if (mDnsUpstreamResolver != nullptr)
+    {
+        EnableDnsUpstreamOnNcp();
+    }
 #endif
 
 exit:
     return error;
 }
+
+#if OTBR_ENABLE_NCP_DNS_UPSTREAM
+void NcpSpinel::SetDnsUpstreamResolver(NcpUpstreamDnsResolver *aResolver)
+{
+    mDnsUpstreamResolver = aResolver;
+
+    if (mDnsUpstreamResolver != nullptr)
+    {
+        mDnsUpstreamResolver->SetAvailabilityChangedCallback(
+            [this](bool aAvailable) { IgnoreError(DnsUpstreamSetAvailable(aAvailable)); });
+    }
+}
+
+otError NcpSpinel::SendDnsUpstreamResponse(uint8_t aTxnIndex, const uint8_t *aData, uint16_t aLength)
+{
+    otError      error        = OT_ERROR_NONE;
+    EncodingFunc encodingFunc = [aTxnIndex, aData, aLength](ot::Spinel::Encoder &aEncoder) {
+        return ot::Spinel::EncodeDnsUpstreamWireMessage(aEncoder, aTxnIndex, aData, aLength);
+    };
+
+    error = SetProperty(SPINEL_PROP_DNS_UPSTREAM_RESPONSE, encodingFunc);
+    if (error != OT_ERROR_NONE)
+    {
+        otbrLogWarning("Failed to send DNS upstream response (txn %u): %s", aTxnIndex, otThreadErrorToString(error));
+    }
+
+    return error;
+}
+
+otError NcpSpinel::DnsUpstreamSetEnabled(bool aEnabled)
+{
+    otError      error        = OT_ERROR_NONE;
+    EncodingFunc encodingFunc = [aEnabled](ot::Spinel::Encoder &aEncoder) { return aEncoder.WriteBool(aEnabled); };
+
+    error = SetProperty(SPINEL_PROP_DNS_UPSTREAM_ENABLED, encodingFunc);
+    if (error != OT_ERROR_NONE)
+    {
+        otbrLogWarning("Failed to set DNS upstream enabled (%d): %s", aEnabled, otThreadErrorToString(error));
+    }
+
+    return error;
+}
+
+otError NcpSpinel::DnsUpstreamSetAvailable(bool aAvailable)
+{
+    otError      error        = OT_ERROR_NONE;
+    EncodingFunc encodingFunc = [aAvailable](ot::Spinel::Encoder &aEncoder) { return aEncoder.WriteBool(aAvailable); };
+
+    error = SetProperty(SPINEL_PROP_DNS_UPSTREAM_AVAILABLE, encodingFunc);
+    if (error != OT_ERROR_NONE)
+    {
+        otbrLogWarning("Failed to set DNS upstream available (%d): %s", aAvailable, otThreadErrorToString(error));
+    }
+
+    return error;
+}
+
+void NcpSpinel::EnableDnsUpstreamOnNcp(void)
+{
+    mDnsUpstreamResolver->RefreshDnsServers();
+    IgnoreError(DnsUpstreamSetEnabled(true));
+    IgnoreError(DnsUpstreamSetAvailable(mDnsUpstreamResolver->IsAvailable()));
+}
+#endif // OTBR_ENABLE_NCP_DNS_UPSTREAM
 
 otbrError NcpSpinel::HandleIcmp6Nd(uint32_t          aInfraIfIndex,
                                    const Ip6Address &aIp6Address,

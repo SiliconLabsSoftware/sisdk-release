@@ -1,81 +1,94 @@
-# SE Manager Symmetric Key Handling
+# Platform Security - SoC SE Manager Symmetric Key Handling
 
-This example uses the SE Manager API to perform symmetric key handling on the supported device.
+Demonstrates how to generate, import, export, wrap, and transfer AES and custom-size symmetric keys with SE Manager on Secure Vault devices.
 
-In this example, SE Manager is used to generate a custom size symmetric key or a standard symmetric key for use with AES.
+## Table of Contents
 
-The example redirects standard I/O to the virtual serial port (VCOM) of the kit. By default, the serial port setting is 115200 bps and 8-N-1 configuration.
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-The example has been instrumented with code to count the number of clock cycles spent in different operations. The results are printed on the VCOM serial port console. This feature can be disabled by defining `SE_MANAGER_PRINT=0` (default is 1) in the IDE setting (`Preprocessor->Defined symbols`).
+## Purpose / Scope
 
-## Getting Started
+This interactive example demonstrates **symmetric key lifecycle** operations with SE Manager: generate keys in RAM or the SE, wrap keys for storage, import/export round-trips, and transfer keys between wrapped buffers and volatile SE slots.
+Output and **clock-cycle counts** appear on **VCOM** (`SE_MANAGER_PRINT=1` by default).
 
-1. Upgrade the kit’s firmware to the latest version (see `Adapter Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in the Simplicity Studio 5 User's Guide).
-2. Upgrade the device’s SE firmware to the latest version (see `Secure Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in the Simplicity Studio 5 User's Guide).
-3. Open any terminal program and connect to the kit’s VCOM port (if using `Device Console` in Simplicity Studio 5, `Line terminator:` must be set to `None`).
-4. Create this platform example project in the Simplicity IDE (see [Examples](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-getting-started/start-a-project#examples) in the Simplicity Studio 5 User's Guide).
-5. Build the example and download it to the kit (see [Simple Build](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/building#simple-build) and [Flash Programmer](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/flashing#flash-programmer) in the Simplicity Studio 5 User's Guide).
-6. Run the example and follow the instructions shown on the console.
+### Key lengths (menu)
 
-## Additional Information
+| Selection | Size |
+|-----------|------|
+| **Custom** | 28 bytes (`CUSTOM_KEY_SIZE` in `app_se_manager_symmetric_key_handling.h`) |
+| **AES-128** | 16 bytes |
+| **AES-192** | 24 bytes |
+| **AES-256** | 32 bytes |
+Use **SPACE** to cycle length, **ENTER** to run the sequence for that length.
 
-1. The default optimization level is `Optimize for debugging (-Og)` on Simplicity IDE and `None` on IAR Embedded Workbench.
+### Operations by vault level
 
-### Key Type
+**Secure Vault Mid**
+- Generate a **plaintext** symmetric key in RAM → return to menu
+**Secure Vault High** (full sequence per run)
+1. **Plain key** — `sl_se_generate_key`
+2. **Import / export** — import plain → wrapped, export wrapped → plain, **memcmp** verify
+3. **Wrapped key** — generate non-exportable wrapped key
+4. **Volatile key** — generate in SE slot, then **delete**
+5. **Transfer** — wrapped → volatile slot → wrapped, then delete volatile slot → return to menu
+Plaintext, wrapped, and volatile paths match the key types described in AN1271 (Secure Key Storage).
+**Requires:** `device_has_semailbox`.
+**Related examples:** `se_manager_block_cipher`, `se_manager_stream_cipher` (use symmetric keys for crypto); `se_manager_asymmetric_key_handling` (ECC key patterns).
 
-The following key types are supported in this example:
+### SE Manager APIs exercised
 
-* Plaintext key in RAM
-* Wrapped key in RAM (Secure Vault High only)
-* Volatile key in SE (Secure Vault High only)
+`sl_se_init`, `sl_se_deinit`, `sl_se_init_command_context`, `sl_se_deinit_command_context`, `sl_se_validate_key`, `sl_se_get_storage_size`, `sl_se_generate_key`, and on **Vault High**: `sl_se_import_key`, `sl_se_export_key`, `sl_se_delete_key`, `sl_se_transfer_key`.
 
-### Key Size
+## Prerequisites / Setup Requirements
 
-The following key sizes are supported in this example:
+### Hardware Requirements
 
-* AES-128 (16 bytes)
-* AES-192 (24 bytes)
-* AES-256 (32 bytes)
-* Custom (28 bytes in this example)
+- Secure Vault kit with SE mailbox.
+- USB for programming and VCOM.
+- **AEM** power when programming.
 
-### SE Manager API
+### Software Requirements
 
-The following SE Manager APIs are used in this example:
+- **Simplicity Studio 5**, latest adapter and **SE firmware**.
+- VCOM: **115200** 8-N-1, line terminator **None** (Device Console).
 
-* `sl_se_init`
-* `sl_se_deinit`
-* `sl_se_init_command_context`
-* `sl_se_deinit_command_context`
-* `sl_se_validate_key`
-* `sl_se_get_storage_size`
-* `sl_se_generate_key`
-* `sl_se_import_key` (Secure Vault High only)
-* `sl_se_export_key` (Secure Vault High only)
-* `sl_se_delete_key` (Secure Vault High only)
-* `sl_se_transfer_key` (Secure Vault High only)
+## Steps to Run Demo
+
+1. Build, flash, and open VCOM (115200 8-N-1, line terminator **None**).
+2. Reset and use the menu:
+| Input | Action |
+|-------|--------|
+| **SPACE** | Cycle key length (Custom / AES-128 / AES-192 / AES-256) |
+| **ENTER** | Run the operation sequence for the selected length |
+3. On **Vault High**, watch each subsection (plain → import/export → wrapped → volatile → transfer) complete with **OK** on the export compare step.
+4. When finished, the app returns to the key-length menu for another run.
+
+### Optional: disable timing prints
+
+Define **`SE_MANAGER_PRINT=0`** in preprocessor symbols.
 
 ## Troubleshooting
 
-### Serial Port Settings
-
-Be sure to select the following settings to see the serial output of this example:
-
-* 115200 Baud Rate 
-* 8-N-1 configuration
-* Line terminator should be set to "None" if using Device Console in Simplicity Studio
-
-### Programming the Radio Board
-
-Before programming the radio board mounted on the mainboard, make sure the power supply switch is in the AEM position (right side) as shown below.
-
-![Radio board power supply switch](image/readme_img0.png)
+| Symptom | What to check |
+|--------|----------------|
+| No serial output | VCOM settings; `SL_BOARD_ENABLE_VCOM=1` |
+| Import/export compare **Failed** | Key type or length mismatch; buffer size (`KEY_BUF_SIZE`) |
+| Volatile slot errors | Prior run left slot occupied — delete step should run first |
+| Transfer failures | Vault **Mid** — transfer APIs are High-only |
+| Custom size issues | Must use `SL_SE_KEY_TYPE_SYMMETRIC` with 28-byte custom path |
+| Garbled console | Line terminator **None** in Device Console |
 
 ## Resources
 
-[SE Manager API](https://docs.silabs.com/gecko-platform/latest/service/api/group-sl-se-manager)
-
-[AN1271: Secure Key Storage](https://www.silabs.com/documents/public/application-notes/an1271-efr32-secure-key-storage.pdf)
+- [SE Manager API documentation](https://docs.silabs.com/gecko-platform/latest/service/api/group-sl-se-manager)
+- [AN1271: Secure Key Storage](https://www.silabs.com/documents/public/application-notes/an1271-efr32-secure-key-storage.pdf)
+- [SE Manager key handling API](https://docs.silabs.com/gecko-platform/latest/service/api/group-sl-se-manager-key-handling)
 
 ## Report Bugs & Get Support
 
-You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://community.silabs.com/).
+You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://www.silabs.com/community).

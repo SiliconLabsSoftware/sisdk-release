@@ -1,0 +1,47 @@
+id: bluetooth_agents_host
+label: Bluetooth host agents.md contributions
+package: bluetooth_le_host
+description: >
+  Bluetooth Host API usage contributions for agents.md
+quality: evaluation
+provides:
+- name: bluetooth_agents_host
+template_contribution:
+- name: agents_slab
+  condition:
+  - bluetooth_feature_advertiser
+  priority: -5300
+  value:
+    id: bluetooth_feature_advertiser
+    context: |
+      # Bluetooth Host for Silicon Labs Series2 and Series3 Devices
+      This provides Bluetooth Host that can be used via BGAPI commands / function calls.
+      ## Features
+      ### Advertising
+      To start advertising whether it is legacy or extended or periodic call:
+      - `sl_bt_advertiser_create_set()`
+      - [optional] `sl_bt_advertiser_configure()`
+      - [optional] `sl_bt_advertiser_set_timing()`
+      - [optional] `sl_bt_advertiser_set_tx_power()`
+      #### Legacy Advertising
+      After creating a set, start legacy advertising by calling:
+      - `sl_bt_legacy_advertiser_set_data()` or `sl_bt_legacy_advertiser_generate_data()`
+      - `sl_bt_legacy_advertiser_start()` or `sl_bt_legacy_advertiser_start_directed()`
+      #### Extended Advertising
+      After creating a set, start extended advertising by calling:
+      - `sl_bt_extended_advertiser_set_data()` or `sl_bt_extended_advertiser_set_long_data()` or
+        `sl_bt_extended_advertiser_generate_data()`
+      - [optional] `sl_bt_extended_advertiser_set_phy()`
+      - `sl_bt_extended_advertiser_start()` or `sl_bt_extended_advertiser_start_directed()`
+      #### Periodic Advertising
+      After creating a set, start periodic advertising by calling:
+      - `sl_bt_periodic_advertiser_set_data()` or `sl_bt_periodic_advertiser_set_long_data()`
+      - `sl_bt_periodic_advertiser_start()`
+
+ui_hints:
+  visibility: never
+
+metadata:
+  sbom:
+    license: MSLA
+root_path: bluetooth_le_host

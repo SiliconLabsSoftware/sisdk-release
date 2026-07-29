@@ -429,6 +429,7 @@ private:
     void ProcessTxtResolvers(const std::string &aType, const Mdns::Publisher::DiscoveredInstanceInfo &aInfo);
     void ProcessIpAddrResolvers(const std::string &aHostName, const Mdns::Publisher::DiscoveredHostInfo &aInfo);
     void ReplayResolvedHostAddressesIfAny(const DnsName &aDnsName);
+    void ReplayResolvedServiceTxtIfAny(const DnsServiceName &aServiceName);
 
     void StartAddressResolver(const AddressResolver &aAddressResolver, AddressCallbackPtr aCallbackPtr);
     void StopAddressResolver(const AddressResolver &aAddressResolver, const AddressCallback &aCallback);
@@ -454,10 +455,11 @@ private:
     std::map<DnsServiceName, EntryList<TxtEntry>>    mTxtResolversMap;
     std::map<DnsName, EntryList<AddressEntry>>       mIpAddrResolversMap;
 
-    std::set<DnsServiceType>                               mServiceTypeSubscriptions;
-    std::set<DnsServiceName>                               mServiceNameSubscriptions;
-    std::set<DnsName>                                      mHostSubscriptions;
-    std::map<DnsName, Mdns::Publisher::DiscoveredHostInfo> mResolvedHostInfoCache;
+    std::set<DnsServiceType>                                          mServiceTypeSubscriptions;
+    std::set<DnsServiceName>                                          mServiceNameSubscriptions;
+    std::set<DnsName>                                                 mHostSubscriptions;
+    std::map<DnsName, Mdns::Publisher::DiscoveredHostInfo>            mResolvedHostInfoCache;
+    std::map<DnsServiceName, Mdns::Publisher::DiscoveredInstanceInfo> mResolvedServiceInfoCache;
 };
 
 } // namespace otbr

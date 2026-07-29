@@ -1,9 +1,9 @@
 // File: ezsp-enum.h
 //
 // *** Generated file. Do not edit! ***
-// 
+//
 // Description: Enumerations for EZSP.
-// 
+//
 // Copyright 2007 by Ember Corporation. All rights reserved.                *80*
 
 #ifndef __EZSP_ENUM_H__
@@ -345,9 +345,12 @@ enum {
   // Controls whether devices must use an install code when joining.
   SL_ZIGBEE_EZSP_VALUE_JOIN_USE_INSTALL_CODE_ENABLE = 0x48,
   // The stack revision.
-  SL_ZIGBEE_EZSP_VALUE_STACK_REVISION           = 0x49
+  SL_ZIGBEE_EZSP_VALUE_STACK_REVISION           = 0x49,
+  // The extra milliseconds added to the APS retry and Fragmentation retry
+  // timeout for known sleepy destinations.
+  SL_ZIGBEE_EZSP_CONFIG_SLEEPY_TARGET_MAC_TIMEOUT_INCREASE = 0x50
 };
-#define SL_ZIGBEE_EZSP_VALUE_ID_MAX  0x49
+#define SL_ZIGBEE_EZSP_VALUE_ID_MAX  0x50
 
 //------------------------------------------------------------------------------
 // Identifies a value based on specified characteristics. Each set of
@@ -751,7 +754,6 @@ enum {
 // Frame IDs
 
 enum {
-
 // Configuration Frames
   SL_ZIGBEE_EZSP_VERSION                        = 0x0000,
   SL_ZIGBEE_EZSP_GET_CONFIGURATION_VALUE        = 0x0052,
@@ -1125,4 +1127,3 @@ enum {
 };
 
 #endif // __EZSP_ENUM_H__
-

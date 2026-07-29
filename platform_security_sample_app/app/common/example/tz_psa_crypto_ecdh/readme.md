@@ -1,9 +1,12 @@
 # TrustZone PSA Crypto ECDH (Workspace and Secure Application)
 
-Demonstrates how to build a TrustZone-split PSA Crypto ECDH key-agreement application as a unified workspace, combining the Secure and Non-secure halves into one image.
+## High-Level Overview
+
+Demonstrates how to build a TrustZone-split PSA Crypto ECDH key-agreement application, in a platform security TrustZone SoC workspace combining the Secure and Non-secure halves into one image.
 
 ## Table of Contents
 
+- [High-Level Overview](#high-level-overview)
 - [Purpose / Scope](#purpose--scope)
 - [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
 - [Steps to Run Demo](#steps-to-run-demo)

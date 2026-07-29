@@ -71,6 +71,7 @@ static const char *sli_zigbee_cli_phy_config_name(sl_rail_util_radio_config_t ph
     case SL_RAIL_IEEE802154_PHY_2P4_GHZ_FEM_ANT_DIV_COEX:   return "2P4_GHZ_FEM_ANT_DIV_COEX";
     case SL_RAIL_IEEE802154_PHY_2P4_GHZ_2_MBPS:             return "2P4_GHZ_2_MBPS";
     case SL_RAIL_IEEE802154_PHY_2P4_GHZ_RX_CH_SWITCHING:    return "2P4_GHZ_RX_CH_SWITCHING";
+    case SL_RAIL_IEEE802154_PHY_2P4_GHZ_RX_DUTY_CYCLING:   return "2P4_GHZ_RX_DUTY_CYCLING";
     case SL_RAIL_IEEE802154_PHY_2P4_GHZ_1_MBPS_FEC:         return "2P4_GHZ_1_MBPS_FEC";
     case SL_RAIL_IEEE802154_PHY_2P4_GHZ_FCS_2_MBPS:         return "2P4_GHZ_FCS_2_MBPS";
     case SL_RAIL_IEEE802154_PHY_2P4_GHZ_FCS_1_MBPS_FEC:     return "2P4_GHZ_FCS_1_MBPS_FEC";

@@ -79,6 +79,7 @@ enum sl_rtl_error_code{
   SL_RTL_ERROR_CS_CHANNEL_SPACING_TOO_LARGE, ///< Channel spacing is too large in the proposed channel map
   SL_RTL_ERROR_POOR_INPUT_DATA_QUALITY, ///< The input data quality is poor
   SL_RTL_ERROR_QUEUE_FULL, ///< The RTL task's input queue is full
+  SL_RTL_ERROR_LIKELINESS_BELOW_THRESHOLD, ///< The estimate likeliness is below the configured threshold
 
   SL_RTL_ERROR_LAST ///< Number of error codes
 };
@@ -932,6 +933,16 @@ typedef enum  {
   SL_RTL_REF_TX_POWER =         3,    /**< Reference RSSI value of the
                                             TX-device at 1.0 m distance in dBm.
                                             Default value is -45.0 dBm. */
+  SL_RTL_LIKELINESS_THRESHOLD = 4,    /**< Minimum acceptable likeliness for an
+                                            estimate, i.e. the lower limit for the
+                                            ::SL_RTL_CS_DISTANCE_ESTIMATE_CONFIDENCE_TYPE_LIKELINESS
+                                            confidence value. Estimates whose
+                                            likeliness falls below this threshold
+                                            are rejected: the estimation call
+                                            returns ::SL_RTL_ERROR_LIKELINESS_BELOW_THRESHOLD
+                                            and the estimate is discarded instead
+                                            of being passed on to post-filtering.
+                                            Range: 0.0 to 1.0. */
 } sl_rtl_cs_estimator_param_type;
 
 typedef PACKSTRUCT (union {
@@ -939,6 +950,7 @@ typedef PACKSTRUCT (union {
   float range_min;
   float range_max;
   float ref_tx_power;
+  float likeliness_threshold;
 }) sl_rtl_cs_estimator_param_value;
 
 typedef PACKSTRUCT (struct {

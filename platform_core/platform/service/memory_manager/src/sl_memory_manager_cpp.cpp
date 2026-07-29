@@ -29,6 +29,7 @@
  ******************************************************************************/
 
 #include <cstddef>
+#include <new>
 
 #include "sl_memory_manager.h"
 #include "sl_assert.h"
@@ -104,17 +105,24 @@ sl_memory_preinit sl_memory_preinit_obj;
 
 //--------------------------------------------------------------------------
 // GLOBAL C++ NEW/DELETE OVERLOAD
+//
+// All replaceable global allocation/deallocation functions are overloaded so
+// that every C++ allocation path (scalar, array, nothrow, and aligned) is
+// routed to the Memory Manager. Defining the complete set is required for
+// toolchains (e.g. LLVM/libc++) that resolve the array, nothrow and aligned
+// overloads independently instead of delegating to the scalar operator new.
+// Leaving any of them undefined would let the weak libc implementations win
+// and bypass the Memory Manager.
 
 /***************************************************************************//**
- * Overloaded new operator.
- * Allocates a memory block of at least requested size from the heap.
+ * Routes a C++ new allocation to the Memory Manager.
  *
  * @param[in]  size   Size of the block, in bytes.
  *
  * @return    Pointer to allocated block if successful. Null pointer if
  *            allocation failed.
  ******************************************************************************/
-void *operator new(size_t size)
+static inline void *sli_cpp_new_alloc(size_t size)
 {
   void *block = NULL;
   sl_status_t status;
@@ -128,13 +136,38 @@ void *operator new(size_t size)
   return block;
 }
 
+#if defined(__cpp_aligned_new)
 /***************************************************************************//**
- * Overloaded delete operator used for single object allocations.
- * Frees a previously allocated block back into the heap.
+ * Routes a C++ aligned new allocation to the Memory Manager.
+ *
+ * @param[in]  size    Size of the block, in bytes.
+ * @param[in]  align   Required alignment for the block, in bytes.
+ *
+ * @return    Pointer to allocated block if successful. Null pointer if
+ *            allocation failed.
+ ******************************************************************************/
+static inline void *sli_cpp_new_alloc_aligned(size_t size,
+                                              size_t align)
+{
+  void *block = NULL;
+  sl_status_t status;
+
+  status = sl_memory_alloc_advanced(size, align, BLOCK_TYPE_LONG_TERM, (void **)&block);
+  if (status != SL_STATUS_OK) {
+    // Convert C NULL pointer to C++ dedicated type.
+    block = nullptr;
+  }
+
+  return block;
+}
+#endif
+
+/***************************************************************************//**
+ * Routes a C++ delete deallocation to the Memory Manager.
  *
  * @param[in] ptr   Pointer to memory block to be freed.
  ******************************************************************************/
-void operator delete(void *ptr)
+static inline void sli_cpp_delete_free(void *ptr)
 {
   sl_status_t status;
 
@@ -145,19 +178,168 @@ void operator delete(void *ptr)
 }
 
 /***************************************************************************//**
+ * Overloaded new operator used for single object allocations.
+ * Allocates a memory block of at least requested size from the heap.
+ *
+ * @param[in]  size   Size of the block, in bytes.
+ *
+ * @return    Pointer to allocated block if successful. Null pointer if
+ *            allocation failed.
+ ******************************************************************************/
+void *operator new(size_t size)
+{
+  return sli_cpp_new_alloc(size);
+}
+
+/***************************************************************************//**
+ * Overloaded new operator used for array of objects allocations.
+ * Allocates a memory block of at least requested size from the heap.
+ *
+ * @param[in]  size   Size of the block, in bytes.
+ *
+ * @return    Pointer to allocated block if successful. Null pointer if
+ *            allocation failed.
+ ******************************************************************************/
+void *operator new[](size_t size)
+{
+  return sli_cpp_new_alloc(size);
+}
+
+/***************************************************************************//**
+ * Overloaded nothrow new operator used for single object allocations.
+ * Allocates a memory block of at least requested size from the heap.
+ *
+ * @param[in]  size         Size of the block, in bytes.
+ * @param[in]  nothrow_tag  Non-throwing allocation tag (std::nothrow). Unused;
+ *                          present only to select this overload.
+ *
+ * @return    Pointer to allocated block if successful. Null pointer if
+ *            allocation failed.
+ ******************************************************************************/
+void *operator new(size_t size,
+                   const std::nothrow_t &nothrow_tag) noexcept
+{
+  (void)nothrow_tag;
+
+  return sli_cpp_new_alloc(size);
+}
+
+/***************************************************************************//**
+ * Overloaded nothrow new operator used for array of objects allocations.
+ * Allocates a memory block of at least requested size from the heap.
+ *
+ * @param[in]  size         Size of the block, in bytes.
+ * @param[in]  nothrow_tag  Non-throwing allocation tag (std::nothrow). Unused;
+ *                          present only to select this overload.
+ *
+ * @return    Pointer to allocated block if successful. Null pointer if
+ *            allocation failed.
+ ******************************************************************************/
+void *operator new[](size_t size,
+                     const std::nothrow_t &nothrow_tag) noexcept
+{
+  (void)nothrow_tag;
+
+  return sli_cpp_new_alloc(size);
+}
+
+#if defined(__cpp_aligned_new)
+/***************************************************************************//**
+ * Overloaded aligned new operator used for single object allocations.
+ * Allocates an aligned memory block of at least requested size from the heap.
+ *
+ * @param[in]  size    Size of the block, in bytes.
+ * @param[in]  align   Required alignment for the block, in bytes.
+ *
+ * @return    Pointer to allocated block if successful. Null pointer if
+ *            allocation failed.
+ ******************************************************************************/
+void *operator new(size_t size,
+                   std::align_val_t align)
+{
+  return sli_cpp_new_alloc_aligned(size, static_cast<size_t>(align));
+}
+
+/***************************************************************************//**
+ * Overloaded aligned new operator used for array of objects allocations.
+ * Allocates an aligned memory block of at least requested size from the heap.
+ *
+ * @param[in]  size    Size of the block, in bytes.
+ * @param[in]  align   Required alignment for the block, in bytes.
+ *
+ * @return    Pointer to allocated block if successful. Null pointer if
+ *            allocation failed.
+ ******************************************************************************/
+void *operator new[](size_t size,
+                     std::align_val_t align)
+{
+  return sli_cpp_new_alloc_aligned(size, static_cast<size_t>(align));
+}
+
+/***************************************************************************//**
+ * Overloaded aligned nothrow new operator used for single object allocations.
+ * Allocates an aligned memory block of at least requested size from the heap.
+ *
+ * @param[in]  size         Size of the block, in bytes.
+ * @param[in]  align        Required alignment for the block, in bytes.
+ * @param[in]  nothrow_tag  Non-throwing allocation tag (std::nothrow). Unused;
+ *                          present only to select this overload.
+ *
+ * @return    Pointer to allocated block if successful. Null pointer if
+ *            allocation failed.
+ ******************************************************************************/
+void *operator new(size_t size,
+                   std::align_val_t align,
+                   const std::nothrow_t &nothrow_tag) noexcept
+{
+  (void)nothrow_tag;
+
+  return sli_cpp_new_alloc_aligned(size, static_cast<size_t>(align));
+}
+
+/***************************************************************************//**
+ * Overloaded aligned nothrow new operator used for array of objects
+ * allocations.
+ * Allocates an aligned memory block of at least requested size from the heap.
+ *
+ * @param[in]  size         Size of the block, in bytes.
+ * @param[in]  align        Required alignment for the block, in bytes.
+ * @param[in]  nothrow_tag  Non-throwing allocation tag (std::nothrow). Unused;
+ *                          present only to select this overload.
+ *
+ * @return    Pointer to allocated block if successful. Null pointer if
+ *            allocation failed.
+ ******************************************************************************/
+void *operator new[](size_t size,
+                     std::align_val_t align,
+                     const std::nothrow_t &nothrow_tag) noexcept
+{
+  (void)nothrow_tag;
+
+  return sli_cpp_new_alloc_aligned(size, static_cast<size_t>(align));
+}
+#endif
+
+/***************************************************************************//**
+ * Overloaded delete operator used for single object allocations.
+ * Frees a previously allocated block back into the heap.
+ *
+ * @param[in] ptr   Pointer to memory block to be freed.
+ ******************************************************************************/
+void operator delete(void *ptr) noexcept
+{
+  sli_cpp_delete_free(ptr);
+}
+
+/***************************************************************************//**
  * Overloaded delete operator used for array of objects allocations.
  * Frees a previously allocated block back into the heap.
  *
  * @param[in] ptr   Pointer to memory block to be freed.
  ******************************************************************************/
-void operator delete[](void *ptr)
+void operator delete[](void *ptr) noexcept
 {
-  sl_status_t status;
-
-  status = sl_memory_free(ptr);
-  if (status != SL_STATUS_OK) {
-    EFM_ASSERT(false);
-  }
+  sli_cpp_delete_free(ptr);
 }
 
 /***************************************************************************//**
@@ -182,16 +364,11 @@ void operator delete[](void *ptr)
  *       that doesn't have a suitable operator delete.
  ******************************************************************************/
 void operator delete(void *ptr,
-                     size_t size)
+                     size_t size) noexcept
 {
-  sl_status_t status;
-
   (void)size;
 
-  status = sl_memory_free(ptr);
-  if (status != SL_STATUS_OK) {
-    EFM_ASSERT(false);
-  }
+  sli_cpp_delete_free(ptr);
 }
 
 /***************************************************************************//**
@@ -202,14 +379,150 @@ void operator delete(void *ptr,
  * @param[in] size  Size of block to be freed, in bytes.
  ******************************************************************************/
 void operator delete[](void *ptr,
-                       size_t size)
+                       size_t size) noexcept
 {
-  sl_status_t status;
-
   (void)size;
 
-  status = sl_memory_free(ptr);
-  if (status != SL_STATUS_OK) {
-    EFM_ASSERT(false);
-  }
+  sli_cpp_delete_free(ptr);
 }
+
+/***************************************************************************//**
+ * Overloaded nothrow delete operator used for single object allocations.
+ * Frees a previously allocated block back into the heap.
+ *
+ * @param[in] ptr          Pointer to memory block to be freed.
+ * @param[in] nothrow_tag  Non-throwing allocation tag (std::nothrow). Unused;
+ *                         present only to match the nothrow new overload.
+ ******************************************************************************/
+void operator delete(void *ptr,
+                     const std::nothrow_t &nothrow_tag) noexcept
+{
+  (void)nothrow_tag;
+
+  sli_cpp_delete_free(ptr);
+}
+
+/***************************************************************************//**
+ * Overloaded nothrow delete operator used for array of objects allocations.
+ * Frees a previously allocated block back into the heap.
+ *
+ * @param[in] ptr          Pointer to memory block to be freed.
+ * @param[in] nothrow_tag  Non-throwing allocation tag (std::nothrow). Unused;
+ *                         present only to match the nothrow new overload.
+ ******************************************************************************/
+void operator delete[](void *ptr,
+                       const std::nothrow_t &nothrow_tag) noexcept
+{
+  (void)nothrow_tag;
+
+  sli_cpp_delete_free(ptr);
+}
+
+#if defined(__cpp_aligned_new)
+/***************************************************************************//**
+ * Overloaded aligned delete operator used for single object allocations.
+ * Frees a previously allocated block back into the heap.
+ *
+ * @param[in] ptr     Pointer to memory block to be freed.
+ * @param[in] align   Alignment of the block being freed, in bytes.
+ ******************************************************************************/
+void operator delete(void *ptr,
+                     std::align_val_t align) noexcept
+{
+  (void)align;
+
+  sli_cpp_delete_free(ptr);
+}
+
+/***************************************************************************//**
+ * Overloaded aligned delete operator used for array of objects allocations.
+ * Frees a previously allocated block back into the heap.
+ *
+ * @param[in] ptr     Pointer to memory block to be freed.
+ * @param[in] align   Alignment of the block being freed, in bytes.
+ ******************************************************************************/
+void operator delete[](void *ptr,
+                       std::align_val_t align) noexcept
+{
+  (void)align;
+
+  sli_cpp_delete_free(ptr);
+}
+
+/***************************************************************************//**
+ * Overloaded sized aligned delete operator used for single object allocations.
+ * Frees a previously allocated block back into the heap.
+ *
+ * @param[in] ptr     Pointer to memory block to be freed.
+ * @param[in] size    Size of block to be freed, in bytes.
+ * @param[in] align   Alignment of the block being freed, in bytes.
+ ******************************************************************************/
+void operator delete(void *ptr,
+                     size_t size,
+                     std::align_val_t align) noexcept
+{
+  (void)size;
+  (void)align;
+
+  sli_cpp_delete_free(ptr);
+}
+
+/***************************************************************************//**
+ * Overloaded sized aligned delete operator used for array of objects
+ * allocations.
+ * Frees a previously allocated block back into the heap.
+ *
+ * @param[in] ptr     Pointer to memory block to be freed.
+ * @param[in] size    Size of block to be freed, in bytes.
+ * @param[in] align   Alignment of the block being freed, in bytes.
+ ******************************************************************************/
+void operator delete[](void *ptr,
+                       size_t size,
+                       std::align_val_t align) noexcept
+{
+  (void)size;
+  (void)align;
+
+  sli_cpp_delete_free(ptr);
+}
+
+/***************************************************************************//**
+ * Overloaded aligned nothrow delete operator used for single object
+ * allocations.
+ * Frees a previously allocated block back into the heap.
+ *
+ * @param[in] ptr          Pointer to memory block to be freed.
+ * @param[in] align        Alignment of the block being freed, in bytes.
+ * @param[in] nothrow_tag  Non-throwing allocation tag (std::nothrow). Unused;
+ *                         present only to match the nothrow new overload.
+ ******************************************************************************/
+void operator delete(void *ptr,
+                     std::align_val_t align,
+                     const std::nothrow_t &nothrow_tag) noexcept
+{
+  (void)align;
+  (void)nothrow_tag;
+
+  sli_cpp_delete_free(ptr);
+}
+
+/***************************************************************************//**
+ * Overloaded aligned nothrow delete operator used for array of objects
+ * allocations.
+ * Frees a previously allocated block back into the heap.
+ *
+ * @param[in] ptr          Pointer to memory block to be freed.
+ * @param[in] align        Alignment of the block being freed, in bytes.
+ * @param[in] nothrow_tag  Non-throwing allocation tag (std::nothrow). Unused;
+ *                         present only to match the nothrow new overload.
+ ******************************************************************************/
+void operator delete[](void *ptr,
+                       std::align_val_t align,
+                       const std::nothrow_t &nothrow_tag) noexcept
+{
+  (void)align;
+  (void)nothrow_tag;
+
+  sli_cpp_delete_free(ptr);
+}
+#endif

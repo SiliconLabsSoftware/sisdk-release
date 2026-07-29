@@ -87,7 +87,7 @@
  ********************************************************************************************************
  *******************************************************************************************************/
 
-// <q CPU_CFG_TS_64_EN> Cache Management
+// <q CPU_CFG_CACHE_MGMT_EN> Cache Management
 // <i> Enable the cache management function.
 // <i> Caches are assumed to be configured and enabled by the time CPU_init() is called.
 // <i> Default: 0

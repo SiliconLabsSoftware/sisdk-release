@@ -40,6 +40,7 @@ set(COMMON_SOURCES
     ncp_spi.cpp
     ncp_hdlc.cpp
     platform/dnssd.cpp
+    platform/dns.cpp
     platform/infra_if.cpp
     platform/border_routing.cpp
 )

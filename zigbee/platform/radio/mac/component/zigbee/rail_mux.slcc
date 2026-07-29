@@ -22,6 +22,7 @@ include:
   file_list:
   - path: sl_rail_mux.h
   - path: sl_rail_mux_rename.h
+  - path: rail_mux_tokens.h
 
 source:
 - path: platform/radio/mac/rail_mux/sl_rail_mux.c
@@ -39,6 +40,12 @@ template_contribution:
     include: sl_rail_mux.h
     handler: sli_rail_mux_local_init
   priority: -9999
+- name: event_handler
+  value:
+    event: stack_init
+    include: sl_rail_mux.h
+    handler: sli_rail_mux_stack_init_callback
+  priority: -8910
 - name: rail_util_ieee802154_phy_select_callbacks
   value:
     include: sl_rail_mux.h

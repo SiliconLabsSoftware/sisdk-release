@@ -540,5 +540,73 @@ exit:
     return error;
 }
 
+otError EncodeDnsUpstreamWireMessage(Encoder &aEncoder, uint8_t aTxnIndex, const uint8_t *aData, uint16_t aDataLength)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = aEncoder.WriteUint8(aTxnIndex));
+    SuccessOrExit(error = aEncoder.WriteUint16(aDataLength));
+    VerifyOrExit(aDataLength > 0, error = OT_ERROR_INVALID_ARGS);
+    SuccessOrExit(error = aEncoder.WriteData(aData, aDataLength));
+
+exit:
+    return error;
+}
+
+otError DecodeDnsUpstreamWireMessage(Decoder        &aDecoder,
+                                     uint8_t        &aTxnIndex,
+                                     const uint8_t *&aData,
+                                     uint16_t       &aDataLength)
+{
+    otError error = OT_ERROR_NONE;
+    SuccessOrExit(error = aDecoder.ReadUint8(aTxnIndex));
+    SuccessOrExit(error = aDecoder.ReadUint16(aDataLength));
+    VerifyOrExit(aDataLength == aDecoder.GetRemainingLengthInStruct(), error = OT_ERROR_PARSE);
+    SuccessOrExit(error = aDecoder.ReadData(aData, aDataLength));
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        aData = nullptr;
+    }
+    return error;
+}
+
+otError DecodeDnsUpstreamCancel(Decoder &aDecoder, uint8_t &aTxnIndex) { return aDecoder.ReadUint8(aTxnIndex); }
+
+otError EncodeDnsUpstreamRdnssServers(Encoder &aEncoder, const otIp6Address *aServers, uint8_t aNumServers)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = aEncoder.WriteUint8(aNumServers));
+
+    for (uint8_t i = 0; i < aNumServers; i++)
+    {
+        SuccessOrExit(error = aEncoder.WriteIp6Address(aServers[i]));
+    }
+
+exit:
+    return error;
+}
+
+otError DecodeDnsUpstreamRdnssServers(Decoder      &aDecoder,
+                                      otIp6Address *aServers,
+                                      uint8_t      &aNumServers,
+                                      uint8_t       aMaxServers)
+{
+    otError error = OT_ERROR_NONE;
+
+    aNumServers = 0;
+    SuccessOrExit(error = aDecoder.ReadUint8(aNumServers));
+    VerifyOrExit(aNumServers <= aMaxServers, error = OT_ERROR_PARSE);
+
+    for (uint8_t i = 0; i < aNumServers; i++)
+    {
+        SuccessOrExit(error = aDecoder.ReadIp6Address(aServers[i]));
+    }
+
+exit:
+    return error;
+}
+
 } // namespace Spinel
 } // namespace ot

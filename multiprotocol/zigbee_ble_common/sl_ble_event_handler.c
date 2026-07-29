@@ -21,22 +21,89 @@
 #include "app/framework/include/af.h"
 
 #include "sl_bluetooth.h"
-#include "sl_bluetooth_advertiser_config.h"
-#include "sl_bluetooth_connection_config.h"
 #ifdef SL_COMPONENT_CATALOG_PRESENT
 #include "sl_component_catalog.h"
 #endif
+#ifdef SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
+#include "sl_zigbee_debug_print.h"
+#endif // SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
+#include "sl_ble_event_handler.h"
+
+#include "gatt_db.h"
+#ifdef gattdb_light_state
+#include "sl_bluetooth_advertiser_config.h"
+#include "sl_bluetooth_connection_config.h"
 #ifdef SL_CATALOG_ZIGBEE_DISPLAY_PRESENT
 #include "sl_dmp_ui.h"
 #else
 #include "sl_dmp_ui_stub.h"
 #endif // SL_CATALOG_ZIGBEE_DISPLAY_PRESENT
+#endif // gattdb_light_state
 
-#include "gatt_db.h"
+static void sli_ble_log_gatt_uuid(const uint8_t *data, uint8_t len)
+{
 #ifdef SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
-#include "sl_zigbee_debug_print.h"
+  uint8_t i;
+  sl_zigbee_app_debug_print("UUID=[");
+  for (i = 0; i < len; i++) {
+    sl_zigbee_app_debug_print("%02X", data[i]);
+  }
+  sl_zigbee_app_debug_println("]");
+#else
+  (void)data;
+  (void)len;
 #endif // SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
-#include "sl_ble_event_handler.h"
+}
+
+bool sli_ble_handle_gatt_client_log_event(sl_bt_msg_t *evt)
+{
+  switch (SL_BT_MSG_ID(evt->header)) {
+    case sl_bt_evt_gatt_service_id: {
+#ifdef SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
+      sl_bt_evt_gatt_service_t *service_evt =
+        (sl_bt_evt_gatt_service_t *)&(evt->data);
+      sl_zigbee_app_debug_println(
+        "GATT service, conn_handle=0x%02x, service_handle=0x%04x",
+        service_evt->connection,
+        service_evt->service);
+      sli_ble_log_gatt_uuid(service_evt->uuid.data, service_evt->uuid.len);
+#endif // SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
+      return true;
+    }
+
+    case sl_bt_evt_gatt_characteristic_id: {
+#ifdef SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
+      sl_bt_evt_gatt_characteristic_t *ch_evt =
+        (sl_bt_evt_gatt_characteristic_t *)&(evt->data);
+      sl_zigbee_app_debug_println(
+        "GATT characteristic, conn=0x%02x, char_handle=0x%04x, properties=0x%02x",
+        ch_evt->connection,
+        ch_evt->characteristic,
+        ch_evt->properties);
+      sli_ble_log_gatt_uuid(ch_evt->uuid.data, ch_evt->uuid.len);
+#endif // SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
+      return true;
+    }
+
+    case sl_bt_evt_gatt_procedure_completed_id: {
+#ifdef SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
+      const sl_bt_evt_gatt_procedure_completed_t *proc_evt =
+        (const sl_bt_evt_gatt_procedure_completed_t *)&(evt->data);
+      sl_zigbee_app_debug_println(
+        "GATT procedure completed, conn=0x%02x, result=0x%04x (%s)",
+        proc_evt->connection,
+        proc_evt->result,
+        (proc_evt->result == SL_STATUS_OK) ? "ok" : "error");
+#endif // SL_CATALOG_ZIGBEE_DEBUG_PRINT_PRESENT
+      return true;
+    }
+
+    default:
+      return false;
+  }
+}
+
+#ifdef gattdb_light_state
 
 sl_zigbee_af_event_t               attr_write_event;
 #define attrWriteEvent          (&attr_write_event)
@@ -819,48 +886,11 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
     }
     break;
 
-    case sl_bt_evt_gatt_service_id: {
-      sl_bt_evt_gatt_service_t* service_evt =
-        (sl_bt_evt_gatt_service_t*) &(evt->data);
-      uint8_t i;
-      sl_zigbee_app_debug_println(
-        "GATT service, conn_handle=0x%02x, service_handle=0x%04x",
-        service_evt->connection, service_evt->service);
-      sl_zigbee_app_debug_print("UUID=[");
-      for (i = 0; i < service_evt->uuid.len; i++) {
-        sl_zigbee_app_debug_print("%02X", service_evt->uuid.data[i]);
-      }
-      sl_zigbee_app_debug_println("]");
-    }
-    break;
-
-    case sl_bt_evt_gatt_characteristic_id: {
-      sl_bt_evt_gatt_characteristic_t *ch_evt =
-        (sl_bt_evt_gatt_characteristic_t *)&(evt->data);
-      uint8_t i;
-      sl_zigbee_app_debug_println(
-        "GATT characteristic, conn=0x%02x, char_handle=0x%04x, properties=0x%02x",
-        ch_evt->connection,
-        ch_evt->characteristic,
-        ch_evt->properties);
-      sl_zigbee_app_debug_print("UUID=[");
-      for (i = 0; i < ch_evt->uuid.len; i++) {
-        sl_zigbee_app_debug_print("%02X", ch_evt->uuid.data[i]);
-      }
-      sl_zigbee_app_debug_println("]");
-    }
-    break;
-
-    case sl_bt_evt_gatt_procedure_completed_id: {
-      const sl_bt_evt_gatt_procedure_completed_t *proc_evt =
-        (const sl_bt_evt_gatt_procedure_completed_t *)&(evt->data);
-      sl_zigbee_app_debug_println(
-        "GATT procedure completed, conn=0x%02x, result=0x%04x (%s)",
-        proc_evt->connection,
-        proc_evt->result,
-        (proc_evt->result == SL_STATUS_OK) ? "ok" : "error");
-    }
-    break;
+    case sl_bt_evt_gatt_service_id:
+    case sl_bt_evt_gatt_characteristic_id:
+    case sl_bt_evt_gatt_procedure_completed_id:
+      (void)sli_ble_handle_gatt_client_log_event(evt);
+      break;
 
     default:
       break;
@@ -911,3 +941,12 @@ void zb_ble_dmp_print_ble_connections()
     }
   }
 }
+
+#else // gattdb_light_state
+
+void sli_ble_application_init(uint8_t init_level)
+{
+  (void)init_level;
+}
+
+#endif // gattdb_light_state

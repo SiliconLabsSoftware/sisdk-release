@@ -1,0 +1,47 @@
+id: psa_crypto_api_nonsecure
+package: security_tfm
+label: PSA Crypto API (TrustZone Non-Secure)
+description: >-
+  This component provides the public PSA Crypto API header files for the
+  TrustZone Non-Secure side. It is the Non-Secure counterpart of the
+  mbedtls component `psa_crypto_api`. The supporting `mbedtls/*.h`
+  headers (notably `mbedtls/md.h` and `mbedtls/private_access.h`) come
+  from `mbedtls_crypto_platform_api`.
+
+  Components used on the Non-Secure side of TrustZone should require this
+  component instead of the mbedtls `psa_crypto_api`. The mbedtls
+  `psa_crypto_api` is for `trustzone_secure` and `trustzone_unaware`
+  builds and declares a conflict with `trustzone_nonsecure`.
+category: Platform|Security|TrustZone
+quality: production
+ui_hints:
+  visibility: never
+provides:
+- name: psa_crypto_api_nonsecure
+# Symmetric with mbedtls `psa_crypto_api` which conflicts trustzone_nonsecure;
+# this NS counterpart must not be loaded on secure or unaware builds.
+conflicts:
+- name: trustzone_secure
+- name: trustzone_unaware
+requires:
+- name: psa_crypto_adjust_config
+- name: mbedtls_crypto_platform_api
+- name: psa_crypto_config
+include:
+- path: interface/include
+  file_list:
+  - path: psa/crypto.h
+  - path: psa/crypto_client_struct.h
+  - path: psa/crypto_compat.h
+  - path: psa/crypto_driver_contexts_composites.h
+  - path: psa/crypto_driver_contexts_primitives.h
+  - path: psa/crypto_extra.h
+  - path: psa/crypto_platform.h
+  - path: psa/crypto_sizes.h
+  - path: psa/crypto_struct.h
+  - path: psa/crypto_types.h
+  - path: psa/crypto_values.h
+metadata:
+  sbom:
+    reference: tfm_sbom
+root_path: security_tfm

@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform Security - SoC SE Manager Secure Debug
 description: >
-  This example project demonstrates the secure debug API of SE Manager.
+  Demonstrates how to enable secure debug, apply debug lock, and unlock the interface with a signed access certificate using SE Manager APIs on Secure Vault devices.
 category: Example|Platform
 filter:
   - name: "Device Type"

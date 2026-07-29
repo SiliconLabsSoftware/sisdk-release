@@ -90,6 +90,10 @@ extern "C" {
 /** @brief Round n up to closest interval of i. */
 #define SL_CEILING(n, i)   ((((n) + (i) - 1U) / (i)) * (i))
 
+/** @brief Round n up to closest power of 2 (unsigned 32-bit). */
+#define SL_CEILING_POW2_U32(n) \
+  ((n) <= 1u ? 1u : (1u << (32u - __builtin_clz((unsigned)((n) - 1u)))))
+
 /** @brief Round n down to closest interval of i. */
 #define SL_FLOOR(n, i) ((n / i) * i)
 

@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform Security - SoC mbedTLS ECDH
 description: >
-  This example uses hardware accelerators of the supported devices to perform ECDH key generation with mbedTLS.
+  Demonstrates how to perform ECDH key agreement between two peers with mbedTLS on SECP256R1 or SECP192R1, reporting hardware-accelerated key generation and shared-secret timing over UART.
 category: Example|Platform
 filter:
   - name: "Device Type"
@@ -13,7 +13,6 @@ filter:
   - name: "Project Difficulty"
     value: ["Advanced"]
 source:
-   - path: main.c
    - path: app.c
    - path: app_ecdh.c
    - path: dummy_entropy.c
@@ -38,7 +37,7 @@ component:
    - id: mbedtls_slcrypto
    - id: mbedtls_ecc_secp192r1
    - id: mbedtls_ecc_secp256r1
-   - id: sl_system
+   - id: sl_main
    - id: sleeptimer
    - id: device_init
    - id: clock_manager

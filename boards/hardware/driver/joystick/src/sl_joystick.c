@@ -30,7 +30,7 @@
 
 #include "sl_joystick.h"
 #include "em_device.h"
-#if defined(_SILICON_LABS_32B_SERIES_3)
+#if defined(ADC_PRESENT)
 #include "sl_hal_adc.h"
 #include "sl_device_peripheral.h"
 #include "sl_device_clock.h"
@@ -136,7 +136,7 @@ sl_status_t sl_joystick_init(sl_joystick_t *joystick_handle)
 {
   sl_status_t status = SL_STATUS_OK;
 
-#if defined(_SILICON_LABS_32B_SERIES_2)
+#if defined(IADC_PRESENT)
   // Declare initialization structures
   IADC_Init_t init = IADC_INIT_DEFAULT;
   IADC_AllConfigs_t initAllConfigs = IADC_ALLCONFIGS_DEFAULT;
@@ -250,7 +250,7 @@ void sl_joystick_start(sl_joystick_t *joystick_handle)
 
   joystick_handle->state = SL_JOYSTICK_ENABLED;
 
-#if defined(_SILICON_LABS_32B_SERIES_2)
+#if defined(IADC_PRESENT)
   IADC_command(IADC0, iadcCmdEnableTimer);
 
   /*
@@ -276,7 +276,7 @@ void sl_joystick_stop(sl_joystick_t *joystick_handle)
 
   joystick_handle->state = SL_JOYSTICK_DISABLED;
 
-#if defined(_SILICON_LABS_32B_SERIES_2)
+#if defined(IADC_PRESENT)
   IADC_command(IADC0, iadcCmdDisableTimer);
 #else
   sl_hal_adc_disable_timer(ADC0);
@@ -297,7 +297,7 @@ sl_status_t sl_joystick_get_position(sl_joystick_t *joystick_handle, sl_joystick
     return SL_STATUS_NOT_READY;
   }
 
-#if defined(_SILICON_LABS_32B_SERIES_2)
+#if defined(IADC_PRESENT)
   // Read most recent single conversion result
   IADC_Result_t sample = IADC_readSingleResult(IADC0);
 #else

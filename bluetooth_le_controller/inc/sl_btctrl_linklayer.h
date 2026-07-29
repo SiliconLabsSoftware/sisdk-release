@@ -290,6 +290,8 @@ void sl_btctrl_init_phy(void);
 
 void sl_btctrl_init_adv_ext(void);
 
+void sli_ll_hci_sniff_init(void);
+
 /**
  * Set the advertiser address or tx power to be used for all advertisers
  * @param adv_config The advertiser configuration.

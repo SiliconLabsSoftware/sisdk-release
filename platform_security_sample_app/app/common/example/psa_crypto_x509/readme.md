@@ -1,9 +1,12 @@
 # PSA Crypto X.509
 
-Demonstrates how to create CSRs, build a root-and-device X.509 certificate chain, and verify it with Mbed TLS, using opaque ECDSA keys from the PSA Crypto API.
+## High-Level Overview
+
+Demonstrates how to create CSRs, build a root-and-device X.509 certificate chain, and verify it with Mbed TLS, in a platform security SoC example using opaque ECDSA keys from the PSA Crypto API.
 
 ## Table of Contents
 
+- [High-Level Overview](#high-level-overview)
 - [Purpose / Scope](#purpose--scope)
 - [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
 - [Steps to Run Demo](#steps-to-run-demo)

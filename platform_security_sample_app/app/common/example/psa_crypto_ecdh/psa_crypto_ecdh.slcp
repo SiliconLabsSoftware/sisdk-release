@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform Security - SoC PSA Crypto ECDH
 description: >
-  Demonstrates how to perform ECDH key agreement between two peers with the PSA Crypto API, exercising SECP and Montgomery (X25519/X448) curves.
+  Demonstrates how to perform ECDH key agreement between two peers with the PSA Crypto API, in a platform security SoC example exercising SECP and Montgomery (X25519/X448) curves.
 category: Example|Platform
 filter:
   - name: "Device Type"

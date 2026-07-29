@@ -8,6 +8,8 @@ ui_hints:
   visibility: never
 provides:
 - name: tfm_tz_sl_interface
+requires:
+- name: tfm_crypto_defs
 include:
 - path: ../
   condition:
@@ -16,7 +18,6 @@ include:
   unless:
   - tz_service_common
   file_list:
-  - path: tfm_crypto_defs.h
   - path: tfm_api.h
   - path: psa_config.h
   - path: psa/client.h

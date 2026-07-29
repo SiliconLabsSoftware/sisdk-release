@@ -1,102 +1,117 @@
-# SE Manager Key Provisioning
+# Platform Security - SoC SE Manager Key Provisioning
 
-This example uses the SE Manager API to perform the key provisioning and OTP initialization on the supported device.
+Demonstrates how to provision SE OTP keys (AES-128, public sign/command) and secure-boot or tamper configuration with the SE Manager APIs on Secure Vault devices.
 
-The following items can be programmed to the SE OTP:
+## Table of Contents
 
-* `Tamper (Secure Vault High only) and secure boot configuration`
-* `AES-128 key (HSE only)`
-* `Public sign key`
-* `Public command key`
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-The AES-128 key (`encrypt-unsafe-key.prv`) in binary format, the corresponding private sign key (`rootsign-unsafe-privkey.pem`), and private command key (`cmd-unsafe-privkey.pem`) in PEM format can be found in the Windows folder below.
+## Purpose / Scope
 
-*C:\SiliconLabs\SimplicityStudio\v5\developer\adapter\_packs\secmgr\scripts\offline*
+This example demonstrates **one-time programming** of Secure Engine **OTP** content using SE Manager provisioning APIs. Output is on the kit **VCOM** port, with **clock-cycle counts** when `SE_MANAGER_PRINT=1` (default).
+After reset, the application:
+1. Reads the **SE firmware version**
+2. Reads current **OTP configuration** (and **tamper** settings on Secure Vault High)
+3. Optionally programs (in order, each step skippable with **SPACE**):
+   - **128-bit AES key** in OTP (**HSE** devices only — not VSE)
+   - **Public sign key** (boot immutable key)
+   - **Public command key** (auth immutable key)
+   - **OTP initialization** for **secure boot** (and **tamper** on Vault High)
+Embedded test keys match the Silicon Labs offline provisioning scripts (`encrypt-unsafe-key.prv`, `rootsign-unsafe-privkey.pem`, `cmd-unsafe-privkey.pem` under the SE Manager pack `scripts/offline` folder in Simplicity Studio).
 
-The AES-128 key (`encrypt-unsafe-key.prv`) in text format is:
+### What can be provisioned
 
-`81a5e21fa15286f1df445c2cc120fa3f`
+| Item | Device support |
+|------|----------------|
+| **Tamper + secure boot OTP config** | Secure Vault **High** |
+| **Secure boot OTP config** (no tamper) | Secure Vault **Mid** |
+| **AES-128 OTP key** | **HSE** only |
+| **Public sign key** | HSE / VSE |
+| **Public command key** | HSE / VSE |
 
-The public key of `rootsign-unsafe-privkey.pem` in text format is:
+### Critical warning
 
-`X - C4AF4AC69AAB9512DB50F7A26AE5B4801183D85417E729A56DA974F4E08A562C`
+Programming OTP keys and OTP configuration is **one-time only** and **irrevocable** for the life of the device. Provisioning **fails** if the slot was already written. Use **development boards** only, with a recovery plan.
+On **VSE** (`CRYPTOACC_PRESENT`), several operations trigger a **device reset**; results are read after reset via `sl_se_read_executed_command` and `sl_se_ack_command`.
+**Components used:** `se_manager`, `sl_main`, `device_init`, `clock_manager`, VCOM stdio retargeting.
 
-`Y - DE6019DEA9411332DC1A743372D170B436238A34597C410EA177024DE20FC819`
+### SE Manager APIs exercised
 
-The public key of `cmd-unsafe-privkey.pem` in text format is:
+`sl_se_init`, `sl_se_deinit`, `sl_se_init_command_context`, `sl_se_deinit_command_context`, `sl_se_get_se_version`, `sl_se_read_otp`, `sl_se_read_pubkey`, `sl_se_init_otp_key`, `sl_se_init_otp`, `sl_se_aes_crypt_ecb`, and on VSE: `sl_se_read_executed_command`, `sl_se_ack_command`.
 
-`X - B1BC6F6FA56640ED522B2EE0F5B3CF7E5D48F60BE8148F0DC08440F0A4E1DCA4`
+## Prerequisites / Setup Requirements
 
-`Y - 7C04119ED6A1BE31B7707E5F9D001A659A051003E95E1B936F05C37EA793AD63`
+### Hardware Requirements
 
-The example redirects standard I/O to the virtual serial port (VCOM) of the kit. By default, the serial port setting is 115200 bps and 8-N-1 configuration.
+- A **Secure Vault** development kit (see board compatibility for `se_manager_key_provisioning` / `se_manager_key_provisioning_s3`).
+- **AEM** power when programming (see image below).
+- USB for programming and VCOM.
 
-The example has been instrumented with code to count the number of clock cycles spent in different operations. The results are printed on the VCOM serial port console. This feature can be disabled by defining `SE_MANAGER_PRINT=0` (default is 1) in the IDE setting (`Preprocessor->Defined symbols`).
 
-## Getting Started
+### Software Requirements
 
-1. Upgrade the kit’s firmware to the latest version (see `Adapter Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in the Simplicity Studio 5 User's Guide).
-2. Upgrade the device’s SE firmware to the latest version (see `Secure Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in the Simplicity Studio 5 User's Guide).
-3. Open any terminal program and connect to the kit’s VCOM port (if using `Device Console` in Simplicity Studio 5, `Line terminator:` must be set to `None`).
-4. Create this platform example project in the Simplicity IDE (see [Examples](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-getting-started/start-a-project#examples) in the Simplicity Studio 5 User's Guide).
-5. Build the example and download it to the kit (see [Simple Build](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/building#simple-build) and [Flash Programmer](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/flashing#flash-programmer) in the Simplicity Studio 5 User's Guide).
-6. Run the example and follow the instructions shown on the console.
+- **Simplicity Studio 5** with SE Manager offline scripts (optional reference keys under `secmgr` pack `scripts/offline`).
+- VCOM: **115200** 8-N-1, line terminator **None** (Device Console).
+- Latest **adapter** and **SE firmware**.
 
-## Additional Information
+### Before you run
 
-1. The key cannot be read if it has not been provisioned.
-2. The key provisioning and OTP initialization will fail if the key and OTP had already been provisioned and initialized.
-3. The secure boot cannot be enabled if the public sign key has not been provisioned.
-4. For a device with VSE, a reset will be issued when running specified SE Manager APIs.
-5. **Warning:** Loading the tamper and secure boot configuration, AES-128 key, public sign key and public command key into the SE OTP are a **ONE-TIME-ONLY** process. These assignment operations are irrevocable and persist for the life of the device.
-6. The default optimization level is `Optimize for debugging (-Og)` on Simplicity IDE and `None` on IAR Embedded Workbench.
+- Understand which items are already provisioned (read-only steps show current OTP state).
+- **Disconnect the debugger** if your flow requires it for OTP programming on your target.
+- Do **not** run full provisioning on units you cannot afford to brick or misconfigure.
 
-### SE Manager API
+## Steps to Run Demo
 
-The following SE Manager APIs are used in this example:
+1. Flash this example on a **development** Secure Vault board.
+2. Open VCOM (115200 8-N-1, line terminator **None**).
+3. Reset and follow the serial log.
 
-* `sl_se_init`
-* `sl_se_deinit`
-* `sl_se_init_command_context`
-* `sl_se_deinit_command_context`
-* `sl_se_get_se_version`
-* `sl_se_read_otp`
-* `sl_se_read_pubkey`
-* `sl_se_init_otp_key`
-* `sl_se_init_otp`
-* `sl_se_aes_crypt_ecb`
-* `sl_se_read_executed_command` (VSE only)
-* `sl_se_ack_command` (VSE only)
+### Interactive flow
+
+- **ENTER (CR)** — confirm the next provisioning step (after warning text).
+- **SPACE** — skip the current optional step.
+Typical sequence:
+1. View SE version and read OTP/tamper configuration.
+2. **AES-128 key (HSE):** ENTER twice to confirm, or SPACE to skip → verify with AES-ECB encrypt vs. expected ciphertext.
+3. **Public sign key:** ENTER to provision, or SPACE to skip → read back public key bytes.
+4. **Public command key:** same pattern.
+5. **OTP init:** ENTER to apply secure boot (and tamper on Vault High), or SPACE to exit.
+On **VSE**, expect **reset** between program/read operations; continue from post-reset log messages.
+
+### Reference key material (offline scripts)
+
+Example AES-128 key (hex): `81a5e21fa15286f1df445c2cc120fa3f`
+Public coordinates for sign/command keys are embedded in `app_process.c` and documented in the original readme; match your `rootsign-unsafe-privkey.pem` / `cmd-unsafe-privkey.pem` when regenerating firmware.
+
+### Optional: disable timing prints
+
+Define **`SE_MANAGER_PRINT=0`** in preprocessor symbols.
 
 ## Troubleshooting
 
-### Serial Port Settings
-
-Be sure to select the following settings to see the serial output of this example:
-
-* 115200 Baud Rate 
-* 8-N-1 configuration
-* Line terminator should be set to "None" if using Device Console in Simplicity Studio
-
-### Programming the Radio Board
-
-Before programming the radio board mounted on the mainboard, make sure the power supply switch is in the AEM position (right side) as shown below.
-
-![Radio board power supply switch](image/readme_img0.png)
-
+| Symptom | What to check |
+|--------|----------------|
+| No serial output | VCOM settings; `SL_BOARD_ENABLE_VCOM=1` |
+| Init OTP / key **failed** | Slot may already be provisioned (one-time only) |
+| Cannot read public key | Key not provisioned yet — run init step first |
+| Secure boot enable blocked | Public sign key must be provisioned first |
+| AES key step missing | **HSE** only — not available on VSE path |
+| Tamper config missing | **Secure Vault High** only |
+| Unexpected reset | Normal on **VSE** during program operations |
+| AES verify **Failed** | Wrong key already in OTP or wrong device family |
+| Programming fails | AEM switch position |
 
 ## Resources
 
-[SE Manager API](https://docs.silabs.com/gecko-platform/latest/service/api/group-sl-se-manager)
-
-[AN1190: Series 2 Secure Debug](https://www.silabs.com/documents/public/application-notes/an1190-efr32-secure-debug.pdf)
-
-[AN1218: Series 2 Secure Boot with RTSL](https://www.silabs.com/documents/public/application-notes/an1218-secure-boot-with-rtsl.pdf)
-
-[AN1222: Production Programming of Series 2 Devices](https://www.silabs.com/documents/public/application-notes/an1222-efr32xg2x-production-programming.pdf)
-
-[AN1247: Anti-Tamper Protection Configuration and Use](https://www.silabs.com/documents/public/application-notes/an1247-efr32-secure-vault-tamper.pdf)
+- [SE Manager API documentation](https://docs.silabs.com/gecko-platform/latest/service/api/group-sl-se-manager)
+- [AN1222: Production Programming of Series 2 Devices](https://www.silabs.com/documents/public/application-notes/an1222-efr32xg2x-production-programming.pdf)
+- [AN1218: Series 2 Secure Boot with RTSL](https://www.silabs.com/documents/public/application-notes/an1218-secure-boot-with-rtsl.pdf)
 
 ## Report Bugs & Get Support
 
-You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://community.silabs.com/).
+You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://www.silabs.com/community).

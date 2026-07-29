@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ASCII"?>
-<device:XMLDevice xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:device="http://www.silabs.com/ss/hwconfig/document/device.ecore" contextId="com.silabs.sdk.stack.sisdk">
+<device:XMLDevice xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:device="http://www.silabs.com/ss/hwconfig/document/device.ecore" contextId="com.silabs.sdk.stack.simplicity_sdk">
   <mode name="DefaultMode">
     <property object="BTL_BUTTON" propertyId="BTL_BUTTON.BSP_BTL_BUTTON.PIN" value="PF6"/>
     <property object="BUTTON" propertyId="BUTTON.BSP_BUTTON0.PIN" value="PF6"/>

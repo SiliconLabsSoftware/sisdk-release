@@ -125,7 +125,7 @@ tag:
   - toolchain:llvm
 
 readme:
-  - path: ./README.md
+  - path: ./readme-mp-zb-ot-ble-rcp-uart.md
 
 filter:
   - name: "Wireless Technology"
@@ -139,5 +139,5 @@ filter:
 
 ui_hints:
   highlight:
-    - path: ./README.md
+    - path: ./readme-mp-zb-ot-ble-rcp-uart.md
       focus: true

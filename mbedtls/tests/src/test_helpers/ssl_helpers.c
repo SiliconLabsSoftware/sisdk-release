@@ -1393,7 +1393,7 @@ int mbedtls_test_ssl_build_transforms(mbedtls_ssl_transform *t_in,
         memset(md1, 0x6, maclen);
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-        alg = mbedtls_md_psa_alg_from_type(hash_id);
+        alg = mbedtls_md_psa_alg_from_type((mbedtls_md_type_t) hash_id);
 
         CHK(alg != 0);
 
@@ -1568,7 +1568,7 @@ int mbedtls_test_ssl_build_transforms(mbedtls_ssl_transform *t_in,
 #endif /* MBEDTLS_SSL_DTLS_CONNECTION_ID */
 
 #if defined(MBEDTLS_USE_PSA_CRYPTO)
-    status = mbedtls_ssl_cipher_to_psa(cipher_type,
+    status = mbedtls_ssl_cipher_to_psa((mbedtls_cipher_type_t) cipher_type,
                                        t_in->taglen,
                                        &alg,
                                        &key_type,

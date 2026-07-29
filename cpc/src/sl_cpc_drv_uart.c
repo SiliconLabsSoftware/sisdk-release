@@ -363,6 +363,12 @@ static sl_status_t uart_drv_hw_init(sli_cpc_drv_t *drv)
     init.advanced_config = &advancedSettings;
     sl_hal_eusart_init_uart_hf(SL_CPC_DRV_UART_PERIPHERAL, &init);
 
+    #if (SL_CPC_DRV_UART_FLOW_CONTROL_TYPE == WITH_HWFC)
+    // De-assert RTS while there is still room for two more frames in the RX FIFO
+    SL_CPC_DRV_UART_PERIPHERAL->CFG1 = ((SL_CPC_DRV_UART_PERIPHERAL->CFG1 & ~_EUSART_CFG1_RTSRXFW_MASK)
+                                        | EUSART_CFG1_RTSRXFW_TWOFRAMES);
+    #endif
+
   #elif defined(SL_CPC_DRV_PERIPH_IS_USART)
     sl_hal_usart_async_init_t init = SL_HAL_USART_INIT_ASYNC_DEFAULT;
     #if (SL_CPC_DRV_UART_FLOW_CONTROL_TYPE == WITHOUT_HWFC)
@@ -386,8 +392,6 @@ static sl_status_t uart_drv_hw_init(sli_cpc_drv_t *drv)
     // Discard false frames and/or IRQs
     SL_CPC_DRV_UART_PERIPHERAL->CMD = USART_CMD_CLEARRX | USART_CMD_CLEARTX;
   #endif
-    // Enable peripheral
-    cpc_uart_enable(SL_CPC_DRV_UART_PERIPHERAL);
   }
   // Configure GPIO pin routes
   {
@@ -440,6 +444,9 @@ static sl_status_t uart_drv_hw_init(sli_cpc_drv_t *drv)
   #endif
   #endif
   }
+
+  // Enable peripheral now that GPIOs (pin modes and routes) are configured
+  cpc_uart_enable(SL_CPC_DRV_UART_PERIPHERAL);
 
   // Init DMA
   {

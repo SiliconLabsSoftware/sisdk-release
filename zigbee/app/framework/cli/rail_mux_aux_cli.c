@@ -25,6 +25,7 @@
 #include "sl_rail.h"
 #ifdef SL_CATALOG_RAIL_MULTIPLEXER_PRESENT
 #include "sl_rail_mux_rename.h"
+#include "sl_rail_mux.h"
 #endif
 
 #if defined(SL_CATALOG_CLI_PRESENT)
@@ -244,6 +245,32 @@ void sl_zigbee_cli_rail_mux_aux_raw_rx_off(sl_cli_command_arg_t *arguments)
   (void)arguments;
   sli_rail_mux_aux_cli_disarm_tx_rx_observers();
   sl_zigbee_af_cli_println("aux_raw_rx_cb:off aux_tx_complete_cb:off");
+}
+
+void sl_zigbee_cli_rail_mux_aux_rxdc_phy_select_get(sl_cli_command_arg_t *arguments)
+{
+  (void)arguments;
+#if defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT) \
+  && defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
+  sl_zigbee_af_cli_println("mux_rxdc_phy_select:%u",
+                           sl_rail_mux_get_rx_duty_cycling_phy_select_enabled() ? 1U : 0U);
+#else
+  sl_zigbee_af_cli_println("mux_rxdc_phy_select:unsupported");
+#endif
+}
+
+void sl_zigbee_cli_rail_mux_aux_rxdc_phy_select_set(sl_cli_command_arg_t *arguments)
+{
+  uint8_t enable = sl_cli_get_argument_uint8(arguments, 0);
+#if defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT) \
+  && defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
+  sl_rail_mux_set_rx_duty_cycling_phy_select_enabled(enable != 0U);
+  sl_zigbee_af_cli_println("mux_rxdc_phy_select:%u",
+                           sl_rail_mux_get_rx_duty_cycling_phy_select_enabled() ? 1U : 0U);
+#else
+  (void)enable;
+  sl_zigbee_af_cli_println("mux_rxdc_phy_select:unsupported");
+#endif
 }
 
 #endif // SL_CATALOG_CLI_PRESENT

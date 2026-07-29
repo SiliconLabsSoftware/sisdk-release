@@ -1,9 +1,9 @@
 /***************************************************************************//**
  * @file
- * @brief UART implementation for windows platform
+ * @brief UART implementation for Windows platform
  *******************************************************************************
  * # License
- * <b>Copyright 2018 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -28,18 +28,21 @@
  *
  ******************************************************************************/
 
+#include <windows.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdbool.h>
-#include <windows.h>
-#include <winbase.h>
-#include <errno.h>
+#include <string.h>
 
 #include "uart.h"
 
 #if _WIN32 != 1 && __CYGWIN__ != 1
 #error "**** Unsupported OS! This UART driver works on Windows and Cygwin only! ****"
 #endif // _WIN32 != 1 && __CYGWIN__ != 1
+
+#ifndef CBR_230400
+  #define CBR_230400 230400
+#endif // CBR_230400
 
 #ifndef CBR_460800
   #define CBR_460800 460800
@@ -49,370 +52,548 @@
   #define CBR_921600 921600
 #endif // CBR_921600
 
+// Brief wait after asserting RTS so a blocked target can finish boot-event TX.
+#define UART_BRINGUP_SETTLE_MS  5
+
 // -----------------------------------------------------------------------------
 // Local Variables
+// Internal handle structure
+typedef struct uart_handle_s uart_handle_t;
 
-static struct {
-  uint32_t cbaud;
-  uint32_t nspeed;
-} speedTab[] = {
-  { CBR_300, 300    },
-  { CBR_1200, 1200   },
-  { CBR_2400, 2400   },
-  { CBR_4800, 4800   },
-  { CBR_9600, 9600   },
-  { CBR_19200, 19200  },
-  { CBR_38400, 38400  },
-  { CBR_57600, 57600  },
-  { CBR_115200, 115200 },
-  { CBR_256000, 256000 },
-  { CBR_460800, 460800 },
-  { CBR_921600, 921600 },
-  { 0, 0 }
+struct uart_handle_s {
+  HANDLE hComm;
+  HANDLE hRxEvent;
+  HANDLE hStopEvent;
+  HANDLE hThread;
+  uart_rx_callback_t cb;
+  void *cb_user;
+  int32_t timeout_ms;
+  uint32_t baud_rate;
+  uint32_t rts_cts;
 };
 
-// -----------------------------------------------------------------------------
-// Static Function Declarations
+typedef enum {
+  UART_LINE_RUNTIME,
+  UART_LINE_BRINGUP,
+} uart_line_mode_t;
 
-static HANDLE uartOpenSerial(int8_t *device, uint32_t bps, uint32_t dataBits,
-                             uint32_t parity, uint32_t stopBits,
-                             uint32_t rtsCts, uint32_t xOnXOff,
-                             int32_t timeout);
-static int32_t uartCloseSerial(HANDLE handle);
+static int uart_configure_port(HANDLE hComm,
+                               uint32_t baudRate,
+                               uint32_t rtsCts,
+                               int32_t timeout_ms,
+                               uart_line_mode_t line_mode);
+
+void *uartHandleAlloc(void)
+{
+  return malloc(sizeof(uart_handle_t));
+}
 
 // -----------------------------------------------------------------------------
 // Public Function Definitions
-
-int32_t uartOpen(void *handle, int8_t *port, uint32_t baudRate,
-                 uint32_t rtsCts, int32_t timeout)
+void uartHandleFree(void *handle)
 {
-  HANDLE serialHandle = INVALID_HANDLE_VALUE;
+  free(handle);
+}
 
-  serialHandle = uartOpenSerial(port, baudRate, 8, 0, 1, rtsCts, 0, timeout);
+// Internal worker thread: waits for RX events
+static DWORD WINAPI uart_worker_thread(LPVOID param)
+{
+  uart_handle_t *uh = (uart_handle_t*)param;
 
-  if (INVALID_HANDLE_VALUE == serialHandle) {
+  HANDLE waitHandles[2];
+  waitHandles[0] = uh->hStopEvent;
+  waitHandles[1] = uh->hRxEvent;
+
+  DWORD mask = 0;
+  OVERLAPPED ov;
+  memset(&ov, 0, sizeof(ov));
+  ov.hEvent = uh->hRxEvent;
+
+  // Enable RXCHAR events
+  if (!SetCommMask(uh->hComm, EV_RXCHAR)) {
+    return 1;
+  }
+
+  while (1) {
+    mask = 0;
+    ResetEvent(uh->hRxEvent);
+
+    BOOL overlapped_pending = FALSE;
+    if (!WaitCommEvent(uh->hComm, &mask, &ov)) {
+      DWORD err = GetLastError();
+      if (err != ERROR_IO_PENDING) {
+        break;
+      }
+      overlapped_pending = TRUE;
+    }
+
+    if (overlapped_pending) {
+      DWORD w = WaitForMultipleObjects(2, waitHandles, FALSE, INFINITE);
+      if (w == WAIT_OBJECT_0) {
+        // Stop: cancel this WaitCommEvent, then reap so the next WaitCommEvent is legal.
+        (void)CancelIoEx(uh->hComm, &ov);
+        DWORD unused = 0;
+        (void)GetOverlappedResult(uh->hComm, &ov, &unused, TRUE);
+        break;
+      } else if (w != WAIT_OBJECT_0 + 1) {
+        break;
+      }
+      DWORD unused = 0;
+      if (!GetOverlappedResult(uh->hComm, &ov, &unused, FALSE)) {
+        break;
+      }
+    }
+    // Synchronous WaitCommEvent, or overlapped completed; mask is valid.
+    if (uh->cb) {
+      uh->cb(uh, uh->cb_user);
+    }
+  }
+
+  return 0;
+}
+
+// Map baud rate to Windows constant
+static DWORD uart_baud_to_cbr(uint32_t baud)
+{
+  switch (baud) {
+    case 300: return CBR_300;
+    case 1200: return CBR_1200;
+    case 2400: return CBR_2400;
+    case 4800: return CBR_4800;
+    case 9600: return CBR_9600;
+    case 19200: return CBR_19200;
+    case 38400: return CBR_38400;
+    case 57600: return CBR_57600;
+    case 115200: return CBR_115200;
+    case 230400: return CBR_230400;
+    case 460800: return CBR_460800;
+    case 921600: return CBR_921600;
+    default: return 0;
+  }
+}
+
+// Assert host ready-to-receive on CDC VCOM (RTS/DTR on, no handshake).
+static int uart_cdc_bringup(HANDLE hComm)
+{
+  COMSTAT st;
+  DWORD err = 0;
+
+  if (!ClearCommError(hComm, &err, &st)) {
+    return -1;
+  }
+  (void)err;
+
+  Sleep(UART_BRINGUP_SETTLE_MS);
+
+  if (!ClearCommError(hComm, &err, &st)) {
+    return -1;
+  }
+  (void)err;
+
+  return 0;
+}
+
+// Configure DCB and timeouts
+static int uart_configure_port(HANDLE hComm,
+                               uint32_t baudRate,
+                               uint32_t rtsCts,
+                               int32_t timeout_ms,
+                               uart_line_mode_t line_mode)
+{
+  DCB dcb;
+  memset(&dcb, 0, sizeof(dcb));
+  dcb.DCBlength = sizeof(dcb);
+
+  if (!GetCommState(hComm, &dcb)) {
     return -1;
   }
 
-  *(HANDLE *)handle = serialHandle;
+  DWORD cbr = uart_baud_to_cbr(baudRate);
+  if (cbr == 0) {
+    return -1;
+  }
+
+  dcb.BaudRate = cbr;
+  dcb.ByteSize = 8;
+  dcb.Parity   = NOPARITY;
+  dcb.StopBits = ONESTOPBIT;
+
+  if (line_mode == UART_LINE_BRINGUP) {
+    dcb.fOutxCtsFlow = FALSE;
+    dcb.fRtsControl  = RTS_CONTROL_ENABLE;
+    dcb.fDtrControl  = DTR_CONTROL_ENABLE;
+  } else if (rtsCts) {
+    dcb.fOutxCtsFlow = TRUE;
+    dcb.fRtsControl  = RTS_CONTROL_HANDSHAKE;
+    dcb.fDtrControl  = DTR_CONTROL_ENABLE;
+  } else {
+    dcb.fOutxCtsFlow = FALSE;
+    dcb.fRtsControl  = RTS_CONTROL_ENABLE;
+    dcb.fDtrControl  = DTR_CONTROL_ENABLE;
+  }
+
+  dcb.fOutX = FALSE;
+  dcb.fInX  = FALSE;
+
+  if (!SetCommState(hComm, &dcb)) {
+    return -1;
+  }
+
+  COMMTIMEOUTS to;
+  memset(&to, 0, sizeof(to));
+
+  if (timeout_ms < 0) {
+    // Block until data
+    to.ReadIntervalTimeout     = 0;
+    to.ReadTotalTimeoutMultiplier  = 0;
+    to.ReadTotalTimeoutConstant  = 0;
+  } else if (timeout_ms == 0) {
+    // Non-blocking
+    to.ReadIntervalTimeout     = MAXDWORD;
+    to.ReadTotalTimeoutMultiplier  = 0;
+    to.ReadTotalTimeoutConstant  = 0;
+  } else {
+    // Timeout in ms
+    to.ReadIntervalTimeout     = MAXDWORD;
+    to.ReadTotalTimeoutMultiplier  = 0;
+    to.ReadTotalTimeoutConstant  = (DWORD)timeout_ms;
+  }
+
+  to.WriteTotalTimeoutMultiplier = 0;
+  to.WriteTotalTimeoutConstant   = (timeout_ms > 0) ? (DWORD)timeout_ms : 0;
+
+  if (!SetCommTimeouts(hComm, &to)) {
+    return -1;
+  }
+
+  // Request reasonable buffer sizes
+  if (!SetupComm(hComm, 4096, 4096)) {
+    DWORD ret = GetLastError();
+    fprintf(stderr, "SetupComm failed %ld.\n", (unsigned long)ret);
+  }
+
+  return 0;
+}
+
+// UART open (using Overlapped I/O)
+int32_t uartOpen(void *handle, int8_t *port, uint32_t baudRate,
+                 uint32_t rtsCts, int32_t timeout)
+{
+  uart_handle_t *uh = (uart_handle_t *)handle;
+  memset(uh, 0, sizeof(*uh));
+
+  char deviceStr[64];
+  memset(deviceStr, 0, sizeof(deviceStr));
+  // Support COM10+ style names
+  _snprintf(deviceStr, sizeof(deviceStr) - 1, "\\\\.\\%s", (char*)port);
+
+  HANDLE hComm = CreateFileA(deviceStr,
+                             GENERIC_READ | GENERIC_WRITE,
+                             0,
+                             NULL,
+                             OPEN_EXISTING,
+                             FILE_FLAG_OVERLAPPED,
+                             NULL);
+  if (hComm == INVALID_HANDLE_VALUE) {
+    return -1;
+  }
+
+  uh->hComm       = hComm;
+  uh->baud_rate   = baudRate;
+  uh->rts_cts     = rtsCts;
+  uh->timeout_ms  = timeout;
+  uh->cb          = NULL;
+  uh->cb_user     = NULL;
+
+  if (uart_configure_port(hComm, baudRate, rtsCts, timeout,
+                          rtsCts ? UART_LINE_BRINGUP : UART_LINE_RUNTIME) < 0) {
+    CloseHandle(hComm);
+    return -1;
+  }
+
+  if (rtsCts && uart_cdc_bringup(hComm) < 0) {
+    CloseHandle(hComm);
+    return -1;
+  }
+
+  uh->hRxEvent   = CreateEventA(NULL, TRUE, FALSE, NULL);
+  uh->hStopEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
+
+  if (!uh->hRxEvent || !uh->hStopEvent) {
+    if (uh->hRxEvent) {
+      CloseHandle(uh->hRxEvent);
+    }
+    if (uh->hStopEvent) {
+      CloseHandle(uh->hStopEvent);
+    }
+    CloseHandle(hComm);
+    return -1;
+  }
+
+  return 0;
+}
+
+int32_t uartFinishOpen(void *handle, uint32_t rtsCts)
+{
+  uart_handle_t *uh = (uart_handle_t *)handle;
+  if (!uh || !uh->hComm || uh->hComm == INVALID_HANDLE_VALUE) {
+    return -1;
+  }
+
+  if (rtsCts) {
+    if (uart_configure_port(uh->hComm, uh->baud_rate, uh->rts_cts,
+                            uh->timeout_ms, UART_LINE_RUNTIME) < 0) {
+      return -1;
+    }
+  }
+
+  if (uh->hThread) {
+    return 0;
+  }
+
+  DWORD tid = 0;
+  uh->hThread = CreateThread(NULL,
+                             0,
+                             uart_worker_thread,
+                             uh,
+                             0,
+                             &tid);
+  if (!uh->hThread) {
+    return -1;
+  }
+
+  return 0;
+}
+
+int32_t uartSetRxCallback(void *handle, uart_rx_callback_t cb, void *user_ctx)
+{
+  uart_handle_t *uh = (uart_handle_t *)handle;
+  if (!uh) {
+    return -1;
+  }
+
+  uh->cb    = cb;
+  uh->cb_user = user_ctx;
 
   return 0;
 }
 
 void uartFlush(void *handle)
 {
-  PurgeComm(*(HANDLE *)handle, PURGE_TXCLEAR | PURGE_RXCLEAR);
-}
-
-int32_t uartClose(void *handle)
-{
-  return (uartCloseSerial(*(HANDLE *)handle) == 0) ? -1 : 0;
+  uart_handle_t *uh = (uart_handle_t*)handle;
+  if (!uh || !uh->hComm || uh->hComm == INVALID_HANDLE_VALUE) {
+    return;
+  }
+  // Do not purge RX: pending bytes are drained into the host ring after open.
+  PurgeComm(uh->hComm, PURGE_TXCLEAR);
 }
 
 int32_t uartRx(void *handle, uint32_t dataLength, uint8_t *data)
 {
-  // Variable for storing function return values.
-  DWORD ret;
-  // The amount of bytes still needed to be read.
-  DWORD dataToRead = dataLength;
-  // The amount of bytes read.
-  DWORD dataRead;
-
-  if (*(HANDLE *)handle == INVALID_HANDLE_VALUE) {
+  uart_handle_t *uh = (uart_handle_t*)handle;
+  if (!uh || !uh->hComm || uh->hComm == INVALID_HANDLE_VALUE) {
     return -1;
   }
 
-  while (dataToRead) {
-    ret = ReadFile(*(HANDLE *)handle, (LPVOID)data, dataToRead,
-                   (LPDWORD)&dataRead, NULL);
-    if (!ret) {
-      ret = GetLastError();
-      if (ret == ERROR_SUCCESS) {
-        continue;
-      }
+  DWORD totalRead = 0;
+
+  while (totalRead < dataLength) {
+    OVERLAPPED ov;
+    memset(&ov, 0, sizeof(ov));
+    ov.hEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
+    if (!ov.hEvent) {
       return -1;
-    } else {
-      if (!dataRead) {
-        continue;
+    }
+
+    DWORD bytesRead = 0;
+    BOOL ok = ReadFile(uh->hComm,
+                       data + totalRead,
+                       dataLength - totalRead,
+                       &bytesRead,
+                       &ov);
+    if (!ok) {
+      DWORD err = GetLastError();
+      if (err == ERROR_IO_PENDING) {
+        DWORD to = (uh->timeout_ms < 0) ? INFINITE : (DWORD)uh->timeout_ms;
+        DWORD w = WaitForSingleObject(ov.hEvent, to);
+        if (w != WAIT_OBJECT_0) {
+          CloseHandle(ov.hEvent);
+          return -1;
+        }
+        if (!GetOverlappedResult(uh->hComm, &ov, &bytesRead, FALSE)) {
+          CloseHandle(ov.hEvent);
+          return -1;
+        }
+      } else {
+        CloseHandle(ov.hEvent);
+        return -1;
       }
     }
-    dataToRead -= dataRead;
-    data += dataRead;
+
+    CloseHandle(ov.hEvent);
+
+    if (bytesRead == 0) {
+      if (totalRead > 0) {
+        return (int32_t)totalRead;
+      }
+      return -1;
+    }
+
+    totalRead += bytesRead;
   }
 
-  return (int32_t)dataLength;
+  return (int32_t)totalRead;
 }
 
 int32_t uartRxNonBlocking(void *handle, uint32_t dataLength, uint8_t *data)
 {
-  // Variable for storing function return values.
-  DWORD ret;
-  // The amount of bytes read.
-  DWORD dataRead;
-
-  if (*(HANDLE *)handle == INVALID_HANDLE_VALUE) {
+  uart_handle_t *uh = (uart_handle_t*)handle;
+  if (!uh || !uh->hComm || uh->hComm == INVALID_HANDLE_VALUE) {
     return -1;
   }
 
-  ret = ReadFile(*(HANDLE *)handle, (LPVOID)data, (DWORD)dataLength,
-                 (LPDWORD)&dataRead, NULL);
-  if (!ret) {
-    ret = GetLastError();
-    fprintf(stderr, "Rx readfile error %ld.\n", (unsigned long)ret);
-    if (ret != ERROR_SUCCESS) {
-      return -1;
-    }
+  OVERLAPPED ov;
+  memset(&ov, 0, sizeof(ov));
+  ov.hEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
+  if (!ov.hEvent) {
+    return -1;
   }
 
-  return (int32_t)dataRead;
+  DWORD bytesRead = 0;
+  BOOL ok = ReadFile(uh->hComm,
+                     data,
+                     dataLength,
+                     &bytesRead,
+                     &ov);
+  if (!ok) {
+    DWORD err = GetLastError();
+    if (err == ERROR_IO_PENDING) {
+      // Nonblocking: do not wait, just check if something is ready
+      BOOL res = GetOverlappedResult(uh->hComm, &ov, &bytesRead, FALSE);
+      CloseHandle(ov.hEvent);
+      if (!res) {
+        DWORD err2 = GetLastError();
+        if (err2 == ERROR_IO_INCOMPLETE) {
+          return 0;
+        }
+        return -1;
+      }
+    } else {
+      CloseHandle(ov.hEvent);
+      return -1;
+    }
+  } else {
+    CloseHandle(ov.hEvent);
+  }
+
+  return (int32_t)bytesRead;
 }
 
 int32_t uartRxPeek(void *handle)
 {
-  COMSTAT comStat = { 0 };
+  uart_handle_t *uh = (uart_handle_t*)handle;
+  COMSTAT st;
   DWORD err = 0;
 
-  if (*(HANDLE *)handle == INVALID_HANDLE_VALUE) {
+  if (!uh || !uh->hComm || uh->hComm == INVALID_HANDLE_VALUE) {
     return -1;
   }
 
-  if (!ClearCommError(*(HANDLE *)handle, &err, &comStat) || err) {
+  memset(&st, 0, sizeof(st));
+  if (!ClearCommError(uh->hComm, &err, &st)) {
     return -1;
   }
+  // Ignore framing/parity flags in err; cbInQue is still valid.
+  (void)err;
 
-  return (int32_t)comStat.cbInQue;
+  return (int32_t)st.cbInQue;
 }
 
 int32_t uartTx(void *handle, uint32_t dataLength, uint8_t *data)
 {
-  // Variable for storing function return values.
-  DWORD ret;
-  // The amount of bytes written.
-  DWORD dataWritten;
-  // The amount of bytes still needed to be written.
-  DWORD dataToWrite = dataLength;
-
-  if (*(HANDLE *)handle == INVALID_HANDLE_VALUE) {
+  uart_handle_t *uh = (uart_handle_t*)handle;
+  if (!uh || !uh->hComm || uh->hComm == INVALID_HANDLE_VALUE) {
     return -1;
   }
 
-  while (dataToWrite) {
-    ret = WriteFile(*(HANDLE *)handle, (LPCVOID)data, dataToWrite,
-                    (LPDWORD)&dataWritten, NULL);
-    if (!ret) {
+  DWORD totalWritten = 0;
+
+  while (totalWritten < dataLength) {
+    OVERLAPPED ov;
+    memset(&ov, 0, sizeof(ov));
+    ov.hEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
+    if (!ov.hEvent) {
       return -1;
     }
-    dataToWrite -= dataWritten;
-    data += dataWritten;
-  }
-  FlushFileBuffers(*(HANDLE *)handle);
 
-  return (int32_t)dataLength;
-}
-
-// -----------------------------------------------------------------------------
-// Static Function Definitions
-
-/**************************************************************************//**
- *  \brief  Open a serial port.
- *  \param[in] device Serial Port number.
- *  \param[in] bps Baud Rate.
- *  \param[in] dataBits Number of databits.
- *  \param[in] parity Parity bit used.
- *  \param[in] stopBits Stop bits used.
- *  \param[in] rtsCts Hardware handshaking used.
- *  \param[in] xOnXOff Software Handshaking used.
- *  \param[in] timeout Block until a character is received or for timeout milliseconds. If
- *             timeout < 0, block until character is received, there is no timeout.
- *  \return  0 on success, -1 on failure.
- *****************************************************************************/
-static HANDLE uartOpenSerial(int8_t* device, uint32_t bps, uint32_t dataBits,
-                             uint32_t parity, uint32_t stopBits,
-                             uint32_t rtsCts, uint32_t xOnXOff,
-                             int32_t timeout)
-{
-  uint32_t i;
-  HANDLE serial = INVALID_HANDLE_VALUE;
-  char deviceStr[60] = { 0 };
-  DCB settings = { 0 };
-  COMMTIMEOUTS commTimeouts = { 0 };
-
-  // Check if baud rate is supported. Return -1 if not.
-  for (i = 0; speedTab[i].nspeed != 0; i++) {
-    if (bps == speedTab[i].nspeed) {
-      break;
+    DWORD bytesWritten = 0;
+    BOOL ok = WriteFile(uh->hComm,
+                        data + totalWritten,
+                        dataLength - totalWritten,
+                        &bytesWritten,
+                        &ov);
+    if (!ok) {
+      DWORD err = GetLastError();
+      if (err == ERROR_IO_PENDING) {
+        DWORD to = (uh->timeout_ms < 0) ? INFINITE : (DWORD)uh->timeout_ms;
+        DWORD w = WaitForSingleObject(ov.hEvent, to);
+        if (w != WAIT_OBJECT_0) {
+          CloseHandle(ov.hEvent);
+          return -1;
+        }
+        if (!GetOverlappedResult(uh->hComm, &ov, &bytesWritten, FALSE)) {
+          CloseHandle(ov.hEvent);
+          return -1;
+        }
+      } else {
+        CloseHandle(ov.hEvent);
+        return -1;
+      }
     }
-  }
-  if (speedTab[i].nspeed == 0) {
-    fprintf(stderr, "Baud rate not supported!\n");
-    goto error;
-  }
 
-  /* Open the serial port for read/write with exclusive access, default
-   * security attributes and not overlapped I/O. */
-  snprintf(deviceStr, sizeof(deviceStr) - 1, "\\\\.\\%s", (char*)device);
-  serial = CreateFileA(deviceStr, GENERIC_READ | GENERIC_WRITE, 0, NULL,
-                       OPEN_EXISTING, 0, NULL);
-  if (serial == INVALID_HANDLE_VALUE) {
-    fprintf(stderr, "Error opening serial port %s - %ld.\n",
-            (char*)device,
-            (unsigned long)GetLastError());
-    goto error;
+    CloseHandle(ov.hEvent);
+
+    if (bytesWritten == 0) {
+      return -1;
+    }
+
+    totalWritten += bytesWritten;
   }
 
-  // Retrieve all current communication settings.
-  settings.DCBlength = sizeof(DCB);
-  if (!GetCommState(serial, &settings)) {
-    fprintf(stderr, "Error getting comm state on %s - %ld.\n",
-            (char*)device,
-            (unsigned long)GetLastError());
-    goto error;
-  }
-
-  // Configure baud rate.
-  settings.BaudRate = speedTab[i].cbaud;
-
-  /* The minimum number of free bytes allowed in the input buffer before flow
-   * control is activated to inhibit the sender. Tune value if you experience
-   * issues! */
-  settings.XoffLim = 1000;
-  /* The minimum number of bytes in use allowed in the input buffer before flow
-   * control is activated to allow transmission by the sender. Tune value if
-   * you experience issues! */
-  settings.XonLim = 1000;
-
-  // Configure software flow control.
-  if (xOnXOff) {
-    settings.fOutX = true;
-    settings.fInX  = true;
-    settings.XoffChar = 0x13;
-    settings.XonChar = 0x11;
-    settings.fTXContinueOnXoff = false;
-  } else {
-    settings.fOutX = false;
-    settings.fInX  = false;
-  }
-
-  // Configure word length. Any number other than 5, 6 or 7 defaults to 8.
-  if (dataBits >= 5 && dataBits <= 7) {
-    settings.ByteSize = (BYTE)dataBits;
-  } else {
-    settings.ByteSize = 8;
-  }
-
-  // Configure parity. Any number other than 1 or 2 defaults to 0.
-  if (parity == 1) {
-    settings.Parity = ODDPARITY;
-  } else if (parity == 2) {
-    settings.Parity = EVENPARITY;
-  } else {
-    // No parity.
-    settings.Parity = NOPARITY;
-  }
-
-  // Configure number of stop bits. Any number other than 2 defaults to 1.
-  if (stopBits == 2) {
-    settings.StopBits = TWOSTOPBITS;
-  } else {
-    // 1 stop bit.
-    settings.StopBits = ONESTOPBIT;
-  }
-
-  // Configure hardware flow control.
-  if (rtsCts) {
-    settings.fRtsControl = RTS_CONTROL_HANDSHAKE;
-    settings.fOutxCtsFlow = true;
-  } else {
-    settings.fRtsControl = RTS_CONTROL_ENABLE;
-    settings.fOutxCtsFlow = false;
-  }
-
-  if (!SetCommState(serial, &settings)) {
-    fprintf(stderr, "Error setting comm state on %s - %ld.\n",
-            (char*)device,
-            (unsigned long)GetLastError());
-    goto error;
-  }
-
-  /* Set the time-out parameters for all read and write operations on
-   * a specified communications device.
-   * ReadIntervalTimeout: The maximum time allowed to elapse before the arrival
-   *    of the next byte on the communications line, in milliseconds. If
-   *    the interval between the arrival of any two bytes exceeds this amount,
-   *    the ReadFile operation is completed and any buffered data is returned.
-   *    A value of zero indicates that interval time-outs are not used. A value
-   *    of MAXDWORD, combined with zero values for both the
-   *    ReadTotalTimeoutConstant and ReadTotalTimeoutMultiplier members,
-   *    specifies that the read operation is to return immediately with
-   *    the bytes that have already been received, even if no bytes have been
-   *    received.
-   * ReadTotalTimeoutMultiplier: The multiplier used to calculate the total
-   *    time-out period for read operations, in milliseconds. For each read
-   *    operation, this value is multiplied by the requested number of bytes to
-   *    be read.
-   * ReadTotalTimeoutConstant: A constant used to calculate the total time-out
-   *    period for read operations, in milliseconds. For each read operation,
-   *    this value is added to the product of the ReadTotalTimeoutMultiplier
-   *    member and the requested number of bytes. A value of zero for both the
-   *    ReadTotalTimeoutMultiplier and ReadTotalTimeoutConstant members
-   *    indicates that total time-outs are not used for read operations.
-   * WriteTotalTimeoutMultiplier: The multiplier used to calculate the total
-   *    time-out period for write operations, in milliseconds. For each write
-   *    operation, this value is multiplied by the number of bytes to be
-   *    written.
-   * WriteTotalTimeoutConstant: A constant used to calculate the total time-out
-   *    period for write operations, in milliseconds. For each write operation,
-   *    this value is added to the product of the WriteTotalTimeoutMultiplier
-   *    member and the number of bytes to be written. A value of zero for both
-   *    the WriteTotalTimeoutMultiplier and WriteTotalTimeoutConstant members
-   *    indicates that total time-outs are not used for write operations.*/
-  if (timeout < 0) {
-    // Block until character is received. No timeout configured.
-    commTimeouts.ReadIntervalTimeout = 0;
-    commTimeouts.ReadTotalTimeoutConstant = 0;
-    commTimeouts.ReadTotalTimeoutMultiplier = 0;
-  } else if (timeout == 0) {
-    // Do not block. Return immediately.
-    commTimeouts.ReadIntervalTimeout = MAXDWORD;
-    commTimeouts.ReadTotalTimeoutConstant = 0;
-    commTimeouts.ReadTotalTimeoutMultiplier = 0;
-  } else {
-    // Block until character is received or timer expires.
-    commTimeouts.ReadIntervalTimeout = MAXDWORD;
-    commTimeouts.ReadTotalTimeoutMultiplier = 0;
-    commTimeouts.ReadTotalTimeoutConstant = (DWORD)timeout;
-  }
-
-  commTimeouts.WriteTotalTimeoutMultiplier = 0;
-  commTimeouts.WriteTotalTimeoutConstant = (DWORD)timeout;
-
-  if (!SetCommTimeouts(serial, &commTimeouts)) {
-    fprintf(stderr, "Error setting comm timeouts on %s - %ld.\n",
-            (char*)device,
-            (unsigned long)GetLastError());
-    goto error;
-  }
-
-  // Success
-  return serial;
-
-  // Failure
-  error:
-  if (serial != INVALID_HANDLE_VALUE) {
-    CloseHandle(serial);
-  }
-
-  return INVALID_HANDLE_VALUE;
+  return (int32_t)totalWritten;
 }
 
-// Close a serial port. Return nonzero on success, 0 on failure.
-static int32_t uartCloseSerial(HANDLE handle)
+int32_t uartClose(void *handle)
 {
-  int32_t ret;
-
-  if (!(ret = CloseHandle(handle))) {
-    fprintf(stderr, "Error closing serial port - %ld.\n", (unsigned long)GetLastError());
+  uart_handle_t *uh = (uart_handle_t*)handle;
+  if (!uh) {
+    return -1;
   }
 
-  return ret;
+  if (uh->hStopEvent) {
+    SetEvent(uh->hStopEvent);
+  }
+
+  if (uh->hThread) {
+    WaitForSingleObject(uh->hThread, INFINITE);
+    CloseHandle(uh->hThread);
+    uh->hThread = NULL;
+  }
+
+  if (uh->hRxEvent) {
+    CloseHandle(uh->hRxEvent);
+    uh->hRxEvent = NULL;
+  }
+
+  if (uh->hStopEvent) {
+    CloseHandle(uh->hStopEvent);
+    uh->hStopEvent = NULL;
+  }
+
+  if (uh->hComm && uh->hComm != INVALID_HANDLE_VALUE) {
+    CloseHandle(uh->hComm);
+    uh->hComm = INVALID_HANDLE_VALUE;
+  }
+
+  return 0;
 }

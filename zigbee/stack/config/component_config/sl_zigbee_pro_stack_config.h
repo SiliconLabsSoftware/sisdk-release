@@ -118,6 +118,12 @@
 // <i> The number of entries that the Address Table can hold.
 #define SL_ZIGBEE_ADDRESS_TABLE_SIZE   12
 
+// <o SL_ZIGBEE_SLEEPY_TARGET_MAC_TIMEOUT_INCREASE> Sleepy-target APS retry extra wait (ms) <0-30000>
+// <i> Default: 7680 - equal to the MAC indirect transmission timeout (7680 ms on Pro).
+// <i> Extra milliseconds added to the APS ACK timeout and Fragmentation retry timeout for
+// <i> sleepy destinations.
+#define SL_ZIGBEE_SLEEPY_TARGET_MAC_TIMEOUT_INCREASE  7680
+
 #ifndef SL_ZIGBEE_ROUTE_TABLE_SIZE
 // <o SL_ZIGBEE_ROUTE_TABLE_SIZE> Route Table Size <10-255>
 // <i> Default: 16

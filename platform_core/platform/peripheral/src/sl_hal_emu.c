@@ -89,6 +89,8 @@
  **************************   LOCAL VARIABLES   ********************************
  ******************************************************************************/
 
+static uint32_t reset_cause = UINT32_MAX;
+
 /*******************************************************************************
  **************************   LOCAL FUNCTIONS   ********************************
  ******************************************************************************/
@@ -113,7 +115,6 @@ extern __INLINE void sl_hal_emu_request_averaged_temperature(sl_hal_emu_temperat
 #endif
 extern __INLINE float sl_hal_emu_get_temperature(void);
 extern __INLINE void sl_hal_emu_clear_reset_cause(void);
-extern __INLINE uint32_t sl_hal_emu_get_reset_cause(void);
 extern __INLINE void sl_hal_emu_set_reset_control(sl_hal_emu_reset_source_t reset,
                                                   sl_hal_emu_reset_mode_t mode);
 #if defined(_EMU_CTRL_HDREGEM2EXITCLIM_MASK)
@@ -239,6 +240,20 @@ void sl_hal_emu_ram_power_up(void)
 #endif
   sl_hal_syscfg_zero_dmem0retnctrl();
 #endif
+}
+
+/***************************************************************************//**
+ * Get the cause of the last reset.
+ ******************************************************************************/
+uint32_t sl_hal_emu_get_reset_cause(void)
+{
+  if (reset_cause != UINT32_MAX) {
+    // sl_hal_emu_get_reset_cause() has already been called since boot. Return what was already obtained.
+    return reset_cause;
+  }
+
+  reset_cause = EMU->RSTCAUSE;
+  return reset_cause;
 }
 
 #if (defined(SL_HAL_EMU_DCDC_BUCK_PRESENT) \

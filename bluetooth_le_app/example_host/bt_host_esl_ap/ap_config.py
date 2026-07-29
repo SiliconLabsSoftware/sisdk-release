@@ -24,6 +24,10 @@ ESL AP configuration.
 # 3. This notice may not be removed or altered from any source distribution.
 # Common constants used both by the BLE and ESL threads
 from ap_constants import TAG_SYNC_TIMEOUT
+from esl_lib_wrapper import (
+    ESL_LIB_ADV_DEDUP_REFRESH_MS,
+    ESL_LIB_CONNECTION_RETRY_COUNT_MAX,
+)
 
 # Alternates between GATT Write With- or Without Response requests, and allows skipping some value range validation
 # and other sanity checks when set to True, so that IOP edge case tests can run properly.
@@ -49,9 +53,10 @@ ITP_MAX_PARALLEL_CONNECTIONS = 32 # 32 is the absolute upper limit for our Bluet
 # Retry count for ESL command opcodes re-sending
 ESL_CMD_MAX_RETRY_COUNT = 3
 
-# Limit of unsuccessful onboarding attempts before blocking the tag to avoid endless retries
-# Set it higher than the internal retry limits of the ESL C library (ESL_LIB_CONNECTION_RETRY_COUNT_MAX value)
-UNSUCCESSFUL_ONBOARDING_LIMIT = 6
+# Limit of unsuccessful onboarding attempts before blocking the tag to avoid endless retries.
+# Must stay above ESL_LIB_CONNECTION_RETRY_COUNT_MAX (esl_lib internal connection retries).
+UNSUCCESSFUL_ONBOARDING_LIMIT_MIN = ESL_LIB_CONNECTION_RETRY_COUNT_MAX + 1
+UNSUCCESSFUL_ONBOARDING_LIMIT = max(6, UNSUCCESSFUL_ONBOARDING_LIMIT_MIN)
 
 # Pending count for connection requests: 1 is the minimum ad also the safest value, but auto provisioning will be the slowest
 ESL_CMD_MAX_PENDING_CONNECTION_REQUEST_COUNT = 4096 # Best if aligned with elw.ESL_LIB_SKIPLIST_MAX_LEVEL_LIB macro value
@@ -66,8 +71,18 @@ RSSI_THRESHOLD = -80
 SCAN_INTERVAL_DEFAULT_MS = 15.0
 SCAN_WINDOW_DEFAULT_MS = 15.0
 
-# Advertising timeout [s]
-ADVERTISING_TIMEOUT = 60
+# esl_lib tag_found refresh interval [s] from ctypesgen wrapper.
+_ADV_DEDUP_REFRESH_S = ESL_LIB_ADV_DEDUP_REFRESH_MS // 1000
+
+# Minimum advertising timeout [s]. Must stay >= _ADV_DEDUP_REFRESH_S when ESL_ADV_DEDUP_ENABLE is True.
+ADVERTISING_TIMEOUT_MIN = _ADV_DEDUP_REFRESH_S
+
+# Advertising timeout [s]. Do not set below ADVERTISING_TIMEOUT_MIN when adv dedup is enabled.
+ADVERTISING_TIMEOUT = max(60, ADVERTISING_TIMEOUT_MIN)
+
+# Runtime option for esl_lib advertisement deduplication feature.
+# Overrides compile-time setting of ESL_LIB_ADV_DEDUP_ENABLE.
+ESL_ADV_DEDUP_ENABLE = True
 
 # (Re)connecting timeout [s]
 # Allow enough time for the ESL C library for the re-connection attempts, which may be delayed by other queued connections

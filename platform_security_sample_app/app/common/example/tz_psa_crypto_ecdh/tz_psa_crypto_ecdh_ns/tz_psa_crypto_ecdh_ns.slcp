@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform Security - SoC TrustZone PSA Crypto ECDH (Non-secure application)
 description: >
-  Demonstrates how to perform ECDH key agreement from the Non-secure side of a TrustZone-split application via the Secure world.
+  Demonstrates how to perform ECDH key agreement from the Non-secure side, in a TrustZone Non-secure PSA Crypto ECDH example using Secure-world PSA Crypto services.
 category: Example|Platform
 filter:
   - name: "Device Type"
@@ -13,7 +13,6 @@ filter:
   - name: "Project Difficulty"
     value: ["Advanced"]
 source:
-  - path: main.c
   - path: app_init.c
   - path: app_process.c
   - path: app_psa_crypto_ecdh.c
@@ -41,7 +40,7 @@ component:
   - id: psa_crypto_ecc_secp384r1
   - id: psa_crypto_ecc_secp521r1
   - id: psa_crypto_ecc_curve25519
-  - id: sl_system
+  - id: sl_main
   - id: device_init
   - id: clock_manager
   - id: printf

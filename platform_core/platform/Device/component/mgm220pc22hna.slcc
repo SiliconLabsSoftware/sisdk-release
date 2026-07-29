@@ -12,6 +12,10 @@
     unless:
     - device_content_override
     value: system
+  - name: HFXO_FREQ
+    unless:
+    - device_content_override
+    value: 38400000
 - source:
   - path: platform/Device/SiliconLabs/MGM22/Source/startup_mgm22.c
     unless:

@@ -3,7 +3,7 @@
  * @brief Core application logic.
  *******************************************************************************
  * # License
- * <b>Copyright 2024 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -49,9 +49,9 @@ static bool increase_security = false;
 // Readable strings for sl_bt_connection_security_t
 static const char *connection_security_str[] = {
   "(0x00) No security",
-  "(0x01) Unauthenticated pairing",
-  "(0x02) Authenticated pairing",
-  "(0x03) Authenticated secure connections pairing (128-bit key)"
+  "(0x01) Unauthenticated pairing with encryption",
+  "(0x02) Authenticated pairing with encryption (legacy)",
+  "(0x03) Authenticated Secure Connections pairing with encryption using a 128-bit strength encryption key"
 };
 
 /***************************************************************************//**
@@ -205,6 +205,35 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
 
       // Test 3 (MA discovers the GATT) takes place now.
 
+      // During the LE Privacy 1.2 (RPA) test the bonded peer reconnects using
+      // a resolvable private address. An address that was resolved from an RPA
+      // together with a valid bonding handle proves that the controller
+      // resolved the peer's RPA against the stored IRK.
+      if (privacy_test_in_progress) {
+        uint8_t address_type = evt->data.evt_connection_opened.address_type;
+        bool rpa_resolved =
+          (address_type == sl_bt_gap_public_address_resolved_from_rpa)
+          || (address_type == sl_bt_gap_static_address_resolved_from_rpa);
+
+        // Record the outcome so the bonded notification subscription is only
+        // accepted as a privacy test pass when this connection was actually
+        // established via a resolved RPA.
+        privacy_rpa_resolved =
+          rpa_resolved
+          && (evt->data.evt_connection_opened.bonding != SL_BT_INVALID_BONDING_HANDLE);
+
+        if (privacy_rpa_resolved) {
+          app_log_info("LE Privacy test: bonded peer reconnected with a "
+                       "resolved private address (RPA resolution successful)." APP_LOG_NL);
+        } else {
+          app_log_warning("LE Privacy test: peer reconnected but the address "
+                          "was not resolved from an RPA (address type: [%d], "
+                          "bonding: [%d]). Privacy resolution may have failed." APP_LOG_NL,
+                          address_type,
+                          evt->data.evt_connection_opened.bonding);
+        }
+      }
+
       // Increase the security of the connection if requested by the tester.
       if (increase_security) {
         sl_bt_sm_increase_security(connection_handle);
@@ -300,18 +329,28 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
                    evt->data.evt_connection_closed.connection);
       set_display(DISPLAY_STATE_IDLE, NULL);
 
+      // The LE Privacy 1.2 (RPA) test spans a single bonded reconnection: the
+      // RPA resolution is evaluated on connection_opened and confirmed when the
+      // bonded notification is re-enabled, both on the same open connection.
+      // Clear the test state on every close so a failed or abandoned run cannot
+      // leave the flag set and make later, unrelated connections emit privacy
+      // warnings. The privacy test setup below (SECURITY_CONFIG_PRIVACY) re-arms
+      // it afterward when the tester actually requests the privacy test.
+      privacy_test_in_progress = false;
+      privacy_rpa_resolved = false;
+
       // Configure security manager for the next connection.
-      switch (security_level) {
+      switch (security_config) {
         // Unauthenticated pairing with encryption
-        case SECURITY_LEVEL_PAIRING: {
+        case SECURITY_CONFIG_PAIRING: {
           // Preparing for test 7.2 (Security/Pairing).
           increase_security = true;
           sc = sl_bt_sm_delete_bondings();
           app_log_status_error(sc);
 
           if (sc == SL_STATUS_OK) {
-            app_log_info("Bondings deleted. Preparing for security level: [%d]." APP_LOG_NL,
-                         (int)security_level);
+            app_log_info("Bondings deleted. Preparing for security configuration: [%d]." APP_LOG_NL,
+                         (int)security_config);
           }
 
           sc = sl_bt_sm_configure(BONDING_WITHOUT_MITM, sl_bt_sm_io_capability_noinputnooutput);
@@ -323,15 +362,15 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
         }
 
         // Authenticated pairing with encryption
-        case SECURITY_LEVEL_AUTHENTICATION: {
+        case SECURITY_CONFIG_AUTHENTICATION: {
           // Preparing for test 7.3 (Security/Authentication).
           increase_security = true;
           sc = sl_bt_sm_delete_bondings();
           app_log_status_error(sc);
 
           if (sc == SL_STATUS_OK) {
-            app_log_info("Bondings deleted. Preparing for security level: [%d]." APP_LOG_NL,
-                         (int)security_level);
+            app_log_info("Bondings deleted. Preparing for security configuration: [%d]." APP_LOG_NL,
+                         (int)security_config);
           }
 
           sc = sl_bt_sm_configure(BONDING_WITH_MITM, sl_bt_sm_io_capability_displayonly);
@@ -347,15 +386,15 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
 
         // Authenticated Secure Connections pairing with encryption using a
         // 128-bit strength encryption key
-        case SECURITY_LEVEL_BONDING: {
+        case SECURITY_CONFIG_BONDING: {
           // Preparing for test 7.4 (Security/Bonding).
           increase_security = true;
           sc = sl_bt_sm_delete_bondings();
           app_log_status_error(sc);
 
           if (sc == SL_STATUS_OK) {
-            app_log_info("Bondings deleted. Preparing for security level: [%d]." APP_LOG_NL,
-                         (int)security_level);
+            app_log_info("Bondings deleted. Preparing for security configuration: [%d]." APP_LOG_NL,
+                         (int)security_config);
           }
 
           sc = sl_bt_sm_configure(BONDING_WITH_MITM, sl_bt_sm_io_capability_displayonly);
@@ -370,7 +409,7 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
         }
 
         // LE Privacy 1.2 test based on an existing bonding
-        case SECURITY_LEVEL_PRIVACY: {
+        case SECURITY_CONFIG_PRIVACY: {
           sc = sl_bt_resolving_list_add_device_by_bonding(bonding_handle, sl_bt_resolving_list_privacy_mode_network);
           app_log_status_error_f(sc, "Failed to add bonding handle %ld to the resolving list." APP_LOG_NL, bonding_handle);
 
@@ -379,6 +418,15 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
 
           sc = sl_bt_advertiser_configure(advertising_set_handle, SL_BT_ADVERTISER_USE_FILTER_FOR_CONNECTION_REQUESTS);
           app_log_status_error_f(sc, "Failed to configure advertising set." APP_LOG_NL);
+
+          // The bonded peer is expected to reconnect using a resolvable
+          // private address. Mark the test as ongoing so the reconnection and
+          // bonded notification subscription can be evaluated as a pass, and
+          // clear any stale RPA-resolution result from a previous run.
+          privacy_test_in_progress = true;
+          privacy_rpa_resolved = false;
+          app_log_info("LE Privacy test: waiting for the bonded peer to "
+                       "reconnect with a resolvable private address." APP_LOG_NL);
           break;
         }
 
@@ -387,7 +435,7 @@ void sl_bt_on_event(sl_bt_msg_t* evt)
         }
       }
       // Evaluate security request only once.
-      security_level = SECURITY_LEVEL_NONE;
+      security_config = SECURITY_CONFIG_NONE;
 
       // Restart advertising.
       sc = sl_bt_legacy_advertiser_start(advertising_set_handle,

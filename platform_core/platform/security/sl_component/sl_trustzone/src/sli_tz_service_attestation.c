@@ -162,7 +162,8 @@ static psa_status_t error_mapping_sl_status_to_psa_status(sl_status_t status);
 static psa_status_t get_attestation_get_public_key(uint8_t *key_buffer,
                                                    size_t key_size)
 {
-  if (key_size != ATTESTATION_PUBLIC_KEY_SIZE) {
+  if ((key_size != ATTESTATION_PUBLIC_KEY_SIZE)
+      || (key_buffer == NULL)) {
     return PSA_ERROR_INVALID_ARGUMENT;
   }
 
@@ -188,16 +189,19 @@ static psa_status_t get_attestation_get_public_key(uint8_t *key_buffer,
     return error_mapping_sl_status_to_psa_status(status);
   }
 
+  // Create an aligned key buffer to store the output key since SE manager
+  // requires alignment for the read key command.
+  // ATTESTATION_PUBLIC_KEY_SIZE includes the format byte, hence the - 1.
+  uint32_t aligned_key_buffer[(ATTESTATION_PUBLIC_KEY_SIZE - 1) / sizeof(uint32_t)] = { 0 };
+
   status = sl_se_read_pubkey(&cmd_ctx,
                              SL_SE_KEY_TYPE_IMMUTABLE_SE_ATTESTATION,
-                             key_buffer,
+                             aligned_key_buffer,
                              (key_size - 1u));
 
   // Write the uncompressed format byte
   if (status == SL_STATUS_OK) {
-    if (memmove(&key_buffer[1], key_buffer, ATTESTATION_PUBLIC_KEY_SIZE) == NULL) {
-      return PSA_ERROR_BAD_STATE;
-    }
+    memcpy(key_buffer + 1 , aligned_key_buffer, ATTESTATION_PUBLIC_KEY_SIZE - 1);
     key_buffer[0u] = 0x04;
   }
   return error_mapping_sl_status_to_psa_status(status);

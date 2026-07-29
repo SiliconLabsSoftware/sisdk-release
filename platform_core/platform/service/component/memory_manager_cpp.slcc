@@ -20,3 +20,21 @@ provides:
 requires:
 - name: memory_manager
 - name: cpp_support
+toolchain_settings:
+  # Force the global C++ operator new symbols defined in sl_memory_manager_cpp.cpp
+  # to stay linked so the weak libc/libc++ implementations are not selected. Without this,
+  # the array, nothrow and aligned new overloads can be resolved internally by libc
+  # (notably with LLVM/libc++), bypassing the Memory Manager. The names are the
+  # Itanium C++ ABI mangled symbols for ILP32 ARM (size_t == unsigned int == 'j'):
+  #   _Znwj                               operator new(size_t)
+  #   _Znaj                               operator new[](size_t)
+  #   _ZnwjRKSt9nothrow_t                 operator new(size_t, nothrow_t const&)
+  #   _ZnajRKSt9nothrow_t                 operator new[](size_t, nothrow_t const&)
+  #   _ZnwjSt11align_val_t                operator new(size_t, align_val_t)
+  #   _ZnajSt11align_val_t                operator new[](size_t, align_val_t)
+  #   _ZnwjSt11align_val_tRKSt9nothrow_t  operator new(size_t, align_val_t, nothrow_t const&)
+  #   _ZnajSt11align_val_tRKSt9nothrow_t  operator new[](size_t, align_val_t, nothrow_t const&)
+- option: gcc_linker_option
+  value: -Wl,--undefined=_Znwj -Wl,--undefined=_Znaj -Wl,--undefined=_ZnwjRKSt9nothrow_t -Wl,--undefined=_ZnajRKSt9nothrow_t -Wl,--undefined=_ZnwjSt11align_val_t -Wl,--undefined=_ZnajSt11align_val_t -Wl,--undefined=_ZnwjSt11align_val_tRKSt9nothrow_t -Wl,--undefined=_ZnajSt11align_val_tRKSt9nothrow_t
+- option: llvm_linker_option
+  value: -Wl,--undefined=_Znwj -Wl,--undefined=_Znaj -Wl,--undefined=_ZnwjRKSt9nothrow_t -Wl,--undefined=_ZnajRKSt9nothrow_t -Wl,--undefined=_ZnwjSt11align_val_t -Wl,--undefined=_ZnajSt11align_val_t -Wl,--undefined=_ZnwjSt11align_val_tRKSt9nothrow_t -Wl,--undefined=_ZnajSt11align_val_tRKSt9nothrow_t

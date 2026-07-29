@@ -43,3 +43,7 @@ tag:
   - hardware:component:joystick:skrhaae010
   - hwfilter:board:joystick
   - hwfilter:device:device_series_2
+  - hwfilter:!device:device_series_3
+  - hwfilter:!board:brd4418a
+  - hwfilter:!board:brd4419a
+  - hwfilter:!board:brd4356z

@@ -104,6 +104,10 @@
 #ifndef OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
 #define OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE       1
 #endif
+// <q>  DNS upstream query (host resolver via Spinel)
+#ifndef OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+#define OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE 1
+#endif
 // <q>  Service Registration Protocol (SRP) Client
 #ifndef OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 #define OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE         1
@@ -466,9 +470,9 @@
 #endif
 // <s.16 OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION> Vendor SW Version string
 // <i> Vendor SW Version string
-// <i> Default: "3.1.0.0"
+// <i> Default: "3.1.1.0"
 #ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION
-#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION "3.1.0.0"
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION "3.1.1.0"
 #endif
 // <s.96 OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_URL> Vendor App URL string
 // <i> Vendor App URL string

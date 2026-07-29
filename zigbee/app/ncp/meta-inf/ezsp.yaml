@@ -2070,6 +2070,12 @@
           name: "SL_ZIGBEE_EZSP_VALUE_STACK_REVISION",
           value: "0x49",
           description: "The stack revision."
+        },
+        {
+          name: "SL_ZIGBEE_EZSP_CONFIG_SLEEPY_TARGET_MAC_TIMEOUT_INCREASE",
+          value: "0x50",
+          description: "The extra milliseconds added to the APS retry and Fragmentation retry
+          timeout for known sleepy destinations.",
         }
       ],
     },

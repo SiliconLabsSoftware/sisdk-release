@@ -1,9 +1,12 @@
 # PSA Crypto DSA
 
-Demonstrates how to sign and verify with the PSA Crypto digital-signature API (ECDSA and EdDSA), using generic and built-in ECC keys.
+## High-Level Overview
+
+Demonstrates how to sign and verify with the PSA Crypto digital-signature API (ECDSA and EdDSA), in a platform security SoC example with generic and built-in ECC keys.
 
 ## Table of Contents
 
+- [High-Level Overview](#high-level-overview)
 - [Purpose / Scope](#purpose--scope)
 - [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
 - [Steps to Run Demo](#steps-to-run-demo)

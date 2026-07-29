@@ -35,6 +35,7 @@ template_contribution:
     include: sl_hfxo_manager.h
     handler: sl_hfxo_manager_init_hardware
   priority: -9675
+  unless: [sl_main]
 - name: event_handler
   value:
     event: service_init

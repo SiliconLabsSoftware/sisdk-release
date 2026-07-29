@@ -1,9 +1,12 @@
 # PSA Crypto KDF
 
-Demonstrates how to derive keys with the PSA Crypto HKDF API, optionally chained with ECDH key agreement, producing AES, ChaCha20, HMAC, and other derived keys.
+## High-Level Overview
+
+Demonstrates how to derive keys with the PSA Crypto HKDF API, in a platform security SoC example optionally chained with ECDH key agreement, producing AES, ChaCha20, HMAC, and other derived keys.
 
 ## Table of Contents
 
+- [High-Level Overview](#high-level-overview)
 - [Purpose / Scope](#purpose--scope)
 - [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
 - [Steps to Run Demo](#steps-to-run-demo)
@@ -134,23 +137,6 @@ When the macro is disabled, PSA functions make defensive `malloc`/`memcpy`/`free
 ## Report Bugs & Get Support
 
 You are always encouraged and welcome to report any issues you find via the [Silicon Labs Community](https://community.silabs.com/).
-
-Be sure to select the following settings to see the serial output of this example:
-
-* 115200 Baud Rate 
-* 8-N-1 configuration
-* Line terminator should be set to "None" if using Device Console in Simplicity Studio
-
-### Programming the Radio Board
-
 Before programming the radio board mounted on the mainboard, make sure the power supply switch is in the AEM position (right side) as shown below.
 
 ![Radio board power supply switch](image/readme_img0.png)
-
-## Resources
-
-[AN1311: Integrating Crypto Functionality Using PSA Crypto Compared to Mbed TLS](https://www.silabs.com/documents/public/application-notes/an1311-mbedtls-psa-crypto-porting-guide.pdf)
-
-## Report Bugs & Get Support
-
-You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://community.silabs.com/).

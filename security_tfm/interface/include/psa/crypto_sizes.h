@@ -29,8 +29,8 @@
 
 #if defined(SL_TRUSTZONE_SECURE)
 
-/* The Secure library must use the standard crypto_sizes.h from the mbedtls repo. */
-#include "psa/crypto_sizes.h"
+/* The Secure library must use the crypto_sizes.h from the mbedtls repo. */
+#include <include/psa/crypto_sizes.h>
 
 #else /* SL_TRUSTZONE_SECURE */
 

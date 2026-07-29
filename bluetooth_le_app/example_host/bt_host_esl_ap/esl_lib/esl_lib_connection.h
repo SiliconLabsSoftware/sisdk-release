@@ -49,8 +49,6 @@ extern "C" {
 // -----------------------------------------------------------------------------
 // Definitions
 
-#define ESL_LIB_CONNECTION_RETRY_COUNT_MAX          3
-
 /// Tag info storage type
 typedef struct {
   sl_slist_node_t          node;    ///< Node for the list

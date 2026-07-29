@@ -28,10 +28,12 @@
  *
  ******************************************************************************/
 
+#include <stdbool.h>
 #include "em_gpio.h"
 #include "sl_simple_rgb_pwm_led_instances.h"
 #include "sl_simple_rgb_pwm_led.h"
 #include "app_log.h"
+#include "sl_gpio.h"
 #include "board.h"
 
 #define ADV_LED_RED_INTENSITY   127
@@ -40,6 +42,8 @@
 
 // -----------------------------------------------------------------------------
 // Private variables
+static sl_gpio_t adv_led;
+static bool adv_led_initialized = false;
 
 //  Array to linearize the light level of the RGB LEDs
 static const uint8_t light_levels[] = {
@@ -62,6 +66,10 @@ static const uint8_t light_levels[] = {
 };
 
 // -----------------------------------------------------------------------------
+// Private function declarations
+static void adv_led_ensure_init(void);
+
+// -----------------------------------------------------------------------------
 // Public function definitions
 
 void rgb_led_set(uint8_t m, uint8_t r, uint8_t g, uint8_t b)
@@ -78,24 +86,40 @@ void rgb_led_set(uint8_t m, uint8_t r, uint8_t g, uint8_t b)
                                     light_levels[g],
                                     light_levels[b]);
   } else {
+    adv_led_turn_off();
+    adv_led_initialized = false;
     sl_simple_rgb_pwm_led_turn_off(sl_simple_rgb_pwm_led_rgb_led0.led_common.context);
   }
 }
 
 void adv_led_turn_on(void)
 {
-  sl_simple_rgb_pwm_led_set_color(sl_simple_rgb_pwm_led_rgb_led0.led_common.context,
-                                  light_levels[ADV_LED_RED_INTENSITY],
-                                  light_levels[ADV_LED_GREEN_INTENSITY],
-                                  light_levels[ADV_LED_BLUE_INTENSITY]);
+  adv_led_ensure_init();
+  sl_gpio_clear_pin(&adv_led);
 }
 
 void adv_led_turn_off(void)
 {
-  sl_simple_rgb_pwm_led_turn_off(sl_simple_rgb_pwm_led_rgb_led0.led_common.context);
+  adv_led_ensure_init();
+  sl_gpio_set_pin(&adv_led);
 }
 
 void adv_led_toggle(void)
 {
-  sl_simple_rgb_pwm_led_toggle(sl_simple_rgb_pwm_led_rgb_led0.led_common.context);
+  adv_led_ensure_init();
+  sl_gpio_toggle_pin(&adv_led);
+}
+
+// -----------------------------------------------------------------------------
+// Private function definitions
+static void adv_led_ensure_init(void)
+{
+  if (!adv_led_initialized) {
+    const sl_simple_rgb_pwm_led_context_t *ctx =
+      sl_simple_rgb_pwm_led_rgb_led0.led_common.context;
+    adv_led.port = ctx->red->port;
+    adv_led.pin = ctx->red->pin;
+    sl_gpio_set_pin_mode(&adv_led, SL_GPIO_MODE_PUSH_PULL, true);
+    adv_led_initialized = true;
+  }
 }

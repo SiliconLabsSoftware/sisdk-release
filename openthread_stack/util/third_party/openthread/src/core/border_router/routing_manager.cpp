@@ -2386,8 +2386,6 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
 
     VerifyOrExit(mEnabled);
 
-    LogInfo("Evaluating NAT64 prefix");
-
     prefix = GetFavoredPrefix(preference);
 
 #if OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
@@ -2445,6 +2443,20 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
 exit:
     return;
 }
+
+#if OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
+void RoutingManager::Nat64PrefixManager::NotifyFavoredPrefix(void)
+{
+    VerifyOrExit(Get<InfraIf>().IsInitialized());
+    VerifyOrExit(mEnabled);
+
+    mNotifiedFavoredPrefix.Clear();
+    Evaluate();
+
+exit:
+    return;
+}
+#endif
 
 void RoutingManager::Nat64PrefixManager::Publish(const Ip6::Prefix &aPrefix, RoutePreference aPreference)
 {

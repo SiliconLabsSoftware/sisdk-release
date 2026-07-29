@@ -67,6 +67,11 @@
 #include "mdns/mdns.hpp"
 
 namespace otbr {
+
+#if OTBR_ENABLE_NCP_DNS_UPSTREAM
+class NcpUpstreamDnsResolver;
+#endif
+
 namespace Host {
 
 /**
@@ -143,6 +148,26 @@ public:
      * @param[in]  aObserver       A reference to the Network properties observer.
      */
     void Init(ot::Spinel::SpinelDriver &aSpinelDriver, PropsObserver &aObserver);
+
+#if OTBR_ENABLE_NCP_DNS_UPSTREAM
+    /**
+     * Sets the NCP DNS upstream resolver used to forward queries to infra nameservers.
+     *
+     * @param[in] aResolver  A pointer to the resolver (may be nullptr to detach).
+     */
+    void SetDnsUpstreamResolver(NcpUpstreamDnsResolver *aResolver);
+
+    /**
+     * Sends a DNS upstream response to the NCP.
+     *
+     * @param[in] aTxnIndex  The transaction index from the NCP query.
+     * @param[in] aData        DNS wire response payload (may be nullptr when @p aLength is 0).
+     * @param[in] aLength      DNS wire response length in bytes.
+     *
+     * @retval OT_ERROR_NONE  The response was sent successfully.
+     */
+    otError SendDnsUpstreamResponse(uint8_t aTxnIndex, const uint8_t *aData, uint16_t aLength);
+#endif
 
     /**
      * Do the de-initialization.
@@ -627,6 +652,12 @@ private:
     bool     ReleaseDnssdStableId(const std::vector<uint8_t> &aCallbackData, uint64_t &aStableIdOut);
 #endif
 
+#if OTBR_ENABLE_NCP_DNS_UPSTREAM
+    otError DnsUpstreamSetEnabled(bool aEnabled);
+    otError DnsUpstreamSetAvailable(bool aAvailable);
+    void    EnableDnsUpstreamOnNcp(void);
+#endif
+
     ot::Spinel::SpinelDriver *mSpinelDriver;
     uint16_t                  mCmdTidsInUse; ///< Used transaction ids.
     spinel_tid_t              mCmdNextTid;   ///< Next available transaction id.
@@ -676,6 +707,9 @@ private:
     TrelStateChangedCallback mTrelStateChangedCallback;
     /// TREL stack UDP port on the NCP (from `SPINEL_PROP_TREL_STATE`); 0 when TREL is off or not yet known.
     uint16_t mTrelThreadUdpPort;
+#endif
+#if OTBR_ENABLE_NCP_DNS_UPSTREAM
+    NcpUpstreamDnsResolver *mDnsUpstreamResolver;
 #endif
 };
 

@@ -1,9 +1,12 @@
 # PSA Crypto Cipher
 
-Demonstrates how to encrypt and decrypt with unauthenticated ciphers (AES-ECB/CBC/CFB/CTR, ChaCha20) using the PSA Crypto API, with generic and built-in AES-128 keys.
+## High-Level Overview
+
+Demonstrates how to encrypt and decrypt with unauthenticated ciphers (AES-ECB/CBC/CFB/CTR, ChaCha20) using the PSA Crypto API, in a platform security SoC example with generic and built-in keys.
 
 ## Table of Contents
 
+- [High-Level Overview](#high-level-overview)
 - [Purpose / Scope](#purpose--scope)
 - [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
 - [Steps to Run Demo](#steps-to-run-demo)

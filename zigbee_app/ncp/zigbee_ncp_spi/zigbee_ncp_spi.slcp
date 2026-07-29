@@ -96,6 +96,7 @@ tag:
   - hwfilter:board:hardware_board_has_spi
   - hwfilter:!board:zb_boards_spi_incompatible
   - hwfilter:!board:zb_boards_ncp_spi_incompatible
+  - hwfilter:!board:zb_boards_ncp_spi_dual_radio_incompatible
   - toolchain:gcc
   - toolchain:iar
   - toolchain:llvm

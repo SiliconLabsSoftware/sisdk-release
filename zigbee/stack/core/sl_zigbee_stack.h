@@ -36,6 +36,7 @@
 
 // These are provided by the application in config/sl_zigbee_configuration.c.
 extern uint16_t sl_zigbee_mac_indirect_timeout;
+extern uint16_t sl_zigbee_sleepy_target_mac_timeout_increase;
 extern uint8_t sl_zigbee_end_devicekeep_alive_support_mode;
 extern uint8_t sli_zigbee_stack_end_device_poll_timeout;
 extern uint16_t sl_zigbee_link_power_delta_interval;

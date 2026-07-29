@@ -41,7 +41,6 @@ class CLIEventHandlersMixin:
             if evt.lib_status == elw.ESL_LIB_STATUS_CONN_FAILED:
                 if (
                     evt.sl_status == elw.SL_STATUS_BT_CTRL_AUTHENTICATION_FAILURE
-                    or evt.data == elw.ESL_LIB_CONNECTION_STATE_NEW_BOND_REQUIRED
                 ):  # handle advertisers bonded to different AP
                     self.log.info(
                         "Tag at address %s refused connection attempts - seemingly bonded to other AP",

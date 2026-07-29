@@ -172,6 +172,7 @@ typedef int ssize_t;
  * | :---------------------: | :---------- ----: | :-------------: | :-----: | :-------|
  * | SO_RCVBUF               | int32_t           |     Set/Get     |   No    | Yes     |
  * | SO_SNDBUF               | int32_t           |     Set/Get     |   Yes   | No      |
+ * | SO_REUSEADDR            | int32_t           |     Set/Get     |   No    | No      |
  * | SO_SNDLOWAT             | int32_t           |     Set/Get     |   Yes   | No      |
  * | SO_WRITABLE             | int32_t           |     Get         |   No    | No      |
  * | SO_READABLE             | int32_t           |     Get         |   No    | No      |
@@ -189,6 +190,27 @@ typedef int ssize_t;
 ///
 /// Used only for stream sockets.
 #define SO_SNDBUF                    2
+
+/// Allow reuse of local addresses on bind().
+/// When set, optval must point to an int32_t. Defaults to 0 (disabled).
+///
+/// Must be set before bind().
+///
+/// Behavior follows the table below
+/// (socketA is already bound, socketB is calling bind() and SO_REUSEADDR is set for this latter one):
+///
+///     socketA (bound)     socketB (binding)   SO_REUSEADDR   Result
+///     ----------------------------------------------------------------
+///     [2001:db8::1]:21    [2001:db8::1]:21    ON / OFF       EADDRINUSE
+///     [2001:db8::1]:21    [2001:db8::2]:21    ON / OFF       OK
+///     [::]:21             [2001:db8::1]:21    OFF            EADDRINUSE
+///     [2001:db8::1]:21    [::]:21             OFF            EADDRINUSE
+///     [::]:21             [2001:db8::1]:21    ON             OK
+///     [2001:db8::1]:21    [::]:21             ON             OK
+///     [::]:21             [::]:21             ON / OFF       EADDRINUSE
+///
+/// For TCP, a socket in TIME_WAIT does not prevent bind() when SO_REUSEADDR is enabled.
+#define SO_REUSEADDR                 3
 
 /// Specify send low water mark in payload bytes.
 /// When set, optval must point to an int32_t.
@@ -505,6 +527,7 @@ int listen(int sockid, int backlog);
  *                      - for #SOL_SOCKET level:
  *                          - #SO_RCVBUF
  *                          - #SO_SNDBUF
+ *                          - #SO_REUSEADDR
  *                          - #SO_SNDLOWAT
  *                      - for #IPPROTO_IPV6 level:
  *                          - #IPV6_UNICAST_HOPS
@@ -536,6 +559,7 @@ int setsockopt(int sockid, int level, int optname,
  *                      - for #SOL_SOCKET level:
  *                          - #SO_RCVBUF
  *                          - #SO_SNDBUF
+ *                          - #SO_REUSEADDR
  *                          - #SO_SNDLOWAT
  *                      - for #IPPROTO_IPV6 level:
  *                          - #IPV6_UNICAST_HOPS

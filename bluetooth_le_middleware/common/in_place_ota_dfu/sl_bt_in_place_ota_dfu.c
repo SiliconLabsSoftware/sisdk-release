@@ -3,7 +3,7 @@
  * @brief In-Place Over-the-Air Device Firmware Update
  *******************************************************************************
  * # License
- * <b>Copyright 2023 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -31,12 +31,26 @@
 #include <math.h>
 #include <stddef.h>
 #include "sl_common.h"
+#include "sl_component_catalog.h"
 #include "gatt_db.h"
 #include "app_assert.h"
+#include "app_timer.h"
 #include "sl_apploader_util.h"
 #include "sl_bt_in_place_ota_dfu.h"
 #include "sl_bt_in_place_ota_dfu_config.h"
-#include "app_timer.h"
+
+#if defined(SL_CATALOG_APP_LOG_PRESENT)
+#include "app_log.h"
+#define LOG_PREFIX                          "[IN-PLACE OTA] "
+#define LOG_NL                              APP_LOG_NL
+#define LOG_INFO(...)                       app_log_info(LOG_PREFIX __VA_ARGS__)
+#define LOG_DEBUG(...)                      app_log_debug(LOG_PREFIX __VA_ARGS__)
+#else // SL_CATALOG_APP_LOG_PRESENT
+#define LOG_PREFIX                          ""
+#define LOG_NL                              ""
+#define LOG_INFO(...)
+#define LOG_DEBUG(...)
+#endif // SL_CATALOG_APP_LOG_PRESENT
 
 // Connection interval time resolution. Time = interval x 1.25 ms
 #define CONN_INTERVAL_TIME_RESOLUTION_MS  1.25f
@@ -71,11 +85,16 @@ void sl_bt_in_place_ota_dfu_on_event(sl_bt_msg_t *evt)
       // into Device Firmware Upgrade (DFU) mode. Written value is ignored.
       if (evt->data.evt_gatt_server_user_write_request.characteristic
           == gattdb_ota_control) {
+        LOG_INFO("OTA Control written. Requesting boot to DFU mode." LOG_NL);
+
         // Always check security status before the transfer.
         if (sl_bt_in_place_ota_dfu_security_status(addr, conn_hdl, bond_hdl)
             != SL_BT_IN_PLACE_OTA_DFU_SECURITY_ACCEPT) {
           // Security requirements not fulfilled. Reject the request.
           attr_status = SL_STATUS_BT_ATT_WRITE_REQUEST_REJECTED;
+          LOG_INFO("Security check FAILED. Rejecting OTA Control write "
+                   "(status 0x%04x). Device will NOT boot to DFU." LOG_NL,
+                   (unsigned int)attr_status);
         } else {
           // Boot into DFU mode.
           boot_to_dfu = true;
@@ -87,9 +106,12 @@ void sl_bt_in_place_ota_dfu_on_event(sl_bt_msg_t *evt)
           gattdb_ota_control,
           (uint8_t)attr_status);
         app_assert_status(sc);
+        LOG_DEBUG("OTA Control write response sent." LOG_NL);
 
         // Start delay timer before closing connection.
         // Forward connection ID to the timer callback.
+        LOG_INFO("Starting connection close delay timer: %lu ms." LOG_NL,
+                 (unsigned long)delay_additional_ms);
         sc = app_timer_start(&connection_close_delay,
                              delay_additional_ms,
                              delay_timer_cb,
@@ -127,8 +149,16 @@ static void delay_timer_cb(app_timer_t *handle, void *data)
 {
   uint32_t conn_handle = (uint32_t)data;
   if (handle == &connection_close_delay && boot_to_dfu) {
+    LOG_INFO("Delay timer expired. Closing connection (%u) "
+             "and resetting into AppLoader OTA DFU mode..." LOG_NL,
+             (unsigned int)conn_handle);
     // Close connection before booting into DFU mode.
     (void)sl_bt_connection_close((uint8_t)conn_handle);
+  } else {
+    LOG_INFO("Delay timer expired but no DFU boot pending "
+             "(handle match %s, boot_to_dfu %s)." LOG_NL,
+             (handle == &connection_close_delay) ? "true" : "false",
+             boot_to_dfu ? "true" : "false");
   }
 }
 
@@ -167,9 +197,6 @@ SL_WEAK sl_bt_in_place_ota_dfu_security_sts_t sl_bt_in_place_ota_dfu_security_st
                                                                                      uint8_t bonding)
 {
   sl_bt_in_place_ota_dfu_security_sts_t ret_val = SL_BT_IN_PLACE_OTA_DFU_SECURITY_ACCEPT;
-  (void) address;
-  (void) connection;
-
   /////////////////////////////////////////////////////////////////////////////
   // Implement as a strong function in user code to realize additional       //
   // security measures before starting the In-place OTA DFU transfer.        //
@@ -178,8 +205,16 @@ SL_WEAK sl_bt_in_place_ota_dfu_security_sts_t sl_bt_in_place_ota_dfu_security_st
   if (bonding == SL_BT_INVALID_BONDING_HANDLE) {
     ret_val = SL_BT_IN_PLACE_OTA_DFU_SECURITY_DENY;
   }
+  LOG_DEBUG("Security status check (bonding required): connection %u, "
+            "bonding handle %u -> %s." LOG_NL,
+            connection,
+            bonding,
+            (ret_val == SL_BT_IN_PLACE_OTA_DFU_SECURITY_ACCEPT) ? "ACCEPT" : "DENY");
 #else
   (void) bonding;
+  (void) connection;
+  LOG_DEBUG("Security status check (bonding not required): ACCEPT." LOG_NL);
 #endif
+  (void) address;
   return ret_val;
 }

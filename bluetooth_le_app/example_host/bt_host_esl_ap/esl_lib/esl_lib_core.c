@@ -45,6 +45,7 @@
 #include "app_timer.h"
 #include "esl_lib_log.h"
 #include "esl_lib_memory.h"
+#include "esl_lib_adv_dedup.h"
 
 // -----------------------------------------------------------------------------
 // Definitions
@@ -84,6 +85,11 @@ static sl_status_t send_scan_status(void);
 static sl_status_t set_connection_mode(esl_lib_connection_mode_t requested_mode,
                                        esl_lib_status_t *lib_status);
 static bool find_service_in_advertisement(uint8_t *data, uint8_t len);
+static void process_advertisement_report(uint8_t *data,
+                                         uint8_t len,
+                                         bd_addr address,
+                                         uint8_t address_type,
+                                         int8_t rssi);
 static void esl_lib_core_internal_reset(void);
 static void send_shutdown_ready_event(void);
 
@@ -146,6 +152,11 @@ void esl_lib_init(char *config)
   // Initialize OTS Client
   esl_lib_log_core_debug("Prepare OTS client" APP_LOG_NL);
   sli_bt_ots_client_init();
+
+#if ESL_LIB_ADV_DEDUP_ENABLE
+  (void)esl_lib_adv_dedup_configure(NULL);
+#endif
+
   esl_lib_log_core_debug("AP host library instance ready" APP_LOG_NL);
 }
 
@@ -315,32 +326,18 @@ static void esl_lib_core_on_bt_event(sl_bt_msg_t *evt)
       send_connection_mode_event();
       break;
     case sl_bt_evt_scanner_legacy_advertisement_report_id:
-      if (find_service_in_advertisement(evt->data.evt_scanner_legacy_advertisement_report.data.data,
-                                        evt->data.evt_scanner_legacy_advertisement_report.data.len)) {
-        esl_lib_core_state_t core_status;
-        bool ll_list_busy;
-        uint8_t connections;
-
-        (void)esl_lib_get_connection_mode_and_status(&core_status, &connections, &ll_list_busy);
-        if (ll_list_busy && core_status == ESL_LIB_CORE_STATE_CONNECTING) {
-          // Our internal acceptance list is practically never busy, unlike its LL counterpart, but with hundreds
-          // to thousands of nearby advertisers it's still better to fill our list gradually, i.e. while the LL is
-          // not busy, to initiate a connection to one of the devices on its filter acceptance list.
-          // This helps reduce the otherwise heavy load on the library interface and avoids initial connection
-          // losses, especially when the AP is cold started.
-          esl_lib_log_core_debug("Defer reporting ESL at " ESL_LIB_LOG_ADDR_FORMAT ", RSSI = %d due to controller busy connecting. Connections: %u." APP_LOG_NL,
-                                 ESL_LIB_LOG_ADDR(evt->data.evt_scanner_legacy_advertisement_report),
-                                 evt->data.evt_scanner_legacy_advertisement_report.rssi,
-                                 connections);
-          break; // exit case immediately, do not send report while connecting
-        }
-        esl_lib_log_core_debug("ESL found at " ESL_LIB_LOG_ADDR_FORMAT ", RSSI = %d" APP_LOG_NL,
-                               ESL_LIB_LOG_ADDR(evt->data.evt_scanner_legacy_advertisement_report),
-                               evt->data.evt_scanner_legacy_advertisement_report.rssi);
-        (void)send_tag_found(evt->data.evt_scanner_legacy_advertisement_report.address.addr,
-                             evt->data.evt_scanner_legacy_advertisement_report.address_type,
-                             evt->data.evt_scanner_legacy_advertisement_report.rssi);
-      }
+      process_advertisement_report(evt->data.evt_scanner_legacy_advertisement_report.data.data,
+                                   evt->data.evt_scanner_legacy_advertisement_report.data.len,
+                                   evt->data.evt_scanner_legacy_advertisement_report.address,
+                                   evt->data.evt_scanner_legacy_advertisement_report.address_type,
+                                   evt->data.evt_scanner_legacy_advertisement_report.rssi);
+      break;
+    case sl_bt_evt_scanner_extended_advertisement_report_id:
+      process_advertisement_report(evt->data.evt_scanner_extended_advertisement_report.data.data,
+                                   evt->data.evt_scanner_extended_advertisement_report.data.len,
+                                   evt->data.evt_scanner_extended_advertisement_report.address,
+                                   evt->data.evt_scanner_extended_advertisement_report.address_type,
+                                   evt->data.evt_scanner_extended_advertisement_report.rssi);
       break;
     case sl_bt_evt_system_resource_exhausted_id:
       lib_status = ESL_LIB_STATUS_RESOURCE_EXCEEDED;
@@ -834,6 +831,50 @@ static void esl_lib_core_step(void)
   }
 }
 
+static void process_advertisement_report(uint8_t *data,
+                                         uint8_t len,
+                                         bd_addr address,
+                                         uint8_t address_type,
+                                         int8_t rssi)
+{
+  if (find_service_in_advertisement(data, len)) {
+    esl_lib_core_state_t core_status;
+    bool ll_list_busy;
+    uint8_t connections;
+    esl_lib_address_t adv_address;
+
+    memset(&adv_address, 0, sizeof(adv_address));
+    memcpy(adv_address.addr, address.addr, sizeof(adv_address.addr));
+    adv_address.address_type = address_type;
+
+    (void)esl_lib_get_connection_mode_and_status(&core_status, &connections, &ll_list_busy);
+    if (ll_list_busy && core_status == ESL_LIB_CORE_STATE_CONNECTING) {
+      // Our internal acceptance list is practically never busy, unlike its LL counterpart, but with hundreds
+      // to thousands of nearby advertisers it's still better to fill our list gradually, i.e. while the LL is
+      // not busy, to initiate a connection to one of the devices on its filter acceptance list.
+      // This helps reduce the otherwise heavy load on the library interface and avoids initial connection
+      // losses, especially when the AP is cold started.
+      esl_lib_adv_dedup_touch(adv_address, rssi);
+      esl_lib_log_core_debug("Defer reporting ESL at type %u %s address: %02X:%02X:%02X:%02X:%02X:%02X, RSSI = %d due to controller busy connecting. Connections: %u." APP_LOG_NL,
+                             address_type,
+                             (address_type ? "random" : "public"),
+                             ESL_LIB_LOG_BD_ADDR(address),
+                             rssi,
+                             connections);
+      return;
+    }
+    if (!esl_lib_adv_dedup_should_notify(adv_address, rssi)) {
+      return;
+    }
+    esl_lib_log_core_debug("ESL found at type %u %s address: %02X:%02X:%02X:%02X:%02X:%02X, RSSI = %d" APP_LOG_NL,
+                           address_type,
+                           (address_type ? "random" : "public"),
+                           ESL_LIB_LOG_BD_ADDR(address),
+                           rssi);
+    (void)send_tag_found(address.addr, address_type, rssi);
+  }
+}
+
 // Parse advertisements looking for advertised ESL service
 static bool find_service_in_advertisement(uint8_t *data, uint8_t len)
 {
@@ -914,6 +955,7 @@ static void esl_lib_core_internal_reset(void)
   esl_lib_pawr_cleanup();
   (void)esl_lib_ap_control_cleanup();
   (void)esl_lib_initiator_filter_cleanup();
+  esl_lib_adv_dedup_deinit();
 
   // Cleanup events
   while ((last_evt = esl_lib_event_list_get_first()) != NULL) {

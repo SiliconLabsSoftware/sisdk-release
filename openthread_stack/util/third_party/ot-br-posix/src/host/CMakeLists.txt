@@ -36,6 +36,8 @@ add_library(otbr-host
     ncp_host.hpp
     ncp_spinel.cpp
     ncp_spinel.hpp
+    ncp_upstream_dns_resolver.cpp
+    ncp_upstream_dns_resolver.hpp
     rcp_host.cpp
     rcp_host.hpp
     thread_helper.cpp

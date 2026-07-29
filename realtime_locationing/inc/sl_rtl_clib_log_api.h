@@ -79,6 +79,7 @@ enum sl_rtl_error_code{
   SL_RTL_ERROR_CS_CHANNEL_SPACING_TOO_LARGE, ///< Channel spacing is too large in the proposed channel map
   SL_RTL_ERROR_POOR_INPUT_DATA_QUALITY, ///< The input data quality is poor
   SL_RTL_ERROR_QUEUE_FULL, ///< The RTL task's input queue is full
+  SL_RTL_ERROR_LIKELINESS_BELOW_THRESHOLD, ///< The estimate likeliness is below the configured threshold
 
   SL_RTL_ERROR_LAST ///< Number of error codes
 };

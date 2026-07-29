@@ -516,14 +516,14 @@ class ScriptMixin:
 
         try:
             resolved = full_template
-            # Phase 1 — iteratively peel nested conditionals from outside in;
+            # Phase 1 - iteratively peel nested conditionals from outside in;
             # capped at 6 iterations to guard against pathological input.
             for _ in range(6):
                 prev = resolved
                 resolved = conditional_re.sub(resolve_conditional, resolved)
                 if resolved == prev:
                     break
-            # Phase 2 — resolve remaining simple / virtual placeholders.
+            # Phase 2 - resolve remaining simple / virtual placeholders.
             resolved = simple_re.sub(resolve_value, resolved)
         except (AttributeError, ValueError):
             return None

@@ -52,6 +52,11 @@ void sli_zigbee_isr_event_marker(struct Event_s *event)
   assert(false);
 }
 
+WEAK(void sli_zigbee_isr_event_armed_callback(void))
+{
+  // no-op; RTOS builds override to wake the application framework task.
+}
+
 void sli_zigbee_initialize_event_queue(sli_zigbee_event_queue_t *queue)
 {
   queue->isrEvents = NULL;
@@ -272,11 +277,15 @@ void sli_zigbee_event_set_delay_ms(sli_zigbee_event_t *event, uint32_t delay)
 {
   sli_zigbee_event_queue_t *queue = event->actions.queue;
   if (event->actions.marker == sli_zigbee_isr_event_marker) {
+    bool armed = false;
+    
     assert(delay == 0);
     ATOMIC(
       if (event->next != NULL) {
       // already scheduled, do nothing
-    } else if (queue->isrEvents == NULL) {
+    } else {
+      armed = true;
+      if (queue->isrEvents == NULL) {
       event->next = event;
       queue->isrEvents = event;
     } else {
@@ -284,11 +293,11 @@ void sli_zigbee_event_set_delay_ms(sli_zigbee_event_t *event, uint32_t delay)
       queue->isrEvents->next = event;
       queue->isrEvents = event;
     }
+    }
       );
-    // Issue a callback to the application so that it knows that an event has
-    // happened in ISR context and we should recompute delay times.
-    // sToDo: this next call should be replaced
-    // emApiEventDelayUpdatedFromIsrHandler(event);
+    if (armed) {
+      sli_zigbee_isr_event_armed_callback(); //call wake up here
+    }
   } else {
     uint32_t now = halCommonGetInt32uMillisecondTick();
     uint32_t timeToExecute;

@@ -38,6 +38,7 @@ component:
 source:
   - path: esl_lib.c
   - path: esl_lib_ap_control.c
+  - path: esl_lib_adv_dedup.c
   - path: esl_lib_command_list.c
   - path: esl_lib_connection.c
   - path: esl_lib_core.c
@@ -56,6 +57,8 @@ include:
     file_list:
       - path: esl_lib.h
       - path: esl_lib_ap_control.h
+      - path: esl_lib_adv_dedup.h
+      - path: esl_lib_adv_dedup_config.h
       - path: esl_lib_command_list.h
       - path: esl_lib_connection.h
       - path: esl_lib_core.h
@@ -81,7 +84,7 @@ configuration:
   - name: PEEK_US_SLEEP
     value: "1"
   - name: MSG_RECV_TIMEOUT_MS
-    value: "2"
+    value: "32"
   - name: DEFAULT_HOST_BUFLEN
     value: "16384"
   - name: NCP_REBOOT_TIMEOUT_INIT_MS

@@ -146,7 +146,7 @@ configuration:
     condition:
       - psa_crypto
   - name: APP_LOG_LEVEL_FILTER_THRESHOLD
-    value: APP_LOG_LEVEL_INFO
+    value: APP_LOG_LEVEL_DEBUG
 
 define:
   - name: BOARD_MEMLCD_PRESENT

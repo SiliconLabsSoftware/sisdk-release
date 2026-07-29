@@ -361,6 +361,11 @@
       vendor: silabs
     path: brd2601d/sl_mx25_flash_shutdown_usart_config.h
   - override:
+      component: legacy_ncp_spi
+      file_id: legacy_ncp_spi_config
+      vendor: silabs
+    path: brd2601d/legacy_ncp_spi_config.h
+  - override:
       component: ot_ncp_spidrv
       file_id: sl_ncp_spidrv_usart_config
       vendor: silabs

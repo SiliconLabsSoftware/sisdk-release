@@ -17,8 +17,8 @@
 
 #if defined(SL_TRUSTZONE_SECURE)
 
-/* The Secure library must use the standard crypto_extra.h from the mbedtls repo. */
-#include "psa/crypto_extra.h"
+/* The Secure library must use the crypto_extra.h from the mbedtls repo. */
+#include <include/psa/crypto_extra.h>
 
 #else /* SL_TRUSTZONE_SECURE */
 
@@ -436,6 +436,10 @@ psa_status_t mbedtls_psa_inject_entropy(const uint8_t *seed,
 /** \defgroup psa_tls_helpers TLS helper functions
  * @{
  */
+/* The helpers below take/return mbedtls_ecp_group_id from <mbedtls/ecp.h>.
+ * On NS the implementations are provided by sli_tz_tls_helpers.c, which
+ * bridges to PSA across the TZ boundary; <mbedtls/ecp.h> is shipped for
+ * NS by the TrustZone NS mbedtls header/component selection. */
 #if defined(PSA_WANT_KEY_TYPE_ECC_PUBLIC_KEY)
 #include <mbedtls/ecp.h>
 

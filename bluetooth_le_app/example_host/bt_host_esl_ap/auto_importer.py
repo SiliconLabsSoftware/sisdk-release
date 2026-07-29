@@ -24,9 +24,10 @@ Automatic dependency importer
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
 import importlib
+import os
+import shutil
 import subprocess
 import sys
-import os
 from pathlib import Path
 from ap_logger import getLogger
 try:
@@ -50,35 +51,65 @@ class AutoImporter:
     def log(self):
         return getLogger("IMP")
 
+    def _venv_python_candidates(self):
+        """Return candidate paths for the venv Python executable."""
+        if sys.platform == "win32":
+            return [self.venv / "Scripts" / "python.exe"]
+        return [self.venv / "bin" / "python", self.venv / "bin" / "python3"]
+
+    def _find_venv_python(self):
+        """Return the first usable venv Python executable, or None if missing."""
+        for candidate in self._venv_python_candidates():
+            if candidate.is_file():
+                return candidate
+        return None
+
+    def _get_venv_site_packages(self):
+        """Return the venv site-packages directory."""
+        if sys.platform == "win32":
+            return self.venv / "Lib" / "site-packages"
+        matches = list((self.venv / "lib").glob("python*/site-packages"))
+        if not matches:
+            raise RuntimeError(f"site-packages not found in virtual environment at {self.venv}.")
+        return matches[0]
+
+    def _remove_venv(self):
+        """Remove a broken or stale virtual environment."""
+        if self.venv.exists():
+            self.log.warning("Removing invalid virtual environment at %s...", self.venv)
+            shutil.rmtree(self.venv)
+
+    def _create_venv(self):
+        """Create the virtual environment."""
+        try:
+            subprocess.run(
+                [sys.executable, "-m", "venv", str(self.venv)],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            err = e.stderr.decode().rstrip() if e.stderr else "Unknown error"
+            raise RuntimeError(f"Failed to create virtual environment: {err}.") from e
+
     def _prepare_venv(self):
         """
         Ensure that the virtual environment exists and that its site-packages
         directory is added to sys.path. Returns the path to the venv Python.
         """
-        if not self.venv.exists():
-            self.log.warning("Virtual environment not found, creating it...")
-            try:
-                subprocess.run(
-                    [sys.executable, "-m", "venv", str(self.venv)],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.PIPE,
-                    check=True,
-                )
-            except subprocess.CalledProcessError as e:
-                err = e.stderr.decode().rstrip() if e.stderr else "Unknown error"
-                raise RuntimeError(f"Failed to create virtual environment: {err}.") from e
+        python = self._find_venv_python() if self.venv.exists() else None
+        if python is None:
+            if self.venv.exists():
+                self.log.warning("Virtual environment is invalid or incomplete, recreating it...")
+                self._remove_venv()
+            else:
+                self.log.warning("Virtual environment not found, creating it...")
+            self._create_venv()
+            python = self._find_venv_python()
+            if python is None:
+                raise RuntimeError(f"Virtual environment at {self.venv} has no usable Python executable.")
 
-
-        # Determine python executable path depending on host OS
-        if sys.platform == "win32":
-            python = self.venv / "Scripts" / "python.exe"
-            site = self.venv / "Lib" / "site-packages"
-        else:
-            python = self.venv / "bin" / "python"
-            site = next((self.venv / "lib").glob("python*/site-packages"))
-
-        # Ensure site-packages is on sys.path
-        site = str(site)
+        site = str(self._get_venv_site_packages())
         if site not in sys.path:
             sys.path.insert(0, site)
 
@@ -119,10 +150,18 @@ class AutoImporter:
         try:
             return self._try_import(module, attr)
         except ImportError:
-            self.log.warning("System import of '%s' failed. Falling back to virtual environment handling.", module)
+            self.log.info("System import of '%s' is falling back to virtual environment handling.", module)
 
         # Prepare venv and install after unsuccessful attempt
         python = self._prepare_venv()
+
+        # retry on venv
+        try:
+            return self._try_import(module, attr)
+        except AttributeError as e:
+            raise AttributeError(...) from e
+        except ImportError:
+            self.log.info("Ensuring optional dependency '%s' is available.", normalize_name(module))
 
         try:
             subprocess.run(

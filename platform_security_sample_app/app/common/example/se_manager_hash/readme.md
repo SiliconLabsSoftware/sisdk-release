@@ -1,85 +1,91 @@
-# SE Manager Hash
+# Platform Security - SoC SE Manager Hash
 
-This example uses the SE Manager API to perform different Hash operations on the supported device.
+Demonstrates how to compute message digests with the SE Manager Hash API, exercising SHA-1 and SHA-2 in one-shot and streaming modes with test-vector verification on Secure Vault devices.
 
-In this example, test vectors are used to verify the Hash streaming operations.
+## Table of Contents
 
-The example redirects standard I/O to the virtual serial port (VCOM) of the kit. By default, the serial port setting is 115200 bps and 8-N-1 configuration.
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-The example has been instrumented with code to count the number of clock cycles spent in different operations. The results are printed on the VCOM serial port console. This feature can be disabled by defining `SE_MANAGER_PRINT=0` (default is 1) in the IDE setting (`Preprocessor->Defined symbols`).
+## Purpose / Scope
 
-## Getting Started
+This example exercises the **SE Manager Hash API** on a Secure Vault device. It fills a message buffer with random data, computes a **one-shot** hash over a selected payload length, then runs a **streaming** hash over a fixed test vector and compares the result to known expected digests.
+Output is on the kit **VCOM** port, with **clock-cycle counts** per operation when `SE_MANAGER_PRINT=1` (default).
 
-1. Upgrade the kit’s firmware to the latest version (see `Adapter Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in the Simplicity Studio 5 User's Guide).
-2. Upgrade the device’s SE firmware to the latest version (see `Secure Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in the Simplicity Studio 5 User's Guide).
-3. Open any terminal program and connect to the kit’s VCOM port (if using `Device Console` in Simplicity Studio 5, `Line terminator:` must be set to `None`).
-4. Create this platform example project in the Simplicity IDE (see [Examples](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-getting-started/start-a-project#examples) in the Simplicity Studio 5 User's Guide).
-5. Build the example and download it to the kit (see [Simple Build](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/building#simple-build) and [Flash Programmer](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/flashing#flash-programmer) in the Simplicity Studio 5 User's Guide).
-6. Run the example and follow the instructions shown on the console.
+### Interactive menu
 
-## Additional Information
+- **SPACE** — cycle the current option
+- **ENTER (CR)** — confirm and proceed
+1. **Payload size:** 256, 1024, or 4096 bytes (`MSG_SIZE` = 4096 in `app_process.h`)
+2. **Hash algorithm:** SHA-1, SHA-224, SHA-256; on **Secure Vault High** also SHA-384 and SHA-512
 
-1. The default optimization level is `Optimize for debugging (-Og)` on Simplicity IDE and `None` on IAR Embedded Workbench.
+### Tests performed
 
-### Payload Size
+| Phase | What it does |
+|-------|----------------|
+| **One-shot hash** | `sl_se_hash` over `msg_size` bytes of random data from `msg_buf`; prints digest in hex |
+| **Streaming hash** | `sl_se_hash_starts` / algorithm-specific `sl_se_hash_sha*_starts`, `sl_se_hash_update`, `sl_se_hash_finish` over the standard test string `abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq` |
+| **Verify** | Compare streaming digest to built-in expected values for the selected algorithm (prints **OK** or **Failed**) |
+After a successful compare, the menu returns so you can run again with different settings.
+**Components used:** `se_manager`, `sl_main`, `device_init`, `clock_manager`, VCOM stdio retargeting. Requires **`device_has_semailbox`**.
 
-The following payload sizes are supported in this example:
+### SE Manager APIs exercised
 
-* `MSG_SIZE`/16
-* `MSG_SIZE`/4
-* `MSG_SIZE`
+`sl_se_init`, `sl_se_deinit`, `sl_se_init_command_context`, `sl_se_deinit_command_context`, `sl_se_get_random`, `sl_se_hash`, `sl_se_hash_starts`, `sl_se_hash_sha1_starts`, `sl_se_hash_sha224_starts`, `sl_se_hash_sha256_starts`, `sl_se_hash_sha384_starts` (Vault High), `sl_se_hash_sha512_starts` (Vault High), `sl_se_hash_update`, `sl_se_hash_finish`.
 
-The default `MSG_SIZE` is `4096`, it is defined in `app_process.h`.
+## Prerequisites / Setup Requirements
 
-### Hash Algorithm
+### Hardware Requirements
 
-The following hash algorithms are supported in this example:
+- A **Secure Vault** development kit with SE mailbox support (see board compatibility in Simplicity Studio for `se_manager_hash` / `se_manager_hash_s3`).
+- **AEM** power selected on the radio/mainboard switch when programming (see image below).
+- USB connection for programming and VCOM.
 
-* `SHA-1`
-* `SHA-224`
-* `SHA-256`
-* `SHA-384` (Secure Vault High only)
-* `SHA-512` (Secure Vault High only)
+### Software Requirements
 
-### SE Manager API
+- **Simplicity Studio 5** (current SDK matching the example).
+- A serial terminal (or **Device Console** in Studio) on the kit **VCOM** port:
+  - **115200** baud, **8-N-1**
+  - **Line terminator: None** (required for Device Console)
+- Latest **adapter firmware** and **Secure Engine (SE) firmware** on the kit ([General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information)).
 
-The following SE Manager APIs are used in this example:
+## Steps to Run Demo
 
-* `sl_se_init`
-* `sl_se_deinit`
-* `sl_se_init_command_context`
-* `sl_se_deinit_command_context`
-* `sl_se_get_random`
-* `sl_se_hash`
-* `sl_se_hash_starts`
-* `sl_se_hash_sha1_starts`
-* `sl_se_hash_sha224_starts`
-* `sl_se_hash_sha256_starts`
-* `sl_se_hash_sha384_starts` (Secure Vault High only)
-* `sl_se_hash_sha512_starts` (Secure Vault High only)
-* `sl_se_hash_update`
-* `sl_se_hash_finish`
+1. Update kit **adapter firmware** and device **SE firmware** to the latest versions.
+2. Open a serial terminal on the kit **VCOM** port (115200 8-N-1; line terminator **None** if using Device Console).
+3. Create the **Platform Security - SoC SE Manager Hash** project in Simplicity Studio ([Examples](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-getting-started/start-a-project#examples)).
+4. Build and flash the project ([Simple Build](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/building#simple-build), [Flash Programmer](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/flashing#flash-programmer)).
+5. Reset the board. The example initializes SE Manager and fills the message buffer with random data.
+6. Use **SPACE** / **ENTER** to choose **payload size**, then **hash algorithm**.
+7. Watch the log for:
+   - One-shot hash over random data (hex digest printed)
+   - Streaming hash over the test vector (hex digest printed)
+   - **Comparing … hash value with expected data… OK**
+8. The size/hash menu reappears for another run.
 
 ## Troubleshooting
 
-### Serial Port Settings
-
-Be sure to select the following settings to see the serial output of this example:
-
-* 115200 Baud Rate 
-* 8-N-1 configuration
-* Line terminator should be set to "None" if using Device Console in Simplicity Studio
-
-### Programming the Radio Board
-
-Before programming the radio board mounted on the mainboard, make sure the power supply switch is in the AEM position (right side) as shown below.
-
-![Radio board power supply switch](image/readme_img0.png)
+| Symptom | What to check |
+|--------|----------------|
+| No serial output | VCOM 115200 8-N-1, line terminator **None**; `SL_BOARD_ENABLE_VCOM=1` |
+| SE manager init failed | Latest SE firmware; Secure Vault + SE mailbox |
+| Random buffer fill failed | SE random source available |
+| One-shot hash failed | Payload size within `MSG_SIZE`; supported algorithm on your Vault tier |
+| Streaming compare **Failed** | Algorithm must match expected test-vector digest; retry with SHA-1/224/256 on Vault Mid |
+| SHA-384/512 not in menu | Vault Mid supports SHA-1, SHA-224, SHA-256 only |
+| Programming fails | AEM switch position (see Prerequisites image) |
+| Slow or debug-heavy build | Default optimization is **debug (-Og)** on GCC / **None** on IAR — intentional for this example |
 
 ## Resources
 
-[SE Manager API](https://docs.silabs.com/gecko-platform/latest/service/api/group-sl-se-manager)
+- [SE Manager API documentation](https://docs.silabs.com/gecko-platform/latest/service/api/group-sl-se-manager)
+- [AN1271: Secure Key Storage](https://www.silabs.com/documents/public/application-notes/an1271-efr32-secure-key-storage.pdf)
+- [Simplicity Studio 5 User's Guide — Examples](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-getting-started/start-a-project#examples)
 
 ## Report Bugs & Get Support
 
-You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://community.silabs.com/).
+You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://www.silabs.com/community).

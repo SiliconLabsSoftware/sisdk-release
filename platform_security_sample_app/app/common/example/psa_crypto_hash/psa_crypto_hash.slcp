@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform Security - SoC PSA Crypto Hash
 description: >
-  Demonstrates how to compute message digests with the PSA Crypto Hash API, exercising SHA-1 and SHA-2 (SHA-224/256/384/512) in single-part and multi-part modes.
+  Demonstrates how to compute message digests with the PSA Crypto Hash API, in a platform security SoC example exercising SHA-1 and SHA-2 (SHA-224/256/384/512) in single-part and multi-part modes.
 category: Example|Platform
 filter:
   - name: "Device Type"

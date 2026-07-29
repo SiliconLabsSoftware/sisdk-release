@@ -104,9 +104,10 @@ zpal_status_t sl_jamming_detection_default_config(sl_jamming_detection_config_t 
 
 /**
  * @brief Enable the jamming detection collection.
+ * Use 0 to disable collection.
  *
  * @param[in] periods Duration in periods (100 ms each) to collect samples (0xffff means forever).
- * @return ZPAL_STATUS_OK on success, ZPAL_STATUS_FAIL if failure.
+ * @return ZPAL_STATUS_OK on success
  */
 zpal_status_t sl_jamming_detection_enable_collection(uint16_t periods);
 

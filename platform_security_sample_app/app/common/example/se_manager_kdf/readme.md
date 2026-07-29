@@ -1,63 +1,85 @@
-# SE Manager Key Derivation (HKDF and PBKDF2)
+# Platform Security - SoC SE Manager Key Derivation (HKDF and PBKDF2)
 
-This example uses the SE Manager API to perform the key derivation (HKDF and PBKDF2) on the supported Secure Vault High device.
+Demonstrates how to derive keys with the SE Manager HKDF and PBKDF2 APIs, verifying output against known test vectors on Secure Vault High devices.
 
-In cryptography, a [key derivation function](https://en.wikipedia.org/wiki/Key_derivation_function) (KDF) is a cryptographic hash function that derives one or more secret keys from a secret value such as a master key, a password, or a passphrase using a pseudo-random function. KDFs can be used to stretch keys into longer keys or to obtain keys of a required format, such as converting a group element that is the result of a Diffie–Hellman key exchange into a symmetric key for use with AES.
+## Table of Contents
 
-HKDF extracts a pseudo-random key (PRK) using an HMAC hash function (e.g. HMAC-SHA256) on an optional salt (acting as a key) and any potentially weak input key material (IKM) (acting as data). It then generates similarly cryptographically strong output key material (OKM) of any desired length by repeatedly generating PRK-keyed hash-blocks and then appending them into the output key material, finally truncating to the desired length.
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-PBKDF2 applies a pseudo-random function, such as hash-based message authentication code (HMAC), to the input password or passphrase along with a salt value and repeats the process many times to produce a derived key, which can then be used as a cryptographic key in subsequent operations. The added computational work makes password cracking much more difficult, and is known as key stretching.
+## Purpose / Scope
 
-In this example, test vectors are used to verify the HKDF and PBKDF2 operations.
+This example exercises **key derivation** with the SE Manager on a **Secure Vault High** device. It runs **HKDF** and **PBKDF2** test cases using built-in vectors, compares the derived key material to expected values, and prints **OK** or **Failed** on the kit **VCOM** port.
+**HKDF** (HMAC-based Extract-and-Expand) derives output key material from input key material, with optional salt and info strings. **PBKDF2** stretches a password with a salt over many iterations.
+The application runs **automatically** after reset (no serial menu). Per-operation **clock-cycle counts** are printed when `SE_MANAGER_PRINT=1` (default).
 
-The example redirects standard I/O to the virtual serial port (VCOM) of the kit. By default, the serial port setting is 115200 bps and 8-N-1 configuration.
+### Tests performed
 
-The example has been instrumented with code to count the number of clock cycles spent in different operations. The results are printed on the VCOM serial port console. This feature can be disabled by defining `SE_MANAGER_PRINT=0` (default is 1) in the IDE setting (`Preprocessor->Defined symbols`).
+| Test | Algorithm | Parameters |
+|------|-----------|------------|
+| **HKDF 1** | HKDF + **SHA-256** | Zero-length salt and info |
+| **HKDF 2** | HKDF + **SHA-256** | Salt + info from test vectors |
+| **HKDF 3** | HKDF + **SHA-512** | Same salt + info |
+| **PBKDF2 1** | PBKDF2 + HMAC-SHA-256 | Password `password`, salt `salt`, **1** iteration |
+| **PBKDF2 2** | PBKDF2 + HMAC-SHA-256 | Same password/salt, **2** iterations |
+| **PBKDF2 3** | PBKDF2 + HMAC-SHA-256 | Same password/salt, **4096** iterations |
+**Components used:** `se_manager`, `sl_main`, `device_init`, `clock_manager`, VCOM stdio retargeting. Requires **`device_security_vault`** (Secure Vault High).
 
-## Getting Started
+### SE Manager APIs exercised
 
-1. Upgrade the kit’s firmware to the latest version (see `Adapter Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in the Simplicity Studio 5 User's Guide).
-2. Upgrade the device’s SE firmware to the latest version (see `Secure Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in the Simplicity Studio 5 User's Guide).
-3. Open any terminal program and connect to the kit’s VCOM port.
-4. Create this platform example project in the Simplicity IDE (see [Examples](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-getting-started/start-a-project#examples) in the Simplicity Studio 5 User's Guide).
-5. Build the example and download it to the kit (see [Simple Build](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/building#simple-build) and [Flash Programmer](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/flashing#flash-programmer) in the Simplicity Studio 5 User's Guide).
-6. Run the example and the console should display the process steps of this example.
+`sl_se_init`, `sl_se_deinit`, `sl_se_init_command_context`, `sl_se_deinit_command_context`, `sl_se_derive_key_hkdf`, `sl_se_derive_key_pbkdf2`.
 
-## Additional Information
+## Prerequisites / Setup Requirements
 
-1. The default optimization level is `Optimize for debugging (-Og)` on Simplicity IDE and `None` on IAR Embedded Workbench.
+### Hardware Requirements
 
-### SE Manager API
+- A **Secure Vault High** development kit (see board compatibility in Simplicity Studio for `se_manager_kdf` / `se_manager_kdf_s3`).
+- **AEM** power selected on the radio/mainboard switch when programming (see image below).
+- USB connection for programming and VCOM.
 
-The following SE Manager APIs are used in this example:
+### Software Requirements
 
-* `sl_se_init`
-* `sl_se_deinit`
-* `sl_se_init_command_context`
-* `sl_se_deinit_command_context`
-* `sl_se_derive_key_hkdf`
-* `sl_se_derive_key_pbkdf2`
+- **Simplicity Studio 5** (current SDK matching the example).
+- A serial terminal (or **Device Console** in Studio) on the kit **VCOM** port:
+  - **115200** baud, **8-N-1**
+  - **Line terminator: None** (required for Device Console)
+- Latest **adapter firmware** and **Secure Engine (SE) firmware** on the kit ([General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information)).
+
+## Steps to Run Demo
+
+1. Update kit **adapter firmware** and device **SE firmware** to the latest versions.
+2. Open a serial terminal on the kit **VCOM** port (115200 8-N-1; line terminator **None** if using Device Console).
+3. Create the **Platform Security - SoC SE Manager Key Derivation (HKDF and PBKDF2)** project in Simplicity Studio ([Examples](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-getting-started/start-a-project#examples)).
+4. Build and flash the project ([Simple Build](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/building#simple-build), [Flash Programmer](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/flashing#flash-programmer)).
+5. Reset the board. The example runs all six tests in sequence without user input.
+6. Confirm each test reports **Comparing … OK**, then SE Manager deinitializes.
+
+### Optional: disable timing prints
+
+Define **`SE_MANAGER_PRINT=0`** in project preprocessor symbols to suppress cycle-count output.
 
 ## Troubleshooting
 
-### Serial Port Settings
-
-Be sure to select the following settings to see the serial output of this example:
-
-* 115200 Baud Rate 
-* 8-N-1 configuration
-* Line terminator should be set to "None" if using Device Console in Simplicity Studio
-
-### Programming the Radio Board
-
-Before programming the radio board mounted on the mainboard, make sure the power supply switch is in the AEM position (right side) as shown below.
-
-![Radio board power supply switch](image/readme_img0.png)
+| Symptom | What to check |
+|--------|----------------|
+| No serial output | VCOM 115200 8-N-1, line terminator **None**; `SL_BOARD_ENABLE_VCOM=1` |
+| SE manager init failed | Latest SE firmware; board is **Secure Vault High** (not Mid-only) |
+| HKDF or PBKDF2 compare **Failed** | SE firmware version; do not modify test vectors unless updating expected arrays |
+| PBKDF2 test 3 slow | **4096 iterations** is intentional — allow time to complete |
+| Example not in Studio picker on Mid board | Expected — requires Secure Vault High |
+| Programming fails | AEM switch position (see Prerequisites image) |
+| Slow or debug-heavy build | Default optimization is **debug (-Og)** on GCC / **None** on IAR — intentional for this example |
 
 ## Resources
 
-[SE Manager API](https://docs.silabs.com/gecko-platform/latest/service/api/group-sl-se-manager)
+- [SE Manager API documentation](https://docs.silabs.com/gecko-platform/latest/service/api/group-sl-se-manager)
+- [AN1271: Secure Key Storage](https://www.silabs.com/documents/public/application-notes/an1271-efr32-secure-key-storage.pdf)
+- [Simplicity Studio 5 User's Guide — Examples](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-getting-started/start-a-project#examples)
 
 ## Report Bugs & Get Support
 
-You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://community.silabs.com/).
+You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://www.silabs.com/community).

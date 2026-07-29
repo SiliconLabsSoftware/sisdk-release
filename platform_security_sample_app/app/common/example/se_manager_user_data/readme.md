@@ -1,55 +1,95 @@
-# SE Manager User Data
+# Platform Security - SoC SE Manager User Data
 
-This example uses the SE Manager API to perform the erase and write operations of the user data section on the supported Series 2 device.
+Demonstrates how to erase and write the SE user data region and verify the contents using SE Manager user data APIs on supported Series 2 devices.
 
-The example redirects standard I/O to the virtual serial port (VCOM) of the kit. By default, the serial port setting is 115200 bps and 8-N-1 configuration.
+## Table of Contents
 
-The example has been instrumented with code to count the number of clock cycles spent in different operations. The results are printed on the VCOM serial port console. This feature can be disabled by defining `SE_MANAGER_PRINT=0` (default is 1) in the IDE setting (`Preprocessor->Defined symbols`).
+- [Purpose / Scope](#purpose--scope)
+- [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
+- [Steps to Run Demo](#steps-to-run-demo)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs & Get Support](#report-bugs--get-support)
 
-## Getting Started
+## Purpose / Scope
 
-1. Upgrade the kit’s firmware to the latest version (see `Adapter Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in the Simplicity Studio 5 User's Guide).
-2. Upgrade the device’s SE firmware to the latest version (see `Secure Firmware` under [General Device Information](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-about-the-launcher/welcome-and-device-tabs#general-device-information) in the Simplicity Studio 5 User's Guide).
-3. Open any terminal program and connect to the kit’s VCOM port.
-4. Create this platform example project in the Simplicity IDE (see [Examples](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-getting-started/start-a-project#examples) in the Simplicity Studio 5 User's Guide).
-5. Build the example and download it to the kit (see [Simple Build](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/building#simple-build) and [Flash Programmer](https://docs.silabs.com/simplicity-studio-5-users-guide/latest/ss-5-users-guide-building-and-flashing/flashing#flash-programmer) in the Simplicity Studio 5 User's Guide).
-6. Run the example and the console should display the process steps of this example.
+This example shows how to manage the **user data** flash region in the Secure Engine using SE Manager. The demo runs **automatically** on reset (no serial menu):
+1. Initialize SE Manager
+2. **Erase** the full user data section (`sl_se_erase_user_data`)
+3. Verify every word reads **`0xFFFFFFFF`** (erased) via `USERDATA_BASE`
+4. **Write** the section with test pattern **`0x55AA55AA`** (`sl_se_write_user_data`)
+5. Read back through the memory map and confirm all words match
+6. Deinitialize SE Manager
+**Clock-cycle counts** print when `SE_MANAGER_PRINT=1` (default).
 
-## Additional Information
+### Device scope
 
-1. The default optimization level is `Optimize for debugging (-Og)` on Simplicity IDE and `None` on IAR Embedded Workbench.
+**Requires:** `device_sdid_200` in the `.slcp` (early **Series 2** parts such as EFR32xG21 / MGM21 / BGM21 class devices with a user data region).
+This example is **not** listed for newer Vault-only or Series 3 templates — use only on supported parts in the Studio catalog entry.
 
-### SE Manager API
+### Data layout
 
-The following SE Manager APIs are used in this example:
+| Symbol | Value | Meaning |
+|--------|-------|---------|
+| `BLANK_DATA` | `0xFFFFFFFF` | Expected content after erase |
+| `TEST_DATA` | `0x55AA55AA` | Pattern written to entire region |
+| `USERDATA_SIZE` | From device headers | Full section size (word-aligned) |
+Writes must be **4-byte aligned** in length and offset (see API note in `app_se_manager_user_data.h`).
 
-* `sl_se_init`
-* `sl_se_deinit`
-* `sl_se_init_command_context`
-* `sl_se_deinit_command_context`
-* `sl_se_erase_user_data`
-* `sl_se_write_user_data`
+### Warning
+
+**Erasing user data clears the entire SE user data section** on the device. Use **development kits** only; production units may store application-specific data in this region.
+
+### SE Manager APIs exercised
+
+`sl_se_init`, `sl_se_deinit`, `sl_se_init_command_context`, `sl_se_deinit_command_context`, `sl_se_erase_user_data`, `sl_se_write_user_data`.
+
+## Prerequisites / Setup Requirements
+
+### Hardware Requirements
+
+- Supported **Series 2** kit (see `se_manager_user_data` board/part compatibility in templates — e.g. xG21-family boards).
+- USB for VCOM; **AEM** power when programming.
+
+### Software Requirements
+
+- **Simplicity Studio 5**, latest adapter and **SE firmware**.
+- VCOM: **115200** 8-N-1, line terminator **None** (Device Console).
+
+## Steps to Run Demo
+
+1. Create the project only for a **compatible** part (project will not resolve on unsupported devices).
+2. Build, flash, and open VCOM (115200 8-N-1, line terminator **None**).
+3. Reset once and read the log.
+
+### Expected console output
+
+- `Erasing user data section...` → `Check all data... OK`
+- `Writing N x 0x55AA55AA to user data...` → `Read back... OK`
+- SE Manager deinitialization
+Any **Failed** on blank or readback check indicates erase/write or memory-map mismatch.
+
+### Optional: disable timing prints
+
+Define **`SE_MANAGER_PRINT=0`** in preprocessor symbols.
 
 ## Troubleshooting
 
-### Serial Port Settings
-
-Be sure to select the following settings to see the serial output of this example:
-
-* 115200 Baud Rate 
-* 8-N-1 configuration
-* Line terminator should be set to "None" if using Device Console in Simplicity Studio
-
-### Programming the Radio Board
-
-Before programming the radio board mounted on the mainboard, make sure the power supply switch is in the AEM position (right side) as shown below.
-
-![Radio board power supply switch](image/readme_img0.png)
+| Symptom | What to check |
+|--------|----------------|
+| No serial output | VCOM settings; `SL_BOARD_ENABLE_VCOM=1` |
+| Project unavailable | Part lacks user data region / wrong `device_sdid` |
+| Erase or write API error | SE firmware; command context init |
+| Blank check **Failed** | Partial erase; rerun or use fresh dev device |
+| Readback **Failed** | Alignment/size; do not change `USERDATA_SIZE` without updating verify loops |
+| Garbled console | Line terminator **None** in Device Console |
 
 ## Resources
 
-[SE Manager API](https://docs.silabs.com/gecko-platform/latest/service/api/group-sl-se-manager)
+- [SE Manager API documentation](https://docs.silabs.com/gecko-platform/latest/service/api/group-sl-se-manager)
+- [SE Manager util API](https://docs.silabs.com/gecko-platform/latest/service/api/group-sl-se-manager-util)
+- [AN1222: Production Programming of Series 2 Devices](https://www.silabs.com/documents/public/application-notes/an1222-efr32xg2x-production-programming.pdf)
 
 ## Report Bugs & Get Support
 
-You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://community.silabs.com/).
+You are always encouraged and welcome to report any issues you found to us via [Silicon Labs Community](https://www.silabs.com/community).

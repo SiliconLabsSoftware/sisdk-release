@@ -78,13 +78,13 @@ def _match_value(actual, expected):
     """Compare an event field value against a user-supplied string.
 
     Comparison order:
-    1. ``str(actual) == expected`` — covers int, str, and most scalar types.
-    2. ``bytes.hex()`` — for ``bytes`` fields (e.g. ``data_sent``) the
+    1. ``str(actual) == expected`` - covers int, str, and most scalar types.
+    2. ``bytes.hex()`` - for ``bytes`` fields (e.g. ``data_sent``) the
        normalized hex representation is compared, accepting ``0x`` prefix,
        mixed case, and odd-length input (zero-padded to whole bytes).
-    3. Reverse constant lookup — for integer values, checks whether
+    3. Reverse constant lookup - for integer values, checks whether
        ``expected`` is a known constant in esl_lib_wrapper whose value
-       equals ``actual``.  Works for any prefix (SL_STATUS_*, ESL_LIB_STATUS_*,
+       equals ``actual``. Works for any prefix (SL_STATUS_*, ESL_LIB_STATUS_*,
        ESL_LIB_CONNECTION_STATE_*, etc.) without hardcoded prefix lists.
     """
     if str(actual) == expected:

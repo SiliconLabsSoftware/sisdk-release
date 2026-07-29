@@ -69,7 +69,6 @@ component:
   - id: zigbee_mac_test_commands_support
   - id: zigbee_r22_support_mac_test_cmds
   - id: zigbee_r23_zcp_test_support
-  - id: zigbee_insecure_debug_key_trace
   - id: zigbee_trust_center_keepalive
 
 configuration:
@@ -174,6 +173,12 @@ configuration:
     value: SL_ZIGBEE_LARGE_PACKET_BUFFER_HEAP
   - name: SL_ZIGBEE_AF_PLUGIN_CONCENTRATOR_CONCENTRATOR_TYPE
     value: HIGH_RAM_CONCENTRATOR
+  # Required to get tests to pass. This option results in APS keys being sent over the air for sniffers to decrypt and pass tests
+  - name: SLX_ZIGBEE_INSECURE_DEBUG_DEFAULT_STATE
+    value: 1
+  # We don't need TRANSPORT_KEY_PACKET since it pollutes the live capture
+  - name: SLX_ZIGBEE_INSECURE_DEBUG_TRANSPORT_KEY_PACKET_ENABLED
+    value: 0
 
 source:
   - path: main.c

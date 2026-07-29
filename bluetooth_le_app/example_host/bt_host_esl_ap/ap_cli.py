@@ -34,7 +34,12 @@ import textwrap
 from datetime import datetime as dt
 from ap_logger import getLogger, log, setLogLevel, LEVELS, logLevelName
 from ap_core import AccessPoint
-from ap_config import IOP_TEST, BLOCKING_WAIT_TIMEOUT, ITP_MAX_PARALLEL_CONNECTIONS
+from ap_config import (
+    IOP_TEST,
+    BLOCKING_WAIT_TIMEOUT,
+    ITP_MAX_PARALLEL_CONNECTIONS,
+    ADVERTISING_TIMEOUT,
+)
 from ap_constants import (
     LED_PATTERN_LENGTH,
     LED_DEFAULT_GAMUT,
@@ -57,6 +62,7 @@ from ap_constants import (
     ADDRESS_TYPE_STATIC_ADDRESS,
     ESL_MAX_TAGS_IN_GROUP,
 )
+from esl_lib import Address
 from esl_tag import ImageUpdateFailed
 from esl_lib_wrapper import (
     ESL_LIB_CONNECTION_MODE_SINGLE,
@@ -72,6 +78,13 @@ from ap_cli_argtypes import (
     time_type,
     date_type,
     data_type,
+    adv_dedup_refresh_seconds_type,
+    adv_dedup_watchdog_seconds_type,
+    adv_dedup_cache_size_type,
+    adv_dedup_multiplier_type,
+    ADV_DEDUP_REFRESH_SECONDS_RANGE,
+    ADV_DEDUP_CACHE_SIZE_RANGE,
+    ADV_DEDUP_PERIOD_MULT_RANGE,
 )
 from ap_cli_resolvers import normalize_hex
 from ap_cli_scripting import ScriptMixin
@@ -163,6 +176,7 @@ class CliProcessor(ScriptMixin, cmd.Cmd):
         self.arg_ping()
         self.arg_vendor_opcode()
         self.arg_service_reset()
+        self.arg_adv_dedup()
         self.arg_set_rssi_threshold()
         self.arg_script()
         self.arg_update_complete()
@@ -412,6 +426,20 @@ class CliProcessor(ScriptMixin, cmd.Cmd):
         - static:      Random static device address"""
             ),
         )
+        parser_connect.add_argument(
+            "--ap_identity",
+            "-id",
+            metavar="<addr>",
+            type=ble_address_type,
+            help="Temporary AP identity Bluetooth address for this connect request only.",
+        )
+        parser_connect.add_argument(
+            "--identity_type",
+            "-id_t",
+            metavar="",
+            choices=["public", "static"],
+            help="Address type for --ap_identity. Defaults to public type if omitted.",
+        )
 
     def do_connect(self, arg):
         """
@@ -421,11 +449,20 @@ class CliProcessor(ScriptMixin, cmd.Cmd):
         bt_addr = None
         esl_id = None
         address_type = None
+        ap_identity = None
         if arg.addr_type == "public":
             address_type = ADDRESS_TYPE_PUBLIC_ADDRESS
         elif arg.addr_type == "static":
             address_type = ADDRESS_TYPE_STATIC_ADDRESS
-
+        if arg.ap_identity is not None:
+            identity_type = ADDRESS_TYPE_PUBLIC_ADDRESS
+            if arg.identity_type == "static":
+                identity_type = ADDRESS_TYPE_STATIC_ADDRESS
+            ap_identity = Address.from_str(arg.ap_identity, identity_type)
+        elif arg.identity_type is not None:
+            self.log.warning(
+                "The '--identity_type' option requires '--ap_identity', option ignored."
+            )
         if arg.address is not None:
             if arg.address.isnumeric():
                 esl_id = int(arg.address)
@@ -440,7 +477,13 @@ class CliProcessor(ScriptMixin, cmd.Cmd):
                 except:
                     esl_id = str(arg.address)  # it must be 'all', then
 
-        self.ap.ap_connect(esl_id, bt_addr, group_id, address_type)
+        self.ap.ap_connect(
+            esl_id,
+            bt_addr,
+            group_id,
+            address_type,
+            ap_identity=ap_identity,
+        )
 
     def arg_disconnect(self):
         parser_disconnect = self.subparsers.add_parser(
@@ -2002,6 +2045,121 @@ class CliProcessor(ScriptMixin, cmd.Cmd):
                 if len(arg_list) == 0:
                     arg_list = None
             self.ap.ap_sync(start, arg_list, arg.advertise)
+
+    def arg_adv_dedup(self):
+        parser_adv_dedup = self.subparsers.add_parser(
+            "adv_dedup",
+            formatter_class=lambda prog: argparse.RawDescriptionHelpFormatter(
+                prog, max_help_position=40
+            ),
+            description=self.do_adv_dedup.__doc__,
+            epilog="""
+        Notes: Optional parameters are "sticky": the AP keeps the last values internally
+               and reuses them on the next enable if a parameter is omitted. Turning the
+               filter off preserves these values for a later 'adv_dedup on'.
+               You can query the current configuration by omitting the choice, or by
+               issuing 'adv_dedup config' without further parameters.
+               Use '-d' to reset all parameters to esl_lib compile-time defaults first;
+               any explicit options given on the same command line override those defaults
+               (argument order does not matter; same idea as 'config --full').
+               Allowed ranges follow esl_lib_adv_dedup_config.h (shown in each option help).
+               Warnings are printed when -r is not below ADVERTISING_TIMEOUT (ap_config.py),
+               or when watchdog would be below the effective refresh interval (it is then
+               raised to match refresh).
+        """,
+        )
+        parser_adv_dedup.add_argument(
+            "--defaults",
+            "-d",
+            action="store_true",
+            help="Reset all parameters to esl_lib compile-time defaults before applying explicit options",
+        )
+        parser_adv_dedup.add_argument(
+            "choice",
+            nargs="?",
+            choices=["on", "off", "config"],
+            help="Enable or disable advertisement deduplication, or update parameters",
+        )
+        parser_adv_dedup.add_argument(
+            "--refresh",
+            "-r",
+            metavar="<int>",
+            type=adv_dedup_refresh_seconds_type,
+            help="tag_found refresh interval in seconds %s"
+            % ADV_DEDUP_REFRESH_SECONDS_RANGE,
+        )
+        parser_adv_dedup.add_argument(
+            "--watchdog",
+            "-w",
+            metavar="<int>",
+            type=adv_dedup_watchdog_seconds_type,
+            help="Default absence watchdog in seconds %s"
+            % ADV_DEDUP_REFRESH_SECONDS_RANGE,
+        )
+        parser_adv_dedup.add_argument(
+            "--cache",
+            "-c",
+            metavar="<int>",
+            type=adv_dedup_cache_size_type,
+            help="Maximum cached advertisers %s" % ADV_DEDUP_CACHE_SIZE_RANGE,
+        )
+        parser_adv_dedup.add_argument(
+            "--multiplier",
+            "-m",
+            metavar="<float>",
+            type=adv_dedup_multiplier_type,
+            help="Adaptive watchdog multiplier from %s" % ADV_DEDUP_PERIOD_MULT_RANGE,
+        )
+
+    def do_adv_dedup(self, arg):
+        """
+        Control esl_lib advertisement deduplication at runtime.
+        """
+        enable = None
+        if arg.choice == "on":
+            enable = True
+        elif arg.choice == "off":
+            enable = False
+
+        refresh_ms, watchdog_ms, _, _ = self.ap._adv_dedup_resolve_params(
+            arg.defaults,
+            arg.refresh,
+            arg.cache,
+            arg.watchdog,
+            arg.multiplier,
+            clamp_watchdog=False,
+        )
+
+        if arg.refresh is not None:
+            refresh_s = refresh_ms // 1000
+            if refresh_s >= ADVERTISING_TIMEOUT:
+                self.log.warning(
+                    "Refresh interval (%ds) is not below ADVERTISING_TIMEOUT "
+                    "(%ds in ap_config.py); tags may be marked absent before "
+                    "periodic tag_found refresh events arrive.",
+                    refresh_s,
+                    ADVERTISING_TIMEOUT,
+                )
+
+        if (
+            (arg.watchdog is not None or arg.refresh is not None or arg.defaults)
+            and watchdog_ms < refresh_ms
+        ):
+            self.log.warning(
+                "Watchdog (%ds) is below refresh (%ds); default_watchdog_ms "
+                "will be raised to the refresh interval.",
+                watchdog_ms // 1000,
+                refresh_ms // 1000,
+            )
+
+        self.ap.ap_adv_dedup(
+            enable,
+            arg.refresh,
+            arg.cache,
+            arg.watchdog,
+            arg.multiplier,
+            use_defaults=arg.defaults,
+        )
 
     def arg_set_rssi_threshold(self):
         parser_set_rssi_threshold = self.subparsers.add_parser(

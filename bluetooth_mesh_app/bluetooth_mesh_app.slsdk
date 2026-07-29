@@ -1,9 +1,9 @@
 id=com.silabs.sdk.bluetooth_mesh_app
 label=Bluetooth Mesh SDK
 description=Bluetooth Mesh Software Development Kit
-version=11.0.0
+version=11.0.1
 
-prop.subLabel=Bluetooth\\ Mesh\\ SDK\\ 11.0.0
+prop.subLabel=Bluetooth\\ Mesh\\ SDK\\ 11.0.1
 prop.file.templatesFile=bluetooth_mesh_templates.xml
 prop.file.docsFile=documentation/slBtMesh_docContent.xml
 prop.file.demosFile= bluetooth_mesh_demos.xml

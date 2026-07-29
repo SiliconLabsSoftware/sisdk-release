@@ -19,7 +19,6 @@
 #define SUPPORT_ZW_AES_ECB                              0 /* ZW_AES_ECB */
 #define SUPPORT_ZW_EXPLORE_REQUEST_INCLUSION            1 /* ZW_ExploreRequestInclusion */
 #define SUPPORT_ZW_EXPLORE_REQUEST_EXCLUSION            1 /* ZW_ExploreRequestExclusion */
-#define SUPPORT_ZW_GET_NODE_PROTOCOL_INFO               1 /* ZW_GetNodeProtocolInfo */
 #define SUPPORT_ZW_GET_PROTOCOL_VERSION                 1 /* ZW_GetProtocolVersion */
 #define SUPPORT_ZW_GET_RANDOM                           1 /* ZW_GetRandomWord */
 #define SUPPORT_ZW_GET_SUC_NODE_ID                      1 /* ZW_GetSUCNodeID */
@@ -42,6 +41,7 @@
 #define SUPPORT_ZW_GET_NETWORK_STATS                    1 /* ZW_GetNetworkStats */
 #define SUPPORT_ZW_GET_BACKGROUND_RSSI                  1 /* ZW_GetBackgroundRSSI */
 #define SUPPORT_ZW_SET_LISTEN_BEFORE_TALK_THRESHOLD     1
+#define SUPPORT_ZW_REQUEST_NODE_INFO                    1 /* ZW_RequestNodeInfo */
 
 #define SUPPORT_ZW_NETWORK_MANAGEMENT_SET_MAX_INCLUSION_REQUEST_INTERVALS     1
 

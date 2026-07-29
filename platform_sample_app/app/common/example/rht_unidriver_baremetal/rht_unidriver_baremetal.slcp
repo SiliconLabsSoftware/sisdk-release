@@ -40,6 +40,8 @@ ui_hints:
 tag:
   - hardware:component:sensor:si7021
   - hardware:component:sensor:sht40-ad1f-r2
+  - hwfilter:board:hardware_board_has_tempsensor
+  - hwfilter:device:device_series_2
 configuration:
   - name: SL_BOARD_ENABLE_VCOM
     value: 1

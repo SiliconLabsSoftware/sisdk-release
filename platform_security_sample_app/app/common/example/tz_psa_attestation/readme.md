@@ -1,9 +1,12 @@
 # TrustZone PSA Attestation (Workspace and Secure Application)
 
-Demonstrates how to build a TrustZone-split PSA Attestation application as a unified workspace, combining the Secure and Non-secure halves into one signed image.
+## High-Level Overview
+
+Demonstrates how to build a TrustZone-split PSA Attestation application, in a platform security TrustZone SoC workspace combining the Secure and Non-secure halves into one signed image.
 
 ## Table of Contents
 
+- [High-Level Overview](#high-level-overview)
 - [Purpose / Scope](#purpose--scope)
 - [Prerequisites / Setup Requirements](#prerequisites--setup-requirements)
 - [Steps to Run Demo](#steps-to-run-demo)

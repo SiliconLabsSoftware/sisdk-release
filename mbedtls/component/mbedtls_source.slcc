@@ -1,7 +1,7 @@
 id: mbedtls_source
 package: mbedtls
 label: Source Code
-description: This component includes the Mbed TLS libraries source code files.
+description: Mbed TLS library sources (X.509, TLS, ASN.1, PK, bignum, threading). Builtin crypto primitives are in mbedtls_source_builtin, pulled in under Secure / Unaware.
 category: Platform|Security|Mbed TLS
 quality: production
 ui_hints:
@@ -10,15 +10,19 @@ provides:
 - name: mbedtls_source
 requires:
 - name: mbedtls_crypto_platform_api
-# The NonSecure app must headers from the trusted-firmware-m repo
+  condition: [trustzone_secure]
+- name: mbedtls_crypto_platform_api
+  condition: [trustzone_unaware]
+- name: mbedtls_crypto_platform_api
+- name: mbedtls_adjust_config
+  condition: [trustzone_nonsecure]
 - name: tfm_tz_service_psa_crypto
   condition: [trustzone_nonsecure]
+- name: mbedtls_source_builtin
+  condition: [trustzone_secure]
+- name: mbedtls_source_builtin
+  condition: [trustzone_unaware]
 source:
-- path: library/aes.c
-  condition:
-  - mbedtls_aes
-  unless:
-  - trustzone_nonsecure
 - path: library/asn1parse.c
   condition:
   - mbedtls_asn1_parse
@@ -40,74 +44,16 @@ source:
 - path: library/bignum_mod_raw.c
   condition:
   - mbedtls_mpi
-- path: library/block_cipher.c
-  condition:
-  - mbedtls_cipher
-  unless:
-  - trustzone_nonsecure
-- path: library/ccm.c
-  condition:
-  - mbedtls_ccm
-  unless:
-  - trustzone_nonsecure
-- path: library/chacha20.c
-  condition:
-  - mbedtls_chacha20
-  unless:
-  - trustzone_nonsecure
-- path: library/chacha20.c
-  condition: [mbedtls_cipher, psa_crypto_cipher_chacha20]
-  unless:
-  - trustzone_nonsecure
-- path: library/chacha20.c
-  condition: [mbedtls_cipher, psa_crypto_chachapoly]
-  unless:
-  - trustzone_nonsecure
-- path: library/chachapoly.c
-  condition:
-  - mbedtls_chachapoly
-  unless:
-  - trustzone_nonsecure
-- path: library/cipher.c
-  condition:
-  - mbedtls_cipher
-  unless:
-  - trustzone_nonsecure
-- path: library/cipher_wrap.c
-  condition:
-  - mbedtls_cipher
-  unless:
-  - trustzone_nonsecure
-- path: library/cmac.c
-  condition:
-  - mbedtls_cmac
-  unless:
-  - trustzone_nonsecure
 - path: library/constant_time.c
-- path: library/ctr_drbg.c
-  condition:
-  - mbedtls_random
-  unless:
-  - trustzone_nonsecure
 - path: library/debug.c
   condition:
   - mbedtls_debug
-- path: library/ecdh.c
-  condition:
-  - mbedtls_ecdh
-  unless:
-  - trustzone_nonsecure
 - path: library/ecdsa.c
   condition:
   - mbedtls_ecdsa
 - path: library/ecdsa.c
   condition:
   - mbedtls_pk
-- path: library/ecjpake.c
-  condition:
-  - mbedtls_jpake
-  unless:
-  - trustzone_nonsecure
 - path: library/ecp.c
   condition:
   - mbedtls_ecc
@@ -123,44 +69,15 @@ source:
 - path: library/ecp_curves_new.c
   condition:
   - mbedtls_ecc
-- path: library/entropy.c
-  condition:
-  - mbedtls_random
-  unless:
-  - trustzone_nonsecure
-- path: library/entropy_poll.c
-  condition:
-  - mbedtls_random
-  unless:
-  - trustzone_nonsecure
-- path: library/gcm.c
-  condition:
-  - mbedtls_gcm
-  unless:
-  - trustzone_nonsecure
-- path: library/hkdf.c
-  condition:
-  - mbedtls_hkdf
-  unless:
-  - trustzone_nonsecure
-- path: library/hmac_drbg.c
-  condition:
-  - mbedtls_random
-  unless:
-  - trustzone_nonsecure
-- path: library/md.c
-  condition:
-  - mbedtls_hash
-  unless:
-  - trustzone_nonsecure
 - path: library/md.c
   condition:
   - mbedtls_pk
-- path: library/md5.c
+- path: library/memory_buffer_alloc.c
   condition:
-  - mbedtls_md5
-  unless:
-  - trustzone_nonsecure
+  - trustzone_secure
+- path: library/memory_buffer_alloc.c
+  condition:
+  - trustzone_unaware
 - path: library/nist_kw.c
   condition:
   - mbedtls_nist_kw
@@ -173,6 +90,8 @@ source:
 - path: library/pem.c
   condition:
   - mbedtls_pem_write
+- path: library/platform.c
+- path: library/platform_util.c
 - path: library/pk.c
   condition:
   - mbedtls_pk
@@ -194,13 +113,6 @@ source:
 - path: library/pk_wrap.c
   condition:
   - mbedtls_pk
-- path: library/platform.c
-- path: library/platform_util.c
-- path: library/poly1305.c
-  condition:
-  - mbedtls_poly1305
-  unless:
-  - trustzone_nonsecure
 - path: library/psa_util.c
 - path: library/rsa.c
   condition:
@@ -208,31 +120,6 @@ source:
 - path: library/rsa_alt_helpers.c
   condition:
   - mbedtls_rsa
-- path: library/sha1.c
-  condition:
-  - mbedtls_sha1
-  unless:
-  - trustzone_nonsecure
-- path: library/sha256.c
-  condition:
-  - mbedtls_sha256
-  unless:
-  - trustzone_nonsecure
-- path: library/sha256.c
-  condition:
-  - mbedtls_sha224
-  unless:
-  - trustzone_nonsecure
-- path: library/sha512.c
-  condition:
-  - mbedtls_sha512
-  unless:
-  - trustzone_nonsecure
-- path: library/sha512.c
-  condition:
-  - mbedtls_sha384
-  unless:
-  - trustzone_nonsecure
 - path: library/ssl_cache.c
   condition:
   - mbedtls_tls
@@ -353,50 +240,39 @@ include:
   - path: mbedtls/lms.h
   - path: mbedtls/memory_buffer_alloc.h
   - path: mbedtls/net_sockets.h
-  - path: mbedtls/nist_kw.h
   - path: mbedtls/oid.h
   - path: mbedtls/pem.h
-  - path: mbedtls/pk.h
   - path: mbedtls/pkcs12.h
   - path: mbedtls/pkcs5.h
   - path: mbedtls/pkcs7.h
   - path: mbedtls/platform.h
-  - path: mbedtls/psa_util.h
   - path: mbedtls/rsa.h
-  - path: mbedtls/ssl.h
   - path: mbedtls/ssl_cache.h
   - path: mbedtls/ssl_ciphersuites.h
-  - path: mbedtls/ssl_cookie.h
   - path: mbedtls/ssl_ticket.h
   - path: mbedtls/threading.h
   - path: mbedtls/timing.h
   - path: mbedtls/version.h
-  - path: mbedtls/x509.h
   - path: mbedtls/x509_crl.h
-  - path: mbedtls/x509_crt.h
   - path: mbedtls/x509_csr.h
 - path: library
   file_list:
   - path: alignment.h
   - path: base64_internal.h
   - path: bignum_core.h
+  - path: bignum_core_invasive.h
   - path: bignum_internal.h
   - path: bignum_mod.h
   - path: bignum_mod_raw.h
   - path: bignum_mod_raw_invasive.h
-  - path: block_cipher_internal.h
   - path: bn_mul.h
   - path: check_crypto_config.h
-  - path: cipher_invasive.h
-  - path: cipher_wrap.h
   - path: common.h
   - path: constant_time_impl.h
   - path: constant_time_internal.h
-  - path: ctr.h
   - path: debug_internal.h
   - path: ecp_internal_alt.h
   - path: ecp_invasive.h
-  - path: entropy_poll.h
   - path: lmots.h
   - path: md_psa.h
   - path: md_wrap.h
@@ -404,7 +280,6 @@ include:
   - path: mps_error.h
   - path: mps_reader.h
   - path: mps_trace.h
-  - path: padlock.h
   - path: pk_internal.h
   - path: pk_wrap.h
   - path: pkwrite.h

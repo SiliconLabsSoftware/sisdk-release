@@ -41,6 +41,9 @@
 
 #include "common/mainloop.hpp"
 #include "host/ncp_spinel.hpp"
+#if OTBR_ENABLE_NCP_DNS_UPSTREAM
+#include "host/ncp_upstream_dns_resolver.hpp"
+#endif
 #include "host/thread_host.hpp"
 #include "posix/cli_daemon.hpp"
 #include "posix/infra_if.hpp"
@@ -202,8 +205,11 @@ private:
     ot::Spinel::SpinelDriver &mSpinelDriver;
     otPlatformConfig          mConfig;
     NcpSpinel                 mNcpSpinel;
-    TaskRunner                mTaskRunner;
-    CliDaemon                 mCliDaemon;
+#if OTBR_ENABLE_NCP_DNS_UPSTREAM
+    NcpUpstreamDnsResolver mDnsUpstreamResolver;
+#endif
+    TaskRunner mTaskRunner;
+    CliDaemon  mCliDaemon;
 };
 
 } // namespace Host

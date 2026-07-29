@@ -1,6 +1,6 @@
 id=com.silabs.sdk.connect_sdk
 label=Connect SDK
-version=4.3.0.0
+version=4.3.1.0
 description=Connect Software Development Kit
 
-prop.subLabel=Connect\\ SDK\\ 4.3.0.0
+prop.subLabel=Connect\\ SDK\\ 4.3.1.0

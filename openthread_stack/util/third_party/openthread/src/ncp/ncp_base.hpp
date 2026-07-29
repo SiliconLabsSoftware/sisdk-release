@@ -120,6 +120,9 @@ public:
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && \
     OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
     void HandleNat64FavoredPrefixChanged(void);
+
+    static void HandleNotifyNat64FavoredPrefixTask(Tasklet &aTasklet);
+    void        NotifyNat64FavoredPrefix(void);
 #endif
 
     /**
@@ -392,6 +395,44 @@ public:
      */
     otPlatDnssdState DnssdGetState(void);
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    /**
+     * Returns whether the host DNS upstream resolver is available.
+     */
+    bool DnsUpstreamIsAvailable(void) const { return mDnsUpstreamAvailable; }
+
+    /**
+     * Forwards a DNS upstream query to the host.
+     *
+     * @param[in] aTxn    The upstream query transaction.
+     * @param[in] aQuery  The DNS query message.
+     */
+    void DnsUpstreamQueryStart(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery);
+
+    /**
+     * Cancels a DNS upstream query on the host.
+     *
+     * @param[in] aTxn  The upstream query transaction.
+     */
+    void DnsUpstreamQueryCancel(otPlatDnsUpstreamQuery *aTxn);
+
+    /**
+     * Handles a DNS upstream response from the host.
+     *
+     * @param[in] aTxnIndex     The transaction index.
+     * @param[in] aResponse     The DNS response wire payload.
+     * @param[in] aResponseLen  The DNS response wire payload length.
+     */
+    void DnsUpstreamResponseReceived(uint8_t aTxnIndex, const uint8_t *aResponse, uint16_t aResponseLen);
+
+    /**
+     * Sets host DNS upstream resolver availability.
+     *
+     * @param[in] aAvailable  Whether the host resolver is available.
+     */
+    void DnsUpstreamSetAvailable(bool aAvailable) { mDnsUpstreamAvailable = aAvailable; }
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
 
 protected:
     static constexpr uint8_t kBitsPerByte = 8; ///< Number of bits in a byte.
@@ -833,7 +874,11 @@ protected:
     bool            mDiscoveryScanEnableFiltering;
     uint16_t        mDiscoveryScanPanId;
 
-    Tasklet         mUpdateChangedPropsTask;
+    Tasklet mUpdateChangedPropsTask;
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && \
+    OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
+    Tasklet mNotifyNat64FavoredPrefixTask;
+#endif
     uint32_t        mThreadChangedFlags;
     ChangedPropsSet mChangedPropsSet;
 
@@ -994,6 +1039,22 @@ protected:
 
     otPlatDnssdState mDnssdState;
 #endif // OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+    otError DnsUpstreamEmitQuery(uint8_t aTxnIndex, const uint8_t *aQuery, uint16_t aQueryLen);
+    void    DnsUpstreamEmitCancel(uint8_t aTxnIndex);
+
+    bool mDnsUpstreamAvailable;
+#endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+
+#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    void DnsUpstreamEmitRdnssServers(void);
+    void DnsUpstreamRegisterRdnssCallback(void);
+
+    static void HandleBorderRoutingRdnssChanged(void *aContext);
+
+    bool mDnsUpstreamRdnssCallbackRegistered;
+#endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE && OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     static void HandleBackboneRouterMulticastListenerEvent(void                                  *aContext,

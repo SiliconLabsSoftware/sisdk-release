@@ -218,7 +218,7 @@ index a70d696e4278703f1a4ee1f3fa9f68d373680aad..206fab90f47cff33e0c9a19a8fbb7f7e
 +
  #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 diff --git a/src/core/border_router/routing_manager.cpp b/src/core/border_router/routing_manager.cpp
-index 8348f7faed0d577c1bf2aef4b9b83b546245bd94..1c2ac3b31ea395da4d09f174d31b16bd8328d1d0 100644
+index 8348f7faed0d577c1bf2aef4b9b83b546245bd94..6a482ecf070b0a6161b6e69ef7c2751c9b1d1653 100644
 --- a/src/core/border_router/routing_manager.cpp
 +++ b/src/core/border_router/routing_manager.cpp
 @@ -2290,6 +2290,9 @@ RoutingManager::Nat64PrefixManager::Nat64PrefixManager(Instance &aInstance)
@@ -231,8 +231,12 @@ index 8348f7faed0d577c1bf2aef4b9b83b546245bd94..1c2ac3b31ea395da4d09f174d31b16bd
  }
  
  void RoutingManager::Nat64PrefixManager::SetEnabled(bool aEnabled)
-@@ -2387,6 +2390,16 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
+@@ -2383,10 +2386,18 @@ void RoutingManager::Nat64PrefixManager::Evaluate(void)
  
+     VerifyOrExit(mEnabled);
+ 
+-    LogInfo("Evaluating NAT64 prefix");
+-
      prefix = GetFavoredPrefix(preference);
  
 +#if OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
@@ -248,7 +252,28 @@ index 8348f7faed0d577c1bf2aef4b9b83b546245bd94..1c2ac3b31ea395da4d09f174d31b16bd
      error = Get<NetworkData::Leader>().FindPreferredNat64Prefix(netdataPrefixConfig);
  
      // NAT64 prefix is expected to be published from this BR
-@@ -3080,6 +3093,11 @@ extern "C" void otPlatBorderRoutingProcessDhcp6PdPrefix(otInstance
+@@ -2433,6 +2444,20 @@ exit:
+     return;
+ }
+ 
++#if OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
++void RoutingManager::Nat64PrefixManager::NotifyFavoredPrefix(void)
++{
++    VerifyOrExit(Get<InfraIf>().IsInitialized());
++    VerifyOrExit(mEnabled);
++
++    mNotifiedFavoredPrefix.Clear();
++    Evaluate();
++
++exit:
++    return;
++}
++#endif
++
+ void RoutingManager::Nat64PrefixManager::Publish(const Ip6::Prefix &aPrefix, RoutePreference aPreference)
+ {
+     // Publishes the given prefix and preference in the Network Data
+@@ -3080,6 +3105,11 @@ extern "C" void otPlatBorderRoutingProcessDhcp6PdPrefix(otInstance
  
  #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
  
@@ -261,10 +286,37 @@ index 8348f7faed0d577c1bf2aef4b9b83b546245bd94..1c2ac3b31ea395da4d09f174d31b16bd
  
  } // namespace ot
 diff --git a/src/core/border_router/routing_manager.hpp b/src/core/border_router/routing_manager.hpp
-index 551491f71a81200e94e0dd1b29849036f6bba980..5d38770932ac0aac521a62ddff7e522619eb5ffb 100644
+index 551491f71a81200e94e0dd1b29849036f6bba980..0c1d242ed35c7538af7e7eb308020137fb361182 100644
 --- a/src/core/border_router/routing_manager.hpp
 +++ b/src/core/border_router/routing_manager.hpp
-@@ -879,7 +879,10 @@ private:
+@@ -408,6 +408,16 @@ public:
+      */
+     Error GetFavoredNat64Prefix(Ip6::Prefix &aPrefix, RoutePreference &aRoutePreference);
+ 
++#if OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
++    /**
++     * Sends the favored NAT64 prefix notification even if the prefix has not changed.
++     *
++     * Used when the host (re)binds the infrastructure interface so listeners (e.g. Tayga on otbr-agent) can sync
++     * after an agent-only restart without resetting the NCP.
++     */
++    void NotifyNat64FavoredPrefix(void) { mNat64PrefixManager.NotifyFavoredPrefix(); }
++#endif
++
+     /**
+     // Informs `RoutingManager` of a discovered NAT64 prefix from the platform.
+     //
+@@ -865,6 +875,9 @@ private:
+         void               HandlePlatformDiscoveredPrefix(const Ip6::Prefix &aPrefix);
+         void               HandleRxRaTrackerChanged(void);
+         void               HandleTimer(void);
++#if OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
++        void NotifyFavoredPrefix(void);
++#endif
+ 
+     private:
+         void Discover(void);
+@@ -879,7 +892,10 @@ private:
          Ip6::Prefix     mLocalPrefix;         // The local prefix (from BR ULA prefix).
          Ip6::Prefix     mPublishedPrefix;     // The prefix to publish in Net Data (empty or local or from infra-if).
          RoutePreference mPublishedPreference; // The published prefix preference.
@@ -402,6 +454,67 @@ index 5a34e3670e1d8bb7063c8b0794d10814a0f3d8f2..0363c69eae062003b9dadc352bbdcda1
      error = aAckFrame.ProcessReceiveAesCcm(srcAddr.GetExtended(), *macKey);
      SuccessOrExit(error);
  
+diff --git a/src/core/net/dnssd_server.cpp b/src/core/net/dnssd_server.cpp
+index c67fa3a00536c05cb5bf0818e4d64991a5280d54..58fd5c3093d30aaf38e3a5c39e022631b29d6a25 100644
+--- a/src/core/net/dnssd_server.cpp
++++ b/src/core/net/dnssd_server.cpp
+@@ -1657,6 +1657,27 @@ void Server::ResetUpstreamQueryTransaction(UpstreamQueryTransaction &aTxn, Error
+     }
+     aTxn.Reset();
+ }
++
++uint8_t Server::GetUpstreamQueryTransactionIndex(const UpstreamQueryTransaction &aTxn) const
++{
++    ptrdiff_t index = &aTxn - mUpstreamQueryTransactions;
++
++    OT_ASSERT(index >= 0);
++    OT_ASSERT(index < static_cast<ptrdiff_t>(kMaxConcurrentUpstreamQueries));
++
++    return static_cast<uint8_t>(index);
++}
++
++Server::UpstreamQueryTransaction *Server::GetUpstreamQueryTransactionAt(uint8_t aIndex)
++{
++    UpstreamQueryTransaction *txn = nullptr;
++
++    VerifyOrExit(aIndex < kMaxConcurrentUpstreamQueries);
++    txn = &mUpstreamQueryTransactions[aIndex];
++
++exit:
++    return txn;
++}
+ #endif
+ 
+ #if OPENTHREAD_CONFIG_DNSSD_DISCOVERY_PROXY_ENABLE
+diff --git a/src/core/net/dnssd_server.hpp b/src/core/net/dnssd_server.hpp
+index e715a03fb613b4e033ae2302bbf10f07463617e0..37975f8160cc2ba1fa0d50495ff0ab8e23b702bc 100644
+--- a/src/core/net/dnssd_server.hpp
++++ b/src/core/net/dnssd_server.hpp
+@@ -249,6 +249,24 @@ public:
+      * @param[in]  aEnabled   A boolean to enable/disable forwarding DNS queries to upstream.
+      */
+     void SetUpstreamQueryEnabled(bool aEnabled) { mEnableUpstreamQuery = aEnabled; }
++
++    /**
++     * Returns the index of a given upstream query transaction.
++     *
++     * @param[in] aTxn  A reference to the upstream query transaction.
++     *
++     * @returns The index of @p aTxn.
++     */
++    uint8_t GetUpstreamQueryTransactionIndex(const UpstreamQueryTransaction &aTxn) const;
++
++    /**
++     * Returns the upstream query transaction at a given index.
++     *
++     * @param[in] aIndex  The transaction index.
++     *
++     * @returns A pointer to the transaction, or `nullptr` if @p aIndex is invalid.
++     */
++    UpstreamQueryTransaction *GetUpstreamQueryTransactionAt(uint8_t aIndex);
+ #endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
+ 
+     /**
 diff --git a/src/core/net/srp_client.cpp b/src/core/net/srp_client.cpp
 index 769bd5c784bc0d74448459d6f1a5fc64d3e92f1a..2fad29863e47f48c6e2467f8d76aacd037570f25 100644
 --- a/src/core/net/srp_client.cpp
@@ -1195,10 +1308,10 @@ index 2ff58b381acd08f37a2f30261c1d714cbd1657c3..6f4dcf99accf7a61d72ca97c62553f99
    public_deps = [
      ":spinel-api",
 diff --git a/src/lib/spinel/spinel.c b/src/lib/spinel/spinel.c
-index 62340241e7a7a6f6534ccaba33fff57b61b82316..013f434ae0c53ca8dd8e2299e1a92c78295a5295 100644
+index 62340241e7a7a6f6534ccaba33fff57b61b82316..d0d4a7eb25ca5453fbe086241558baff0129de8f 100644
 --- a/src/lib/spinel/spinel.c
 +++ b/src/lib/spinel/spinel.c
-@@ -1423,6 +1423,12 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
+@@ -1423,6 +1423,18 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
          {SPINEL_PROP_DNSSD_BROWSE_RESULT, "DNSSD_BROWSE_RESULT"},
          {SPINEL_PROP_DNSSD_SRV_RESOLVER, "DNSSD_SRV_RESOLVER"},
          {SPINEL_PROP_DNSSD_SRV_RESULT, "DNSSD_SRV_RESULT"},
@@ -1208,10 +1321,16 @@ index 62340241e7a7a6f6534ccaba33fff57b61b82316..013f434ae0c53ca8dd8e2299e1a92c78
 +        {SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT, "DNSSD_IP6_ADDRESS_RESULT"},
 +        {SPINEL_PROP_DNSSD_IP4_ADDRESS_RESOLVER, "DNSSD_IP4_ADDRESS_RESOLVER"},
 +        {SPINEL_PROP_DNSSD_IP4_ADDRESS_RESULT, "DNSSD_IP4_ADDRESS_RESULT"},
++        {SPINEL_PROP_DNS_UPSTREAM_QUERY, "DNS_UPSTREAM_QUERY"},
++        {SPINEL_PROP_DNS_UPSTREAM_RESPONSE, "DNS_UPSTREAM_RESPONSE"},
++        {SPINEL_PROP_DNS_UPSTREAM_CANCEL, "DNS_UPSTREAM_CANCEL"},
++        {SPINEL_PROP_DNS_UPSTREAM_ENABLED, "DNS_UPSTREAM_ENABLED"},
++        {SPINEL_PROP_DNS_UPSTREAM_AVAILABLE, "DNS_UPSTREAM_AVAILABLE"},
++        {SPINEL_PROP_DNS_UPSTREAM_RDNSS_SERVERS, "DNS_UPSTREAM_RDNSS_SERVERS"},
          {SPINEL_PROP_BORDER_AGENT_MESHCOP_SERVICE_STATE, "BORDER_AGENT_MESHCOP_SERVICE_STATE"},
          {SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_STATE, "SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_STATE"},
          {SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_ENABLE, "SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_ENABLE"},
-@@ -1518,6 +1524,9 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
+@@ -1518,6 +1530,9 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
          {SPINEL_PROP_DEBUG_TREL_TEST_MODE_ENABLE, "DEBUG_TREL_TEST_MODE_ENABLE"},
          {SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_ENABLE, "SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_ENABLE"},
          {SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX, "SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX"},
@@ -1222,10 +1341,10 @@ index 62340241e7a7a6f6534ccaba33fff57b61b82316..013f434ae0c53ca8dd8e2299e1a92c78
      };
  
 diff --git a/src/lib/spinel/spinel.h b/src/lib/spinel/spinel.h
-index 8a9d5f0c830833135108a29f10661aea22effadf..7b32145e8667cc22e36ae4ce6e7a16ff88d05966 100644
+index 8a9d5f0c830833135108a29f10661aea22effadf..c6430bde72d5c6896dc5ac547392c8601dd500aa 100644
 --- a/src/lib/spinel/spinel.h
 +++ b/src/lib/spinel/spinel.h
-@@ -4959,6 +4959,63 @@ enum
+@@ -4959,6 +4959,121 @@ enum
       */
      SPINEL_PROP_DNSSD_SRV_RESULT = SPINEL_PROP_DNSSD__BEGIN + 9,
  
@@ -1265,11 +1384,12 @@ index 8a9d5f0c830833135108a29f10661aea22effadf..7b32145e8667cc22e36ae4ce6e7a16ff
 +
 +    /// DNS-SD IPv6 Address Resolution Result
 +    /**
-+     * Format: `ULt(A(6)L)D`: Set
++     * Format: `ULS(A(6L))D`: Set
 +     *
 +     * `U`: Host name.
 +     * `L`: Infrastructure interface index.
-+     * `t(A(6)L)`: Array of (`A(6)` IPv6 address, `L` TTL) entries.
++     * `S`: Number of (`6` address, `L` TTL) pairs.
++     * `A(6L)`: Concatenated IPv6 address and TTL pairs (no per-entry struct wrapper).
 +     * `D`: Callback context (`sizeof(otPlatDnssdAddressCallback)`).
 +     */
 +    SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT = SPINEL_PROP_DNSSD__BEGIN + 13,
@@ -1286,10 +1406,67 @@ index 8a9d5f0c830833135108a29f10661aea22effadf..7b32145e8667cc22e36ae4ce6e7a16ff
 +     */
 +    SPINEL_PROP_DNSSD_IP4_ADDRESS_RESULT = SPINEL_PROP_DNSSD__BEGIN + 15,
 +
++    /// DNS upstream query (NCP to host).
++    /**
++     * Format: `CS` + *n* bytes - Inserted (NCP to host).
++     *
++     * `C`: Transaction index (`0` to `31`).
++     * `S`: DNS wire query length *n* in bytes.
++     * Payload: *n* raw bytes immediately following (`EncodeDnsUpstreamWireMessage` / `DecodeDnsUpstreamWireMessage`).
++     *          Length is taken from `S` only; this is not a Spinel `d` type (no second length prefix).
++     */
++    SPINEL_PROP_DNS_UPSTREAM_QUERY = 0x940,
++
++    /// DNS upstream query response (host to NCP).
++    /**
++     * Format: `CS` + *n* bytes - Set (host to NCP).
++     *
++     * `C`: Transaction index (`0` to `31`).
++     * `S`: DNS wire response length *n* in bytes (zero indicates failure; no payload bytes follow).
++     * Payload: *n* raw bytes immediately following when `S` > 0 (same encoding as QUERY).
++     */
++    SPINEL_PROP_DNS_UPSTREAM_RESPONSE = 0x941,
++
++    /// DNS upstream query cancel (NCP to host).
++    /**
++     * Format: `C` - Removed (NCP to host).
++     *
++     * `C`: Transaction index (`0` to `31`).
++     */
++    SPINEL_PROP_DNS_UPSTREAM_CANCEL = 0x942,
++
++    /// Enablement of DNS upstream forwarding on the NCP DNS-SD server.
++    /**
++     * Format: `b` - Set (host to NCP).
++     *
++     * `b`: Whether to enable or disable upstream DNS forwarding (`otDnssdUpstreamQuerySetEnabled`).
++     */
++    SPINEL_PROP_DNS_UPSTREAM_ENABLED = 0x943,
++
++    /// Host DNS upstream resolver availability (host to NCP).
++    /**
++     * Format: `b` - Set (host to NCP).
++     *
++     * `b`: Whether the host has at least one upstream DNS nameserver configured.
++     */
++    SPINEL_PROP_DNS_UPSTREAM_AVAILABLE = 0x944,
++
++    /// Discovered RDNSS upstream DNS servers (NCP to host).
++    /**
++     * Format: `C6` - Get and unsolicited notifications (`VALUE_IS`).
++     *
++     * `C`: Number of recursive DNS server addresses (0 to 3).
++     * `6`: IPv6 address of each server (repeated `C` times).
++     *
++     * Emitted when Border Routing learns or updates RDNSS entries on the infrastructure link.
++     * The host uses these addresses for `NcpUpstreamDnsResolver` forwarding (DH 11.3 / RDNSS selection).
++     */
++    SPINEL_PROP_DNS_UPSTREAM_RDNSS_SERVERS = 0x945,
++
      SPINEL_PROP_DNSSD__END = 0x950,
  
      SPINEL_PROP_BORDER_AGENT__BEGIN = 0x950,
-@@ -5072,8 +5129,59 @@ enum
+@@ -5072,8 +5187,59 @@ enum
       */
      SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX = SPINEL_PROP_BORDER_ROUTER__BEGIN + 2,
  
@@ -1350,7 +1527,7 @@ index 8a9d5f0c830833135108a29f10661aea22effadf..7b32145e8667cc22e36ae4ce6e7a16ff
  
      SPINEL_PROP_NEST_STREAM_MFG = SPINEL_PROP_NEST__BEGIN + 0,
 diff --git a/src/lib/spinel/spinel_prop_codec.cpp b/src/lib/spinel/spinel_prop_codec.cpp
-index 9751d3030f973c92f1f774a6a60ef8c78b3b150f..2efab7336f04877204afd5ec64c9ba510ca57c6c 100644
+index 9751d3030f973c92f1f774a6a60ef8c78b3b150f..9ca3d34e5061db6934829e53f6983071d52de46b 100644
 --- a/src/lib/spinel/spinel_prop_codec.cpp
 +++ b/src/lib/spinel/spinel_prop_codec.cpp
 @@ -124,7 +124,16 @@ otError DecodeDnssdHost(Decoder              &aDecoder,
@@ -1371,7 +1548,7 @@ index 9751d3030f973c92f1f774a6a60ef8c78b3b150f..2efab7336f04877204afd5ec64c9ba51
      SuccessOrExit(error = aDecoder.ReadUint32(aRequestId));
      SuccessOrExit(error = aDecoder.ReadData(aCallbackData, aCallbackDataLen));
  
-@@ -377,5 +386,159 @@ exit:
+@@ -377,5 +386,227 @@ exit:
      return error;
  }
  
@@ -1529,13 +1706,81 @@ index 9751d3030f973c92f1f774a6a60ef8c78b3b150f..2efab7336f04877204afd5ec64c9ba51
 +    return error;
 +}
 +
++otError EncodeDnsUpstreamWireMessage(Encoder &aEncoder, uint8_t aTxnIndex, const uint8_t *aData, uint16_t aDataLength)
++{
++    otError error = OT_ERROR_NONE;
++
++    SuccessOrExit(error = aEncoder.WriteUint8(aTxnIndex));
++    SuccessOrExit(error = aEncoder.WriteUint16(aDataLength));
++    VerifyOrExit(aDataLength > 0, error = OT_ERROR_INVALID_ARGS);
++    SuccessOrExit(error = aEncoder.WriteData(aData, aDataLength));
++
++exit:
++    return error;
++}
++
++otError DecodeDnsUpstreamWireMessage(Decoder        &aDecoder,
++                                     uint8_t        &aTxnIndex,
++                                     const uint8_t *&aData,
++                                     uint16_t       &aDataLength)
++{
++    otError error = OT_ERROR_NONE;
++    SuccessOrExit(error = aDecoder.ReadUint8(aTxnIndex));
++    SuccessOrExit(error = aDecoder.ReadUint16(aDataLength));
++    VerifyOrExit(aDataLength == aDecoder.GetRemainingLengthInStruct(), error = OT_ERROR_PARSE);
++    SuccessOrExit(error = aDecoder.ReadData(aData, aDataLength));
++exit:
++    if (error != OT_ERROR_NONE)
++    {
++        aData = nullptr;
++    }
++    return error;
++}
++
++otError DecodeDnsUpstreamCancel(Decoder &aDecoder, uint8_t &aTxnIndex) { return aDecoder.ReadUint8(aTxnIndex); }
++
++otError EncodeDnsUpstreamRdnssServers(Encoder &aEncoder, const otIp6Address *aServers, uint8_t aNumServers)
++{
++    otError error = OT_ERROR_NONE;
++
++    SuccessOrExit(error = aEncoder.WriteUint8(aNumServers));
++
++    for (uint8_t i = 0; i < aNumServers; i++)
++    {
++        SuccessOrExit(error = aEncoder.WriteIp6Address(aServers[i]));
++    }
++
++exit:
++    return error;
++}
++
++otError DecodeDnsUpstreamRdnssServers(Decoder      &aDecoder,
++                                      otIp6Address *aServers,
++                                      uint8_t      &aNumServers,
++                                      uint8_t       aMaxServers)
++{
++    otError error = OT_ERROR_NONE;
++
++    aNumServers = 0;
++    SuccessOrExit(error = aDecoder.ReadUint8(aNumServers));
++    VerifyOrExit(aNumServers <= aMaxServers, error = OT_ERROR_PARSE);
++
++    for (uint8_t i = 0; i < aNumServers; i++)
++    {
++        SuccessOrExit(error = aDecoder.ReadIp6Address(aServers[i]));
++    }
++
++exit:
++    return error;
++}
++
  } // namespace Spinel
  } // namespace ot
 diff --git a/src/lib/spinel/spinel_prop_codec.hpp b/src/lib/spinel/spinel_prop_codec.hpp
-index 979abd1a863dc1e8bf7df7088073ce9023239e01..ed029c3eca7135e62de4e05e96d7b4cc33e68d9c 100644
+index 979abd1a863dc1e8bf7df7088073ce9023239e01..ebf6d8d0d19abb9b84c1e68f7dc3e7f9f67436aa 100644
 --- a/src/lib/spinel/spinel_prop_codec.hpp
 +++ b/src/lib/spinel/spinel_prop_codec.hpp
-@@ -210,6 +210,88 @@ otError DecodeDnssdSrvResult(Decoder              &aDecoder,
+@@ -210,6 +210,142 @@ otError DecodeDnssdSrvResult(Decoder              &aDecoder,
                               otPlatDnssdSrvResult &aSrvResult,
                               const uint8_t       *&aCallbackData,
                               uint16_t             &aCallbackDataLen);
@@ -1621,6 +1866,60 @@ index 979abd1a863dc1e8bf7df7088073ce9023239e01..ed029c3eca7135e62de4e05e96d7b4cc
 +                                 uint16_t                  aMaxAddresses,
 +                                 const uint8_t           *&aCallbackData,
 +                                 uint16_t                 &aCallbackDataLen);
++
++/**
++ * Encodes a DNS upstream query or response payload (`CSd` format).
++ *
++ * @param[in] aEncoder     A reference to the encoder object.
++ * @param[in] aTxnIndex    The transaction index.
++ * @param[in] aData        A pointer to the DNS wire payload.
++ * @param[in] aDataLength  The DNS wire payload length in bytes.
++ */
++otError EncodeDnsUpstreamWireMessage(Encoder &aEncoder, uint8_t aTxnIndex, const uint8_t *aData, uint16_t aDataLength);
++
++/**
++ * Decodes a DNS upstream query or response payload (`CSd` format).
++ *
++ * @param[in]  aDecoder      A reference to the decoder object.
++ * @param[out] aTxnIndex     A reference to the transaction index.
++ * @param[out] aData         A reference to the pointer to the DNS wire payload.
++ * @param[out] aDataLength    A reference to the DNS wire payload length in bytes.
++ */
++otError DecodeDnsUpstreamWireMessage(Decoder        &aDecoder,
++                                     uint8_t        &aTxnIndex,
++                                     const uint8_t *&aData,
++                                     uint16_t       &aDataLength);
++
++/**
++ * Decodes a DNS upstream cancel payload (`C` format).
++ *
++ * @param[in]  aDecoder   A reference to the decoder object.
++ * @param[out] aTxnIndex  A reference to the transaction index.
++ */
++otError DecodeDnsUpstreamCancel(Decoder &aDecoder, uint8_t &aTxnIndex);
++
++/**
++ * Encodes a DNS upstream RDNSS server list (`C6` format).
++ *
++ * @param[in] aEncoder      A reference to the encoder object.
++ * @param[in] aServers      IPv6 recursive DNS server addresses.
++ * @param[in] aNumServers   Number of servers (max 3).
++ */
++otError EncodeDnsUpstreamRdnssServers(Encoder &aEncoder, const otIp6Address *aServers, uint8_t aNumServers);
++
++/**
++ * Decodes a DNS upstream RDNSS server list (`C6` format).
++ *
++ * @param[in]  aDecoder      A reference to the decoder object.
++ * @param[out] aServers      Output array for IPv6 server addresses.
++ * @param[out] aNumServers   Number of servers read.
++ * @param[in]  aMaxServers   Capacity of @p aServers.
++ */
++otError DecodeDnsUpstreamRdnssServers(Decoder      &aDecoder,
++                                      otIp6Address *aServers,
++                                      uint8_t      &aNumServers,
++                                      uint8_t       aMaxServers);
++
  } // namespace Spinel
  } // namespace ot
  
@@ -1653,12 +1952,14 @@ index 2bb99814a51c901c6e2dd8031028683df9b37ddf..13d864935dd870c9160483ca57c1cdd1
    public_deps = [
      "../core:libopenthread-radio",
 diff --git a/src/ncp/CMakeLists.txt b/src/ncp/CMakeLists.txt
-index d88fbe293b5eed1a7fd6eed5033cfe84e7cb2b42..55f95808b34434af217e83aafbba0302dd54ea5d 100644
+index d88fbe293b5eed1a7fd6eed5033cfe84e7cb2b42..ccbbde2501d17a6d69f57a28fe649f2aa6cba0e0 100644
 --- a/src/ncp/CMakeLists.txt
 +++ b/src/ncp/CMakeLists.txt
-@@ -41,6 +41,7 @@ set(COMMON_SOURCES
+@@ -40,7 +40,9 @@ set(COMMON_SOURCES
+     ncp_spi.cpp
      ncp_hdlc.cpp
      platform/dnssd.cpp
++    platform/dns.cpp
      platform/infra_if.cpp
 +    platform/border_routing.cpp
  )
@@ -1683,10 +1984,34 @@ index 3133683ff7d74c56d178a7dc574ee9804cc44c41..0f70e320a173288253c262c5a1bca8d2
  
  uint8_t ChangedPropsSet::GetNumEntries(void) const
 diff --git a/src/ncp/ncp_base.cpp b/src/ncp/ncp_base.cpp
-index 6726380d084ee3692f365d9ed15feb65ded7434d..5312d07c0cf49ef52718dba39851563bc62bb6cc 100644
+index 6726380d084ee3692f365d9ed15feb65ded7434d..5ff6d0343584ff366253e16a898c348b73817599 100644
 --- a/src/ncp/ncp_base.cpp
 +++ b/src/ncp/ncp_base.cpp
-@@ -382,6 +382,9 @@ NcpBase::NcpBase(Instance *aInstance)
+@@ -280,6 +280,10 @@ NcpBase::NcpBase(Instance *aInstance)
+     , mDiscoveryScanEnableFiltering(false)
+     , mDiscoveryScanPanId(0xffff)
+     , mUpdateChangedPropsTask(*aInstance, NcpBase::UpdateChangedProps)
++#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && \
++    OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
++    , mNotifyNat64FavoredPrefixTask(*aInstance, NcpBase::HandleNotifyNat64FavoredPrefixTask)
++#endif
+     , mThreadChangedFlags(0)
+     , mHostPowerState(SPINEL_HOST_POWER_STATE_ONLINE)
+     , mHostPowerReplyFrameTag(Spinel::Buffer::kInvalidTag)
+@@ -328,6 +332,12 @@ NcpBase::NcpBase(Instance *aInstance)
+ #if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+     , mDnssdState(OT_PLAT_DNSSD_STOPPED)
+ #endif
++#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
++    , mDnsUpstreamAvailable(false)
++#endif
++#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
++    , mDnsUpstreamRdnssCallbackRegistered(false)
++#endif
+ #endif
+ #if OPENTHREAD_CONFIG_DIAG_ENABLE
+     , mDiagOutput(nullptr)
+@@ -382,6 +392,9 @@ NcpBase::NcpBase(Instance *aInstance)
  #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
      otSrpClientSetCallback(mInstance, HandleSrpClientCallback, this);
  #endif
@@ -1697,22 +2022,25 @@ index 6726380d084ee3692f365d9ed15feb65ded7434d..5312d07c0cf49ef52718dba39851563b
  #if OPENTHREAD_CONFIG_DIAG_ENABLE
      otDiagSetOutputCallback(mInstance, &NcpBase::HandleDiagOutput_Jump, this);
 diff --git a/src/ncp/ncp_base.hpp b/src/ncp/ncp_base.hpp
-index d9aa796ae168e2eccc54078bb898bbf37cec0803..58c83d4ac920e6ff3e3a855ee573e1d8f07002fc 100644
+index d9aa796ae168e2eccc54078bb898bbf37cec0803..c4445cdcc5c8afd68dd288432f8e34ed564b16fc 100644
 --- a/src/ncp/ncp_base.hpp
 +++ b/src/ncp/ncp_base.hpp
-@@ -117,6 +117,11 @@ public:
+@@ -117,6 +117,14 @@ public:
       */
      static NcpBase *GetNcpInstance(void);
  
 +#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && \
 +    OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
 +    void HandleNat64FavoredPrefixChanged(void);
++
++    static void HandleNotifyNat64FavoredPrefixTask(Tasklet &aTasklet);
++    void        NotifyNat64FavoredPrefix(void);
 +#endif
 +
      /**
       * Returns an IID for the given instance
       *
-@@ -338,6 +343,48 @@ public:
+@@ -338,6 +346,48 @@ public:
       */
      void DnssdStopSrvResolver(const otPlatDnssdSrvResolver *aResolver);
  
@@ -1761,7 +2089,52 @@ index d9aa796ae168e2eccc54078bb898bbf37cec0803..58c83d4ac920e6ff3e3a855ee573e1d8
      /**
       * Gets the Dnssd state.
       *
-@@ -586,6 +633,11 @@ protected:
+@@ -346,6 +396,44 @@ public:
+     otPlatDnssdState DnssdGetState(void);
+ #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+ 
++#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
++    /**
++     * Returns whether the host DNS upstream resolver is available.
++     */
++    bool DnsUpstreamIsAvailable(void) const { return mDnsUpstreamAvailable; }
++
++    /**
++     * Forwards a DNS upstream query to the host.
++     *
++     * @param[in] aTxn    The upstream query transaction.
++     * @param[in] aQuery  The DNS query message.
++     */
++    void DnsUpstreamQueryStart(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery);
++
++    /**
++     * Cancels a DNS upstream query on the host.
++     *
++     * @param[in] aTxn  The upstream query transaction.
++     */
++    void DnsUpstreamQueryCancel(otPlatDnsUpstreamQuery *aTxn);
++
++    /**
++     * Handles a DNS upstream response from the host.
++     *
++     * @param[in] aTxnIndex     The transaction index.
++     * @param[in] aResponse     The DNS response wire payload.
++     * @param[in] aResponseLen  The DNS response wire payload length.
++     */
++    void DnsUpstreamResponseReceived(uint8_t aTxnIndex, const uint8_t *aResponse, uint16_t aResponseLen);
++
++    /**
++     * Sets host DNS upstream resolver availability.
++     *
++     * @param[in] aAvailable  Whether the host resolver is available.
++     */
++    void DnsUpstreamSetAvailable(bool aAvailable) { mDnsUpstreamAvailable = aAvailable; }
++#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
++
+ protected:
+     static constexpr uint8_t kBitsPerByte = 8; ///< Number of bits in a byte.
+ 
+@@ -586,6 +674,11 @@ protected:
                                         void         *aContext);
      void HandleUdpForwardStream(otMessage *aMessage, uint16_t aPeerPort, otIp6Address &aPeerAddr, uint16_t aPort);
  #endif // OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
@@ -1773,7 +2146,20 @@ index d9aa796ae168e2eccc54078bb898bbf37cec0803..58c83d4ac920e6ff3e3a855ee573e1d8
  #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
  
  #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-@@ -883,6 +935,11 @@ protected:
+@@ -781,7 +874,11 @@ protected:
+     bool            mDiscoveryScanEnableFiltering;
+     uint16_t        mDiscoveryScanPanId;
+ 
+-    Tasklet         mUpdateChangedPropsTask;
++    Tasklet mUpdateChangedPropsTask;
++#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && \
++    OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
++    Tasklet mNotifyNat64FavoredPrefixTask;
++#endif
+     uint32_t        mThreadChangedFlags;
+     ChangedPropsSet mChangedPropsSet;
+ 
+@@ -883,6 +980,11 @@ protected:
  
  #if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
  
@@ -1785,7 +2171,7 @@ index d9aa796ae168e2eccc54078bb898bbf37cec0803..58c83d4ac920e6ff3e3a855ee573e1d8
      template <typename DnssdObjType> struct DnssdDiscoveryPropKeyFor;
  
      template <typename DnssdObjType>
-@@ -903,7 +960,7 @@ protected:
+@@ -903,7 +1005,7 @@ protected:
          SuccessOrExit(error = mEncoder.EndFrame());
  
      exit:
@@ -1794,7 +2180,7 @@ index d9aa796ae168e2eccc54078bb898bbf37cec0803..58c83d4ac920e6ff3e3a855ee573e1d8
          {
              aCallback(mInstance, aRequestId, error);
          }
-@@ -931,6 +988,10 @@ protected:
+@@ -931,9 +1033,29 @@ protected:
          return;
      }
  
@@ -1805,7 +2191,26 @@ index d9aa796ae168e2eccc54078bb898bbf37cec0803..58c83d4ac920e6ff3e3a855ee573e1d8
      otPlatDnssdState mDnssdState;
  #endif // OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
  
-@@ -965,6 +1026,11 @@ template <> struct NcpBase::DnssdDiscoveryPropKeyFor<otPlatDnssdSrvResolver>
++#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
++    otError DnsUpstreamEmitQuery(uint8_t aTxnIndex, const uint8_t *aQuery, uint16_t aQueryLen);
++    void    DnsUpstreamEmitCancel(uint8_t aTxnIndex);
++
++    bool mDnsUpstreamAvailable;
++#endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
++
++#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
++    void DnsUpstreamEmitRdnssServers(void);
++    void DnsUpstreamRegisterRdnssCallback(void);
++
++    static void HandleBorderRoutingRdnssChanged(void *aContext);
++
++    bool mDnsUpstreamRdnssCallbackRegistered;
++#endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
++
+ #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE && OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+     static void HandleBackboneRouterMulticastListenerEvent(void                                  *aContext,
+                                                            otBackboneRouterMulticastListenerEvent aEvent,
+@@ -965,6 +1087,11 @@ template <> struct NcpBase::DnssdDiscoveryPropKeyFor<otPlatDnssdSrvResolver>
  {
      static constexpr spinel_prop_key_t Key = SPINEL_PROP_DNSSD_SRV_RESOLVER;
  };
@@ -1818,18 +2223,21 @@ index d9aa796ae168e2eccc54078bb898bbf37cec0803..58c83d4ac920e6ff3e3a855ee573e1d8
  
  } // namespace Ncp
 diff --git a/src/ncp/ncp_base_dispatcher.cpp b/src/ncp/ncp_base_dispatcher.cpp
-index 9a8fd7ee671f81e3736b36262024957097863eee..62908778cfef0d9c23ebcbd9425dbf4517593c35 100644
+index 9a8fd7ee671f81e3736b36262024957097863eee..64919ef5386e7738b926d5923c0d0d19a0c30d19 100644
 --- a/src/ncp/ncp_base_dispatcher.cpp
 +++ b/src/ncp/ncp_base_dispatcher.cpp
-@@ -224,6 +224,7 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
+@@ -224,6 +224,10 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
  #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
          OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_SRP_SERVER_AUTO_ENABLE_MODE),
  #endif
 +#endif
++#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
++        OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_DNS_UPSTREAM_RDNSS_SERVERS),
++#endif
  #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
          OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_BORDER_AGENT_MESHCOP_SERVICE_STATE),
  #if OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
-@@ -233,6 +234,11 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
+@@ -233,6 +237,11 @@ NcpBase::PropertyHandler NcpBase::FindGetPropertyHandler(spinel_prop_key_t aKey)
  #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
          OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_BACKBONE_ROUTER_STATE),
  #endif
@@ -1841,17 +2249,22 @@ index 9a8fd7ee671f81e3736b36262024957097863eee..62908778cfef0d9c23ebcbd9425dbf45
  #endif
          OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_UNSOL_UPDATE_FILTER),
          OT_NCP_GET_HANDLER_ENTRY(SPINEL_PROP_UNSOL_UPDATE_LIST),
-@@ -549,6 +555,9 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
+@@ -549,6 +558,14 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
          OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DNSSD_REQUEST_RESULT),
          OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DNSSD_BROWSE_RESULT),
          OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DNSSD_SRV_RESULT),
 +        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DNSSD_TXT_RESULT),
 +        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DNSSD_IP6_ADDRESS_RESULT),
 +        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DNSSD_IP4_ADDRESS_RESULT),
++#endif
++#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
++        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DNS_UPSTREAM_RESPONSE),
++        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DNS_UPSTREAM_ENABLED),
++        OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_DNS_UPSTREAM_AVAILABLE),
  #endif
  #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_BORDER_AGENT_EPHEMERAL_KEY_ENABLE
          OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_BORDER_AGENT_EPHEMERAL_KEY_ENABLE),
-@@ -564,7 +573,15 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
+@@ -564,7 +581,15 @@ NcpBase::PropertyHandler NcpBase::FindSetPropertyHandler(spinel_prop_key_t aKey)
          OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_BORDER_ROUTER_DHCP6_PD_PREFIX),
  #endif
  #endif
@@ -1868,23 +2281,52 @@ index 9a8fd7ee671f81e3736b36262024957097863eee..62908778cfef0d9c23ebcbd9425dbf45
          OT_NCP_SET_HANDLER_ENTRY(SPINEL_PROP_UNSOL_UPDATE_FILTER),
  #if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 diff --git a/src/ncp/ncp_base_ftd.cpp b/src/ncp/ncp_base_ftd.cpp
-index cb1ed88ec48c4e60a602375aee64cff393216649..e3daa16e7bd98355f42e852e505b6f2132b7ee82 100644
+index cb1ed88ec48c4e60a602375aee64cff393216649..12c14f105af79330716de7b13aad71a51cbfef59 100644
 --- a/src/ncp/ncp_base_ftd.cpp
 +++ b/src/ncp/ncp_base_ftd.cpp
-@@ -47,6 +47,12 @@
+@@ -47,6 +47,21 @@
  #include <openthread/dataset_ftd.h>
  #include <openthread/diag.h>
  #include <openthread/icmp6.h>
-+#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE
++#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE || \
++    (OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE)
 +#include <openthread/border_routing.h>
 +#endif
 +#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE || OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE
++#include <openthread/ip6.h>
++#include <openthread/logging.h>
 +#include <openthread/nat64.h>
++#endif
++#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
++#include <openthread/dnssd_server.h>
++#include <openthread/udp.h>
++#include <openthread/platform/dns.h>
++#include "core/net/dnssd_server.hpp"
 +#endif
  #include <openthread/ncp.h>
  #include <openthread/thread_ftd.h>
  #include <openthread/platform/misc.h>
-@@ -1690,6 +1696,46 @@ exit:
+@@ -1532,12 +1547,19 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_INFRA_IF_STATE>(void)
+         IgnoreError(otBorderRoutingSetEnabled(mInstance, /* aEnabled */ false));
+         SuccessOrExit(error = otBorderRoutingInit(mInstance, mInfraIfIndex, isInfraRunning));
+         SuccessOrExit(error = otBorderRoutingSetEnabled(mInstance, /* aEnabled */ true));
++#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
++        DnsUpstreamRegisterRdnssCallback();
++#endif
+     }
+     else
+     {
+         SuccessOrExit(error = otPlatInfraIfStateChanged(mInstance, mInfraIfIndex, isInfraRunning));
+     }
+ 
++#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
++    mNotifyNat64FavoredPrefixTask.Post();
++#endif
++
+ exit:
+     return error;
+ }
+@@ -1690,6 +1712,71 @@ exit:
  
  #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_DHCP6_PD_ENABLE
  
@@ -1898,11 +2340,31 @@ index cb1ed88ec48c4e60a602375aee64cff393216649..e3daa16e7bd98355f42e852e505b6f21
 +    SuccessOrExit(error = mDecoder.ReadBool(enabled));
 +    otNat64SetEnabled(mInstance, enabled);
 +
++#if OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
++    if (enabled)
++    {
++        mNotifyNat64FavoredPrefixTask.Post();
++    }
++#endif
++
 +exit:
 +    return error;
 +}
 +#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE && (OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE ||
 +       // OPENTHREAD_CONFIG_NAT64_TRANSLATOR_ENABLE)
++
++#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
++void NcpBase::HandleNotifyNat64FavoredPrefixTask(Tasklet &aTasklet)
++{
++    OT_UNUSED_VARIABLE(aTasklet);
++    GetNcpInstance()->NotifyNat64FavoredPrefix();
++}
++
++void NcpBase::NotifyNat64FavoredPrefix(void)
++{
++    mInstance->Get<BorderRouter::RoutingManager>().NotifyNat64FavoredPrefix();
++}
++#endif
 +
 +#if OPENTHREAD_CONFIG_NAT64_BORDER_ROUTING_ENABLE && OPENTHREAD_CONFIG_NAT64_FAVORED_PREFIX_NOTIFICATION_ENABLE
 +void NcpBase::HandleNat64FavoredPrefixChanged(void)
@@ -1924,6 +2386,11 @@ index cb1ed88ec48c4e60a602375aee64cff393216649..e3daa16e7bd98355f42e852e505b6f21
 +    SuccessOrExit(error = mEncoder.WriteUint8(prefix.mLength));
 +
 +exit:
++    if (error != OT_ERROR_NONE)
++    {
++        error = mEncoder.OverwriteWithLastStatusError(ThreadErrorToSpinelStatus(error));
++    }
++
 +    return error;
 +}
 +#endif
@@ -1931,7 +2398,7 @@ index cb1ed88ec48c4e60a602375aee64cff393216649..e3daa16e7bd98355f42e852e505b6f21
  #if OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
  
  void NcpBase::DnssdRegisterHost(const otPlatDnssdHost      *aHost,
-@@ -1754,6 +1800,48 @@ void NcpBase::DnssdStopSrvResolver(const otPlatDnssdSrvResolver *aResolver)
+@@ -1754,6 +1841,48 @@ void NcpBase::DnssdStopSrvResolver(const otPlatDnssdSrvResolver *aResolver)
      DnssdUpdateDiscovery(aResolver, /* aStart */ false);
  }
  
@@ -1980,7 +2447,7 @@ index cb1ed88ec48c4e60a602375aee64cff393216649..e3daa16e7bd98355f42e852e505b6f21
  otPlatDnssdState NcpBase::DnssdGetState(void) { return mDnssdState; }
  
  template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_STATE>(void)
-@@ -1787,7 +1875,10 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_REQUEST_RESULT>
+@@ -1787,7 +1916,10 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_REQUEST_RESULT>
      SuccessOrExit(error = mDecoder.ReadData(context, contextLen));
      VerifyOrExit(contextLen == sizeof(otPlatDnssdRegisterCallback), error = OT_ERROR_PARSE);
      callback = *reinterpret_cast<const otPlatDnssdRegisterCallback *>(context);
@@ -1992,7 +2459,7 @@ index cb1ed88ec48c4e60a602375aee64cff393216649..e3daa16e7bd98355f42e852e505b6f21
  
  exit:
      return error;
-@@ -1804,7 +1895,10 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_BROWSE_RESULT>(
+@@ -1804,7 +1936,10 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_BROWSE_RESULT>(
      SuccessOrExit(error = DecodeDnssdBrowseResult(mDecoder, browseResult, context, contextLen));
      VerifyOrExit(contextLen == sizeof(otPlatDnssdBrowseCallback), error = OT_ERROR_PARSE);
      callback = *reinterpret_cast<const otPlatDnssdBrowseCallback *>(context);
@@ -2004,7 +2471,7 @@ index cb1ed88ec48c4e60a602375aee64cff393216649..e3daa16e7bd98355f42e852e505b6f21
  
  exit:
      return error;
-@@ -1821,7 +1915,74 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_SRV_RESULT>(voi
+@@ -1821,13 +1956,404 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNSSD_SRV_RESULT>(voi
      SuccessOrExit(error = DecodeDnssdSrvResult(mDecoder, srvResult, context, contextLen));
      VerifyOrExit(contextLen == sizeof(otPlatDnssdSrvCallback), error = OT_ERROR_PARSE);
      callback = *reinterpret_cast<const otPlatDnssdSrvCallback *>(context);
@@ -2080,6 +2547,336 @@ index cb1ed88ec48c4e60a602375aee64cff393216649..e3daa16e7bd98355f42e852e505b6f21
  
  exit:
      return error;
+ }
+ #endif // OPENTHREAD_CONFIG_NCP_DNSSD_ENABLE && OPENTHREAD_CONFIG_PLATFORM_DNSSD_ENABLE
+ 
++#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
++
++otError NcpBase::DnsUpstreamEmitQuery(uint8_t aTxnIndex, const uint8_t *aQuery, uint16_t aQueryLen)
++{
++    otError          error  = OT_ERROR_NONE;
++    uint8_t          header = SPINEL_HEADER_FLAG | SPINEL_HEADER_TX_NOTIFICATION_IID;
++    spinel_command_t cmd    = SPINEL_CMD_PROP_VALUE_INSERTED;
++
++    VerifyOrExit(aQuery != nullptr, error = OT_ERROR_INVALID_ARGS);
++
++    SuccessOrExit(error = mEncoder.BeginFrame(header, cmd, SPINEL_PROP_DNS_UPSTREAM_QUERY));
++    SuccessOrExit(error = Spinel::EncodeDnsUpstreamWireMessage(mEncoder, aTxnIndex, aQuery, aQueryLen));
++    SuccessOrExit(error = mEncoder.EndFrame());
++
++exit:
++    return error;
++}
++
++void NcpBase::DnsUpstreamEmitCancel(uint8_t aTxnIndex)
++{
++    uint8_t          header = SPINEL_HEADER_FLAG | SPINEL_HEADER_TX_NOTIFICATION_IID;
++    spinel_command_t cmd    = SPINEL_CMD_PROP_VALUE_REMOVED;
++
++    SuccessOrExit(mEncoder.BeginFrame(header, cmd, SPINEL_PROP_DNS_UPSTREAM_CANCEL));
++    SuccessOrExit(mEncoder.WriteUint8(aTxnIndex));
++    SuccessOrExit(mEncoder.EndFrame());
++
++exit:
++    return;
++}
++
++#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
++static bool RdnssEntryHasHigherPriority(const otBorderRoutingRdnssAddrEntry &aEntry,
++                                        const otBorderRoutingRdnssAddrEntry &aOther)
++{
++    bool result = false;
++
++    if (aEntry.mLifetime != aOther.mLifetime)
++    {
++        result = aEntry.mLifetime > aOther.mLifetime;
++    }
++    else
++    {
++        for (uint8_t i = 0; i < sizeof(otIp6Address); i++)
++        {
++            if (aEntry.mAddress.mFields.m8[i] != aOther.mAddress.mFields.m8[i])
++            {
++                result = aEntry.mAddress.mFields.m8[i] > aOther.mAddress.mFields.m8[i];
++                break;
++            }
++        }
++    }
++
++    return result;
++}
++
++static void SortRdnssEntriesByPriority(otBorderRoutingRdnssAddrEntry *aEntries, uint32_t aNumEntries)
++{
++    for (uint32_t i = 1; i < aNumEntries; i++)
++    {
++        otBorderRoutingRdnssAddrEntry entry = aEntries[i];
++        uint32_t                      j     = i;
++
++        while (j > 0 && RdnssEntryHasHigherPriority(entry, aEntries[j - 1]))
++        {
++            aEntries[j] = aEntries[j - 1];
++            j--;
++        }
++
++        aEntries[j] = entry;
++    }
++}
++
++void NcpBase::HandleBorderRoutingRdnssChanged(void *aContext)
++{
++    static_cast<NcpBase *>(aContext)->DnsUpstreamEmitRdnssServers();
++}
++
++void NcpBase::DnsUpstreamRegisterRdnssCallback(void)
++{
++    if (!mDnsUpstreamRdnssCallbackRegistered)
++    {
++        otBorderRoutingSetRdnssAddrCallback(mInstance, HandleBorderRoutingRdnssChanged, this);
++        mDnsUpstreamRdnssCallbackRegistered = true;
++    }
++
++    DnsUpstreamEmitRdnssServers();
++}
++
++void NcpBase::DnsUpstreamEmitRdnssServers(void)
++{
++    static constexpr uint8_t kMaxRdnssServers = 3;
++
++    uint8_t                            header = SPINEL_HEADER_FLAG | SPINEL_HEADER_TX_NOTIFICATION_IID;
++    spinel_command_t                   cmd    = SPINEL_CMD_PROP_VALUE_IS;
++    otBorderRoutingPrefixTableIterator iterator;
++    otBorderRoutingRdnssAddrEntry      entry;
++    otBorderRoutingRdnssAddrEntry      rdnssEntries[kMaxRdnssServers + 1];
++    otIp6Address                       rdnssServers[kMaxRdnssServers];
++    uint32_t                           numEntries = 0;
++    uint8_t                            numServers = 0;
++
++    otBorderRoutingPrefixTableInitIterator(mInstance, &iterator);
++
++    while (otBorderRoutingGetNextRdnssAddrEntry(mInstance, &iterator, &entry) == OT_ERROR_NONE)
++    {
++        uint32_t i = 0;
++
++        for (; i < numEntries; ++i)
++        {
++            if (otIp6IsAddressEqual(&entry.mAddress, &rdnssEntries[i].mAddress))
++            {
++                rdnssEntries[i].mLifetime = OT_MAX(rdnssEntries[i].mLifetime, entry.mLifetime);
++                break;
++            }
++        }
++
++        if (i == numEntries)
++        {
++            rdnssEntries[numEntries++] = entry;
++            SortRdnssEntriesByPriority(rdnssEntries, numEntries);
++            numEntries = OT_MIN(numEntries, kMaxRdnssServers);
++        }
++    }
++
++    for (uint32_t i = 0; i < numEntries; i++)
++    {
++        rdnssServers[i] = rdnssEntries[i].mAddress;
++    }
++    numServers = static_cast<uint8_t>(numEntries);
++
++    SuccessOrExit(mEncoder.BeginFrame(header, cmd, SPINEL_PROP_DNS_UPSTREAM_RDNSS_SERVERS));
++    SuccessOrExit(Spinel::EncodeDnsUpstreamRdnssServers(mEncoder, rdnssServers, numServers));
++    SuccessOrExit(mEncoder.EndFrame());
++
++exit:
++    return;
++}
++
++template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DNS_UPSTREAM_RDNSS_SERVERS>(void)
++{
++    static constexpr uint8_t kMaxRdnssServers = 3;
++
++    otError                            error = OT_ERROR_NONE;
++    otBorderRoutingPrefixTableIterator iterator;
++    otBorderRoutingRdnssAddrEntry      entry;
++    otBorderRoutingRdnssAddrEntry      rdnssEntries[kMaxRdnssServers + 1];
++    otIp6Address                       rdnssServers[kMaxRdnssServers];
++    uint32_t                           numEntries = 0;
++    uint8_t                            numServers = 0;
++
++    otBorderRoutingPrefixTableInitIterator(mInstance, &iterator);
++
++    while (otBorderRoutingGetNextRdnssAddrEntry(mInstance, &iterator, &entry) == OT_ERROR_NONE)
++    {
++        uint32_t i = 0;
++
++        for (; i < numEntries; ++i)
++        {
++            if (otIp6IsAddressEqual(&entry.mAddress, &rdnssEntries[i].mAddress))
++            {
++                rdnssEntries[i].mLifetime = OT_MAX(rdnssEntries[i].mLifetime, entry.mLifetime);
++                break;
++            }
++        }
++
++        if (i == numEntries)
++        {
++            rdnssEntries[numEntries++] = entry;
++            SortRdnssEntriesByPriority(rdnssEntries, numEntries);
++            numEntries = OT_MIN(numEntries, kMaxRdnssServers);
++        }
++    }
++
++    for (uint32_t i = 0; i < numEntries; i++)
++    {
++        rdnssServers[i] = rdnssEntries[i].mAddress;
++    }
++    numServers = static_cast<uint8_t>(numEntries);
++
++    SuccessOrExit(error = Spinel::EncodeDnsUpstreamRdnssServers(mEncoder, rdnssServers, numServers));
++
++exit:
++    if (error != OT_ERROR_NONE)
++    {
++        error = mEncoder.OverwriteWithLastStatusError(ThreadErrorToSpinelStatus(error));
++    }
++
++    return error;
++}
++#endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
++
++void NcpBase::DnsUpstreamQueryStart(otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
++{
++    static constexpr uint16_t kMaxDnsWireSize = 512;
++
++    otError                                                  error  = OT_ERROR_NONE;
++    Dns::ServiceDiscovery::Server                           &server = mInstance->Get<Dns::ServiceDiscovery::Server>();
++    Dns::ServiceDiscovery::Server::UpstreamQueryTransaction *txn;
++    uint8_t                                                  txnIndex;
++    uint8_t                                                  buffer[kMaxDnsWireSize];
++    uint16_t                                                 length;
++
++    VerifyOrExit(aTxn != nullptr && aQuery != nullptr, error = OT_ERROR_INVALID_ARGS);
++    VerifyOrExit(mDnsUpstreamAvailable, error = OT_ERROR_INVALID_STATE);
++
++    txn      = &AsCoreType(aTxn);
++    txnIndex = server.GetUpstreamQueryTransactionIndex(*txn);
++    length   = otMessageRead(aQuery, 0, buffer, sizeof(buffer));
++    VerifyOrExit(length > 0 && length == otMessageGetLength(aQuery), error = OT_ERROR_INVALID_ARGS);
++
++    SuccessOrExit(error = DnsUpstreamEmitQuery(txnIndex, buffer, length));
++
++exit:
++    if (error != OT_ERROR_NONE && aTxn != nullptr)
++    {
++        otPlatDnsUpstreamQueryDone(mInstance, aTxn, nullptr);
++    }
++}
++
++void NcpBase::DnsUpstreamQueryCancel(otPlatDnsUpstreamQuery *aTxn)
++{
++    Dns::ServiceDiscovery::Server                           &server = mInstance->Get<Dns::ServiceDiscovery::Server>();
++    Dns::ServiceDiscovery::Server::UpstreamQueryTransaction *txn;
++    uint8_t                                                  txnIndex;
++
++    VerifyOrExit(aTxn != nullptr);
++
++    txn      = &AsCoreType(aTxn);
++    txnIndex = server.GetUpstreamQueryTransactionIndex(*txn);
++
++    DnsUpstreamEmitCancel(txnIndex);
++    otPlatDnsUpstreamQueryDone(mInstance, aTxn, nullptr);
++
++exit:
++    return;
++}
++
++void NcpBase::DnsUpstreamResponseReceived(uint8_t aTxnIndex, const uint8_t *aResponse, uint16_t aResponseLen)
++{
++    Dns::ServiceDiscovery::Server                           &server = mInstance->Get<Dns::ServiceDiscovery::Server>();
++    Dns::ServiceDiscovery::Server::UpstreamQueryTransaction *txn;
++    otMessage                                               *otMessagePtr    = nullptr;
++    otMessageSettings                                        messageSettings = {true, OT_MESSAGE_PRIORITY_NORMAL};
++    otError                                                  error           = OT_ERROR_NONE;
++    bool                                                     queryDone       = false;
++
++    txn = server.GetUpstreamQueryTransactionAt(aTxnIndex);
++    VerifyOrExit(txn != nullptr && txn->IsValid());
++
++    if (aResponseLen == 0)
++    {
++        otPlatDnsUpstreamQueryDone(mInstance, txn, nullptr);
++        queryDone = true;
++        ExitNow();
++    }
++
++    otMessagePtr = otUdpNewMessage(mInstance, &messageSettings);
++    VerifyOrExit(otMessagePtr != nullptr, error = OT_ERROR_NO_BUFS);
++    SuccessOrExit(error = AsCoreType(otMessagePtr).AppendBytes(aResponse, aResponseLen));
++
++    otPlatDnsUpstreamQueryDone(mInstance, txn, otMessagePtr);
++    otMessagePtr = nullptr;
++    queryDone    = true;
++
++exit:
++    if (otMessagePtr != nullptr)
++    {
++        otMessageFree(otMessagePtr);
++    }
++
++    if (!queryDone && txn != nullptr && txn->IsValid())
++    {
++        otPlatDnsUpstreamQueryDone(mInstance, txn, nullptr);
++    }
++}
++
++template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNS_UPSTREAM_RESPONSE>(void)
++{
++    otError        error = OT_ERROR_NONE;
++    uint8_t        txnIndex;
++    const uint8_t *response;
++    uint16_t       responseLen;
++
++    SuccessOrExit(error = DecodeDnsUpstreamWireMessage(mDecoder, txnIndex, response, responseLen));
++    DnsUpstreamResponseReceived(txnIndex, response, responseLen);
++
++exit:
++    return error;
++}
++
++template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNS_UPSTREAM_ENABLED>(void)
++{
++    otError error = OT_ERROR_NONE;
++    bool    enabled;
++
++    SuccessOrExit(error = mDecoder.ReadBool(enabled));
++    otDnssdUpstreamQuerySetEnabled(mInstance, enabled);
++
++#if OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE && OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
++    if (enabled)
++    {
++        DnsUpstreamRegisterRdnssCallback();
++    }
++#endif
++
++exit:
++    return error;
++}
++
++template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DNS_UPSTREAM_AVAILABLE>(void)
++{
++    otError error = OT_ERROR_NONE;
++    bool    available;
++
++    SuccessOrExit(error = mDecoder.ReadBool(available));
++    DnsUpstreamSetAvailable(available);
++
++exit:
++    return error;
++}
++
++#endif // OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
++
+ #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+ 
+ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_BORDER_AGENT_MESHCOP_SERVICE_STATE>(void)
 diff --git a/src/ncp/ncp_base_mtd.cpp b/src/ncp/ncp_base_mtd.cpp
 index 9095c86dcfbc39de4280a43c13de1eb5ef4ccead..98251488eeec7a06833dfbc814bfebf2bc307821 100644
 --- a/src/ncp/ncp_base_mtd.cpp
@@ -2290,6 +3087,67 @@ index 0000000000000000000000000000000000000000..45f7ff1231e1cbbe34b0dc0b754ded29
 +}
 +
 +#endif
+diff --git a/src/ncp/platform/dns.cpp b/src/ncp/platform/dns.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..88cd96190fec5efe4e2a4ad2f4cf7bcf61b9ab1a
+--- /dev/null
++++ b/src/ncp/platform/dns.cpp
+@@ -0,0 +1,55 @@
++/*
++ *  Copyright (c) 2026, The OpenThread Authors.
++ *  All rights reserved.
++ *
++ *  Redistribution and use in source and binary forms, with or without
++ *  modification, are permitted provided that the following conditions are met:
++ *  1. Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *  2. Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in the
++ *     documentation and/or other materials provided with the distribution.
++ *  3. Neither the name of the copyright holder nor the
++ *     names of its contributors may be used to endorse or promote products
++ *     derived from this software without specific prior written permission.
++ *
++ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
++ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ *  POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <openthread/instance.h>
++#include <openthread/platform/dns.h>
++
++#include "ncp/ncp_base.hpp"
++
++#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
++
++bool otPlatDnsIsUpstreamQueryAvailable(otInstance *aInstance)
++{
++    OT_UNUSED_VARIABLE(aInstance);
++
++    return ot::Ncp::NcpBase::GetNcpInstance()->DnsUpstreamIsAvailable();
++}
++
++void otPlatDnsStartUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn, const otMessage *aQuery)
++{
++    OT_UNUSED_VARIABLE(aInstance);
++    ot::Ncp::NcpBase::GetNcpInstance()->DnsUpstreamQueryStart(aTxn, aQuery);
++}
++
++void otPlatDnsCancelUpstreamQuery(otInstance *aInstance, otPlatDnsUpstreamQuery *aTxn)
++{
++    OT_UNUSED_VARIABLE(aInstance);
++    ot::Ncp::NcpBase::GetNcpInstance()->DnsUpstreamQueryCancel(aTxn);
++}
++
++#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_DNS_UPSTREAM_QUERY_ENABLE
 diff --git a/src/ncp/platform/dnssd.cpp b/src/ncp/platform/dnssd.cpp
 index 9ee5fc5de3558b921043a89aec526e1b3b03cd08..efa5b0556f109e8f1e79281284a8eb26b05620ea 100644
 --- a/src/ncp/platform/dnssd.cpp

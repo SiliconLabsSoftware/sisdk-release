@@ -1,7 +1,7 @@
 id=com.silabs.sdk.rail_sdk_sample_app
 label=Rail SDK Sample Applications
 description=Rail SDK Sample Applications
-version=1.1.0
+version=1.1.1
 
 prop.file.templatesFile=rail_sdk_sample_app_templates.xml
 prop.file.demosFile=rail_sdk_sample_app_demos.xml

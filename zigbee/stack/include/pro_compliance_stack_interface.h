@@ -243,7 +243,7 @@ void slx_zigbee_ignore_incoming_aps_acks(bool ignore);
  * @param msg_type an enumeration representing which kind of debug msg to generate
  * @param debug_data an opaque pointer type. semantics are specific to each message
  * @internal SL_ZIGBEE_IPC_ARGS
- * {# debug_data | length: MAX_IPC_VEC_ARG_CAPACITY | max: MAX_IPC_VEC_ARG_CAPACITY #}
+ * {# debug_data | length: SL_ZIGBEE_ENCRYPTION_KEY_SIZE | max: MAX_IPC_VEC_ARG_CAPACITY #}
  */
 void slx_zigbee_insecure_debug_generate_trace(uint8_t msg_type, uint8_t *debug_data);
 #endif //PRO_COMPLIANCE_STACK_INTERFACE_H

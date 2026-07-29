@@ -275,6 +275,16 @@ else()
     target_compile_definitions(otbr-config INTERFACE OTBR_ENABLE_DNSSD_PLAT=0)
 endif()
 
+option(OTBR_NCP_DNS_UPSTREAM "Enable NCP DNS upstream Spinel bridge on the host" OFF)
+if (OTBR_NCP_DNS_UPSTREAM)
+    target_compile_definitions(otbr-config INTERFACE OTBR_ENABLE_NCP_DNS_UPSTREAM=1)
+endif()
+
+option(OTBR_NCP_DNS_UPSTREAM_BIND_TO_INFRA "Bind NCP upstream DNS sockets to the infra interface" OFF)
+if (OTBR_NCP_DNS_UPSTREAM_BIND_TO_INFRA)
+    target_compile_definitions(otbr-config INTERFACE OTBR_ENABLE_NCP_DNS_UPSTREAM_BIND_TO_INFRA=1)
+endif()
+
 set(OTBR_MULTI_AIL_DEFAULT OFF)
 if (OTBR_BORDER_ROUTING)
     set(OTBR_MULTI_AIL_DEFAULT ON)

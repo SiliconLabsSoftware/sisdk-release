@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform Security - SoC SE Manager Tamper
 description: >
-  This example project demonstrates the tamper feature of Secure Vault High device.
+  Demonstrates how to provision tamper OTP settings, trigger tamper via kit buttons, and temporarily disable tamper with a signed SE Manager token on Secure Vault High.
 category: Example|Platform
 filter:
   - name: "Device Type"

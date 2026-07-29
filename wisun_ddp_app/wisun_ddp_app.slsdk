@@ -2,7 +2,7 @@
 # Package ID should prefer format: com.silabs.sdk.<package_name>
 id=com.silabs.sdk.wisun_ddp_app
 
-version=2.12.0
+version=2.13.0
 
 label=wisun_ddp_app
 description=Wi-SUN DDP Application

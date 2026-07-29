@@ -42,6 +42,7 @@
 #include "sl_rail_mux.h"
 
 #include "mac-flat-header.h"
+#include "mac-phy.h"
 #include "buffer_manager/buffer-management.h"
 #include "buffer_manager/buffer-queue.h"
 #include "sl_assert.h" // for EFM_ASSERT
@@ -69,6 +70,81 @@ SL_WEAK void sli_rail_mux_aux_on_unregister_success(void)
 #if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT)
 #include "sl_rail_util_ieee802154_rx_duty_cycling.h"
 #endif
+
+#if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT)
+#if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
+// MUX builds with FCS default to Standard/FCS+HDR until product config selects RXDC.
+#define SLI_RAIL_MUX_RX_DUTY_CYCLING_PHY_SELECT_DEFAULT  false
+#else
+// DC-only MUX builds always requested RXDC PHY before runtime selection existed.
+#define SLI_RAIL_MUX_RX_DUTY_CYCLING_PHY_SELECT_DEFAULT  true
+#endif
+
+// Runtime RXDC PHY profile cache for phy_select feature queries. Boot value comes
+// from sl_rail_mux_get_rx_duty_cycling_phy_select_from_product_config(); runtime
+// CLI updates RAM and the store hook. Read from sl_rail_util_ieee802154_get_*_phy_features()
+// (RAIL phy_select, potentially ISR/event context). Loads/stores use RAIL_MUX critical sections.
+static volatile bool sli_rail_mux_rx_duty_cycling_phy_select_enabled = SLI_RAIL_MUX_RX_DUTY_CYCLING_PHY_SELECT_DEFAULT;
+
+static void sli_rail_mux_set_rx_duty_cycling_phy_select_enabled_runtime(bool enabled)
+{
+  RAIL_MUX_DECLARE_IRQ_STATE;
+
+  RAIL_MUX_ENTER_CRITICAL();
+  sli_rail_mux_rx_duty_cycling_phy_select_enabled = enabled;
+  RAIL_MUX_EXIT_CRITICAL();
+}
+
+static bool sli_rail_mux_is_rx_duty_cycling_phy_select_enabled(void)
+{
+  RAIL_MUX_DECLARE_IRQ_STATE;
+  bool enabled;
+
+  RAIL_MUX_ENTER_CRITICAL();
+  enabled = sli_rail_mux_rx_duty_cycling_phy_select_enabled;
+  RAIL_MUX_EXIT_CRITICAL();
+  return enabled;
+}
+
+#if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
+#include "rail_mux_tokens.h"
+#include "stack/include/sl_zigbee_token.h"
+
+#define SLI_RAIL_MUX_RXDC_PHY_SELECT_TOKEN_DEFAULT  0U
+
+static sl_status_t sli_rail_mux_token_init(void)
+{
+  uint8_t default_token = SLI_RAIL_MUX_RXDC_PHY_SELECT_TOKEN_DEFAULT;
+
+  return sl_zigbee_initialize_basic_token(COMMON_TOKEN_RAIL_MUX_RXDC_PHY_SELECT,
+                                          &default_token,
+                                          sizeof(default_token));
+}
+
+SL_WEAK bool sl_rail_mux_get_rx_duty_cycling_phy_select_from_product_config(void)
+{
+  uint8_t token = SLI_RAIL_MUX_RXDC_PHY_SELECT_TOKEN_DEFAULT;
+
+  if (slx_zigbee_token_manager_get_data(COMMON_TOKEN_RAIL_MUX_RXDC_PHY_SELECT,
+                                        &token,
+                                        sizeof(token)) != SL_STATUS_OK) {
+    return false;
+  }
+  return (token != SLI_RAIL_MUX_RXDC_PHY_SELECT_TOKEN_DEFAULT);
+}
+
+SL_WEAK void sl_rail_mux_store_rx_duty_cycling_phy_select_to_product_config(bool enabled)
+{
+  uint8_t token = enabled ? 1U : 0U;
+
+  (void) slx_zigbee_token_manager_set_data(COMMON_TOKEN_RAIL_MUX_RXDC_PHY_SELECT,
+                                           &token,
+                                           sizeof(token));
+}
+
+#endif // FCS + RXDC token path
+
+#endif // RX duty cycling catalog
 
 #if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
 #include "sl_rail_util_ieee802154_fast_channel_switching_config.h"
@@ -334,6 +410,34 @@ static void sli_rail_mux_reset_protocol_context_index(uint8_t i)
   protocol_context[i].is_pan_coordinator_802154 = false;
   // Initialize to address broadcast and PAN broadcast
   protocol_context[i].addr_filter_mask_802154 = RAIL_MUX_FILTERING_MASK_BROADCAST_ENABLED;
+}
+
+#if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT)
+#if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
+static void sli_rail_mux_apply_rxdc_phy_select_if_radio_active(void)
+{
+  if (!s_sl_rail_mux_base_rail_started || (mux_rail_handle == NULL)) {
+    return;
+  }
+  sl_rail_mux_update_active_radio_config();
+}
+#endif
+#endif
+
+void sli_rail_mux_stack_init_callback(void)
+{
+#if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT)
+#if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
+  bool boot_profile_enabled;
+
+  EFM_ASSERT(sli_rail_mux_token_init() == SL_STATUS_OK);
+  boot_profile_enabled = sl_rail_mux_get_rx_duty_cycling_phy_select_from_product_config();
+  sli_rail_mux_set_rx_duty_cycling_phy_select_enabled_runtime(boot_profile_enabled);
+  if (boot_profile_enabled != SLI_RAIL_MUX_RX_DUTY_CYCLING_PHY_SELECT_DEFAULT) {
+    sli_rail_mux_apply_rxdc_phy_select_if_radio_active();
+  }
+#endif
+#endif
 }
 
 void sli_rail_mux_local_init(void)
@@ -2128,8 +2232,8 @@ sl_rail_status_t sl_rail_mux_ieee802154_set_rx_to_enh_ack_tx(sl_rail_handle_t ra
   return sl_rail_ieee802154_set_rx_to_enh_ack_tx(mux_rail_handle, pRxToEnhAckTx);
 }
 #ifdef HIGH_DATARATE_PHY
-#define not_high_datarate_packet() (packet_details.channel <= 26)
-#define high_datarate_packet() (packet_details.channel > 26)
+#define not_high_datarate_packet() (!SLI_MAC_IS_HDR_PHY_CHANNEL(packet_details.channel))
+#define high_datarate_packet() (SLI_MAC_IS_HDR_PHY_CHANNEL(packet_details.channel))
 static uint8_t high_datarate_phy_index = 0xFF;
 void sl_rail_mux_set_high_datarate_phy_index(sl_rail_handle_t railHandle)
 {
@@ -2778,23 +2882,62 @@ sl_rail_status_t sl_rail_mux_util_ieee802154_config_radio(sl_rail_handle_t railH
   return sl_rail_util_ieee802154_config_radio(mux_rail_handle);
 }
 
+bool sl_rail_mux_get_rx_duty_cycling_phy_select_enabled(void)
+{
 #if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT)
-sl_rail_ieee802154_phy_features_t duty_cycling_phy_features = SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_DUTY_CYCLING;
+  return sli_rail_mux_is_rx_duty_cycling_phy_select_enabled();
 #else
-sl_rail_ieee802154_phy_features_t duty_cycling_phy_features = SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ;
+  return false;
 #endif
+}
+
+void sl_rail_mux_set_rx_duty_cycling_phy_select_enabled(bool enabled)
+{
+#if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT)
+  bool profile_changed = (sli_rail_mux_is_rx_duty_cycling_phy_select_enabled() != enabled);
+
+  sli_rail_mux_set_rx_duty_cycling_phy_select_enabled_runtime(enabled);
+  #if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
+  sl_rail_mux_store_rx_duty_cycling_phy_select_to_product_config(enabled);
+  if (profile_changed) {
+    sli_rail_mux_apply_rxdc_phy_select_if_radio_active();
+  }
+  #endif
+#else
+  (void) enabled;
+#endif
+}
+
 sl_rail_ieee802154_phy_features_t sl_rail_util_ieee802154_get_fast_channel_switching_phy_features(void)
 {
-  return sli_is_multi_channel_enabled() ? SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_CH_SWITCHING : duty_cycling_phy_features;
+  if (sli_is_multi_channel_enabled()) {
+    return SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_CH_SWITCHING;
+  }
+#if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT)
+  // Contributes RX_DUTY_CYCLING to phy_select desired features. If HDR is also
+  // requested via get_high_speed_phy_features(), phy_select resolves DC+HDR to
+  // a combined HDR PHY; get-active-phy will not show standalone RX_DUTY_CYCLING.
+  return sli_rail_mux_is_rx_duty_cycling_phy_select_enabled()
+         ? SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_DUTY_CYCLING
+         : SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ;
+#else
+  return SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ;
+#endif
 }
+
 sl_rail_ieee802154_phy_features_t sl_rail_util_ieee802154_get_rx_duty_cycling_phy_features(void)
 {
-  // if fast channel switching is enabled, we don't want to load duty cycling phy
-  #if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
+  // When FCS is present, RXDC is selected via get_fast_channel_switching_phy_features()
+  // when not multi-channel; do not also contribute the RXDC feature bit here.
+#if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
   return SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ;
-  #else
-  return duty_cycling_phy_features;
-  #endif
+#elif defined(SL_CATALOG_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_RX_DUTY_CYCLING_PRESENT)
+  return sli_rail_mux_is_rx_duty_cycling_phy_select_enabled()
+         ? SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ_RX_DUTY_CYCLING
+         : SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ;
+#else
+  return SL_RAIL_IEEE802154_PHY_FEATURE_2P4_GHZ;
+#endif
 }
 
 SL_WEAK uint8_t sl_rail_mux_get_ieee802154_rx_channel_switching_slot_base(void)

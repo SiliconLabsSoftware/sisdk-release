@@ -2,27 +2,28 @@ id: psa_crypto_api
 package: mbedtls
 label: PSA Crypto API
 description: >-
-  This component provides the public PSA Crypto API header files.
+  Public PSA Crypto API headers for `trustzone_secure` and
+  `trustzone_unaware` builds; `trustzone_nonsecure` uses TF-M
+  `psa_crypto_api_nonsecure` with `psa_crypto_adjust_config` for shared
+  PSA adjust headers.
 category: Platform|Security|PSA Crypto
 quality: production
 ui_hints:
   visibility: never
 provides:
 - name: psa_crypto_api
+conflicts:
+- name: trustzone_nonsecure
 requires:
+- name: psa_crypto_adjust_config
 - name: mbedtls_crypto_platform_api
 include:
 - path: include
   file_list:
   - path: psa/crypto.h
-  - path: psa/crypto_adjust_auto_enabled.h
-  - path: psa/crypto_adjust_config_dependencies.h
-  - path: psa/crypto_adjust_config_key_pair_types.h
-  - path: psa/crypto_adjust_config_synonyms.h
-  - path: psa/build_info.h
   - path: psa/crypto_builtin_composites.h
-  - path: psa/crypto_builtin_primitives.h
   - path: psa/crypto_builtin_key_derivation.h
+  - path: psa/crypto_builtin_primitives.h
   - path: psa/crypto_compat.h
   - path: psa/crypto_config.h
   - path: psa/crypto_driver_common.h
@@ -30,13 +31,14 @@ include:
   - path: psa/crypto_driver_contexts_key_derivation.h
   - path: psa/crypto_driver_contexts_primitives.h
   - path: psa/crypto_extra.h
-  - path: psa/crypto_legacy.h
   - path: psa/crypto_platform.h
   - path: psa/crypto_se_driver.h
   - path: psa/crypto_sizes.h
   - path: psa/crypto_struct.h
   - path: psa/crypto_types.h
   - path: psa/crypto_values.h
+# -I package root so TF-M's `<include/psa/...>` redirects resolve.
+- path: .
 
 metadata:
   sbom:

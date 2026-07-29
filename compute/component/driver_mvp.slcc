@@ -9,6 +9,9 @@ description: >
   The API of this component is marked as internal.
 category: Compute
 quality: production
+documentation:
+  docset: compute
+  document: compute-reference-guide
 metadata:
   sbom:
     license: Zlib
@@ -39,6 +42,10 @@ recommends:
 - id: driver_mvp_hal_efr32
   condition:
   - device_series_2
+  vendor: silabs
+- id: driver_mvp_hal_si91x
+  condition:
+  - device_si91x
   vendor: silabs
 template_contribution:
 - name: component_catalog

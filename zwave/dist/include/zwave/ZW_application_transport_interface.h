@@ -813,8 +813,14 @@ typedef enum EZwaveCommandType{
    * every reset or power-up.
    * The RAM variables that stores the threshold values are initialized after ApplicationInitHW thus
    * ZW_SetListenBeforeTalkThreshold should be called in ApplicationInitSW.
-   * The default threshold value is set to a value corresponding to the RF regulatory requirements for a Z-Wave module in the specific country.
-   * The appropriate value range goes from 34(dec) to 78(dec) and each threshold step corresponds to a 1.5dB input power step.
+   * The default threshold value is set to a value corresponding to the RF regulatory requirements for a
+   * Z-Wave module in the specific region.
+   *
+   * The threshold is a signed RSSI value in dBm, encoded as an int8_t according to the RSSI encoding used
+   * throughout the Z-Wave Host API. See Z-Wave Serial API specification, Section 4.8.7.
+   *
+   * @warning 500 series controllers used a different encoding: an unsigned scale from 34(dec) to 78(dec),
+   *          where each threshold step corresponds to 1.5 dB. E.g.,:
    *
    * | Region                               | Default Threshold (dec) | dBm |
    * |--------------------------------------|-------------------------|-----|
@@ -822,25 +828,16 @@ typedef enum EZwaveCommandType{
    * | KR                                   | 64                      | -65 |
    * | EU, US, HK, ANZ, CN, IL, IN, MY & RU | 64                      | -65 |
    *
-   * For instance, if a SAW filter with an insertion loss of 3dB is inserted between the antenna feed-point and
-   * the chip on a JP product, the threshold value should be set to 48(dec) .
+   * For instance, if a SAW filter with an insertion loss of 3 dB is inserted between the antenna feed-point
+   * and the chip on a JP 500 series product, the threshold value should be set to 48(dec).
    *
-   * @note In some contries (JP and KR) the value of the LBT threshold is specified in the RF regulatory
-   *       for the country and must be set to the value corresponding to the regulatory requirements.
+   * @warning The protocol accepts the value received from the host and does not enforce regional regulatory limits. It assumes that the host uses signed RSSI.
    *
    * @param[in] SetLBTThreshold.channel Channel number the threshold should be set for.
    *                                    Valid channel numbers are 0, 1 and 2
    *
-   * @param[in] SetLBTThreshold.level   LBT RSSI level in dBm.
-   *                                    The threshold the RSSI should use.
-   *                                    Valid threshold range is from 34(dec) to
-   *                                    78(dec). 34 will set the threshold to the
-   *                                    lowest amount of noise which the node
-   *                                    will refuse to transmit and thus will only
-   *                                    transmit in a quiet RF environment. 78
-   *                                    sets the threshold to the highest amount
-   *                                    of noise and the node will transmit even
-   *                                    in the presence of a lot of RF noise.
+   * @param[in] SetLBTThreshold.level   LBT RSSI threshold as a signed dBm value (int8_t).
+   *                                    The reserved RSSI encodings 125, 126 and 127 MUST NOT be used.
    */
   EZWAVECOMMANDTYPE_ZW_SET_LBT_THRESHOLD, // 99
 
@@ -1275,6 +1272,8 @@ typedef enum EProtocolEvent{
   EPROTOCOLEVENT_NETWORKID_UPDATE,
   EPROTOCOLEVENT_CHANGE_RADIO_PHY,
   EPROTOCOLEVENT_RADIO_ASSERT,
+  EPROTOCOLEVENT_RADIO_CAL_NEEDED,
+  EPROTOCOLEVENT_RADIO_IR_CAL_COMPLETE,
 #ifdef ZW_SECURITY_PROTOCOL
   EPROTOCOLEVENT_SECURITY_RUN,
 #endif
@@ -2118,6 +2117,11 @@ typedef struct SZwaveTransmitPackage{
   EZwaveTransmitType eTransmitType;
   UTransmitParameters uTransmitParams;
 } SZwaveTransmitPackage;
+
+/**
+ * @brief Return app_session_id from a transmit package, or 0 if not applicable.
+ */
+uint8_t ZW_TransmitPackageGetAppSessionId(const SZwaveTransmitPackage *pTransmitPackage);
 
 /**
  * Z-Wave Command Status Package

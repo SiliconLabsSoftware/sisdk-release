@@ -122,6 +122,11 @@ void sli_zigbee_app_framework_rtos_task_init_cb(void)
   #endif
 }
 
+void sli_zigbee_isr_event_armed_callback(void)
+{
+  sl_zigbee_rtos_wakeup_app_framework_task();
+}
+
 //------------------------------------------------------------------------------
 // Static functions.
 

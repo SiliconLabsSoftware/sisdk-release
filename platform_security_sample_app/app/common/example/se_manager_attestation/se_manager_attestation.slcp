@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform Security - SoC SE Manager Attestation
 description: >
-  This example project demonstrates how to get attestation tokens using the SE Manager Attestation API and printing them in a human-readable format.
+  Demonstrates how to obtain and pretty-print PSA IAT and config attestation tokens (COSE_Sign1 / CBOR) with the SE Manager Attestation API on Secure Vault devices.
 category: Example|Platform
 filter:
   - name: "Device Type"
@@ -39,6 +39,8 @@ component:
   - id: printf
   - id: iostream_retarget_stdio
   - id: iostream_recommended_stream
+  - id: toolchain_llvm_lto
+    condition: [toolchain_llvm]
 requires:
   - name: device_security_vault
 configuration:
@@ -55,4 +57,4 @@ define:
   - name: SE_MANAGER_PRINT
 toolchain_settings:
   - option: optimize
-    value: debug
+    value: size

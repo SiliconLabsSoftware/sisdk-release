@@ -26,7 +26,6 @@
 #define SUPPORT_ZW_REPLACE_FAILED_NODE                  1 /* ZW_ReplaceFailedNode */
 #define SUPPORT_ZW_REPLICATION_COMMAND_COMPLETE         1 /* ZW_ReplicationReceiveComplete */
 #define SUPPORT_ZW_REPLICATION_SEND_DATA                1 /* ZW_ReplicationSend */
-#define SUPPORT_ZW_REQUEST_NODE_INFO                    1 /* ZW_RequestNodeInfo */
 #define SUPPORT_ZW_REQUEST_NODE_NEIGHBOR_UPDATE         1 /* ZW_RequestNodeNeighborUpdate */
 #define SUPPORT_ZW_SEND_DATA_EX                         0 /* ZW_SendDataEx */
 #define SUPPORT_ZW_SEND_DATA_MULTI_EX                   0 /* ZW_SendDataMultiEx */
@@ -47,6 +46,7 @@
 #define SUPPORT_ENABLE_NODE_NLS                         1
 #define SUPPORT_GET_NODE_NLS_STATE                      1
 #define SUPPORT_SERIAL_GET_NLS_NODES                    1
+#define SUPPORT_ZW_GET_NODE_PROTOCOL_INFO               1 /* ZW_GetNodeProtocolInfo */
 /* */
 
 /**************************************************************************/

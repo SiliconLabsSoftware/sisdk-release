@@ -55,6 +55,9 @@ class CommonEventHandlersMixin:
         self.demo_controller_connected = False
         self.ncp_address = evt.address
 
+        # Push ap_config dedup override after lib IPC is up (same path as adv_dedup CLI).
+        self._adv_dedup_apply()
+
         for tag in self.tag_db.all():
             if (
                 tag.state == TagState.CONNECTING

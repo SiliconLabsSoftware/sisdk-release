@@ -3,7 +3,7 @@ package: platform
 quality: production
 label: Platform Security - SoC PSA Crypto X.509
 description: >
-  Demonstrates how to create CSRs, build a root-and-device X.509 certificate chain, and verify it with Mbed TLS, using opaque ECDSA keys from the PSA Crypto API.
+  Demonstrates how to create CSRs, build a root-and-device X.509 certificate chain, and verify it with Mbed TLS, in a platform security SoC example using opaque ECDSA keys from the PSA Crypto API.
 category: Example|Platform
 filter:
   - name: "Device Type"

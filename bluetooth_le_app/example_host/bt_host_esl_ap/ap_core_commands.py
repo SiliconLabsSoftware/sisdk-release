@@ -146,7 +146,14 @@ class CLICommandsMixin:
         else:
             self.stop_scan()
 
-    def ap_connect(self, esl_id, bt_addr: str | None, group_id=None, address_type=None):
+    def ap_connect(
+        self,
+        esl_id,
+        bt_addr: str | None,
+        group_id=None,
+        address_type=None,
+        ap_identity: esl_lib.Address = None,
+    ):
         """
         Connect to one or more ESL devices.
         input:
@@ -295,7 +302,14 @@ class CLICommandsMixin:
         )
         try:
             for idx, tag in enumerate(connecting_to):
-                if tag.state in (TagState.CONNECTED, TagState.CONNECTING):
+                recovery_direct_connect = (
+                    tag.state == TagState.CONNECTING
+                    and ap_identity is not None
+                    and self._is_authorized_recovery_identity(tag, ap_identity)
+                )
+                if tag.state == TagState.CONNECTED or (
+                    tag.state == TagState.CONNECTING and not recovery_direct_connect
+                ):
                     if (
                         self.controller_command == CCMD_CONNECT
                         and not self.demo_auto_reconfigure
@@ -316,7 +330,7 @@ class CLICommandsMixin:
 
                 if not self.max_conn_count_reached:
                     self.bonding_finished = False
-                    self.connect(tag)
+                    self.connect(tag, ap_identity=ap_identity)
                     initiated_from_user_command += 1
                     requested_connect_count += 1
 
@@ -345,20 +359,21 @@ class CLICommandsMixin:
             self.evt_dispatcher.unsubscribe("bonding_finished", on_user_connect_waitable)
             self.evt_dispatcher.unsubscribe("error", on_user_connect_waitable)
             stack_limit_denied = len(scope_conn_limit_fail_tag_ids)
-            self.log.info(
-                "'connect all' summary: %d adv. ESL%s in scope; "
-                "%d skipped due already connecting or connected; "
-                "%d stack connect attempt%s, of which %d failed due resource limit; "
-                "%d in-scope ESL%s %s not attempted after resource limit reached.",
-                advertising_esl_in_scope,
-                "s" if advertising_esl_in_scope != 1 else "",
-                skipped_already_busy_in_scope,
-                initiated_from_user_command,
-                "s" if initiated_from_user_command != 1 else "",
-                stack_limit_denied,
-                not_started_due_to_ap_limit_in_scope,
-                "s" if not_started_due_to_ap_limit_in_scope != 1 else "",
-                "was" if not_started_due_to_ap_limit_in_scope == 1 else "were",
+            if esl_id in ["all", BROADCAST_ADDRESS]:
+                self.log.info(
+                    "'connect all' summary: %d adv. ESL%s in scope; "
+                    "%d skipped due already connecting or connected; "
+                    "%d stack connect attempt%s, of which %d failed due resource limit; "
+                    "%d in-scope ESL%s %s not attempted after resource limit reached.",
+                    advertising_esl_in_scope,
+                    "s" if advertising_esl_in_scope != 1 else "",
+                    skipped_already_busy_in_scope,
+                    initiated_from_user_command,
+                    "s" if initiated_from_user_command != 1 else "",
+                    stack_limit_denied,
+                    not_started_due_to_ap_limit_in_scope,
+                    "s" if not_started_due_to_ap_limit_in_scope != 1 else "",
+                    "was" if not_started_due_to_ap_limit_in_scope == 1 else "were",
             )
 
     def ap_disconnect(self, esl_id, bt_addr: str, group_id):

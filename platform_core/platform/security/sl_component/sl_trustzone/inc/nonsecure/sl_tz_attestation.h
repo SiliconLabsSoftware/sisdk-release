@@ -50,7 +50,7 @@ extern "C" {
  *                overwritten unless the content is protected by the "write-once" ITS flag.
  *
  * \param[out] key_buffer        Buffer to store the attestation public key.
- *                               The buffer must be word aligned.
+ *
  * \param[in]  key_size          Size of the key buffer.
  *
  * \return      A status indicating the success/failure of the operation

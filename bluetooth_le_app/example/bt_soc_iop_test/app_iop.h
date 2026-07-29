@@ -3,7 +3,7 @@
  * @brief Helper functions for BLE interoperability test.
  *******************************************************************************
  * # License
- * <b>Copyright 2024 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * SPDX-License-Identifier: Zlib
@@ -30,6 +30,7 @@
 #ifndef APP_IOP_H
 #define APP_IOP_H
 
+#include <stdbool.h>
 #include "sl_bt_api.h"
 
 #define BONDING_DISABLED          0x00
@@ -59,22 +60,22 @@ extern uint8_t phy;
 
 //--------------------------------
 // Security level request from the tester
-typedef enum security_level_e {
+typedef enum security_config_e {
   // No security
-  SECURITY_LEVEL_NONE = sl_bt_connection_mode1_level1,
+  SECURITY_CONFIG_NONE = sl_bt_connection_mode1_level1,
   // Test 7.2 (Security/Pairing)
-  SECURITY_LEVEL_PAIRING = sl_bt_connection_mode1_level2,
+  SECURITY_CONFIG_PAIRING = sl_bt_connection_mode1_level2,
   // Test 7.3 (Security/Authentication)
-  SECURITY_LEVEL_AUTHENTICATION = sl_bt_connection_mode1_level3,
+  SECURITY_CONFIG_AUTHENTICATION = sl_bt_connection_mode1_level3,
   // Test 7.4 (Security/Bonding)
-  SECURITY_LEVEL_BONDING = sl_bt_connection_mode1_level4,
+  SECURITY_CONFIG_BONDING = sl_bt_connection_mode1_level4,
   // Test 7.6 (LE Privacy 1.2, RPA)
-  SECURITY_LEVEL_PRIVACY = 4
-} security_level_t;
+  SECURITY_CONFIG_PRIVACY = 4
+} security_config_t;
 
-extern security_level_t security_level;
-
-// Encryption key for pairing and bonding.
+extern security_config_t security_config;
+extern bool privacy_test_in_progress;
+extern bool privacy_rpa_resolved;
 extern uint32_t passkey;
 
 //--------------------------------

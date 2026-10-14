@@ -39,7 +39,9 @@
 
 #include "sl_board_control.h"
 #include "sl_sleeptimer.h"
+#include "sl_rht_unidriver.h"
 #include "sl_si70xx.h"
+#include "sl_sht4x.h"
 #include "sl_i2cspm_instances.h"
 
 #include "app_assert.h"
@@ -65,6 +67,25 @@
 #define SI7021_CMD_READ_USER_REG1        0xE7 ///< Read RH/T User Register 1
 #define SI7021_CMD_WRITE_HEATER_CTRL     0x51 ///< Write Heater Control Register
 #define SI7021_CMD_READ_HEATER_CTRL      0x11 ///< Read Heater Control Register
+
+/// Delay for AVDD / battery voltage to settle before IR measurement samples
+#define POWER_SUPPLY_VOLTAGE_SETTLE_MS   250
+
+/// Si70xx heater current model: I ≈ base + step * heater setting
+#define SI7021_HEATER_CURRENT_BASE_A     0.00309f   ///< ~3.09 mA at heater setting 0x00
+#define SI7021_HEATER_CURRENT_STEP_A     0.006074f  ///< ~6.074 mA per heater-control LSB
+
+/// SHT4x: lowest heater (~20 mW @ 3.3 V) for 0.1 s + high-precision measurement.
+/// Prefer this over 110/200 mW: those can brown out a CR2032 (~60 mA).
+/// ~20 mW ≈ 6 mA, close to the Si70xx ~3 mA internal resistance load used elsewhere.
+#define SHT4X_CMD_HEATER_20MW_0P1S       0x15
+/// Typical heater power at 3.3 V (datasheet "20 mW" setting)
+#define SHT4X_HEATER_POWER_W             0.020f
+/// Delay after starting heater before sampling loaded voltage (heater still on)
+#define SHT4X_HEATER_SETTLE_MS           50
+/// Remaining wait after mid-heater sample before reading 6-byte result
+/// (~100 ms heat − settle) + high-precision measure (~8–10 ms) + margin
+#define SHT4X_HEATER_TAIL_MS             70
 
 #if defined(ADC_PRESENT)
 // 5V reference voltage, no attenuation on AVDD, 12 bit ADC data
@@ -109,25 +130,47 @@ static void adc_init(void);
 static uint16_t get_adc_sample(void);
 
 /***************************************************************************//**
- * Send a command and data to the Si7021 chip over the I2C bus.
+ * Send a command and data to the Si70xx chip over the I2C bus.
  *
  * @param[in] cmd The command to be sent.
  * @param[in] cmd_len The length of the command in bytes.
- * @param[out] data The data byte(s) to be sent to the chip.
+ * @param[in] data The data byte(s) to be sent to the chip.
  * @param[in] data_len The number of the bytes to be sent to the chip.
+ * @return SL_STATUS_OK on success, SL_STATUS_TRANSMIT on I2C failure.
  ******************************************************************************/
-static void si7021_cmd_write(uint8_t *cmd, uint16_t cmd_len, uint8_t *data, uint16_t data_len);
+static sl_status_t si7021_cmd_write(uint8_t *cmd, uint16_t cmd_len, uint8_t *data, uint16_t data_len);
 
 /***************************************************************************//**
- * Measure the the internal resistance of the connected power supply.
+ * Measure supply internal resistance using the Si70xx on-chip heater
+ * as a controlled load.
+ *
+ * @param[in] load_setting Heater current setting of the Si70xx.
+ * @param[out] r_out Measured internal resistance.
+ * @return SL_STATUS_OK on success.
+ ******************************************************************************/
+static sl_status_t measure_supply_ir_si7021(uint8_t load_setting, float *r_out);
+
+/***************************************************************************//**
+ * Measure supply internal resistance using the SHT4x on-chip heater
+ * as a controlled load.
+ *
+ * @param[out] r_out Measured internal resistance.
+ * @return SL_STATUS_OK on success.
+ ******************************************************************************/
+static sl_status_t measure_supply_ir_sht4x(float *r_out);
+
+/***************************************************************************//**
+ * Measure the internal resistance of the connected power supply.
  *
  * The internal resistance is calculated from the unloaded and loaded supply
- * voltage. The load is provided by the heater element built in the Si7021.
+ * voltage. The load is provided by the heater in the detected RHT sensor
+ * (Si70xx or SHT4x).
  *
- * @param[in] loadSetting Heater current setting of the Si7021.
- * @return The measured internal resistance of the connected supply
+ * @param[in] device_id RHT UniDriver device ID from init.
+ * @param[out] r_out Measured internal resistance of the connected supply.
+ * @return SL_STATUS_OK on success.
  ******************************************************************************/
-static float measure_supply_ir(uint8_t load_setting);
+static sl_status_t measure_supply_ir(uint8_t device_id, float *r_out);
 
 /***************************************************************************//**
  * Calculate battery level based on the model of the battery.
@@ -213,7 +256,7 @@ static uint16_t get_adc_sample(void)
 #endif
 }
 
-static void si7021_cmd_write(uint8_t *cmd, uint16_t cmd_len, uint8_t *data, uint16_t data_len)
+static sl_status_t si7021_cmd_write(uint8_t *cmd, uint16_t cmd_len, uint8_t *data, uint16_t data_len)
 {
   I2C_TransferSeq_TypeDef seq;
   I2C_TransferReturn_TypeDef ret;
@@ -231,49 +274,134 @@ static void si7021_cmd_write(uint8_t *cmd, uint16_t cmd_len, uint8_t *data, uint
   }
 
   ret = I2CSPM_Transfer(sl_i2cspm_sensor, &seq);
-
-  app_assert(ret == i2cTransferDone,
-             "[E: 0x%04x] Failed to write to SI7021" POWER_SUPPLY_LOG_NEW_LINE,
-             (int)ret);
+  if (ret != i2cTransferDone) {
+    return SL_STATUS_TRANSMIT;
+  }
+  return SL_STATUS_OK;
 }
 
-static float measure_supply_ir(uint8_t loadSetting)
+static sl_status_t si7021_heater_disable(void)
+{
+  uint8_t cmd = SI7021_CMD_WRITE_USER_REG1;
+  uint8_t data = 0x00;
+  sl_status_t sc;
+
+  // Soft I2C errors must not leave HTRE set; retry once before giving up.
+  sc = si7021_cmd_write(&cmd, sizeof(cmd), &data, sizeof(data));
+  if (sc != SL_STATUS_OK) {
+    sc = si7021_cmd_write(&cmd, sizeof(cmd), &data, sizeof(data));
+  }
+  return sc;
+}
+
+static sl_status_t measure_supply_ir_si7021(uint8_t load_setting, float *r_out)
 {
   float supplyVoltage;
   float supplyVoltageLoad;
   float i, r;
+  sl_status_t sc;
+  sl_status_t sc_disable;
+  bool heater_enabled = false;
 
   uint8_t cmd;
   uint8_t data;
 
-  sl_sleeptimer_delay_millisecond(250);
+  sl_sleeptimer_delay_millisecond(POWER_SUPPLY_VOLTAGE_SETTLE_MS);
   supplyVoltage = sl_power_supply_measure_voltage(16);
 
-  // Enable heater in Si7021 - 9.81 mA
+  // Enable heater in Si7021 (~3.09 mA at load_setting 0x00)
   cmd = SI7021_CMD_WRITE_HEATER_CTRL;
-  data = loadSetting;
-  si7021_cmd_write(&cmd, 1, &data, 1);
+  data = load_setting;
+  sc = si7021_cmd_write(&cmd, sizeof(cmd), &data, sizeof(data));
+  if (sc != SL_STATUS_OK) {
+    return sc;
+  }
 
   cmd = SI7021_CMD_WRITE_USER_REG1;
   data = 0x04;
-  si7021_cmd_write(&cmd, 1, &data, 1);
+  sc = si7021_cmd_write(&cmd, sizeof(cmd), &data, sizeof(data));
+  if (sc != SL_STATUS_OK) {
+    return sc;
+  }
+  heater_enabled = true;
 
   // Wait for battery voltage to settle.
-  sl_sleeptimer_delay_millisecond(250);
+  sl_sleeptimer_delay_millisecond(POWER_SUPPLY_VOLTAGE_SETTLE_MS);
   supplyVoltageLoad = sl_power_supply_measure_voltage(16);
 
-  // Turn off heater.
-  cmd = SI7021_CMD_WRITE_USER_REG1;
-  data = 0x00;
-  si7021_cmd_write(&cmd, 1, &data, 1);
-
-  i = 0.006074 * loadSetting + 0.00309;
+  // Heater current from Si70xx linear model
+  i = SI7021_HEATER_CURRENT_STEP_A * (float)load_setting + SI7021_HEATER_CURRENT_BASE_A;
   r = (supplyVoltage - supplyVoltageLoad) / i;
 
   power_supply_log_info("Power supply - sv = %.3f   svl = %.3f   i = %.3f   r = %.3f" POWER_SUPPLY_LOG_NEW_LINE,
                         (double)supplyVoltage, (double)supplyVoltageLoad, (double)i, (double)r);
 
-  return r;
+  *r_out = r;
+  sc = SL_STATUS_OK;
+
+  // Always clear HTRE after enable, do not return with the heater still on.
+  if (heater_enabled) {
+    sc_disable = si7021_heater_disable();
+    if (sc_disable != SL_STATUS_OK) {
+      power_supply_log_warning("Power supply - failed to disable Si70xx heater" POWER_SUPPLY_LOG_NEW_LINE);
+      sc = sc_disable;
+    }
+  }
+
+  return sc;
+}
+
+static sl_status_t measure_supply_ir_sht4x(float *r_out)
+{
+  float supplyVoltage;
+  float supplyVoltageLoad;
+  float i, r;
+  uint8_t cmd = SHT4X_CMD_HEATER_20MW_0P1S;
+  uint8_t rx[6];
+  I2C_TransferSeq_TypeDef seq;
+  I2C_TransferReturn_TypeDef ret;
+
+  sl_sleeptimer_delay_millisecond(POWER_SUPPLY_VOLTAGE_SETTLE_MS);
+  supplyVoltage = sl_power_supply_measure_voltage(16);
+
+  // Start SHT4x heater (runs ~0.1 s at ~20 mW, then measures and turns off).
+  seq.addr = SHT4X_ADDR << 1;
+  seq.flags = I2C_FLAG_WRITE;
+  seq.buf[0].data = &cmd;
+  seq.buf[0].len = 1;
+  ret = I2CSPM_Transfer(sl_i2cspm_sensor, &seq);
+  if (ret != i2cTransferDone) {
+    return SL_STATUS_TRANSMIT;
+  }
+
+  // Sample while heater is still on.
+  sl_sleeptimer_delay_millisecond(SHT4X_HEATER_SETTLE_MS);
+  supplyVoltageLoad = sl_power_supply_measure_voltage(16);
+
+  // Let the timed heater + measurement finish, then clock out the result.
+  sl_sleeptimer_delay_millisecond(SHT4X_HEATER_TAIL_MS);
+  seq.flags = I2C_FLAG_READ;
+  seq.buf[0].data = rx;
+  seq.buf[0].len = sizeof(rx);
+  (void)I2CSPM_Transfer(sl_i2cspm_sensor, &seq);
+
+  // I = P / V using typical 20 mW heater power (~6 mA @ 3.3 V).
+  i = SHT4X_HEATER_POWER_W / supplyVoltage;
+  r = (supplyVoltage - supplyVoltageLoad) / i;
+
+  power_supply_log_info("Power supply - sv = %.3f   svl = %.3f   i = %.3f   r = %.3f" POWER_SUPPLY_LOG_NEW_LINE,
+                        (double)supplyVoltage, (double)supplyVoltageLoad, (double)i, (double)r);
+
+  *r_out = r;
+  return SL_STATUS_OK;
+}
+
+static sl_status_t measure_supply_ir(uint8_t device_id, float *r_out)
+{
+  if (device_id == RHT_UNIDRIVER_SHT4X_ID) {
+    return measure_supply_ir_sht4x(r_out);
+  }
+  return measure_supply_ir_si7021(0x00, r_out);
 }
 
 static uint8_t calculate_level(float voltage, batt_model_entry_t *model, uint8_t model_entry_count)
@@ -314,18 +442,25 @@ void sl_power_supply_probe(void)
 {
   sl_status_t sc;
   uint8_t type = SL_POWER_SUPPLY_TYPE_UNKNOWN;
-  float r, v;
+  uint8_t device_id = 0;
+  float r = 0.0f;
+  float v = 0.0f;
 
   sc = sl_board_enable_sensor(SL_BOARD_SENSOR_RHT);
-  app_assert((SL_STATUS_OK == sc),
-             "[E: %#04lx] Si7021 sensor not available" POWER_SUPPLY_LOG_NEW_LINE,
-             sc);
-  sc = sl_si70xx_init(sl_i2cspm_sensor, SI7021_ADDR);
+  if (sc == SL_STATUS_OK) {
+    sc = sl_rht_unidriver_init(sl_i2cspm_sensor);
+  }
 
   if (sc == SL_STATUS_OK) {
-    // Try to measure using 9.18 mA first.
+    sc = sl_rht_unidriver_get_device_id(&device_id);
+  }
+
+  if (sc == SL_STATUS_OK) {
     v = sl_power_supply_measure_voltage(16);
-    r = measure_supply_ir(0x00);
+    sc = measure_supply_ir(device_id, &r);
+  }
+
+  if (sc == SL_STATUS_OK) {
     if ( r > 5.0f ) {
       type = SL_POWER_SUPPLY_TYPE_CR2032;
     } else if (r > 0.5f) {
@@ -339,7 +474,7 @@ void sl_power_supply_probe(void)
     supply_ir = r;
     supply_type = type;
   } else {
-    power_supply_log_warning("Si7021 sensor initialization failed. "
+    power_supply_log_warning("RHT sensor initialization failed. "
                              "Unable to detect power supply type." POWER_SUPPLY_LOG_NEW_LINE);
   }
 }

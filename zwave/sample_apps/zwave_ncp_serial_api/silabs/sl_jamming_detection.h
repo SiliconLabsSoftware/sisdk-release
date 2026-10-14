@@ -4,6 +4,8 @@
  *
  * @brief RSSI-based jamming detection.
  *
+ * @warning This software component is currently evaluation quality and is subject to change.
+ *
  * This module implements the jamming detection algorithm: sample RSSI per
  * channel every 100 ms over a configurable window (e.g. 150 samples = 15 s),
  * count samples above a configurable RSSI threshold, and mark a channel as
@@ -36,11 +38,21 @@ _Static_assert(SL_JAMMING_DETECTION_NUM_CHANNELS == 4, "SL_JAMMING_DETECTION_NUM
 _Static_assert(SL_JAMMING_DETECTION_NUM_STATS_CHANNELS == 5, "SL_JAMMING_DETECTION_NUM_STATS_CHANNELS should be 5");
 _Static_assert(SL_JAMMING_DETECTION_NUM_COLLECTION_CHANNELS == SL_JAMMING_DETECTION_NUM_STATS_CHANNELS, "collection and stats channel counts must match");
 
+/**
+ * @addtogroup Apps
+ * @{
+ * @addtogroup JammingDetection
+ * @{
+ */
+
+/** RSSI sample for one channel in a collection snapshot. */
+typedef struct {
+  int8_t rssi;  /**< RSSI value for this channel. */
+} sl_jamming_detection_collection_sample_t;
+
 /** One collection snapshot: one RSSI sample per channel. */
 typedef struct {
-  struct {
-    int8_t rssi;  /**< RSSI value for this channel. */
-  } samples[SL_JAMMING_DETECTION_NUM_COLLECTION_CHANNELS];
+  sl_jamming_detection_collection_sample_t samples[SL_JAMMING_DETECTION_NUM_COLLECTION_CHANNELS];
 } sl_jamming_detection_collection_t;
 
 /*
@@ -50,14 +62,17 @@ typedef struct {
  */
 typedef zpal_status_t (*sl_jamming_detection_collection_callback_t)(const sl_jamming_detection_collection_t *collection);
 
+/** Per-channel jamming detection statistics. */
+typedef struct {
+  int8_t  rssi_threshold_dbm;       /**< RSSI threshold in dBm for this channel. */
+  uint8_t critical_number_of_samples;  /**< number of samples above threshold to trigger jamming detection. */
+  uint8_t samples_above_threshold;  /**< Number of samples above threshold in the window. */
+} sl_jamming_detection_channel_statistics_t;
+
 /** Statistics for jamming detection. */
 typedef struct {
   uint8_t channel_bitmap;  /**< Bitmap: bit i set = channel i is jammed. */
-  struct {
-    int8_t  rssi_threshold_dbm;       /**< RSSI threshold in dBm for this channel. */
-    uint8_t critical_number_of_samples;  /**< number of samples above threshold to trigger jamming detection. */
-    uint8_t samples_above_threshold;  /**< Number of samples above threshold in the window. */
-  } statistics[SL_JAMMING_DETECTION_NUM_STATS_CHANNELS];
+  sl_jamming_detection_channel_statistics_t statistics[SL_JAMMING_DETECTION_NUM_STATS_CHANNELS];
 } sl_jamming_detection_statistics_t;
 
 /**
@@ -65,6 +80,12 @@ typedef struct {
  * @param[in] statistics  Struct with channel_bitmap and per-channel statistics (threshold, counts).
  */
 typedef zpal_status_t (*sl_jamming_detection_report_callback_t)(const sl_jamming_detection_statistics_t *statistics);
+
+/** Per-channel jamming detection configuration. */
+typedef struct {
+  int8_t  rssi_threshold_dbm;      /**< RSSI threshold in dBm; samples above this threshold are counted as high. */
+  uint8_t critical_number_of_samples;                 /**< Number of samples in the window that triggers jamming event (e.g. 95 or more samples in the 15 s window will be reported as jammed). */
+} sl_jamming_detection_channel_config_t;
 
 /**
  * @brief Configuration for the jamming detection algorithm.
@@ -74,10 +95,7 @@ typedef zpal_status_t (*sl_jamming_detection_report_callback_t)(const sl_jamming
  * window are above the RSSI threshold.
  */
 typedef struct {
-  struct {
-    int8_t  rssi_threshold_dbm;      /**< RSSI threshold in dBm; samples above this threshold are counted as high. */
-    uint8_t critical_number_of_samples;                 /**< Number of samples in the window that triggers jamming event (e.g. 95 or more samples in the 15 s window will be reported as jammed). */
-  } settings[SL_JAMMING_DETECTION_NUM_STATS_CHANNELS];
+  sl_jamming_detection_channel_config_t settings[SL_JAMMING_DETECTION_NUM_STATS_CHANNELS];
   uint16_t report_interval_sec;    /**< Seconds between periodic jamming reports; 0 disables periodic reporting ([0,20]). */
   sl_jamming_detection_report_callback_t report_callback; /**< Callback invoked when jamming is detected on one or more channels. */
   sl_jamming_detection_collection_callback_t collection_callback; /**< Callback invoked when RSSI collection is ready. */
@@ -131,6 +149,11 @@ zpal_status_t sl_jamming_detection_set_report_interval_sec(uint16_t interval_sec
  * @return ZPAL_STATUS_OK on success, ZPAL_STATUS_FAIL if failure.
  */
 zpal_status_t sl_jamming_detection_set_channel_configuration(uint8_t logical_channel, int8_t threshold, uint8_t critical_number_of_samples);
+
+/**
+ * @}
+ * @}
+ */
 
 #ifdef __cplusplus
 }

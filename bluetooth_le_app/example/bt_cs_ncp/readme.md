@@ -26,7 +26,7 @@ The following ACP commands are sent from the host to the target device:
 
 The following ACP events are sent from the target device to the host:
 * CS results
-* CS intermediate results, used in stationary object tracking mode
+* CS intermediate results, used in Stationary (suitable for stationary targets) mode
 * CS extended results, used by the tooling
 * Error events
 

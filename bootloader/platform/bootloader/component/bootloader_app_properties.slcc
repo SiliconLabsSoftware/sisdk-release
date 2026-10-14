@@ -24,6 +24,8 @@ config_file:
 - path: platform/bootloader/config/app_properties_config.h
 template_file:
 - path: platform/bootloader/app_properties/config/sl_application_type.h.jinja
+documentation:
+  url: https://docs.silabs.com/mcu-bootloader/latest/gecko-bootloader-api/application-properties
 metadata:
   sbom:
     license: Zlib

@@ -15,7 +15,7 @@ requires:
 
 template_contribution:
 - name: component_catalog
-  value: zigbee_armv7l_tizen-0.1-13.1_gcc-9.2-softfp
+  value: zigbee_armv7l_tizen_0_1_13_1_gcc_9_2_softfp
 
 validation_helper:
 - path: component/scripts/zigbee_linux_arch_validation.lua

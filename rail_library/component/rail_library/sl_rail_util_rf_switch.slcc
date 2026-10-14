@@ -1,0 +1,79 @@
+id: sl_rail_util_rf_switch
+label: RAIL Utility, RF Switch
+description: Utility to configure an external RF switch for antenna switching on EFR32xG24. Configures the antenna-to-pin mapping (polarity, single/dual-pin, custom) plus optional VDD power-gating. The control GPIO(s) themselves come from the AoX Antenna utility, which this component pulls in. Once installed, the switch is applied for any radio activity (VDD and the default-antenna control pins follow it, and the control pins rest low from boot while the radio is inactive), and also drives intra-event switching during Channel Sounding.
+package: rail_library
+category: Platform|Radio
+quality: production
+metadata:
+  sbom:
+    id: sl_rail_util_rf_switch
+    name: RAIL Utility, RF Switch
+    license: Zlib
+documentation:
+  docset: rail
+  document: rail-api/rail-util-rf-switch
+provides:
+- name: sl_rail_util_rf_switch
+requires:
+- name: gpio
+- name: rail_lib
+- name: sl_rail_util_aox
+- name: component_catalog
+- name: cli
+  condition:
+  - sl_rail_test_core
+- name: silabs_core_response_print
+  condition:
+  - sl_rail_test_core
+config_file:
+- path: plugin/rf_switch/config/efr32xg24/sl_rail_util_rf_switch_config.h
+  file_id: sl_rail_util_rf_switch_config
+  condition:
+  - device_sdid_215
+include:
+- path: plugin/rf_switch
+  file_list:
+  - path: sl_rail_util_rf_switch.h
+source:
+- path: plugin/rf_switch/sl_rail_util_rf_switch.c
+- path: plugin/rf_switch/sl_rail_util_rf_switch_cli.c
+  condition:
+  - sl_rail_test_core
+template_contribution:
+- name: event_handler
+  value:
+    event: stack_init
+    include: sl_rail_util_rf_switch.h
+    handler: sl_rail_util_rf_switch_init
+    # Must run after sl_rail_util_init (priority -9000). Lower priority values
+    # run earlier, so this uses a value greater than -9000 to ensure the RAIL
+    # handle and the TrustZone/secure-GPIO configuration are valid before
+    # sl_rail_config_rf_switch() is called.
+  priority: -8999
+- name: component_catalog
+  value: sl_rail_util_rf_switch
+- name: cli_command
+  value:
+    name: setCsAntGpioPattern
+    handler: CI_setCsAntGpioPattern
+    help: 'Associate a control-pin GPIO pattern with each antenna id for the\n                    external RF switch. Each value is a bit pattern where bit0 drives the\n                    first antenna-switch GPIO and bit1 the second. Selects polarity\n                    (standard vs inverted), single-pin or dual-pin complementary\n                    SPDT, and custom mappings.\n                    Example single-pin standard: 1 0; dual-pin complementary: 1 2.\n                    Control GPIO(s) are configured via the AoX antenna utility\n                    (setCsAntSwitchGpio in RAIL Test CS CLI).'
+    argument:
+    - type: uint8
+      help: Antenna 1 GPIO pattern (0-3)
+    - type: uint8opt
+      help: '[uint8opt] Antenna 2 pattern\n                    [uint8opt] Antenna 3 pattern\n                    [uint8opt] Antenna 4 pattern'
+  condition:
+  - sl_rail_test_core
+- name: cli_command
+  value:
+    name: setCsRfSwitch
+    handler: CI_setCsRfSwitch
+    help: 'Configure optional external RF switch VDD power-gating. Antenna\n                    control pins come from the AoX antenna utility; antenna-to-pin\n                    mapping is set via setCsAntGpioPattern. The control pins always\n                    follow radio activity and rest low while it is inactive.\n                    vddEnable: gate a VDD pin; when 1 supply port pin settleUs [prsSignal].'
+    argument:
+    - type: uint8
+      help: VDD enable (0/1)
+    - type: uint8opt
+      help: '[uint8opt] VDD port\n                    [uint8opt] VDD pin\n                    [uint8opt] VDD settle time (us)\n                    [uint8opt] VDD PRS signal (0=PAEN|LNAEN, 1=TX|RX)'
+  condition:
+  - sl_rail_test_core
+root_path: rail_library

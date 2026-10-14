@@ -5,6 +5,7 @@ var searchData=
   ['bluetooth_20event_20system_20ipc_2',['Bluetooth Event System IPC',['../group__bluetooth__event__system.html',1,'']]],
   ['bluetooth_20rtos_20adaptation_3',['Bluetooth RTOS adaptation',['../group__bluetooth__rtos__adaptation.html',1,'']]],
   ['bluetooth_20sdk_20version_4',['Bluetooth SDK version',['../group__sl__bt__version.html',1,'']]],
-  ['bt_20common_20types_5',['BT Common Types',['../group__sl__bt__common__types.html',1,'']]],
-  ['bt_20event_20system_20event_20masks_6',['BT Event System Event Masks',['../group__sl__bt__event__masks.html',1,'']]]
+  ['bonding_20database_5',['External Bonding Database',['../group__sl__bt__external__bondingdb.html',1,'']]],
+  ['bt_20common_20types_6',['BT Common Types',['../group__sl__bt__common__types.html',1,'']]],
+  ['bt_20event_20system_20event_20masks_7',['BT Event System Event Masks',['../group__sl__bt__event__masks.html',1,'']]]
 ];

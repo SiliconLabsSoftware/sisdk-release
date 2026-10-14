@@ -159,8 +159,8 @@ extern "C" {
  *  If the hardware sets the CHERROR bit for a channel, the driver disables
  *  the channel, aborts all queued descriptors and invokes the registered
  *  callback for each pending descriptor with @p error=true and
- *  @p aborted=true. The application is responsible for re-enabling or
- *  reinitializing the channel before submitting new work.
+ *  @p aborted=true. The application may submit new transfers from the callback,
+ *  allowing error recovery.
  *
  *  ## Performance
  *
@@ -246,7 +246,6 @@ typedef struct sl_dma_channel_xfer_descriptor_flags {
 typedef enum {
   SL_DMA_CHANNEL_STATE_DISABLED,
   SL_DMA_CHANNEL_STATE_ENABLED,
-  SL_DMA_CHANNEL_STATE_ABORTING,
 } sl_dma_channel_state_t;
 
 /// DMA channel operating mode
@@ -331,9 +330,8 @@ typedef struct sl_dma_channel_status {
  *
  * This function may be called from thread context or from within a DMA channel
  * callback (IRQ context). Re-entrant calls are safe: if the channel is already
- * in the @p SL_DMA_CHANNEL_STATE_ABORTING or @p SL_DMA_CHANNEL_STATE_DISABLED
- * state, the function returns @p SL_STATUS_OK immediately without taking any
- * action.
+ * in the @p SL_DMA_CHANNEL_STATE_DISABLED state, the function returns
+ * @p SL_STATUS_OK immediately without taking any action.
  *
  * @param[in,out]  handle DMA channel handle.
  *

@@ -1,7 +1,7 @@
 project_name: bt_soc_thermometer_micriumos_mock
 package: bluetooth_le_app
 label: Bluetooth - SoC Thermometer (Mock) Micrium OS
-description: >
+description: >-
   Implements a GATT Server with the Health Thermometer Profile, which enables a
   Client device to connect and get temperature data. Temperature is read from
   the digital relative humidity and temperature sensor of the mainboard or of

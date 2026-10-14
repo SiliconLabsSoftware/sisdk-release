@@ -81,3 +81,135 @@ upgrade:
           adds toolchain_lto when present after upgrading to simplicity_sdk 2026.6.0.
     configuration:
       - script: platform_core/platform/emdrv/component/upgrade_configuration_dmadrv.lua
+  - sdk:
+      id: simplicity_sdk
+      version: "2026.6.2"
+    component:
+      - trigger: SIBG301M104XIL_1MB
+        description: >
+          Starting from simplicity_sdk 2026.6.2 the SIBG301M104XIL_1MB component was replaced by SIBG301M104XIL with its associated external flash size (external_flash_1mb_s3).
+        add:
+          - SIBG301M104XIL
+          - external_flash_1mb_s3
+        remove:
+          - SIBG301M104XIL_1MB
+      - trigger: SIBG301M104XIL_2MB
+        description: >
+          Starting from simplicity_sdk 2026.6.2 the SIBG301M104XIL_2MB component was replaced by SIBG301M104XIL with its associated external flash size (external_flash_2mb_s3).
+        add:
+          - SIBG301M104XIL
+          - external_flash_2mb_s3
+        remove:
+          - SIBG301M104XIL_2MB
+      - trigger: SIBG301M104XIL_4MB
+        description: >
+          Starting from simplicity_sdk 2026.6.2 the SIBG301M104XIL_4MB component was replaced by SIBG301M104XIL with its associated external flash size (external_flash_4mb_s3).
+        add:
+          - SIBG301M104XIL
+          - external_flash_4mb_s3
+        remove:
+          - SIBG301M104XIL_4MB
+      - trigger: SIBG301M104XIL_8MB
+        description: >
+          Starting from simplicity_sdk 2026.6.2 the SIBG301M104XIL_8MB component was replaced by SIBG301M104XIL with its associated external flash size (external_flash_8mb_s3).
+        add:
+          - SIBG301M104XIL
+          - external_flash_8mb_s3
+        remove:
+          - SIBG301M104XIL_8MB
+      - trigger: SIBG301M104XIL_16MB
+        description: >
+          Starting from simplicity_sdk 2026.6.2 the SIBG301M104XIL_16MB component was replaced by SIBG301M104XIL with its associated external flash size (external_flash_16mb_s3).
+        add:
+          - SIBG301M104XIL
+          - external_flash_16mb_s3
+        remove:
+          - SIBG301M104XIL_16MB
+      - trigger: SIBG301M104XIL_32MB
+        description: >
+          Starting from simplicity_sdk 2026.6.2 the SIBG301M104XIL_32MB component was replaced by SIBG301M104XIL with its associated external flash size (external_flash_32mb_s3).
+        add:
+          - SIBG301M104XIL
+          - external_flash_32mb_s3
+        remove:
+          - SIBG301M104XIL_32MB
+      - trigger: SIBG301M104XIL_64MB
+        description: >
+          Starting from simplicity_sdk 2026.6.2 the SIBG301M104XIL_64MB component was replaced by SIBG301M104XIL with its associated external flash size (external_flash_64mb_s3).
+        add:
+          - SIBG301M104XIL
+          - external_flash_64mb_s3
+        remove:
+          - SIBG301M104XIL_64MB
+      - trigger: SIBG301M104XIL_128MB
+        description: >
+          Starting from simplicity_sdk 2026.6.2 the SIBG301M104XIL_128MB component was replaced by SIBG301M104XIL with its associated external flash size (external_flash_128mb_s3).
+        add:
+          - SIBG301M104XIL
+          - external_flash_128mb_s3
+        remove:
+          - SIBG301M104XIL_128MB
+      - trigger: SIMG301M104XIL_1MB
+        description: >
+          Starting from simplicity_sdk 2026.6.2 the SIMG301M104XIL_1MB component was replaced by SIMG301M104XIL with its associated external flash size (external_flash_1mb_s3).
+        add:
+          - SIMG301M104XIL
+          - external_flash_1mb_s3
+        remove:
+          - SIMG301M104XIL_1MB
+      - trigger: SIMG301M104XIL_2MB
+        description: >
+          Starting from simplicity_sdk 2026.6.2 the SIMG301M104XIL_2MB component was replaced by SIMG301M104XIL with its associated external flash size (external_flash_2mb_s3).
+        add:
+          - SIMG301M104XIL
+          - external_flash_2mb_s3
+        remove:
+          - SIMG301M104XIL_2MB
+      - trigger: SIMG301M104XIL_4MB
+        description: >
+          Starting from simplicity_sdk 2026.6.2 the SIMG301M104XIL_4MB component was replaced by SIMG301M104XIL with its associated external flash size (external_flash_4mb_s3).
+        add:
+          - SIMG301M104XIL
+          - external_flash_4mb_s3
+        remove:
+          - SIMG301M104XIL_4MB
+      - trigger: SIMG301M104XIL_8MB
+        description: >
+          Starting from simplicity_sdk 2026.6.2 the SIMG301M104XIL_8MB component was replaced by SIMG301M104XIL with its associated external flash size (external_flash_8mb_s3).
+        add:
+          - SIMG301M104XIL
+          - external_flash_8mb_s3
+        remove:
+          - SIMG301M104XIL_8MB
+      - trigger: SIMG301M104XIL_16MB
+        description: >
+          Starting from simplicity_sdk 2026.6.2 the SIMG301M104XIL_16MB component was replaced by SIMG301M104XIL with its associated external flash size (external_flash_16mb_s3).
+        add:
+          - SIMG301M104XIL
+          - external_flash_16mb_s3
+        remove:
+          - SIMG301M104XIL_16MB
+      - trigger: SIMG301M104XIL_32MB
+        description: >
+          Starting from simplicity_sdk 2026.6.2 the SIMG301M104XIL_32MB component was replaced by SIMG301M104XIL with its associated external flash size (external_flash_32mb_s3).
+        add:
+          - SIMG301M104XIL
+          - external_flash_32mb_s3
+        remove:
+          - SIMG301M104XIL_32MB
+      - trigger: SIMG301M104XIL_64MB
+        description: >
+          Starting from simplicity_sdk 2026.6.2 the SIMG301M104XIL_64MB component was replaced by SIMG301M104XIL with its associated external flash size (external_flash_64mb_s3).
+        add:
+          - SIMG301M104XIL
+          - external_flash_64mb_s3
+        remove:
+          - SIMG301M104XIL_64MB
+      - trigger: SIMG301M104XIL_128MB
+        description: >
+          Starting from simplicity_sdk 2026.6.2 the SIMG301M104XIL_128MB component was replaced by SIMG301M104XIL with its associated external flash size (external_flash_128mb_s3).
+        add:
+          - SIMG301M104XIL
+          - external_flash_128mb_s3
+        remove:
+          - SIMG301M104XIL_128MB

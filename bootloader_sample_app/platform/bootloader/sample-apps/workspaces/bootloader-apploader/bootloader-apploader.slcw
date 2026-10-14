@@ -1,5 +1,5 @@
 workspace_name: bootloader-apploader-workspace
-package: bootloader_sample_app
+package: bootloader
 label: bootloader-apploader-workspace
 quality: production
 description: >

@@ -1444,6 +1444,12 @@ __INLINE void sl_hal_eusart_enable_rx(EUSART_TypeDef *eusart)
   // Wait for synchronization to complete.
   sl_hal_eusart_wait_sync(eusart, _EUSART_SYNCBUSY_MASK);
   eusart->CMD_SET = EUSART_CMD_RXEN;
+  sl_hal_eusart_wait_sync(eusart, EUSART_SYNCBUSY_RXEN);
+
+  while ((eusart->EN & _EUSART_EN_EN_MASK)
+         && !(eusart->STATUS & _EUSART_STATUS_RXENS_MASK)) {
+    // Wait for receiver to be enabled.
+  }
 }
 
 /***************************************************************************//**
@@ -1461,6 +1467,12 @@ __INLINE void sl_hal_eusart_disable_rx(EUSART_TypeDef *eusart)
   // Wait for synchronization to complete.
   sl_hal_eusart_wait_sync(eusart, _EUSART_SYNCBUSY_MASK);
   eusart->CMD_SET = EUSART_CMD_RXDIS;
+  sl_hal_eusart_wait_sync(eusart, EUSART_SYNCBUSY_RXDIS);
+
+  while ((eusart->EN & _EUSART_EN_EN_MASK)
+         && (eusart->STATUS & _EUSART_STATUS_RXENS_MASK)) {
+    // Wait for receiver to be disabled.
+  }
 }
 
 /***************************************************************************//**
@@ -1478,6 +1490,12 @@ __INLINE void sl_hal_eusart_enable_tx(EUSART_TypeDef *eusart)
   // Wait for synchronization to complete.
   sl_hal_eusart_wait_sync(eusart, _EUSART_SYNCBUSY_MASK);
   eusart->CMD_SET = EUSART_CMD_TXEN;
+  sl_hal_eusart_wait_sync(eusart, EUSART_SYNCBUSY_TXEN);
+
+  while ((eusart->EN & _EUSART_EN_EN_MASK)
+         && !(eusart->STATUS & _EUSART_STATUS_TXENS_MASK)) {
+    // Wait for transmitter to be enabled.
+  }
 }
 
 /***************************************************************************//**
@@ -1495,6 +1513,12 @@ __INLINE void sl_hal_eusart_disable_tx(EUSART_TypeDef *eusart)
   // Wait for synchronization to complete.
   sl_hal_eusart_wait_sync(eusart, _EUSART_SYNCBUSY_MASK);
   eusart->CMD_SET = EUSART_CMD_TXDIS;
+  sl_hal_eusart_wait_sync(eusart, EUSART_SYNCBUSY_TXDIS);
+
+  while ((eusart->EN & _EUSART_EN_EN_MASK)
+         && (eusart->STATUS & _EUSART_STATUS_TXENS_MASK)) {
+    // Wait for transmitter to be disabled.
+  }
 }
 
 /***************************************************************************//**
@@ -1603,7 +1627,12 @@ __INLINE void sl_hal_eusart_clear_tx(EUSART_TypeDef *eusart)
   // Make sure that the module exists on the selected chip.
   EFM_ASSERT(SL_HAL_EUSART_REF_VALID(eusart));
 
-  // Make sure transmitter is disabled.
+#if defined(_EUSART_CFG0_SYNC_MASK)
+  // CLEARTX is only applicable in async mode.
+  EFM_ASSERT((eusart->CFG0 & _EUSART_CFG0_SYNC_MASK) == EUSART_CFG0_SYNC_ASYNC);
+#endif
+
+  // CLEARTX is only allowed once TX has been fully disabled, as indicated by STATUS_TXENS.
   EFM_ASSERT(((eusart->STATUS & _EUSART_STATUS_TXENS_MASK) >> _EUSART_STATUS_TXENS_SHIFT) == 0);
 
   eusart->CMD_SET = EUSART_CMD_CLEARTX;

@@ -3,7 +3,7 @@
  * @brief defines structured format for 'sl_zigbee_zdo_dlk_negotiation' ipc messages
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -102,5 +102,21 @@ typedef struct {
 typedef struct {
   slxi_zigbee_stack_gu_zdo_dlk_override_supported_params_ipc_req_t request;
 } slxi_zigbee_stack_gu_zdo_dlk_override_supported_params_ipc_msg_t;
+
+typedef struct {
+  sl_zigbee_address_info target;
+  sl_zigbee_dlk_negotiation_method selected_method;
+  sl_zigbee_dlk_negotiation_shared_secret_source selected_secret;
+  bool use_aps_encryption;
+} slxi_zigbee_stack_zdo_dlk_start_key_update_with_aps_encryption_ipc_req_t;
+
+typedef struct {
+  sl_status_t result;
+} slxi_zigbee_stack_zdo_dlk_start_key_update_with_aps_encryption_ipc_rsp_t;
+
+typedef struct {
+  slxi_zigbee_stack_zdo_dlk_start_key_update_with_aps_encryption_ipc_req_t request;
+  slxi_zigbee_stack_zdo_dlk_start_key_update_with_aps_encryption_ipc_rsp_t response;
+} slxi_zigbee_stack_zdo_dlk_start_key_update_with_aps_encryption_ipc_msg_t;
 
 #endif // SL_ZIGBEE_ZDO_DLK_NEGOTIATION_IPC_COMMAND_MESSAGES_H

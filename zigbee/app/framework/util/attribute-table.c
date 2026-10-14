@@ -350,34 +350,36 @@ uint16_t sli_zigbee_af_resolve_mfg_code_for_discover_attribute(uint8_t endpoint,
                                           clientServerMask);
     }
 
-    if (cluster != NULL) {
-      for (i = 0; i < cluster->attributeCount; i++) {
-        metadata = &cluster->attributes[i];
+    if (cluster == NULL) {
+      continue;
+    }
 
-        // Only start from the passed attribute id
-        if (metadata->attributeId < startAttributeId) {
-          continue;
-        }
+    for (uint16_t attrIndex = 0; attrIndex < cluster->attributeCount; attrIndex++) {
+      metadata = &cluster->attributes[attrIndex];
 
-        // After having previously found a first mfg-spec candidate,
-        // ignore an attr that has a higher attrId.
-        if (foundFirst && metadata->attributeId > foundAttrId) {
-          continue;
-        }
+      // Only start from the passed attribute id
+      if (metadata->attributeId < startAttributeId) {
+        continue;
+      }
 
-        // Get attribute's mfg-code. Update the search state if:
-        // this is the first qualifying attr found;
-        // else, this qualifying attr has a lower attrId than prior attr found;
-        // else, this attrId equals prior, prefer this attr's lower mfg-code.
-        candidateMfgCode = sli_zigbee_af_get_manufacturer_code_for_attribute(cluster, metadata);
-        if (candidateMfgCode != SL_ZIGBEE_AF_NULL_MANUFACTURER_CODE
-            && (!foundFirst
-                || metadata->attributeId < foundAttrId
-                || candidateMfgCode < attrMfgCode)) {
-          foundFirst = true;
-          foundAttrId = metadata->attributeId;
-          attrMfgCode = candidateMfgCode;
-        }
+      // After having previously found a first mfg-spec candidate,
+      // ignore an attr that has a higher attrId.
+      if (foundFirst && metadata->attributeId > foundAttrId) {
+        continue;
+      }
+
+      // Get attribute's mfg-code. Update the search state if:
+      // this is the first qualifying attr found;
+      // else, this qualifying attr has a lower attrId than prior attr found;
+      // else, this attrId equals prior, prefer this attr's lower mfg-code.
+      candidateMfgCode = sli_zigbee_af_get_manufacturer_code_for_attribute(cluster, metadata);
+      if (candidateMfgCode != SL_ZIGBEE_AF_NULL_MANUFACTURER_CODE
+          && (!foundFirst
+              || metadata->attributeId < foundAttrId
+              || candidateMfgCode < attrMfgCode)) {
+        foundFirst = true;
+        foundAttrId = metadata->attributeId;
+        attrMfgCode = candidateMfgCode;
       }
     }
   }

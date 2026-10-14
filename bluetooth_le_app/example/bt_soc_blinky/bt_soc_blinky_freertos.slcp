@@ -1,7 +1,7 @@
 project_name: bt_soc_blinky_freertos
 package: bluetooth_le_app
 label: Bluetooth - SoC Blinky FreeRTOS
-description: >
+description: >-
   The classic blinky example using Bluetooth communication. Demonstrates a
   simple two-way data exchange over GATT. This can be tested with the
   Simplicity Connect mobile app.

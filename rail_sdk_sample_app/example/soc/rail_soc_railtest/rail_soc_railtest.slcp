@@ -326,6 +326,8 @@ tag:
   - hwfilter:!board:brd4319a
   - hwfilter:!board:brd4337a
   - hwfilter:!device:device_family_bgm24
+  - hwfilter:!device:device_family_bgm21
+  - hwfilter:!device:device_family_bgm26
   - hwfilter:!device:device_family_mgm21
   - hwfilter:!device:device_family_mgm22
   

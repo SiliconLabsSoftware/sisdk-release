@@ -1358,8 +1358,30 @@ static int32_t parser_parseNewTagHeader(ParserContext_t  *parserContext,
     return BOOTLOADER_ERROR_PARSER_UNKNOWN_TAG;
   }
 
+  uint8_t effectiveTagOrder = gblTagParsingInfo->tagOrder;
+
+#if defined(BOOTLOADER_SE_UPGRADE_NO_STAGING) \
+  && (BOOTLOADER_SE_UPGRADE_NO_STAGING == 1)  \
+  && (defined(SEMAILBOX_PRESENT) || defined(CRYPTOACC_PRESENT))
+  // Under NO_STAGING, GBL_TAG_ORDER_SE_UPGRADE is hard-coded to 3 so the SE
+  // upgrade tag is required to appear before ENC_INIT (=4). This is the only
+  // semantic requirement of in-place SE upgrade. For UNENCRYPTED GBLs there
+  // is no ENC_INIT tag in the stream, so the constraint is vacuous; however
+  // Simplicity Commander (which is consumer-agnostic) lays the unencrypted
+  // tags out in the default order with SE at position 6 (after APPLICATION).
+  // Treat the SE tag's effective order as 6 in that case so the canonical
+  // unencrypted --app --seupgrade GBL is accepted. The "SE before ENC_INIT"
+  // invariant is still enforced for encrypted files because
+  // PARSER_FLAG_ENCRYPTED is set from the GBL header before any other tag
+  // is parsed.
+  if ((gblTagParsingInfo->tagId == GBL_TAG_ID_SE_UPGRADE)
+      && ((parserContext->flags & PARSER_FLAG_ENCRYPTED) == 0U)) {
+    effectiveTagOrder = 6U;
+  }
+#endif
+
   // Parsing a tag of order strictly less than currentTagOrder is not allowed
-  if (gblTagParsingInfo->tagOrder < parserContext->currentTagOrder) {
+  if (effectiveTagOrder < parserContext->currentTagOrder) {
     parserContext->internalState = GblParserStateError;
     return BOOTLOADER_ERROR_PARSER_INVALID_TAG_ORDER;
   }
@@ -1369,9 +1391,9 @@ static int32_t parser_parseNewTagHeader(ParserContext_t  *parserContext,
   if (gblTagParsingInfo->tagId != GBL_TAG_ID_ENC_GBL_DATA) {
     // If the tag type is only allowed to occur once in the GBL (ex. Signature)
     if (gblTagParsingInfo->flags & GBL_TAG_FLAG_SINGLE_OCCURRENCE_ONLY) {
-      parserContext->currentTagOrder = gblTagParsingInfo->tagOrder + 1U;
+      parserContext->currentTagOrder = effectiveTagOrder + 1U;
     } else { // Else, multiple tags of the same type allowed (ex. Programming)
-      parserContext->currentTagOrder = gblTagParsingInfo->tagOrder;
+      parserContext->currentTagOrder = effectiveTagOrder;
     }
   }
 

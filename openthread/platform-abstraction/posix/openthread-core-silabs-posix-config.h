@@ -84,7 +84,7 @@ sudo INFRA_IF_NAME=eth0 \
                    -DOT_PLATFORM_CONFIG=openthread-core-silabs-posix-config.h \
                    -DOTBR_DUA_ROUTING=ON \
                    -DOTBR_DHCP6_PD=ON \
-                   -DOTBR_NAME=SL-OPENTHREAD-BR -DOTBR_VERSION=3.1.1.0_GitHub-717abf0dc -DOT_PACKAGE_NAME=SL-OPENTHREAD -DOT_PACKAGE_VERSION=3.1.1.0_GitHub-fb274efe6" \
+                   -DOTBR_NAME=SL-OPENTHREAD-BR -DOTBR_VERSION=3.1.2.0_GitHub-717abf0dc -DOT_PACKAGE_NAME=SL-OPENTHREAD -DOT_PACKAGE_VERSION=3.1.2.0_GitHub-fb274efe6" \
      ./script/setup
 
 */
@@ -107,7 +107,7 @@ sudo INFRA_IF_NAME=eth0 \
                    -DOTBR_DNS_UPSTREAM_QUERY=OFF \
                    -DOTBR_NCP_DNS_UPSTREAM=ON \
                    -DOTBR_NCP_DNS_UPSTREAM_BIND_TO_INFRA=ON \
-                   -DOTBR_NAME=SL-OPENTHREAD-BR -DOTBR_VERSION=3.1.1.0_GitHub-717abf0dc -DOT_PACKAGE_NAME=SL-OPENTHREAD -DOT_PACKAGE_VERSION=3.1.1.0_GitHub-fb274efe6" \
+                   -DOTBR_NAME=SL-OPENTHREAD-BR -DOTBR_VERSION=3.1.2.0_GitHub-717abf0dc -DOT_PACKAGE_NAME=SL-OPENTHREAD -DOT_PACKAGE_VERSION=3.1.2.0_GitHub-fb274efe6" \
      ./script/setup
 
 */
@@ -135,7 +135,7 @@ sudo INFRA_IF_NAME=eth0 \
                    -DOT_PLATFORM_CONFIG=openthread-core-silabs-posix-config.h \
                    -DOTBR_DUA_ROUTING=ON \
                    -DOTBR_DHCP6_PD=ON \
-                   -DOTBR_NAME=SL-OPENTHREAD-BR -DOTBR_VERSION=3.1.1.0_GitHub-717abf0dc -DOT_PACKAGE_NAME=SL-OPENTHREAD -DOT_PACKAGE_VERSION=3.1.1.0_GitHub-fb274efe6" \
+                   -DOTBR_NAME=SL-OPENTHREAD-BR -DOTBR_VERSION=3.1.2.0_GitHub-717abf0dc -DOT_PACKAGE_NAME=SL-OPENTHREAD -DOT_PACKAGE_VERSION=3.1.2.0_GitHub-fb274efe6" \
      ./script/setup
 
 */
@@ -352,7 +352,7 @@ sudo INFRA_IF_NAME=eth0 \
  * See `OPENTHREAD_CONFIG_NET_DIAG_VENDOR_INFO_SET_API_ENABLE`
  */
 #undef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION
-#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION "3.1.1.0"
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION "3.1.2.0"
 
 /**
  * @def OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_URL

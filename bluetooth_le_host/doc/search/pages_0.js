@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['bgapi_0',['BGAPI',['../md_doc_bgapi.html',1,'']]]
+  ['bgapi_0',['BGAPI',['../bgapi.html',1,'']]]
 ];

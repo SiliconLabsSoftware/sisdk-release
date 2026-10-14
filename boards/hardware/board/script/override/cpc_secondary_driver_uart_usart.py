@@ -1,7 +1,7 @@
 from siliconlabs.slc.board_gen.util.uart_util import *
 from typing import Set
 
-special_case = ['brd2608a', 'brd2710a']
+special_case = ['brd2608a', 'brd2608b', 'brd2710a']
 
 cpc_secondary_uart = UartOverrideUtil('usart')
 

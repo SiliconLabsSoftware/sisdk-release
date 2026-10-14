@@ -455,6 +455,7 @@ void sl_btctrl_configure_scheduler_priorities(sl_btctrl_ll_priorities *prioritie
  */
 void sl_btctrl_init_tasklets(void);
 void sl_btctrl_init_adv_tasklet(void);
+void sl_btctrl_init_adv_ext_tasklet(void);
 void sl_btctrl_init_iso_conn_tasklet(void);
 void sl_btctrl_init_conn_tasklet(void);
 void sl_btctrl_init_dtm_tasklet(void);

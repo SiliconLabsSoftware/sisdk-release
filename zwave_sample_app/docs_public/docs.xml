@@ -42,19 +42,19 @@
     <property key="core.partCompatibility" value=".*efr32zg2[38].* .*zgm230.*"/>
     <property key="core.boardCompatibility" value=".*"/>
   </contentItemData>
-  <contentItemData name="" label="Zniffer v4.69 Release Note" itemURI="https://www.silabs.com/documents/public/release-notes/SRN13233.pdf">
+  <contentItemData name="" label="Zniffer v4.69 Release Note" itemURI="https://github.com/Z-Wave-Alliance/z-wave-pc-zniffer/commits">
     <description>Discusses the latest changes to the PC-based Zniffer tool and lists new features.</description>
     <property key="core.category" value="Release Notes"/>
     <property key="core.priority" value="41"/>
     <property key="core.partCompatibility" value=".*efr32zg2[38].* .*zgm230.*"/>
   </contentItemData>
-  <contentItemData name="" label="Z-Wave SDK Release Notes" itemURI="https://docs.silabs.com/z-wave/8.1.1/sisdk-zwave-release-notes/">
+  <contentItemData name="" label="Z-Wave SDK Release Notes" itemURI="https://docs.silabs.com/z-wave/8.1.2/sisdk-zwave-release-notes/">
     <description>Release notes for the Z-Wave SDK, listing new features, changes, and fixes.</description>
     <property key="core.category" value="Release Notes"/>
     <property key="core.priority" value="39"/>
     <property key="core.partCompatibility" value=".*efr32zg2[38].* .*zgm230.*"/>
   </contentItemData>
-  <contentItemData name="" label="PC based Controller v5.55 Release Note" itemURI="https://github.com/Z-Wave-Alliance/z-wave-pc-controller/wiki/Manual">
+  <contentItemData name="" label="PC based Controller v5.55 Release Note" itemURI="https://github.com/Z-Wave-Alliance/z-wave-pc-controller/commits">
     <description>Discusses the latest changes to the PC-based Controller code and lists new features.</description>
     <property key="core.category" value="Release Notes"/>
     <property key="core.priority" value="40"/>
@@ -91,13 +91,13 @@
     <description>Z-Wave 800 Thunderboard Quick Start Guide</description>
     <property key="core.category" value="Quick Start Guides"/>
     <property key="core.priority" value="5"/>
-    <property key="core.boardCompatibility" value="brd2603a"/>
+    <property key="core.boardCompatibility" value="brd2603[ac]"/>
   </contentItemData>
   <contentItemData name="" label="Z-Wave 800 Dev Kit Quick-Start Guide with Unify" itemURI="https://www.silabs.com/documents/public/quick-start-guides/qsg185-z-wave-800-dev-kit.pdf">
     <description>Z-Wave 800 Dev Kit Quick-Start Guide with Unify</description>
     <property key="core.category" value="Quick Start Guides"/>
     <property key="core.priority" value="6"/>
-    <property key="core.boardCompatibility" value="brd2603a"/>
+    <property key="core.boardCompatibility" value="brd2603[ac]"/>
   </contentItemData>
   <contentItemData name="" label="Z-Wave Lock Bits and User Data Page Contents" itemURI="https://www.silabs.com/documents/public/reference-manuals/SDS14306.pdf">
     <description>Defines the Z-Wave extensions to the Lock Bits and User Data Page in the Zen Gecko SoCs.</description>
@@ -119,7 +119,7 @@
     <property key="core.partCompatibility" value=".*efr32zg2[38].* .*zgm230.*"/>
     <property key="core.boardCompatibility" value=".*"/>
   </contentItemData>
-  <contentItemData name="" label="Z-Wave PC based Controller v5 User Guide" itemURI="https://www.silabs.com/documents/public/user-guides/INS13114.pdf">
+  <contentItemData name="" label="Z-Wave PC based Controller v5 User Guide" itemURI="https://github.com/Z-Wave-Alliance/z-wave-pc-controller/wiki/Manual">
     <description>Z-Wave PC based Controller v5 User Guide. The Z-Wave PC-based Controller application is an example on how Static/Bridge Controller Serial API functionality can be used to implement a Z-Wave-enabled PC application.</description>
     <property key="core.category" value="User's Guides"/>
     <property key="core.priority" value="31"/>

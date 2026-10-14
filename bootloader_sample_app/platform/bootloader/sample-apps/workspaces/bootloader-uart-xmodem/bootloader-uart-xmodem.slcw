@@ -1,5 +1,5 @@
 workspace_name: bootloader-uart-xmodem-workspace
-package: bootloader_sample_app
+package: bootloader
 label: bootloader-uart-xmodem-workspace
 quality: production
 description: >

@@ -1,7 +1,7 @@
 project_name: bt_soc_app_ota_dfu_micriumos
 package: bluetooth_le_app
 label: Bluetooth - SoC Application OTA DFU MicriumOS
-description: >
+description: >-
   A minimal project structure, that serves as a starting point for custom
   Bluetooth applications that provides Over-The-Air device firmware update in
   user application runtime.
@@ -86,7 +86,7 @@ configuration:
   - name: OS_CFG_TASK_Q_EN
     value: "0"
   - name: LIB_MEM_CFG_HEAP_SIZE
-    value: "3500"
+    value: "6500"
   - name: SL_PSA_KEY_USER_SLOT_COUNT
     value: "0"
     condition:
@@ -98,7 +98,7 @@ configuration:
   - name: SL_IOSTREAM_EUSART_VCOM_RESTRICT_ENERGY_MODE_TO_ALLOW_RECEPTION
     value: "0"
   - name: SL_BT_APP_OTA_DFU_CONFIG_STACK
-    value: "2048"
+    value: "4096"
 
 post_build:
   - path: ../../postbuild_profile/bt_dfu_app_s2.slpb

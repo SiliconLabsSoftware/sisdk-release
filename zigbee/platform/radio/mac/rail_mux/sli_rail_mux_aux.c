@@ -417,12 +417,19 @@ sl_rail_status_t sli_zigbee_stack_rail_mux_aux_try_register_and_start_rx(uint16_
     return st;
   }
 
+  // Aux listen uses the mux's normal 802.15.4 address filtering (like the Zigbee context),
+  // not global promiscuous mode. The aux PAN id and short address registered above, together
+  // with the always-enabled broadcast filter, let broadcast frames (e.g. 15.4 beacon requests)
+  // and aux-PAN traffic reach the aux context. Enabling promiscuous mode here would disable
+  // hardware address filtering for every mux context and cause the RX dispatch to drop
+  // non-ack/non-beacon frames (beacon requests are MAC command frames) on the aux context.
+
   // Aux listen is a sniffer-style path for mux validation; accept on-channel traffic broadly.
-  st = sl_rail_ieee802154_set_promiscuous_mode(out_handle, true);
-  if (st != SL_RAIL_STATUS_NO_ERROR) {
-    (void)sli_zigbee_stack_rail_mux_aux_unregister_protocol();
-    return st;
-  }
+  // st = sl_rail_ieee802154_set_promiscuous_mode(out_handle, true);
+  // if (st != SL_RAIL_STATUS_NO_ERROR) {
+  //   (void)sli_zigbee_stack_rail_mux_aux_unregister_protocol();
+  //   return st;
+  // }
 
   st = sl_rail_config_events(out_handle,
                              SL_RAIL_EVENTS_ALL,

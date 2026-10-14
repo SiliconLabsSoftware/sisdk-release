@@ -144,17 +144,7 @@ static psa_status_t driver_can_handle(const psa_key_attributes_t *attributes,
 }
 static uint8_t* get_aead_block(sli_hostcrypto_transparent_aead_operation_t *operation)
 {
- #if defined(SLI_PSA_DRIVER_FEATURE_CHACHAPOLY)
-  if (PSA_ALG_AEAD_WITH_SHORTENED_TAG(operation->alg,
-                                      0)
-      == PSA_ALG_AEAD_WITH_SHORTENED_TAG(PSA_ALG_CHACHA20_POLY1305, 0)) {
-    return operation->block.chacha_block;
-  } else {
-    return operation->block.aes_block;
-  }
- #else
-  return operation->block.aes_block;
- #endif
+  return operation->block;
 }
 
 static size_t get_aead_block_size(psa_algorithm_t alg)

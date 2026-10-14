@@ -132,9 +132,11 @@
   "    -w  Use wired antenna offset\n"                                             \
   "    -o  Object tracking mode, default: 2\n"                                     \
   "        Used only for initiator instances\n"                                    \
-  "        0 : moving object tracking (REAL_TIME_BASIC)\n"                         \
-  "        1 : stationary object tracking (STATIC_HIGH_ACCURACY)\n"                \
-  "        2 : moving object tracking fast (REAL_TIME_FAST)\n"                     \
+  "        0 : Tracking accuracy optimized (suitable for moving targets)\n"        \
+  "            (TRACKING_ACCURACY_OPTIMIZED)\n"                                    \
+  "        1 : Stationary (suitable for stationary targets) (STATIONARY)\n"        \
+  "        2 : Tracking latency optimized (suitable for fast moving targets)\n"    \
+  "            (TRACKING_LATENCY_OPTIMIZED)\n"                                     \
   "    -p  Pre-set parameters for channel map selection, default: 2\n"             \
   "        Used only for initiator instances\n"                                    \
   "        1 : medium (channel spacing: 2, number of channels: 38)\n"              \
@@ -144,13 +146,19 @@
   "        Used only for initiator instances\n"                                    \
   "        0 : Single antennas on both sides\n"                                    \
   "        1 : Dual antenna initiator & single antenna reflector\n"                \
+  "        2 : Triple antenna initiator & single antenna reflector\n"              \
+  "        3 : Quad antenna initiator & single antenna reflector\n"                \
   "        4 : Single antenna initiator & dual antenna reflector\n"                \
+  "        5 : Single antenna initiator & triple antenna reflector\n"              \
+  "        6 : Single antenna initiator & quad antenna reflector\n"                \
   "        7 : Dual antennas on both sides\n"                                      \
   "        Note: considered only with CS main mode: PBR!\n"                        \
   "    -q  Antenna usage for CS SYNC packets, default: 0xFE\n"                     \
   "        Used for both initiator and reflector instances\n"                      \
   "        1 : use antenna ID1 only\n"                                             \
   "        2 : use antenna ID2 only\n"                                             \
+  "        3 : use antenna ID3 only\n"                                             \
+  "        4 : use antenna ID4 only\n"                                             \
   "        0xFE : Switching between antennas for each channel\n"                   \
   "        Note: considered only with CS main mode: RTT!\n"                        \
   "    -s  Optimized procedure scheduling\n"                                       \
@@ -348,9 +356,9 @@ void app_cli_init(int argc, char *argv[])
       {
         int object_tracking_mode = atoi(optarg);
 
-        if (object_tracking_mode != SL_RTL_CS_ALGO_MODE_REAL_TIME_BASIC
-            && object_tracking_mode != SL_RTL_CS_ALGO_MODE_STATIC_HIGH_ACCURACY
-            && object_tracking_mode != SL_RTL_CS_ALGO_MODE_REAL_TIME_FAST) {
+        if (object_tracking_mode != SL_RTL_CS_ALGO_MODE_TRACKING_ACCURACY_OPTIMIZED
+            && object_tracking_mode != SL_RTL_CS_ALGO_MODE_STATIONARY
+            && object_tracking_mode != SL_RTL_CS_ALGO_MODE_TRACKING_LATENCY_OPTIMIZED) {
           app_log_info(APP_PREFIX "Invalid object tracking mode (%d) provided!" APP_LOG_NL, object_tracking_mode);
           exit(EXIT_FAILURE);
         } else {
@@ -379,7 +387,11 @@ void app_cli_init(int argc, char *argv[])
         if (cs_tone_antenna_config_idx_req != CS_ANTENNA_CONFIG_INDEX_SINGLE_ONLY
             && cs_tone_antenna_config_idx_req != CS_ANTENNA_CONFIG_INDEX_DUAL_ONLY
             && cs_tone_antenna_config_idx_req != CS_ANTENNA_CONFIG_INDEX_DUAL_I_SINGLE_R
-            && cs_tone_antenna_config_idx_req != CS_ANTENNA_CONFIG_INDEX_SINGLE_I_DUAL_R) {
+            && cs_tone_antenna_config_idx_req != CS_ANTENNA_CONFIG_INDEX_TRIPLE_I_SINGLE_R
+            && cs_tone_antenna_config_idx_req != CS_ANTENNA_CONFIG_INDEX_QUAD_I_SINGLE_R
+            && cs_tone_antenna_config_idx_req != CS_ANTENNA_CONFIG_INDEX_SINGLE_I_DUAL_R
+            && cs_tone_antenna_config_idx_req != CS_ANTENNA_CONFIG_INDEX_SINGLE_I_TRIPLE_R
+            && cs_tone_antenna_config_idx_req != CS_ANTENNA_CONFIG_INDEX_SINGLE_I_QUAD_R) {
           app_log_error(APP_PREFIX "Invalid antenna usage for PBR (%d) provided!" APP_LOG_NL, cs_tone_antenna_config_idx_req);
           exit(EXIT_FAILURE);
         } else {
@@ -413,6 +425,8 @@ void app_cli_init(int argc, char *argv[])
         } else {
           if (arg_data != CS_SYNC_ANTENNA_1
               && arg_data != CS_SYNC_ANTENNA_2
+              && arg_data != CS_SYNC_ANTENNA_3
+              && arg_data != CS_SYNC_ANTENNA_4
               && arg_data != CS_SYNC_SWITCHING) {
             app_log_error(APP_PREFIX "Invalid antenna usage for RTT (%d) provided!" APP_LOG_NL, arg_data);
             exit(EXIT_FAILURE);
@@ -538,9 +552,9 @@ void app_cli_init(int argc, char *argv[])
     if (initiator_cs_sync_antenna_req_set && initiator_config.cs_main_mode == sl_bt_cs_mode_pbr) {
       app_log_warning(APP_PREFIX "RTT antenna configuration is omitted in PBR mode!" APP_LOG_NL);
     }
-    if (rtl_config.algo_mode == SL_RTL_CS_ALGO_MODE_REAL_TIME_FAST
+    if (rtl_config.algo_mode == SL_RTL_CS_ALGO_MODE_TRACKING_LATENCY_OPTIMIZED
         && initiator_config.cs_main_mode == sl_bt_cs_mode_rtt) {
-      app_log_error(APP_PREFIX "Real-time fast mode is not supported with main mode RTT!" APP_LOG_NL);
+      app_log_error(APP_PREFIX "Tracking latency optimized mode is not supported with main mode RTT!" APP_LOG_NL);
       exit(EXIT_FAILURE);
     }
     // Log mode based on max_procedure_count
@@ -944,6 +958,10 @@ static const char *antenna_usage_to_str(const cs_initiator_config_t *config)
         return "antenna ID 1";
       case CS_SYNC_ANTENNA_2:
         return "antenna ID 2";
+      case CS_SYNC_ANTENNA_3:
+        return "antenna ID 3";
+      case CS_SYNC_ANTENNA_4:
+        return "antenna ID 4";
       case CS_SYNC_SWITCHING:
         return "switch between all antenna IDs";
       default:
@@ -955,8 +973,16 @@ static const char *antenna_usage_to_str(const cs_initiator_config_t *config)
         return "single antenna on both sides (1:1)";
       case CS_ANTENNA_CONFIG_INDEX_DUAL_I_SINGLE_R:
         return "dual antenna initiator & single antenna reflector (2:1)";
+      case CS_ANTENNA_CONFIG_INDEX_TRIPLE_I_SINGLE_R:
+        return "triple antenna initiator & single antenna reflector (3:1)";
+      case CS_ANTENNA_CONFIG_INDEX_QUAD_I_SINGLE_R:
+        return "quad antenna initiator & single antenna reflector (4:1)";
       case CS_ANTENNA_CONFIG_INDEX_SINGLE_I_DUAL_R:
         return "single antenna initiator & dual antenna reflector (1:2)";
+      case CS_ANTENNA_CONFIG_INDEX_SINGLE_I_TRIPLE_R:
+        return "single antenna initiator & triple antenna reflector (1:3)";
+      case CS_ANTENNA_CONFIG_INDEX_SINGLE_I_QUAD_R:
+        return "single antenna initiator & quad antenna reflector (1:4)";
       case CS_ANTENNA_CONFIG_INDEX_DUAL_ONLY:
         return "dual antennas on both sides (2:2)";
       default:
@@ -971,12 +997,12 @@ static const char *antenna_usage_to_str(const cs_initiator_config_t *config)
 static const char *algo_mode_to_str(uint8_t algo_mode)
 {
   switch (algo_mode) {
-    case SL_RTL_CS_ALGO_MODE_REAL_TIME_BASIC:
-      return "real time basic (moving)";
-    case SL_RTL_CS_ALGO_MODE_STATIC_HIGH_ACCURACY:
-      return "stationary object tracking";
-    case SL_RTL_CS_ALGO_MODE_REAL_TIME_FAST:
-      return "real time fast (moving)";
+    case SL_RTL_CS_ALGO_MODE_TRACKING_ACCURACY_OPTIMIZED:
+      return "Tracking accuracy optimized (suitable for moving targets)";
+    case SL_RTL_CS_ALGO_MODE_STATIONARY:
+      return "Stationary (suitable for stationary targets)";
+    case SL_RTL_CS_ALGO_MODE_TRACKING_LATENCY_OPTIMIZED:
+      return "Tracking latency optimized (suitable for fast moving targets)";
     default:
       return "unknown";
   }
@@ -1542,7 +1568,7 @@ static void cs_on_result(const uint8_t conn_handle,
 
     // --------------------------------
     // Get velocity
-    if (rtl_config.algo_mode == SL_RTL_CS_ALGO_MODE_REAL_TIME_FAST
+    if (rtl_config.algo_mode == SL_RTL_CS_ALGO_MODE_TRACKING_LATENCY_OPTIMIZED
         && initiator_config.cs_main_mode == sl_bt_cs_mode_pbr
         && (initiator_config.channel_map_preset == CS_CHANNEL_MAP_PRESET_HIGH
             || initiator_config.channel_map_preset == CS_CHANNEL_MAP_PRESET_MEDIUM)) {

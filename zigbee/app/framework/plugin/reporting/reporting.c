@@ -20,6 +20,11 @@
 #include "app/framework/util/common.h"
 #include "app/framework/util/attribute-storage.h"
 #include "app/framework/plugin/reporting/reporting.h"
+#ifdef SL_CATALOG_ZIGBEE_REPORTING_PRESENT
+#include "reporting-config.h"
+#else
+#include "app/framework/plugin/reporting/config/reporting-config.h"
+#endif
 #include "stack/include/sl_zigbee_token.h"
 
 #if !defined(EZSP_HOST) && !defined(ENABLE_EXPANDED_TABLE) && !defined(SL_CATALOG_TOKEN_MANAGER_PRESENT)
@@ -300,6 +305,9 @@ void sl_zigbee_af_reporting_tick_event_handler(sl_zigbee_af_event_t * event)
                                                               "");
       apsFrame->sourceEndpoint = entry.endpoint;
       apsFrame->options = SL_ZIGBEE_AF_DEFAULT_APS_OPTIONS;
+#if (SL_ZIGBEE_AF_PLUGIN_REPORTING_ENABLE_RETRY == 0)
+      apsFrame->options &= ~SL_ZIGBEE_APS_OPTION_RETRY;
+#endif
       manufacturerCode = entry.manufacturerCode;
 
       // EMAPPFWKV2-1327: Reporting plugin does not account for reporting too many attributes

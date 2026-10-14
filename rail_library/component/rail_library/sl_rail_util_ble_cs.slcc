@@ -20,6 +20,9 @@ requires:
 - name: sl_rail_util_ble_cs_antenna_offset
 - name: sl_rail_util_cs_gdcomp
 - name: sl_rail_util_dma
+- name: sl_rail_util_rf_switch
+  condition:
+  - device_sdid_215
 - name: sl_rail_util_aox
   condition: [device_supports_bluetooth_cte]
 - name: component_catalog

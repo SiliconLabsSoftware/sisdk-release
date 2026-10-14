@@ -67,6 +67,8 @@ template_contribution:
       help: selected key negotiation method enum
     - type: uint8
       help: selected pre-shared secret key
+    - type: uint8opt
+      help: use aps encryption (omit for automatic post-join/initial-join selection)
 - name: cli_command
   value:
     name: retrieve_auth_token

@@ -1,7 +1,7 @@
 project_name: bt_soc_thermometer_mock
 package: bluetooth_le_app
 label: Bluetooth - SoC Thermometer (Mock)
-description: >
+description: >-
   Implements a GATT Server with the Health Thermometer Profile, which enables a
   Client device to connect and get temperature data. Temperature is read from
   the mock relative humidity and temperature sensor.

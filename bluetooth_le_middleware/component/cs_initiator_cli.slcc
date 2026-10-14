@@ -73,7 +73,7 @@ template_contribution:
     help: "Set algo_mode"
     argument:
     - type: uint8
-      help: "Moving Object Tracking:0 or Stationary Object Tracking:1"
+      help: "Tracking accuracy optimized:0, Stationary:1, or Tracking latency optimized:2"
 - name: cli_command
   value:
     name: preset

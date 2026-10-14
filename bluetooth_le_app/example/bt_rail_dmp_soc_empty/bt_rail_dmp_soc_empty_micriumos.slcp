@@ -1,7 +1,7 @@
 project_name: bt_rail_dmp_soc_empty_micriumos
 package: bluetooth_le_app
 label: Bluetooth RAIL DMP - SoC Empty Micrium OS
-description: >
+description: >-
   A minimal project structure, used as a starting point for custom
   Bluetooth + Proprietary DMP (Dynamic Multiprotocol) applications.
   It runs on top of Micrium OS and multiprotocol RAIL.

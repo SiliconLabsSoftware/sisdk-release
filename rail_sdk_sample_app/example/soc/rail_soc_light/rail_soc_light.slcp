@@ -272,6 +272,7 @@ tag:
   - hwfilter:!board:hardware:shares:button:led
   - hwfilter:ram:19k
   - hwfilter:flash:109k
+  - hwfilter:!device:device_no_rail_api
   - hwfilter:!device:device_generic_family_efr32xg21
   - hwfilter:!device:device_family_zgm23
   - hwfilter:!device:device_family_mgm24

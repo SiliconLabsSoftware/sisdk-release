@@ -10,6 +10,10 @@ void sl_btctrl_init_tasklets(void)
   || defined(SLI_LL_SEQUENCER)
   sl_btctrl_init_adv_tasklet();
 #endif
+#if defined(SL_CATALOG_BLUETOOTH_FEATURE_EXTENDED_ADVERTISER_PRESENT) \
+  || defined(SLI_LL_SEQUENCER)
+  sl_btctrl_init_adv_ext_tasklet();
+#endif
 #if defined(SL_CATALOG_BLUETOOTH_FEATURE_ISO_CONN_PRESENT) \
   || defined(SLI_LL_SEQUENCER)
   sl_btctrl_init_iso_conn_tasklet();

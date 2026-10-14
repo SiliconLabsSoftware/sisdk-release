@@ -1,6 +1,7 @@
 template:
   series2_z_wave_boards: &series2_z_wave_boards
     - brd2603a
+    - brd2603c
     - brd2705a
     - brd4204a
     - brd4204b
@@ -31,6 +32,7 @@ template:
   z_wave_boards: &z_wave_boards
     # Series2 must be the same as *series2_z_wave_boards
     - brd2603a
+    - brd2603c
     - brd2705a
     - brd4204a
     - brd4204b

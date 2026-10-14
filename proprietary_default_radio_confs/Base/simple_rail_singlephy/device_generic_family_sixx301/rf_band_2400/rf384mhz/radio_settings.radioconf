@@ -9,12 +9,6 @@
           <physical_channel_offset>SAME_AS_FIRST_CHANNEL</physical_channel_offset>
           <max_power>RAIL_TX_POWER_MAX</max_power>
           <metadata>{"selectedPhy":"PHY_Studio_2450M_2GFSK_1Mbps_500K"}</metadata>
-          <profile_input_overrides>
-            <override>
-              <key>xtal_frequency_hz</key>
-              <value>38400000</value>
-            </override>
-          </profile_input_overrides>
         </channel_config_entry>
       </channel_config_entries>
       <metadata>{"selectedPhy":"PHY_Studio_2450M_2GFSK_1Mbps_500K"}</metadata>

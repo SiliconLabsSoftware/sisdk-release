@@ -1,7 +1,7 @@
 project_name: bt_soc_thermometer_client
 package: bluetooth_le_app
 label: Bluetooth - SoC Thermometer Client
-description: >
+description: >-
   Implements a GATT Client that discovers and connects with up to 4 BLE devices
   advertising themselves as Thermometer Servers. It displays the discovery
   process and the temperature values received via UART.

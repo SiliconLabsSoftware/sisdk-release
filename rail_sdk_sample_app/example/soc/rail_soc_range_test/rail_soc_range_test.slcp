@@ -128,6 +128,7 @@ configuration:
 # ------------------------------------ CLI -------------------------------------
   - name: SL_CLI_EXAMPLE_TASK_STACK_SIZE
     value: 250
+    unless: [device_series_3]
   - name: SL_CLI_INPUT_BUFFER_SIZE
     value: 64
   - name: SL_CLI_NUM_HISTORY_BYTES
@@ -258,6 +259,7 @@ tag:
   - hwfilter:board:hardware:has:pti
   - hwfilter:ram:19k
   - hwfilter:flash:125k
+  - hwfilter:!device:device_no_rail_api
   - hwfilter:!device:device_generic_family_efr32xg21
   - hwfilter:!device:device_family_mgm24
   - hwfilter:!device:device_family_zgm23

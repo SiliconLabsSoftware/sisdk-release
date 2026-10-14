@@ -104,14 +104,14 @@ if antenna_offset ~= nil and antenna_offset ~= 0 and antenna_offset ~= 1 then
 end
 
 
--- CS main mode RTT and CS algo mode real-time fast
+-- CS main mode RTT and CS algo mode tracking latency optimized
 -- combination is not supported!
 local cs_main_mode = slc.config('CS_INITIATOR_DEFAULT_CS_MAIN_MODE').value
 local cs_algo_mode = slc.config('CS_INITIATOR_DEFAULT_ALGO_MODE').value
 err_msg = "Object tracking mode is incompatible with"
 
 if cs_main_mode ~= nil and cs_algo_mode ~= nil then
-  if cs_main_mode == 'sl_bt_cs_mode_rtt' and cs_algo_mode == 'SL_RTL_CS_ALGO_MODE_REAL_TIME_FAST' then
+  if cs_main_mode == 'sl_bt_cs_mode_rtt' and cs_algo_mode == 'SL_RTL_CS_ALGO_MODE_TRACKING_LATENCY_OPTIMIZED' then
     validation.error(
     err_msg .. " CS main mode!",
     validation.target_for_defines({'CS_INITIATOR_DEFAULT_CS_ALGO_MODE'}),

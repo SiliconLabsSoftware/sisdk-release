@@ -1,5 +1,16 @@
 var NAVTREEINDEX1 =
 {
+"group__sl__bt__connection.html#ga322a5f4020bef878c5fb309371d1f867":[2,22,27],
+"group__sl__bt__connection.html#ga362f7be2dd9780113826ccc59323bf53":[2,22,24],
+"group__sl__bt__connection.html#ga3b6563e2c6cea4c88170a7716c30f094":[2,22,34],
+"group__sl__bt__connection.html#ga3db044fa811b54e9cc5265a647ddcfb0":[2,22,26],
+"group__sl__bt__connection.html#ga4092b2c91f37aa4be8c9c3357cf5b20a":[2,22,39],
+"group__sl__bt__connection.html#ga58d82e8cfee3a03a27bea0d6c31b3c60":[2,22,43],
+"group__sl__bt__connection.html#ga59392872bf8e6a72348d08222cc8017c":[2,22,36],
+"group__sl__bt__connection.html#ga5eca2b6ff75c05e52d2595fab6e0977b":[2,22,40],
+"group__sl__bt__connection.html#ga609a3741e23e5ff8eaf7a4794bc1953f":[2,22,32],
+"group__sl__bt__connection.html#ga6e3bebbe55844dcb63dde4ef9cc61d64":[2,22,46],
+"group__sl__bt__connection.html#ga7f55470c777dd3c65617d9493ea595c7":[2,22,45],
 "group__sl__bt__connection.html#ga817c9d6f24d206939cbd02f82c1313a7":[2,22,20],
 "group__sl__bt__connection.html#ga8cadd42340a29a6e76442f7b4f085617":[2,22,35],
 "group__sl__bt__connection.html#ga92c4ee2ce006445af24337077ba988e5":[2,22,29],
@@ -238,16 +249,5 @@ var NAVTREEINDEX1 =
 "group__sl__bt__evt__connection__remote__used__features.html#ga171b4b561b00d7efcd575da0a022ed7f":[2,22,9,1],
 "group__sl__bt__evt__connection__remote__used__features.html#structsl__bt__evt__connection__remote__used__features__s":[2,22,9,0],
 "group__sl__bt__evt__connection__request__subrate__failed.html":[2,22,12],
-"group__sl__bt__evt__connection__request__subrate__failed.html#a47de92df82e4a4352969c45188b85ee0":[2,22,12,0,0],
-"group__sl__bt__evt__connection__request__subrate__failed.html#a9a4568275ceabb900fb5e06421bfd1a3":[2,22,12,0,1],
-"group__sl__bt__evt__connection__request__subrate__failed.html#gaf27bf24c50eb7065717e67b3db126c2d":[2,22,12,1],
-"group__sl__bt__evt__connection__request__subrate__failed.html#structsl__bt__evt__connection__request__subrate__failed__s":[2,22,12,0],
-"group__sl__bt__evt__connection__set__parameters__failed.html":[2,22,4],
-"group__sl__bt__evt__connection__set__parameters__failed.html#a2481aa8307811bff1d1ab083d69458d3":[2,22,4,0,0],
-"group__sl__bt__evt__connection__set__parameters__failed.html#ga747061a9b61f5dcea2bf49a028c75340":[2,22,4,1],
-"group__sl__bt__evt__connection__set__parameters__failed.html#structsl__bt__evt__connection__set__parameters__failed__s":[2,22,4,0],
-"group__sl__bt__evt__connection__statistics.html":[2,22,11],
-"group__sl__bt__evt__connection__statistics.html#a46d4e2c3d3e388deb0c80d7038179960":[2,22,11,0,4],
-"group__sl__bt__evt__connection__statistics.html#a6517db657384747d786b41425e9daed7":[2,22,11,0,6],
-"group__sl__bt__evt__connection__statistics.html#abb4a709f14fe0ee8af4f46ff81d63c6f":[2,22,11,0,3]
+"group__sl__bt__evt__connection__request__subrate__failed.html#a47de92df82e4a4352969c45188b85ee0":[2,22,12,0,0]
 };

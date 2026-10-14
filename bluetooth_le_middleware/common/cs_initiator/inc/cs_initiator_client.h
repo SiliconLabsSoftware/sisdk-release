@@ -146,7 +146,11 @@ SL_ENUM(cs_channel_map_preset_t) {
 SL_ENUM(cs_tone_antenna_config_index_t) {
   CS_ANTENNA_CONFIG_INDEX_SINGLE_ONLY = 0,
   CS_ANTENNA_CONFIG_INDEX_DUAL_I_SINGLE_R = 1,
+  CS_ANTENNA_CONFIG_INDEX_TRIPLE_I_SINGLE_R = 2,
+  CS_ANTENNA_CONFIG_INDEX_QUAD_I_SINGLE_R = 3,
   CS_ANTENNA_CONFIG_INDEX_SINGLE_I_DUAL_R = 4,
+  CS_ANTENNA_CONFIG_INDEX_SINGLE_I_TRIPLE_R = 5,
+  CS_ANTENNA_CONFIG_INDEX_SINGLE_I_QUAD_R = 6,
   CS_ANTENNA_CONFIG_INDEX_DUAL_ONLY = 7
 };
 #endif // CS_TONE_ANTENNA_CONFIG_INDEX_T_DEFINED
@@ -356,14 +360,15 @@ sl_status_t cs_initiator_get_multiple_intervals(uint8_t main_mode,
  *                                  (reflector) device.
  * @param[out]    num_antenna_paths Optional. If not NULL, receives the number
  *                                  of PBR antenna paths that result from the
- *                                  selection (1, 2, or 4 for PBR; 0 for RTT).
+ *                                  selection (1, 2, 3, or 4 for PBR; 0 for RTT).
  *
  * @return Status of the operation.
  *         SL_STATUS_OK if the requested configuration is supported.
  *         SL_STATUS_NULL_POINTER if @p config is NULL.
  *         SL_STATUS_NOT_SUPPORTED if the requested antenna usage is not
  *         supported with the given local/remote antenna counts. In this case
- *         a fallback configuration is still applied to @p config.
+ *         the closest supported fallback is still applied to @p config
+ *         (e.g. 3:1 falls back to 2:1, then 1:1).
  *****************************************************************************/
 sl_status_t cs_initiator_select_antennas(cs_initiator_config_t *config,
                                          uint8_t local_antenna_num,

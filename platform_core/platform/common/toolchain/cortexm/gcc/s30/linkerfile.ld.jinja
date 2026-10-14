@@ -89,6 +89,8 @@
   #}
   {%- set physical_code_region0_size = ((9 * logical_code_region0_size) // 8)  %}
   {%- set region0_axip_overhead = physical_code_region0_size - logical_code_region0_size  %}
+{%- else %}
+  {%- set physical_code_region0_size = logical_code_region0_size  %}
 {%- endif %}
 
 {#-

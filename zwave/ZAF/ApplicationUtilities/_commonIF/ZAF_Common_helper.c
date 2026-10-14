@@ -77,6 +77,14 @@ static bool invoke_init(CC_handler_map_latest_t const * const p_cc_entry, __attr
   return false;
 }
 
+static bool invoke_startup(CC_handler_map_latest_t const * const p_cc_entry, __attribute__((unused)) zaf_cc_context_t context)
+{
+  if (NULL != p_cc_entry->startup) {
+    p_cc_entry->startup();
+  }
+  return false;
+}
+
 void ZAF_Init(TaskHandle_t AppTaskHandle, SApplicationHandles *pAppHandles)
 {
   zaf_cc_list_t *unsecure_included_cc;
@@ -138,6 +146,9 @@ void ZAF_Init(TaskHandle_t AppTaskHandle, SApplicationHandles *pAppHandles)
   // Initialize command classes that have registered an init function.
   // Don't pass a context because invoke_init() doesn't require it.
   ZAF_CC_foreach(invoke_init, NULL);
+
+  // All command class init callbacks have completed. Start command class startup callbacks.
+  ZAF_CC_foreach(invoke_startup, NULL);
 
   // Check if the wake up callback was NOT set by a command class (CC Wake Up).
   if (NULL == zaf_get_stay_awake_callback()) {

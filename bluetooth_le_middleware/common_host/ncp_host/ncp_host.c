@@ -29,6 +29,13 @@
  ******************************************************************************/
 
 #include <stdlib.h>
+#if defined(_WIN32)
+#include <windows.h>
+#elif defined(__APPLE__)
+#include <mach/mach_time.h>
+#else
+#include <time.h>
+#endif
 #include "app_log.h"
 #include "app_assert.h"
 #include "sl_bt_ncp_host.h"

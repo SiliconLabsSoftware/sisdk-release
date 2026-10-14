@@ -137,6 +137,8 @@ typedef struct _OTA_UTIL_{
   uint8_t fw_numOfRetries;
   SSwTimer timerFwUpdateFrameGet;
   SSwTimer timerOtaSuccess;
+  bool post_ota_status_pending;
+  bool post_ota_updated_successfully;
   uint16_t firmwareUpdateReportNumberPrevious;  /// The last received report number. Also total number of received fragments from start of OTA.
   uint16_t fw_crcrunning;                       /// The CRC of the entire image incrementally calculated as the fragments are being received.
   RECEIVE_OPTIONS_TYPE_EX rxOpt;
@@ -282,6 +284,7 @@ static void ZCB_VerifyImage(SSwTimer* pTimer);
 
 static void UpdateStatusSuccess(void);
 static void SendFirmwareUpdateStatusReport(void);
+static void cc_firmware_update_send_status_report(void);
 
 static void handleEvent(uint8_t event);
 static void fw_action_send_get(void);
@@ -434,11 +437,10 @@ static bool invoke_migrate(CC_handler_map_latest_t const * const p_cc_entry, __a
 
 static void cc_firmware_update_send_status_report(void)
 {
-  bool updated_successfully = false;
-  if (false == zpal_bootloader_is_first_boot(&updated_successfully)) {
-    ZPAL_LOG_DEBUG(ZPAL_LOG_CC_FIRMWARE_UPDATE, "\n Not first boot.");
+  if (false == myOta.post_ota_status_pending) {
     return;
   }
+  myOta.post_ota_status_pending = false;
 
   ZAF_CC_foreach(invoke_migrate, NULL);
 
@@ -493,7 +495,7 @@ static void cc_firmware_update_send_status_report(void)
     ZPAL_LOG_DEBUG(ZPAL_LOG_CC_FIRMWARE_UPDATE, "\nTX Activation Status Report!");
 
     uint8_t status;
-    if (updated_successfully) {
+    if (myOta.post_ota_updated_successfully) {
       status = FIRMWARE_UPDATE_ACTIVATION_STATUS_REPORT_FIRMWARE_UPDATE_COMPLETED_SUCCESSFULLY_V5;
     } else {
       status = FIRMWARE_UPDATE_ACTIVATION_STATUS_REPORT_ERROR_ACTIVATING_THE_FIRMWARE_V5;
@@ -503,7 +505,7 @@ static void cc_firmware_update_send_status_report(void)
     }
   } else {
     uint8_t status;
-    if (updated_successfully) {
+    if (myOta.post_ota_updated_successfully) {
       status = FIRMWARE_UPDATE_MD_STATUS_REPORT_SUCCESSFULLY_V5;
     } else {
       status = FIRMWARE_UPDATE_MD_STATUS_REPORT_INVALID_FILE_HEADER_INFORMATION_V5;
@@ -531,6 +533,7 @@ bool CC_FirmwareUpdate_Init(
   myOta.pOtaStart = pOtaStart;
   myOta.pOtaFinish = pOtaFinish;
   myOta.NVM_valid = true;
+  myOta.post_ota_status_pending = false;
 
   mdGetNumberOfReports = 1;
 
@@ -586,7 +589,11 @@ bool CC_FirmwareUpdate_Init(
   }
   ZPAL_LOG_DEBUG(ZPAL_LOG_CC_FIRMWARE_UPDATE, "\r\nInit including bootloader init finished--bootloader init status 0x%x\n", retvalue);
 
-  cc_firmware_update_send_status_report();
+  bool updated_successfully = false;
+  if (zpal_bootloader_is_first_boot(&updated_successfully)) {
+    myOta.post_ota_status_pending = true;
+    myOta.post_ota_updated_successfully = updated_successfully;
+  }
 
   return myOta.NVM_valid;
 }
@@ -1351,6 +1358,12 @@ static void fw_action_reboot_and_Install(void)
   ZPAL_LOG_DEBUG(ZPAL_LOG_CC_FIRMWARE_UPDATE, ">> %s() \n", __func__);
   reboot_and_install();
 }
+
+void CC_FirmwareUpdate_Startup(void)
+{
+  cc_firmware_update_send_status_report();
+}
+
 /// No action needed.
 static void fw_action_none(void)
 {

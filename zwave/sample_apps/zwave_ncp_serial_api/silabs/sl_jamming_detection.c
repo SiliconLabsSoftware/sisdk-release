@@ -173,6 +173,31 @@ static uint8_t jamming_phy_to_logical_channel_index(uint8_t physical_channel)
 }
 
 /*
+ * @brief Check if a sample is considered as a jamming sample or not.
+ * A sample is considered as jamming in any condition:
+ * - RSSI value is above jamming threshold.
+ * - INVALID value return by hardware.
+ * This function only intend to sort RSSI sample. One jamming sample is not enough to detect jamming.
+ *
+ * @param[in] threshold  RSSI threshold in dBm.
+ * @param[in] the RSSI value.
+ * @return True if sample is consider as jamming, False otherwise.
+ */
+static bool jamming_is_jamming_sample(int8_t threshold, int8_t rssi)
+{
+  if (ZPAL_RADIO_INVALID_RSSI_DBM == rssi) {
+    /* Some specific signals can prevent RAIL from measuring the RSSI. Whatever it's a jamming or
+       not, it prevents the product from working properly. So consider it as jamming. */
+    return true;
+  }
+  if ( (threshold < rssi) && (rssi <= ZPAL_RADIO_BACKGROUND_RSSI_VALID_MAX) ) {
+    /* valid rssi value above jamming threshold is a jamming signal */
+    return true;
+  }
+  return false;
+}
+
+/*
  * @brief Fill the buffers with the RSSI value for a given physical channel.
  *
  * @param[in] physical_channel Physical channel index.
@@ -192,7 +217,8 @@ static zpal_status_t jamming_store_sample(uint8_t physical_channel, int8_t *rssi
   }
 
   uint8_t logical_channel = jamming_phy_to_logical_channel_index(physical_channel);
-  if (*rssi > jamming_detection_config.settings[logical_channel].rssi_threshold_dbm) {
+  int8_t threshold = jamming_detection_config.settings[logical_channel].rssi_threshold_dbm;
+  if (jamming_is_jamming_sample(threshold, *rssi)) {
     uint8_t index = indexes[physical_channel];
     rssi_buffer[physical_channel][index] = *rssi;
     index = (uint8_t)((index + 1u) % SL_JAMMING_DETECTION_BUFFER_SIZE);
@@ -202,7 +228,7 @@ static zpal_status_t jamming_store_sample(uint8_t physical_channel, int8_t *rssi
     if (has_samples[physical_channel]) {
       indexes[physical_channel] = 0;
       has_samples[physical_channel] = false;
-      (void)memset(rssi_buffer[physical_channel], (unsigned char)(int8_t)ZPAL_RADIO_INVALID_RSSI_DBM, sizeof(rssi_buffer[physical_channel]));
+      (void)memset(rssi_buffer[physical_channel], (unsigned char)(int8_t)ZPAL_RADIO_RSSI_NOT_AVAILABLE, sizeof(rssi_buffer[physical_channel]));
     }
   }
 
@@ -276,9 +302,14 @@ static uint8_t jamming_count_samples_above_threshold(uint8_t physical_channel)
 {
   uint8_t samples_above_threshold = 0;
   uint8_t logical_channel = jamming_phy_to_logical_channel_index(physical_channel);
+  int8_t threshold = jamming_detection_config.settings[logical_channel].rssi_threshold_dbm;
 
   for (uint8_t x = 0; x < SL_JAMMING_DETECTION_BUFFER_SIZE; x++) {
-    if (rssi_buffer[physical_channel][x] > jamming_detection_config.settings[logical_channel].rssi_threshold_dbm) {
+    if (ZPAL_RADIO_RSSI_NOT_AVAILABLE == rssi_buffer[physical_channel][x]) {
+      // ignore empty value
+      continue;
+    }
+    if ( jamming_is_jamming_sample(threshold, rssi_buffer[physical_channel][x]) ) {
       samples_above_threshold++;
     }
   }
@@ -321,15 +352,16 @@ static void jamming_detection_task(void *pvParameters)
     if (is_collection_enabled) {
       /* Initialize the collection to invalid RSSI. */
       for (uint8_t i = 0; i < SL_JAMMING_DETECTION_NUM_COLLECTION_CHANNELS; i++) {
-        collection.samples[i].rssi = ZPAL_RADIO_INVALID_RSSI_DBM;
+        collection.samples[i].rssi = ZPAL_RADIO_RSSI_NOT_AVAILABLE;
       }
     }
 
     /* Step 1.1: Fetch RSSI and fill the buffers */
     for (uint8_t physical_channel = 0; physical_channel < num_physical_channels; physical_channel++) {
-      int8_t rssi = ZPAL_RADIO_INVALID_RSSI_DBM;
+      int8_t rssi = ZPAL_RADIO_RSSI_NOT_AVAILABLE;
       status = jamming_fetch_rssi(physical_channel, &rssi);
-      if (ZPAL_STATUS_OK == status) {
+      if ((ZPAL_STATUS_OK == status) || (ZPAL_STATUS_BUSY == status)) {
+        /* Store samples even if they are invalid (busy). Invalid samples may be caused by jamming. */
         status = jamming_store_sample(physical_channel, &rssi);
         if (ZPAL_STATUS_OK != status) {
           ZPAL_LOG_ERROR(ZPAL_LOG_APP_JAMMING, "1. RSSI[%d] : fill failed with status %d\n", physical_channel, status);
@@ -438,7 +470,7 @@ zpal_status_t sl_jamming_detection_init(const sl_jamming_detection_config_t *use
 
   (void)memset(indexes, 0, sizeof(indexes));
   (void)memset(has_samples, 0, sizeof(has_samples));
-  (void)memset(rssi_buffer, (unsigned char)(int8_t)ZPAL_RADIO_INVALID_RSSI_DBM, sizeof(rssi_buffer));
+  (void)memset(rssi_buffer, (unsigned char)(int8_t)ZPAL_RADIO_RSSI_NOT_AVAILABLE, sizeof(rssi_buffer));
 
   /* Copy user configuration values */
   jamming_detection_config = *user_config;

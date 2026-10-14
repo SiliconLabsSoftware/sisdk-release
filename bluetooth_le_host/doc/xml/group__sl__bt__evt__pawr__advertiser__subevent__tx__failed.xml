@@ -1,10 +1,10 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.4" xml:lang="en-US">
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.8" xml:lang="en-US">
   <compounddef id="group__sl__bt__evt__pawr__advertiser__subevent__tx__failed" kind="group">
     <compoundname>sl_bt_evt_pawr_advertiser_subevent_tx_failed</compoundname>
     <title>sl_bt_evt_pawr_advertiser_subevent_tx_failed</title>
     <innerclass refid="structsl__bt__evt__pawr__advertiser__subevent__tx__failed__s" prot="public">sl_bt_evt_pawr_advertiser_subevent_tx_failed_s</innerclass>
-      <sectiondef kind="typedef">
+    <sectiondef kind="typedef">
       <memberdef kind="typedef" id="group__sl__bt__evt__pawr__advertiser__subevent__tx__failed_1ga54e2eb2fb8b341013d21e67a954f819e" prot="public" static="no">
         <type>struct <ref refid="structsl__bt__evt__pawr__advertiser__subevent__tx__failed__s" kindref="compound">sl_bt_evt_pawr_advertiser_subevent_tx_failed_s</ref></type>
         <definition>typedef struct sl_bt_evt_pawr_advertiser_subevent_tx_failed_s sl_bt_evt_pawr_advertiser_subevent_tx_failed_t</definition>
@@ -16,10 +16,10 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6325" column="61" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6325" bodyend="-1"/>
+        <location file="/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6330" column="61" bodyfile="/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6330" bodyend="-1"/>
       </memberdef>
-      </sectiondef>
-      <sectiondef kind="define">
+    </sectiondef>
+    <sectiondef kind="define">
       <memberdef kind="define" id="group__sl__bt__evt__pawr__advertiser__subevent__tx__failed_1ga886d7a6793571c3ffd5691549ba92c6d" prot="public" static="no">
         <name>sl_bt_evt_pawr_advertiser_subevent_tx_failed_id</name>
         <initializer>0x025500a0</initializer>
@@ -30,9 +30,9 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6312" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6312" bodyend="-1"/>
+        <location file="/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6317" column="9" bodyfile="/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6317" bodyend="-1"/>
       </memberdef>
-      </sectiondef>
+    </sectiondef>
     <briefdescription>
 <para>This event is triggered if subevent data was successfully set using <ref refid="group__sl__bt__pawr__advertiser_1ga2d3e76e947a9678ebe4601c8b90be914" kindref="member">sl_bt_pawr_advertiser_set_subevent_data</ref> command but the attempt to transmit the subevent data has failed. </para>
     </briefdescription>

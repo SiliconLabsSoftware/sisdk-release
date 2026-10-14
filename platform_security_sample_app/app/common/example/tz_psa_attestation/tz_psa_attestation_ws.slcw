@@ -1,5 +1,5 @@
 workspace_name: tz_psa_attestation_ws
-package: platform_security_sample_app
+package: platform
 label: Platform Security - SoC TrustZone PSA Attestation
 description: >
   Demonstrates how to build a TrustZone-split PSA Attestation application, in a platform security TrustZone SoC workspace combining the Secure and Non-secure halves into one signed image.

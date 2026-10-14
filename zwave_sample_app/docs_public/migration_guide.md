@@ -20,7 +20,9 @@ If you don't want to use app_log in your CLI files, you should:
 - Replace calls to `app_log_info(...)` with `sl_iostream_vprintf(stream, ...)`
 Note that if you get the error "app_log.h: No such file or directory" after the migration, that means your are missing the `app_log` component in your projet. It can be easly fixed by installing the `app_log` component in your project.
 
-## DC/DC configuration (`ZW_DCDC_CONFIG`) {#migrate-section-8-1-0-dcdc}
+<a id="migrate-section-8-1-0-dcdc"></a>
+
+## DC/DC configuration (ZW_DCDC_CONFIG)
 
 In 8.1.0, `ZW_DCDC_CONFIG` in `zw_hardware_config.h` (or Project Configurator) is applied when the radio platform initializes the DC/DC at startup. In 8.0.0 that setting was ignored and the firmware always used `EDCDCMODE_AUTO`.
 
@@ -91,7 +93,7 @@ These values can now be set via the Z-Wave Core Component (if using the GUI) or 
 | `SL_DEVICE_INIT_EMU_EM4_RETAIN_LFRCO`       | `ZW_EM4_RETAIN_LFRCO`         |
 | `SL_DEVICE_INIT_EMU_EM4_RETAIN_ULFRCO`      | `ZW_EM4_RETAIN_ULFRCO`        |
 
-\* The `ZW_DCDC_CONFIG` configuration value is still hard-coded to `EDCDCMODE_AUTO`, regardless of the value of this setting. A workaround is currently not available. SDK 8.1.0 applies this setting; see [DC/DC configuration (`ZW_DCDC_CONFIG`)](#migrate-section-8-1-0-dcdc).
+\* The `ZW_DCDC_CONFIG` configuration value is still hard-coded to `EDCDCMODE_AUTO`, regardless of the value of this setting. A workaround is currently not available. SDK 8.1.0 applies this setting; see [DC/DC configuration (ZW_DCDC_CONFIG)](#migrate-section-8-1-0-dcdc).
 
 ## RAIL Power Manager Initialization
 
@@ -227,6 +229,8 @@ In the following sections, an example is shown about the upgrade steps of each s
 
 > **Note:** This guide is not exhaustive. Please ensure that any changes you make follow the steps outlined above.
 
+<a id="general-steps-for-all-applications"></a>
+
 ### General steps for all applications
 
 #### All .c files
@@ -282,7 +286,7 @@ SDK upgrades are not supported for this application. To migrate, please create a
   #endif
   ```
 - Remove `zw_cli_sleeping_util_prevent_sleeping_timeout(ZW_CLI_SLEEPING_WAKEUP_TIME_AFTER_RESET);`
-- CLI baud rate was changed to 9600, which enables the device to receive CLI commands in EM2 sleep. There is no need to prevent sleeping for this application. To apply the new configuration on the baud rate, see the section [zwave_soc_door_lock_keypad.slcp](#zwave_soc_door_lock_keypadslcp).
+- CLI baud rate was changed to 9600, which enables the device to receive CLI commands in EM2 sleep. There is no need to prevent sleeping for this application. To apply the new configuration on the baud rate, see the section [zwave_soc_door_lock_keypad.slcp](#zwave_soc_door_lock_keypad_slcp).
 
 #### app_cli_cc_user_credential.c
 
@@ -301,6 +305,8 @@ SDK upgrades are not supported for this application. To migrate, please create a
 - Rename `u3c_user` struct type to `u3c_user_t`
 - Rename `u3c_credential` struct type to `u3c_credential_t`
 - Rename `u3c_credential_learn_event_data` to `u3c_event_data_learn_start_t`
+
+<a id="zwave_soc_door_lock_keypad_slcp"></a>
 
 #### zwave_soc_door_lock_keypad.slcp
 

@@ -172,8 +172,6 @@ u3c_db_operation_result CC_UserCredential_modify_credential(
 /**
  * Deletes a Credential.
  *
- * @param[in] user_unique_identifier Unique Identifier of the Credential's
- *                                   associated User (0 matches any UUID)
  * @param[in] credential_type Type of the current Credential
  * @param[in] credential_slot Slot of the current Credential
  * @return the result of the operation

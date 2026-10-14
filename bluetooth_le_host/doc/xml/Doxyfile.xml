@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<doxyfile xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="doxyfile.xsd" version="1.9.4" xml:lang="en-US">
+<doxyfile xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="doxyfile.xsd" version="1.9.8" xml:lang="en-US">
   <option  id='DOXYFILE_ENCODING' default='yes' type='string'><value><![CDATA[UTF-8]]></value></option>
   <option  id='PROJECT_NAME' default='no' type='string'><value><![CDATA["Silicon Labs Silicon Labs Bluetooth API API"]]></value></option>
   <option  id='PROJECT_NUMBER' default='yes' type='string'><value><![CDATA[]]></value></option>
   <option  id='PROJECT_BRIEF' default='yes' type='string'><value><![CDATA[]]></value></option>
   <option  id='PROJECT_LOGO' default='yes' type='string'><value><![CDATA[]]></value></option>
-  <option  id='OUTPUT_DIRECTORY' default='no' type='string'><value><![CDATA[/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/doc]]></value></option>
+  <option  id='OUTPUT_DIRECTORY' default='no' type='string'><value><![CDATA[/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/doc]]></value></option>
   <option  id='CREATE_SUBDIRS' default='yes' type='bool'><value>NO</value></option>
   <option  id='CREATE_SUBDIRS_LEVEL' default='yes' type='int'><value>8</value></option>
   <option  id='ALLOW_UNICODE_NAMES' default='yes' type='bool'><value>NO</value></option>
@@ -52,6 +52,7 @@
   </option>
   <option  id='MARKDOWN_SUPPORT' default='yes' type='bool'><value>YES</value></option>
   <option  id='TOC_INCLUDE_HEADINGS' default='yes' type='int'><value>5</value></option>
+  <option  id='MARKDOWN_ID_STYLE' default='yes' type='string'><value>DOXYGEN</value></option>
   <option  id='AUTOLINK_SUPPORT' default='yes' type='bool'><value>YES</value></option>
   <option  id='BUILTIN_STL_SUPPORT' default='yes' type='bool'><value>NO</value></option>
   <option  id='CPP_CLI_SUPPORT' default='yes' type='bool'><value>NO</value></option>
@@ -65,6 +66,7 @@
   <option  id='TYPEDEF_HIDES_STRUCT' default='yes' type='bool'><value>NO</value></option>
   <option  id='LOOKUP_CACHE_SIZE' default='yes' type='int'><value>0</value></option>
   <option  id='NUM_PROC_THREADS' default='yes' type='int'><value>1</value></option>
+  <option  id='TIMESTAMP' default='yes' type='string'><value>NO</value></option>
   <option  id='EXTRACT_ALL' default='yes' type='bool'><value>NO</value></option>
   <option  id='EXTRACT_PRIVATE' default='yes' type='bool'><value>NO</value></option>
   <option  id='EXTRACT_PRIV_VIRTUAL' default='yes' type='bool'><value>NO</value></option>
@@ -79,7 +81,7 @@
   <option  id='HIDE_FRIEND_COMPOUNDS' default='yes' type='bool'><value>NO</value></option>
   <option  id='HIDE_IN_BODY_DOCS' default='no' type='bool'><value>YES</value></option>
   <option  id='INTERNAL_DOCS' default='yes' type='bool'><value>NO</value></option>
-  <option  id='CASE_SENSE_NAMES' default='yes' type='bool'><value>YES</value></option>
+  <option  id='CASE_SENSE_NAMES' default='yes' type='string'><value>SYSTEM</value></option>
   <option  id='HIDE_SCOPE_NAMES' default='yes' type='bool'><value>NO</value></option>
   <option  id='HIDE_COMPOUND_REFERENCE' default='yes' type='bool'><value>NO</value></option>
   <option  id='SHOW_HEADERFILE' default='yes' type='bool'><value>YES</value></option>
@@ -113,25 +115,31 @@
   <option  id='WARN_IF_DOC_ERROR' default='yes' type='bool'><value>YES</value></option>
   <option  id='WARN_IF_INCOMPLETE_DOC' default='yes' type='bool'><value>YES</value></option>
   <option  id='WARN_NO_PARAMDOC' default='yes' type='bool'><value>NO</value></option>
+  <option  id='WARN_IF_UNDOC_ENUM_VAL' default='yes' type='bool'><value>NO</value></option>
   <option  id='WARN_AS_ERROR' default='no' type='string'><value>YES</value></option>
   <option  id='WARN_FORMAT' default='yes' type='string'><value><![CDATA["$file:$line: $text"]]></value></option>
   <option  id='WARN_LINE_FORMAT' default='yes' type='string'><value><![CDATA["at line $line of file $file"]]></value></option>
   <option  id='WARN_LOGFILE' default='yes' type='string'><value><![CDATA[]]></value></option>
   <option  id='INPUT' default='no' type='stringlist'>
     <value><![CDATA[doc]]></value>
-    <value><![CDATA[/var/lib/jenkins/github/bgapi_protocol/protocol/inc]]></value>
-    <value><![CDATA[/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/]]></value>
-    <value><![CDATA[/var/lib/jenkins/github/bgapi_protocol/api3/ble_indexPage.md]]></value>
-    <value><![CDATA[/var/lib/jenkins/github/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h]]></value>
-    <value><![CDATA[/var/lib/jenkins/github/bluetooth_le_host/event_system/inc/sli_bt_event_system.h]]></value>
+    <value><![CDATA[/__w/bluetooth-le/bluetooth-le/bgapi_protocol/protocol/inc]]></value>
+    <value><![CDATA[/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc/]]></value>
+    <value><![CDATA[/__w/bluetooth-le/bluetooth-le/bgapi_protocol/api3/ble_indexPage.md]]></value>
+    <value><![CDATA[/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/inc/sl_bt_rtos_adaptation.h]]></value>
+    <value><![CDATA[/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/event_system/inc/sli_bt_event_system.h]]></value>
   </option>
   <option  id='INPUT_ENCODING' default='yes' type='string'><value><![CDATA[UTF-8]]></value></option>
+  <option  id='INPUT_FILE_ENCODING' default='yes' type='stringlist'>
+  </option>
   <option  id='FILE_PATTERNS' default='yes' type='stringlist'>
     <value><![CDATA[*.c]]></value>
     <value><![CDATA[*.cc]]></value>
     <value><![CDATA[*.cxx]]></value>
+    <value><![CDATA[*.cxxm]]></value>
     <value><![CDATA[*.cpp]]></value>
+    <value><![CDATA[*.cppm]]></value>
     <value><![CDATA[*.c++]]></value>
+    <value><![CDATA[*.c++m]]></value>
     <value><![CDATA[*.java]]></value>
     <value><![CDATA[*.ii]]></value>
     <value><![CDATA[*.ixx]]></value>
@@ -146,6 +154,7 @@
     <value><![CDATA[*.hxx]]></value>
     <value><![CDATA[*.hpp]]></value>
     <value><![CDATA[*.h++]]></value>
+    <value><![CDATA[*.ixx]]></value>
     <value><![CDATA[*.l]]></value>
     <value><![CDATA[*.cs]]></value>
     <value><![CDATA[*.d]]></value>
@@ -188,7 +197,7 @@
   <option  id='EXCLUDE_SYMBOLS' default='yes' type='stringlist'>
   </option>
   <option  id='EXAMPLE_PATH' default='no' type='stringlist'>
-    <value><![CDATA[/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/doc_autogen/]]></value>
+    <value><![CDATA[/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/doc_autogen/]]></value>
   </option>
   <option  id='EXAMPLE_PATTERNS' default='yes' type='stringlist'>
     <value><![CDATA[*]]></value>
@@ -202,7 +211,8 @@
   <option  id='FILTER_SOURCE_FILES' default='yes' type='bool'><value>NO</value></option>
   <option  id='FILTER_SOURCE_PATTERNS' default='yes' type='stringlist'>
   </option>
-  <option  id='USE_MDFILE_AS_MAINPAGE' default='no' type='string'><value><![CDATA[/var/lib/jenkins/github/bgapi_protocol/api3/ble_indexPage.md]]></value></option>
+  <option  id='USE_MDFILE_AS_MAINPAGE' default='no' type='string'><value><![CDATA[/__w/bluetooth-le/bluetooth-le/bgapi_protocol/api3/ble_indexPage.md]]></value></option>
+  <option  id='FORTRAN_COMMENT_AFTER' default='yes' type='int'><value>72</value></option>
   <option  id='SOURCE_BROWSER' default='yes' type='bool'><value>NO</value></option>
   <option  id='INLINE_SOURCES' default='yes' type='bool'><value>NO</value></option>
   <option  id='STRIP_CODE_COMMENTS' default='yes' type='bool'><value>YES</value></option>
@@ -231,12 +241,13 @@
   </option>
   <option  id='HTML_EXTRA_FILES' default='yes' type='stringlist'>
   </option>
+  <option  id='HTML_COLORSTYLE' default='yes' type='string'><value>AUTO_LIGHT</value></option>
   <option  id='HTML_COLORSTYLE_HUE' default='yes' type='int'><value>220</value></option>
   <option  id='HTML_COLORSTYLE_SAT' default='yes' type='int'><value>100</value></option>
   <option  id='HTML_COLORSTYLE_GAMMA' default='yes' type='int'><value>80</value></option>
-  <option  id='HTML_TIMESTAMP' default='yes' type='bool'><value>NO</value></option>
   <option  id='HTML_DYNAMIC_MENUS' default='yes' type='bool'><value>YES</value></option>
   <option  id='HTML_DYNAMIC_SECTIONS' default='yes' type='bool'><value>NO</value></option>
+  <option  id='HTML_CODE_FOLDING' default='yes' type='bool'><value>YES</value></option>
   <option  id='HTML_INDEX_NUM_ENTRIES' default='yes' type='int'><value>100</value></option>
   <option  id='GENERATE_DOCSET' default='yes' type='bool'><value>NO</value></option>
   <option  id='DOCSET_FEEDNAME' default='yes' type='string'><value><![CDATA["Doxygen generated docs"]]></value></option>
@@ -251,6 +262,7 @@
   <option  id='CHM_INDEX_ENCODING' default='yes' type='string'><value><![CDATA[]]></value></option>
   <option  id='BINARY_TOC' default='yes' type='bool'><value>NO</value></option>
   <option  id='TOC_EXPAND' default='yes' type='bool'><value>NO</value></option>
+  <option  id='SITEMAP_URL' default='yes' type='string'><value><![CDATA[]]></value></option>
   <option  id='GENERATE_QHP' default='yes' type='bool'><value>NO</value></option>
   <option  id='QCH_FILE' default='yes' type='string'><value><![CDATA[]]></value></option>
   <option  id='QHP_NAMESPACE' default='yes' type='string'><value><![CDATA[org.doxygen.Project]]></value></option>
@@ -270,7 +282,6 @@
   <option  id='OBFUSCATE_EMAILS' default='yes' type='bool'><value>YES</value></option>
   <option  id='HTML_FORMULA_FORMAT' default='yes' type='string'><value>png</value></option>
   <option  id='FORMULA_FONTSIZE' default='yes' type='int'><value>10</value></option>
-  <option  id='FORMULA_TRANSPARENT' default='yes' type='bool'><value>YES</value></option>
   <option  id='FORMULA_MACROFILE' default='yes' type='string'><value><![CDATA[]]></value></option>
   <option  id='USE_MATHJAX' default='yes' type='bool'><value>NO</value></option>
   <option  id='MATHJAX_VERSION' default='yes' type='string'><value>MathJax_2</value></option>
@@ -304,10 +315,9 @@
   </option>
   <option  id='PDF_HYPERLINKS' default='yes' type='bool'><value>YES</value></option>
   <option  id='USE_PDFLATEX' default='yes' type='bool'><value>YES</value></option>
-  <option  id='LATEX_BATCHMODE' default='yes' type='bool'><value>NO</value></option>
+  <option  id='LATEX_BATCHMODE' default='yes' type='string'><value>NO</value></option>
   <option  id='LATEX_HIDE_INDICES' default='yes' type='bool'><value>NO</value></option>
   <option  id='LATEX_BIB_STYLE' default='yes' type='string'><value><![CDATA[plain]]></value></option>
-  <option  id='LATEX_TIMESTAMP' default='yes' type='bool'><value>NO</value></option>
   <option  id='LATEX_EMOJI_DIRECTORY' default='yes' type='string'><value><![CDATA[]]></value></option>
   <option  id='GENERATE_RTF' default='yes' type='bool'><value>NO</value></option>
   <option  id='RTF_OUTPUT' default='yes' type='string'><value><![CDATA[rtf]]></value></option>
@@ -327,6 +337,9 @@
   <option  id='GENERATE_DOCBOOK' default='yes' type='bool'><value>NO</value></option>
   <option  id='DOCBOOK_OUTPUT' default='yes' type='string'><value><![CDATA[docbook]]></value></option>
   <option  id='GENERATE_AUTOGEN_DEF' default='yes' type='bool'><value>NO</value></option>
+  <option  id='GENERATE_SQLITE3' default='yes' type='bool'><value>NO</value></option>
+  <option  id='SQLITE3_OUTPUT' default='yes' type='string'><value><![CDATA[sqlite3]]></value></option>
+  <option  id='SQLITE3_RECREATE_DB' default='yes' type='bool'><value>YES</value></option>
   <option  id='GENERATE_PERLMOD' default='yes' type='bool'><value>NO</value></option>
   <option  id='PERLMOD_LATEX' default='yes' type='bool'><value>NO</value></option>
   <option  id='PERLMOD_PRETTY' default='yes' type='bool'><value>YES</value></option>
@@ -352,12 +365,12 @@
   <option  id='ALLEXTERNALS' default='yes' type='bool'><value>NO</value></option>
   <option  id='EXTERNAL_GROUPS' default='yes' type='bool'><value>YES</value></option>
   <option  id='EXTERNAL_PAGES' default='yes' type='bool'><value>YES</value></option>
-  <option  id='DIA_PATH' default='yes' type='string'><value><![CDATA[]]></value></option>
   <option  id='HIDE_UNDOC_RELATIONS' default='yes' type='bool'><value>YES</value></option>
-  <option  id='HAVE_DOT' default='yes' type='bool'><value>NO</value></option>
+  <option  id='HAVE_DOT' default='no' type='bool'><value>NO</value></option>
   <option  id='DOT_NUM_THREADS' default='yes' type='int'><value>0</value></option>
-  <option  id='DOT_FONTNAME' default='yes' type='string'><value><![CDATA[Helvetica]]></value></option>
-  <option  id='DOT_FONTSIZE' default='yes' type='int'><value>10</value></option>
+  <option  id='DOT_COMMON_ATTR' default='yes' type='string'><value><![CDATA["fontname=Helvetica,fontsize=10"]]></value></option>
+  <option  id='DOT_EDGE_ATTR' default='yes' type='string'><value><![CDATA["labelfontname=Helvetica,labelfontsize=10"]]></value></option>
+  <option  id='DOT_NODE_ATTR' default='yes' type='string'><value><![CDATA["shape=box,height=0.2,width=0.4"]]></value></option>
   <option  id='DOT_FONTPATH' default='yes' type='string'><value><![CDATA[]]></value></option>
   <option  id='CLASS_GRAPH' default='yes' type='string'><value>YES</value></option>
   <option  id='COLLABORATION_GRAPH' default='yes' type='bool'><value>YES</value></option>
@@ -379,8 +392,7 @@
   <option  id='DOT_PATH' default='yes' type='string'><value><![CDATA[]]></value></option>
   <option  id='DOTFILE_DIRS' default='yes' type='stringlist'>
   </option>
-  <option  id='MSCFILE_DIRS' default='yes' type='stringlist'>
-  </option>
+  <option  id='DIA_PATH' default='yes' type='string'><value><![CDATA[]]></value></option>
   <option  id='DIAFILE_DIRS' default='yes' type='stringlist'>
   </option>
   <option  id='PLANTUML_JAR_PATH' default='yes' type='string'><value><![CDATA[]]></value></option>
@@ -389,8 +401,10 @@
   </option>
   <option  id='DOT_GRAPH_MAX_NODES' default='yes' type='int'><value>50</value></option>
   <option  id='MAX_DOT_GRAPH_DEPTH' default='yes' type='int'><value>0</value></option>
-  <option  id='DOT_TRANSPARENT' default='yes' type='bool'><value>NO</value></option>
   <option  id='DOT_MULTI_TARGETS' default='yes' type='bool'><value>NO</value></option>
   <option  id='GENERATE_LEGEND' default='yes' type='bool'><value>YES</value></option>
   <option  id='DOT_CLEANUP' default='yes' type='bool'><value>YES</value></option>
+  <option  id='MSCGEN_TOOL' default='yes' type='string'><value><![CDATA[]]></value></option>
+  <option  id='MSCFILE_DIRS' default='yes' type='stringlist'>
+  </option>
 </doxyfile>

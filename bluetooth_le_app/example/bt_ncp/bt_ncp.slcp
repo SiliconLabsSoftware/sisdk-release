@@ -1,7 +1,7 @@
 project_name: bt_ncp
 package: bluetooth_le_app
 label: Bluetooth - NCP
-description: >
+description: >-
   Network Co-Processor (NCP) target application. Runs the Bluetooth stack
   dynamically and provides access to it via Bluetooth API (BGAPI) using UART
   connection. NCP mode makes it possible to run your application on a host

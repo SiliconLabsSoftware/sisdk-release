@@ -1455,6 +1455,12 @@ void sl_zigbee_af_price_server_refresh_billing_period(uint8_t endpoint, bool for
   } else if (secondsUntilSecondIndexActive == 0xFFFFFFFFU
              && force
              && priceServerInfo.billingPeriodTable.commonInfos[ep][0].valid) {
+    // A zero duration never advances nextStartTime, so re-adding the period
+    // would recurse indefinitely through billing_period_add -> refresh.
+    if (priceServerInfo.billingPeriodTable.commonInfos[ep][0].durationSec == 0u) {
+      sl_zigbee_af_price_cluster_println("Error: Billing period has zero duration; not refreshing.");
+      return;
+    }
     // The .startTime and .durationSec members are both UTC values measured
     // in seconds. The nextStartTime is therefore a UTC value. Set the start
     // time of the next period to the end time of the current period.

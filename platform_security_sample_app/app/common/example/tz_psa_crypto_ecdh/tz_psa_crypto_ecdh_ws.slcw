@@ -1,5 +1,5 @@
 workspace_name: tz_psa_crypto_ecdh_ws
-package: platform_security_sample_app
+package: platform
 label: Platform Security - SoC TrustZone PSA Crypto ECDH
 description: >
   Demonstrates how to build a TrustZone-split PSA Crypto ECDH key-agreement application, in a platform security TrustZone SoC workspace combining the Secure and Non-secure halves into one image.

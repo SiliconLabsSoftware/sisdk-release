@@ -3,10 +3,19 @@ label: Bluetooth controller agents.md contributions
 package: bluetooth_le_controller
 description: >
   Bluetooth Controller usage contributions for agents.md
+category: Bluetooth|Bluetooth LE Controller (Link Layer)
 quality: evaluation
 provides:
 - name: bluetooth_agents_controller
 template_contribution:
+- name: agents_slab
+  condition:
+  - bluetooth_controller
+  priority: -5300
+  value:
+    id: bluetooth_controller
+    context: |
+      # Bluetooth Controller for Silicon Labs Series 2 and Series 3 devices
 - name: agents_slab
   condition:
   - bluetooth_hci
@@ -14,16 +23,13 @@ template_contribution:
   value:
     id: bluetooth_hci
     context: |
-      # Bluetooth HCI for Silicon Labs Series2 and Series3 Devices
-      This provides HCI interface with the bluetooth controller. HCI is the interface between
-      Bluetooth Host and Bluetooth Controller.
-      ## Supported Commands and Features
-      Supported commands and features can be read by issuing HCI_Read_Local_Supported_Commands
-      and HCI_LE_Read_Local_Supported_Features_Page_0 commands. Based on the components required
-      by the project, the respective features, commands and events will be supported.
-      ## HCI transport
-      There are multiple streams for HCI transport, UART is the default transport, but CPC
-      and 3-wire could also be selected.
+      ## HCI
+      - This is for applications that do not use the SiSDK `bluetooth_stack`.
+        Supported commands and features depend on the controller components included by the application.
+        Query local supported commands/features using HCI_Read_Local_Supported_Commands and
+        HCI_LE_Read_Local_Supported_Features_Page_0.
+      - UART is the default transport. CPC and 3-wire are available alternatives.
+      - Unavailable to SoC and NCP applications that use the SiSDK `bluetooth_stack` and BGAPI.
 - name: agents_slab
   condition:
   - bluetooth_feature_advertiser
@@ -31,29 +37,16 @@ template_contribution:
   value:
     id: bluetooth_feature_advertiser
     context: |
-      # Bluetooth Advertising For Silicon Labs Series2 and Series3 Devices
-      This provides Bluetooth Advertising feature.
-      Before starting advertising the user must set advertising parameters and data.
-      Based on the used advertising type, the user might need to set advertising data, and / or scan response data.
-      ## Constraints
-      The maximum advertising interval supported is 0xFFFF / 40959.375 ms, if the user tries with
-      a larger interval the parameters will be rejected.
-      ## Legacy Advertising
-      In Legacy advertisements, data length is limited to 31 bytes. Usually for more than 31
-      bytes it is good to use scannable advertisements, then in the scan response the user
-      could add 31 bytes of data.
-      Legacy advertisements can be connectable scannable, which is the most common for peripheral
-      use case, or directed connectable, scannable, non-connectable / non-scannable.
-      ### Constraints
-      If the user attempts to advertise more than 31 bytes the data will be rejected.
-      Legacy advertisements use primary advertising channels which have bigger traffic so there is
-      high chance of conflicts and CRC errors.
-      ## Extended Advertising
-      Extended advertisements can be only one of connectable, scannable, or non-connectable / non
-      scannable.
-      ### Constraints
-      In extended advertising, data length could be up to 1650 bytes. Data must fit within one
-      interval otherwise advertisements will be rejected.
+      ## Advertising
+      - Set advertising parameters and data before start.
+      - Max advertising interval: 0xFFFF × 0.625 ms = 40959.375 ms; larger
+        values are rejected.
+      - Legacy advertising: advertising data and scan-response data are each limited to 31
+        bytes; longer data is rejected. Scannable advertising can put extra
+        payload in the scan response.
+      - Extended advertising can only be one of connectable, scannable, or non-connectable and
+        non-scannable. Data may be up to 1650 bytes and must fit within one advertising interval or
+        advertising is rejected.
 - name: agents_slab
   condition:
   - bluetooth_feature_scanner
@@ -61,16 +54,12 @@ template_contribution:
   value:
     id: bluetooth_feature_scanner
     context: |
-      # Bluetooth Scanning For Silicon Labs Series2 and Series3 Devices
-      This provides Bluetooth Scanning feature.
-      Before starting the scanning, the user must set scanning parameters.
-      Scanning window and interval are used to calculate scanning duty cycle as follows
-      duty cycle = window / interval, max duty cycle is 100%.
-      ## Constraints
-      Based on how fast the application is consuming the advertising reports sent by the
-      controller, it is possible that the controller would run out of buffer and it would throttle
-      the system, especially when scanning at 100% duty cycle for longer periods. It is
-      recommended to consume the advertising reports as soon as possible, or use filtering.
+      ## Scanning
+      - Before starting scanning, set scanning parameters.
+        Duty cycle = scanning window / scanning interval (maximum 100%).
+      - At high duty cycle, slow consumption of advertising reports can
+        exhaust controller buffers and throttle the system; drain reports
+        promptly or use filtering.
 - name: agents_slab
   condition:
   - bluetooth_feature_connection_role_central
@@ -78,18 +67,12 @@ template_contribution:
   value:
     id: bluetooth_feature_connection_role_central
     context: |
-      # Bluetooth Connection Central For Silicon Labs Series2 and Series3 Devices
-      This provides Bluetooth Central Connection feature.
-      In order to setup central connection, the application must start scanning to find the
-      advertising devices that are using connectable advertising. Then create a connection
-      to a device based on the advertiser's Bluetooth address.
-      ## Constraints
-      By default phy update feature is not included to save flash and memory, to use it include
-      `bluetooth_feature_connection_phy_update` component.
-      The max number of connections supported is 32 connections, or less based on the memory
-      availability in the device. When using multiple connections it is good to have system
-      understanding and design, if the goal is to have the least latency, then it is recommended
-      to use `bluetooth_controller_anchor_selection` component.
+      ## Central connection
+      - Scan for connectable advertisers, then create a connection by address.
+      - PHY update is opt-in: include `bluetooth_feature_connection_phy_update`
+        (not present by default, to save flash and memory).
+      - Max number of connections is 32, or fewer based on available memory.
+        If the goal is lowest latency, use `bluetooth_controller_anchor_selection`.
 - name: agents_slab
   condition:
   - bluetooth_feature_connection_role_peripheral
@@ -97,21 +80,16 @@ template_contribution:
   value:
     id: bluetooth_feature_connection_role_peripheral
     context: |
-      # Bluetooth Connection Peripheral For Silicon Labs Series2 and Series3 Devices
-      This provides Bluetooth Peripheral Connection feature.
-      In order to setup peripheral connection, the application must start connectable advertising,
-      then a central device would establish a connection with the peripheral device. If the
-      application starts scannable only advertising, then a connection can never be established.
-      Once connection is established the advertising set that was started is stopped by the
-      controller.
-      ## Constraints
-      By default phy update feature is not included to save flash and memory, to use it include
-      `bluetooth_feature_connection_phy_update` component.
-      The max number of connections supported is 32 connections, or less based on the memory
-      availability in the device. However, in peripheral connection the Bluetooth controller
-      cannot schedule the connections based on its own timings because that is decided by
-      the central device(s). This means that peripheral connections cannot scale with all
-      interval and timeout parameters without a good system design and understanding.
+      ## Peripheral connection
+      - Start connectable advertising; scannable-only advertising never
+        establishes a connection.
+      - When a connection is established, the controller stops that
+        advertising set.
+      - PHY update is opt-in: include `bluetooth_feature_connection_phy_update`.
+      - Max number of connections is 32, or fewer based on available memory.
+      - The central owns connection timing; peripherals cannot freely
+        reschedule, so multi-connection scaling needs careful interval and
+        timeout design.
 - name: agents_slab
   condition:
   - bluetooth_feature_cs
@@ -119,21 +97,17 @@ template_contribution:
   value:
     id: bluetooth_feature_cs
     context: |
-      # Bluetooth Channel Sounding For Silicon Labs Series2 and Series3 Devices
-      This provides Bluetooth Channel Sounding (CS) feature for high-accuracy
-      distance measurement using phase-based ranging and round-trip time (RTT).
-      Channel Sounding requires a connection between two devices. Before
-      starting CS procedures, the application must exchange CS capabilities with
-      the remote device, enable CS security, create a CS configuration, and set
-      procedure parameters.
-      ## Constraints
-      Channel Sounding is only supported on devices with CS-capable hardware.
-      The link layers of the connected devices negotiate and decide the subevent length, the
-      application cannot preset a subevent length.
-      CS SYNC PHY is the PHY used for CS packets (mode0, mode1, RTT portion of mode3), that is
-      different from connection PHY. CS SYNC PHYs and device supported PHYs do not necessarily match.
-      CS requires larger Bluetooth buffer, and higher UART baudrate to deliver CS subevents
-      results as fast as possible, otherwise aborts of multiple subevents happen more frequently.
+      ## Channel Sounding
+      - Channel Sounding is only supported on devices with CS-capable hardware.
+      - Before starting CS procedures: exchange CS capabilities, enable CS security,
+        create a CS configuration, then set procedure parameters.
+      - Subevent length is negotiated by the link layers; the application
+        cannot preset it.
+      - CS SYNC PHY (mode 0, mode 1 and RTT portion of mode 3) is different from
+        the connection PHY; CS SYNC PHYs and device-supported PHYs may differ.
+      - CS needs larger Bluetooth buffers and, on HCI/UART paths, a higher
+        baud rate to deliver subevent results; otherwise subevent aborts are
+        more frequent.
 - name: agents_slab
   condition:
   - bluetooth_feature_sync
@@ -141,22 +115,77 @@ template_contribution:
   value:
     id: bluetooth_feature_sync
     context: |
-      # Bluetooth Periodic Advertising Synchronization For Silicon Labs Series2 and Series3 Devices
-      This provides Bluetooth Periodic Advertising Synchronization feature.
-      Periodic advertising synchronization allows a device to synchronize to periodic
-      advertising trains from another device, receiving data at regular intervals without
-      a connection. Before creating a sync, the application must be scanning to discover
-      periodic advertisers. Synchronization can also be established via PAST (Periodic
-      Advertising Sync Transfer) over an existing connection if `bluetooth_feature_sync_past`
-      is included. Once synchronized, the controller delivers periodic advertising reports
-      to the host. If the sync is lost (e.g., due to timeout), the application must
-      re-create the sync.
-      ## Constraints
-      The max number of simultaneous syncs depends on memory
-      availability in the device. Maintaining multiple simultaneous syncs is further
-      constrained by the fact that periodic advertisers operate independently and know
-      nothing about each other, which can cause scheduling conflicts and missed events
-      when their timing overlaps.
+      ## Periodic advertising sync
+      - Scan to discover periodic advertisers before creating a sync.
+      - Sync can also be established via PAST if `bluetooth_feature_sync_past`
+        (and related PAST components) are included.
+      - If sync is lost (for example, on timeout), the application must recreate it.
+      - Max number of simultaneous syncs depends on memory. Independent periodic
+        advertisers can overlap in time and cause scheduling conflicts or
+        missed events.
+- name: agents_slab
+  condition:
+  - bluetooth_hci_sleep
+  priority: -5300
+  value:
+    id: bluetooth_hci_sleep
+    context: |
+      ## HCI sleep
+      - Vendor-specific sleep puts the controller into EM2; without a sleep
+        command the device stays at EM1 when idle.
+      - Not supported with CPC transport.
+      - After a sleep command, wake is driven by activity on the HCI UART RX
+        pin; call `sl_btctrl_hci_sleep_sleep()` from the normal process loop
+        (the component wires this) so the wake path can complete and send the
+        command-complete event.
+- name: agents_slab
+  condition:
+  - bluetooth_feature_connection_phy_update
+  priority: -5300
+  value:
+    id: bluetooth_feature_connection_phy_update
+    context: |
+      ## Connection PHY update
+      - Optional component: without it, connections stay on the default 1M
+        PHY. Include this component to configure a preferred PHY other than 1M
+        (for example 2M or coded).
+- name: agents_slab
+  condition:
+  - bluetooth_feature_sync_past
+  priority: -5300
+  value:
+    id: bluetooth_feature_sync_past
+    context: |
+      ## PAST — transfer established sync
+      - Use to transfer synchronization info for an **established** periodic
+        sync to a peer over a connection.
+      - For a **local** periodic advertising set, use
+        `bluetooth_feature_advertiser_past` instead.
+      - To **receive** PAST, use `bluetooth_feature_past_receiver`.
+- name: agents_slab
+  condition:
+  - bluetooth_feature_advertiser_past
+  priority: -5300
+  value:
+    id: bluetooth_feature_advertiser_past
+    context: |
+      ## PAST — transfer local advertising set
+      - Use to transfer synchronization info for a **local active** periodic
+        advertising set to a peer over a connection.
+      - For an **established** sync, use `bluetooth_feature_sync_past` instead.
+      - To **receive** PAST, use `bluetooth_feature_past_receiver`.
+- name: agents_slab
+  condition:
+  - bluetooth_feature_past_receiver
+  priority: -5300
+  value:
+    id: bluetooth_feature_past_receiver
+    context: |
+      ## PAST — receive
+      - Use on the device that **receives** Periodic Advertising Sync Transfer
+        over a connection.
+      - To initiate PAST, use `bluetooth_feature_advertiser_past` and/or
+        `bluetooth_feature_sync_past` on the sender.
 
 ui_hints:
   visibility: never

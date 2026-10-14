@@ -833,4 +833,391 @@ sl_log_ring_buffer_t *sl_log_get_ring_buffer_config(void);
 #ifdef __cplusplus
 }
 #endif
-#endif // SL_DEBUG_LOGGER_H
+
+/* *INDENT-OFF* */
+/* THE REST OF THE FILE IS DOCUMENTATION ONLY! */
+/**************************************************************************//**
+* @addtogroup sl_log Silicon Labs Debug Logger
+* @{
+* @details The Silicon Labs Debug Logger (sl_log) is the unified, platform-level
+* logging service. Its main purpose is to give application, driver, and stack
+* code a single, standardized logging API that replaces ad-hoc `printf` /
+* `DEBUGOUT` paths with predictable Flash/RAM cost, runtime-tunable verbosity,
+* and a clean zero-overhead build for shipping firmware. Log messages are
+* generated using lightweight `SL_PRINT_*` macros, categorized by severity
+* (DEBUG, INFO, WARN, ERROR, and CRASH for asserts), and routed to a single
+* selectable backend: I/O Stream (UART/VCOM or SEGGER RTT) in either formatted
+* or compact form, or SEGGER SystemView. Logging behavior - default log level,
+* ring-buffer depth, maximum argument count, selected backend, and message
+* formatting - is configured through the Simplicity Studio Project Configurator
+* (Universal Configurator, UC).
+*
+* @note Only **one** backend may be installed at a time. Adding a second backend
+*       component triggers a Simplicity Studio conflict dialog offering
+*       **Replace** or **Keep**.
+*
+* @details
+* ## Initialization
+*
+*   SL Log must be initialized before any `SL_PRINT_*` macro produces output.
+*   When `sl_main` or `sl_system_init` is used, initialization is part of the
+*   startup sequence and @ref sl_log_init_stage1() / @ref sl_log_init_stage2()
+*   are invoked automatically - **do not call them from application code**.
+*   Initialization is split into two stages so that code running before the
+*   timestamp timer and backend are ready can still log:
+*   - @ref sl_log_init_stage1() sets up the ring buffer and the initial runtime
+*     level. Early `SL_PRINT_*` calls that use the ring path are buffered;
+*     final timestamps are applied at stage2 (see Early logs below).
+*   - @ref sl_log_init_stage2() starts the timestamp timer, initializes the
+*     backend, back-fills timestamps on the early logs, and flushes them. It is
+*     wired in as a Service-Init event (priority 9999).
+*
+* ## Selecting and configuring a backend
+*
+*   In Simplicity Studio (**Software Components** view), install **exactly one**
+*   backend. SL Log components ship with `quality: evaluation`, so they appear
+*   in the Software Components list when Evaluation quality is enabled.
+*   The core (`log`), platform integration (`log_platform_specific`), and no-op
+*   (`log_none`) components are hidden and are pulled in automatically by the
+*   backend; never install them by hand. If the backend uses I/O Stream, also
+*   add and configure the transport (UART/VCOM or RTT).
+*
+*   | Goal | Components to install |
+*   |------|-----------------------|
+*   | Formatted (console/RTT) | `log_backend_iostream` + `log_backend_iostream_formatted` |
+*   | Compact binary (host decode tool)  | `log_backend_iostream` + `log_backend_iostream_compact` |
+*   | Trace correlation with SystemView  | `log_backend_systemview` |
+*   | No output (buildable, zero output) | `log_none` (or set `LOG_LEVEL = NONE`) |
+*
+*   - **I/O Stream - Formatted** (`log_backend_iostream_formatted`): produces
+*     human-readable text lines, expanded on target for **host-core** logs.
+*     Viewable directly in a serial terminal (UART/VCOM) or RTT viewer with no
+*     host decoder. Host string logs are written directly to the transport
+*     (they do not enqueue through the compact ring-buffer drain /
+*     @ref sl_log_flush path). Captive-core logs are not formatted on target.
+*     Best for bench debugging and log analysis.
+*   - **I/O Stream - Compact** (`log_backend_iostream_compact`): streams the
+*     packed @ref sl_log_event_t record as a binary wire format (one struct per
+*     event) to minimize bandwidth and RAM. Requires a host-side decoder and the
+*     application ELF `.log_fmt` section to resolve format strings. Best for
+*     performance-sensitive or resource-constrained builds.
+*   - **SEGGER SystemView** (`log_backend_systemview`): forwards events into
+*     SEGGER SystemView for trace correlation alongside FreeRTOS task and
+*     interrupt timelines. Requires the SystemView host application and the
+*     application ELF `.log_fmt` section for string resolution.
+*
+* ## Event record layout (`sl_log_event_t`)
+*
+*   @ref sl_log_event_t is the packed ring-buffer element used by all backends.
+*   It is not compact-only: formatted and SystemView paths also enqueue this
+*   record in RAM. Only the compact backend reuses the same packed layout as its
+*   on-wire binary stream (`sizeof(sl_log_event_t)` bytes per event).
+*
+*   | Field | Type | Role |
+*   |-------|------|------|
+*   | `timestamp` | `uint32_t` | Raw counter ticks (wraps at 2^32) |
+*   | `event_id` | `uint32_t` | Format-string pointer or numeric event ID |
+*   | `args[]` | `uint32_t[SL_LOG_CONFIG_ARG]` | Argument slots (UC `CONFIG_MAX_ARGS`) |
+*   | `arg_count` | `uint8_t` | Number of valid entries in `args` |
+*   | `core_id` | `uint8_t` | Producing core (`0` = host) |
+*   | `flags` | `uint8_t` | Bit 0: type (0 = format string, 1 = numeric); bits 1-7: log level |
+*   | `version` | `uint8_t` | Logger layout / component version |
+*
+*   Packed field order: `timestamp`, `event_id`, `args[]`, then the four
+*   trailing `uint8_t` fields. Raising `CONFIG_MAX_ARGS` enlarges every
+*   ring-buffer slot and every compact wire record by four bytes per added
+*   argument.
+*
+* ## UC configuration options
+*
+*   All UC settings map one-to-one to C macros in the config headers under
+*   `platform/service/sl_log/config/`.
+*
+*   **Common settings** (`sl_log_common_config.h`, always present):
+*
+*   | UC field | Macro | Allowed values | Default |
+*   |----------|-------|----------------|---------|
+*   | LOG_LEVEL | `SL_LOG_CONFIG_LEVEL_COMPILE_TIME` | NONE / DEBUG / INFO / WARN / ERROR | ERROR |
+*   | CONFIG_MAX_ARGS | `SL_LOG_CONFIG_ARG` | ARG0..ARG10 (0..10) | 3 |
+*   | No of Logs | `SL_LOG_NUMBER_OF_EVENTS` | 1..255 | 128 |
+*   | Enable Debug Assertions | `SL_LOG_DEBUG_ASSERT_ENABLE` | 0 / 1 | 0 |
+*
+*   `LOG_LEVEL` is the compile-time ceiling: severities below it are stripped
+*   from the binary and cannot be recovered without a rebuild. `NONE` removes
+*   all log calls. `CONFIG_MAX_ARGS` sets the maximum arguments per call (each
+*   extra argument adds 4 bytes per event); calls that exceed it fail to build
+*   with a `_Static_assert`.
+*
+*   **Timer** (`sl_log_platform_core_config.h`):
+*
+*   | UC field | Macro | Allowed values | Default |
+*   |----------|-------|----------------|---------|
+*   | TIMER Instance Used for timestamp counter | `SL_LOG_CONFIG_TIMER_INSTANCE` | 0..6 | 0 |
+*
+*   Select a 32-bit timer instance for the logger timestamp counter. Make sure
+*   the chosen TIMER instance is 32 bits (see the device datasheet).
+*
+*   **Compact output** (`sl_log_proprietary_config.h`, compact backend only):
+*
+*   | UC field | Macro | Allowed values | Default |
+*   |----------|-------|----------------|---------|
+*   | PROPRIETARY_CONFIG_MODE | `SL_LOG_CONFIG_MODE` | Buffer / Console / Host | Host |
+*
+*   **Host** mode buffers events and drains them with @ref sl_log_flush()
+*   (recommended). **Console** writes each event directly with no flush
+*   plumbing. **Buffer** captures events in RAM only and does not stream them
+*   live.
+*
+*   **Formatted output** (`sl_log_formatted_iostream_config.h`, formatted
+*   backend only):
+*
+*   | UC field | Macro | Allowed values | Default |
+*   |----------|-------|----------------|---------|
+*   | Formatted iostream: prefix timestamp | `SL_LOG_FORMATTED_IOSTREAM_PREFIX_TIMESTAMP` | 0 / 1 | 0 |
+*   | Formatted iostream: emit core ID | `SL_LOG_FORMATTED_IOSTREAM_APPEND_CORE_ID` | 0 / 1 | 0 |
+*
+*   When enabled, the timestamp prefix emits `[TTTTTTTT]` (32-bit `timestamp` as
+*   8 hex digits) before the formatted payload. The core-ID prefix emits `[CC]`
+*   (2 hex digits).
+*
+*   Example (both options enabled): `[00005678] [00] App started`
+*
+* ## Host vs captive-core formatted output
+*
+*   On-target printf-style expansion (`SL_PRINT_STRING_*` with the formatted
+*   I/O Stream backend) is supported for **host-core** logs only. Captive-core
+*   (secondary core) logs do not support formatted strings on target; they are
+*   emitted in encoded form and require a host-side decoder for interpretation.
+*
+* ## Using the SL_PRINT macros
+*
+*   Include `sl_log_helper.h` in your source files. Prefer the `SL_PRINT_STRING_*`
+*   and `SL_PRINT_EVENT_*` families; they are the supported application API.
+*
+*   Printf-style string logging:
+* @code{.c}
+* SL_PRINT_STRING_DEBUG("Debug message");
+* SL_PRINT_STRING_INFO("Sensor value: %u", (uint32_t)reading);
+* SL_PRINT_STRING_WARN("Retry %u of %u", (uint32_t)attempt, (uint32_t)max_attempts);
+* SL_PRINT_STRING_ERROR("Init failed: %d", (int)status);
+* SL_PRINT_STRING_CRASH("Fatal path: %lu", (unsigned long)code);
+* @endcode
+*
+*   Event-style numeric logging (best for hot paths and machine-parsed traces):
+* @code{.c}
+* SL_PRINT_EVENT_DEBUG(EVT_STATE_CHANGE, (uint32_t)old_state, (uint32_t)new_state);
+* SL_PRINT_EVENT_INFO(MY_EVENT_ID, (uint32_t)arg1, (uint32_t)arg2);
+* SL_PRINT_EVENT_WARN(EVT_RETRY, (uint32_t)attempt, (uint32_t)max_attempts);
+* SL_PRINT_EVENT_ERROR(EVT_RADIO_TX_FAIL, (uint32_t)channel, (uint32_t)status);
+* SL_PRINT_EVENT_CRASH(EVT_FATAL, (uint32_t)reason, (uint32_t)pc);
+* @endcode
+*
+*   Guidance on which style to use:
+*   - **Formatted backend** - use `SL_PRINT_STRING_*` with `%` format
+*     specifiers. On this backend those macros expand on target (via the
+*     `SL_PRINT_FMT_*` path). Prefer `SL_PRINT_STRING_*` in application code.
+*   - **Compact backend** - use `SL_PRINT_STRING_*` or `SL_PRINT_EVENT_*`; cast
+*     every numeric argument to `(uint32_t)` (`%lu` recommended).
+*   - **SystemView** - either style; view in SystemView.
+*
+*   Argument storage is `uint32_t` through the log ABI. The formatted backend
+*   accepts native C types for most integer/pointer/string specifiers; the
+*   compact and event paths require explicit `(uint32_t)` / `(uintptr_t)` casts.
+*   Avoid `%f` - it is not supported by the compact / event encoding.
+*
+* ### `SL_PRINT_FMT_*` (formatted backend path)
+*
+*   When the formatted I/O Stream backend is installed, `SL_PRINT_STRING_*`
+*   maps to `SL_PRINT_FMT_*` (`INFO` / `DEBUG` / `WARN` / `ERROR` /
+*   `CRASH`). In this configuration, the line is formatted on target and written
+*   to the console stream; it does not enqueue a compact ring-buffer event. Prefer
+*   `SL_PRINT_STRING_*` in application code; the `SL_PRINT_FMT_*` names are the
+*   underlying formatted-backend implementation.
+*
+*   Requirements and limits:
+*   - Active only with the formatted I/O Stream backend. Without it, direct
+*     `SL_PRINT_FMT_*` calls are silent; `SL_PRINT_STRING_*` still uses the
+*     compact / ring-buffer path when that backend is selected.
+*   - Requires @ref sl_log_init_stage2() to have completed. Early prints before
+*     stage 2 are discarded (not buffered) on this path.
+*   - Host-core only for on-target expansion (see Host vs captive-core
+*     formatted output).
+*
+* Preferred application API:
+* @code{.c}
+* SL_PRINT_STRING_DEBUG("Probe: value=%u", (unsigned)7);
+* SL_PRINT_STRING_INFO("App started, build=%u", (unsigned)42);
+* SL_PRINT_STRING_WARN("Retry %u of %u", (unsigned)1, (unsigned)3);
+* SL_PRINT_STRING_ERROR("Init failed: status=%d", (int)-1);
+* @endcode
+*
+* Same effect under the formatted backend (implementation path):
+* @code{.c}
+* SL_PRINT_FMT_DEBUG("Probe: value=%u", (unsigned)7);
+* SL_PRINT_FMT_INFO("App started, build=%u", (unsigned)42);
+* SL_PRINT_FMT_WARN("Retry %u of %u", (unsigned)1, (unsigned)3);
+* SL_PRINT_FMT_ERROR("Init failed: status=%d", (int)-1);
+* @endcode
+*
+*   Example host console line (optional UC timestamp / core-ID prefixes on):
+* @code
+* [00005678] [00] App started, build=42
+* @endcode
+*
+* ## Log levels
+*
+*   Severity increases from DEBUG to CRASH. A message is emitted only if its
+*   level is at or above **both** the compile-time ceiling and the current
+*   runtime threshold. Setting the filter to level N passes N and all
+*   higher-severity levels (for example, `INFO` passes INFO, WARN, ERROR, CRASH).
+*
+*   | Level | Producer macro | Use for |
+*   |-------|----------------|---------|
+*   | DEBUG | `SL_PRINT_STRING_DEBUG` / `SL_PRINT_EVENT_DEBUG` | Verbose dev trace (temp) |
+*   | INFO | `SL_PRINT_STRING_INFO` / `SL_PRINT_EVENT_INFO` | Normal progress (temp) |
+*   | WARN | `SL_PRINT_STRING_WARN` / `SL_PRINT_EVENT_WARN` | Recoverable anomalies |
+*   | ERROR | `SL_PRINT_STRING_ERROR` / `SL_PRINT_EVENT_ERROR` | Needs attention (default) |
+*   | CRASH | `SL_PRINT_STRING_CRASH` / `SL_PRINT_EVENT_CRASH`, asserts | Fatal / assert paths |
+*
+*   `ERROR` / `WARN` are the intended working levels for production and
+*   day-to-day development; `INFO` / `DEBUG` are temporary and should not be
+*   left enabled in shipping firmware. Set the compile-time `LOG_LEVEL` to
+*   `NONE` to strip all logging from the build.
+*
+* ## Runtime log level
+*
+*   The `LOG_LEVEL` UC setting is the compile-time upper bound. Within that
+*   ceiling, the runtime threshold can be changed at any time without a rebuild
+*   using @ref sl_log_set_loglevel() and @ref sl_log_get_loglevel(). The initial
+*   runtime level is seeded from the compile-time setting during
+*   @ref sl_log_init_stage1(). Logs below the runtime threshold are suppressed
+*   at runtime, but they remain in the binary and can be re-enabled later if they
+*   are within the compile-time `LOG_LEVEL` limit.
+*
+*   The example below reads the current threshold, widens it to INFO while the
+*   issue is reproduced and the trace is captured, then restores the previous
+*   value on exit.
+*
+* @code{.c}
+* sl_log_level_t prev = sl_log_get_loglevel();
+*
+* sl_log_set_loglevel(SL_LOG_ENUM_CONFIG_INFO);
+*
+* sl_log_set_loglevel(prev);
+* @endcode
+*
+* ## Early logs and stage2 re-stamping
+*
+*   Before @ref sl_log_init_stage2(), `SL_PRINT_*` events that use the ring
+*   buffer are queued without a final timestamp. At stage2 the logger assigns
+*   ordered tick values (oldest to newest relative to the then-current count),
+*   initializes the backend, and flushes those early events. Formatted
+*   on-target prints that require the backend wait until stage2 completes.
+*
+* ## Ring-buffer overflow
+*
+*   When the ring buffer is full, newer events overwrite the oldest. The logger
+*   also tracks drops and may emit a synthetic WARN overflow event so host tools
+*   can see that records were lost. Size the UC **No of Logs**
+*   (`SL_LOG_NUMBER_OF_EVENTS`) for your peak rate, and call @ref sl_log_flush()
+*   often enough in compact Host mode.
+*
+* ## Draining the buffer with sl_log_flush()
+*
+*   In compact **Host** mode (default), events accumulate in the ring buffer and
+*   must be drained by @ref sl_log_flush(). The call is blocking: it writes the
+*   pending events through the backend transport and returns when that write
+*   completes (`SL_STATUS_OK` = flushed, `SL_STATUS_EMPTY` = nothing to send,
+*   `SL_STATUS_BUSY` = previous transfer still in progress).
+*   @ref sl_log_flush() is not required for the formatted backend or compact
+*   **Console** mode. With the formatted backend, host string output is rendered
+*   on target and written straight to the console stream; it does not use the
+*   compact ring-buffer enqueue / flush path.
+*
+* @note Call @ref sl_log_flush() from the super-loop (baremetal) or a dedicated
+*       low-priority task (RTOS) - never from a high-priority ISR. Call it before
+*       sleeping to ensure buffered logs reach the host.
+*
+* ## Usage Example
+*
+*   @ref sl_log_init_stage1() and @ref sl_log_init_stage2() are invoked
+*   automatically by `sl_main` / `sl_system_init`; do not call them from
+*   application code. Only the optional runtime level override below is needed,
+*   and it stays within the compile-time ceiling.
+*
+* @code{.c}
+* #include "sl_log_helper.h"
+*
+* void app_init(void)
+* {
+*   sl_log_set_loglevel(SL_LOG_ENUM_CONFIG_INFO);
+*
+*   SL_PRINT_STRING_INFO("App started");
+*   SL_PRINT_STRING_WARN("Sensor sample = %d", (int)42);
+*   SL_PRINT_STRING_ERROR("Boot OK");
+* }
+* @endcode
+*
+*   `SL_PRINT_STRING_ERROR()` is always emitted at the default level.
+*
+* ## Assert macros
+*
+*   | Macro | When active | Behavior |
+*   |-------|-------------|----------|
+*   | `SL_LOG_CRASH_ASSERT(cond)` | Always | See note below. |
+*   | `SL_LOG_DEBUG_ASSERT(cond)` | UC debug asserts on | Development checks. |
+*
+*   `SL_LOG_CRASH_ASSERT` logs `"file:line - Assertion failed: <expr>"` on failure,
+*   then `__BKPT(1)` if a debugger is attached, otherwise spins for watchdog reset.
+*
+* @code{.c}
+* SL_LOG_CRASH_ASSERT(ptr != NULL);
+* SL_LOG_DEBUG_ASSERT(count < MAX_COUNT);
+* @endcode
+*
+* ## Power management integration
+*
+*   To keep timestamps monotonic across low-power transitions, call
+*   @ref sl_log_pre_sleep_process() before entering sleep and
+*   @ref sl_log_post_sleep_process() immediately after wake-up. When the
+*   platform power_manager service is present, these hooks are wired
+*   automatically. Otherwise, pair them symmetrically around every sleep
+*   entry; timestamps become non-monotonic if they are not. While suspended
+*   between the two calls, `SL_PRINT_*` calls are silently dropped because
+*   the transport is gated. The RTT and SystemView backends keep the system
+*   in the lowest operable state while a debugger is connected.
+*
+* ## Multi-core timestamp synchronization
+*
+*   On multi-core systems, @ref sl_log_sync_timestamp() aligns secondary-core
+*   (captive) timestamps to the host-core reference so lines from all cores
+*   correlate in a single stream. Call it periodically if precise correlation
+*   is required. Formatted on-target string expansion remains host-core only;
+*   captive-core traffic stays encoded for host decode.
+*
+*
+* ## `.log_fmt` and viewing output
+*
+*   Compact and SystemView string logs store each format string in a dedicated
+*   ELF section so host tools can map `event_id` (an address) back to text.
+*   Placement is automatic: the `SL_PRINT_STRING_*` helpers put the literal in
+*   that section (GCC/Clang: `.log_fmt`; IAR: `log_fmt`). Installing a compact
+*   or SystemView backend automatically enables the corresponding linker input,
+*   which retains this section in the final image. Applications do not need to
+*   add these strings manually.
+*
+*   Always archive the application ELF with any release that produces those
+*   streams; offline decoders need it (and the `timestamp` field on compact
+*   records).
+*
+*   | Backend + transport | Host tool |
+*   |---------------------|-----------|
+*   | Formatted + RTT | SEGGER RTT Viewer / J-Link RTT terminal |
+*   | Formatted + UART/VCOM | Serial terminal at the configured baud |
+*   | Compact + RTT/UART | Host decoder + application ELF (`.log_fmt`); decode `timestamp` |
+*   | SystemView | SEGGER SystemView; map messages using ELF `.log_fmt` |
+*
+* @} (end addtogroup sl_log)
+******************************************************************************/
+
+#endif // SL_LOG_H

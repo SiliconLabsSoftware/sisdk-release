@@ -29,7 +29,7 @@ received_frame_status_t CC_UserCredential_UserGet_handler(
 /**
  * Called upon receiving a Credential Set frame.
  *
- * @param[in] input Details of the incoming frame
+ * @param[in] operation_type Type of operation to perform.
  * @param[in] p_credential Pointer to the incoming credential data
  * @param[in] p_rx_options Pointer to the details of the received frame
  */
@@ -41,9 +41,9 @@ received_frame_status_t CC_UserCredential_CredentialSet_handler(
 /**
  * Called upon receiving a Credential Get frame.
  *
- * @param[in] input Details of the incoming frame
+ * @param[in] input Pointer to the incoming frame details
  * @param[in] p_metadata Pointer to the requested credential's details
- * @param[in] p_rx_options Pointer to the details of the received frame
+ * @param[in] callback Callback used to transmit the credential report
  */
 bool CC_UserCredential_CredentialGet_handler(
   cc_handler_input_t * input,

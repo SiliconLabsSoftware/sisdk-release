@@ -275,9 +275,19 @@ static sl_status_t zb_sec_man_calc_encrypt_mic(uint8_t* nonce,
   uint8_t *chunk = data;
   uint16_t chunklen;
   uint8_t phase;
+  uint8_t flags;
 
   chunklen = encryption_start_index;
-  encryptNonce(nonce, 0x49, length - encryption_start_index, encryptionBlock);
+  // CCM* B0 flags (NIST SP 800-38C):
+  //   bit 6:    Adata = 1, authenticated data is present
+  //   bits 5-3: (M - 2) / 2, where M is the MIC length in bytes
+  //   bits 2-0: L - 1 = 1, the payload length field is 2 bytes
+  // A 4-byte MIC encodes (4 - 2) / 2 = 1, so the flags byte is
+  // 0x40 | 0x08 | 0x01 = 0x49. An 8-byte MIC encodes (8 - 2) / 2 = 3,
+  // so the flags byte is 0x40 | 0x18 | 0x01 = 0x59. Those three bits
+  // hold every even MIC length CCM allows, 4 through 16.
+  flags = (uint8_t)(0x41u | (((stored_mic_length - 2u) / 2u) << 3));
+  encryptNonce(nonce, flags, length - encryption_start_index, encryptionBlock);
   // first two bytes are the 16-bit representation of the frame length,
   // high byte first
   encryptionBlock[0] ^= HIGH_BYTE(encryption_start_index);

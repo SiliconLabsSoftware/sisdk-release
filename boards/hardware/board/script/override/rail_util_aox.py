@@ -86,6 +86,9 @@ def configure(project, hw, _):
             ('SW4000-SPDT-38-SX', ['ctl1']),
             ('SKY13575-639LF', ['ctl1', 'ctl2']),
             ('SKY13348-374LF', ['ctl1', 'ctl2']),
+            # Richwave SPDT used on BRD2610A (A05+) / BRD6360A; BOM may say RTC76001
+            ('RTC7608U', ['ctl1']),
+            ('RTC76001', ['ctl1']),
         ]
 
         antenna_pins = {}

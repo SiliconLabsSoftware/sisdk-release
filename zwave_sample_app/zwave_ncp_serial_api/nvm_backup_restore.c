@@ -278,15 +278,27 @@ void func_id_serial_api_nvm_backup_restore(__attribute__((unused)) uint8_t input
       if (dataLength > WORK_BUFFER_SIZE) {/* Make sure that length isn't larger than the available buffer size */
         dataLength = WORK_BUFFER_SIZE;
       }
-      if ((NVM_WorkPtr + dataLength) >= nvm_storage_size) {/* Make sure that we don't go beyond valid NVM content */
+      /* Make sure that we don't go beyond valid NVM content. The offset is checked on its own
+         first, otherwise the clamping below underflows for any offset past the end of the NVM. */
+      if (NVM_WorkPtr >= nvm_storage_size) {
+        ZPAL_LOG_WARNING(ZPAL_LOG_APP, "NVM_Read_EOF \r\n");
+        dataLength = 0;
+        pOutputBuffer[NVMBACKUP_TX_STATUS_IDX] = (uint8_t)NVMBackupRestoreReturnValueEOF; /* Indicate at EOF */
+      } else if ((NVM_WorkPtr + dataLength) >= nvm_storage_size) {
         ZPAL_LOG_WARNING(ZPAL_LOG_APP, "NVM_Read_EOF \r\n");
         dataLength = (uint8_t)(nvm_storage_size - NVM_WorkPtr);
         pOutputBuffer[NVMBACKUP_TX_STATUS_IDX] = (uint8_t)NVMBackupRestoreReturnValueEOF; /* Indicate at EOF */
       }
       /* fill output buffer */
-      pOutputBuffer[NVMBACKUP_TX_DATA_LEN_IDX] = dataLength;
       NvmBackupAddrSet(&(pOutputBuffer[NVMBACKUP_TX_ADDR_IDX]), addrSize, NVM_WorkPtr);
-      NvmBackupRead(NVM_WorkPtr, dataLength, &pOutputBuffer[NVMBACKUP_TX_DATA_IDX(addrSize)]);
+      if ((0 < dataLength)
+          && !NvmBackupRead(NVM_WorkPtr, dataLength, &pOutputBuffer[NVMBACKUP_TX_DATA_IDX(addrSize)])) {
+        /* Never hand out the buffer content when the read failed, it may hold unrelated data. */
+        memset(&pOutputBuffer[NVMBACKUP_TX_DATA_IDX(addrSize)], 0, WORK_BUFFER_SIZE);
+        dataLength = 0;
+        pOutputBuffer[NVMBACKUP_TX_STATUS_IDX] = NVMBackupRestoreReturnValueError;
+      }
+      pOutputBuffer[NVMBACKUP_TX_DATA_LEN_IDX] = dataLength;
     }
     break;
 
@@ -308,16 +320,26 @@ void func_id_serial_api_nvm_backup_restore(__attribute__((unused)) uint8_t input
         ZPAL_LOG_ERROR(ZPAL_LOG_APP, "NVM_Write_buff_err \r\n");
         pOutputBuffer[NVMBACKUP_TX_STATUS_IDX] = NVMBackupRestoreReturnValueError; /* ERROR: ignore request if length is larger than available buffer */
       } else {
-        /* Make sure that we don't go beyond valid NVM content */
+        /* Make sure that we don't go beyond valid NVM content. The offset is checked on its own
+           first, otherwise the clamping below underflows for any offset past the end of the NVM. */
         uint8_t tmp_buf[WORK_BUFFER_SIZE];
-        if ((NVM_WorkPtr + dataLength) >= nvm_storage_size) {
+        if (NVM_WorkPtr >= nvm_storage_size) {
+          ZPAL_LOG_WARNING(ZPAL_LOG_APP, "NVM_Write_EOF \r\n");
+          dataLength = 0;
+          pOutputBuffer[NVMBACKUP_TX_STATUS_IDX] = (uint8_t)NVMBackupRestoreReturnValueEOF; /* Indicate at EOF */
+        } else if ((NVM_WorkPtr + dataLength) >= nvm_storage_size) {
           ZPAL_LOG_WARNING(ZPAL_LOG_APP, "NVM_Write_EOF \r\n");
           dataLength = (uint8_t)(nvm_storage_size - NVM_WorkPtr);
           pOutputBuffer[NVMBACKUP_TX_STATUS_IDX] = (uint8_t)NVMBackupRestoreReturnValueEOF; /* Indicate at EOF */
         }
-        /* copy data into another buffer because write operation will be done in another task. */
-        memcpy(tmp_buf, (uint8_t*)&pInputBuffer[NVMBACKUP_RX_DATA_IDX(addrSize)], dataLength);
-        NvmBackupRestore(NVM_WorkPtr, dataLength, tmp_buf);
+        if (0 < dataLength) {
+          /* copy data into another buffer because write operation will be done in another task. */
+          memcpy(tmp_buf, (uint8_t*)&pInputBuffer[NVMBACKUP_RX_DATA_IDX(addrSize)], dataLength);
+          if (!NvmBackupRestore(NVM_WorkPtr, dataLength, tmp_buf)) {
+            dataLength = 0;
+            pOutputBuffer[NVMBACKUP_TX_STATUS_IDX] = NVMBackupRestoreReturnValueError;
+          }
+        }
         /* fill output buffer */
         pOutputBuffer[NVMBACKUP_TX_DATA_LEN_IDX] = dataLength;
         NvmBackupAddrSet(&(pOutputBuffer[NVMBACKUP_TX_ADDR_IDX]), addrSize, NVM_WorkPtr);

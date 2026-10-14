@@ -1477,9 +1477,9 @@ template_contribution:
     help: Set PHR (first 1, 2 or 4 bytes) in Tx buffer according to\n                    the 'format' input parameter.\n                    PHR 'frameLength' field is derived from TxLength set\n                    previously with 'setTxLength'.\n                    For PHR fields info, refer to 802.15.4 specification.
     argument:
     - type: uint8
-      help: 'PHR format: 0=misc IEEE802154 modulations, PHR 1byte\n                                        1=SUN FSK, PHR 2bytes\n                                        2=SUN OFDM, PHR 4bytes\n                                        3=SUN OQPSK, PHR 4bytes'
+      help: 'PHR format: 0=misc IEEE802154 modulations, PHR 1byte\n                                        1=SUN FSK, PHR 2bytes\n                                        2=SUN OFDM, PHR 4bytes\n                                        3=SUN OQPSK, PHR 4bytes\n                                        6=PROP OQPSK, PHR 4bytes'
     - type: uint8opt
-      help: 'For LEG_OQPSK: none\n                               For SUN_FSK  : fcsTtype\n                               For SUN_OFDM : rate\n                               For SUN_OQPSK: spreadingMode\n                    [uint8opt] For LEG_OQPSK: none\n                               For SUN_FSK  : whitening\n                               For SUN_OFDM : scrambler\n                               For SUN_OQPSK: rateMode'
+      help: 'For LEG_OQPSK: none\n                               For SUN_FSK  : fcsTtype\n                               For SUN_OFDM : rate\n                               For SUN_OQPSK: spreadingMode\n                               For PROP_OQPSK: FEC\n                    [uint8opt] For LEG_OQPSK: none\n                               For SUN_FSK  : whitening\n                               For SUN_OFDM : scrambler\n                               For SUN_OQPSK: rateMode\n                               For PROP_OQPSK: none'
 
 - name: cli_command
   value:

@@ -1086,6 +1086,8 @@ psa_status_t sli_se_key_desc_from_input(const psa_key_attributes_t* attributes,
       #endif // SLI_PSA_DRIVER_FEATURE_OPAQUE_KEYS
     #if defined(SLI_PSA_DRIVER_FEATURE_KSU)
     case SL_PSA_KEY_LOCATION_KSU_0:
+    {
+      // Scope this case to avoid IAR Pe546 (declaration with init inside switch).
       if (key_buffer_size < sizeof(uint8_t)) {
         return PSA_ERROR_INSUFFICIENT_MEMORY;
       }
@@ -1113,6 +1115,7 @@ psa_status_t sli_se_key_desc_from_input(const psa_key_attributes_t* attributes,
           return PSA_ERROR_INVALID_ARGUMENT;
       }
       break;
+    }
    #endif
     default:
       return PSA_ERROR_DOES_NOT_EXIST;

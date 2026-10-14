@@ -1,7 +1,7 @@
 project_name: bt_aod_ncp_receiver
 package: bluetooth_le_app
 label: Bluetooth AoD - NCP Receiver
-description: >
+description: >-
   Network Co-Processor (NCP) target application extended with CTE Receiver
   support. It enables Angle of Departure (AoD) calculation. Use this application
   with Direction Finding Studio tools.

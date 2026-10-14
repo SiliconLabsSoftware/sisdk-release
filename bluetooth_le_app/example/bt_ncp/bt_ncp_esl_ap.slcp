@@ -1,7 +1,7 @@
 project_name: bt_ncp_esl_ap
 package: bluetooth_le_app
 label: Bluetooth - NCP ESL Access Point
-description: >
+description: >-
   Network Co-Processor (NCP) target application with additional features to
   support the Electronic Shelf Label Profile ESL Access Point role.
   Note: Some BLE features unused by the ESL Access Point are removed compared

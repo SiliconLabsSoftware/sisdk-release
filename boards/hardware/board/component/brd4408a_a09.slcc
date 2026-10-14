@@ -9,7 +9,8 @@
     sbom:
       license: Zlib
 - requires:
-  - name: simg301m104xil_8mb
+  - name: simg301m104xil
+  - name: external_flash_8mb_s3
   - name: brd4408a_config
   - name: hardware_board_mainboard
 - provides:
@@ -94,7 +95,7 @@
   - board:pn:BRD4408
   - board:variant:A
   - board:revision:A09
-  - board:device:simg301m104xil_8mb
+  - board:device:simg301m104xil
   - hardware:has:vcom
   - hardware:has:vcom:vcom_hardware_flowcontrol
   - hardware:has:pti

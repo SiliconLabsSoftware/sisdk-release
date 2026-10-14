@@ -32,11 +32,17 @@
 #define SLI_HFXO_MANAGER_H
 
 #include <stdbool.h>
+
 #if defined(SL_COMPONENT_CATALOG_PRESENT)
 #include "sl_component_catalog.h"
 #endif
 
-#if defined(SL_CATALOG_SLEEPTIMER_PRESENT) && defined(SYSRTC_PRESENT)
+#if defined(SL_CATALOG_CLOCK_MANAGER_PRESENT)
+#include "sli_clock_manager.h"
+#endif
+
+#if defined(SL_CATALOG_SLEEPTIMER_PRESENT) && defined(SYSRTC_PRESENT) \
+  && !defined(SLI_HFXO_BYPASS_MODE)
 #include "sli_sleeptimer.h"
 #if (SL_SLEEPTIMER_PERIPHERAL == SL_SLEEPTIMER_PERIPHERAL_SYSRTC)
 #define HFXO_MANAGER_SLEEPTIMER_SYSRTC_INTEGRATION_ON

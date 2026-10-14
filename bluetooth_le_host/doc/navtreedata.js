@@ -25,26 +25,21 @@
 var NAVTREE =
 [
   [ "Silicon Labs Silicon Labs Bluetooth API API", "index.html", [
-    [ "Overview", "index.html", [
-      [ "API Payload", "index.html#autotoc_md6", null ],
-      [ "API Payload Size", "index.html#autotoc_md7", null ],
-      [ "Decode API Binary Data", "index.html#autotoc_md8", null ],
-      [ "Deprecations", "index.html#autotoc_md9", null ]
-    ] ],
-    [ "BGAPI", "md_doc_bgapi.html", [
-      [ "BGAPI message header format", "md_doc_bgapi.html#bgapi_message_header_format", [
-        [ "Byte 1", "md_doc_bgapi.html#bgapi_message_header_byte1", null ],
-        [ "Byte 2", "md_doc_bgapi.html#bgapi_message_header_byte2", null ],
-        [ "Byte 3", "md_doc_bgapi.html#bgapi_message_header_byte3", null ],
-        [ "Byte 4", "md_doc_bgapi.html#bgapi_message_header_byte4", null ]
+    [ "Overview", "index.html", "index" ],
+    [ "BGAPI", "bgapi.html", [
+      [ "BGAPI message header format", "bgapi.html#bgapi_message_header_format", [
+        [ "Byte 1", "bgapi.html#bgapi_message_header_byte1", null ],
+        [ "Byte 2", "bgapi.html#bgapi_message_header_byte2", null ],
+        [ "Byte 3", "bgapi.html#bgapi_message_header_byte3", null ],
+        [ "Byte 4", "bgapi.html#bgapi_message_header_byte4", null ]
       ] ],
-      [ "Endianness", "md_doc_bgapi.html#bgapi_endianness", null ],
-      [ "Concurrency", "md_doc_bgapi.html#autotoc_md0", null ],
-      [ "Payload Length Calculation", "md_doc_bgapi.html#bgapi_payload_length_calculation", null ],
-      [ "Decode a BGAPI Message", "md_doc_bgapi.html#decode_bgapi_message", null ],
-      [ "BGAPI message summary", "md_doc_bgapi.html#bgapi_message_summary", null ]
+      [ "Endianness", "bgapi.html#bgapi_endianness", null ],
+      [ "Concurrency", "bgapi.html#autotoc_md0", null ],
+      [ "Payload Length Calculation", "bgapi.html#bgapi_payload_length_calculation", null ],
+      [ "Decode a BGAPI Message", "bgapi.html#decode_bgapi_message", null ],
+      [ "BGAPI message summary", "bgapi.html#bgapi_message_summary", null ]
     ] ],
-    [ "Modules", "modules.html", "modules" ],
+    [ "Topics", "topics.html", "topics" ],
     [ "Data Structures", "annotated.html", [
       [ "Data Structures", "annotated.html", "annotated_dup" ],
       [ "Data Structure Index", "classes.html", null ],
@@ -59,12 +54,12 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "annotated.html",
-"group__sl__bt__connection.html#ga817c9d6f24d206939cbd02f82c1313a7",
-"group__sl__bt__evt__connection__statistics.html#acb4ac9d1ed388424df7139ee4c6da3c7",
-"group__sl__bt__evt__gatt__characteristic.html#ae875473e4862d23ca0bdeaa195d7e41a",
-"group__sl__bt__evt__scanner__extended__advertisement__report.html",
-"group__sl__bt__gatt__server__send__option.html",
-"group__sl__bt__sync.html#ga4d6dbc6ce7a4dfc5ba8e473253161d30"
+"group__sl__bt__connection.html#ga322a5f4020bef878c5fb309371d1f867",
+"group__sl__bt__evt__connection__request__subrate__failed.html#a9a4568275ceabb900fb5e06421bfd1a3",
+"group__sl__bt__evt__external__bondingdb__local__irk__request.html",
+"group__sl__bt__evt__periodic__sync__transfer__received.html#a97a135677cc29a810837717b76328d64",
+"group__sl__bt__gatt__server.html#gacf92de2fe80136039a123e43c3e1e90b",
+"group__sl__bt__sm__configuration.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

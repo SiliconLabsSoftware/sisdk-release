@@ -8,6 +8,14 @@
 
 #include <stdint.h>
 #include <ZAF_types.h>
+
+/**
+ * @addtogroup ZWaveAPI
+ * @{
+ * @addtogroup ZWSerialAPI Z-Wave Serial API
+ * @{
+ */
+
 /* FUNC_ID_SERIAL_API_SETUP command definitions */
 typedef enum {
   /**
@@ -191,4 +199,10 @@ void func_id_ZW_RemoveNodeIDFromNetwork (uint8_t inputLength,
  * @return true if Shutdown process start, else false
  */
 bool InitiateShutdown(ZW_Void_Callback_t pCallback);
+
+/**
+ * @}
+ * @}
+ */
+
 #endif /* APPS_SERIALAPI_CMD_MANAGEMENT_H_ */

@@ -38,6 +38,11 @@
 // <i> This feature is enabled by default to satisfy zigbee 3.0 compliance. Network commissioners should handle reports over group bindings with caution as the frequency and number of reports over multicasts can stagnate the network. Multicasts are treated as broadcasts, which consume network bandwidth.
 #define SL_ZIGBEE_AF_PLUGIN_REPORTING_ENABLE_GROUP_BOUND_REPORTS   1
 
+// <q SL_ZIGBEE_AF_PLUGIN_REPORTING_ENABLE_RETRY> Request an APS acknowledgement when sending reports
+// <i> Default: TRUE
+// <i> When enabled, attribute reports are sent with the APS retry option, which requests an APS acknowledgement. Disable this to send reports without requesting an APS acknowledgement.
+#define SL_ZIGBEE_AF_PLUGIN_REPORTING_ENABLE_RETRY   1
+
 // </h>
 
 // <<< end of configuration section >>>

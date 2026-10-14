@@ -104,6 +104,12 @@ template_contribution:
 - name: cli_command
   value:
     group: rail-mux-aux
+    name: aux-rx-callback-on
+    handler: sl_zigbee_cli_rail_mux_aux_raw_rx_on
+    help: Arm one-shot aux_raw_rx_psdu dump via the unified aux event callback (no TX). try-register first.
+- name: cli_command
+  value:
+    group: rail-mux-aux
     name: aux-rx-callback-off
     handler: sl_zigbee_cli_rail_mux_aux_raw_rx_off
     help: Clears unified aux event observer so auxcount drain resumes (e.g. after tx-fixed-psdu).

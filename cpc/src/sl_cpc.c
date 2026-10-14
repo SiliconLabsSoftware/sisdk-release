@@ -2322,6 +2322,9 @@ void sli_cpc_notify_rx_data_from_drv(sli_cpc_instance_t *inst)
 bool sl_cpc_is_ok_to_sleep(void)
 {
   return (g_instance.rx_process_flag == 0
+          && g_instance.defer_endpoint_free_list == NULL
+          && g_instance.pending_on_security_ready_queue == NULL
+          && g_instance.event_counter == 0
           && (g_instance.transmit_queue == NULL || !g_instance.driver->ops.is_transmit_ready(g_instance.driver)));
 }
 #endif

@@ -1,10 +1,8 @@
 var searchData=
 [
-  ['past_20receiver_0',['PAST Receiver',['../group__sl__bt__past__receiver.html',1,'']]],
-  ['pawr_20advertiser_1',['PAwR Advertiser',['../group__sl__bt__pawr__advertiser.html',1,'']]],
-  ['periodic_20advertiser_2',['Periodic Advertiser',['../group__sl__bt__periodic__advertiser.html',1,'']]],
-  ['periodic_20advertising_20configuration_20flags_3',['Periodic Advertising Configuration Flags',['../group__sl__bt__periodic__advertiser__flags.html',1,'']]],
-  ['periodic_20advertising_20sync_20scanner_4',['Periodic Advertising Sync Scanner',['../group__sl__bt__sync__scanner.html',1,'']]],
-  ['periodic_20advertising_20with_20responses_20synchronization_5',['Periodic Advertising with responses Synchronization',['../group__sl__bt__pawr__sync.html',1,'']]],
-  ['periodic_20advertising_20without_20responses_20synchronization_6',['Periodic Advertising without responses Synchronization',['../group__sl__bt__periodic__sync.html',1,'']]]
+  ['manager_0',['Security Manager',['../group__sl__bt__sm.html',1,'']]],
+  ['manager_20configuration_20flags_1',['Security Manager configuration flags',['../group__sl__bt__sm__configuration.html',1,'']]],
+  ['masks_2',['BT Event System Event Masks',['../group__sl__bt__event__masks.html',1,'']]],
+  ['messaging_3',['User Messaging',['../group__sl__bt__user.html',1,'']]],
+  ['mode_4',['NVM3 Access in NCP mode',['../group__sl__bt__nvm.html',1,'']]]
 ];

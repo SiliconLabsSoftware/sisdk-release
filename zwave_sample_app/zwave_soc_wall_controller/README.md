@@ -103,7 +103,7 @@ Y: For Z-Wave node count is equal to 5 and for Z-Wave Long Range it is 0.
 
 We are differentiating four different types of button presses. The following types are the same for the BTN0 and BTN1 on the WSTK board. The duration values can be configured under the config directory in app_button_press_config.h file in each generated application/project.
 
-Please note external wakeup is not supported on button 1 in case of brd2603a and brd2603b.
+Please note external wakeup is not supported on button 1 in case of brd2603a and brd2603c.
 
 <table>
 <tr>
@@ -181,7 +181,7 @@ Firmware update from previous versions should work without any additional steps.
 
 In case CLI support is needed, please install zw_cli_common component to the project. Please note that the zw_cli_common component will modify the power consumption for every application.
 
-The default baud rate is 9600, which allows the underlying EUSART module to work in EM2. On some development kits (e.g. BRD2603A and BRD2705A), the following command should be applied in Simplicity Studio via the Admin console to adjust the baudrate: `serial vcom config speed 9600`.
+The default baud rate is 9600, which allows the underlying EUSART module to work in EM2. On some development kits (e.g. BRD2603C and BRD2705A), the following command should be applied in Simplicity Studio via the Admin console to adjust the baudrate: `serial vcom config speed 9600`.
 
 ### Available CLI commands
 

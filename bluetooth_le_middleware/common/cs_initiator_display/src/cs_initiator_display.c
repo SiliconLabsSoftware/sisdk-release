@@ -154,7 +154,7 @@ void cs_initiator_display_update_instance(uint8_t instance_num)
     return;
   }
   cs_initiator_display_write_float_to_instance(lcd_instance[instance_num].content.distance, ROW_DISTANCE_VALUE, instance_num);
-  if (lcd_instance[instance_num].content.algo_mode == SL_RTL_CS_ALGO_MODE_STATIC_HIGH_ACCURACY) {
+  if (lcd_instance[instance_num].content.algo_mode == SL_RTL_CS_ALGO_MODE_STATIONARY) {
     cs_initiator_display_write_float_to_instance(lcd_instance[instance_num].content.progress_percentage, ROW_RAW_DISTANCE_VALUE, instance_num);
   } else {
     cs_initiator_display_write_float_to_instance(lcd_instance[instance_num].content.raw_distance, ROW_RAW_DISTANCE_VALUE, instance_num);
@@ -179,7 +179,7 @@ void cs_initiator_display_set_measurement_mode(sl_bt_cs_mode_t mode,
     lcd_instance[i].content.mode = mode;
     lcd_instance[i].content.algo_mode = algo_mode;
   }
-  if (algo_mode == SL_RTL_CS_ALGO_MODE_STATIC_HIGH_ACCURACY) {
+  if (algo_mode == SL_RTL_CS_ALGO_MODE_STATIONARY) {
     cs_initiator_display_write_text_to_instance("               ", ROW_RAW_DISTANCE_TEXT, 0);
     cs_initiator_display_write_text_to_instance(CS_INITIATOR_DISPLAY_PERCENTAGE_TEXT, ROW_RAW_DISTANCE_TEXT, 0);
   }
@@ -270,13 +270,13 @@ static sl_status_t cs_initiator_display_measurement_modes(sl_bt_cs_mode_t mode,
     cs_initiator_display_clear_row(ROW_BIT_ERROR_RATE_VALUE);
   }
 
-  if (algo_mode == SL_RTL_CS_ALGO_MODE_REAL_TIME_BASIC) {
+  if (algo_mode == SL_RTL_CS_ALGO_MODE_TRACKING_ACCURACY_OPTIMIZED) {
     if (strncat(string, CS_INITIATOR_DISPLAY_AMODE_MOVING_OBJ_TEXT, (sizeof(string) - strlen(string) - 1u)) == NULL) {
       display_log_error("Failed to concat \'%s\' string!" NL,
                         CS_INITIATOR_DISPLAY_AMODE_MOVING_OBJ_TEXT);
       sc = SL_STATUS_FAIL;
     }
-  } else if (algo_mode == SL_RTL_CS_ALGO_MODE_REAL_TIME_FAST) {
+  } else if (algo_mode == SL_RTL_CS_ALGO_MODE_TRACKING_LATENCY_OPTIMIZED) {
     if (strncat(string, CS_INITIATOR_DISPLAY_AMODE_MOVING_OBJ_FAST_TEXT, (sizeof(string) - strlen(string) - 1u)) == NULL) {
       display_log_error("Failed to concat \'%s\' string!" NL,
                         CS_INITIATOR_DISPLAY_AMODE_MOVING_OBJ_FAST_TEXT);

@@ -1,7 +1,7 @@
 project_name: bt_soc_throughput_log_single
 package: bluetooth_le_app
 label: Bluetooth - SoC Throughput (single button)
-description: >
+description: >-
   This example tests the throughput capabilities of the device and can be used
   to measure throughput between 2 *EFR32* devices, as well as between a device
   and a smartphone using the 'Si Connect' mobile app, through the 'Throughput' demo tile.

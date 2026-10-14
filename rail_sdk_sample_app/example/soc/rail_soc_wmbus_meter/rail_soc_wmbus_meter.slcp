@@ -303,6 +303,7 @@ tag:
   - hwfilter:board:simple_led:led0
   - hwfilter:ram:12k
   - hwfilter:flash:115k
+  - hwfilter:!device:device_no_rail_api
   - hwfilter:device:device_series_2
   - hwfilter:!device:device_generic_family_efr32xg21
   - hwfilter:!device:device_generic_family_efr32xg22

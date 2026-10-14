@@ -222,7 +222,7 @@ void sl_hal_acmp_set_input(ACMP_TypeDef *acmp,
                     | (positive_input << _ACMP_INPUTCTRL_POSSEL_SHIFT);
 
   // Wait for sync of INPUTCTRL to complete.
-  sl_hal_acmp_wait_sync(ACMP0);
+  sl_hal_acmp_wait_sync(acmp);
 }
 
 /***************************************************************************//**

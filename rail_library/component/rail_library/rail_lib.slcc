@@ -72,6 +72,9 @@ requires:
 - name: emlib_timer
   condition:
   - device_sdid_215     # Needed for BLE channel sounding
+- name: hal_prs
+  condition:
+  - device_sdid_215     # Needed for the external RF switch
   # sl_hal_ldma is required on every device with an LDMA (Series 2 and
   # Series 3). RAIL features that depend on it include IEEE 802.15.4 RX
   # channel switching, BLE channel sounding antenna switching, and the

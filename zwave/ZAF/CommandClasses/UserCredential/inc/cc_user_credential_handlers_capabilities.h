@@ -28,8 +28,7 @@
 /**
  * Called upon receiving a User Capabilities Get frame.
  *
- * @param[out] pReport Pointer to the data that will be included in the
- *                     Capabilities Report frame.
+ * @param[out] output Handler output containing the Capabilities Report frame data.
  */
 void CC_UserCredential_UserCapabilitiesGet_handler(
   cc_handler_output_t * output
@@ -38,9 +37,7 @@ void CC_UserCredential_UserCapabilitiesGet_handler(
 /**
  * Called upon receiving a Credential Capabilities Get frame.
  *
- * @param[out] pReport Pointer to the data that will be included in the
- *                     Capabilities Report frame.
- * @param[out] pLength Pointer to the length of the frame.
+ * @param[out] output Handler output containing the Capabilities Report frame data.
  */
 void CC_UserCredential_CredentialCapabilitiesGet_handler(
   cc_handler_output_t * output

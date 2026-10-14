@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['resource_20report_0',['Resource Report',['../group__sl__bt__resource.html',1,'']]],
-  ['rssi_20value_20constants_1',['RSSI Value Constants',['../group__sl__bt__connection__rssi__const.html',1,'']]]
+  ['ncp_20mode_0',['NVM3 Access in NCP mode',['../group__sl__bt__nvm.html',1,'']]],
+  ['nvm3_20access_20in_20ncp_20mode_1',['NVM3 Access in NCP mode',['../group__sl__bt__nvm.html',1,'']]]
 ];

@@ -480,6 +480,35 @@ SL_ENUM(sl_hal_emu_dcdc_regulation_type_t) {
 };
 #endif
 
+#if defined(DCDC_VRLCFG_VRLEN)
+/// DCDC Variable Resistive Load (VRL) mode.
+SL_ENUM(sl_hal_emu_dcdc_vrl_mode_t) {
+  SL_HAL_EMU_DCDC_VRL_MODE_300OHM = _DCDC_VRLCFG_VRLMODE_MODE0,  ///< 300 ohm load (MODE0).
+  SL_HAL_EMU_DCDC_VRL_MODE_100OHM = _DCDC_VRLCFG_VRLMODE_MODE1   ///< 100 ohm load (MODE1).
+};
+
+/// DCDC VRL pulse count.
+SL_ENUM(sl_hal_emu_dcdc_vrl_pulse_num_t) {
+  SL_HAL_EMU_DCDC_VRL_PULSE_NUM_3  = _DCDC_VRLCFG_VRLPULSENUM_pulse3,   ///< 3 pulses.
+  SL_HAL_EMU_DCDC_VRL_PULSE_NUM_6  = _DCDC_VRLCFG_VRLPULSENUM_pulse6,   ///< 6 pulses.
+  SL_HAL_EMU_DCDC_VRL_PULSE_NUM_9  = _DCDC_VRLCFG_VRLPULSENUM_pulse9,   ///< 9 pulses.
+  SL_HAL_EMU_DCDC_VRL_PULSE_NUM_12 = _DCDC_VRLCFG_VRLPULSENUM_pulse12   ///< 12 pulses.
+};
+
+/// DCDC VRL regulator-off delay before applying the load.
+SL_ENUM(sl_hal_emu_dcdc_vrl_regulator_off_delay_t) {
+  SL_HAL_EMU_DCDC_VRL_REGULATOR_OFF_DELAY_0US    = _DCDC_VRLCFG_VRLCNTLOAD_regoff0us,           ///< 0 us regulator-off delay.
+  SL_HAL_EMU_DCDC_VRL_REGULATOR_OFF_DELAY_2P5US  = _DCDC_VRLCFG_VRLCNTLOAD_regoff2p5us,         ///< 2.5 us regulator-off delay.
+  SL_HAL_EMU_DCDC_VRL_REGULATOR_OFF_DELAY_5US    = _DCDC_VRLCFG_VRLCNTLOAD_regoff5us,           ///< 5 us regulator-off delay.
+  SL_HAL_EMU_DCDC_VRL_REGULATOR_OFF_DELAY_7P5US  = _DCDC_VRLCFG_VRLCNTLOAD_regoff7p5us,         ///< 7.5 us regulator-off delay.
+  SL_HAL_EMU_DCDC_VRL_REGULATOR_OFF_DELAY_10US   = _DCDC_VRLCFG_VRLCNTLOAD_regoff10us_default,  ///< 10 us regulator-off delay.
+  SL_HAL_EMU_DCDC_VRL_REGULATOR_OFF_DELAY_12P5US = _DCDC_VRLCFG_VRLCNTLOAD_regoff12p5us,        ///< 12.5 us regulator-off delay.
+  SL_HAL_EMU_DCDC_VRL_REGULATOR_OFF_DELAY_15US   = _DCDC_VRLCFG_VRLCNTLOAD_regoff15us,          ///< 15 us regulator-off delay.
+  SL_HAL_EMU_DCDC_VRL_REGULATOR_OFF_DELAY_17P5US = _DCDC_VRLCFG_VRLCNTLOAD_regoff17p5us,        ///< 17.5 us regulator-off delay.
+  SL_HAL_EMU_DCDC_VRL_REGULATOR_OFF_DELAY_20US   = _DCDC_VRLCFG_VRLCNTLOAD_regoff20us           ///< 20 us regulator-off delay.
+};
+#endif /* defined(DCDC_VRLCFG_VRLEN) */
+
 /*******************************************************************************
  *******************************   STRUCTS   ***********************************
  ******************************************************************************/
@@ -535,6 +564,16 @@ typedef struct {
 typedef sl_hal_emu_dcdc_init_t sl_hal_emu_dcdc_config_t;
 /** @endcond */
 #endif /* defined(SL_HAL_EMU_DCDC_BUCK_PRESENT) */
+
+#if defined(DCDC_VRLCFG_VRLEN)
+/// DCDC Variable Resistive Load (VRL) initialization structure.
+typedef struct {
+  sl_hal_emu_dcdc_vrl_mode_t                   mode;                   ///< VRL load mode.
+  sl_hal_emu_dcdc_vrl_pulse_num_t              pulse_num;              ///< VRL pulse count.
+  sl_hal_emu_dcdc_vrl_regulator_off_delay_t    regulator_off_delay;    ///< Regulator-off delay before applying the load.
+  bool                                         force_refresh_enable;   ///< Enable PRS forced refresh.
+} sl_hal_emu_dcdc_vrl_init_t;
+#endif /* defined(DCDC_VRLCFG_VRLEN) */
 
 #if defined(SL_HAL_EMU_DCDC_BOOST_PRESENT)
 /// Default DCDC Boost initialization.
@@ -650,6 +689,17 @@ typedef sl_hal_emu_dcdc_init_t sl_hal_emu_dcdc_config_t;
 #endif
 #endif
 #endif /* defined(SL_HAL_EMU_DCDC_BUCK_PRESENT) */
+
+#if defined(DCDC_VRLCFG_VRLEN)
+/// Default DCDC Variable Resistive Load (VRL) initialization.
+#define SL_HAL_EMU_DCDC_VRL_INIT_DEFAULT                                              \
+  {                                                                                   \
+    SL_HAL_EMU_DCDC_VRL_MODE_100OHM,                 /*< 100 ohm load. */             \
+    SL_HAL_EMU_DCDC_VRL_PULSE_NUM_3,                 /*< 3 pulses. */                 \
+    SL_HAL_EMU_DCDC_VRL_REGULATOR_OFF_DELAY_10US,    /*< 10 us regulator-off. */      \
+    false                                            /*< PRS forced refresh off. */   \
+  }
+#endif /* defined(DCDC_VRLCFG_VRLEN) */
 
 /** @cond DO_NOT_INCLUDE_WITH_DOXYGEN */
 // Alias for deprecated macro names used for backward compatibility purposes.
@@ -971,6 +1021,52 @@ void sl_hal_emu_dcdc_dual_ipk_disable(void);
  ******************************************************************************/
 bool sl_hal_emu_dcdc_get_dual_ipk_enable(void);
 #endif /* defined(_DCDC_DOCTRL_DUALIPKEN_MASK)*/
+
+#if defined(DCDC_VRLCFG_VRLEN)
+/***************************************************************************//**
+ * @brief
+ *   Initialize the DCDC Variable Resistive Load (VRL) configuration.
+ *
+ * @details
+ *   Configures VRLCFG and loads the factory trim of the selected load mode from
+ *   DEVINFO.VRLTRIM into DCDC.TRIM0.VRLTRIM. The load itself is not applied;
+ *   call @ref sl_hal_emu_dcdc_vrl_enable() to connect it.
+ *
+ * @param[in] init
+ *   The DCDC VRL initialization structure.
+ *
+ * @note
+ *   Make sure the DCDC is enabled and unlocked before calling this function.
+ ******************************************************************************/
+void sl_hal_emu_init_dcdc_vrl(const sl_hal_emu_dcdc_vrl_init_t *init);
+
+/***************************************************************************//**
+ * @brief
+ *   Enable the DCDC Variable Resistive Load (VRL).
+ *
+ * @details
+ *   Sets VRLCFG.VRLEN, which connects the resistive load configured by
+ *   @ref sl_hal_emu_init_dcdc_vrl().
+ *
+ * @note
+ *   Make sure the DCDC is enabled and unlocked before calling this function.
+ ******************************************************************************/
+void sl_hal_emu_dcdc_vrl_enable(void);
+
+/***************************************************************************//**
+ * @brief
+ *   Disable the DCDC Variable Resistive Load (VRL).
+ *
+ * @details
+ *   Clears VRLCFG.VRLEN, which disconnects the resistive load without altering
+ *   the remaining VRL configuration.
+ *
+ * @note
+ *   Make sure the DCDC is enabled and unlocked before calling this function.
+ ******************************************************************************/
+void sl_hal_emu_dcdc_vrl_disable(void);
+#endif /* defined(DCDC_VRLCFG_VRLEN) */
+
 
 /***************************************************************************//**
  * @brief

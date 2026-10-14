@@ -1,7 +1,7 @@
 project_name: bt_soc_esl_tag_demo
 package: bluetooth_le_app
 label: Bluetooth - SoC ESL Tag Demo
-description: >
+description: >-
   This example is an evaluation showcase for a Bluetooth Electronic Shelf Label
   (ESL) Tag application with the ESL Tag Demo component. The example includes
   image and display capabilities of an ESL Tag, utilizing the memory LCD

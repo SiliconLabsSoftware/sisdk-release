@@ -76,6 +76,8 @@
 // <o CS_REFLECTOR_CS_SYNC_ANTENNA> Select antenna for CS sync packets
 // <CS_SYNC_ANTENNA_1=> Antenna 1
 // <CS_SYNC_ANTENNA_2=> Antenna 2
+// <CS_SYNC_ANTENNA_3=> Antenna 3
+// <CS_SYNC_ANTENNA_4=> Antenna 4
 // <CS_SYNC_SWITCHING=> Switching between all antennas
 // <i> Default: CS_SYNC_SWITCHING
 #define CS_REFLECTOR_CS_SYNC_ANTENNA      CS_SYNC_SWITCHING

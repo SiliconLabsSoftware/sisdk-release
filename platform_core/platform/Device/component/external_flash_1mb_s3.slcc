@@ -1,0 +1,36 @@
+id: external_flash_1mb_s3
+label: 1 MB External Flash
+package: platform_core
+description: >
+  Configures 1 MB of external flash for the device.
+category: Platform|Device|Flash
+quality: production
+metadata:
+  sbom:
+    license: Zlib
+provides:
+- name: external_flash_1mb_s3
+- name: external_flash_size_s3
+- name: device_has_832kb_flash
+  condition:
+  - device_se_size_192k
+- name: device_has_768kb_flash
+  condition:
+  - device_se_size_256k
+requires:
+- name: device_efx
+- name: device_has_ext_mem
+template_contribution:
+- name: device_flash_size
+  value: 851968
+  condition:
+  - device_se_size_192k
+- name: device_flash_size
+  value: 786432
+  condition:
+  - device_se_size_256k
+- name: device_flash_mspu_region_size
+  value: 16384
+  condition:
+  - device_generic_family_sixx301
+root_path: platform_core

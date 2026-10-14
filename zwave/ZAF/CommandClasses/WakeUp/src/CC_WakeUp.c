@@ -178,7 +178,11 @@ init(void)
   LoadData();
 
   zaf_set_stay_awake_callback(CC_WakeUp_stayAwakeIfActive);
+}
 
+void
+CC_WakeUp_Startup(void)
+{
   send_first_notification();
 }
 
@@ -511,4 +515,4 @@ zaf_learn_mode_finished(void)
   }
 }
 
-REGISTER_CC_V4(COMMAND_CLASS_WAKE_UP, WAKE_UP_VERSION_V2, CC_WakeUp_handler, NULL, NULL, NULL, 0, init, reset);
+REGISTER_CC_V7(CC_API_HANDLER_V2, COMMAND_CLASS_WAKE_UP, WAKE_UP_VERSION_V2, CC_WakeUp_handler, NULL, NULL, NULL, 0, init, CC_WakeUp_Startup, reset, NULL);

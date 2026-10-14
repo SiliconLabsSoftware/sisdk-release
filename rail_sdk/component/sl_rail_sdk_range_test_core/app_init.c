@@ -41,6 +41,7 @@
 #include "app_menu.h"
 #include "app_measurement.h"
 #include "sl_code_classification.h"
+#include "sl_clock_manager_oscillator_config.h"
 
 #if defined(SL_CATALOG_GLIB_PRESENT)
 #include "app_graphics.h"
@@ -67,6 +68,11 @@
 // -----------------------------------------------------------------------------
 /// Timer expiration callback for the delay function.
 static void init_screen_timer_callback(sl_sleeptimer_timer_handle_t *handle, void *data);
+
+/******************************************************************************
+ * Checks that HFXO and radio config crystal frequencies match when both are present.
+ *****************************************************************************/
+static void xtal_frequency_validation_check(void);
 
 // -----------------------------------------------------------------------------
 //                                Global Variables
@@ -99,6 +105,8 @@ SL_WEAK void print_sample_app_name(const char* app_name)
  ******************************************************************************/
 void rail_app_init(void)
 {
+  xtal_frequency_validation_check();
+
   sl_status_t sleep_timer_status = 0;
   uint16_t start;
   uint16_t end;
@@ -180,6 +188,17 @@ void end_init_timer(void)
 // -----------------------------------------------------------------------------
 //                          Static Function Definitions
 // -----------------------------------------------------------------------------
+/******************************************************************************
+ * Checks that HFXO and radio config crystal frequencies match when both are present.
+ *****************************************************************************/
+static void xtal_frequency_validation_check(void)
+{
+#if defined(SL_CLOCK_MANAGER_HFXO_FREQ) && defined(RADIO_CONFIG_XTAL_FREQUENCY)
+  _Static_assert(SL_CLOCK_MANAGER_HFXO_FREQ == RADIO_CONFIG_XTAL_FREQUENCY,
+                 "SL_CLOCK_MANAGER_HFXO_FREQ must match RADIO_CONFIG_XTAL_FREQUENCY.");
+#endif
+}
+
 /*******************************************************************************
  * Timer expiration callback for the delay function.
  *

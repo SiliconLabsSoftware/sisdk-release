@@ -34,7 +34,14 @@ end
 local neighbor_table_size = tonumber(slc.config("SL_ZIGBEE_NEIGHBOR_TABLE_SIZE").value)
 local leaf_with_csl_configuration = slc.is_provided("zigbee_pro_leaf_stack_with_csl")
 
-if leaf_with_csl_configuration == false then
+if leaf_with_csl_configuration then
+    if neighbor_table_size < 16 or neighbor_table_size > 26 then
+        validation.error("Zigbee Pro Leaf Stack with CSL requires a neighbor table size of at least 16 and at most 26.",
+            validation.target_for_defines({"SL_ZIGBEE_NEIGHBOR_TABLE_SIZE"}),
+            nil,
+            nil)
+    end
+else
     if neighbor_table_size > 1 then
         validation.error("An end device neighbor table can not be sized greater than 1.",
             validation.target_for_defines({"SL_ZIGBEE_NEIGHBOR_TABLE_SIZE"}),

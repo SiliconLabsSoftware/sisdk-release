@@ -99,7 +99,7 @@
 //The maximum number of ZigBee PRO End Devices that can be supported by a single device.
 #define SL_ZIGBEE_MAX_END_DEVICE_CHILDREN   0
 
-// The size of the neighbor table.
+// The size of the neighbor table for standard end devices.
 #define SL_ZIGBEE_NEIGHBOR_TABLE_SIZE   1
 
 // The size of the route table.

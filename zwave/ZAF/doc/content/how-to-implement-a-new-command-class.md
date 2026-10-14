@@ -27,7 +27,7 @@ the command handler.
 
 ### Association Group Information
 
-https://sdomembers.z-wavealliance.org/wg/AWG/document/120 defines a list of command class / command
+https://github.com/Z-Wave-Alliance/AWG/blob/main/source/xml_registries/zwa_association_command_class_list_of_mandatory_lifeline_commands.xml defines a list of command class / command
 pairs that MUST be listed for the Lifeline association group. The Z-Wave Controller will ask
 for the list using the Association Group Command List Get command.
 

@@ -32,6 +32,11 @@
 #if (SL_ZIGBEE_AF_PLUGIN_REPORTING_ENABLE_GROUP_BOUND_REPORTS == 1)
 #define ENABLE_GROUP_BOUND_REPORTS
 #endif
+// Generated project copies of reporting-config.h predate this option.
+// Reports keep requesting an APS acknowledgement unless the project sets it to 0.
+#ifndef SL_ZIGBEE_AF_PLUGIN_REPORTING_ENABLE_RETRY
+#define SL_ZIGBEE_AF_PLUGIN_REPORTING_ENABLE_RETRY 1
+#endif
 #include "app/framework/plugin/reporting/reporting-tokens.h"
 
 //TODO: Properly doxygenate this file

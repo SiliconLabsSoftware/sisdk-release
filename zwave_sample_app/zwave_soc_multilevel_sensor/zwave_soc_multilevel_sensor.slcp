@@ -58,8 +58,12 @@ component:
     condition: [hardware_board_has_tempsensor]
   - id: veml6035_driver
     condition: [brd2603a]
+  - id: veml6035_driver
+    condition: [brd2603c]
   - id: imu_driver
     condition: [brd2603a]
+  - id: imu_driver
+    condition: [brd2603c]
   - id: clock_manager
 
 source:
@@ -103,12 +107,18 @@ configuration:
   - name: ZAF_TSE_MAXIMUM_SIMULTANEOUS_TRIGGERS
     value: 6
     condition: [brd2603a]
+  - name: ZAF_TSE_MAXIMUM_SIMULTANEOUS_TRIGGERS
+    value: 6
+    condition: [brd2603c]
   - name: MULTILEVEL_SENSOR_REGISTERED_SENSOR_NUMBER_LIMIT
     value: 3 # Acceleration measurements are defined but disabled for non-IMU boards due to CC Configurator limitations
-    unless: [brd2603a]
+    unless: [brd2603a,brd2603c]
   - name: MULTILEVEL_SENSOR_REGISTERED_SENSOR_NUMBER_LIMIT
     value: 6
     condition: [brd2603a]
+  - name: MULTILEVEL_SENSOR_REGISTERED_SENSOR_NUMBER_LIMIT
+    value: 6
+    condition: [brd2603c]
   - name: ZAF_CONFIG_USER_ICON_TYPE
     value: ICON_TYPE_SPECIFIC_SENSOR_NOTIFICATION_HOME_SECURITY
   - name: ZAF_CONFIG_INSTALLER_ICON_TYPE
@@ -145,6 +155,9 @@ configuration:
   - name: SL_BOARD_ENABLE_SENSOR_IMU
     value: 1
     condition: [brd2603a]
+  - name: SL_BOARD_ENABLE_SENSOR_IMU
+    value: 1
+    condition: [brd2603c]
   - name: CC_ASSOCIATION_MAX_GROUPS_PER_ENDPOINT
     value: 2
   - name: CC_ASSOCIATION_MAX_NODES_IN_GROUP

@@ -1,7 +1,7 @@
 project_name: bt_host_ncp_test
 package: bluetooth_le_app
 label: Bluetooth - Host NCP Test
-description: >
+description: >-
   This Network Co-Processor (NCP) host application serves 2 purposes.
   It demonstrates (1) how to use user NCP commands and
   (2) how to implement a simple application to test NCP

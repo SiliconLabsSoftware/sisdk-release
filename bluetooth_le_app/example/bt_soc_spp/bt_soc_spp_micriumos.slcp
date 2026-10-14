@@ -1,7 +1,7 @@
 project_name: bt_soc_spp_micriumos
 package: bluetooth_le_app
 label: Bluetooth - SoC Serial Port Profile Micrium OS
-description: >
+description: >-
   Serial Port Profile (SPP) example for Bluetooth wire replacement.  
   This project demonstrates both peripheral and central roles, enabling wireless
   serial communication between devices.

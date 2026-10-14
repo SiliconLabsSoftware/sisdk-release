@@ -167,11 +167,11 @@
 // <h> Distance estimation
 
 // <o CS_INITIATOR_DEFAULT_ALGO_MODE> Object tracking mode
-// <SL_RTL_CS_ALGO_MODE_REAL_TIME_BASIC=> Real-time basic
-// <SL_RTL_CS_ALGO_MODE_STATIC_HIGH_ACCURACY=> Static high accuracy
-// <SL_RTL_CS_ALGO_MODE_REAL_TIME_FAST=> Real-time fast
-// <i> Default: SL_RTL_CS_ALGO_MODE_REAL_TIME_FAST
-#define CS_INITIATOR_DEFAULT_ALGO_MODE           SL_RTL_CS_ALGO_MODE_REAL_TIME_FAST
+// <SL_RTL_CS_ALGO_MODE_TRACKING_ACCURACY_OPTIMIZED=> Tracking accuracy optimized (suitable for moving targets)
+// <SL_RTL_CS_ALGO_MODE_STATIONARY=> Stationary (suitable for stationary targets)
+// <SL_RTL_CS_ALGO_MODE_TRACKING_LATENCY_OPTIMIZED=> Tracking latency optimized (suitable for fast moving targets)
+// <i> Default: SL_RTL_CS_ALGO_MODE_TRACKING_LATENCY_OPTIMIZED
+#define CS_INITIATOR_DEFAULT_ALGO_MODE           SL_RTL_CS_ALGO_MODE_TRACKING_LATENCY_OPTIMIZED
 
 // </h>
 
@@ -300,15 +300,19 @@
 // <i> Use all the available antennas that can be supported
 // <i> Value: 0. 1 antenna path, [1:1] antenna [initiator:reflector]
 // <i> Value: 1. 2 antenna path, [2:1] antenna
-// <i> Value: 2. 3 antenna path, [3:1] antenna (not supported)
-// <i> Value: 3. 4 antenna path, [4:1] antenna (not supported)
+// <i> Value: 2. 3 antenna path, [3:1] antenna
+// <i> Value: 3. 4 antenna path, [4:1] antenna
 // <i> Value: 4. 2 antenna path, [1:2] antenna
-// <i> Value: 5. 3 antenna path, [1:3] antenna (not supported)
-// <i> Value: 6. 4 antenna path, [1:4] antenna (not supported)
+// <i> Value: 5. 3 antenna path, [1:3] antenna
+// <i> Value: 6. 4 antenna path, [1:4] antenna
 // <i> Value: 7. 4 antenna path, [2:2] antenna
 // <CS_ANTENNA_CONFIG_INDEX_SINGLE_ONLY=> 1 antenna path, [1:1] antenna
 // <CS_ANTENNA_CONFIG_INDEX_DUAL_I_SINGLE_R=> 2 antenna path, [2:1] antenna
+// <CS_ANTENNA_CONFIG_INDEX_TRIPLE_I_SINGLE_R=> 3 antenna path, [3:1] antenna
+// <CS_ANTENNA_CONFIG_INDEX_QUAD_I_SINGLE_R=> 4 antenna path, [4:1] antenna
 // <CS_ANTENNA_CONFIG_INDEX_SINGLE_I_DUAL_R=> 2 antenna path, [1:2] antenna
+// <CS_ANTENNA_CONFIG_INDEX_SINGLE_I_TRIPLE_R=> 3 antenna path, [1:3] antenna
+// <CS_ANTENNA_CONFIG_INDEX_SINGLE_I_QUAD_R=> 4 antenna path, [1:4] antenna
 // <CS_ANTENNA_CONFIG_INDEX_DUAL_ONLY=> 4 antenna path, [2:2] antenna
 // <i> Default: CS_ANTENNA_CONFIG_INDEX_DUAL_ONLY
 #define CS_INITIATOR_DEFAULT_CS_TONE_ANTENNA_CONFIG_IDX_REQ   CS_ANTENNA_CONFIG_INDEX_DUAL_ONLY
@@ -317,6 +321,8 @@
 // <i> Use all the available antennas that can be supported
 // <CS_SYNC_ANTENNA_1=> Antenna 1
 // <CS_SYNC_ANTENNA_2=> Antenna 2
+// <CS_SYNC_ANTENNA_3=> Antenna 3
+// <CS_SYNC_ANTENNA_4=> Antenna 4
 // <CS_SYNC_SWITCHING=> Switching
 // <i> Default: CS_SYNC_SWITCHING
 #define CS_INITIATOR_DEFAULT_CS_SYNC_ANTENNA_REQ  CS_SYNC_SWITCHING

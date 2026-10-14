@@ -34,6 +34,7 @@
 #include <assert.h>
 #include <openthread-core-config.h>
 #include <openthread-system.h>
+#include <stddef.h>
 #include <openthread/link.h>
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
@@ -85,6 +86,44 @@ typedef enum
     SL_OT_COEX_EVENT_DELAYED_GRANT_COUNT,
     SL_OT_COEX_EVENT_AVG_REQUEST_TO_GRANT_TIME
 } sl_coex_events;
+
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
+
+#define SLI_OT_COEX_TX_METRIC_FIELD_OFFSET(aField) \
+    (offsetof(otRadioCoexMetrics, aField) - offsetof(otRadioCoexMetrics, mNumTxRequest))
+
+#define SLI_OT_COEX_VERIFY_TX_METRIC_FIELD(aField, aEventIndex)                                    \
+    _Static_assert(SLI_OT_COEX_TX_METRIC_FIELD_OFFSET(aField) == (aEventIndex) * sizeof(uint32_t), \
+                   "otRadioCoexMetrics Tx field layout mismatch for " #aField)
+
+#define SLI_OT_COEX_RX_METRIC_FIELD_OFFSET(aField) \
+    (offsetof(otRadioCoexMetrics, aField) - offsetof(otRadioCoexMetrics, mNumRxRequest))
+
+#define SLI_OT_COEX_VERIFY_RX_METRIC_FIELD(aField, aEventIndex)                                    \
+    _Static_assert(SLI_OT_COEX_RX_METRIC_FIELD_OFFSET(aField) == (aEventIndex) * sizeof(uint32_t), \
+                   "otRadioCoexMetrics Rx field layout mismatch for " #aField)
+
+SLI_OT_COEX_VERIFY_TX_METRIC_FIELD(mNumTxRequest, SL_OT_COEX_EVENT_REQUEST_COUNT);
+SLI_OT_COEX_VERIFY_TX_METRIC_FIELD(mNumTxGrantImmediate, SL_OT_COEX_EVENT_GRANT_IMMEDIATE_COUNT);
+SLI_OT_COEX_VERIFY_TX_METRIC_FIELD(mNumTxGrantWait, SL_OT_COEX_EVENT_GRANT_WAIT_COUNT);
+SLI_OT_COEX_VERIFY_TX_METRIC_FIELD(mNumTxGrantWaitActivated, SL_OT_COEX_EVENT_GRANT_WAIT_ACTIVATED_COUNT);
+SLI_OT_COEX_VERIFY_TX_METRIC_FIELD(mNumTxGrantWaitTimeout, SL_OT_COEX_EVENT_GRANT_WAIT_TIMEOUT_COUNT);
+SLI_OT_COEX_VERIFY_TX_METRIC_FIELD(mNumTxGrantDeactivatedDuringRequest,
+                                   SL_OT_COEX_EVENT_GRANT_DEACTIVATED_DURING_REQUEST_COUNT);
+SLI_OT_COEX_VERIFY_TX_METRIC_FIELD(mNumTxDelayedGrant, SL_OT_COEX_EVENT_DELAYED_GRANT_COUNT);
+SLI_OT_COEX_VERIFY_TX_METRIC_FIELD(mAvgTxRequestToGrantTime, SL_OT_COEX_EVENT_AVG_REQUEST_TO_GRANT_TIME);
+
+SLI_OT_COEX_VERIFY_RX_METRIC_FIELD(mNumRxRequest, SL_OT_COEX_EVENT_REQUEST_COUNT);
+SLI_OT_COEX_VERIFY_RX_METRIC_FIELD(mNumRxGrantImmediate, SL_OT_COEX_EVENT_GRANT_IMMEDIATE_COUNT);
+SLI_OT_COEX_VERIFY_RX_METRIC_FIELD(mNumRxGrantWait, SL_OT_COEX_EVENT_GRANT_WAIT_COUNT);
+SLI_OT_COEX_VERIFY_RX_METRIC_FIELD(mNumRxGrantWaitActivated, SL_OT_COEX_EVENT_GRANT_WAIT_ACTIVATED_COUNT);
+SLI_OT_COEX_VERIFY_RX_METRIC_FIELD(mNumRxGrantWaitTimeout, SL_OT_COEX_EVENT_GRANT_WAIT_TIMEOUT_COUNT);
+SLI_OT_COEX_VERIFY_RX_METRIC_FIELD(mNumRxGrantDeactivatedDuringRequest,
+                                   SL_OT_COEX_EVENT_GRANT_DEACTIVATED_DURING_REQUEST_COUNT);
+SLI_OT_COEX_VERIFY_RX_METRIC_FIELD(mNumRxDelayedGrant, SL_OT_COEX_EVENT_DELAYED_GRANT_COUNT);
+SLI_OT_COEX_VERIFY_RX_METRIC_FIELD(mAvgRxRequestToGrantTime, SL_OT_COEX_EVENT_AVG_REQUEST_TO_GRANT_TIME);
+
+#endif // OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 
 typedef struct sl_ot_coex_counter
 {

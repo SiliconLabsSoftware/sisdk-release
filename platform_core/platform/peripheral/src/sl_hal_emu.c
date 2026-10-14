@@ -828,5 +828,76 @@ bool sl_hal_emu_dcdc_get_dual_ipk_enable(void)
 }
 #endif
 
+#if defined(DCDC_VRLCFG_VRLEN)
+/***************************************************************************//**
+ * Initialize the DCDC Variable Resistive Load (VRL) configuration.
+ ******************************************************************************/
+void sl_hal_emu_init_dcdc_vrl(const sl_hal_emu_dcdc_vrl_init_t *init)
+{
+  uint32_t vrlcfg;
+#if defined(_DCDC_TRIM0_VRLTRIM_MASK)      \
+  && defined(_DEVINFO_VRLTRIM_VRL100_MASK) \
+  && defined(_DEVINFO_VRLTRIM_VRL300_MASK)
+  uint32_t trim;
+#endif
+
+  EFM_ASSERT(init != NULL);
+
+  vrlcfg = (((uint32_t)init->mode << _DCDC_VRLCFG_VRLMODE_SHIFT)
+            & _DCDC_VRLCFG_VRLMODE_MASK)
+           | (((uint32_t)init->pulse_num << _DCDC_VRLCFG_VRLPULSENUM_SHIFT)
+              & _DCDC_VRLCFG_VRLPULSENUM_MASK)
+           | (((uint32_t)init->regulator_off_delay << _DCDC_VRLCFG_VRLCNTLOAD_SHIFT)
+              & _DCDC_VRLCFG_VRLCNTLOAD_MASK);
+
+#if defined(_DCDC_VRLCFG_FORCERFRSHEN_MASK)
+  if (init->force_refresh_enable) {
+    vrlcfg |= DCDC_VRLCFG_FORCERFRSHEN_ENABLE;
+  }
+#endif
+
+  // The load is only configured here, VRLEN is left to the enable function.
+  sl_hal_bus_reg_write_mask(&DCDC->VRLCFG,
+                            _DCDC_VRLCFG_MASK & ~_DCDC_VRLCFG_VRLEN_MASK,
+                            vrlcfg);
+
+#if defined(_DCDC_TRIM0_VRLTRIM_MASK)      \
+  && defined(_DEVINFO_VRLTRIM_VRL100_MASK) \
+  && defined(_DEVINFO_VRLTRIM_VRL300_MASK)
+  // Load the factory VRL trim of the selected mode from DEVINFO.VRLTRIM.
+  if (init->mode == SL_HAL_EMU_DCDC_VRL_MODE_100OHM) {
+    trim = (DEVINFO->VRLTRIM & _DEVINFO_VRLTRIM_VRL100_MASK)
+           >> _DEVINFO_VRLTRIM_VRL100_SHIFT;
+  } else {
+    trim = (DEVINFO->VRLTRIM & _DEVINFO_VRLTRIM_VRL300_MASK)
+           >> _DEVINFO_VRLTRIM_VRL300_SHIFT;
+  }
+
+  sl_hal_bus_reg_write_mask(&DCDC->TRIM0,
+                            _DCDC_TRIM0_VRLTRIM_MASK,
+                            trim << _DCDC_TRIM0_VRLTRIM_SHIFT);
+#endif
+}
+
+/***************************************************************************//**
+ * Enable the DCDC Variable Resistive Load (VRL).
+ ******************************************************************************/
+void sl_hal_emu_dcdc_vrl_enable(void)
+{
+  sl_hal_bus_reg_write_mask(&DCDC->VRLCFG,
+                            _DCDC_VRLCFG_VRLEN_MASK,
+                            DCDC_VRLCFG_VRLEN_ENABLE);
+}
+
+/***************************************************************************//**
+ * Disable the DCDC Variable Resistive Load (VRL).
+ ******************************************************************************/
+void sl_hal_emu_dcdc_vrl_disable(void)
+{
+  sl_hal_bus_reg_write_mask(&DCDC->VRLCFG,
+                            _DCDC_VRLCFG_VRLEN_MASK,
+                            DCDC_VRLCFG_VRLEN_DISABLE);
+}
+#endif /* defined(DCDC_VRLCFG_VRLEN) */
 
 #endif /* defined(EMU_PRESENT) */

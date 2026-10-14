@@ -104,13 +104,19 @@ static void scheduleMoveEvent(void)
                                networkIndex,
                                state->moveAttempts);
     }
+
+    uint32_t jittered_initial_delay_sec =
+      SL_ZIGBEE_AF_PLUGIN_END_DEVICE_SUPPORT_START_MOVE_DELAY_JITTER_SECONDS > 1
+      ? (sl_zigbee_get_pseudo_random_number() % SL_ZIGBEE_AF_PLUGIN_END_DEVICE_SUPPORT_START_MOVE_DELAY_JITTER_SECONDS)
+      : 0;
+
     sl_zigbee_af_event_set_delay_qs(sl_zigbee_af_end_device_support_move_network_events,
                                     (state->moveAttempts == 0
 #ifdef SL_CATALOG_ZIGBEE_NETWORK_FIND_SUB_GHZ_PRESENT
                                      || (state->moveAttempts >= MOVE_ATTEMPTS_BEFORE_TRYING_ALL_PAGES
                                          && state->page > 0)
 #endif // SL_CATALOG_ZIGBEE_NETWORK_FIND_SUB_GHZ_PRESENT
-                                     ? 0
+                                     ? (jittered_initial_delay_sec * 4)
                                      : MOVE_DELAY_QS));
   } else {
     sl_zigbee_af_app_println("Max move limit reached nwk %d: %d",

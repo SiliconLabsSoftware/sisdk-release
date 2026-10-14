@@ -1,0 +1,43 @@
+id: external_flash_none_s3
+label: No External Flash Size Selected
+package: platform_core
+description: >
+  No external flash size has been explicitly selected. Because a flashless part
+  executes from external flash, the memory map defaults to 8 MB so that a
+  part-only project can still generate and build. Select an external flash size
+  component that matches your board's actual external flash.
+category: Platform|Device|Flash
+quality: production
+metadata:
+  sbom:
+    license: Zlib
+provides:
+- name: external_flash_none_s3
+- name: external_flash_size_s3
+- name: device_has_8000kb_flash
+  condition:
+  - device_se_size_192k
+- name: device_has_7936kb_flash
+  condition:
+  - device_se_size_256k
+requires:
+- name: device_efx
+- name: device_has_ext_mem
+source:
+- path: platform/common/src/sl_flash_none.c
+validation_helper:
+- path: platform/Device/component/external_flash_none_validation_S3.lua
+template_contribution:
+- name: device_flash_size
+  value: 8192000
+  condition:
+  - device_se_size_192k
+- name: device_flash_size
+  value: 8126464
+  condition:
+  - device_se_size_256k
+- name: device_flash_mspu_region_size
+  value: 65536
+  condition:
+  - device_generic_family_sixx301
+root_path: platform_core

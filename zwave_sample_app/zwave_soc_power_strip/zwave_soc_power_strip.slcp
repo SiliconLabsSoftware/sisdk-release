@@ -144,6 +144,9 @@ configuration:
   - name: CC_MULTILEVEL_SWITCH_CONFIG_DEFAULT_DURATION_SEC
     value: 2
     condition: [brd2603a]
+  - name: CC_MULTILEVEL_SWITCH_CONFIG_DEFAULT_DURATION_SEC
+    value: 2
+    condition: [brd2603c]
   - name: ZAF_APP_NAME
     value: '"power_strip"'
   - name: SL_CLOCK_MANAGER_WDOG0CLK_SOURCE

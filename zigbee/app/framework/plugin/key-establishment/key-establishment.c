@@ -384,8 +384,16 @@ static bool checkKeyTable(uint8_t *bigEndianEui64)
     if (context_existing.key_index != 0xFF) {
       return true;
     } else if (NEW_KEY_TABLE_ENTRY_ALLOWED != true) {
+      // Cert subject EUI64 is not in the link key table (not OOB-registered /
+      // no Partner Link Key). Choose terminate status by device role:
+      // - if the local device is TC: unknown EUI via OOB => BAD_MESSAGE (0x03)
+      // - if the local device is non-TC: no Partner Link Key => NO_RESOURCES (0x04)
       sl_zigbee_af_key_establishment_cluster_println("Error: Unknown EUI64 trying to perform CBKE.");
-      cleanupAndStop(INVALID_PARTNER_MESSAGE);
+      if (sl_zigbee_af_get_node_id() == SL_ZIGBEE_TRUST_CENTER_NODE_ID) {
+        cleanupAndStop(INVALID_PARTNER_MESSAGE);
+      } else {
+        cleanupAndStop(NO_ESTABLISHMENT_ALLOWED);
+      }
       return false;
     } else if (0xFF != context_open.key_index) {
       return true;

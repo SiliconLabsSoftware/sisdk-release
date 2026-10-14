@@ -1,7 +1,7 @@
 project_name: bt_host_cpc_hci_bridge
 package: bluetooth_le_app
 label: Bluetooth - Host CPC HCI Bridge
-description: >
+description: >-
   This application creates a Bridge between the CPC daemon, and the host's Bluetooth stack
   such as BlueZ on Linux. CPC daemon and libcpc must be installed by the user before building
   the bridge. There must be an Bluetooth RCP connected to the system, and CPC daemon must be

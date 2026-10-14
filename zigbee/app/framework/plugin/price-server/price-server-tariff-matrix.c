@@ -463,6 +463,10 @@ bool sl_zigbee_af_price_add_price_matrix_raw(uint8_t endpoint,
     uint32_t price;
     if ((subPayloadControl & 0x01) == 0x01) {
       uint8_t tier = payload[payloadIndex];
+      if (tier >= ZCL_PRICE_CLUSTER_MAX_TOU_TIERS) {
+        sl_zigbee_af_price_cluster_println("ERR: PriceMatrix tier index %d out of bounds", tier);
+        return false;
+      }
       memcpy(&price, &payload[payloadIndex + 1], 4);
       pm.matrix.tier[tier] = price;
       sl_zigbee_af_price_cluster_println("Info: Updating PriceMatrix tier[%d] = 0x%08X",
@@ -471,6 +475,13 @@ bool sl_zigbee_af_price_add_price_matrix_raw(uint8_t endpoint,
     } else if ((subPayloadControl & 0x01) == 0x00) {
       uint8_t blockNumber = payload[payloadIndex] & 0x0F;
       uint8_t tier = (payload[payloadIndex] & 0xF0) >> 4;
+      if (tier >= ZCL_PRICE_CLUSTER_MAX_TOU_BLOCK_TIERS
+          || blockNumber >= ZCL_PRICE_CLUSTER_MAX_TOU_BLOCKS) {
+        sl_zigbee_af_price_cluster_println("ERR: PriceMatrix blockAndTier[%d][%d] out of bounds",
+                                           tier,
+                                           blockNumber);
+        return false;
+      }
       memcpy(&price, &payload[payloadIndex + 1], 4);
       pm.matrix.blockAndTier[tier][blockNumber] = price;
       sl_zigbee_af_price_cluster_println("Info: Updating PriceMatrix blockAndTier[%d][%d] = 0x%08X",

@@ -177,9 +177,6 @@ static uint8_t     sLastLqi         = 0;
 static int8_t      sLastRssi        = 0;
 otExtAddress       sExtAddress[RADIO_EXT_ADDR_COUNT];
 
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-#define IEEE802154_2015_ENH_ACK_TIMING_RX_TO_TX_US 256
-#endif
 #define CSL_CSMA_BACKOFF_TIME_IN_US 150
 sl_rail_csma_config_t csmaConfig    = SL_RAIL_CSMA_CONFIG_802_15_4_2003_2P4_GHZ_OQPSK_CSMA;
 sl_rail_csma_config_t cslCsmaConfig = SL_RAIL_CSMA_CONFIG_SINGLE_CCA;

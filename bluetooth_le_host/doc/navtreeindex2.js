@@ -1,5 +1,16 @@
 var NAVTREEINDEX2 =
 {
+"group__sl__bt__evt__connection__request__subrate__failed.html#a9a4568275ceabb900fb5e06421bfd1a3":[2,22,12,0,1],
+"group__sl__bt__evt__connection__request__subrate__failed.html#gaf27bf24c50eb7065717e67b3db126c2d":[2,22,12,1],
+"group__sl__bt__evt__connection__request__subrate__failed.html#structsl__bt__evt__connection__request__subrate__failed__s":[2,22,12,0],
+"group__sl__bt__evt__connection__set__parameters__failed.html":[2,22,4],
+"group__sl__bt__evt__connection__set__parameters__failed.html#a2481aa8307811bff1d1ab083d69458d3":[2,22,4,0,0],
+"group__sl__bt__evt__connection__set__parameters__failed.html#ga747061a9b61f5dcea2bf49a028c75340":[2,22,4,1],
+"group__sl__bt__evt__connection__set__parameters__failed.html#structsl__bt__evt__connection__set__parameters__failed__s":[2,22,4,0],
+"group__sl__bt__evt__connection__statistics.html":[2,22,11],
+"group__sl__bt__evt__connection__statistics.html#a46d4e2c3d3e388deb0c80d7038179960":[2,22,11,0,4],
+"group__sl__bt__evt__connection__statistics.html#a6517db657384747d786b41425e9daed7":[2,22,11,0,6],
+"group__sl__bt__evt__connection__statistics.html#abb4a709f14fe0ee8af4f46ff81d63c6f":[2,22,11,0,3],
 "group__sl__bt__evt__connection__statistics.html#acb4ac9d1ed388424df7139ee4c6da3c7":[2,22,11,0,0],
 "group__sl__bt__evt__connection__statistics.html#ae96bbad6dacb33458ef2852a3a85f0a3":[2,22,11,0,2],
 "group__sl__bt__evt__connection__statistics.html#ae9ae59dc7139d867255370c6b765c24c":[2,22,11,0,1],
@@ -238,16 +249,5 @@ var NAVTREEINDEX2 =
 "group__sl__bt__evt__external__bondingdb__local__irk.html":[2,29,4],
 "group__sl__bt__evt__external__bondingdb__local__irk.html#adacc3f4f79cb80052e7606394d770b19":[2,29,4,0,0],
 "group__sl__bt__evt__external__bondingdb__local__irk.html#ga9001e986269d11c2ddf457b1f1b73465":[2,29,4,1],
-"group__sl__bt__evt__external__bondingdb__local__irk.html#structsl__bt__evt__external__bondingdb__local__irk__s":[2,29,4,0],
-"group__sl__bt__evt__external__bondingdb__local__irk__request.html":[2,29,3],
-"group__sl__bt__evt__external__bondingdb__local__irk__request.html#ga6a0d9aeefb48fe7ea9ef986c10325482":[2,29,3,0],
-"group__sl__bt__evt__gap__random__address__refresh.html":[2,8,0],
-"group__sl__bt__evt__gap__random__address__refresh.html#a782542294593743acffa1e9f2179c352":[2,8,0,0,0],
-"group__sl__bt__evt__gap__random__address__refresh.html#ab7613525e5b4aa528ef08bd026996d31":[2,8,0,0,1],
-"group__sl__bt__evt__gap__random__address__refresh.html#ga765ade59521df4030059cfea3d941854":[2,8,0,1],
-"group__sl__bt__evt__gap__random__address__refresh.html#structsl__bt__evt__gap__random__address__refresh__s":[2,8,0,0],
-"group__sl__bt__evt__gatt__characteristic.html":[2,23,2],
-"group__sl__bt__evt__gatt__characteristic.html#a620e0908144407678924961523f269d2":[2,23,2,0,1],
-"group__sl__bt__evt__gatt__characteristic.html#a6ef8b6af06e43130a96a3ef284849557":[2,23,2,0,3],
-"group__sl__bt__evt__gatt__characteristic.html#ade653d67c88b7300c7c97185f8e2eaa2":[2,23,2,0,0]
+"group__sl__bt__evt__external__bondingdb__local__irk.html#structsl__bt__evt__external__bondingdb__local__irk__s":[2,29,4,0]
 };

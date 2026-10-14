@@ -27,6 +27,8 @@ requires:
 - name: zw_core
 - name: zaf_appname_nvm
   condition: [brd2603a]
+- name: zaf_appname_nvm
+  condition: [brd2603c]
 config_file:
 - path: sample_apps/config/zaf_appname/zaf_appname_config.h
   file_id: zaf_appname

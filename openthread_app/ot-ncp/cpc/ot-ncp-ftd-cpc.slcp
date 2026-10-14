@@ -89,12 +89,6 @@ configuration:
     condition: [ot_rtt_log]
   - name: CIRCULAR_QUEUE_LEN_MAX
     value: 16
-  - name: SL_IOSTREAM_USART_VCOM_FLOW_CONTROL_TYPE
-    value: usartHwFlowControlCtsAndRts
-    condition: [iostream_usart]
-  - name: SL_IOSTREAM_EUSART_VCOM_FLOW_CONTROL_TYPE
-    value: SL_IOSTREAM_EUSART_UART_FLOW_CTRL_CTS_RTS
-    condition: [iostream_eusart]
   - name: SL_OPENTHREAD_STACK_TASK_MEM_SIZE
     value: 7168
     condition: [toolchain_lto]

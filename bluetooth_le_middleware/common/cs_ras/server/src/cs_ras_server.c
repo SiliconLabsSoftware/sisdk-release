@@ -720,7 +720,8 @@ static bool handle_user_cccd_write(cs_ras_server_t *server,
     cs_ras_server_on_mode_change(server->connection, mode, indication);
   } else if (req->characteristic
              ==  cs_ras_server_get_cccd_handle(CS_RAS_CHARACTERISTIC_INDEX_ON_DEMAND_RANGING_DATA)) {
-    if (server->cccd.real_time_indication || server->cccd.real_time_notification) {
+    if ((server->cccd.real_time_indication || server->cccd.real_time_notification)
+        && (status != sl_bt_gatt_disable)) {
       (void)sl_bt_gatt_server_send_user_write_response(req->connection,
                                                        req->characteristic,
                                                        ATT_ERR_CCCD_IMPROPERLY_CONFIGURED);

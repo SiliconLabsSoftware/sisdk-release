@@ -149,6 +149,32 @@ special_cases = {
                 "signal": "11"
             }
         }
+    },
+    "brd4418a": {
+        "compatible": True,
+        "requirements": {
+            "SL_EZSPSPI_HOST_INT": {
+                "component": "exp_h",
+                "signal": "7"
+            },
+            "SL_EZSPSPI_WAKE_INT": {
+                "component": "exp_h",
+                "signal": "11"
+            }
+        }
+    },
+    "brd4419a": {
+        "compatible": True,
+        "requirements": {
+            "SL_EZSPSPI_HOST_INT": {
+                "component": "exp_h",
+                "signal": "7"
+            },
+            "SL_EZSPSPI_WAKE_INT": {
+                "component": "exp_h",
+                "signal": "11"
+            }
+        }
     }
 }
 

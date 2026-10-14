@@ -43,11 +43,13 @@ SL_WEAK void sli_zigbee_stack_zdo_dlk_get_supported_negotiation_parameters(uint8
 SL_WEAK sl_status_t sli_zigbee_zdo_dlk_handle_start_key_update_req(sli_buffer_manager_buffer_t request,
                                                                    uint8_t payload_index,
                                                                    sl_802154_short_addr_t source,
+                                                                   sl_zigbee_aps_option_t options,
                                                                    uint8_t sequence)
 {
   (void)request;
   (void)payload_index;
   (void)source;
+  (void)options;
   (void)sequence;
   return SL_STATUS_NOT_SUPPORTED;
 }

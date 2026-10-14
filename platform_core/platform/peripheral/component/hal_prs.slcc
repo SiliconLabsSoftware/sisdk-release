@@ -37,6 +37,8 @@ provides:
 - name: hal_prs
   condition: [device_sdid_260]
 - name: hal_prs
+  condition: [device_sdid_265]
+- name: hal_prs
   condition: [device_generic_family_sixx301]
 - name: hal_prs
   condition: [device_generic_family_sixx302]

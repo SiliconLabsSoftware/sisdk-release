@@ -111,8 +111,4 @@ bool validate_admin_pin_code(u3c_admin_code_metadata_t * const data);
  */
 bool validate_user_name_encoding(const uint8_t * p_name, uint8_t p_name_length, u3c_user_name_encoding p_name_encoding);
 
-/**
- * @}
- * @}
- */
 #endif /* CC_USER_CREDENTIAL_VALIDATION_H */

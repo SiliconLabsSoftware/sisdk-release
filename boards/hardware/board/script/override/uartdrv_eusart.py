@@ -2,7 +2,7 @@ from siliconlabs.slc.board_gen.util.board_gen_util import *
 from typing import Set
 
 # List of boards where flow control of board controller is disabled by default
-special_case = ['brd2608a', 'brd2710a']
+special_case = ['brd2608a', 'brd2608b', 'brd2710a']
 
 euart_signals_map = {
   Instance.EXP: [

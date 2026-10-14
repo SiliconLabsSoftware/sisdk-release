@@ -1,7 +1,7 @@
 project_name: bt_soc_cbap
 package: bluetooth_le_app
 label: Bluetooth - SoC Certificate Based Authentication and Pairing (Secure Vault)
-description: >
+description: >-
   Demonstrates Certificate Based Authentication and Pairing over BLE.
   This example utilizes Secure Vault for storing keys.
 category: Bluetooth Examples

@@ -613,4 +613,4 @@ filter:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.1.1
+  version: 4.1.2

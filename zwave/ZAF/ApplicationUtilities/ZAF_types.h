@@ -218,9 +218,41 @@ typedef void(* basic_set_mapper_t)(ZW_APPLICATION_TX_BUFFER * p_frame);
  */
 typedef void(* basic_get_mapper_t)(uint8_t endpoint, uint8_t * p_current_value, uint8_t * p_target_value, uint8_t * p_duration);
 
-typedef void (*cc_init_function_t)(void);  // Generic init function
-typedef void (*cc_reset_function_t)(void);  // Generic reset function
-typedef void (*cc_migrate_function_t)(void);  // Generic migrate function
+/**
+ * Command Class initialization function.
+ *
+ * Called during the Command Class initialization phase to initialize the
+ * Command Class state and internal data structures. This function must only
+ * perform local initialization. It must not perform actions that depend on
+ * other Command Classes being initialized or send a frame.
+ */
+typedef void (*cc_init_function_t)(void);
+
+/**
+ * Command Class startup function.
+ *
+ * Called after all Command Classes have been initialized. This function is
+ * intended for startup actions that require the complete application to be
+ * ready, including actions such as sending an OTA status report or starting
+ * Wake Up activity.
+ */
+typedef void (*cc_startup_function_t)(void);
+
+/**
+ * Command Class reset function.
+ *
+ * Called when the Command Class state must be reset. The function resets the
+ * Command Class state and internal data to their initial values.
+ */
+typedef void (*cc_reset_function_t)(void);
+
+/**
+ * Command Class migration function.
+ *
+ * Called to migrate persistent Command Class data from an older storage
+ * format to the current one.
+ */
+typedef void (*cc_migrate_function_t)(void);
 
 /**
  * A lifeline report function must take an array of CC pairs as input and return the number of
@@ -296,6 +328,7 @@ typedef struct {
   cc_init_function_t init;
   cc_reset_function_t reset;
   cc_migrate_function_t migrate;
+  cc_startup_function_t startup;
 }
 CC_handler_map_v5_t;
 
@@ -369,14 +402,18 @@ extern const CC_handler_map_latest_t __stop_zw_cc_handlers_v5[];
  *                                    command pairs for the Association Group Command List Report.
  *                                    The list of mandatory command class / command pairs can be found
  *                                    under "Lifeline Reports" in
- *                                    https://sdomembers.z-wavealliance.org/wg/AWG/document/120.
+ *                                    https://github.com/Z-Wave-Alliance/AWG/blob/main/source/xml_registries/zwa_association_command_class_list_of_mandatory_lifeline_commands.xml.
  * @param[in] flags                   Reserved for future use.
  * @param[in] init_cb                 The CC init function to be invoked by ZAF_Init().
  * @param[in] reset_cb                The CC reset function to be invoked on factory reset.
  * @param[in] migrate_cb              The CC migration function to be invoked on firmware upgrade.
  */
-#define REGISTER_CC_V6(cc_api_handler_version, cc, version, handler, basic_set_mapper, basic_get_mapper, lifeline_report_cb, flags, init_cb, reset_cb, migrate_cb)                                                                                                                         \
-  static const CC_handler_map_latest_t thisHandler##cc __attribute__((aligned(4), __used__, __section__(HANDLER_SECTION))) = { cc_api_handler_version, cc, version, (cc_handler_t)handler, basic_set_mapper, basic_get_mapper, lifeline_report_cb, flags, init_cb, reset_cb, migrate_cb }; \
+#define REGISTER_CC_V6(cc_api_handler_version, cc, version, handler, basic_set_mapper, basic_get_mapper, lifeline_report_cb, flags, init_cb, reset_cb, migrate_cb)                                                                                                                               \
+  static const CC_handler_map_latest_t thisHandler##cc __attribute__((aligned(4), __used__, __section__(HANDLER_SECTION))) = { cc_api_handler_version, cc, version, (cc_handler_t)handler, basic_set_mapper, basic_get_mapper, lifeline_report_cb, flags, init_cb, reset_cb, migrate_cb, NULL }; \
+  void * dummy##cc
+
+#define REGISTER_CC_V7(cc_api_handler_version, cc, version, handler, basic_set_mapper, basic_get_mapper, lifeline_report_cb, flags, init_cb, startup_cb, reset_cb, migrate_cb)                                                                                                                         \
+  static const CC_handler_map_latest_t thisHandler##cc __attribute__((aligned(4), __used__, __section__(HANDLER_SECTION))) = { cc_api_handler_version, cc, version, (cc_handler_t)handler, basic_set_mapper, basic_get_mapper, lifeline_report_cb, flags, init_cb, reset_cb, migrate_cb, startup_cb }; \
   void * dummy##cc
 
 /**
@@ -406,13 +443,13 @@ extern const CC_handler_map_latest_t __stop_zw_cc_handlers_v5[];
  *                                command pairs for the Association Group Command List Report.
  *                                The list of mandatory command class / command pairs can be found
  *                                under "Lifeline Reports" in
- *                                https://sdomembers.z-wavealliance.org/wg/AWG/document/120.
+ *                                https://github.com/Z-Wave-Alliance/AWG/blob/main/source/xml_registries/zwa_association_command_class_list_of_mandatory_lifeline_commands.xml.
  * @param[in] flags               Reserved for future use.
  * @param[in] init_cb             The CC init function to be invoked by ZAF_Init().
  * @param[in] reset_cb            The CC reset function to be invoked on factory reset.
  */
-#define REGISTER_CC_V5(cc, version, handler, basic_set_mapper, basic_get_mapper, lifeline_report_cb, flags, init_cb, reset_cb)                                                                                                                                                  \
-  static const CC_handler_map_latest_t thisHandler##cc __attribute__((aligned(4), __used__, __section__(HANDLER_SECTION))) = { CC_API_HANDLER_V3, cc, version, (cc_handler_t)handler, basic_set_mapper, basic_get_mapper, lifeline_report_cb, flags, init_cb, reset_cb, NULL }; \
+#define REGISTER_CC_V5(cc, version, handler, basic_set_mapper, basic_get_mapper, lifeline_report_cb, flags, init_cb, reset_cb)                                                                                                                                                        \
+  static const CC_handler_map_latest_t thisHandler##cc __attribute__((aligned(4), __used__, __section__(HANDLER_SECTION))) = { CC_API_HANDLER_V3, cc, version, (cc_handler_t)handler, basic_set_mapper, basic_get_mapper, lifeline_report_cb, flags, init_cb, reset_cb, NULL, NULL }; \
   void * dummy##cc
 
 /**
@@ -442,13 +479,13 @@ extern const CC_handler_map_latest_t __stop_zw_cc_handlers_v5[];
  *                                command pairs for the Association Group Command List Report.
  *                                The list of mandatory command class / command pairs can be found
  *                                under "Lifeline Reports" in
- *                                https://sdomembers.z-wavealliance.org/wg/AWG/document/120.
+ *                                https://github.com/Z-Wave-Alliance/AWG/blob/main/source/xml_registries/zwa_association_command_class_list_of_mandatory_lifeline_commands.xml.
  * @param[in] flags               Reserved for future use.
  * @param[in] init_cb             The CC init function to be invoked by ZAF_Init().
  * @param[in] reset_cb            The CC reset function to be invoked on factory reset.
  */
-#define REGISTER_CC_V4(cc, version, handler, basic_set_mapper, basic_get_mapper, lifeline_report_cb, flags, init_cb, reset_cb)                                                                                                                                                  \
-  static const CC_handler_map_latest_t thisHandler##cc __attribute__((aligned(4), __used__, __section__(HANDLER_SECTION))) = { CC_API_HANDLER_V2, cc, version, (cc_handler_t)handler, basic_set_mapper, basic_get_mapper, lifeline_report_cb, flags, init_cb, reset_cb, NULL }; \
+#define REGISTER_CC_V4(cc, version, handler, basic_set_mapper, basic_get_mapper, lifeline_report_cb, flags, init_cb, reset_cb)                                                                                                                                                        \
+  static const CC_handler_map_latest_t thisHandler##cc __attribute__((aligned(4), __used__, __section__(HANDLER_SECTION))) = { CC_API_HANDLER_V2, cc, version, (cc_handler_t)handler, basic_set_mapper, basic_get_mapper, lifeline_report_cb, flags, init_cb, reset_cb, NULL, NULL }; \
   void * dummy##cc
 
 /**
@@ -478,11 +515,11 @@ extern const CC_handler_map_latest_t __stop_zw_cc_handlers_v5[];
  *                                command pairs for the Association Group Command List Report.
  *                                The list of mandatory command class / command pairs can be found
  *                                under "Lifeline Reports" in
- *                                https://sdomembers.z-wavealliance.org/wg/AWG/document/120.
+ *                                https://github.com/Z-Wave-Alliance/AWG/blob/main/source/xml_registries/zwa_association_command_class_list_of_mandatory_lifeline_commands.xml.
  * @param[in] flags               Reserved for future use.
  */
-#define REGISTER_CC_V3(cc, version, handler, basic_set_mapper, basic_get_mapper, lifeline_report_cb, flags)                                                                                                                                                              \
-  static const CC_handler_map_latest_t thisHandler##cc __attribute__((aligned(4), __used__, __section__(HANDLER_SECTION))) = { CC_API_HANDLER_V2, cc, version, (cc_handler_t)handler, basic_set_mapper, basic_get_mapper, lifeline_report_cb, flags, NULL, NULL, NULL }; \
+#define REGISTER_CC_V3(cc, version, handler, basic_set_mapper, basic_get_mapper, lifeline_report_cb, flags)                                                                                                                                                                    \
+  static const CC_handler_map_latest_t thisHandler##cc __attribute__((aligned(4), __used__, __section__(HANDLER_SECTION))) = { CC_API_HANDLER_V2, cc, version, (cc_handler_t)handler, basic_set_mapper, basic_get_mapper, lifeline_report_cb, flags, NULL, NULL, NULL, NULL }; \
   void * dummy##cc
 
 /**
@@ -490,8 +527,8 @@ extern const CC_handler_map_latest_t __stop_zw_cc_handlers_v5[];
  *
  * Requires a CC handler matching @ref cc_handler_v2_t.
  */
-#define REGISTER_CC_V2(cc, version, handler)                                                                                                                                                                                   \
-  static const CC_handler_map_latest_t thisHandler##cc __attribute__((aligned(4), __used__, __section__(HANDLER_SECTION))) = { CC_API_HANDLER_V2, cc, version, (cc_handler_t)handler, NULL, NULL, NULL, 0, NULL, NULL, NULL }; \
+#define REGISTER_CC_V2(cc, version, handler)                                                                                                                                                                                         \
+  static const CC_handler_map_latest_t thisHandler##cc __attribute__((aligned(4), __used__, __section__(HANDLER_SECTION))) = { CC_API_HANDLER_V2, cc, version, (cc_handler_t)handler, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL }; \
   void * dummy##cc
 
 /**
@@ -499,8 +536,8 @@ extern const CC_handler_map_latest_t __stop_zw_cc_handlers_v5[];
  *
  * Requires a CC handler matching @ref cc_handler_t.
  */
-#define REGISTER_CC(cc, version, handler)                                                                                                                                                                                      \
-  static const CC_handler_map_latest_t thisHandler##cc __attribute__((aligned(4), __used__, __section__(HANDLER_SECTION))) = { CC_API_HANDLER_V1, cc, version, (cc_handler_t)handler, NULL, NULL, NULL, 0, NULL, NULL, NULL }; \
+#define REGISTER_CC(cc, version, handler)                                                                                                                                                                                            \
+  static const CC_handler_map_latest_t thisHandler##cc __attribute__((aligned(4), __used__, __section__(HANDLER_SECTION))) = { CC_API_HANDLER_V1, cc, version, (cc_handler_t)handler, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL }; \
   void * dummy##cc
 
 /**

@@ -1,7 +1,7 @@
 project_name: bt_aoa_soc_asset_tag
 package: bluetooth_le_app
 label: Bluetooth AoA - SoC Asset Tag
-description: >
+description: >-
   This sample app demonstrates a CTE (Constant Tone Extension) transmitter
   that can be used as an asset tag in a Direction Finding setup estimating
   Angle of Arrival (AoA).

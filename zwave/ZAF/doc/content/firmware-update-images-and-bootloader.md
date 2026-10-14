@@ -36,7 +36,7 @@ Further information about bootloaders can be found [here](https://www.silabs.com
 
 To generate the GBL files needed for the OTA/OTW update, a signing keypair must first be created. It is the intention that a vendor will keep the signing keypair for the lifetime of the product. These keys are used to sign all the firmware versions for the whole lifetime of the product. An encryption key must also be created, this key is intended for encrypting the GBL file. Encryption makes it harder for a bootlegger to copy the product.
 
-The signing keys can be created using the `Simplicity Commander`'s command line interface:
+The signing keys can be created using _Simplicity Commander_'s command line interface:
 
 ```bat
 commander.exe gbl keygen --type ecc-p256 -o vendor_sign.key
@@ -61,11 +61,11 @@ This should be done each time a new firmware is produced.
 
 ## Firmware update flow (Simplicity Studio)
 
-1. Create a new `Solution Examples` project using the sample project as a template, such as `ZWave_SoC_SwitchOnOff_Solution`.
+1. Create a new _Solution Examples_ project using the sample project as a template, such as `ZWave_SoC_SwitchOnOff_Solution`.
    This will create a new workspace with the bootloader and the Z-Wave application.
-2. Open the <solution_name>.slpb (SL Postbuild Profile) file.
+2. Open the `<solution_name>.slpb` (SL Postbuild Profile) file.
    This will open a GUI, where the encryption and signing keys can be added.
-3. When the `Solution Examples` project is built, the GBL files are generated in the `artifacts` folder with the merged binary of the bootloader and the Z-Wave application.
+3. When the _Solution Examples_ project is built, the GBL files are generated in the `artifacts` folder with the merged binary of the bootloader and the Z-Wave application.
 4. Flash initial device firmware:
    ```bat
    commander.exe flash "{solution project location}\zwave_soc_switch_on_off.hex" --address 0x0 -s <board_jlink_serial>
@@ -74,19 +74,20 @@ This should be done each time a new firmware is produced.
    ```bat
    commander.exe flash --tokengroup znet --tokenfile sample_encrypt.key --tokenfile sample_sign.keytokens.txt -s <board_jlink_serial>
    ```
-6.  Reset device:
-    ```bat
-    commander.exe device reset -s <board_jlink_serial>
-    ```
+6. Reset device:
+   ```bat
+   commander.exe device reset -s <board_jlink_serial>
+   ```
 7. Connect a controller or a device running a controller firmware to the PC and start the PC controller application.
 8. Include the node into the network and make sure the device is visible.
 9. Initiate the OTA update in the PC controller application using an OTA-ready .gbl file with a firmware version greater than that of the current binary (see the *v255 generation* section below).
 
->**Note:** The automatic generation of GBL files also works with `Example Projects`, but in this case, the bootloader won't be merged with the Z-Wave application.
+> **Note:** The automatic generation of GBL files also works with _Example Projects_, but in this case, the bootloader won't be merged with the Z-Wave application.
 
 ## v255 generation
 
-A v255 binary is an application binary in .gbl format, the firmware version of which is set to `255.0.0`. This ensures that the image version is greater than the current firmware version on the device, which is a hard requirement for OTA updates. A suitable binary can be generated from a `Solution Example` or a `Project Example` in Simplicity Studio. The following steps are required to generate the v255 file:
+A v255 binary is an application binary in .gbl format, the firmware version of which is set to `255.0.0`. This ensures that the image version is greater than the current firmware version on the device, which is a hard requirement for OTA updates. A suitable binary can be generated from a _Solution Example_ or a _Project Example_ in Simplicity Studio. The following steps are required to generate the v255 file:
+
 1. Open `zw_version_config.h` in the GUI or in the text editor.
 2. Set `USE_USER_APP_VERSION` to `1`.
 3. Set `ZAF_VERSION_MAJOR` to `255`.
@@ -102,9 +103,10 @@ When building the bootloader, the OTA image storage information must be configur
 Importantly, **this storage slot (slot0), start address and size must not be changed**.
 
 ![Bootloader 800 Storage Slot](bootloader_800_storageslot.png)
+
 ![Bootloader 800 OTA](bootloader_800_OTA.png)
 
-In Simplicity Studio, the `Solution Examples` provide workspaces for the bootloader and the Z-Wave application. In the workspaces' postbuild profile the gbl files are generated and the bootloader and the Z-Wave application are combined into a single image (check `artifacts` folder).
+In Simplicity Studio, the _Solution Examples_ provide workspaces for the bootloader and the Z-Wave application. In the workspaces' postbuild profile the gbl files are generated and the bootloader and the Z-Wave application are combined into a single image (check `artifacts` folder).
 
 ## Linker Script for the 800 Series
 
@@ -125,13 +127,15 @@ There is a dedicated space in the flash memory where the Manufacturing Tokens da
 This area can be written once during firmware running. To save the new region, the flash must be erased before.
 
 Read token frequency:
+
 ```sh
 commander tokendump --tokengroup znet --token MFG_ZWAVE_COUNTRY_FREQ
 ```
 
 Write token frequency:
+
 ```sh
 commander flash --tokengroup znet --token MFG_ZWAVE_COUNTRY_FREQ:0xFF
 ```
 
-*0xFF* means this area is erased.
+`0xFF` means this area is erased.

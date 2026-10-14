@@ -1,7 +1,7 @@
 project_name: bt_host_positioning
 package: bluetooth_le_app
 label: Bluetooth - Host Positioning
-description: >
+description: >-
   AoA positioning application that calculates asset tag positions using
   angle-of-arrival data from multiple locators. It subscribes to MQTT topics
   to receive angle data and publishes calculated positions.

@@ -24,26 +24,25 @@
 #include "sl_wisun_alloc_config.h"
 #include "sl_wisun_common.h"
 
-#if defined(__GNUC__)
-// common with Clang
-#define WRAPPER_GET_HEAP_HANDLE __wrap_sli_memory_get_heap_handle
-#define REAL_GET_HEAP_HANDLE __real_sli_memory_get_heap_handle
-#else
-#define WRAPPER_GET_HEAP_HANDLE $Sub$$sli_memory_get_heap_handle
-#define REAL_GET_HEAP_HANDLE $Super$$sli_memory_get_heap_handle
-#endif
-
 SL_ALIGN(8) static uint8_t sli_wisun_heap[SL_WISUN_ALLOC_HEAP_SIZE] SL_ATTRIBUTE_ALIGN(8);
 static sl_memory_heap_t sli_wisun_heap_handle = { 0 };
 
-extern sl_memory_heap_t *REAL_GET_HEAP_HANDLE(const void *block);
-
 static void sli_wisun_heap_init(void)
 {
+    sl_memory_heap_t *h = &sli_general_purpose_heap;
+
     if (sli_wisun_heap_handle.base_addr) {
         return;
     }
     sli_memory_create_heap(sli_wisun_heap, SL_WISUN_ALLOC_HEAP_SIZE, SL_MEMORY_HEAP_ALLOC_CPU_RAM, &sli_wisun_heap_handle);
+
+    // Link the new heap after the general purpose one so sli_memory_get_heap_handle can find it
+    while (h->next_handle != NULL && h->next_handle != &sli_wisun_heap_handle) {
+        h = h->next_handle;
+    }
+    if (h->next_handle != &sli_wisun_heap_handle) {
+        h->next_handle = &sli_wisun_heap_handle;
+    }
 }
 
 static uint32_t sli_wisun_get_block_length(void *ptr)
@@ -53,17 +52,6 @@ static uint32_t sli_wisun_get_block_length(void *ptr)
     }
     sli_block_metadata_t *block = (sli_block_metadata_t *)((uint8_t *)ptr - SLI_BLOCK_METADATA_SIZE_BYTE);
     return SLI_BLOCK_LEN_DWORD_TO_BYTE(sli_block_len_dword_decode(block));
-}
-
-sl_memory_heap_t *WRAPPER_GET_HEAP_HANDLE(const void *block)
-{
-    // sli_memory_get_heap_handle currently cannot detect this heap instance
-    if (sli_wisun_heap_handle.base_addr
-        && block >= sli_wisun_heap_handle.base_addr
-        && block < (void *)((uintptr_t)sli_wisun_heap_handle.base_addr + sli_wisun_heap_handle.size)) {
-        return &sli_wisun_heap_handle;
-    }
-    return REAL_GET_HEAP_HANDLE(block);
 }
 
 /*****************************************************************************/

@@ -470,9 +470,9 @@
 #endif
 // <s.16 OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION> Vendor SW Version string
 // <i> Vendor SW Version string
-// <i> Default: "3.1.1.0"
+// <i> Default: "3.1.2.0"
 #ifndef OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION
-#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION "3.1.1.0"
+#define OPENTHREAD_CONFIG_NET_DIAG_VENDOR_SW_VERSION "3.1.2.0"
 #endif
 // <s.96 OPENTHREAD_CONFIG_NET_DIAG_VENDOR_APP_URL> Vendor App URL string
 // <i> Vendor App URL string

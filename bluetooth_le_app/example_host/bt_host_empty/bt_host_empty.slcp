@@ -1,7 +1,7 @@
 project_name: bt_host_empty
 package: bluetooth_le_app
 label: Bluetooth - Host Empty
-description: >
+description: >-
   Reference implementation of an NCP (Network Co-Processor) host, which
   typically runs on a central MCU without radio. It can connect to an NCP target
   running the NCP Example via UART to access the Bluetooth stack on the target

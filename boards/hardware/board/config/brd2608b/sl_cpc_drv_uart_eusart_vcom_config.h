@@ -69,7 +69,7 @@
 // <eusartHwFlowControlNone=> None
 // <eusartHwFlowControlCtsAndRts=> CTS/RTS
 // <i> Default: eusartHwFlowControlCtsAndRts
-#define SL_CPC_DRV_UART_VCOM_FLOW_CONTROL_TYPE eusartHwFlowControlCtsAndRts
+#define SL_CPC_DRV_UART_VCOM_FLOW_CONTROL_TYPE eusartHwFlowControlNone
 // </h>
 
 // <<< end of configuration section >>>

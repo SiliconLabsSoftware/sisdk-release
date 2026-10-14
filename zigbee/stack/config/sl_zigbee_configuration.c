@@ -475,7 +475,9 @@ sl_zigbee_zll_policy_t sli_zigbee_zll_policy = SL_ZIGBEE_ZLL_POLICY_DISABLED;
 // The number of groups required by the ZLL application.
 uint8_t sli_zigbee_zll_group_addresses_needed = SL_ZIGBEE_ZLL_GROUP_ADDRESSES;
 int8_t sli_zigbee_zll_rssi_threshold = SL_ZIGBEE_ZLL_RSSI_THRESHOLD;
-#ifdef SL_ZIGBEE_ZLL_APPLY_THRESHOLD_TO_ALL_INTERPANS
+
+#if defined(SL_ZIGBEE_ZLL_APPLY_THRESHOLD_TO_ALL_INTERPANS) \
+    && (SL_ZIGBEE_ZLL_APPLY_THRESHOLD_TO_ALL_INTERPANS)
 bool sli_zigbee_zll_apply_threshold_to_all_interpans = true;
 #else
 bool sli_zigbee_zll_apply_threshold_to_all_interpans = false;

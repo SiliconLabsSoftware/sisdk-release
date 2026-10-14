@@ -495,6 +495,14 @@ static bool processSimpleDescriptorResponse(sli_zigbee_service_discovery_state_t
   sl_zigbee_af_service_discovery_result_t result;
   sl_zigbee_af_cluster_list_t clusterList;
 
+  // Need at least through empty in/out cluster counts.
+  if (length < (SIMPLE_DESCRIPTOR_RESPONSE_INPUT_CLUSTER_LIST_COUNT_INDEX + 2u)) {
+    sl_zigbee_af_service_discovery_println("Error: %s simple descriptor too short (min length %d).",
+                                           PREFIX,
+                                           (SIMPLE_DESCRIPTOR_RESPONSE_INPUT_CLUSTER_LIST_COUNT_INDEX + 2u));
+    return true;
+  }
+
   clusterList.profileId = message[SIMPLE_DESCRIPTOR_RESPONSE_PROFILE_ID_OFFSET]
                           + (message[SIMPLE_DESCRIPTOR_RESPONSE_PROFILE_ID_OFFSET + 1u] << 8);
   clusterList.deviceId = message[SIMPLE_DESCRIPTOR_RESPONSE_DEVICE_ID_OFFSET]
@@ -508,11 +516,34 @@ static bool processSimpleDescriptorResponse(sli_zigbee_service_discovery_state_t
   // However we also do it for the little endian CPUs because the
   // message can actually be truncated due to bad Zigbee stacks.
   uint16_t clusters[MAX_CLUSTERS_IN_ACTIVE_ENDPOINT_RESPONSE];
-  uint8_t index = SIMPLE_DESCRIPTOR_RESPONSE_INPUT_CLUSTER_LIST_INDEX;
+  uint16_t index = SIMPLE_DESCRIPTOR_RESPONSE_INPUT_CLUSTER_LIST_INDEX;
   clusterList.inClusterCount = message[SIMPLE_DESCRIPTOR_RESPONSE_INPUT_CLUSTER_LIST_COUNT_INDEX];
-  // The +1 is for the input cluster count length.
-  clusterList.outClusterCount = message[SIMPLE_DESCRIPTOR_RESPONSE_INPUT_CLUSTER_LIST_COUNT_INDEX
-                                        + 1u + (clusterList.inClusterCount * 2u)];
+
+  // outClusterCount sits after the input cluster list; validate that offset.
+  uint16_t outCountOffset = (uint16_t)(SIMPLE_DESCRIPTOR_RESPONSE_INPUT_CLUSTER_LIST_COUNT_INDEX
+                                       + 1u + ((uint16_t)clusterList.inClusterCount * 2u));
+  if (outCountOffset >= length) {
+    sl_zigbee_af_service_discovery_println("Error: %s simple descriptor out-cluster count OOB (offset %d, length %d).",
+                                           PREFIX,
+                                           outCountOffset,
+                                           length);
+    return true;
+  }
+  clusterList.outClusterCount = message[outCountOffset];
+
+  uint16_t totalClusters = (uint16_t)clusterList.inClusterCount
+                           + (uint16_t)clusterList.outClusterCount;
+  if (totalClusters > MAX_CLUSTERS_IN_ACTIVE_ENDPOINT_RESPONSE) {
+    sl_zigbee_af_service_discovery_println("Error: %s simple descriptor too many clusters.", PREFIX);
+    return true;
+  }
+
+  uint16_t expectedLength = (uint16_t)(outCountOffset + 1u
+                                       + ((uint16_t)clusterList.outClusterCount * 2u));
+  if (expectedLength > length) {
+    sl_zigbee_af_service_discovery_println("Error: %s simple descriptor truncated.", PREFIX);
+    return true;
+  }
 
   if ((length - index - 1u) % 2u != 0u) {  // subtract 1 for the output cluster count.
     sl_zigbee_af_service_discovery_println("Error: %s bad simple descriptor length.", PREFIX);

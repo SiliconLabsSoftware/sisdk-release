@@ -2646,36 +2646,6 @@ WEAK(void slx_zigbee_insecure_debug_generate_trace(slx_zigbee_insecure_debug_mes
   UNUSED_VAR(debug_data);
 }
 
-void slx_zigbee_application_handle_new_aps_link_key_with_partner(sl_802154_long_addr_t partner)
-{
-  // export the key
-  sl_zigbee_sec_man_context_t context;
-  sl_zigbee_sec_man_init_context(&context);
-  if (!sli_zigbee_am_trust_center) {
-    context.core_key_type = SL_ZB_SEC_MAN_KEY_TYPE_TC_LINK;
-  } else if (sl_zigbee_get_trust_center_link_key_request_policy() == SL_ZIGBEE_ALLOW_TC_LINK_KEY_REQUEST_AND_SEND_CURRENT_KEY) {
-    context.core_key_type = SL_ZB_SEC_MAN_KEY_TYPE_TC_LINK;
-  } else {
-    context.core_key_type = SL_ZB_SEC_MAN_KEY_TYPE_APP_LINK;
-  }
-  memmove(context.eui64, partner, EUI64_SIZE);
-  context.flags |= ZB_SEC_MAN_FLAG_EUI_IS_VALID;
-  sl_zigbee_sec_man_key_t plain_text;
-  sl_status_t status = sl_zigbee_sec_man_export_key(&context,
-                                                    &plain_text);
-  if (status == SL_STATUS_OK) {
-    // dump to wireshark
-    slx_zigbee_insecure_debug_generate_trace(SLX_ZIGBEE_INSECURE_DEBUG_NWK_REPORT_KEY_PACKET,
-                                             (uint8_t *) plain_text.key);
-    // key transport
-    slx_zigbee_insecure_debug_generate_trace(SLX_ZIGBEE_INSECURE_DEBUG_TRANSPORT_KEY_PACKET,
-                                             (uint8_t *) plain_text.key);
-  } else {
-    sl_zigbee_core_debug_print("WARN: error (0x%02X) getting aps link key for ", status);
-    sl_zigbee_core_debug_print_buffer(partner, EUI64_SIZE, false);
-  }
-}
-
 #ifdef SL_CATALOG_KERNEL_PRESENT
 //task size is specified in bytes and is word aligned
 static osThreadId_t pro_compliance_app_task_id;

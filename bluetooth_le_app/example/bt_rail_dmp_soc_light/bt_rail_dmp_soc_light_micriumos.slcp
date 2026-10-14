@@ -1,7 +1,7 @@
 project_name: bt_rail_dmp_soc_light_micriumos
 package: bluetooth_le_app
 label: Bluetooth RAIL DMP - SoC Light Micrium OS
-description: >
+description: >-
   This is a Dynamic Multiprotocol reference application demonstrating a light
   bulb that can be switched both via Bluetooth and via a Proprietary protocol.
   Can be tested with the Simplicity Connect mobile app and RAIL - SoC Switch

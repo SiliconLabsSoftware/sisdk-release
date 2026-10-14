@@ -1,5 +1,5 @@
 workspace_name: bootloader-spi-ezsp-workspace
-package: bootloader_sample_app
+package: bootloader
 label: bootloader-spi-ezsp-workspace
 quality: production
 description: >

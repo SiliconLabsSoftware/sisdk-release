@@ -146,6 +146,7 @@ otInstance *sli_ot_radio_instance_from_filter_mask(uint8_t aFilterMask)
     bool        foundInstance = false;
     uint8_t     panFilterMask;
     uint8_t     addressFiltermask;
+    uint8_t     selectMask;
 
 #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     // Single-instance mode: Always return the single instance for security processing
@@ -172,11 +173,34 @@ otInstance *sli_ot_radio_instance_from_filter_mask(uint8_t aFilterMask)
     addressFiltermask &= sRailFilterMask;
 #endif
 
-    // Find the first set bit in the PAN or address filter mask,
-    // Skip bit 0 (broadcast) and look for instance-specific matches
+    // After the shift above, both masks use the same bit numbers:
+    //   bit 0 = broadcast, bit 1 = instance 0 (e.g. Zigbee), bit 2 = instance 1 (e.g. Thread)
+    // Drop bit 0 for broadcast packets.
+    panFilterMask &= static_cast<uint8_t>(~0x01);
+    addressFiltermask &= static_cast<uint8_t>(~0x01);
+
+    // A fully addressed unicast is the (PAN, address) pair, not either field alone.
+    selectMask = static_cast<uint8_t>(panFilterMask & addressFiltermask);
+
+    if (selectMask == 0)
+    {
+        if (panFilterMask == 0)
+        {
+            // Dest PAN omitted (e.g. PAN ID compression). Bind from address only.
+            selectMask = addressFiltermask;
+        }
+        else if (addressFiltermask == 0)
+        {
+            // Dest address omitted, or dest is broadcast 0xFFFF. Bind from PAN only.
+            selectMask = panFilterMask;
+        }
+        // Else both fields were present but no instance matched both: leave 0.
+    }
+
+    // Find the first set bit in the PAN or address filter mask
     for (uint8_t i = 1; i <= RADIO_INTERFACE_COUNT && i < 8; i++)
     {
-        if ((panFilterMask & (1 << i)) || (addressFiltermask & (1 << i)))
+        if ((selectMask & (1 << i)) != 0)
         {
             instanceIndex = i - 1; // Convert to 0-based index
             foundInstance = true;

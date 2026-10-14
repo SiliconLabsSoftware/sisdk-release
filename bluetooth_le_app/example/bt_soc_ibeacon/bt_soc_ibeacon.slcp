@@ -1,7 +1,7 @@
 project_name: bt_soc_ibeacon
 package: bluetooth_le_app
 label: Bluetooth - SoC iBeacon
-description: >
+description: >-
   Sends non-connectable advertisements in iBeacon format.
   The iBeacon Service gives Bluetooth accessories a simple and convenient way
   to send iBeacons to smartphones. This example can be tested together with the

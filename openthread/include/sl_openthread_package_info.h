@@ -45,7 +45,7 @@
  * sure it is a valid GitHub version.  Avoid merge or local commit hashes.
  */
 #ifndef PACKAGE_VERSION
-#define PACKAGE_VERSION "3.1.1.0_GitHub-fb274efe6"
+#define PACKAGE_VERSION "3.1.2.0_GitHub-fb274efe6"
 #endif
 
 #endif // SL_OPENTHREAD_PACKAGE_INFO_H_

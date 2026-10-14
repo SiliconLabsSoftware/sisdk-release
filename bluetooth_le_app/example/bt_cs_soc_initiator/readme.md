@@ -1,6 +1,6 @@
 # SoC - CS Initiator
 
-The Bluetooth SoC-CS Initiator is a project that can be used to test the Channel Sounding (CS) feature. In the provided CS setup, the application establishes connection to a reflector (Running on the host or SoC), measures in the phase based ranging (PBR) or round trip time (RTT) CS measurement modes and estimates the distance. The reflector data is obtained using the Ranging Service (RAS). The RAS Real-time mode enabled real-time data reception from the RAS Server. In on-demand mode the RAS client included in the initiator will ask for the ranging data after the data reception is finished. Moving object tracking algorithm mode and stationary object tracking algorithm mode are also supported for the measurement process. In moving object tracking mode distance will be calculated for every CS procedure while in stationary object tracking mode the calculation requires multiple CS procedures data. Moving object tracking has two different modes. The real-time basic mode is using medium filtering, medium response and medium CPU cost. The real-time fast mode is using low filtering, low CPU and RAM cost and provides basic accuracy. In stationary object tracking mode during measurement the percentage of the progress is displayed on the LCD (if the device has LCD) and logged to the console. Once all required CS procedure data is received for the distance measurement, the estimated result will arrive and it will be displayed on the LCD (if the device has LCD) and logged to the console. In order to select different algorithm modes (Moving object tracking/Stationary object tracking) the push button can be pressed during device RESET. The push button BTN1 will change the object tracking mode to Stationary object tracking. Default values can be found and modified in the component configuration file (config/cs_initiator_config.h).
+The Bluetooth SoC-CS Initiator is a project that can be used to test the Channel Sounding (CS) feature. In the provided CS setup, the application establishes connection to a reflector (Running on the host or SoC), measures in the phase based ranging (PBR) or round trip time (RTT) CS measurement modes and estimates the distance. The reflector data is obtained using the Ranging Service (RAS). The RAS Real-time mode enabled real-time data reception from the RAS Server. In on-demand mode the RAS client included in the initiator will ask for the ranging data after the data reception is finished. Tracking accuracy optimized, Tracking latency optimized, and Stationary algorithm modes are also supported for the measurement process. In Tracking accuracy optimized and Tracking latency optimized modes distance will be calculated for every CS procedure while in Stationary mode the calculation requires multiple CS procedures data. Tracking accuracy optimized (suitable for moving targets) uses medium filtering, medium response and medium CPU cost. Tracking latency optimized (suitable for fast moving targets) uses low filtering, low CPU and RAM cost and provides basic accuracy. In Stationary (suitable for stationary targets) mode during measurement the percentage of the progress is displayed on the LCD (if the device has LCD) and logged to the console. Once all required CS procedure data is received for the distance measurement, the estimated result will arrive and it will be displayed on the LCD (if the device has LCD) and logged to the console. In order to select different algorithm modes the push button can be pressed during device RESET. The push button BTN1 will change the object tracking mode to Stationary. Default values can be found and modified in the component configuration file (config/cs_initiator_config.h).
 If the configuration is changed to create more than 1 initiator instances, SL_BT_CONFIG_BUFFER_SIZE shall be increased.
 
 > Note: this example does not include Device Firmware Update (DFU) functionality by default. For details see the [Device Firmware Update](#device-firmware-update) section.
@@ -10,13 +10,13 @@ If the configuration is changed to create more than 1 initiator instances, SL_BT
 
 - Build and flash the sample application.
 
-- The default object tracking mode is Moving Object tracking - fast. Pressing BTN1 while resetting the device selects Stationary Object tracking algorithm mode.
+- The default object tracking mode is Tracking latency optimized (suitable for fast moving targets). Pressing BTN1 while resetting the device selects Stationary (suitable for stationary targets) algorithm mode.
 
 - After startup the CS initiator will scan for a device running the "CS RFLCT" sample application.
 
 - When found, the initiator will establish connection to the CS reflector device and will start the distance measurement process. By default the CS initiator can create 4 connections.
 
-- The initiator will calculate the distance, display it on the LCD (if the device has LCD) and also send them via UART. Note: in case of stationary object tracking mode multiple CS procedure data will be required. Until the distance measurement is in progress the progress percentage will be displayed on the LCD (if the device has LCD) and logged to the console.
+- The initiator will calculate the distance, display it on the LCD (if the device has LCD) and also send them via UART. Note: in case of Stationary mode multiple CS procedure data will be required. Until the distance measurement is in progress the progress percentage will be displayed on the LCD (if the device has LCD) and logged to the console.
 
 
 ![](./image/cs_lcd.png)
@@ -93,9 +93,9 @@ The following table shows example scenarios with other configuration parameters 
 
 ## Known issues and limitations
 
-* In case RTT mode used with stationary object tracking algorithm mode the behavior will be the same as RTT with moving object tracking mode.
-* CS main mode RTT and CS algo mode real-time fast combination is not supported.
-* CS algo mode real-time fast and synchronized procedure execution (max procedure count == 1) combination is not supported.
+* In case RTT mode used with Stationary algorithm mode the behavior will be the same as RTT with Tracking accuracy optimized or Tracking latency optimized mode.
+* CS main mode RTT and CS algo mode Tracking latency optimized combination is not supported.
+* CS algo mode Tracking latency optimized and synchronized procedure execution (max procedure count == 1) combination is not supported.
 
 ## Device Firmware Update
 

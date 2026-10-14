@@ -1,7 +1,7 @@
 project_name: bt_soc_thunderboard_brd4184a
 package: bluetooth_le_app
 label: Bluetooth - SoC Thunderboard EFR32BG22 (BRD4184A)
-description: >
+description: >-
   Demonstrates the features of the Thunderboard EFR32BG22 Kit.
   This can be tested with the Simplicity Connect mobile app.
 category: Bluetooth Examples

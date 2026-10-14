@@ -4,9 +4,6 @@ package: zigbee
 category: Zigbee|Utility|Testing
 quality: production
 description: Utility component that provides useful CLI commands and application code to perform zigbee throughput testing for DMP and large network testing
-ui_hints:
-  visibility: never
-
 
 provides:
 - name: zigbee_network_test

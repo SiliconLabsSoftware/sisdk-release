@@ -2,7 +2,7 @@
 project_name: bt_soc_dtm_freertos
 package: bluetooth_le_app
 label: Bluetooth - SoC DTM FreeRTOS
-description: >
+description: >-
   This example implements the direct test mode (DTM) application for radio
   testing. DTM commands can be called via UART.
 category: Bluetooth Examples

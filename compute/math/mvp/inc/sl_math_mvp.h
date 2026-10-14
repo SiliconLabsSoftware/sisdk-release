@@ -63,7 +63,10 @@
 /************ THIS SECTION IS FOR DOCUMENTATION ONLY !**********************//**
  *
  * @defgroup math_mvp_vector Vector functions
+ * @brief MVP-accelerated vector operations on real and complex data.
+ *
  * @defgroup math_mvp_matrix Matrix functions
+ * @brief MVP-accelerated matrix operations, including the matrix data types.
  *
  */
 

@@ -1,7 +1,7 @@
 project_name: bt_soc_app_ota_dfu_freertos
 package: bluetooth_le_app
 label: Bluetooth - SoC Application OTA DFU FreeRTOS
-description: >
+description: >-
   A minimal project structure, that serves as a starting point for custom
   Bluetooth applications that provides Over-The-Air device firmware update in
   user application runtime.
@@ -78,7 +78,7 @@ configuration:
     condition:
       - psa_crypto
   - name: SL_BT_APP_OTA_DFU_CONFIG_STACK
-    value: "2048"
+    value: "4096"
     condition:
       - device_series_2
 

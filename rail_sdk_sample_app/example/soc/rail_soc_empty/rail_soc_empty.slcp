@@ -237,6 +237,7 @@ tag:
   - hwfilter:board:hardware:has:pti
   - hwfilter:ram:7k
   - hwfilter:flash:56k
+  - hwfilter:!device:device_no_rail_api
   - hwfilter:!device:device_generic_family_efr32xg21
   - hwfilter:!device:device_family_mgm24
   - hwfilter:!device:device_family_zgm23

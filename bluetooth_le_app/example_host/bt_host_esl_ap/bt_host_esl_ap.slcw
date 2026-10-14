@@ -1,7 +1,7 @@
 workspace_name: bt_host_esl_ap
 label: Bluetooth - Host ESL Access Point
 package: bluetooth_le_app
-description: >
+description: >-
   Bluetooth - Host ESL Access Point
 quality: experimental
 project:

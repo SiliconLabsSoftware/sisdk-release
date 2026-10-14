@@ -46,19 +46,21 @@
 {#-
   Code Region 0 is usually the bootloader region. The default logical size is 32kb.
 #}
-{%- if axip_region0_enabled is defined %}
-  {%- if code_region0_size is defined %}
-    {%- set logical_code_region0_size = code_region0_size | first %}
-  {%- else %}
-    {%- set logical_code_region0_size = 32768 %}
-  {%- endif %}
-  {%- set logical_code_region0_size = ((logical_code_region0_size // 32768) * 32768) %}
+{%- if code_region0_size is defined %}
+  {%- set logical_code_region0_size = code_region0_size | first %}
+{%- else %}
+  {%- set logical_code_region0_size = 32768 %}
+{%- endif %}
+{%- set logical_code_region0_size = ((logical_code_region0_size // 32768) * 32768) %}
 
+{%- if axip_region0_enabled is defined %}
   {#-
     With AXiP enabled, every 8 logical pages effectively uses 9 physical pages.
   #}
   {%- set physical_code_region0_size = ((9 * logical_code_region0_size) // 8)  %}
   {%- set region0_axip_overhead = physical_code_region0_size - logical_code_region0_size  %}
+{%- else %}
+  {%- set physical_code_region0_size = logical_code_region0_size  %}
 {%- endif %}
 
 {#-

@@ -1,10 +1,10 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.4" xml:lang="en-US">
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.8" xml:lang="en-US">
   <compounddef id="group__sl__bt__evt__periodic__sync__report" kind="group">
     <compoundname>sl_bt_evt_periodic_sync_report</compoundname>
     <title>sl_bt_evt_periodic_sync_report</title>
     <innerclass refid="structsl__bt__evt__periodic__sync__report__s" prot="public">sl_bt_evt_periodic_sync_report_s</innerclass>
-      <sectiondef kind="typedef">
+    <sectiondef kind="typedef">
       <memberdef kind="typedef" id="group__sl__bt__evt__periodic__sync__report_1ga3c8e188697964ad2b70c1f59e8013c72" prot="public" static="no">
         <type>struct <ref refid="structsl__bt__evt__periodic__sync__report__s" kindref="compound">sl_bt_evt_periodic_sync_report_s</ref></type>
         <definition>typedef struct sl_bt_evt_periodic_sync_report_s sl_bt_evt_periodic_sync_report_t</definition>
@@ -16,10 +16,10 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="5727" column="47" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="5727" bodyend="-1"/>
+        <location file="/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="5732" column="47" bodyfile="/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="5732" bodyend="-1"/>
       </memberdef>
-      </sectiondef>
-      <sectiondef kind="define">
+    </sectiondef>
+    <sectiondef kind="define">
       <memberdef kind="define" id="group__sl__bt__evt__periodic__sync__report_1ga8a4d0ceb7483899fd79f7cd4bae9e491" prot="public" static="no">
         <name>sl_bt_evt_periodic_sync_report_id</name>
         <initializer>0x025300a0</initializer>
@@ -30,9 +30,9 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="5677" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="5677" bodyend="-1"/>
+        <location file="/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="5682" column="9" bodyfile="/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="5682" bodyend="-1"/>
       </memberdef>
-      </sectiondef>
+    </sectiondef>
     <briefdescription>
 <para>Reports a periodic advertising packet for periodic advertising train that does not have subevents or response slots. </para>
     </briefdescription>

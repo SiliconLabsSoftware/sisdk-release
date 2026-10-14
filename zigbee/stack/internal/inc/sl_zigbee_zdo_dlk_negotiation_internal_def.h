@@ -3,7 +3,7 @@
  * @brief internal names for 'sl_zigbee_zdo_dlk_negotiation' declarations
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -41,5 +41,10 @@ bool slxi_zigbee_stack_gu_zdo_dlk_override_psk_fetch(uint8_t *key_buffer);
 
 void slxi_zigbee_stack_gu_zdo_dlk_override_supported_params(sl_zigbee_dlk_supported_negotiation_method *method_mask,
                                                             sl_zigbee_dlk_negotiation_supported_shared_secret_source *secret_mask);
+
+sl_status_t slxi_zigbee_stack_zdo_dlk_start_key_update_with_aps_encryption(sl_zigbee_address_info *target,
+                                                                           sl_zigbee_dlk_negotiation_method selected_method,
+                                                                           sl_zigbee_dlk_negotiation_shared_secret_source selected_secret,
+                                                                           bool use_aps_encryption);
 
 #endif // SL_ZIGBEE_ZDO_DLK_NEGOTIATION_INTERNAL_DEF_H

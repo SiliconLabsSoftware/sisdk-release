@@ -140,22 +140,30 @@ void sl_rail_util_coex_ot_events(sl_rail_util_coex_ot_event_t aEvent)
     switch (coexEvent)
     {
     case SL_RAIL_UTIL_COEX_OT_EVENT_GRANTED_IMMEDIATE:
-        sl_increment_if_no_overflow(metrics, 1, &sCoexCounter.metrics.mStopped);
+        sl_increment_if_no_overflow(&metrics[SL_OT_COEX_EVENT_GRANT_IMMEDIATE_COUNT],
+                                    1,
+                                    &sCoexCounter.metrics.mStopped);
         break;
 
     case SL_RAIL_UTIL_COEX_OT_EVENT_REQUESTED:
         sCoexCounter.timestamp = otPlatAlarmMicroGetNow();
-        sl_increment_if_no_overflow(metrics, 1, &sCoexCounter.metrics.mStopped);
+        sl_increment_if_no_overflow(&metrics[SL_OT_COEX_EVENT_REQUEST_COUNT], 1, &sCoexCounter.metrics.mStopped);
         break;
 
     case SL_RAIL_UTIL_COEX_OT_EVENT_GRANTED:
     {
-        uint64_t reqToGrantDuration = otPlatAlarmMicroGetNow() - sCoexCounter.timestamp;
-        sl_increment_if_no_overflow(metrics, 1, &sCoexCounter.metrics.mStopped);
+        uint32_t now                = otPlatAlarmMicroGetNow();
+        uint64_t reqToGrantDuration = (uint32_t)(now - (uint32_t)sCoexCounter.timestamp);
+
+        sl_increment_if_no_overflow(&metrics[SL_OT_COEX_EVENT_GRANT_WAIT_ACTIVATED_COUNT],
+                                    1,
+                                    &sCoexCounter.metrics.mStopped);
 
         if (reqToGrantDuration > 50)
         {
-            sl_increment_if_no_overflow(metrics, 1, &sCoexCounter.metrics.mStopped);
+            sl_increment_if_no_overflow(&metrics[SL_OT_COEX_EVENT_DELAYED_GRANT_COUNT],
+                                        1,
+                                        &sCoexCounter.metrics.mStopped);
         }
 
         *totalReqToGrantDuration += reqToGrantDuration;
@@ -163,28 +171,43 @@ void sl_rail_util_coex_ot_events(sl_rail_util_coex_ot_event_t aEvent)
     break;
 
     case SL_RAIL_UTIL_COEX_OT_EVENT_DENIED:
-        sl_increment_if_no_overflow(metrics, 1, &sCoexCounter.metrics.mStopped);
+        sl_increment_if_no_overflow(&metrics[SL_OT_COEX_EVENT_GRANT_WAIT_TIMEOUT_COUNT],
+                                    1,
+                                    &sCoexCounter.metrics.mStopped);
         break;
 
     case SL_RAIL_UTIL_COEX_OT_EVENT_GRANT_ABORTED:
-        sl_increment_if_no_overflow(metrics, 1, &sCoexCounter.metrics.mStopped);
+        sl_increment_if_no_overflow(&metrics[SL_OT_COEX_EVENT_GRANT_DEACTIVATED_DURING_REQUEST_COUNT],
+                                    1,
+                                    &sCoexCounter.metrics.mStopped);
         break;
 
     default:
         break;
     }
 
-    sl_increment_if_no_overflow(metrics,
-                                sCoexCounter.metrics.mNumTxGrantWaitTimeout
-                                    + sCoexCounter.metrics.mNumTxGrantWaitActivated,
-                                &sCoexCounter.metrics.mStopped);
-    if (*metrics != 0)
     {
-        sCoexCounter.metrics.mAvgTxRequestToGrantTime = (uint32_t)(*totalReqToGrantDuration / *metrics);
+        uint32_t grantWaitCount =
+            metrics[SL_OT_COEX_EVENT_GRANT_WAIT_TIMEOUT_COUNT] + metrics[SL_OT_COEX_EVENT_GRANT_WAIT_ACTIVATED_COUNT];
+
+        if (grantWaitCount < metrics[SL_OT_COEX_EVENT_GRANT_WAIT_COUNT])
+        {
+            sCoexCounter.metrics.mStopped = true;
+        }
+        else
+        {
+            metrics[SL_OT_COEX_EVENT_GRANT_WAIT_COUNT] = grantWaitCount;
+        }
+    }
+
+    if (metrics[SL_OT_COEX_EVENT_REQUEST_COUNT] != 0)
+    {
+        metrics[SL_OT_COEX_EVENT_AVG_REQUEST_TO_GRANT_TIME] =
+            (uint32_t)(*totalReqToGrantDuration / metrics[SL_OT_COEX_EVENT_REQUEST_COUNT]);
     }
     else
     {
-        sCoexCounter.metrics.mAvgTxRequestToGrantTime = 0;
+        metrics[SL_OT_COEX_EVENT_AVG_REQUEST_TO_GRANT_TIME] = 0;
     }
 
 exit:

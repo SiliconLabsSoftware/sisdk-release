@@ -454,6 +454,30 @@ index 5a34e3670e1d8bb7063c8b0794d10814a0f3d8f2..0363c69eae062003b9dadc352bbdcda1
      error = aAckFrame.ProcessReceiveAesCcm(srcAddr.GetExtended(), *macKey);
      SuccessOrExit(error);
  
+diff --git a/src/core/mac/sub_mac.cpp b/src/core/mac/sub_mac.cpp
+index 27cefde5ac6cf00a93ca48232842e7f902cea938..f55a257c63e986978a8e152750bc8bea83d2673d 100644
+--- a/src/core/mac/sub_mac.cpp
++++ b/src/core/mac/sub_mac.cpp
+@@ -1033,11 +1033,17 @@ void SubMac::RadioSample(void)
+     if (!RadioSupportsReceiveTiming())
+     {
+         UpdateRadioSampleState();
++        ExitNow();
+     }
+ 
+-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+-exit:
++#if !OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
++    if (!RadioSupportsRxOnWhenIdle())
++    {
++        IgnoreError(Get<Radio>().Sleep());
++    }
+ #endif
++
++exit:
+     return;
+ }
+ 
 diff --git a/src/core/net/dnssd_server.cpp b/src/core/net/dnssd_server.cpp
 index c67fa3a00536c05cb5bf0818e4d64991a5280d54..58fd5c3093d30aaf38e3a5c39e022631b29d6a25 100644
 --- a/src/core/net/dnssd_server.cpp

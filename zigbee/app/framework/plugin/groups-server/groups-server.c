@@ -34,6 +34,18 @@
 #define isInvalidGroupId(groupId) ((groupId) < GROUP_ID_MIN || (groupId) > GROUP_ID_MAX)
 
 static uint8_t findGroupIndex(uint8_t endpoint, uint16_t groupId);
+static void appendGroupIdToMembershipList(uint8_t *list,
+                                          uint8_t listCapacity,
+                                          uint8_t *listLen,
+                                          uint8_t *count,
+                                          uint8_t id0,
+                                          uint8_t id1);
+static void appendMatchingBindingsToMembershipList(uint8_t endpoint,
+                                                   uint16_t groupId,
+                                                   uint8_t *list,
+                                                   uint8_t listCapacity,
+                                                   uint8_t *listLen,
+                                                   uint8_t *count);
 
 void sl_zigbee_af_groups_cluster_server_init_cb(uint8_t endpoint)
 {
@@ -208,7 +220,7 @@ sl_zigbee_af_zcl_request_status_t sl_zigbee_af_groups_cluster_get_group_membersh
 {
   sl_zcl_groups_cluster_get_group_membership_command_t cmd_data;
   sl_status_t status;
-  uint8_t i, j;
+  uint8_t i;
   uint8_t count = 0;
   uint8_t list[SL_ZIGBEE_BINDING_TABLE_SIZE << 1];
   uint8_t listLen = 0;
@@ -249,36 +261,37 @@ sl_zigbee_af_zcl_request_status_t sl_zigbee_af_groups_cluster_get_group_membersh
   if (cmd_data.groupCount == 0) {
     for (i = 0; i < SL_ZIGBEE_BINDING_TABLE_SIZE; i++) {
       sl_zigbee_binding_table_entry_t entry;
+      if ((listLen + 2u) > sizeof(list)) {
+        break;
+      }
       status = sl_zigbee_get_binding(i, &entry);
       if ((status == SL_STATUS_OK)
           && (entry.type == SL_ZIGBEE_MULTICAST_BINDING)
           && (entry.local == sl_zigbee_af_current_endpoint())) {
-        list[listLen]     = entry.identifier[0];
-        list[listLen + 1] = entry.identifier[1];
-        listLen += 2;
-        count++;
+        appendGroupIdToMembershipList(list,
+                                      sizeof(list),
+                                      &listLen,
+                                      &count,
+                                      entry.identifier[0],
+                                      entry.identifier[1]);
       }
     }
   } else {
+    uint8_t endpoint = sl_zigbee_af_current_endpoint();
     for (i = 0; i < cmd_data.groupCount; i++) {
-      uint16_t groupId = sl_zigbee_af_get_int16u(cmd->buffer,
-                                                 (uint16_t)(groupListOffset + ((uint16_t)i << 1)),
-                                                 cmd->bufLen);
-      for (j = 0; j < SL_ZIGBEE_BINDING_TABLE_SIZE; j++) {
-        sl_zigbee_binding_table_entry_t entry;
-        status = sl_zigbee_get_binding(j, &entry);
-        if ((status == SL_STATUS_OK)
-            && (entry.type == SL_ZIGBEE_MULTICAST_BINDING)) {
-          if (entry.local == sl_zigbee_af_current_endpoint()
-              && entry.identifier[0] == LOW_BYTE(groupId)
-              && entry.identifier[1] == HIGH_BYTE(groupId)) {
-            list[listLen]     = entry.identifier[0];
-            list[listLen + 1] = entry.identifier[1];
-            listLen += 2;
-            count++;
-          }
-        }
+      uint16_t groupId;
+      if ((listLen + 2u) > sizeof(list)) {
+        break;
       }
+      groupId = sl_zigbee_af_get_int16u(cmd->buffer,
+                                       (uint16_t)(groupListOffset + ((uint16_t)i << 1)),
+                                       cmd->bufLen);
+      appendMatchingBindingsToMembershipList(endpoint,
+                                             groupId,
+                                             list,
+                                             sizeof(list),
+                                             &listLen,
+                                             &count);
     }
   }
 
@@ -428,6 +441,48 @@ void sl_zigbee_af_groups_cluster_clear_group_table_cb(uint8_t endpoint)
                                             status);
       }
     }
+  }
+}
+
+static void appendGroupIdToMembershipList(uint8_t *list,
+                                          uint8_t listCapacity,
+                                          uint8_t *listLen,
+                                          uint8_t *count,
+                                          uint8_t id0,
+                                          uint8_t id1)
+{
+  if ((*listLen + 2u) > listCapacity) {
+    return;
+  }
+  list[*listLen]     = id0;
+  list[*listLen + 1] = id1;
+  *listLen += 2;
+  (*count)++;
+}
+
+static void appendMatchingBindingsToMembershipList(uint8_t endpoint,
+                                                   uint16_t groupId,
+                                                   uint8_t *list,
+                                                   uint8_t listCapacity,
+                                                   uint8_t *listLen,
+                                                   uint8_t *count)
+{
+  for (uint8_t j = 0; j < SL_ZIGBEE_BINDING_TABLE_SIZE; j++) {
+    sl_zigbee_binding_table_entry_t entry;
+    sl_status_t status;
+
+    if ((*listLen + 2u) > listCapacity) {
+      break;
+    }
+
+    status = sl_zigbee_get_binding(j, &entry);
+    if ((status != SL_STATUS_OK)
+        || !sli_zigbee_af_groups_cluster_binding_group_match(endpoint, groupId, &entry)) {
+      continue;
+    }
+
+    appendGroupIdToMembershipList(list, listCapacity, listLen, count,
+                                  entry.identifier[0], entry.identifier[1]);
   }
 }
 

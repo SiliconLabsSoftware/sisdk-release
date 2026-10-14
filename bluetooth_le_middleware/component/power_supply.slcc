@@ -20,8 +20,9 @@ provides:
 - name: power_supply
 requires:
 - name: app_assert
-- name: si70xx_driver
+- name: rht_unidriver_driver
 - name: i2cspm
+- name: sleeptimer
 - name: emlib_iadc
   condition:
   - device_has_iadc

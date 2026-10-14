@@ -2,7 +2,7 @@
 project_name: bt_rcp_dhc
 package: bluetooth_le_app
 label: Bluetooth - Dynamic Hardware Configuration over RCP
-description: >
+description: >-
   Enables runtime configuration of radio values such as RSSI offset,
   PA curve, PA mode and CTUNE using HCI (RCP) messages.
 category: Bluetooth Examples

@@ -71,6 +71,13 @@ sl_status_t zb_sec_man_upgrade_link_key_table(void)
   //key returns an accurate result.
   context.flags |= ZB_SEC_MAN_FLAG_KEY_INDEX_IS_VALID;
 
+  // If the last key has been migrated, then nothing to do
+  context.key_index = (SL_ZIGBEE_KEY_TABLE_SIZE - 1);
+  sl_status_t is_key_migrated = sli_zigbee_stack_sec_man_check_key_context(&context);
+  if (is_key_migrated == SL_STATUS_OK) {
+    return SL_STATUS_OK;
+  }
+
   for (i = 0; i < SL_ZIGBEE_KEY_TABLE_SIZE; i++) {
     sl_zigbee_sec_man_key_t plaintext_key;
     context.key_index = i;
@@ -130,6 +137,13 @@ sl_status_t zb_sec_man_upgrade_gp_proxy_table(void)
   sl_status_t vault_import_status;
   uint8_t i;
 
+  // If the last key has been migrated, then nothing to do
+  context.key_index = (sli_zigbee_gp_proxy_table_size - 1);
+  sl_status_t is_key_migrated = sli_zigbee_stack_sec_man_check_key_context(&context);
+  if (is_key_migrated == SL_STATUS_OK) {
+    return SL_STATUS_OK;
+  }
+
   for (i = 0; i < sli_zigbee_gp_proxy_table_size; i++) {
     context.key_index = i;
     sl_status_t is_key_migrated = sli_zigbee_stack_sec_man_check_key_context(&context);
@@ -172,6 +186,13 @@ sl_status_t zb_sec_man_upgrade_gp_sink_table(void)
   context.core_key_type = SL_ZB_SEC_MAN_KEY_TYPE_GREEN_POWER_SINK_TABLE_KEY;
   sl_status_t vault_import_status;
   uint8_t i;
+
+  // If the last key has been migrated, then nothing to do
+  context.key_index = (sli_zigbee_gp_sink_table_size - 1);
+  sl_status_t is_key_migrated = sli_zigbee_stack_sec_man_check_key_context(&context);
+  if (is_key_migrated == SL_STATUS_OK) {
+    return SL_STATUS_OK;
+  }
 
   for (i = 0; i < sli_zigbee_gp_sink_table_size; i++) {
     context.key_index = i;

@@ -3,7 +3,7 @@
  * @brief internal wrappers for 'sl_zigbee_zdo_dlk_negotiation' ipc commands
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -61,6 +61,14 @@ void slxi_zigbee_stack_gu_zdo_dlk_override_supported_params_process_ipc_command(
 {
   slxi_zigbee_stack_gu_zdo_dlk_override_supported_params(&msg->data.gu_zdo_dlk_override_supported_params.request.method_mask,
                                                          &msg->data.gu_zdo_dlk_override_supported_params.request.secret_mask);
+}
+
+void slxi_zigbee_stack_zdo_dlk_start_key_update_with_aps_encryption_process_ipc_command(sli_zigbee_ipc_cmd_t *msg)
+{
+  msg->data.zdo_dlk_start_key_update_with_aps_encryption.response.result = slxi_zigbee_stack_zdo_dlk_start_key_update_with_aps_encryption(&msg->data.zdo_dlk_start_key_update_with_aps_encryption.request.target,
+                                                                                                                                          msg->data.zdo_dlk_start_key_update_with_aps_encryption.request.selected_method,
+                                                                                                                                          msg->data.zdo_dlk_start_key_update_with_aps_encryption.request.selected_secret,
+                                                                                                                                          msg->data.zdo_dlk_start_key_update_with_aps_encryption.request.use_aps_encryption);
 }
 
 // public entrypoints
@@ -196,4 +204,27 @@ void slx_zigbee_gu_zdo_dlk_override_supported_params(sl_zigbee_dlk_supported_neg
   if (secret_mask != NULL) {
     *secret_mask = msg.data.gu_zdo_dlk_override_supported_params.request.secret_mask;
   }
+}
+
+sl_status_t slx_zigbee_zdo_dlk_start_key_update_with_aps_encryption(sl_zigbee_address_info *target,
+                                                                    sl_zigbee_dlk_negotiation_method selected_method,
+                                                                    sl_zigbee_dlk_negotiation_shared_secret_source selected_secret,
+                                                                    bool use_aps_encryption)
+{
+  sli_zigbee_ipc_cmd_t msg = { 0, };
+
+  if (target != NULL) {
+    msg.data.zdo_dlk_start_key_update_with_aps_encryption.request.target = *target;
+  }
+
+  msg.data.zdo_dlk_start_key_update_with_aps_encryption.request.selected_method = selected_method;
+  msg.data.zdo_dlk_start_key_update_with_aps_encryption.request.selected_secret = selected_secret;
+  msg.data.zdo_dlk_start_key_update_with_aps_encryption.request.use_aps_encryption = use_aps_encryption;
+  sli_zigbee_send_ipc_cmd(slxi_zigbee_stack_zdo_dlk_start_key_update_with_aps_encryption_process_ipc_command, &msg);
+
+  if (target != NULL) {
+    *target = msg.data.zdo_dlk_start_key_update_with_aps_encryption.request.target;
+  }
+
+  return msg.data.zdo_dlk_start_key_update_with_aps_encryption.response.result;
 }

@@ -76,7 +76,7 @@ can be read, triggered from other Z-Wave devices</li>
 
 We are differentiating four different types of button presses. The following types are the same for the BTN0 and BTN1 on the WSTK board. The duration values can be configured under the config directory in app_button_press_config.h file in each generated application/project.
 
-Please note external wakeup is not supported on button 1 in case of brd2603a and brd2603b.
+Please note external wakeup is not supported on button 1 in case of brd2603a and brd2603c.
 
 <table>
 <tr>
@@ -124,7 +124,7 @@ Please note external wakeup is not supported on button 1 in case of brd2603a and
 </tr>
 </table>
 
-\*: Acceleration data about the X, Y, and Z axes is only available for brd2603a.
+\*: Acceleration data about the X, Y, and Z axes is only available for brd2603a and brd2603c.
 
 <table>
 <tr>
@@ -147,7 +147,7 @@ This section will describe backward compatibility when upgrading the Multilevel 
 
 In case CLI support is needed, please install zw_cli_common component to the project. Please note that the zw_cli_common component will significantly increase the power consumption of this application, as it must always be in an active state in order to receive CLI commands. The CLI cannot function during EM4 sleep mode. After a reset, the application stays awake for 10 seconds. During this timeframe, the sleeping disable CLI command can be issued to keep the application awake.
 
-The default baud rate is 9600, which allows the underlying EUSART module to work in EM2. On some development kits (e.g. BRD2603A and BRD2705A), the following command should be applied in Simplicity Studio via the Admin console to adjust the baudrate: `serial vcom config speed 9600`.
+The default baud rate is 9600, which allows the underlying EUSART module to work in EM2. On some development kits (e.g. BRD2603C and BRD2705A), the following command should be applied in Simplicity Studio via the Admin console to adjust the baudrate: `serial vcom config speed 9600`.
 
 ### Available CLI commands
 

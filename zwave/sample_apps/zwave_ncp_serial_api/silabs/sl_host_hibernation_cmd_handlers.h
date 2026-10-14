@@ -1,6 +1,9 @@
 /***************************************************************************//**
  * @file sl_host_hibernation_cmd_handlers.h
  * @brief Host hibernation and important devices list command handlers.
+ *
+ * @warning This software component is currently evaluation quality and is subject to change.
+ *
  *******************************************************************************
  * # License
  * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
@@ -37,6 +40,13 @@
 #include "SerialAPI.h"
 
 #define FUNC_ID_HOST_SLEEP FUNC_ID_PROPRIETARY_0  /* 0xF0 - Host Hibernation commands */
+
+/**
+ * @addtogroup Apps
+ * @{
+ * @addtogroup SerialAPI
+ * @{
+ */
 
 #define ZW_MAX_IMPORTANT_DEVICES SL_HOST_HIBERNATION_DEVICE_TABLE_SIZE
 
@@ -104,5 +114,10 @@ typedef struct {
 #ifdef SL_CATALOG_ZW_JAMMING_DETECTION_PRESENT
 void store_jamming_report(const sl_jamming_detection_statistics_t *report);
 #endif
+
+/**
+ * @}
+ * @}
+ */
 
 #endif /* SL_HOST_HIBERNATION_CMD_HANDLERS_H_ */

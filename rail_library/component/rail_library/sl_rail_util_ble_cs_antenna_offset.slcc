@@ -19,6 +19,12 @@ requires:
 - name: rail_lib
 - name: component_catalog
 config_file:
+- path: plugin/cs/antenna_offset/config/efr32xg2b/sl_rail_util_cs_antenna_offset_config.h
+  file_id: rail_util_cs_antenna_offset_config
+  condition:
+  - device_sdid_250
+  unless:
+  - fpga
 - path: plugin/cs/antenna_offset/config/efr32xg24/sl_rail_util_cs_antenna_offset_config.h
   file_id: rail_util_cs_antenna_offset_config
   condition:

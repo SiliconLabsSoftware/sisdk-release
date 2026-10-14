@@ -44,6 +44,9 @@
 #include "sl_power_manager.h"
 #include "sli_power_manager.h"
 #endif
+#if defined(SL_CATALOG_CLOCK_MANAGER_PRESENT)
+#include "sli_clock_manager.h"
+#endif
 
 #define TIME_UNIX_EPOCH                         (1970u)
 #define TIME_NTP_EPOCH                          (1900u)
@@ -455,7 +458,8 @@ sl_status_t sl_sleeptimer_stop_timer(sl_sleeptimer_timer_handle_t *handle)
 #if ((SL_SLEEPTIMER_PERIPHERAL == SL_SLEEPTIMER_PERIPHERAL_SYSRTC) \
   && defined(SL_CATALOG_POWER_MANAGER_PRESENT)                     \
   && !defined(SL_CATALOG_POWER_MANAGER_NO_DEEPSLEEP_PRESENT)       \
-  && !defined(SL_CATALOG_SYSRTC_PRETRIGGERS_PRESENT))
+  && !defined(SL_CATALOG_SYSRTC_PRETRIGGERS_PRESENT)               \
+  && !defined(SLI_HFXO_BYPASS_MODE))
   if (handle->option_flags == (SLI_SLEEPTIMER_POWER_MANAGER_EARLY_WAKEUP_TIMER_FLAG | SLI_SLEEPTIMER_POWER_MANAGER_HF_ACCURACY_CLK_FLAG)) {
     sleeptimer_hal_disable_prs_compare_and_capture_channel();
   }
@@ -1598,7 +1602,8 @@ static sl_status_t create_timer(sl_sleeptimer_timer_handle_t *handle,
 #if ((SL_SLEEPTIMER_PERIPHERAL == SL_SLEEPTIMER_PERIPHERAL_SYSRTC) \
   && defined(SL_CATALOG_POWER_MANAGER_PRESENT)                     \
   && !defined(SL_CATALOG_POWER_MANAGER_NO_DEEPSLEEP_PRESENT)       \
-  && !defined(SL_CATALOG_SYSRTC_PRETRIGGERS_PRESENT))
+  && !defined(SL_CATALOG_SYSRTC_PRETRIGGERS_PRESENT)               \
+  && !defined(SLI_HFXO_BYPASS_MODE))
   if (option_flags == (SLI_SLEEPTIMER_POWER_MANAGER_EARLY_WAKEUP_TIMER_FLAG | SLI_SLEEPTIMER_POWER_MANAGER_HF_ACCURACY_CLK_FLAG)) {
     HFXO0->CTRL_SET = HFXO_CTRL_EM23ONDEMAND;
     sleeptimer_hal_set_compare_prs_hfxo_startup(timeout_initial);

@@ -807,6 +807,7 @@ SLI_RAIL_ENUM(IEEE802154_PHRType_t) {
   SUNOQPSK_PHR4BYTES,
   SUNFSK_PHR4BYTES,
   LEGOQPSK_PHR4BYTE, //802.15.4 O-QPSK (other than SUN O-QPSK)
+  PROPOQPSK_PHR4BYTES, // Proprietary O-QPSK
   IEEE802154_NB_PHR_TYPE // Must be last
 };
 
@@ -892,6 +893,15 @@ void ieee802154SetPHR(sl_cli_command_arg_t *args)
       case LEGOQPSK_PHR4BYTE:
         phr = (frameLength & 0x7F) << 24;
         break;
+      case PROPOQPSK_PHR4BYTES:
+      {
+        // Proprietary O-QPSK PHR: [9:8]=FEC, [7:0]=FrameLength
+        bool fec = (bool) param1;
+        (void) param2;
+        frameLength &= 0xFFU;
+        phr = ((uint32_t) fec << 8) | frameLength;
+        break;
+      }
       default:
         break;
     }

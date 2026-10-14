@@ -1,7 +1,7 @@
 project_name: bt_soc_voice
 package: bluetooth_le_app
 label: Bluetooth - SoC Voice
-description: >
+description: >-
   Voice over Bluetooth Low Energy sample application. It is supported by
   Thunderboard Sense 2 and Thunderboard EFR32BG22 boards and demonstrates how to
   send voice data over GATT, which is acquired from the on-board microphones.

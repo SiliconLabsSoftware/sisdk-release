@@ -319,7 +319,9 @@ static void sli_rail_mux_fcs_resync_table(void)
   RAIL_MUX_EXIT_CRITICAL();
 }
 
-/** After aux unregister: reprogram FCS for slot_base 0 and restart RX on each peer (ZB then OT).
+/** Reprogram FCS from protocol_context channels for current slot_base and restart RX on each
+ * in-window peer (base+0, base+1). Used after aux unregister (base=0) and relies on resync
+ * at aux register / start_rx when base=1.
  * CONFIGURE does not call sl_rail_start_rx(); a single start_rx on ZB only left OT not listening
  * when Thread was already up on the mux (MULTIPROT-2308). */
 static void sli_rail_mux_fcs_refresh_listen(void)
@@ -591,6 +593,17 @@ static sl_rail_status_t sli_rail_mux_init_common(sl_rail_handle_t *p_rail_handle
   }
   RAIL_MUX_EXIT_CRITICAL();
 
+#if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
+  /* Aux register bumps slot_base to 1; rebuild FCS from ctx1+ctx2 (drop stale base=0 slot0). */
+  if (SUPPORTED_PROTOCOL_COUNT > 2U
+      && i == (uint8_t)(SUPPORTED_PROTOCOL_COUNT - 1U)
+      && s_sl_rail_mux_base_rail_started
+      && (mux_rail_handle != NULL)) {
+    sli_rail_mux_fcs_resync_table();
+    CONFIGURE_RX_CHANNEL_SWITCHING(mux_rail_handle, channel_switching_cfg);
+  }
+#endif
+
   // Enable use of RAIL multi-timer.
   sl_rail_config_multi_timer(mux_rail_handle, true);
 
@@ -670,7 +683,7 @@ sl_rail_status_t sli_zigbee_stack_rail_mux_aux_unregister_protocol(void)
 
   // Aux listen enables promiscuous mode for sniffing stimulus traffic.
   // Restore default non-promiscuous behavior before releasing the aux context.
-  (void)sl_rail_mux_ieee802154_set_promiscuous_mode((sl_rail_handle_t)&protocol_context[aux], false);
+  //(void)sl_rail_mux_ieee802154_set_promiscuous_mode((sl_rail_handle_t)&protocol_context[aux], false);
 
   (void)sl_rail_mux_cancel_multi_timer(mux_rail_handle, &protocol_context[aux].timer);
 
@@ -983,7 +996,17 @@ sl_rail_status_t sl_rail_mux_start_rx(sl_rail_handle_t railHandle,
   // and rx events will use the channel to determine whether to
   // pass the event up or not
   protocol_context[context_index].channel = channel;
+#if defined(SL_CATALOG_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT) || defined(SL_CATALOG_SL_RAIL_UTIL_IEEE802154_FAST_CHANNEL_SWITCHING_PRESENT)
+  /* With slot_base=1 (aux registered), rebuild the full FCS table so slot0=ctx1 not stale ctx0. */
+  if ((sli_rail_mux_rx_cs_slot_base_runtime > 0U)
+      && sli_rx_cs_logical_maps_to_rail(context_index)) {
+    sli_rail_mux_fcs_resync_table();
+  } else {
+    SET_CHANNEL_SWITCHING_CFG_CH(context_index, channel);
+  }
+#else
   SET_CHANNEL_SWITCHING_CFG_CH(context_index, channel);
+#endif
 
   // Check to ensure lock is not active before acting on startRx
   if ( check_lock_permissions(context_index) && !tx_in_progress()) {
@@ -1544,8 +1567,21 @@ sl_rail_radio_state_t sl_rail_mux_get_radio_state(sl_rail_handle_t railHandle)
   uint8_t context_index = fn_get_context_index(railHandle);
   EFM_ASSERT(context_index < SUPPORTED_PROTOCOL_COUNT);
   sl_rail_radio_state_t radio_state = sl_rail_get_radio_state(mux_rail_handle);
-  return ((radio_state & SL_RAIL_RF_STATE_IDLE) != SL_RAIL_RF_STATE_IDLE && (radio_state & SL_RAIL_RF_STATE_RX) != SL_RAIL_RF_STATE_RX) ? radio_state
-         : (protocol_context[context_index].channel == INVALID_CHANNEL ? SL_RAIL_RF_STATE_IDLE : SL_RAIL_RF_STATE_RX);
+  // Pass through non-RX states (e.g. TX). Note: (radio_state & RX) != RX does not
+  // cover RX_ACTIVE — that state has the RX bit set, so this branch is skipped;
+  // SL_RAIL_RF_STATE_IDLE also aliases ACTIVE, which RX_ACTIVE has set.
+  if ((radio_state & SL_RAIL_RF_STATE_IDLE) != SL_RAIL_RF_STATE_IDLE && (radio_state & SL_RAIL_RF_STATE_RX) != SL_RAIL_RF_STATE_RX) {
+    return radio_state;
+  }
+  // Preserve RX_ACTIVE before the INVALID_CHANNEL check so a mid-frame receive is
+  // not collapsed to IDLE if protocol context is briefly cleared.
+  if ((radio_state & SL_RAIL_RF_STATE_RX_ACTIVE) == SL_RAIL_RF_STATE_RX_ACTIVE) {
+    return SL_RAIL_RF_STATE_RX_ACTIVE;
+  }
+  if (protocol_context[context_index].channel == INVALID_CHANNEL) {
+    return SL_RAIL_RF_STATE_IDLE;
+  }
+  return SL_RAIL_RF_STATE_RX;
 }
 sl_rail_status_t sl_rail_mux_set_tx_fifo(sl_rail_handle_t rail_handle,
                                        sl_rail_fifo_buffer_align_t *p_addr,

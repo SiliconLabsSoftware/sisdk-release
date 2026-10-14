@@ -553,22 +553,22 @@ sl_status_t cs_initiator_create(const uint8_t               conn_handle,
          rtl_config,
          sizeof(initiator->rtl_config));
 
-  if (initiator->rtl_config.algo_mode == SL_RTL_CS_ALGO_MODE_REAL_TIME_BASIC) {
-    initiator_log_info(INSTANCE_PREFIX "RTL - algo mode selected: real-time basic"
-                                       "(moving objects tracking)" LOG_NL,
+  if (initiator->rtl_config.algo_mode == SL_RTL_CS_ALGO_MODE_TRACKING_ACCURACY_OPTIMIZED) {
+    initiator_log_info(INSTANCE_PREFIX "RTL - algo mode selected: Tracking accuracy optimized "
+                                       "(suitable for moving targets)" LOG_NL,
                        initiator->conn_handle);
-  } else if (initiator->rtl_config.algo_mode == SL_RTL_CS_ALGO_MODE_STATIC_HIGH_ACCURACY) {
-    initiator_log_info(INSTANCE_PREFIX "RTL - algo mode selected: static high accuracy "
-                                       "(stationary object tracking)" LOG_NL,
+  } else if (initiator->rtl_config.algo_mode == SL_RTL_CS_ALGO_MODE_STATIONARY) {
+    initiator_log_info(INSTANCE_PREFIX "RTL - algo mode selected: Stationary "
+                                       "(suitable for stationary targets)" LOG_NL,
                        initiator->conn_handle);
-  } else if (initiator->rtl_config.algo_mode == SL_RTL_CS_ALGO_MODE_REAL_TIME_FAST) {
-    initiator_log_info(INSTANCE_PREFIX "RTL - algo mode selected: real time fast "
-                                       "(moving object fast)" LOG_NL,
+  } else if (initiator->rtl_config.algo_mode == SL_RTL_CS_ALGO_MODE_TRACKING_LATENCY_OPTIMIZED) {
+    initiator_log_info(INSTANCE_PREFIX "RTL - algo mode selected: Tracking latency optimized "
+                                       "(suitable for fast moving targets)" LOG_NL,
                        initiator->conn_handle);
   } else {
     initiator_log_warning(INSTANCE_PREFIX "unknown algo_mode: %u!"
-                                          "Will use the default setting: real-time basic "
-                                          "(moving objects tracking)!" LOG_NL,
+                                          "Will use the default setting: Tracking accuracy optimized "
+                                          "(suitable for moving targets)!" LOG_NL,
                           initiator->conn_handle, initiator->rtl_config.algo_mode);
   }
   initiator_log_debug(INSTANCE_PREFIX "ch3c_jump=%u, ch3c_shape=%u" LOG_NL,

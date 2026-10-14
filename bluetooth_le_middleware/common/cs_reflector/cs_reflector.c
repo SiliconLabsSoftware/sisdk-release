@@ -126,6 +126,38 @@ sl_status_t cs_reflector_create(uint8_t               conn_handle,
         reflector_config->cs_sync_antenna = CS_SYNC_ANTENNA_1;
       }
       break;
+    case CS_SYNC_ANTENNA_3:
+      if (num_antennas >= 3) {
+        reflector_log_info(INSTANCE_PREFIX "CS - RTT - 3-antenna device! Using the antenna ID 3" NL,
+                           conn_handle);
+      } else if (num_antennas >= 2) {
+        reflector_log_info(INSTANCE_PREFIX "CS - RTT - only 2-antenna device! Using the antenna ID 2" NL,
+                           conn_handle);
+        reflector_config->cs_sync_antenna = CS_SYNC_ANTENNA_2;
+      } else {
+        reflector_log_info(INSTANCE_PREFIX "CS - RTT - only 1-antenna device! Using the antenna ID 1" NL,
+                           conn_handle);
+        reflector_config->cs_sync_antenna = CS_SYNC_ANTENNA_1;
+      }
+      break;
+    case CS_SYNC_ANTENNA_4:
+      if (num_antennas >= 4) {
+        reflector_log_info(INSTANCE_PREFIX "CS - RTT - 4-antenna device! Using the antenna ID 4" NL,
+                           conn_handle);
+      } else if (num_antennas >= 3) {
+        reflector_log_info(INSTANCE_PREFIX "CS - RTT - only 3-antenna device! Using the antenna ID 3" NL,
+                           conn_handle);
+        reflector_config->cs_sync_antenna = CS_SYNC_ANTENNA_3;
+      } else if (num_antennas >= 2) {
+        reflector_log_info(INSTANCE_PREFIX "CS - RTT - only 2-antenna device! Using the antenna ID 2" NL,
+                           conn_handle);
+        reflector_config->cs_sync_antenna = CS_SYNC_ANTENNA_2;
+      } else {
+        reflector_log_info(INSTANCE_PREFIX "CS - RTT - only 1-antenna device! Using the antenna ID 1" NL,
+                           conn_handle);
+        reflector_config->cs_sync_antenna = CS_SYNC_ANTENNA_1;
+      }
+      break;
     case CS_SYNC_SWITCHING:
       reflector_log_info(INSTANCE_PREFIX "CS - RTT - switching between %u available antennas" NL,
                          conn_handle,

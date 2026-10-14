@@ -39,6 +39,7 @@
 #include "app_rta.h"
 #include "sl_iostream.h"
 #include "sli_iostream.h"
+#include "sli_iostream_uart.h"
 #include "sl_iostream_handles.h"
 #include "sl_component_catalog.h"
 #ifdef SL_CATALOG_APP_ASSERT_PRESENT
@@ -47,6 +48,19 @@
 
 // -----------------------------------------------------------------------------
 // Definitions
+
+// TX transfer state
+typedef enum {
+  TRANSPORT_TX_IDLE = 0, //< Nothing handed over to the stream
+  TRANSPORT_TX_ONGOING,  //< Transfer in flight
+  TRANSPORT_TX_FINISHED  //< Result available, not reported yet
+} transport_tx_state_t;
+
+// How RX learns about incoming data
+typedef enum {
+  TRANSPORT_RX_POLLED = 0, //< The step function has to poll the stream
+  TRANSPORT_RX_NOTIFIED    //< The stream signals new data
+} transport_rx_mode_t;
 
 // Internal state type for transport
 typedef struct {
@@ -57,6 +71,9 @@ typedef struct {
   sl_iostream_t     *stream;         //< IO Stream instance
   bool              receive_enabled; //< Enabled state of the reception
   size_t            tx_count;        //< The amount of data in the TX buffer
+  volatile transport_tx_state_t tx_state;  //< State of the ongoing transfer
+  volatile sl_status_t          tx_status; //< Result of the last transfer
+  transport_rx_mode_t           rx_mode;   //< New data notification mode
   struct sli_iostream_write_async_op write_async_op; // IO Stream async operator
 } transport_t;
 
@@ -73,6 +90,8 @@ static void rx_step(void);
 static void on_iostream_transmit(sli_iostream_write_async_op_t *op,
                                  sl_status_t status,
                                  void *arg);
+// iostream new data callback wrapper
+static void on_iostream_new_data(void *arg);
 
 // -----------------------------------------------------------------------------
 // Private variables
@@ -90,25 +109,24 @@ void sl_bt_ncp_transport_transmit(uint32_t len, const uint8_t *data)
   if (sc != SL_STATUS_OK) {
     sl_bt_ncp_transport_on_error(SL_BT_NCP_TRANSPORT_ERROR_RUNTIME, sc);
     return;
+  }
+  if (transport.tx_count + len > SL_BT_NCP_TRANSPORT_CONFIG_TX_BUF_SIZE) {
+    sl_bt_ncp_transport_on_error(SL_BT_NCP_TRANSPORT_ERROR_TX_OVERFLOW,
+                                 SL_STATUS_WOULD_OVERFLOW);
   } else {
-    if (transport.tx_count + len > SL_BT_NCP_TRANSPORT_CONFIG_TX_BUF_SIZE) {
-      sl_bt_ncp_transport_on_error(SL_BT_NCP_TRANSPORT_ERROR_TX_OVERFLOW, sc);
-    } else {
-      // Proceed
-      sc = app_rta_proceed(transport.ctx_tx);
-      if (sc != SL_STATUS_OK) {
-        sl_bt_ncp_transport_on_error(SL_BT_NCP_TRANSPORT_ERROR_RUNTIME, sc);
-      } else {
-        // Copy data
-        memcpy(&transport.tx_buf[transport.tx_count], data, len);
-        // Increase TX byte count
-        transport.tx_count += len;
-      }
-    }
-    sc = app_rta_release(transport.ctx_tx);
+    // Copy data
+    memcpy(&transport.tx_buf[transport.tx_count], data, len);
+    // Increase TX byte count
+    transport.tx_count += len;
+    // Proceed
+    sc = app_rta_proceed(transport.ctx_tx);
     if (sc != SL_STATUS_OK) {
       sl_bt_ncp_transport_on_error(SL_BT_NCP_TRANSPORT_ERROR_RUNTIME, sc);
     }
+  }
+  sc = app_rta_release(transport.ctx_tx);
+  if (sc != SL_STATUS_OK) {
+    sl_bt_ncp_transport_on_error(SL_BT_NCP_TRANSPORT_ERROR_RUNTIME, sc);
   }
 }
 
@@ -119,20 +137,18 @@ void sl_bt_ncp_transport_receive(void)
   if (sc != SL_STATUS_OK) {
     sl_bt_ncp_transport_on_error(SL_BT_NCP_TRANSPORT_ERROR_RUNTIME, sc);
     return;
-  } else {
-    if (!transport.receive_enabled) {
-      sc = app_rta_proceed(transport.ctx_rx);
-      if (sc != SL_STATUS_OK) {
-        sl_bt_ncp_transport_on_error(SL_BT_NCP_TRANSPORT_ERROR_RUNTIME, sc);
-      } else {
-        // Enable reception
-        transport.receive_enabled = true;
-      }
-      sc = app_rta_release(transport.ctx_rx);
-      if (sc != SL_STATUS_OK) {
-        sl_bt_ncp_transport_on_error(SL_BT_NCP_TRANSPORT_ERROR_RUNTIME, sc);
-      }
+  }
+  if (!transport.receive_enabled) {
+    // Enable reception
+    transport.receive_enabled = true;
+    sc = app_rta_proceed(transport.ctx_rx);
+    if (sc != SL_STATUS_OK) {
+      sl_bt_ncp_transport_on_error(SL_BT_NCP_TRANSPORT_ERROR_RUNTIME, sc);
     }
+  }
+  sc = app_rta_release(transport.ctx_rx);
+  if (sc != SL_STATUS_OK) {
+    sl_bt_ncp_transport_on_error(SL_BT_NCP_TRANSPORT_ERROR_RUNTIME, sc);
   }
 }
 
@@ -211,12 +227,25 @@ void sli_bt_ncp_transport_rta_ready(void)
       // Stream found by type
       iostream = iostream_type;
     } else {
-      // Not found stream, set to default
+      // Not found stream, set to default. Its type is unknown here.
       iostream = sl_iostream_get_default();
+      type = SL_IOSTREAM_TYPE_UNDEFINED;
     }
   }
 
   transport.stream = iostream;
+
+  // Subscribe for new data notification if the stream is able to provide it,
+  // otherwise the stream has to be polled.
+  if (type == SL_IOSTREAM_TYPE_UART) {
+    sl_status_t sc;
+    sc = sli_iostream_uart_subscribe_to_new_data((sl_iostream_uart_t *)iostream,
+                                                 on_iostream_new_data,
+                                                 &transport);
+    if (sc == SL_STATUS_OK) {
+      transport.rx_mode = TRANSPORT_RX_NOTIFIED;
+    }
+  }
 }
 
 // Step function (to be called externally)
@@ -230,6 +259,7 @@ void sli_bt_ncp_transport_step(void)
 static void tx_step(void)
 {
   sl_status_t sc;
+  transport_tx_state_t state;
 
   sc = app_rta_acquire(transport.ctx_tx);
 
@@ -239,26 +269,48 @@ static void tx_step(void)
     return;
   }
 
-  if (transport.tx_count > 0) {
+  // Start a new transfer only when the previous one has finished.
+  if ((transport.tx_state == TRANSPORT_TX_IDLE) && (transport.tx_count > 0)) {
     // Try sync write first (especially on streams that don't support async)
     // since there's no other way to determine iostream UART mode.
     sc = sl_iostream_write(transport.stream,
                            transport.tx_buf,
                            transport.tx_count);
     if (sc == SL_STATUS_NOT_AVAILABLE) { // Feature not available due to software configuration.
-      // Try async as fallback on supported UART streams
+      // Try async as fallback on supported UART streams. The callback may
+      // preempt this context, so mark the transfer before submitting it.
+      transport.tx_state = TRANSPORT_TX_ONGOING;
       sc = sli_iostream_init_async_write_op(&transport.write_async_op,
                                             transport.tx_buf,
                                             transport.tx_count,
                                             on_iostream_transmit,
                                             &transport);
       if (sc == SL_STATUS_OK) {
-        (void)sli_iostream_async_write(transport.stream,
-                                       &transport.write_async_op);
+        sc = sli_iostream_async_write(transport.stream,
+                                      &transport.write_async_op);
+      }
+      if (sc != SL_STATUS_OK) {
+        // Nothing reached the stream, no callback will arrive.
+        on_iostream_transmit(NULL, sc, &transport);
       }
     } else {
       on_iostream_transmit(NULL, sc, &transport);
     }
+  }
+
+  // Collect the result, which may come from interrupt context.
+  state = transport.tx_state;
+  if (state == TRANSPORT_TX_FINISHED) {
+    sc                 = transport.tx_status;
+    transport.tx_count = 0;
+    transport.tx_state = TRANSPORT_TX_IDLE;
+  }
+
+  (void)app_rta_release(transport.ctx_tx);
+
+  // Notify the upper layer outside of the guard and the interrupt context.
+  if (state == TRANSPORT_TX_FINISHED) {
+    sl_bt_ncp_transport_on_transmit(sc);
   }
 }
 
@@ -266,21 +318,23 @@ static void on_iostream_transmit(sli_iostream_write_async_op_t *op,
                                  sl_status_t status,
                                  void *arg)
 {
+  transport_t *tr = (transport_t *)arg;
   (void)op;
-  if (status == SL_STATUS_OK) {
-    ((transport_t *)arg)->tx_count = 0;
-    (void)app_rta_release(((transport_t *)arg)->ctx_tx);
-    sl_bt_ncp_transport_on_transmit(SL_STATUS_OK);
-  } else {
-    (void)app_rta_proceed(((transport_t *)arg)->ctx_tx);
-    (void)app_rta_release(((transport_t *)arg)->ctx_tx);
-  }
+  tr->tx_status = status;
+  tr->tx_state  = TRANSPORT_TX_FINISHED;
+  (void)app_rta_proceed(tr->ctx_tx);
+}
+
+// Called from interrupt context when data arrives on an empty stream buffer.
+static void on_iostream_new_data(void *arg)
+{
+  (void)app_rta_proceed(((transport_t *)arg)->ctx_rx);
 }
 // Step function for RX
 static void rx_step(void)
 {
   sl_status_t sc;
-  size_t bytes_read;
+  size_t bytes_read = 0;
 
   sc = app_rta_acquire(transport.ctx_rx);
 
@@ -295,21 +349,22 @@ static void rx_step(void)
                           transport.rx_buf,
                           sizeof(transport.rx_buf),
                           &bytes_read);
+    (void)app_rta_release(transport.ctx_rx);
     if (sc == SL_STATUS_OK) {
-      (void)app_rta_release(transport.ctx_rx);
       if (bytes_read > 0) {
         sl_bt_ncp_transport_on_receive(SL_STATUS_OK,
                                        bytes_read,
                                        transport.rx_buf);
       }
     } else if (sc == SL_STATUS_EMPTY) {
-      (void)app_rta_release(transport.ctx_rx);
       // Empty, do nothing
     } else {
-      (void)app_rta_release(transport.ctx_rx);
       sl_bt_ncp_transport_on_error(SL_BT_NCP_TRANSPORT_ERROR_RX, sc);
     }
-    (void)app_rta_proceed(transport.ctx_rx);
+    // Keep going while data flows. Stream that cannot notify must be polled.
+    if ((bytes_read > 0) || (transport.rx_mode == TRANSPORT_RX_POLLED)) {
+      (void)app_rta_proceed(transport.ctx_rx);
+    }
   } else {
     (void)app_rta_release(transport.ctx_rx);
   }

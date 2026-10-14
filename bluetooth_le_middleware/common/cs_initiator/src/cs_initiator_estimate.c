@@ -407,7 +407,7 @@ static void report_result(cs_initiator_t *initiator)
 
   // --------------------------------
   // Get velocity
-  if (initiator->rtl_config.algo_mode == SL_RTL_CS_ALGO_MODE_REAL_TIME_FAST
+  if (initiator->rtl_config.algo_mode == SL_RTL_CS_ALGO_MODE_TRACKING_LATENCY_OPTIMIZED
       && initiator->config.cs_main_mode == sl_bt_cs_mode_pbr
       && (initiator->config.channel_map_preset == CS_CHANNEL_MAP_PRESET_HIGH
           || initiator->config.channel_map_preset == CS_CHANNEL_MAP_PRESET_MEDIUM)) {

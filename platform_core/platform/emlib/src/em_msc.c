@@ -1564,9 +1564,10 @@ SL_RAMFUNC_DEFINITION_END
   || defined(_MPAHBRAM_CTRL_MASK)
 
 #if defined(__ICCARM__)
-#define SL_ECC_ASM_NOINLINE __attribute__((noinline))
+/* Disable optimization for the next function; IAR LTO/speed-opt can duplicate inline-asm labels. */
+#define SL_ECC_ASM_OPTIMIZE_NONE _Pragma("optimize=none")
 #else
-#define SL_ECC_ASM_NOINLINE
+#define SL_ECC_ASM_OPTIMIZE_NONE
 #endif
 
 /***************************************************************************//**
@@ -1580,7 +1581,8 @@ SL_RAMFUNC_DEFINITION_END
  * @param[in] eccBank
  *    Pointer to ECC RAM bank (MSC_EccBank_Typedef)
  ******************************************************************************/
-static void SL_ECC_ASM_NOINLINE mscEccReadWriteExistingPio(const MSC_EccBank_Typedef *eccBank)
+SL_ECC_ASM_OPTIMIZE_NONE
+static void mscEccReadWriteExistingPio(const MSC_EccBank_Typedef *eccBank)
 {
   volatile uint32_t *ramptr = (volatile uint32_t *) eccBank->base;
   const uint32_t *endptr = (const uint32_t *) (eccBank->base + eccBank->size);

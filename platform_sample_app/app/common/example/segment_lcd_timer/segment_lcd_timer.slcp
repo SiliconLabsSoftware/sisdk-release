@@ -43,5 +43,4 @@ tag:
   - hwfilter:board:hardware:has:segment_lcd_driver:cl010-1087-04
   - hwfilter:board:simple_button:btn0
   - hwfilter:board:simple_button:btn1
-  - hwfilter:!board:brd2506b
   - hwfilter:device:device_series_2

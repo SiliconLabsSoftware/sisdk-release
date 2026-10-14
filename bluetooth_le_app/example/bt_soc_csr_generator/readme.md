@@ -18,11 +18,10 @@ Some examples (like **Bluetooth - SoC Certification Based Authentication and Pai
 ![](image/readme_img1.png)
 
 To flash these components to the device, this firmware must be used together with some Python scripts that can be run on a host computer:
-* `create_authority_certificate.py`: generates the root certificate. Also creates a header file with the root certificate to be stored on the device.
+* `create_certificate_authority.py`: generates the root certificate. Also creates a header file with the root certificate to be stored on the device.
 * `production_line_tool.py` (PLT): reads the certificate signing request from the device and signs it with the CA private key, then flashes it to the device.
 
-The scripts can be found in the following folder:
-*{SDK_folder}/app/bluetooth/script/certificate_authorities*
+The scripts can be found in the generated project, under the *script* directory.
 
 ![](image/readme_img2.png)
 
@@ -32,28 +31,35 @@ To generate the device certificate and get it signed, follow this process:
 
 1. Factory-reset your device to make sure that no EC keys and certificates are stored on it. This can be done with Simplicity Commander using the **Recover Bricked Device** option in the GUI or with the following CLI command: `commander device recover`.
 
-2. Flash an **Internal Storage Bootloader** to your device. (Must be generated and built as a separate project.)
+2. Open the slcp file of the **Bluetooth - SoC CSR Generator** project.
 
-3. Open the slcp file of the **Bluetooth - SoC CSR Generator** project.
+3. On the Overview tab, under Project Details, open the three-dots-menu, and click **Configuration**.
 
-4. On the Overview tab, under Project Details, open the three-dots-menu, and click **Configuration**.
+4. Configure the certificate data as needed.
 
-5. Modify the certificate data.
+5. Build and flash the project to your device. This will automatically generate the EC key pair and the Certificate Signing Request on startup.
 
-6. Build and flash the project to your device. This will automatically generate the EC key pair and the Certificate Signing Request on startup.
+6. Install python dependencies:
 
-7. Create a CA certificate if you do not have one yet. Run the `create_authority_certificate.py` python script on your computer. Certificate data can be provided as parameters, see the parameter list with `create_authority_certificate.py -h`. *Note: you may need to install some python packages (cryptography, jinja2) to get this script run.*
+        pip install -r script/requirements.txt
+7. Create a CA certificate if you do not have one yet:
 
-8. The CA certificate can now be found under the `central_authority` folder.
+        python script/create_certificate_authority.py
+  * The certificate data for the Certificate Authority (the issuer) can be provided as parameters. Please see the parameter list:
+
+        python script/create_certificate_authority.py -h
+8. The CA certificate can now be found under `~/.silabs/certificates/central_authority`.
 
 9. Check the Jlink serial number of your debug adapter either with Simplicity Studio or with Simplicity Commander.
 
-10. Run the `production_line_tool.py` python script on your computer with the following parameters:
-`python production_line_tool.py -p ble --serial <serialnumber>`. This will read out the signing request, sign the device certificate and flash the signed certificate on the device. *Note: the 'serial' parameter is not required if only one device is connected to your PC.*
+10. Run the provisioning python script with the following parameters:
+
+        python script/production_line_tool.py -p ble --serial <serialnumber>
+  * This will read out the signing request, sign the device certificate and flash the signed certificate on the device. *Note: the 'serial' parameter is only required if multiple devices are connected to your PC.*
 
 11. Now the EC key pair and the signed certificate are stored on your device. You can flash a new application to the device, this will not remove the keys and the certificate.
 
-12. To also flash the CA certificate (root certificate), you must copy the generated `sl_bt_cbap_root_cert.h` file (found under *{SDK_folder}/app/bluetooth/script/certificate_authorities/central_authority*) into your new application project under the */config* folder.
+12. To also flash the CA certificate (root certificate), you must copy the generated `sl_bt_cbap_root_cert.h` file (under `~/.silabs/certificates/central_authority`) into your new application project under the `/config` folder.
 
 ## Troubleshooting
 

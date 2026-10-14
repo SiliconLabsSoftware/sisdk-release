@@ -1,10 +1,10 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.4" xml:lang="en-US">
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.8" xml:lang="en-US">
   <compounddef id="group__sl__bt__evt__pawr__advertiser__response__report" kind="group">
     <compoundname>sl_bt_evt_pawr_advertiser_response_report</compoundname>
     <title>sl_bt_evt_pawr_advertiser_response_report</title>
     <innerclass refid="structsl__bt__evt__pawr__advertiser__response__report__s" prot="public">sl_bt_evt_pawr_advertiser_response_report_s</innerclass>
-      <sectiondef kind="typedef">
+    <sectiondef kind="typedef">
       <memberdef kind="typedef" id="group__sl__bt__evt__pawr__advertiser__response__report_1ga429a11cc451c9a1faef6dc84b33a8d41" prot="public" static="no">
         <type>struct <ref refid="structsl__bt__evt__pawr__advertiser__response__report__s" kindref="compound">sl_bt_evt_pawr_advertiser_response_report_s</ref></type>
         <definition>typedef struct sl_bt_evt_pawr_advertiser_response_report_s sl_bt_evt_pawr_advertiser_response_report_t</definition>
@@ -16,10 +16,10 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6402" column="58" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6402" bodyend="-1"/>
+        <location file="/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6407" column="58" bodyfile="/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6407" bodyend="-1"/>
       </memberdef>
-      </sectiondef>
-      <sectiondef kind="define">
+    </sectiondef>
+    <sectiondef kind="define">
       <memberdef kind="define" id="group__sl__bt__evt__pawr__advertiser__response__report_1ga682df1101fc750877c6c807e617b1388" prot="public" static="no">
         <name>sl_bt_evt_pawr_advertiser_response_report_id</name>
         <initializer>0x015500a0</initializer>
@@ -30,9 +30,9 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6340" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6340" bodyend="-1"/>
+        <location file="/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="6345" column="9" bodyfile="/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="6345" bodyend="-1"/>
       </memberdef>
-      </sectiondef>
+    </sectiondef>
     <briefdescription>
 <para>Reports the status and data of a used response slot of an active PAwR train. </para>
     </briefdescription>

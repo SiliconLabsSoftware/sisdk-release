@@ -72,7 +72,7 @@ typedef bool (*cmd_foreach_callback_t)(cmd_handler_map_t const * const p_cmd_ent
  * Will stop if the callback returns true.
  *
  * @param callback Callback function to invoke.
- * @param context Context to pass on to the callback function.
+ * @param supported_cmds_mask Bitmask of supported commands to pass to the callback function.
  */
 void cmd_foreach(cmd_foreach_callback_t callback, uint8_t* supported_cmds_mask);
 

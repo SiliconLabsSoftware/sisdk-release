@@ -1,7 +1,7 @@
 project_name: bt_ncp_dfu_micriumos
 package: bluetooth_le_app
 label: Bluetooth - NCP DFU Micrium OS
-description: >
+description: >-
   Network Co-Processor (NCP) target application with device firmware update.
   Runs the Bluetooth stack dynamically and provides access to it via Bluetooth
   API (BGAPI) using UART connection. NCP mode makes it possible to run your

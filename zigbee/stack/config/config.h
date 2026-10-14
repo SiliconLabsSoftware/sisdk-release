@@ -33,7 +33,7 @@
 // The 4 digit version: A.B.C.D
 #define SL_ZIGBEE_MAJOR_VERSION  9
 #define SL_ZIGBEE_MINOR_VERSION  1
-#define SL_ZIGBEE_PATCH_VERSION  1
+#define SL_ZIGBEE_PATCH_VERSION  2
 #define SL_ZIGBEE_SPECIAL_VERSION  0
 
 // 2 bytes

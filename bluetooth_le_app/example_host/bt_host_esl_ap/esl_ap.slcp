@@ -1,7 +1,7 @@
 project_name: esl_ap
 package: bluetooth_le_app
 label: Bluetooth - ESL Access Point
-description: >
+description: >-
   Bluetooth - ESL Access Point
 category: Bluetooth Examples
 quality: experimental

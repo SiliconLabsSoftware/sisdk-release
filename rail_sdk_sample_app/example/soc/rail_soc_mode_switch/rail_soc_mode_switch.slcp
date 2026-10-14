@@ -301,6 +301,7 @@ tag:
   - hwfilter:!board:hardware:shares:button:led
   - hwfilter:ram:9k
   - hwfilter:flash:100k
+  - hwfilter:!device:device_no_rail_api
   - hwfilter:device:device_generic_family_efr32xg25
 
 filter:

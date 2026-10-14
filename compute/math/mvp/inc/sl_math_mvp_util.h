@@ -37,7 +37,8 @@ extern "C" {
 #endif
 
 /***************************************************************************//**
- * @addtogroup math_mvp_util Utility functions
+ * @defgroup math_mvp_util Utility functions
+ * @brief Error handling helpers shared by the MVP math functions.
  * @{
  ******************************************************************************/
 

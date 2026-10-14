@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<doxygenindex xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="index.xsd" version="1.9.4" xml:lang="en-US">
+<doxygenindex xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="index.xsd" version="1.9.8" xml:lang="en-US">
   <compound refid="structaes__key__128" kind="struct"><name>aes_key_128</name>
     <member refid="structaes__key__128_1ade9b32f16f9392c4a487027766105540" kind="variable"><name>data</name></member>
   </compound>
@@ -1506,296 +1506,64 @@
     <member refid="group__sl__bt__evt__user__message__to__host_1gadd310ebdbcb3d3ac74037754e5818852" kind="define"><name>sl_bt_evt_user_message_to_host_id</name></member>
     <member refid="group__sl__bt__evt__user__cs__service__message__to__host_1ga0d67b428485b0689a41dab0d5b7f4184" kind="define"><name>sl_bt_evt_user_cs_service_message_to_host_id</name></member>
     <member refid="group__sl__bt__system_1gabeb0cee19ac79ff0d4789a07e8e185af" kind="enum"><name>sl_bt_system_linklayer_config_key_t</name></member>
-    <member refid="group__sl__bt__system_1ggabeb0cee19ac79ff0d4789a07e8e185afa68a0cbc3f93d963b09d64aae568cdc2f" kind="enumvalue"><name>sl_bt_system_linklayer_config_key_halt</name></member>
-    <member refid="group__sl__bt__system_1ggabeb0cee19ac79ff0d4789a07e8e185afafab76ca6260813bf33db78930d8a9dd4" kind="enumvalue"><name>sl_bt_system_linklayer_config_key_priority_range</name></member>
-    <member refid="group__sl__bt__system_1ggabeb0cee19ac79ff0d4789a07e8e185afa90620a0dbd60633e8be80f9c63d34622" kind="enumvalue"><name>sl_bt_system_linklayer_config_key_scan_channels</name></member>
-    <member refid="group__sl__bt__system_1ggabeb0cee19ac79ff0d4789a07e8e185afa926a6bc250ff309ce6600b52150f8a8f" kind="enumvalue"><name>sl_bt_system_linklayer_config_key_set_flags</name></member>
-    <member refid="group__sl__bt__system_1ggabeb0cee19ac79ff0d4789a07e8e185afa6ec5886d8beb7b13096569d73ea7a355" kind="enumvalue"><name>sl_bt_system_linklayer_config_key_clr_flags</name></member>
-    <member refid="group__sl__bt__system_1ggabeb0cee19ac79ff0d4789a07e8e185afa9117d6eba7cdd6ef1ef339cae5821e2e" kind="enumvalue"><name>sl_bt_system_linklayer_config_key_set_afh_interval</name></member>
-    <member refid="group__sl__bt__system_1ggabeb0cee19ac79ff0d4789a07e8e185afad2187f1b88c73da8324a876364c04510" kind="enumvalue"><name>sl_bt_system_linklayer_config_key_set_periodic_advertising_status_report</name></member>
-    <member refid="group__sl__bt__system_1ggabeb0cee19ac79ff0d4789a07e8e185afa99c69b22ddee000e771b8f7f64bd095c" kind="enumvalue"><name>sl_bt_system_linklayer_config_key_set_priority_table</name></member>
-    <member refid="group__sl__bt__system_1ggabeb0cee19ac79ff0d4789a07e8e185afa919037d6e74be8ab9b0e0d30652c1475" kind="enumvalue"><name>sl_bt_system_linklayer_config_key_set_rx_packet_filtering</name></member>
-    <member refid="group__sl__bt__system_1ggabeb0cee19ac79ff0d4789a07e8e185afa14c5887377146d9fd22a8e0b3af552c5" kind="enumvalue"><name>sl_bt_system_linklayer_config_key_set_simultaneous_scanning</name></member>
-    <member refid="group__sl__bt__system_1ggabeb0cee19ac79ff0d4789a07e8e185afa3a4a49e958ba48f39575e5c9f22760b5" kind="enumvalue"><name>sl_bt_system_linklayer_config_key_set_channelmap_flags</name></member>
-    <member refid="group__sl__bt__system_1ggabeb0cee19ac79ff0d4789a07e8e185afa69ea953590c3448e2efd1d6572e7b2ee" kind="enumvalue"><name>sl_bt_system_linklayer_config_key_low_power_mode_power_limit</name></member>
-    <member refid="group__sl__bt__system_1ggabeb0cee19ac79ff0d4789a07e8e185afa6b178d0975c5d1ad95c4f0d9d19cfe47" kind="enumvalue"><name>sl_bt_system_linklayer_config_key_power_control_golden_range</name></member>
-    <member refid="group__sl__bt__system_1ggabeb0cee19ac79ff0d4789a07e8e185afa29cbcb8dc3ebe8158ccd0a11a143c6e2" kind="enumvalue"><name>sl_bt_system_linklayer_config_key_active_scanner_backoff_upper_limit</name></member>
-    <member refid="group__sl__bt__system_1ggabeb0cee19ac79ff0d4789a07e8e185afaa790dd0108e5cc621b2ce4c494f95bca" kind="enumvalue"><name>sl_bt_system_linklayer_config_key_afh_rssi_threshold</name></member>
-    <member refid="group__sl__bt__system_1ggabeb0cee19ac79ff0d4789a07e8e185afa4d1ebcc50ea9e449b4fe66af27f2eb82" kind="enumvalue"><name>sl_bt_system_linklayer_config_key_afh_channel_cooldown</name></member>
-    <member refid="group__sl__bt__system_1ggabeb0cee19ac79ff0d4789a07e8e185afa94e8821960fa72e19801b86ac3a0d9ea" kind="enumvalue"><name>sl_bt_system_linklayer_config_key_set_report_all_scan_rsps</name></member>
     <member refid="group__sl__bt__gap_1gac8d5431d3062e47c5d51b9fb9f36c104" kind="enum"><name>sl_bt_gap_address_type_t</name></member>
-    <member refid="group__sl__bt__gap_1ggac8d5431d3062e47c5d51b9fb9f36c104a9bd23a182f82727d767972fa82a41295" kind="enumvalue"><name>sl_bt_gap_public_address</name></member>
-    <member refid="group__sl__bt__gap_1ggac8d5431d3062e47c5d51b9fb9f36c104a0906c9f6e28dd0d93b011d7509c3d70c" kind="enumvalue"><name>sl_bt_gap_static_address</name></member>
-    <member refid="group__sl__bt__gap_1ggac8d5431d3062e47c5d51b9fb9f36c104a3a0443252343b32692fe328d1d57d373" kind="enumvalue"><name>sl_bt_gap_random_resolvable_address</name></member>
-    <member refid="group__sl__bt__gap_1ggac8d5431d3062e47c5d51b9fb9f36c104a5f62ca6ef98136610de468f3e2e8ddf1" kind="enumvalue"><name>sl_bt_gap_random_nonresolvable_address</name></member>
-    <member refid="group__sl__bt__gap_1ggac8d5431d3062e47c5d51b9fb9f36c104ae6fc3496d03a6b45ab4d78649dd9703b" kind="enumvalue"><name>sl_bt_gap_public_address_resolved_from_rpa</name></member>
-    <member refid="group__sl__bt__gap_1ggac8d5431d3062e47c5d51b9fb9f36c104ab2c2c574d7b476b19eaa1be12b069038" kind="enumvalue"><name>sl_bt_gap_static_address_resolved_from_rpa</name></member>
-    <member refid="group__sl__bt__gap_1ggac8d5431d3062e47c5d51b9fb9f36c104a8a317b2563feb135dd3444a0d9dca37a" kind="enumvalue"><name>sl_bt_gap_anonymous_address</name></member>
     <member refid="group__sl__bt__gap_1ga05ce4496a6f87de7c67a9e32d816727c" kind="enum"><name>sl_bt_gap_phy_t</name></member>
-    <member refid="group__sl__bt__gap_1gga05ce4496a6f87de7c67a9e32d816727ca3ae0bf1d99d33066af4b6eea4b55414e" kind="enumvalue"><name>sl_bt_gap_phy_1m</name></member>
-    <member refid="group__sl__bt__gap_1gga05ce4496a6f87de7c67a9e32d816727ca3f768e221018e837d768d737d7f8a4f3" kind="enumvalue"><name>sl_bt_gap_phy_2m</name></member>
-    <member refid="group__sl__bt__gap_1gga05ce4496a6f87de7c67a9e32d816727ca5233c0e14a2181f8094b987885086f41" kind="enumvalue"><name>sl_bt_gap_phy_coded</name></member>
-    <member refid="group__sl__bt__gap_1gga05ce4496a6f87de7c67a9e32d816727ca1d0f75e090da3301ebceff78be1b5a93" kind="enumvalue"><name>sl_bt_gap_phy_any</name></member>
     <member refid="group__sl__bt__gap_1ga1644548686ce4cbe4ff0c55b5760c24d" kind="enum"><name>sl_bt_gap_phy_coding_t</name></member>
-    <member refid="group__sl__bt__gap_1gga1644548686ce4cbe4ff0c55b5760c24dae29d662e113af1b0a63041a9de3c2651" kind="enumvalue"><name>sl_bt_gap_phy_coding_1m_uncoded</name></member>
-    <member refid="group__sl__bt__gap_1gga1644548686ce4cbe4ff0c55b5760c24dae7d4e59097ab83b49c64b46fb697388e" kind="enumvalue"><name>sl_bt_gap_phy_coding_2m_uncoded</name></member>
-    <member refid="group__sl__bt__gap_1gga1644548686ce4cbe4ff0c55b5760c24da86c3cfbf6d599452028c6cbed70567c8" kind="enumvalue"><name>sl_bt_gap_phy_coding_125k_coded</name></member>
-    <member refid="group__sl__bt__gap_1gga1644548686ce4cbe4ff0c55b5760c24dae5d379696bb79b9731422885489c5a15" kind="enumvalue"><name>sl_bt_gap_phy_coding_500k_coded</name></member>
     <member refid="group__sl__bt__gap_1gac8f8f7951d8100e1e969cdf90127a086" kind="enum"><name>sl_bt_gap_channel_selection_algorithm_t</name></member>
-    <member refid="group__sl__bt__gap_1ggac8f8f7951d8100e1e969cdf90127a086a207c4b705ad3016dc17edb2d38fa9863" kind="enumvalue"><name>sl_bt_gap_channel_selection_algorithm_1</name></member>
-    <member refid="group__sl__bt__gap_1ggac8f8f7951d8100e1e969cdf90127a086aa37ef47df0d5c53d0c73ed0f50ec95ec" kind="enumvalue"><name>sl_bt_gap_channel_selection_algorithm_2</name></member>
     <member refid="group__sl__bt__advertiser_1ga5ba0781115b475f1f26eec61863b8d62" kind="enum"><name>sl_bt_advertiser_discovery_mode_t</name></member>
-    <member refid="group__sl__bt__advertiser_1gga5ba0781115b475f1f26eec61863b8d62a97e0f2fdb3120d6ba13160f8a58ea653" kind="enumvalue"><name>sl_bt_advertiser_non_discoverable</name></member>
-    <member refid="group__sl__bt__advertiser_1gga5ba0781115b475f1f26eec61863b8d62a4e7eef653bdd71d3bf20769c1541152b" kind="enumvalue"><name>sl_bt_advertiser_limited_discoverable</name></member>
-    <member refid="group__sl__bt__advertiser_1gga5ba0781115b475f1f26eec61863b8d62a316930bccd17eee47d00789d3c8ed432" kind="enumvalue"><name>sl_bt_advertiser_general_discoverable</name></member>
     <member refid="group__sl__bt__advertiser_1ga8627603adcd9fb1e6967e5e0e3313dcd" kind="enum"><name>sl_bt_advertiser_adv_address_type_t</name></member>
-    <member refid="group__sl__bt__advertiser_1gga8627603adcd9fb1e6967e5e0e3313dcda9dbeebd6eef4d695894ebbbae07c8cb3" kind="enumvalue"><name>sl_bt_advertiser_identity_address</name></member>
-    <member refid="group__sl__bt__advertiser_1gga8627603adcd9fb1e6967e5e0e3313dcdaf16619b3fcb658de5406ab694f8cb5e9" kind="enumvalue"><name>sl_bt_advertiser_non_resolvable</name></member>
     <member refid="group__sl__bt__advertiser_1ga796b94a773705bf84eee2c61f2bb6d1d" kind="enum"><name>sl_bt_advertiser_packet_type_t</name></member>
-    <member refid="group__sl__bt__advertiser_1gga796b94a773705bf84eee2c61f2bb6d1da087a9b44dacc25ffd792692440b77958" kind="enumvalue"><name>sl_bt_advertiser_advertising_data_packet</name></member>
-    <member refid="group__sl__bt__advertiser_1gga796b94a773705bf84eee2c61f2bb6d1da375b2f6b1dbbecdb01bcbef44a7be55a" kind="enumvalue"><name>sl_bt_advertiser_scan_response_packet</name></member>
     <member refid="group__sl__bt__legacy__advertiser_1gaf55ab87e2eda26ad9f13b131b274d6b7" kind="enum"><name>sl_bt_legacy_advertiser_connection_mode_t</name></member>
-    <member refid="group__sl__bt__legacy__advertiser_1ggaf55ab87e2eda26ad9f13b131b274d6b7a65d5c2f2453c07811a41a868d7056a42" kind="enumvalue"><name>sl_bt_legacy_advertiser_non_connectable</name></member>
-    <member refid="group__sl__bt__legacy__advertiser_1ggaf55ab87e2eda26ad9f13b131b274d6b7aec69b8baf73552b214618f8ae5fccf76" kind="enumvalue"><name>sl_bt_legacy_advertiser_connectable</name></member>
-    <member refid="group__sl__bt__legacy__advertiser_1ggaf55ab87e2eda26ad9f13b131b274d6b7a07fdcb461295eca043fb5eee58068b44" kind="enumvalue"><name>sl_bt_legacy_advertiser_scannable</name></member>
     <member refid="group__sl__bt__legacy__advertiser_1gaa7494c2c37d134bcf1b2720dff52d78f" kind="enum"><name>sl_bt_legacy_advertiser_directed_connection_mode_t</name></member>
-    <member refid="group__sl__bt__legacy__advertiser_1ggaa7494c2c37d134bcf1b2720dff52d78fa17e8c16fcd2e34b8cc9790c0993578c7" kind="enumvalue"><name>sl_bt_legacy_advertiser_high_duty_directed_connectable</name></member>
-    <member refid="group__sl__bt__legacy__advertiser_1ggaa7494c2c37d134bcf1b2720dff52d78fa1f069501b1f1b5b9e11aba55a84367d0" kind="enumvalue"><name>sl_bt_legacy_advertiser_low_duty_directed_connectable</name></member>
     <member refid="group__sl__bt__extended__advertiser_1ga33cacc2aca33282bd319e1042b1bfc67" kind="enum"><name>sl_bt_extended_advertiser_connection_mode_t</name></member>
-    <member refid="group__sl__bt__extended__advertiser_1gga33cacc2aca33282bd319e1042b1bfc67a3b4df31ee9a786a6b2e6005d2d1cbb2b" kind="enumvalue"><name>sl_bt_extended_advertiser_non_connectable</name></member>
-    <member refid="group__sl__bt__extended__advertiser_1gga33cacc2aca33282bd319e1042b1bfc67a25a3be5a0fbf351694faaa62326b0c16" kind="enumvalue"><name>sl_bt_extended_advertiser_scannable</name></member>
-    <member refid="group__sl__bt__extended__advertiser_1gga33cacc2aca33282bd319e1042b1bfc67ac6bdb08c9a5960099d0fcf3ebf1a89ff" kind="enumvalue"><name>sl_bt_extended_advertiser_connectable</name></member>
     <member refid="group__sl__bt__scanner_1ga3830ec233ae145d28d34258bbefc00f4" kind="enum"><name>sl_bt_scanner_discover_mode_t</name></member>
-    <member refid="group__sl__bt__scanner_1gga3830ec233ae145d28d34258bbefc00f4a4d6ee89abb3c77ee093e5c62185c4270" kind="enumvalue"><name>sl_bt_scanner_discover_limited</name></member>
-    <member refid="group__sl__bt__scanner_1gga3830ec233ae145d28d34258bbefc00f4a94cb7f575d29df9a18bf79b6359146c8" kind="enumvalue"><name>sl_bt_scanner_discover_generic</name></member>
-    <member refid="group__sl__bt__scanner_1gga3830ec233ae145d28d34258bbefc00f4a8405c738e113754927319c2e905a59e6" kind="enumvalue"><name>sl_bt_scanner_discover_observation</name></member>
     <member refid="group__sl__bt__scanner_1gac85cd821c92ed695a15fa689f5d51b95" kind="enum"><name>sl_bt_scanner_scan_mode_t</name></member>
-    <member refid="group__sl__bt__scanner_1ggac85cd821c92ed695a15fa689f5d51b95af3b455e97275bdfa6503538c8c6f15f9" kind="enumvalue"><name>sl_bt_scanner_scan_mode_passive</name></member>
-    <member refid="group__sl__bt__scanner_1ggac85cd821c92ed695a15fa689f5d51b95a583f109e5c133631770faa8f23c6ae24" kind="enumvalue"><name>sl_bt_scanner_scan_mode_active</name></member>
     <member refid="group__sl__bt__scanner_1ga4713d5a26836fd1613db16be436fcb92" kind="enum"><name>sl_bt_scanner_scan_phy_t</name></member>
-    <member refid="group__sl__bt__scanner_1gga4713d5a26836fd1613db16be436fcb92af69e2c34d517fde3a0262286081bd32a" kind="enumvalue"><name>sl_bt_scanner_scan_phy_1m</name></member>
-    <member refid="group__sl__bt__scanner_1gga4713d5a26836fd1613db16be436fcb92ad8caacfcbcf14975f9d516d77d0dd3ca" kind="enumvalue"><name>sl_bt_scanner_scan_phy_coded</name></member>
-    <member refid="group__sl__bt__scanner_1gga4713d5a26836fd1613db16be436fcb92a5ff8817f7f6d7f09340daf90097ae7bc" kind="enumvalue"><name>sl_bt_scanner_scan_phy_1m_and_coded</name></member>
     <member refid="group__sl__bt__scanner_1ga198ccf77c614ae3f0a7b97f731489eb6" kind="enum"><name>sl_bt_scanner_data_status_t</name></member>
-    <member refid="group__sl__bt__scanner_1gga198ccf77c614ae3f0a7b97f731489eb6a0b066c26364d680e47a97cd280eb96af" kind="enumvalue"><name>sl_bt_scanner_data_status_complete</name></member>
-    <member refid="group__sl__bt__scanner_1gga198ccf77c614ae3f0a7b97f731489eb6a5cc457db755a388ef57ed9946e16eae7" kind="enumvalue"><name>sl_bt_scanner_data_status_incomplete_more</name></member>
-    <member refid="group__sl__bt__scanner_1gga198ccf77c614ae3f0a7b97f731489eb6ad5cf47e1e4a49f960011bf3e45b32839" kind="enumvalue"><name>sl_bt_scanner_data_status_incomplete_nomore</name></member>
     <member refid="group__sl__bt__scanner_1ga273b6e90f8db94de796c5f5027fc769d" kind="enum"><name>sl_bt_scanner_filter_policy_t</name></member>
-    <member refid="group__sl__bt__scanner_1gga273b6e90f8db94de796c5f5027fc769da6e4a3cfc08865e2d1487a33162a63302" kind="enumvalue"><name>sl_bt_scanner_filter_policy_basic_unfiltered</name></member>
-    <member refid="group__sl__bt__scanner_1gga273b6e90f8db94de796c5f5027fc769da5d6569adeb5873788f88a4fb7a9d858a" kind="enumvalue"><name>sl_bt_scanner_filter_policy_basic_filtered</name></member>
-    <member refid="group__sl__bt__scanner_1gga273b6e90f8db94de796c5f5027fc769daeb8291c3d56ae2474c09c64396f4fab5" kind="enumvalue"><name>sl_bt_scanner_filter_policy_extended_unfiltered</name></member>
-    <member refid="group__sl__bt__scanner_1gga273b6e90f8db94de796c5f5027fc769da7013679926e8a1b6ef754f8f3eef1525" kind="enumvalue"><name>sl_bt_scanner_filter_policy_extended_filtered</name></member>
     <member refid="group__sl__bt__sync_1ga4d6dbc6ce7a4dfc5ba8e473253161d30" kind="enum"><name>sl_bt_sync_reporting_mode_t</name></member>
-    <member refid="group__sl__bt__sync_1gga4d6dbc6ce7a4dfc5ba8e473253161d30adb0e697ad0134cd6ccaa1afbbaf27260" kind="enumvalue"><name>sl_bt_sync_report_none</name></member>
-    <member refid="group__sl__bt__sync_1gga4d6dbc6ce7a4dfc5ba8e473253161d30aac59b61bf5411ed41d7079f22c122f8b" kind="enumvalue"><name>sl_bt_sync_report_all</name></member>
-    <member refid="group__sl__bt__sync_1gga4d6dbc6ce7a4dfc5ba8e473253161d30aef07a9c632badbc00fd6bde07fc770cb" kind="enumvalue"><name>sl_bt_sync_report_non_duplicate</name></member>
     <member refid="group__sl__bt__sync_1gacf10b05b3679bf358e10775bee5bcd60" kind="enum"><name>sl_bt_sync_advertiser_clock_accuracy_t</name></member>
-    <member refid="group__sl__bt__sync_1ggacf10b05b3679bf358e10775bee5bcd60ad1fd26a5d7cce17adcfb968e80a73f31" kind="enumvalue"><name>sl_bt_sync_clock_accuracy_500</name></member>
-    <member refid="group__sl__bt__sync_1ggacf10b05b3679bf358e10775bee5bcd60ac16d4c34f34fcada454bc3d9e72788a0" kind="enumvalue"><name>sl_bt_sync_clock_accuracy_250</name></member>
-    <member refid="group__sl__bt__sync_1ggacf10b05b3679bf358e10775bee5bcd60a13c496b240f1631d36d7c3f442d65adc" kind="enumvalue"><name>sl_bt_sync_clock_accuracy_150</name></member>
-    <member refid="group__sl__bt__sync_1ggacf10b05b3679bf358e10775bee5bcd60a8ee87dbc3aa74cb7bd0de64e00df2cb0" kind="enumvalue"><name>sl_bt_sync_clock_accuracy_100</name></member>
-    <member refid="group__sl__bt__sync_1ggacf10b05b3679bf358e10775bee5bcd60a4f4e283b15a84c02aba61c2b20b6ef91" kind="enumvalue"><name>sl_bt_sync_clock_accuracy_75</name></member>
-    <member refid="group__sl__bt__sync_1ggacf10b05b3679bf358e10775bee5bcd60acb6c7e67037885dc1b4899e5605dab61" kind="enumvalue"><name>sl_bt_sync_clock_accuracy_50</name></member>
-    <member refid="group__sl__bt__sync_1ggacf10b05b3679bf358e10775bee5bcd60a6f02d76ce4e49796868cba41ae057ab6" kind="enumvalue"><name>sl_bt_sync_clock_accuracy_30</name></member>
-    <member refid="group__sl__bt__sync_1ggacf10b05b3679bf358e10775bee5bcd60a3679e701ffeb40d8adf9d8ddf08bb86b" kind="enumvalue"><name>sl_bt_sync_clock_accuracy_20</name></member>
     <member refid="group__sl__bt__past__receiver_1gae52bc349487a3a5ef0f221c7ad7dae74" kind="enum"><name>sl_bt_past_receiver_mode_t</name></member>
-    <member refid="group__sl__bt__past__receiver_1ggae52bc349487a3a5ef0f221c7ad7dae74a03d877f107bfc67b5d9ab8f6029c1e1f" kind="enumvalue"><name>sl_bt_past_receiver_mode_ignore</name></member>
-    <member refid="group__sl__bt__past__receiver_1ggae52bc349487a3a5ef0f221c7ad7dae74aa235ad4de6aaecad35ada927e0baee02" kind="enumvalue"><name>sl_bt_past_receiver_mode_synchronize</name></member>
     <member refid="group__sl__bt__past__receiver_1ga19c4f0a4c5f89393d599a5240409ff66" kind="enum"><name>sl_bt_past_receiver_over_sync_mode_t</name></member>
-    <member refid="group__sl__bt__past__receiver_1gga19c4f0a4c5f89393d599a5240409ff66acdcda47bd85c3a3ae7ab10bcd042c8ad" kind="enumvalue"><name>sl_bt_past_receiver_over_sync_mode_ignore</name></member>
-    <member refid="group__sl__bt__past__receiver_1gga19c4f0a4c5f89393d599a5240409ff66a871c5ffa838326303f9bac935881a240" kind="enumvalue"><name>sl_bt_past_receiver_over_sync_mode_replace</name></member>
     <member refid="group__sl__bt__periodic__sync_1gaa1f741a2a7b46593e4f3f5b5fa40fc8e" kind="enum"><name>sl_bt_periodic_sync_data_status_t</name></member>
-    <member refid="group__sl__bt__periodic__sync_1ggaa1f741a2a7b46593e4f3f5b5fa40fc8ea7ed1b0a919198530ded6bec6f3357b94" kind="enumvalue"><name>sl_bt_periodic_sync_data_status_complete</name></member>
-    <member refid="group__sl__bt__periodic__sync_1ggaa1f741a2a7b46593e4f3f5b5fa40fc8eac7b8f000ada4e7cf5ffc85fdd4952cf9" kind="enumvalue"><name>sl_bt_periodic_sync_data_status_incomplete_more</name></member>
-    <member refid="group__sl__bt__periodic__sync_1ggaa1f741a2a7b46593e4f3f5b5fa40fc8ea42d110945bf35b364a6d6c2918893163" kind="enumvalue"><name>sl_bt_periodic_sync_data_status_incomplete_nomore</name></member>
     <member refid="group__sl__bt__pawr__sync_1ga177073dd4204ac9d634309db80a7460f" kind="enum"><name>sl_bt_pawr_sync_subevent_data_status_t</name></member>
-    <member refid="group__sl__bt__pawr__sync_1gga177073dd4204ac9d634309db80a7460fac293c1974a1d03fb12be133f85597ff5" kind="enumvalue"><name>sl_bt_pawr_sync_subevent_data_status_complete</name></member>
-    <member refid="group__sl__bt__pawr__sync_1gga177073dd4204ac9d634309db80a7460fa561617299ee57795ac8e7c4e7ebd2eb9" kind="enumvalue"><name>sl_bt_pawr_sync_subevent_data_status_incomplete_more</name></member>
-    <member refid="group__sl__bt__pawr__sync_1gga177073dd4204ac9d634309db80a7460fa2446f37f9d20aafee78592e282b96566" kind="enumvalue"><name>sl_bt_pawr_sync_subevent_data_status_incomplete_nomore</name></member>
-    <member refid="group__sl__bt__pawr__sync_1gga177073dd4204ac9d634309db80a7460fa961e290fd830df993b09333dcfc0ad9f" kind="enumvalue"><name>sl_bt_pawr_sync_subevent_data_status_not_received</name></member>
     <member refid="group__sl__bt__pawr__advertiser_1ga329ce801272328bfa943f6f781002a8b" kind="enum"><name>sl_bt_pawr_advertiser_response_data_status_t</name></member>
-    <member refid="group__sl__bt__pawr__advertiser_1gga329ce801272328bfa943f6f781002a8bad2bd11f9d498c98436e097fb8ab222ff" kind="enumvalue"><name>sl_bt_pawr_advertiser_response_data_status_complete</name></member>
-    <member refid="group__sl__bt__pawr__advertiser_1gga329ce801272328bfa943f6f781002a8ba56b525da1c00bb261c1a37b3dcb90ffd" kind="enumvalue"><name>sl_bt_pawr_advertiser_response_data_status_incomplete_more</name></member>
-    <member refid="group__sl__bt__pawr__advertiser_1gga329ce801272328bfa943f6f781002a8ba7a241d133c7ebda7ffd4bc5aa642ceee" kind="enumvalue"><name>sl_bt_pawr_advertiser_response_data_status_incomplete_nomore</name></member>
-    <member refid="group__sl__bt__pawr__advertiser_1gga329ce801272328bfa943f6f781002a8bafa5b7b34c8a6a2e73d36a6661ea95403" kind="enumvalue"><name>sl_bt_pawr_advertiser_response_data_status_not_received</name></member>
     <member refid="group__sl__bt__connection_1gab7587d83e86c8d88ecd98f7d20af9ab6" kind="enum"><name>sl_bt_connection_role_t</name></member>
-    <member refid="group__sl__bt__connection_1ggab7587d83e86c8d88ecd98f7d20af9ab6a4ef4abde4e72cb4a362bb7092c8b79f4" kind="enumvalue"><name>sl_bt_connection_role_peripheral</name></member>
-    <member refid="group__sl__bt__connection_1ggab7587d83e86c8d88ecd98f7d20af9ab6a744e83e3bb7190bdea0cf752b528cfd9" kind="enumvalue"><name>sl_bt_connection_role_central</name></member>
     <member refid="group__sl__bt__connection_1ga0bcac2d0bd0f1beb06e5af863a66382d" kind="enum"><name>sl_bt_connection_state_t</name></member>
-    <member refid="group__sl__bt__connection_1gga0bcac2d0bd0f1beb06e5af863a66382dae69003e850dc19a76b228bb2ac2d3e49" kind="enumvalue"><name>sl_bt_connection_state_closed</name></member>
-    <member refid="group__sl__bt__connection_1gga0bcac2d0bd0f1beb06e5af863a66382daed365c2d6e36b148e56992852e786e2f" kind="enumvalue"><name>sl_bt_connection_state_closing</name></member>
-    <member refid="group__sl__bt__connection_1gga0bcac2d0bd0f1beb06e5af863a66382da1d74a7568eff2e0894b542d1baafcef6" kind="enumvalue"><name>sl_bt_connection_state_open</name></member>
-    <member refid="group__sl__bt__connection_1gga0bcac2d0bd0f1beb06e5af863a66382dab83119a70fbbc224ca65bd6ca1602c48" kind="enumvalue"><name>sl_bt_connection_state_opening</name></member>
     <member refid="group__sl__bt__connection_1gaa978c6a4744e442da21c790679af4eae" kind="enum"><name>sl_bt_connection_security_t</name></member>
-    <member refid="group__sl__bt__connection_1ggaa978c6a4744e442da21c790679af4eaea048c2dcf4e5b707bbdb22f97395f1be9" kind="enumvalue"><name>sl_bt_connection_mode1_level1</name></member>
-    <member refid="group__sl__bt__connection_1ggaa978c6a4744e442da21c790679af4eaea4804c8d4c42f24c9133622678868feb4" kind="enumvalue"><name>sl_bt_connection_mode1_level2</name></member>
-    <member refid="group__sl__bt__connection_1ggaa978c6a4744e442da21c790679af4eaea908c437f430f6447244654ee94959dc4" kind="enumvalue"><name>sl_bt_connection_mode1_level3</name></member>
-    <member refid="group__sl__bt__connection_1ggaa978c6a4744e442da21c790679af4eaea2d9c2b4bb82bab1213dc99c8def2fdb6" kind="enumvalue"><name>sl_bt_connection_mode1_level4</name></member>
     <member refid="group__sl__bt__connection_1gaaac541dbe1a895990b3e8d2793107d0e" kind="enum"><name>sl_bt_connection_power_reporting_mode_t</name></member>
-    <member refid="group__sl__bt__connection_1ggaaac541dbe1a895990b3e8d2793107d0ea628e810e6741584889f9d95e6961df1c" kind="enumvalue"><name>sl_bt_connection_power_reporting_disable</name></member>
-    <member refid="group__sl__bt__connection_1ggaaac541dbe1a895990b3e8d2793107d0ea8695f2a618e4c1622dc7321e99d6bd74" kind="enumvalue"><name>sl_bt_connection_power_reporting_enable</name></member>
     <member refid="group__sl__bt__connection_1ga817c9d6f24d206939cbd02f82c1313a7" kind="enum"><name>sl_bt_connection_tx_power_flag_t</name></member>
-    <member refid="group__sl__bt__connection_1gga817c9d6f24d206939cbd02f82c1313a7ad0d94bb3a1b858bf228cd4e7b134939f" kind="enumvalue"><name>sl_bt_connection_tx_power_flag_none</name></member>
-    <member refid="group__sl__bt__connection_1gga817c9d6f24d206939cbd02f82c1313a7a731463b7b8e51685b9218b433e142188" kind="enumvalue"><name>sl_bt_connection_tx_power_at_minimum</name></member>
-    <member refid="group__sl__bt__connection_1gga817c9d6f24d206939cbd02f82c1313a7a249bb5e36ec28c4bab0d6e273e09dbbe" kind="enumvalue"><name>sl_bt_connection_tx_power_at_maximum</name></member>
     <member refid="group__sl__bt__gatt_1ga459acca869ec6d9edd49c57ff6357dd8" kind="enum"><name>sl_bt_gatt_att_opcode_t</name></member>
-    <member refid="group__sl__bt__gatt_1gga459acca869ec6d9edd49c57ff6357dd8a23d515309f6f1157659e70566c123bb1" kind="enumvalue"><name>sl_bt_gatt_read_by_type_request</name></member>
-    <member refid="group__sl__bt__gatt_1gga459acca869ec6d9edd49c57ff6357dd8a3fc828b0c74725fd064c202b86387ae3" kind="enumvalue"><name>sl_bt_gatt_read_by_type_response</name></member>
-    <member refid="group__sl__bt__gatt_1gga459acca869ec6d9edd49c57ff6357dd8a3d1e1583c0de6a134833fc9197835102" kind="enumvalue"><name>sl_bt_gatt_read_request</name></member>
-    <member refid="group__sl__bt__gatt_1gga459acca869ec6d9edd49c57ff6357dd8a7033ed3b4a030ab70776d8e6ecbf362f" kind="enumvalue"><name>sl_bt_gatt_read_response</name></member>
-    <member refid="group__sl__bt__gatt_1gga459acca869ec6d9edd49c57ff6357dd8abba72fea01bc89a78032866f8efefe7a" kind="enumvalue"><name>sl_bt_gatt_read_blob_request</name></member>
-    <member refid="group__sl__bt__gatt_1gga459acca869ec6d9edd49c57ff6357dd8ae74bdc8f5d3c8f535b1842527458a324" kind="enumvalue"><name>sl_bt_gatt_read_blob_response</name></member>
-    <member refid="group__sl__bt__gatt_1gga459acca869ec6d9edd49c57ff6357dd8ae24d6db43518478cd506d9c1837dd820" kind="enumvalue"><name>sl_bt_gatt_read_multiple_request</name></member>
-    <member refid="group__sl__bt__gatt_1gga459acca869ec6d9edd49c57ff6357dd8a8029859995866293b193d87cf9478937" kind="enumvalue"><name>sl_bt_gatt_read_multiple_response</name></member>
-    <member refid="group__sl__bt__gatt_1gga459acca869ec6d9edd49c57ff6357dd8a51671dfd8baa4c957c17e79106d0002d" kind="enumvalue"><name>sl_bt_gatt_write_request</name></member>
-    <member refid="group__sl__bt__gatt_1gga459acca869ec6d9edd49c57ff6357dd8ad1ac592ed693ac835cabb32cd8049b02" kind="enumvalue"><name>sl_bt_gatt_write_response</name></member>
-    <member refid="group__sl__bt__gatt_1gga459acca869ec6d9edd49c57ff6357dd8aa762dfb3566f9069bf36d10fced2e2c1" kind="enumvalue"><name>sl_bt_gatt_write_command</name></member>
-    <member refid="group__sl__bt__gatt_1gga459acca869ec6d9edd49c57ff6357dd8aa83dd06123197fb0e93ab07036ba9f0a" kind="enumvalue"><name>sl_bt_gatt_prepare_write_request</name></member>
-    <member refid="group__sl__bt__gatt_1gga459acca869ec6d9edd49c57ff6357dd8aea7552adb389b97492d9b8fc65b91433" kind="enumvalue"><name>sl_bt_gatt_prepare_write_response</name></member>
-    <member refid="group__sl__bt__gatt_1gga459acca869ec6d9edd49c57ff6357dd8adcc73fa81bc13dea5ac84383333ac136" kind="enumvalue"><name>sl_bt_gatt_execute_write_request</name></member>
-    <member refid="group__sl__bt__gatt_1gga459acca869ec6d9edd49c57ff6357dd8a3069586bdf8f1b14728719d4f132290a" kind="enumvalue"><name>sl_bt_gatt_execute_write_response</name></member>
-    <member refid="group__sl__bt__gatt_1gga459acca869ec6d9edd49c57ff6357dd8a7f887db09ea25336e773976671711099" kind="enumvalue"><name>sl_bt_gatt_handle_value_notification</name></member>
-    <member refid="group__sl__bt__gatt_1gga459acca869ec6d9edd49c57ff6357dd8aea444b30c7d2924fc5098f7b870afa22" kind="enumvalue"><name>sl_bt_gatt_handle_value_indication</name></member>
     <member refid="group__sl__bt__gatt_1gac09c2c4769fe66af0f7e590aff8de05b" kind="enum"><name>sl_bt_gatt_client_config_flag_t</name></member>
-    <member refid="group__sl__bt__gatt_1ggac09c2c4769fe66af0f7e590aff8de05ba3e2698be4369fa757bb4912dd96f03f6" kind="enumvalue"><name>sl_bt_gatt_disable</name></member>
-    <member refid="group__sl__bt__gatt_1ggac09c2c4769fe66af0f7e590aff8de05ba6087351d24a57eea15e21aaf57a71439" kind="enumvalue"><name>sl_bt_gatt_notification</name></member>
-    <member refid="group__sl__bt__gatt_1ggac09c2c4769fe66af0f7e590aff8de05baab5eef2e4759ecd70a59f598f5f4aa8a" kind="enumvalue"><name>sl_bt_gatt_indication</name></member>
     <member refid="group__sl__bt__gatt_1ga37ce8cc880b027b2817f78803eb7284d" kind="enum"><name>sl_bt_gatt_execute_write_flag_t</name></member>
-    <member refid="group__sl__bt__gatt_1gga37ce8cc880b027b2817f78803eb7284da8e7499629d3feaed2a79c36307d2837b" kind="enumvalue"><name>sl_bt_gatt_cancel</name></member>
-    <member refid="group__sl__bt__gatt_1gga37ce8cc880b027b2817f78803eb7284da9b25f1afdebac3956cc8e8f09f163c52" kind="enumvalue"><name>sl_bt_gatt_commit</name></member>
     <member refid="group__sl__bt__gattdb_1ga91d3c36ce798fd1c1bdf8af403dcc179" kind="enum"><name>sl_bt_gattdb_service_type_t</name></member>
-    <member refid="group__sl__bt__gattdb_1gga91d3c36ce798fd1c1bdf8af403dcc179a24c18d61afe32af7c652256fbc999b7e" kind="enumvalue"><name>sl_bt_gattdb_primary_service</name></member>
-    <member refid="group__sl__bt__gattdb_1gga91d3c36ce798fd1c1bdf8af403dcc179a757c68d1188e774c4ee499da0373b0d0" kind="enumvalue"><name>sl_bt_gattdb_secondary_service</name></member>
     <member refid="group__sl__bt__gattdb_1gaeff5d21199ad8135d881399b5c862fef" kind="enum"><name>sl_bt_gattdb_attribute_category_t</name></member>
-    <member refid="group__sl__bt__gattdb_1ggaeff5d21199ad8135d881399b5c862fefa27b1f94633b39ca59fe25693a4ddb574" kind="enumvalue"><name>sl_bt_gattdb_category_service</name></member>
-    <member refid="group__sl__bt__gattdb_1ggaeff5d21199ad8135d881399b5c862fefaa508baf5b1260bd8329864a29a2dfffe" kind="enumvalue"><name>sl_bt_gattdb_category_include</name></member>
-    <member refid="group__sl__bt__gattdb_1ggaeff5d21199ad8135d881399b5c862fefa8f9613d413b7c61f2d7f715d6e3204eb" kind="enumvalue"><name>sl_bt_gattdb_category_characteristic_declaration</name></member>
-    <member refid="group__sl__bt__gattdb_1ggaeff5d21199ad8135d881399b5c862fefa20a13304b2b4d390f78b7d8cce6d78b6" kind="enumvalue"><name>sl_bt_gattdb_category_characteristic_value</name></member>
-    <member refid="group__sl__bt__gattdb_1ggaeff5d21199ad8135d881399b5c862fefa986e954db4611592956e2b50b14fdb3e" kind="enumvalue"><name>sl_bt_gattdb_category_descriptor</name></member>
     <member refid="group__sl__bt__gattdb_1gaff72bb90c32e77883d3a776d3aa78a51" kind="enum"><name>sl_bt_gattdb_value_type_t</name></member>
-    <member refid="group__sl__bt__gattdb_1ggaff72bb90c32e77883d3a776d3aa78a51a3531dc4dd0cea01b297f60e3fd2b5f04" kind="enumvalue"><name>sl_bt_gattdb_fixed_length_value</name></member>
-    <member refid="group__sl__bt__gattdb_1ggaff72bb90c32e77883d3a776d3aa78a51ab791bcf445cf4169df2a946d711ed726" kind="enumvalue"><name>sl_bt_gattdb_variable_length_value</name></member>
-    <member refid="group__sl__bt__gattdb_1ggaff72bb90c32e77883d3a776d3aa78a51ae4b8bc1c873f8d4bad0e92ab2ad62554" kind="enumvalue"><name>sl_bt_gattdb_user_managed_value</name></member>
     <member refid="group__sl__bt__gatt__server_1ga494b6552ef9af21dd22f79dfd4edadfd" kind="enum"><name>sl_bt_gatt_server_client_configuration_t</name></member>
-    <member refid="group__sl__bt__gatt__server_1gga494b6552ef9af21dd22f79dfd4edadfda42950c6d59af2572b028cb80c2b6447b" kind="enumvalue"><name>sl_bt_gatt_server_disable</name></member>
-    <member refid="group__sl__bt__gatt__server_1gga494b6552ef9af21dd22f79dfd4edadfdad310d1c7d7195bb074a6d99240b5ff59" kind="enumvalue"><name>sl_bt_gatt_server_notification</name></member>
-    <member refid="group__sl__bt__gatt__server_1gga494b6552ef9af21dd22f79dfd4edadfda5397df511a2936d0ff64d5d5f8c8448c" kind="enumvalue"><name>sl_bt_gatt_server_indication</name></member>
-    <member refid="group__sl__bt__gatt__server_1gga494b6552ef9af21dd22f79dfd4edadfda66bafcc24564bc9d53395d013695ae8f" kind="enumvalue"><name>sl_bt_gatt_server_notification_and_indication</name></member>
     <member refid="group__sl__bt__gatt__server_1gacb0e9f3923813a7c7e87e18b4f994b3f" kind="enum"><name>sl_bt_gatt_server_characteristic_status_flag_t</name></member>
-    <member refid="group__sl__bt__gatt__server_1ggacb0e9f3923813a7c7e87e18b4f994b3fa64c1c0911d3f0119886e8dab472c0066" kind="enumvalue"><name>sl_bt_gatt_server_client_config</name></member>
-    <member refid="group__sl__bt__gatt__server_1ggacb0e9f3923813a7c7e87e18b4f994b3fa21e2d4e7e62f434c33922c44805c18d5" kind="enumvalue"><name>sl_bt_gatt_server_confirmation</name></member>
     <member refid="group__sl__bt__test_1ga5cd6efcb00f31a090c3534f5e08cbdc7" kind="enum"><name>sl_bt_test_packet_type_t</name></member>
-    <member refid="group__sl__bt__test_1gga5cd6efcb00f31a090c3534f5e08cbdc7a657093f522ff5d9b1df449992005bbad" kind="enumvalue"><name>sl_bt_test_pkt_prbs9</name></member>
-    <member refid="group__sl__bt__test_1gga5cd6efcb00f31a090c3534f5e08cbdc7aec25fca9fb81ebf7faa6bcc695b0fc65" kind="enumvalue"><name>sl_bt_test_pkt_11110000</name></member>
-    <member refid="group__sl__bt__test_1gga5cd6efcb00f31a090c3534f5e08cbdc7abd7100bdda52ca8d877b9eb449c46273" kind="enumvalue"><name>sl_bt_test_pkt_10101010</name></member>
-    <member refid="group__sl__bt__test_1gga5cd6efcb00f31a090c3534f5e08cbdc7a2e8a86ab33a0d5ec7435a9e90d80b800" kind="enumvalue"><name>sl_bt_test_pkt_11111111</name></member>
-    <member refid="group__sl__bt__test_1gga5cd6efcb00f31a090c3534f5e08cbdc7adb4d17b599b9af1b695a3a9672abbdec" kind="enumvalue"><name>sl_bt_test_pkt_00000000</name></member>
-    <member refid="group__sl__bt__test_1gga5cd6efcb00f31a090c3534f5e08cbdc7a4ea9a0c87e037c2f3b99350d0aca6f45" kind="enumvalue"><name>sl_bt_test_pkt_00001111</name></member>
-    <member refid="group__sl__bt__test_1gga5cd6efcb00f31a090c3534f5e08cbdc7a409c1b10e753c64bb2aaf8003c689a17" kind="enumvalue"><name>sl_bt_test_pkt_01010101</name></member>
-    <member refid="group__sl__bt__test_1gga5cd6efcb00f31a090c3534f5e08cbdc7ad15a8e241e1b15499c82ec66505968ef" kind="enumvalue"><name>sl_bt_test_pkt_pn9</name></member>
-    <member refid="group__sl__bt__test_1gga5cd6efcb00f31a090c3534f5e08cbdc7af022bf24b54abaa16383b1c7f031d535" kind="enumvalue"><name>sl_bt_test_pkt_carrier</name></member>
     <member refid="group__sl__bt__test_1ga35a5e3ed16a6fc6186b45b47565759bc" kind="enum"><name>sl_bt_test_phy_t</name></member>
-    <member refid="group__sl__bt__test_1gga35a5e3ed16a6fc6186b45b47565759bca3b5ee041bf2ea45832647b4bbaa56015" kind="enumvalue"><name>sl_bt_test_phy_1m</name></member>
-    <member refid="group__sl__bt__test_1gga35a5e3ed16a6fc6186b45b47565759bca5f40998ac85a463655865e766b4a0048" kind="enumvalue"><name>sl_bt_test_phy_2m</name></member>
-    <member refid="group__sl__bt__test_1gga35a5e3ed16a6fc6186b45b47565759bca01a0236cd52a1bd0a23c8432a79da6b9" kind="enumvalue"><name>sl_bt_test_phy_125k</name></member>
-    <member refid="group__sl__bt__test_1gga35a5e3ed16a6fc6186b45b47565759bcafd540a3bb1564a1216f06879b881e5ab" kind="enumvalue"><name>sl_bt_test_phy_500k</name></member>
     <member refid="group__sl__bt__sm_1gad428091a8f4174a3dfc1adaaca2b6785" kind="enum"><name>sl_bt_sm_io_capability_t</name></member>
-    <member refid="group__sl__bt__sm_1ggad428091a8f4174a3dfc1adaaca2b6785a87010ed990af365f379dfd87eeec71ac" kind="enumvalue"><name>sl_bt_sm_io_capability_displayonly</name></member>
-    <member refid="group__sl__bt__sm_1ggad428091a8f4174a3dfc1adaaca2b6785ae72626ebce11a3e261c1b131e9775e40" kind="enumvalue"><name>sl_bt_sm_io_capability_displayyesno</name></member>
-    <member refid="group__sl__bt__sm_1ggad428091a8f4174a3dfc1adaaca2b6785aa19fe69e09c48105097b9a0019c41d90" kind="enumvalue"><name>sl_bt_sm_io_capability_keyboardonly</name></member>
-    <member refid="group__sl__bt__sm_1ggad428091a8f4174a3dfc1adaaca2b6785acc1d4e152dedaf71335c35f0a3268d35" kind="enumvalue"><name>sl_bt_sm_io_capability_noinputnooutput</name></member>
-    <member refid="group__sl__bt__sm_1ggad428091a8f4174a3dfc1adaaca2b6785aee6d75123aa9c8be67df8a9840f0425e" kind="enumvalue"><name>sl_bt_sm_io_capability_keyboarddisplay</name></member>
     <member refid="group__sl__bt__external__bondingdb_1ga57a8e1716515591b6934083d7807f1dc" kind="enum"><name>sl_bt_external_bondingdb_data_t</name></member>
-    <member refid="group__sl__bt__external__bondingdb_1gga57a8e1716515591b6934083d7807f1dca6f30bd2eadf497ccc0e48ce649bb1c20" kind="enumvalue"><name>sl_bt_external_bondingdb_data_remote_address</name></member>
-    <member refid="group__sl__bt__external__bondingdb_1gga57a8e1716515591b6934083d7807f1dcacfcd4247ec843d238bd6a096ae186e3a" kind="enumvalue"><name>sl_bt_external_bondingdb_data_remote_address_type</name></member>
-    <member refid="group__sl__bt__external__bondingdb_1gga57a8e1716515591b6934083d7807f1dca7ebb7a7c0ff4147c66b4ea14a54e06c2" kind="enumvalue"><name>sl_bt_external_bondingdb_data_remote_ltk</name></member>
-    <member refid="group__sl__bt__external__bondingdb_1gga57a8e1716515591b6934083d7807f1dca15da8758f8617a979ae108ba424eb137" kind="enumvalue"><name>sl_bt_external_bondingdb_data_local_ltk</name></member>
-    <member refid="group__sl__bt__external__bondingdb_1gga57a8e1716515591b6934083d7807f1dca204e5f7bc627f686b4912bf0f77f8df0" kind="enumvalue"><name>sl_bt_external_bondingdb_data_remote_central_inf</name></member>
-    <member refid="group__sl__bt__external__bondingdb_1gga57a8e1716515591b6934083d7807f1dcab0200693105912636404470ddcc6f45f" kind="enumvalue"><name>sl_bt_external_bondingdb_data_local_central_inf</name></member>
-    <member refid="group__sl__bt__external__bondingdb_1gga57a8e1716515591b6934083d7807f1dca1e284993424ea7e60b89302c6112c99f" kind="enumvalue"><name>sl_bt_external_bondingdb_data_irk</name></member>
-    <member refid="group__sl__bt__external__bondingdb_1gga57a8e1716515591b6934083d7807f1dcada64056686b773b8df08a6bfcde65bb1" kind="enumvalue"><name>sl_bt_external_bondingdb_data_meta</name></member>
-    <member refid="group__sl__bt__external__bondingdb_1gga57a8e1716515591b6934083d7807f1dca227d8917e465ca2f8a502cd5e3a65355" kind="enumvalue"><name>sl_bt_external_bondingdb_data_gatt_client_config</name></member>
-    <member refid="group__sl__bt__external__bondingdb_1gga57a8e1716515591b6934083d7807f1dcaf4b1355669e95cf54742e1f68e56e617" kind="enumvalue"><name>sl_bt_external_bondingdb_data_gatt_client_features</name></member>
-    <member refid="group__sl__bt__external__bondingdb_1gga57a8e1716515591b6934083d7807f1dcac13dee4ad45788c67b22b615dccc920f" kind="enumvalue"><name>sl_bt_external_bondingdb_data_gatt_db_hash</name></member>
     <member refid="group__sl__bt__resolving__list_1gadc0d564b01ec80cdff8bfb5501bf0dce" kind="enum"><name>sl_bt_resolving_list_privacy_mode_t</name></member>
-    <member refid="group__sl__bt__resolving__list_1ggadc0d564b01ec80cdff8bfb5501bf0dcea26a7a837818b5a1ecd36b4ec3f1ab2ad" kind="enumvalue"><name>sl_bt_resolving_list_privacy_mode_network</name></member>
-    <member refid="group__sl__bt__resolving__list_1ggadc0d564b01ec80cdff8bfb5501bf0dcea464b10cdc9972f94b943b928c88a5493" kind="enumvalue"><name>sl_bt_resolving_list_privacy_mode_device</name></member>
     <member refid="group__sl__bt__coex_1ga35af928f08226b258ebee855f287f7e5" kind="enum"><name>sl_bt_coex_option_t</name></member>
-    <member refid="group__sl__bt__coex_1gga35af928f08226b258ebee855f287f7e5a6c1ee14ea145299b91dc76f42541d581" kind="enumvalue"><name>sl_bt_coex_option_enable</name></member>
-    <member refid="group__sl__bt__coex_1gga35af928f08226b258ebee855f287f7e5a46368edef7586b8cf3d4c20ceca26099" kind="enumvalue"><name>sl_bt_coex_option_tx_abort</name></member>
-    <member refid="group__sl__bt__coex_1gga35af928f08226b258ebee855f287f7e5aefc95107d48fa34bd1e85f43af237568" kind="enumvalue"><name>sl_bt_coex_option_high_priority</name></member>
     <member refid="group__sl__bt__cs_1gab16efa17cdb87c4313b5e15b9261aaf9" kind="enum"><name>sl_bt_cs_role_t</name></member>
-    <member refid="group__sl__bt__cs_1ggab16efa17cdb87c4313b5e15b9261aaf9aaf73d968e07229751c606ffd11765112" kind="enumvalue"><name>sl_bt_cs_role_initiator</name></member>
-    <member refid="group__sl__bt__cs_1ggab16efa17cdb87c4313b5e15b9261aaf9ac48303f1d3ee7f11542edd8c6d794aca" kind="enumvalue"><name>sl_bt_cs_role_reflector</name></member>
     <member refid="group__sl__bt__cs_1ga066c2dc03d402d4af269353c4ed6f3d3" kind="enum"><name>sl_bt_cs_role_status_t</name></member>
-    <member refid="group__sl__bt__cs_1gga066c2dc03d402d4af269353c4ed6f3d3aae4bf4fbf9538dcd69e42f7ee4b5a7d5" kind="enumvalue"><name>sl_bt_cs_role_status_disable</name></member>
-    <member refid="group__sl__bt__cs_1gga066c2dc03d402d4af269353c4ed6f3d3a4054393bf496004c512a7e7659db3a03" kind="enumvalue"><name>sl_bt_cs_role_status_enable</name></member>
     <member refid="group__sl__bt__cs_1ga8fd875965cf4e392514a5f4f7769bb3d" kind="enum"><name>sl_bt_cs_procedure_state_t</name></member>
-    <member refid="group__sl__bt__cs_1gga8fd875965cf4e392514a5f4f7769bb3da4eeadc432c438018a20be6b27a29ba44" kind="enumvalue"><name>sl_bt_cs_procedure_state_disabled</name></member>
-    <member refid="group__sl__bt__cs_1gga8fd875965cf4e392514a5f4f7769bb3da61c67251f887bd52c618ef6106176cd7" kind="enumvalue"><name>sl_bt_cs_procedure_state_enabled</name></member>
     <member refid="group__sl__bt__cs_1ga1dc74f64ec915490815e1628b118d2b5" kind="enum"><name>sl_bt_cs_handover_handle_type_t</name></member>
-    <member refid="group__sl__bt__cs_1gga1dc74f64ec915490815e1628b118d2b5afb3359772b7ae46cd288c31cbb0d2255" kind="enumvalue"><name>sl_bt_cs_handover_handle_type_connection</name></member>
-    <member refid="group__sl__bt__cs_1gga1dc74f64ec915490815e1628b118d2b5a1d5945e7d48e4cfef53216ba555f7344" kind="enumvalue"><name>sl_bt_cs_handover_handle_type_analyzer</name></member>
     <member refid="group__sl__bt__cs_1ga8850c7bbb087a73a571cfd280a2a1a93" kind="enum"><name>sl_bt_cs_handover_complete_reason_t</name></member>
-    <member refid="group__sl__bt__cs_1gga8850c7bbb087a73a571cfd280a2a1a93a0d72aa29c1c395c8393692a651bc32a6" kind="enumvalue"><name>sl_bt_cs_handover_complete_reason_max_procedure_count_reached</name></member>
-    <member refid="group__sl__bt__cs_1gga8850c7bbb087a73a571cfd280a2a1a93a9a6b5e860561286bea8a6474b756de18" kind="enumvalue"><name>sl_bt_cs_handover_complete_reason_sync_lost</name></member>
     <member refid="group__sl__bt__cs_1ga631ba2f05b0fb5daf637468c2f0d7dc3" kind="enum"><name>sl_bt_cs_mode_t</name></member>
-    <member refid="group__sl__bt__cs_1gga631ba2f05b0fb5daf637468c2f0d7dc3a32778ba18934123ad7132ca191192edb" kind="enumvalue"><name>sl_bt_cs_mode_rtt</name></member>
-    <member refid="group__sl__bt__cs_1gga631ba2f05b0fb5daf637468c2f0d7dc3aa489a1f39d38004f996b3b830b3f36ba" kind="enumvalue"><name>sl_bt_cs_mode_pbr</name></member>
-    <member refid="group__sl__bt__cs_1gga631ba2f05b0fb5daf637468c2f0d7dc3a8d55acf36a87ff73a3a187ca6a464243" kind="enumvalue"><name>sl_bt_cs_submode_disabled</name></member>
     <member refid="group__sl__bt__cs_1ga706ac48e5976f2b902c86bf7fd305d18" kind="enum"><name>sl_bt_cs_rtt_type_t</name></member>
-    <member refid="group__sl__bt__cs_1gga706ac48e5976f2b902c86bf7fd305d18addf8dabfe55ac054b8eca49fa2816a0d" kind="enumvalue"><name>sl_bt_cs_rtt_type_aa_only</name></member>
-    <member refid="group__sl__bt__cs_1gga706ac48e5976f2b902c86bf7fd305d18a1da4ed6a5722141fe1c6030e265c6803" kind="enumvalue"><name>sl_bt_cs_rtt_type_fractional_32_bit_sounding</name></member>
-    <member refid="group__sl__bt__cs_1gga706ac48e5976f2b902c86bf7fd305d18a0894adef6ce2d02667881a8876b827b5" kind="enumvalue"><name>sl_bt_cs_rtt_type_fractional_96_bit_sounding</name></member>
-    <member refid="group__sl__bt__cs_1gga706ac48e5976f2b902c86bf7fd305d18ae571e6e167d166625a40ce49148b5540" kind="enumvalue"><name>sl_bt_cs_rtt_type_fractional_32_bit_random</name></member>
-    <member refid="group__sl__bt__cs_1gga706ac48e5976f2b902c86bf7fd305d18a0bb850cd14095d5570c03004c58bfff4" kind="enumvalue"><name>sl_bt_cs_rtt_type_fractional_64_bit_random</name></member>
-    <member refid="group__sl__bt__cs_1gga706ac48e5976f2b902c86bf7fd305d18a45bde3a6ee00e1efd4acb106b613c6eb" kind="enumvalue"><name>sl_bt_cs_rtt_type_fractional_96_bit_random</name></member>
-    <member refid="group__sl__bt__cs_1gga706ac48e5976f2b902c86bf7fd305d18aa3263989477a5205a289671a1fccdde2" kind="enumvalue"><name>sl_bt_cs_rtt_type_fractional_128_bit_random</name></member>
     <member refid="group__sl__bt__cs_1gac5685b907bdb55573c9e7fc9eb8d74a6" kind="enum"><name>sl_bt_cs_channel_selection_algorithm_t</name></member>
-    <member refid="group__sl__bt__cs_1ggac5685b907bdb55573c9e7fc9eb8d74a6aa97a6091523c724bd83932e30238b4b9" kind="enumvalue"><name>sl_bt_cs_channel_selection_algorithm_3b</name></member>
-    <member refid="group__sl__bt__cs_1ggac5685b907bdb55573c9e7fc9eb8d74a6a8be53a27c1a8bdb63e1918417b9fe711" kind="enumvalue"><name>sl_bt_cs_channel_selection_algorithm_3c</name></member>
-    <member refid="group__sl__bt__cs_1ggac5685b907bdb55573c9e7fc9eb8d74a6a1329b5c6333403c8eec3843ea3f3f6af" kind="enumvalue"><name>sl_bt_cs_channel_selection_algorithm_user_shape_interleaved</name></member>
     <member refid="group__sl__bt__cs_1ga969721c02be54688a7faa2adf9873be2" kind="enum"><name>sl_bt_cs_ch3c_shape_t</name></member>
-    <member refid="group__sl__bt__cs_1gga969721c02be54688a7faa2adf9873be2a37658e08bcb114430b9277f625e4c762" kind="enumvalue"><name>sl_bt_cs_ch3c_shape_hat</name></member>
-    <member refid="group__sl__bt__cs_1gga969721c02be54688a7faa2adf9873be2a0268932de733fef5d528264c79a4daef" kind="enumvalue"><name>sl_bt_cs_chc3_shape_interleaved</name></member>
     <member refid="group__sl__bt__cs_1ga7eb16c89a888196a9c82fb85feb8d5a3" kind="enum"><name>sl_bt_cs_done_status_t</name></member>
-    <member refid="group__sl__bt__cs_1gga7eb16c89a888196a9c82fb85feb8d5a3a0c984123ced5e0dc2601c3a546c2bf79" kind="enumvalue"><name>sl_bt_cs_done_status_complete</name></member>
-    <member refid="group__sl__bt__cs_1gga7eb16c89a888196a9c82fb85feb8d5a3a96d9239a93fe21cc6b36ffddeff309f6" kind="enumvalue"><name>sl_bt_cs_done_status_partial_results_continue</name></member>
-    <member refid="group__sl__bt__cs_1gga7eb16c89a888196a9c82fb85feb8d5a3aa9b19995e3a7a48c9e10dc1b1bd0d555" kind="enumvalue"><name>sl_bt_cs_done_status_aborted</name></member>
     <member refid="group__sl__bt__cs_1gacdacad7e39ed8a52834708a58845f41a" kind="enum"><name>sl_bt_cs_config_state_t</name></member>
-    <member refid="group__sl__bt__cs_1ggacdacad7e39ed8a52834708a58845f41aabd37e6a25cbf1269135f8564fcdd92ca" kind="enumvalue"><name>sl_bt_cs_config_state_removed</name></member>
-    <member refid="group__sl__bt__cs_1ggacdacad7e39ed8a52834708a58845f41aae1711f456957c326eadb68416958b232" kind="enumvalue"><name>sl_bt_cs_config_state_created</name></member>
     <member refid="group__sl__bt__cs_1gae36bfcc29d4bffeae51b5c6ee64eea9b" kind="enum"><name>sl_bt_cs_snr_control_adjustment_t</name></member>
-    <member refid="group__sl__bt__cs_1ggae36bfcc29d4bffeae51b5c6ee64eea9ba90c8ebd75ef08d64a37e69ca397b2ac5" kind="enumvalue"><name>sl_bt_cs_snr_control_adjustment_not_applied</name></member>
     <member refid="group__sl__bt__cs__test_1ga63927ecc8c3951878256e65b568b3f08" kind="enum"><name>sl_bt_cs_test_tone_extension_t</name></member>
-    <member refid="group__sl__bt__cs__test_1gga63927ecc8c3951878256e65b568b3f08aee065f593ff9c1771b2dd2354e2c05fb" kind="enumvalue"><name>sl_bt_cs_test_tone_extension_both_without</name></member>
-    <member refid="group__sl__bt__cs__test_1gga63927ecc8c3951878256e65b568b3f08a2a95093bcd18bbacdcebb5ffc115ccb5" kind="enumvalue"><name>sl_bt_cs_test_tone_extension_reflector_without</name></member>
-    <member refid="group__sl__bt__cs__test_1gga63927ecc8c3951878256e65b568b3f08a690179d918527fd6da49f5a86946fbe8" kind="enumvalue"><name>sl_bt_cs_test_tone_extension_initiator_without</name></member>
-    <member refid="group__sl__bt__cs__test_1gga63927ecc8c3951878256e65b568b3f08a63f0be1f04cffe2c30c02ff04272fc04" kind="enumvalue"><name>sl_bt_cs_test_tone_extension_both_with</name></member>
-    <member refid="group__sl__bt__cs__test_1gga63927ecc8c3951878256e65b568b3f08a7c0b1eb28ff59b6cfb4aa1c4486b7a33" kind="enumvalue"><name>sl_bt_cs_test_tone_extension_round_robin</name></member>
     <member refid="group__sl__bt__cs__test_1ga33230168dbb19ffd8cb4f2579e82c16d" kind="enum"><name>sl_bt_cs_test_sounding_sequence_marker_t</name></member>
-    <member refid="group__sl__bt__cs__test_1gga33230168dbb19ffd8cb4f2579e82c16dadc361fee95c4269ef72152fc17d5d7e4" kind="enumvalue"><name>sl_bt_cs_test_sounding_sequence_marker_1</name></member>
-    <member refid="group__sl__bt__cs__test_1gga33230168dbb19ffd8cb4f2579e82c16da37cff30910f83663e2f78dee2d40798b" kind="enumvalue"><name>sl_bt_cs_test_sounding_sequence_marker_2</name></member>
-    <member refid="group__sl__bt__cs__test_1gga33230168dbb19ffd8cb4f2579e82c16da619778e33723264d7eeabd1826060c4d" kind="enumvalue"><name>sl_bt_cs_test_sounding_sequence_marker_round_robin</name></member>
     <member refid="group__sl__bt__l2cap_1gae9842dbd44c2e083436b58bcd06cdb42" kind="enum"><name>sl_bt_l2cap_connection_result_t</name></member>
-    <member refid="group__sl__bt__l2cap_1ggae9842dbd44c2e083436b58bcd06cdb42ac9cf1e0fa42f9d334727f0a95c63905a" kind="enumvalue"><name>sl_bt_l2cap_connection_result_successful</name></member>
-    <member refid="group__sl__bt__l2cap_1ggae9842dbd44c2e083436b58bcd06cdb42ac8ab8e5881656aae4eabdf87a383b94b" kind="enumvalue"><name>sl_bt_l2cap_connection_result_spsm_not_supported</name></member>
-    <member refid="group__sl__bt__l2cap_1ggae9842dbd44c2e083436b58bcd06cdb42a25defc9dc1aa75800216c5058ffcec84" kind="enumvalue"><name>sl_bt_l2cap_connection_result_no_resources_available</name></member>
-    <member refid="group__sl__bt__l2cap_1ggae9842dbd44c2e083436b58bcd06cdb42a8e146e00333f945bcf01d12964e95945" kind="enumvalue"><name>sl_bt_l2cap_connection_result_insufficient_authentication</name></member>
-    <member refid="group__sl__bt__l2cap_1ggae9842dbd44c2e083436b58bcd06cdb42a2165a04e13774f7cdc55d7dec64b091f" kind="enumvalue"><name>sl_bt_l2cap_connection_result_insufficient_authorization</name></member>
-    <member refid="group__sl__bt__l2cap_1ggae9842dbd44c2e083436b58bcd06cdb42ab0970f03863591be8d3c401d07a81c4a" kind="enumvalue"><name>sl_bt_l2cap_connection_result_encryption_key_size_too_short</name></member>
-    <member refid="group__sl__bt__l2cap_1ggae9842dbd44c2e083436b58bcd06cdb42a105f546218f3d5928f4b379abc224d08" kind="enumvalue"><name>sl_bt_l2cap_connection_result_insufficient_encryption</name></member>
-    <member refid="group__sl__bt__l2cap_1ggae9842dbd44c2e083436b58bcd06cdb42a70de4f1d3e687da0296bab5240c26876" kind="enumvalue"><name>sl_bt_l2cap_connection_result_invalid_source_cid</name></member>
-    <member refid="group__sl__bt__l2cap_1ggae9842dbd44c2e083436b58bcd06cdb42acf7d93d75152b8269bcdaebf0d00b085" kind="enumvalue"><name>sl_bt_l2cap_connection_result_source_cid_already_allocated</name></member>
-    <member refid="group__sl__bt__l2cap_1ggae9842dbd44c2e083436b58bcd06cdb42a4c9536cfee86cacb0a1956c5bc83ccd7" kind="enumvalue"><name>sl_bt_l2cap_connection_result_unacceptable_parameters</name></member>
     <member refid="group__sl__bt__l2cap_1ga04c047b6f61188f5b77de18e9402ba5e" kind="enum"><name>sl_bt_l2cap_command_reject_reason_t</name></member>
-    <member refid="group__sl__bt__l2cap_1gga04c047b6f61188f5b77de18e9402ba5ea6d94cc54389b4cd65176515f657739a8" kind="enumvalue"><name>sl_bt_l2cap_command_not_understood</name></member>
-    <member refid="group__sl__bt__l2cap_1gga04c047b6f61188f5b77de18e9402ba5ea61d3c21019eb3e76579c48f6f7865602" kind="enumvalue"><name>sl_bt_l2cap_signaling_mtu_exceeded</name></member>
-    <member refid="group__sl__bt__l2cap_1gga04c047b6f61188f5b77de18e9402ba5eadcb2204e881a7ae4dc383d3930378ff2" kind="enumvalue"><name>sl_bt_l2cap_invalid_cid_request</name></member>
     <member refid="group__sl__bt__l2cap_1ga41d09e90ffacb07a18fcf20f6668a4cc" kind="enum"><name>sl_bt_l2cap_command_code_t</name></member>
-    <member refid="group__sl__bt__l2cap_1gga41d09e90ffacb07a18fcf20f6668a4cca8f839566b869d25dbbb556cf508e23e2" kind="enumvalue"><name>sl_bt_l2cap_disconnection_request</name></member>
-    <member refid="group__sl__bt__l2cap_1gga41d09e90ffacb07a18fcf20f6668a4cca3e63fdf83590b42fb7b97d9ac9d8f40c" kind="enumvalue"><name>sl_bt_l2cap_le_connection_request</name></member>
-    <member refid="group__sl__bt__l2cap_1gga41d09e90ffacb07a18fcf20f6668a4cca78589707f6269295e7cc54980fece17a" kind="enumvalue"><name>sl_bt_l2cap_flow_control_credit</name></member>
     <member refid="group__sl__bt__evt__dfu__boot_1ga3edd86b0a92b412c0a7b30a9e609baea" kind="typedef"><name>sl_bt_evt_dfu_boot_t</name></member>
     <member refid="group__sl__bt__evt__dfu__boot__failure_1ga0608e3b4665bbbfbda6e7bad99971cde" kind="typedef"><name>sl_bt_evt_dfu_boot_failure_t</name></member>
     <member refid="group__sl__bt__evt__system__boot_1ga2323776cf08c2eb9f2e2cc56eaa9ef2e" kind="typedef"><name>sl_bt_evt_system_boot_t</name></member>
@@ -3913,29 +3681,29 @@
     <member refid="group__bluetooth__rtos__adaptation_1gaa7b9592f6f990160875fc32fe5028e6c" kind="function"><name>sl_bt_bluetooth_pend</name></member>
     <member refid="group__bluetooth__rtos__adaptation_1ga6c0f014f2cfe37e0301e8d0dcd124b6d" kind="function"><name>sl_bt_bluetooth_post</name></member>
   </compound>
-  <compound refid="md_doc_bgapi" kind="page"><name>md_doc_bgapi</name>
+  <compound refid="bgapi" kind="page"><name>bgapi</name>
   </compound>
-  <compound refid="dir_2391b89f2879365d74a63a728bba7d01" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi</name>
+  <compound refid="dir_2391b89f2879365d74a63a728bba7d01" kind="dir"><name>/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi</name>
   </compound>
-  <compound refid="dir_e2f731d1cb9f97679faa790ae39b91e5" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host</name>
+  <compound refid="dir_e2f731d1cb9f97679faa790ae39b91e5" kind="dir"><name>/__w/bluetooth-le/bluetooth-le/bluetooth_le_host</name>
   </compound>
-  <compound refid="dir_b1a1817b9387e5b054018a5428eb2a3f" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/build</name>
+  <compound refid="dir_b1a1817b9387e5b054018a5428eb2a3f" kind="dir"><name>/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build</name>
   </compound>
   <compound refid="dir_5a46a304ca1f10f7c478657ff1bdae3a" kind="dir"><name>doc</name>
   </compound>
-  <compound refid="dir_d9a0b0c47291d7e9365bb8ce2e415e2a" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/event_system</name>
+  <compound refid="dir_d9a0b0c47291d7e9365bb8ce2e415e2a" kind="dir"><name>/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/event_system</name>
   </compound>
-  <compound refid="dir_ae20ecc429096018a2fe615dace667aa" kind="dir"><name>/var/lib/jenkins/github/bgapi_protocol/protocol/inc</name>
+  <compound refid="dir_ae20ecc429096018a2fe615dace667aa" kind="dir"><name>/__w/bluetooth-le/bluetooth-le/bgapi_protocol/protocol/inc</name>
   </compound>
-  <compound refid="dir_d0da292a01e2631d4fa972006f72b194" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc</name>
+  <compound refid="dir_d0da292a01e2631d4fa972006f72b194" kind="dir"><name>/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc</name>
   </compound>
-  <compound refid="dir_2e99f0e5add2c6d752cf2b568e810fad" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/event_system/inc</name>
+  <compound refid="dir_2e99f0e5add2c6d752cf2b568e810fad" kind="dir"><name>/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/event_system/inc</name>
   </compound>
-  <compound refid="dir_848835a5aecb994e59a4c4b7340e87b9" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/inc</name>
+  <compound refid="dir_848835a5aecb994e59a4c4b7340e87b9" kind="dir"><name>/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/inc</name>
   </compound>
-  <compound refid="dir_9ef8797857fbe1d47af7accb030e7afd" kind="dir"><name>/var/lib/jenkins/github/bluetooth_le_host/build/native</name>
+  <compound refid="dir_9ef8797857fbe1d47af7accb030e7afd" kind="dir"><name>/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native</name>
   </compound>
-  <compound refid="dir_6d235e19420f7bb65a9187ffe80ccb69" kind="dir"><name>/var/lib/jenkins/github/bgapi_protocol/protocol</name>
+  <compound refid="dir_6d235e19420f7bb65a9187ffe80ccb69" kind="dir"><name>/__w/bluetooth-le/bluetooth-le/bgapi_protocol/protocol</name>
   </compound>
   <compound refid="indexpage" kind="page"><name>index</name>
   </compound>

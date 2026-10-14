@@ -1,7 +1,7 @@
 project_name: bt_aod_soc_beacon
 package: bluetooth_le_app
 label: Bluetooth AoD - SoC Beacon
-description: >
+description: >-
   This sample app demonstrates a CTE (Constant Tone Extension) transmitter
   that can be used as a locator beacon in a Direction Finding setup estimating
   Angle of Departure (AoD).

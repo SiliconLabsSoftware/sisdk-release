@@ -1,7 +1,7 @@
 project_name: esl_lib
 package: bluetooth_le_app
 label: Bluetooth - ESL Library
-description: >
+description: >-
   A cross-platform shared library designed for host integration in Bluetooth
   LE Electronic Shelf Label systems. This project delivers a position-
   independent dynamic extension that offers ESL operations through a

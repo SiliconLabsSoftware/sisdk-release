@@ -197,7 +197,6 @@ JOB_STATUS CC_UserCredential_UsageNotification_tx(
  * @param[in] p_destination_metadata Destination credential metadata.
  * @param[in] status Status of association set action.
  * @param[in] p_rx_options Pointer to the details of the received frame.
- * @return true if the frame was enqueued succesfully.
  */
 void CC_UserCredential_AssociationReport_tx(
   u3c_credential_metadata_t const * const p_source_metadata,

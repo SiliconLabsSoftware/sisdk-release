@@ -1,7 +1,7 @@
 project_name: bt_soc_csr_generator_tz_ns
 package: bluetooth_le_app
 label: Bluetooth - SoC Certificate Signing Request Generator (TrustZone)
-description: >
+description: >-
   Certificate generating firmware example. Software is generating the device
   EC key pair, the signing request for the device certificate, and other related
   data. The generated data can be read out by the Central Authority.
@@ -62,6 +62,22 @@ readme:
   - path: readme.md
 
 other_file:
+  - path: script/create_certificate_authority.py
+    project:
+      transfer_ownership: true
+      directory: script
+  - path: script/production_line_tool.py
+    project:
+      transfer_ownership: true
+      directory: script
+  - path: script/requirements.txt
+    project:
+      transfer_ownership: true
+      directory: script
+  - path: script/sl_bt_cbap_root_cert.h.jinja
+    project:
+      transfer_ownership: true
+      directory: script
   - path: image/readme_img0.png
   - path: image/readme_img1.png
   - path: image/readme_img2.png

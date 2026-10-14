@@ -77,6 +77,11 @@ typedef struct SWakeupCcData{
 void CC_WakeUp_notification_tx(void (*pCallback)(uint8_t txStatus, TX_STATUS_TYPE* pExtendedTxStatus));
 
 /**
+ * Runs the Wake Up Command Class startup actions after all CC init actions.
+ */
+void CC_WakeUp_Startup(void);
+
+/**
  * @brief Used by the WakeUp Command Class configuration
  * Returns with the default sleep time in second between Wake Up Notifications.
  *

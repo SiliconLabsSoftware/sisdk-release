@@ -888,7 +888,9 @@ illuminance_t get_light(void)
   sc = sl_sensor_lux_get(&lux);
 #endif // SL_CATALOG_SENSOR_LIGHT_PRESENT
   if (sc == SL_STATUS_OK) {
-    light = (illuminance_t)lux;
+    // Mesh stack defines illuminance_t as a 24 bit value where one bit is
+    // 0.01 lx, so a 1234.56 lx reading is represented as 123456.
+    light = (illuminance_t)(lux * 100);
   } else if (sc != SL_STATUS_NOT_INITIALIZED) {
     log_warning("Invalid light reading: %6lulx" NL, (illuminance_t)lux);
   }

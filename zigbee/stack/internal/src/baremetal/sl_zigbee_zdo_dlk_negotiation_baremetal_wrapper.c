@@ -3,7 +3,7 @@
  * @brief internal implementations for 'sl_zigbee_zdo_dlk_negotiation' as a thin-wrapper
  *******************************************************************************
  * # License
- * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
+ * <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
  *******************************************************************************
  *
  * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -63,4 +63,15 @@ void slx_zigbee_gu_zdo_dlk_override_supported_params(sl_zigbee_dlk_supported_neg
 {
   slxi_zigbee_stack_gu_zdo_dlk_override_supported_params(method_mask,
                                                          secret_mask);
+}
+
+sl_status_t slx_zigbee_zdo_dlk_start_key_update_with_aps_encryption(sl_zigbee_address_info *target,
+                                                                    sl_zigbee_dlk_negotiation_method selected_method,
+                                                                    sl_zigbee_dlk_negotiation_shared_secret_source selected_secret,
+                                                                    bool use_aps_encryption)
+{
+  return slxi_zigbee_stack_zdo_dlk_start_key_update_with_aps_encryption(target,
+                                                                        selected_method,
+                                                                        selected_secret,
+                                                                        use_aps_encryption);
 }

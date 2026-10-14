@@ -212,4 +212,4 @@ static void init_and_reset(void)
                          CC_FIRMWARE_UPDATE_CONFIG_SUPPORT_ACTIVATION);
 }
 
-REGISTER_CC_V4(COMMAND_CLASS_FIRMWARE_UPDATE_MD_V5, FIRMWARE_UPDATE_MD_VERSION_V5, CC_FirmwareUpdate_handler, NULL, NULL, NULL, 0, init_and_reset, init_and_reset);
+REGISTER_CC_V7(CC_API_HANDLER_V2, COMMAND_CLASS_FIRMWARE_UPDATE_MD_V5, FIRMWARE_UPDATE_MD_VERSION_V5, CC_FirmwareUpdate_handler, NULL, NULL, NULL, 0, init_and_reset, CC_FirmwareUpdate_Startup, init_and_reset, NULL);

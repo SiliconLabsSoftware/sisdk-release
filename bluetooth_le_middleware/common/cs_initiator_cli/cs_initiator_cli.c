@@ -46,14 +46,20 @@
 // Channel Sounding specification for Antenna Configuration Index (ACI)
 // In PBR mode these values specify the antenna configuration of the initiator
 // and reflector device
-#define ACI_SINGLE           0u
-#define ACI_DUAL_I_SINGLE_R  1u
-#define ACI_SINGLE_I_DUAL_R  4u
-#define ACI_DUAL             7u
+#define ACI_SINGLE              0u
+#define ACI_DUAL_I_SINGLE_R     1u
+#define ACI_TRIPLE_I_SINGLE_R   2u
+#define ACI_QUAD_I_SINGLE_R     3u
+#define ACI_SINGLE_I_DUAL_R     4u
+#define ACI_SINGLE_I_TRIPLE_R   5u
+#define ACI_SINGLE_I_QUAD_R     6u
+#define ACI_DUAL                7u
 // HCI specification for CS SYNC antenna usage
 // In RTT mode these values specify the antenna usage for CS SYNC packets
 #define CS_SYNC_ANT_ID_1             1
 #define CS_SYNC_ANT_ID_2             2
+#define CS_SYNC_ANT_ID_3             3
+#define CS_SYNC_ANT_ID_4             4
 #define CS_SYNC_ANT_SWITCHING     0xFE
 
 #define cli_print(...) \
@@ -64,7 +70,7 @@
 static bool start = false;
 static uint8_t cs_main_mode = sl_bt_cs_mode_pbr;
 static uint8_t cs_sub_mode = sl_bt_cs_submode_disabled;
-static uint8_t algo_mode = SL_RTL_CS_ALGO_MODE_REAL_TIME_BASIC;
+static uint8_t algo_mode = SL_RTL_CS_ALGO_MODE_TRACKING_ACCURACY_OPTIMIZED;
 static uint8_t channel_map_preset = CHANNEL_MAP_PRESET_HIGH;
 static uint8_t antenna_config_idx = ACI_DUAL;
 static uint8_t cs_sync_antenna_usage = CS_SYNC_ANT_SWITCHING;
@@ -200,23 +206,23 @@ void cs_initiator_cli_algo_mode(sl_cli_command_arg_t *arguments)
 {
   uint8_t arg_data;
   arg_data = sl_cli_get_argument_uint8(arguments, 0);
-  if (arg_data == SL_RTL_CS_ALGO_MODE_REAL_TIME_BASIC) {
-    cli_print("OK. Initiator object tracking mode set: real time basic "
-              "(moving object tracking).\n");
+  if (arg_data == SL_RTL_CS_ALGO_MODE_TRACKING_ACCURACY_OPTIMIZED) {
+    cli_print("OK. Initiator object tracking mode set: Tracking accuracy optimized "
+              "(suitable for moving targets).\n");
     algo_mode = arg_data;
-  } else if (arg_data == SL_RTL_CS_ALGO_MODE_STATIC_HIGH_ACCURACY) {
-    cli_print("OK. Initiator object tracking mode set: static high accuracy "
-              "(stationary object tracking).\n");
+  } else if (arg_data == SL_RTL_CS_ALGO_MODE_STATIONARY) {
+    cli_print("OK. Initiator object tracking mode set: Stationary "
+              "(suitable for stationary targets).\n");
     algo_mode = arg_data;
-  } else if (arg_data == SL_RTL_CS_ALGO_MODE_REAL_TIME_FAST) {
-    cli_print("OK. Initiator object tracking mode set: real time fast "
-              "(moving object tracking).\n");
+  } else if (arg_data == SL_RTL_CS_ALGO_MODE_TRACKING_LATENCY_OPTIMIZED) {
+    cli_print("OK. Initiator object tracking mode set: Tracking latency optimized "
+              "(suitable for fast moving targets).\n");
     algo_mode = arg_data;
   } else {
     cli_print("ERROR. Object tracking mode should be %d, %d or %d\n",
-              SL_RTL_CS_ALGO_MODE_REAL_TIME_BASIC,
-              SL_RTL_CS_ALGO_MODE_REAL_TIME_FAST,
-              SL_RTL_CS_ALGO_MODE_STATIC_HIGH_ACCURACY);
+              SL_RTL_CS_ALGO_MODE_TRACKING_ACCURACY_OPTIMIZED,
+              SL_RTL_CS_ALGO_MODE_TRACKING_LATENCY_OPTIMIZED,
+              SL_RTL_CS_ALGO_MODE_STATIONARY);
   }
 }
 
@@ -349,11 +355,17 @@ void cs_initiator_cli_aci(sl_cli_command_arg_t *arguments)
   } else {
     if (arg_data != ACI_SINGLE
         && arg_data != ACI_DUAL_I_SINGLE_R
+        && arg_data != ACI_TRIPLE_I_SINGLE_R
+        && arg_data != ACI_QUAD_I_SINGLE_R
         && arg_data != ACI_SINGLE_I_DUAL_R
+        && arg_data != ACI_SINGLE_I_TRIPLE_R
+        && arg_data != ACI_SINGLE_I_QUAD_R
         && arg_data != ACI_DUAL) {
-      cli_print("ERROR. Only (%d, %d, %d, %d) are supported.\n",
+      cli_print("ERROR. Only (%d, %d, %d, %d, %d, %d, %d, %d) are supported.\n",
                 ACI_SINGLE, ACI_DUAL_I_SINGLE_R,
-                ACI_SINGLE_I_DUAL_R, ACI_DUAL);
+                ACI_TRIPLE_I_SINGLE_R, ACI_QUAD_I_SINGLE_R,
+                ACI_SINGLE_I_DUAL_R, ACI_SINGLE_I_TRIPLE_R,
+                ACI_SINGLE_I_QUAD_R, ACI_DUAL);
     } else {
       cli_print("OK. Antenna configuration index set to %d\n", arg_data);
       antenna_config_idx = arg_data;
@@ -382,9 +394,12 @@ void cs_initiator_cli_cs_sync_antenna_usage(sl_cli_command_arg_t *arguments)
   }
   if (arg_data != CS_SYNC_ANT_ID_1
       && arg_data != CS_SYNC_ANT_ID_2
+      && arg_data != CS_SYNC_ANT_ID_3
+      && arg_data != CS_SYNC_ANT_ID_4
       && arg_data != CS_SYNC_ANT_SWITCHING) {
-    cli_print("ERROR. Only (%x, %x, %#x) are supported.\n",
-              CS_SYNC_ANT_ID_1, CS_SYNC_ANT_ID_2, CS_SYNC_ANT_SWITCHING);
+    cli_print("ERROR. Only (%x, %x, %x, %x, %#x) are supported.\n",
+              CS_SYNC_ANT_ID_1, CS_SYNC_ANT_ID_2,
+              CS_SYNC_ANT_ID_3, CS_SYNC_ANT_ID_4, CS_SYNC_ANT_SWITCHING);
   } else {
     cli_print("OK. Antenna usage for CS SYNC packets set to %#x\n",
               arg_data);

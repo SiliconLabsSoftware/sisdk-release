@@ -37,6 +37,11 @@
 extern "C" {
 #endif
 
+/***************************************************************************//**
+ * @addtogroup math_mvp_matrix
+ * @{
+ ******************************************************************************/
+
 /**
  * @brief
  *  Matrix data type.
@@ -46,11 +51,6 @@ typedef struct {
   size_t    num_cols;   ///< The number of columns in the matrix.
   float16_t *data;      ///< Pointer to the matrix data.
 } sl_math_matrix_f16_t;
-
-/***************************************************************************//**
- * @addtogroup math_mvp_matrix
- * @{
- ******************************************************************************/
 
 /**
  * @brief

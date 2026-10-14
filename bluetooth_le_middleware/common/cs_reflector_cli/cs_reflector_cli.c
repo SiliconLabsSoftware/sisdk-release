@@ -45,6 +45,8 @@
 // In RTT mode these values specify the antenna usage for CS SYNC packets
 #define CS_SYNC_ANT_ID_1            1
 #define CS_SYNC_ANT_ID_2            2
+#define CS_SYNC_ANT_ID_3            3
+#define CS_SYNC_ANT_ID_4            4
 #define CS_SYNC_ANT_SWITCHING    0xFE
 
 #define cli_print(...) \
@@ -124,9 +126,12 @@ void cs_reflector_cli_cs_sync_antenna_usage(sl_cli_command_arg_t *arguments)
   }
   if (arg_data != CS_SYNC_ANT_ID_1
       && arg_data != CS_SYNC_ANT_ID_2
+      && arg_data != CS_SYNC_ANT_ID_3
+      && arg_data != CS_SYNC_ANT_ID_4
       && arg_data != CS_SYNC_ANT_SWITCHING) {
-    cli_print("ERROR. Only (%x, %x, %#x) are supported.\n",
-              CS_SYNC_ANT_ID_1, CS_SYNC_ANT_ID_2, CS_SYNC_ANT_SWITCHING);
+    cli_print("ERROR. Only (%x, %x, %x, %x, %#x) are supported.\n",
+              CS_SYNC_ANT_ID_1, CS_SYNC_ANT_ID_2,
+              CS_SYNC_ANT_ID_3, CS_SYNC_ANT_ID_4, CS_SYNC_ANT_SWITCHING);
   } else {
     cli_print("OK. Antenna usage for CS SYNC packets set to %#x\n", arg_data);
     cs_sync_antenna_usage = arg_data;

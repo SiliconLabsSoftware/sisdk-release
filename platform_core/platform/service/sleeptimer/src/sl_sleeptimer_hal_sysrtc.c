@@ -40,6 +40,7 @@
 #include "sl_code_classification.h"
 #include "sl_core.h"
 #include "sl_clock_manager.h"
+#include "sli_clock_manager.h"
 #include "sl_interrupt_manager.h"
 #include "sl_device_peripheral.h"
 
@@ -133,7 +134,7 @@ void sli_sleeptimer_hal_power_manager_integration_init(void)
 /*******************************************************************************
  * Hardware Abstraction Layer to perform initialization related to HFXO Manager.
  ******************************************************************************/
-#if defined(SL_CATALOG_HFXO_MANAGER_PRESENT)
+#if defined(SL_CATALOG_HFXO_MANAGER_PRESENT) && !defined(SLI_HFXO_BYPASS_MODE)
 void sli_sleeptimer_hal_hfxo_manager_integration_init(void)
 {
   // Set PRS signal from HFXO to SYSRTC capture channel

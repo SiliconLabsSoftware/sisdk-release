@@ -1,7 +1,7 @@
 project_name: bt_host_throughput
 package: bluetooth_le_app
 label: Bluetooth - Host Throughput Example
-description: >
+description: >-
   This example tests the throughput capabilities of the device and can be used
   to measure throughput between a host and an *EFR32* device.
 category: Bluetooth Examples

@@ -54,6 +54,9 @@
 #define SHR_SIZE 5 // 4 bytes of preamble, 1 byte sync-word
 #endif
 
+// Need higher than default rxToTx turnaround time for enhanced ACKs
+#define SLI_OT_IEEE802154_2015_ENH_ACK_TIMING_RX_TO_TX_US 256
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -288,9 +291,6 @@ uint32_t sli_ot_radio_interface_rail_get_symbol_rate(void);
 uint32_t sli_ot_radio_interface_rail_get_bit_rate(void);
 uint16_t sli_ot_radio_interface_rail_get_channel_value(void);
 int16_t  sli_ot_radio_interface_rail_get_rssi(sl_rail_time_t wait_timeout_us);
-
-// RAIL timing configuration access
-uint32_t sli_ot_radio_interface_rail_get_rx_to_tx_timing(void);
 
 // RAIL configuration
 sl_rail_status_t sli_ot_radio_interface_rail_config_channels(

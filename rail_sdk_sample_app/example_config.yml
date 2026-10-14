@@ -7,7 +7,6 @@ hwfilter:
    device_includes:
     - device_supports_rail
    device_excludes:
-    - device_no_rail_api
     - device_family_bgm22
     - device_family_bgm27
    board_excludes:

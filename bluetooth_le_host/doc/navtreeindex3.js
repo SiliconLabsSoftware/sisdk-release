@@ -1,5 +1,16 @@
 var NAVTREEINDEX3 =
 {
+"group__sl__bt__evt__external__bondingdb__local__irk__request.html":[2,29,3],
+"group__sl__bt__evt__external__bondingdb__local__irk__request.html#ga6a0d9aeefb48fe7ea9ef986c10325482":[2,29,3,0],
+"group__sl__bt__evt__gap__random__address__refresh.html":[2,8,0],
+"group__sl__bt__evt__gap__random__address__refresh.html#a782542294593743acffa1e9f2179c352":[2,8,0,0,0],
+"group__sl__bt__evt__gap__random__address__refresh.html#ab7613525e5b4aa528ef08bd026996d31":[2,8,0,0,1],
+"group__sl__bt__evt__gap__random__address__refresh.html#ga765ade59521df4030059cfea3d941854":[2,8,0,1],
+"group__sl__bt__evt__gap__random__address__refresh.html#structsl__bt__evt__gap__random__address__refresh__s":[2,8,0,0],
+"group__sl__bt__evt__gatt__characteristic.html":[2,23,2],
+"group__sl__bt__evt__gatt__characteristic.html#a620e0908144407678924961523f269d2":[2,23,2,0,1],
+"group__sl__bt__evt__gatt__characteristic.html#a6ef8b6af06e43130a96a3ef284849557":[2,23,2,0,3],
+"group__sl__bt__evt__gatt__characteristic.html#ade653d67c88b7300c7c97185f8e2eaa2":[2,23,2,0,0],
 "group__sl__bt__evt__gatt__characteristic.html#ae875473e4862d23ca0bdeaa195d7e41a":[2,23,2,0,2],
 "group__sl__bt__evt__gatt__characteristic.html#ga15a9f7d6e63b67d5b0cdda6f9550fc2e":[2,23,2,1],
 "group__sl__bt__evt__gatt__characteristic.html#structsl__bt__evt__gatt__characteristic__s":[2,23,2,0],
@@ -238,16 +249,5 @@ var NAVTREEINDEX3 =
 "group__sl__bt__evt__periodic__sync__transfer__received.html#a6c91df3c511fec112f6cd3dfbf062660":[2,19,1,0,0],
 "group__sl__bt__evt__periodic__sync__transfer__received.html#a727ef8cc7e2b6b4b55a37ceead6b1ba3":[2,19,1,0,6],
 "group__sl__bt__evt__periodic__sync__transfer__received.html#a74e3f5212773f0c7c937fc3c9c3f31ca":[2,19,1,0,10],
-"group__sl__bt__evt__periodic__sync__transfer__received.html#a90c514e6443384e85e98827cc5a8ad56":[2,19,1,0,9],
-"group__sl__bt__evt__periodic__sync__transfer__received.html#a97a135677cc29a810837717b76328d64":[2,19,1,0,5],
-"group__sl__bt__evt__periodic__sync__transfer__received.html#ac830fb4aeb3a78ecfee472e4873e4c53":[2,19,1,0,4],
-"group__sl__bt__evt__periodic__sync__transfer__received.html#adbeb87ca66d91f93e3cbeeebe3cf9747":[2,19,1,0,1],
-"group__sl__bt__evt__periodic__sync__transfer__received.html#ae176dcd543fe21d0e5e70459db1ffe4d":[2,19,1,0,2],
-"group__sl__bt__evt__periodic__sync__transfer__received.html#afb343d23361a051ffbd4cc6a3205259f":[2,19,1,0,8],
-"group__sl__bt__evt__periodic__sync__transfer__received.html#ga8c6c5076078d173009b089d3fd4f9976":[2,19,1,1],
-"group__sl__bt__evt__periodic__sync__transfer__received.html#structsl__bt__evt__periodic__sync__transfer__received__s":[2,19,1,0],
-"group__sl__bt__evt__resource__status.html":[2,7,1],
-"group__sl__bt__evt__resource__status.html#a708018308f68627001d3f59b28160ca2":[2,7,1,0,0],
-"group__sl__bt__evt__resource__status.html#gaa27a8b50b03066e313ef65c96236864f":[2,7,1,1],
-"group__sl__bt__evt__resource__status.html#structsl__bt__evt__resource__status__s":[2,7,1,0]
+"group__sl__bt__evt__periodic__sync__transfer__received.html#a90c514e6443384e85e98827cc5a8ad56":[2,19,1,0,9]
 };

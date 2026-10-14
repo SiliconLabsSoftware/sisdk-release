@@ -61,6 +61,7 @@ cc_multilevel_sensor_check_scale(const sensor_interface_t* i_interface, uint8_t 
 
 /**
  * Checks if the wanted sensor type has a registered interface or not.
+ * @param[in] endpoint Endpoint to filter sensors by
  * @param[in] sensor_type_value Sensor type value to check, this is the value in sensor_type_t struct's value
  * @return CC_MULTILEVEL_SENSOR_RETURN_VALUE_OK if interface is registered for a sensor, else CC_MULTILEVEL_SENSOR_RETURN_VALUE_NOT_FOUND.
  */
@@ -118,6 +119,7 @@ cc_multilevel_sensor_get_supported_scale(uint8_t sensor_type_value, uint8_t* o_s
 
 /**
  * Getter function for a sensor type's interface
+ * @param[in] endpoint Endpoint to filter sensors by
  * @param[in] sensor_type_value Sensor type value to check, this is the value in sensor_type_t struct's value
  * @param[out] o_interface This is a double pointer which will hold an interface reference
  * @return CC_MULTILEVEL_SENSOR_RETURN_VALUE_OK if interface is registered for a sensor, else CC_MULTILEVEL_SENSOR_RETURN_VALUE_NOT_FOUND.

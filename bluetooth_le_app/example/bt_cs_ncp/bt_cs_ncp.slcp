@@ -1,7 +1,7 @@
 project_name: bt_cs_ncp
 package: bluetooth_le_app
 label: Bluetooth - NCP CS
-description: >
+description: >-
   Network Co-Processor (NCP) target application for Channel Sounding (CS).
   Runs the Bluetooth stack and provides access to it by exposing the
   Bluetooth API (BGAPI) via UART connection. In addition to the standard
@@ -144,7 +144,7 @@ tag:
   - hwfilter:device:device_supports_bluetooth
   - hwfilter:device:device_generic_family_efr32xg24
   - hwfilter:!device:device_wlcsp
-  - hwfilter:board:hardware_board_has_hfxo_freq_40mhz
+  - hwfilter:board:hardware_board_supports_cs
   - hwfilter:ram:128k
 
 ui_hints:

@@ -18,10 +18,6 @@
               <key>preamble_length</key>
               <value>3000</value>
             </override>
-            <override>
-              <key>xtal_frequency_hz</key>
-              <value>38400000</value>
-            </override>
           </profile_input_overrides>
         </channel_config_entry>
       </channel_config_entries>

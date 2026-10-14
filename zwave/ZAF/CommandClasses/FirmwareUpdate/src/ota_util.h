@@ -84,6 +84,12 @@ bool CC_FirmwareUpdate_Init(
   bool support_activation);
 
 /**
+ * Sends a pending post-OTA status report during the ZAF startup phase.
+ * @private
+ */
+void CC_FirmwareUpdate_Startup(void);
+
+/**
  * @brief ZCB_CmdClassFwUpdateMdReqReport
  * Callback function receive status on Send data FIRMWARE_UPDATE_MD_REQUEST_REPORT_V3
  * @param pTxResult : TRANSMIT_COMPLETE_OK, TRANSMIT_COMPLETE_NO_ACK, TRANSMIT_COMPLETE_FAIL...

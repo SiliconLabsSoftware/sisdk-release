@@ -4,7 +4,7 @@
 - package: boards
 - description: Board support for BRD2601D.
 - category: Platform|Board|Starter Kit
-- quality: evaluation
+- quality: production
 - metadata:
     sbom:
       license: Zlib
@@ -22,6 +22,11 @@
   - name: hardware_board_has_rgb
   - name: hardware_board_has_vcom
   - name: no_vcom_hardware_flowcontrol
+  - name: hardware_board_has_led0
+  - name: hardware_board_has_led1
+  - name: hardware_board_has_led2
+  - name: hardware_board_has_btn0
+  - name: hardware_board_has_btn1
   - name: hardware_board_has_spiflash
   - name: hardware_board_has_exp_1
   - name: hardware_board_has_exp_2
@@ -46,6 +51,7 @@
   - name: hardware_board_has_spi
   - name: hardware_board_has_uart
   - name: hardware_board_has_i2c
+  - name: hardware_board_has_exclusive_button_led
   - name: board_config_clock_manager
   - name: hardware_board_has_hfxo_freq_39mhz
   - name: hardware_board_has_hfxo

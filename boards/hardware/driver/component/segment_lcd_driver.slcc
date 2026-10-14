@@ -50,6 +50,10 @@ include:
   file_list:
   - path: sl_segmentlcd_pin_config.h
   condition: [brd2506a]
+- path: inc/brd2506b/
+  file_list:
+  - path: sl_segmentlcd_pin_config.h
+  condition: [brd2506b]
 source:
 - path: src/sl_segmentlcd.c
 config_file:
@@ -74,6 +78,9 @@ config_file:
 - path: config/cl010_1087/sl_segmentlcd_config.h
   file_id: sl_segmentlcd_config
   condition: [brd2506a]
+- path: config/cl010_1087/sl_segmentlcd_config.h
+  file_id: sl_segmentlcd_config
+  condition: [brd2506b]
 template_contribution:
 - name: component_catalog
   value: segment_lcd_driver

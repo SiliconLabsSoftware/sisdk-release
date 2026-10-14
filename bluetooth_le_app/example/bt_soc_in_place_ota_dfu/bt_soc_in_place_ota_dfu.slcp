@@ -1,7 +1,7 @@
 project_name: bt_soc_in_place_ota_dfu
 package: bluetooth_le_app
 label: Bluetooth - SoC In-Place OTA DFU
-description: >
+description: >-
   A minimal project structure, that serves as a starting point for custom
   Bluetooth applications that provides Over-The-Air device firmware update
   using an apploader.

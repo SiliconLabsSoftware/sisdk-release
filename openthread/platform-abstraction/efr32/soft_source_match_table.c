@@ -226,7 +226,7 @@ static sSrcMatchExtEntry srcMatchExtEntry[RADIO_CONFIG_SRC_MATCH_PANID_NUM][RADI
 #if PRINT_MULTIPAN_SOURCE_MATCH_TABLES
 static void printExtEntryTable(otInstance *aInstance)
 {
-    const panIndex_t panIndex = getPanInde(aInstance);
+    const panIndex_t panIndex = sli_ot_radio_instance_get_pan_index(aInstance);
 
     otLogDebgPlat("==============================|============|===========");
     otLogDebgPlat("ExtEntry[panIndex][entry]     | .allocated | .checksum ");

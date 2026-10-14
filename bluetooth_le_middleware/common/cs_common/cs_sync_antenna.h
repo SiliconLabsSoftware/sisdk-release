@@ -37,6 +37,8 @@
 SL_ENUM(cs_sync_antenna_t) {
   CS_SYNC_ANTENNA_1 = 1,
   CS_SYNC_ANTENNA_2 = 2,
+  CS_SYNC_ANTENNA_3 = 3,
+  CS_SYNC_ANTENNA_4 = 4,
   CS_SYNC_SWITCHING = 0xfe
 };
 

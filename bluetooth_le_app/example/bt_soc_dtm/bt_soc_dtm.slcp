@@ -2,7 +2,7 @@
 project_name: bt_soc_dtm
 package: bluetooth_le_app
 label: Bluetooth - SoC DTM
-description: >
+description: >-
   This example implements the direct test mode (DTM) application for radio
   testing. DTM commands can be called via UART.
 category: Bluetooth Examples

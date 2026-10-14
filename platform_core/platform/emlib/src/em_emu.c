@@ -4708,5 +4708,107 @@ void EMU_HDRegStopGearSet(EMU_HdregStopGearILmt_TypeDef current)
                 & _EMU_CTRL_HDREGSTOPGEAR_MASK) | (EMU->CTRL & ~_EMU_CTRL_HDREGSTOPGEAR_MASK);
 }
 #endif
+
+#if defined(DCDC_VRLCFG_VRLEN)
+
+/***************************************************************************//**
+ * @brief
+ *   Initialize DCDC Variable Resistive Load (VRL) configuration.
+ *
+ * @note
+ *   Assumes DCDC is already initialized and enabled. Configures VRLCFG and
+ *   loads the factory trim for the selected load mode from DEVINFO.VRLTRIM
+ *   into DCDC.TRIM0.VRLTRIM. Does not enable VRL; call @ref EMU_DCDCVrlEnable().
+ *
+ * @param[in] init
+ *   Pointer to a VRL initialization structure.
+ ******************************************************************************/
+void EMU_DCDCVrlInit(const EMU_DCDCVrlInit_TypeDef *init)
+{
+  bool dcdcLocked;
+  uint32_t vrlcfg;
+#if defined(_DCDC_TRIM0_VRLTRIM_MASK)     \
+  && defined(_DEVINFO_VRLTRIM_VRL100_MASK) \
+  && defined(_DEVINFO_VRLTRIM_VRL300_MASK)
+  uint32_t trim;
+#endif
+
+  EFM_ASSERT(init != NULL);
+
+  vrlcfg = (((uint32_t)init->mode << _DCDC_VRLCFG_VRLMODE_SHIFT)
+             & _DCDC_VRLCFG_VRLMODE_MASK)
+            | (((uint32_t)init->pulseNum << _DCDC_VRLCFG_VRLPULSENUM_SHIFT)
+                & _DCDC_VRLCFG_VRLPULSENUM_MASK)
+            | (((uint32_t)init->regulatorOffDelay << _DCDC_VRLCFG_VRLCNTLOAD_SHIFT)
+                & _DCDC_VRLCFG_VRLCNTLOAD_MASK);
+
+#if defined(_DCDC_VRLCFG_FORCERFRSHEN_MASK)
+  if (init->forceRefreshEnable) {
+    vrlcfg |= DCDC_VRLCFG_FORCERFRSHEN_ENABLE;
+  }
+#endif
+
+  dcdcLocked = ((DCDC->LOCKSTATUS & DCDC_LOCKSTATUS_LOCK) != 0);
+  EMU_DCDCUnlock();
+
+  BUS_RegMaskedWrite(&DCDC->VRLCFG,
+                     _DCDC_VRLCFG_MASK & ~_DCDC_VRLCFG_VRLEN_MASK,
+                     vrlcfg);
+
+#if defined(_DCDC_TRIM0_VRLTRIM_MASK)     \
+  && defined(_DEVINFO_VRLTRIM_VRL100_MASK) \
+  && defined(_DEVINFO_VRLTRIM_VRL300_MASK)
+  /* Load factory VRL trim for the selected mode from DEVINFO.VRLTRIM. */
+  if (init->mode == emuDcdcVrlMode_100Ohm) {
+    trim = (DEVINFO->VRLTRIM & _DEVINFO_VRLTRIM_VRL100_MASK)
+           >> _DEVINFO_VRLTRIM_VRL100_SHIFT;
+  } else {
+    trim = (DEVINFO->VRLTRIM & _DEVINFO_VRLTRIM_VRL300_MASK)
+           >> _DEVINFO_VRLTRIM_VRL300_SHIFT;
+  }
+  BUS_RegMaskedWrite(&DCDC->TRIM0,
+                     _DCDC_TRIM0_VRLTRIM_MASK,
+                     trim << _DCDC_TRIM0_VRLTRIM_SHIFT);
+#endif
+
+  if (dcdcLocked) {
+    EMU_DCDCLock();
+  }
+}
+
+/***************************************************************************//**
+ * @brief
+ *   Enable DCDC Variable Resistive Load (VRL).
+ ******************************************************************************/
+void EMU_DCDCVrlEnable(void)
+{
+  bool dcdcLocked;
+
+  dcdcLocked = ((DCDC->LOCKSTATUS & DCDC_LOCKSTATUS_LOCK) != 0);
+  EMU_DCDCUnlock();
+  DCDC->VRLCFG_SET = DCDC_VRLCFG_VRLEN_ENABLE;
+  if (dcdcLocked) {
+    EMU_DCDCLock();
+  }
+}
+
+/***************************************************************************//**
+ * @brief
+ *   Disable DCDC Variable Resistive Load (VRL).
+ ******************************************************************************/
+void EMU_DCDCVrlDisable(void)
+{
+  bool dcdcLocked;
+
+  dcdcLocked = ((DCDC->LOCKSTATUS & DCDC_LOCKSTATUS_LOCK) != 0);
+  EMU_DCDCUnlock();
+  DCDC->VRLCFG_CLR = _DCDC_VRLCFG_VRLEN_MASK;
+  if (dcdcLocked) {
+    EMU_DCDCLock();
+  }
+}
+
+#endif /* defined(DCDC_VRLCFG_VRLEN) */
+
 /** @} (end addtogroup emu) */
 #endif /* __EM_EMU_H */

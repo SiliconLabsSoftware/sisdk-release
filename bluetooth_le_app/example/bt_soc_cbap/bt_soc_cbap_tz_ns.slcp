@@ -1,7 +1,7 @@
 project_name: bt_soc_cbap_tz_ns
 package: bluetooth_le_app
 label: Bluetooth - SoC Certificate Based Authentication and Pairing (TrustZone)
-description: >
+description: >-
   Demonstrates Certificate Based Authentication and Pairing over BLE.
   This example utilizes TrustZone for storing keys.
 category: Bluetooth Examples

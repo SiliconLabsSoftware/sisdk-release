@@ -2,7 +2,7 @@ from siliconlabs.slc.board_gen.util.board_gen_util import *
 from typing import Set
 
 # List of boards where flow control of board controller is disabled by default
-special_case = ['brd2608a', 'brd2710a']
+special_case = ['brd2608a', 'brd2608b', 'brd2710a']
 
 # Temporarily added signal map for br4180b and brd4180a as exp_h 3 and 5 are not available
 uart_signals_map_brd4180 = {

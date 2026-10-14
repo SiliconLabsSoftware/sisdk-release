@@ -1,16 +1,32 @@
 <?xml version="1.0" encoding="ASCII"?>
 <model:MDescriptors xmlns:model="http://www.silabs.com/ss/Studio.ecore">
-  <descriptors name="compute_soc_math_mvp_demo" label="Compute - SoC Math MVP"
+  <descriptors name="compute_soc_math_mvp_demo_efr32" label="Compute - SoC Math MVP EFR32"
                description="Demonstrates the Compute Math MVP API (vector and matrix operations).">
     <properties key="namespace" value="template.uc"/>
     <properties key="keywords" value="compute math mvp vector matrix"/>
-    <properties key="solutionReferenceId" value="compute_soc_math_mvp_demo.compute_soc_math_mvp_demo.slcp"/>
-    <properties key="projectFilePaths" value="compute_soc_math_mvp_demo/compute_soc_math_mvp_demo.slcp"/>
+    <properties key="solutionReferenceId" value="compute_soc_math_mvp_demo.compute_soc_math_mvp_demo_efr32.slcp"/>
+    <properties key="projectFilePaths" value="compute_soc_math_mvp_demo/compute_soc_math_mvp_demo_efr32.slcp"/>
     <properties key="readmeFiles" value="compute_soc_math_mvp_demo/readme.md"/>
-    <properties key="boardCompatibility" value="brd2601b brd2608a com.silabs.board.none brd4338a brd2605a"/>
-    <properties key="partCompatibility" value=".*ef.32.g2[468].* .*si917.* .*siwg917m111mgtba.* .*siwg917m141xgtba.* .*siwg917y111mgab.* .*siwg917y111mgnba.* .*siwg917y121mgnb.* .*siwg917m121xgtba.* .*siwg917m111xgtba.* .*siwg917m100mgtba.* .*siwg917m110lgtba.* .*siwg917y111mgnba.* .*siwg917y110lgnba.* .*siwg917y111xgnba.* .*siwg917y121mgnba.* .*siwg917y111mgaba.* .*siwg917y110lgaba.* .*siwg917y111xgaba.* .*siwg917y121mgaba.*"/>
+    <properties key="boardCompatibility" value="brd2601b brd2608a brd2608b com.silabs.board.none "/>
+    <properties key="partCompatibility" value=".*ef.32.g2[468].*"/>
     <properties key="ideCompatibility" value="generic-template makefile-ide simplicity-ide visual-studio-code visual-studio-code-cmake iar-embedded-workbench"/>
-    <properties key="toolchainCompatibility" value="gcc llvm"/>
+    <properties key="toolchainCompatibility" value="gcc iar llvm"/>
+    <properties key="category" value="Compute Application"/>
+    <properties key="quality" value="production"/>
+    <properties key="stockConfigCompatibility" value="com.silabs.ss.framework.project.toolchain.core.default"/>
+    <properties key="filters" value="Device Type|SoC MCU|32-bit\ MCU Project\ Difficulty|Advanced Capability|Compute"/>
+  </descriptors>
+  <descriptors name="compute_soc_math_mvp_demo_siwg917" label="Compute - SoC Math MVP SiWG917"
+               description="Demonstrates the Compute Math MVP API (vector and matrix operations) on SiWG917.">
+    <properties key="namespace" value="template.uc"/>
+    <properties key="keywords" value="compute math mvp vector matrix 917"/>
+    <properties key="solutionReferenceId" value="compute_soc_math_mvp_demo.compute_soc_math_mvp_demo_siwg917.slcp"/>
+    <properties key="projectFilePaths" value="compute_soc_math_mvp_demo/compute_soc_math_mvp_demo_siwg917.slcp"/>
+    <properties key="readmeFiles" value="compute_soc_math_mvp_demo/readme.md"/>
+    <properties key="boardCompatibility" value="com.silabs.board.none brd4338a brd2605a"/>
+    <properties key="partCompatibility" value=" .*si917.* .*siwg917m111mgtba.* .*siwg917m141xgtba.* .*siwg917y111mgab.* .*siwg917y111mgnba.* .*siwg917y121mgnb.* .*siwg917m121xgtba.* .*siwg917m111xgtba.* .*siwg917m100mgtba.* .*siwg917m110lgtba.* .*siwg917y111mgnba.* .*siwg917y110lgnba.* .*siwg917y111xgnba.* .*siwg917y121mgnba.* .*siwg917y111mgaba.* .*siwg917y110lgaba.* .*siwg917y111xgaba.* .*siwg917y121mgaba.*"/>
+    <properties key="ideCompatibility" value="generic-template makefile-ide simplicity-ide visual-studio-code"/>
+    <properties key="toolchainCompatibility" value="gcc"/>
     <properties key="category" value="Compute Application"/>
     <properties key="quality" value="production"/>
     <properties key="stockConfigCompatibility" value="com.silabs.ss.framework.project.toolchain.core.default"/>

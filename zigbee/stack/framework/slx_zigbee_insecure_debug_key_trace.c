@@ -22,6 +22,7 @@
 #include "sl_zigbee_debug_print.h"
 #include "sl_zigbee_stack.h"
 #include "zigbee-packet-header.h"
+#include "stack/mac/mac-dispatch.h"
 #include "stack/routing/util/retry.h"
 #include "stack/zigbee/aps-security.h"
 #include "sl_cli.h"
@@ -70,7 +71,7 @@ void slxi_zigbee_stack_insecure_debug_generate_trace(slx_zigbee_insecure_debug_m
         return;
       }
 
-      (void) sli_zigbee_retry_submit(header, 1, 0, SLI_ZIGBEE_RETRY_FLAG_NONE);
+      (void)sli_802154mac_submit(header, SL_802154_TRANSMIT_PRIORITY_HIGH);
     } break;
 #endif // SLX_ZIGBEE_INSECURE_DEBUG_NWK_REPORT_KEY_PACKET_ENABLED
 #if SLX_ZIGBEE_INSECURE_DEBUG_TRANSPORT_KEY_PACKET_ENABLED == 1

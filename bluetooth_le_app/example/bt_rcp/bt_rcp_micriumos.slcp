@@ -1,7 +1,7 @@
 project_name: bt_rcp_micriumos
 package: bluetooth_le_app
 label: Bluetooth - RCP Micrium OS
-description: >
+description: >-
   Radio Co-Processor (RCP) target application. Runs the Bluetooth Controller
   (i.e. the Link Layer only) and provides access to it using the standard HCI
   (Host-Controller Interface) over a UART connection.

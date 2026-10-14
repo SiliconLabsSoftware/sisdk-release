@@ -1,7 +1,7 @@
 project_name: bt_aoa_host_locator
 package: bluetooth_le_app
 label: Bluetooth AoA - Host Locator
-description: >
+description: >-
   Host application that performs real-time Angle of Arrival (AoA) calculations
   for Bluetooth direction finding. It connects to an NCP target with an antenna
   array (e.g., WSTK with antenna board) via UART to receive IQ samples from AoA

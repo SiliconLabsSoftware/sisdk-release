@@ -29,7 +29,7 @@ uart_signals_map = {
 }
 
 # List of boards where flow control of board controller is disabled by default
-special_case = ['brd2608a', 'brd2710a']
+special_case = ['brd2608a', 'brd2608b', 'brd2710a']
 
 iostream_usart = OverrideUtil(uart_signals_map, 'usart')
 

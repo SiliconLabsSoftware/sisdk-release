@@ -1,0 +1,36 @@
+id: external_flash_32mb_s3
+label: 32 MB External Flash
+package: platform_core
+description: >
+  Configures 32 MB of external flash for the device.
+category: Platform|Device|Flash
+quality: production
+metadata:
+  sbom:
+    license: Zlib
+provides:
+- name: external_flash_32mb_s3
+- name: external_flash_size_s3
+- name: device_has_32576kb_flash
+  condition:
+  - device_se_size_192k
+- name: device_has_32512kb_flash
+  condition:
+  - device_se_size_256k
+requires:
+- name: device_efx
+- name: device_has_ext_mem
+template_contribution:
+- name: device_flash_size
+  value: 33357824
+  condition:
+  - device_se_size_192k
+- name: device_flash_size
+  value: 33292288
+  condition:
+  - device_se_size_256k
+- name: device_flash_mspu_region_size
+  value: 262144
+  condition:
+  - device_generic_family_sixx301
+root_path: platform_core

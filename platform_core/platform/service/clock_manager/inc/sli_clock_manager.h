@@ -36,6 +36,20 @@
 #include "sl_compiler.h"
 #include "sl_code_classification.h"
 
+#if defined(SL_COMPONENT_CATALOG_PRESENT)
+#include "sl_component_catalog.h"
+#endif
+
+#if defined(SL_CATALOG_CLOCK_MANAGER_PRESENT)
+#include "em_device.h"
+#include "sl_clock_manager_oscillator_config.h"
+#if defined(SL_CLOCK_MANAGER_HFXO_MODE) && (SL_CLOCK_MANAGER_HFXO_MODE != HFXO_CFG_MODE_XTAL) \
+  && (!defined(SL_CLOCK_MANAGER_HFXO_CRYSTAL_SHARING_EN) || (SL_CLOCK_MANAGER_HFXO_CRYSTAL_SHARING_EN == 0)) \
+  && !defined(SLI_CLOCK_MANAGER_RUNTIME_CONFIGURATION)
+#define SLI_HFXO_BYPASS_MODE
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

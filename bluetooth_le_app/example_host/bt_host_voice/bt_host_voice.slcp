@@ -1,7 +1,7 @@
 project_name: bt_host_voice
 package: bluetooth_le_app
 label: Bluetooth - Host Voice
-description: >
+description: >-
   Host Voice example. This example demonstrates a Bluetooth LE host application
   that communicates with an NCP (Network Co-Processor)
   device to handle voice data transmission over Bluetooth LE.

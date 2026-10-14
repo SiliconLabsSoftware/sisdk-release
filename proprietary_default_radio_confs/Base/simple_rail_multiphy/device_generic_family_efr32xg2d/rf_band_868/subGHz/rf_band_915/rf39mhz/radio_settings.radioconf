@@ -10,12 +10,6 @@
           <max_power>RAIL_TX_POWER_MAX</max_power>
           <metadata>{"selectedPhy":"PHY_Studio_868M_GMSK_500Kbps"}</metadata>
           <phy_name_override>PHY_Studio_868M_GMSK_500Kbps</phy_name_override>
-          <profile_input_overrides>
-            <override>
-              <key>xtal_frequency_hz</key>
-              <value>39000000</value>
-            </override>
-          </profile_input_overrides>
         </channel_config_entry>
         <channel_config_entry name="second_channelSubGHz">
           <channel_number_start>1</channel_number_start>

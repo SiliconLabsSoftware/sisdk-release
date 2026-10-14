@@ -148,15 +148,19 @@ static uint16_t computeTransitionTimeFromStateAndRate(sli_zigbee_color_16u_trans
 static uint8_t readColorMode(uint8_t endpoint)
 {
   uint8_t colorMode;
-
-  assert(SL_ZIGBEE_ZCL_STATUS_SUCCESS
-         == sl_zigbee_af_read_server_attribute(endpoint,
-                                               ZCL_COLOR_CONTROL_CLUSTER_ID,
-                                               ZCL_COLOR_CONTROL_COLOR_MODE_ATTRIBUTE_ID,
-                                               (uint8_t *)&colorMode,
-                                               sizeof(uint8_t)));
-
-  return colorMode;
+  sl_zigbee_af_status_t status = sl_zigbee_af_read_server_attribute(endpoint,
+                                                                     ZCL_COLOR_CONTROL_CLUSTER_ID,
+                                                                     ZCL_COLOR_CONTROL_COLOR_MODE_ATTRIBUTE_ID,
+                                                                     (uint8_t *)&colorMode,
+                                                                     sizeof(uint8_t));
+  #ifdef SL_ZIGBEE_TEST
+  assert(status == SL_ZIGBEE_ZCL_STATUS_SUCCESS);
+  #else
+  if (status != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
+    sl_zigbee_af_color_control_cluster_println("ERR: reading color mode %02X", status);
+  }
+  #endif
+  return status == SL_ZIGBEE_ZCL_STATUS_SUCCESS ? colorMode : COLOR_MODE_HSV;
 }
 
 static uint16_t readColorTemperature(uint8_t endpoint)
@@ -256,79 +260,127 @@ static uint8_t readLevelControlCurrentLevel(uint8_t endpoint)
 
 static void writeRemainingTime(uint8_t endpoint, uint16_t remainingTime)
 {
-  assert(SL_ZIGBEE_ZCL_STATUS_SUCCESS
-         == sl_zigbee_af_write_server_attribute(endpoint,
-                                                ZCL_COLOR_CONTROL_CLUSTER_ID,
-                                                ZCL_COLOR_CONTROL_REMAINING_TIME_ATTRIBUTE_ID,
-                                                (uint8_t *)&remainingTime,
-                                                ZCL_INT16U_ATTRIBUTE_TYPE));
+  sl_zigbee_af_status_t status = sl_zigbee_af_write_server_attribute(endpoint,
+                                                                      ZCL_COLOR_CONTROL_CLUSTER_ID,
+                                                                      ZCL_COLOR_CONTROL_REMAINING_TIME_ATTRIBUTE_ID,
+                                                                      (uint8_t *)&remainingTime,
+                                                                      ZCL_INT16U_ATTRIBUTE_TYPE);
+  #ifdef SL_ZIGBEE_TEST
+  assert(status == SL_ZIGBEE_ZCL_STATUS_SUCCESS);
+  #else
+  if (status != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
+    sl_zigbee_af_color_control_cluster_println("ERR: writing remaining time %02X", status);
+  }
+  #endif
 }
 
 static void writeColorMode(uint8_t endpoint, uint8_t colorMode)
 {
-  assert(SL_ZIGBEE_ZCL_STATUS_SUCCESS
-         == sl_zigbee_af_write_server_attribute(endpoint,
-                                                ZCL_COLOR_CONTROL_CLUSTER_ID,
-                                                ZCL_COLOR_CONTROL_ENHANCED_COLOR_MODE_ATTRIBUTE_ID,
-                                                (uint8_t *)&colorMode,
-                                                ZCL_INT8U_ATTRIBUTE_TYPE));
+  sl_zigbee_af_status_t status = sl_zigbee_af_write_server_attribute(endpoint,
+                                                                      ZCL_COLOR_CONTROL_CLUSTER_ID,
+                                                                      ZCL_COLOR_CONTROL_ENHANCED_COLOR_MODE_ATTRIBUTE_ID,
+                                                                      (uint8_t *)&colorMode,
+                                                                      ZCL_INT8U_ATTRIBUTE_TYPE);
+  #ifdef SL_ZIGBEE_TEST
+  assert(status == SL_ZIGBEE_ZCL_STATUS_SUCCESS);
+  #else
+  if (status != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
+    sl_zigbee_af_color_control_cluster_println("ERR: writing enhanced color mode %02X", status);
+  }
+  #endif
 
-  assert(SL_ZIGBEE_ZCL_STATUS_SUCCESS
-         == sl_zigbee_af_write_server_attribute(endpoint,
-                                                ZCL_COLOR_CONTROL_CLUSTER_ID,
-                                                ZCL_COLOR_CONTROL_COLOR_MODE_ATTRIBUTE_ID,
-                                                (uint8_t *)&colorMode,
-                                                ZCL_INT8U_ATTRIBUTE_TYPE));
+  status = sl_zigbee_af_write_server_attribute(endpoint,
+                                               ZCL_COLOR_CONTROL_CLUSTER_ID,
+                                               ZCL_COLOR_CONTROL_COLOR_MODE_ATTRIBUTE_ID,
+                                               (uint8_t *)&colorMode,
+                                               ZCL_INT8U_ATTRIBUTE_TYPE);
+  #ifdef SL_ZIGBEE_TEST
+  assert(status == SL_ZIGBEE_ZCL_STATUS_SUCCESS);
+  #else
+  if (status != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
+    sl_zigbee_af_color_control_cluster_println("ERR: writing color mode %02X", status);
+  }
+  #endif
 }
 
 static void writeHue(uint8_t endpoint, uint8_t hue)
 {
-  assert(SL_ZIGBEE_ZCL_STATUS_SUCCESS
-         == sl_zigbee_af_write_server_attribute(endpoint,
-                                                ZCL_COLOR_CONTROL_CLUSTER_ID,
-                                                ZCL_COLOR_CONTROL_CURRENT_HUE_ATTRIBUTE_ID,
-                                                (uint8_t *)&hue,
-                                                ZCL_INT8U_ATTRIBUTE_TYPE));
+  sl_zigbee_af_status_t status = sl_zigbee_af_write_server_attribute(endpoint,
+                                                                      ZCL_COLOR_CONTROL_CLUSTER_ID,
+                                                                      ZCL_COLOR_CONTROL_CURRENT_HUE_ATTRIBUTE_ID,
+                                                                      (uint8_t *)&hue,
+                                                                      ZCL_INT8U_ATTRIBUTE_TYPE);
+  #ifdef SL_ZIGBEE_TEST
+  assert(status == SL_ZIGBEE_ZCL_STATUS_SUCCESS);
+  #else
+  if (status != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
+    sl_zigbee_af_color_control_cluster_println("ERR: writing current hue %02X", status);
+  }
+  #endif
 }
 
 static void writeSaturation(uint8_t endpoint, uint8_t saturation)
 {
-  assert(SL_ZIGBEE_ZCL_STATUS_SUCCESS
-         == sl_zigbee_af_write_server_attribute(endpoint,
-                                                ZCL_COLOR_CONTROL_CLUSTER_ID,
-                                                ZCL_COLOR_CONTROL_CURRENT_SATURATION_ATTRIBUTE_ID,
-                                                (uint8_t *)&saturation,
-                                                ZCL_INT8U_ATTRIBUTE_TYPE));
+  sl_zigbee_af_status_t status = sl_zigbee_af_write_server_attribute(endpoint,
+                                                                      ZCL_COLOR_CONTROL_CLUSTER_ID,
+                                                                      ZCL_COLOR_CONTROL_CURRENT_SATURATION_ATTRIBUTE_ID,
+                                                                      (uint8_t *)&saturation,
+                                                                      ZCL_INT8U_ATTRIBUTE_TYPE);
+  #ifdef SL_ZIGBEE_TEST
+  assert(status == SL_ZIGBEE_ZCL_STATUS_SUCCESS);
+  #else
+  if (status != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
+    sl_zigbee_af_color_control_cluster_println("ERR: writing current saturation %02X", status);
+  }
+  #endif
 }
 
 static void writeColorX(uint8_t endpoint, uint16_t colorX)
 {
-  assert(SL_ZIGBEE_ZCL_STATUS_SUCCESS
-         == sl_zigbee_af_write_server_attribute(endpoint,
-                                                ZCL_COLOR_CONTROL_CLUSTER_ID,
-                                                ZCL_COLOR_CONTROL_CURRENT_X_ATTRIBUTE_ID,
-                                                (uint8_t *)&colorX,
-                                                ZCL_INT16U_ATTRIBUTE_TYPE));
+  sl_zigbee_af_status_t status = sl_zigbee_af_write_server_attribute(endpoint,
+                                                                      ZCL_COLOR_CONTROL_CLUSTER_ID,
+                                                                      ZCL_COLOR_CONTROL_CURRENT_X_ATTRIBUTE_ID,
+                                                                      (uint8_t *)&colorX,
+                                                                      ZCL_INT16U_ATTRIBUTE_TYPE);
+  #ifdef SL_ZIGBEE_TEST
+  assert(status == SL_ZIGBEE_ZCL_STATUS_SUCCESS);
+  #else
+  if (status != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
+    sl_zigbee_af_color_control_cluster_println("ERR: writing current X %02X", status);
+  }
+  #endif
 }
 
 static void writeColorY(uint8_t endpoint, uint16_t colorY)
 {
-  assert(SL_ZIGBEE_ZCL_STATUS_SUCCESS
-         == sl_zigbee_af_write_server_attribute(endpoint,
-                                                ZCL_COLOR_CONTROL_CLUSTER_ID,
-                                                ZCL_COLOR_CONTROL_CURRENT_Y_ATTRIBUTE_ID,
-                                                (uint8_t *)&colorY,
-                                                ZCL_INT16U_ATTRIBUTE_TYPE));
+  sl_zigbee_af_status_t status = sl_zigbee_af_write_server_attribute(endpoint,
+                                                                      ZCL_COLOR_CONTROL_CLUSTER_ID,
+                                                                      ZCL_COLOR_CONTROL_CURRENT_Y_ATTRIBUTE_ID,
+                                                                      (uint8_t *)&colorY,
+                                                                      ZCL_INT16U_ATTRIBUTE_TYPE);
+  #ifdef SL_ZIGBEE_TEST
+  assert(status == SL_ZIGBEE_ZCL_STATUS_SUCCESS);
+  #else
+  if (status != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
+    sl_zigbee_af_color_control_cluster_println("ERR: writing current Y %02X", status);
+  }
+  #endif
 }
 
 static void writeColorTemperature(uint8_t endpoint, uint16_t colorTemperature)
 {
-  assert(SL_ZIGBEE_ZCL_STATUS_SUCCESS
-         == sl_zigbee_af_write_server_attribute(endpoint,
-                                                ZCL_COLOR_CONTROL_CLUSTER_ID,
-                                                ZCL_COLOR_CONTROL_COLOR_TEMPERATURE_ATTRIBUTE_ID,
-                                                (uint8_t *)&colorTemperature,
-                                                ZCL_INT16U_ATTRIBUTE_TYPE));
+  sl_zigbee_af_status_t status = sl_zigbee_af_write_server_attribute(endpoint,
+                                                                      ZCL_COLOR_CONTROL_CLUSTER_ID,
+                                                                      ZCL_COLOR_CONTROL_COLOR_TEMPERATURE_ATTRIBUTE_ID,
+                                                                      (uint8_t *)&colorTemperature,
+                                                                      ZCL_INT16U_ATTRIBUTE_TYPE);
+  #ifdef SL_ZIGBEE_TEST
+  assert(status == SL_ZIGBEE_ZCL_STATUS_SUCCESS);
+  #else
+  if (status != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
+    sl_zigbee_af_color_control_cluster_println("ERR: writing color temperature %02X", status);
+  }
+  #endif
 }
 
 // -------------------------------------------------------------------------
@@ -809,7 +861,7 @@ sl_zigbee_af_zcl_request_status_t sl_zigbee_af_color_control_cluster_step_satura
   stepMode = cmd_data.stepMode;
   stepSize = cmd_data.stepSize;
   transitionTime = cmd_data.transitionTime;
-  optionsMask = cmd_data.transitionTime;
+  optionsMask = cmd_data.optionsMask;
   optionsOverride = cmd_data.optionsOverride;
 
   if (!shouldExecuteIfOff(endpoint, optionsMask, optionsOverride)) {
@@ -1174,29 +1226,37 @@ static uint16_t findNewColorValueFromStep(uint16_t oldValue, int16_t step)
 static uint16_t readColorX(uint8_t endpoint)
 {
   uint16_t colorX;
-
-  assert(SL_ZIGBEE_ZCL_STATUS_SUCCESS
-         == sl_zigbee_af_read_server_attribute(endpoint,
-                                               ZCL_COLOR_CONTROL_CLUSTER_ID,
-                                               ZCL_COLOR_CONTROL_CURRENT_X_ATTRIBUTE_ID,
-                                               (uint8_t *)&colorX,
-                                               sizeof(uint16_t)));
-
-  return colorX;
+  sl_zigbee_af_status_t status = sl_zigbee_af_read_server_attribute(endpoint,
+                                                                     ZCL_COLOR_CONTROL_CLUSTER_ID,
+                                                                     ZCL_COLOR_CONTROL_CURRENT_X_ATTRIBUTE_ID,
+                                                                     (uint8_t *)&colorX,
+                                                                     sizeof(uint16_t));
+  #ifdef SL_ZIGBEE_TEST
+  assert(status == SL_ZIGBEE_ZCL_STATUS_SUCCESS);
+  #else
+  if (status != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
+    sl_zigbee_af_color_control_cluster_println("ERR: reading current X %02X", status);
+  }
+  #endif
+  return status == SL_ZIGBEE_ZCL_STATUS_SUCCESS ? colorX : MIN_CIE_XY_VALUE;
 }
 
 static uint16_t readColorY(uint8_t endpoint)
 {
   uint16_t colorY;
-
-  assert(SL_ZIGBEE_ZCL_STATUS_SUCCESS
-         == sl_zigbee_af_read_server_attribute(endpoint,
-                                               ZCL_COLOR_CONTROL_CLUSTER_ID,
-                                               ZCL_COLOR_CONTROL_CURRENT_Y_ATTRIBUTE_ID,
-                                               (uint8_t *)&colorY,
-                                               sizeof(uint16_t)));
-
-  return colorY;
+  sl_zigbee_af_status_t status = sl_zigbee_af_read_server_attribute(endpoint,
+                                                                     ZCL_COLOR_CONTROL_CLUSTER_ID,
+                                                                     ZCL_COLOR_CONTROL_CURRENT_Y_ATTRIBUTE_ID,
+                                                                     (uint8_t *)&colorY,
+                                                                     sizeof(uint16_t));
+  #ifdef SL_ZIGBEE_TEST
+  assert(status == SL_ZIGBEE_ZCL_STATUS_SUCCESS);
+  #else
+  if (status != SL_ZIGBEE_ZCL_STATUS_SUCCESS) {
+    sl_zigbee_af_color_control_cluster_println("ERR: reading current Y %02X", status);
+  }
+  #endif
+  return status == SL_ZIGBEE_ZCL_STATUS_SUCCESS ? colorY : MIN_CIE_XY_VALUE;
 }
 
 #endif  // SUPPORT_CIE_1931

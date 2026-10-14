@@ -1,0 +1,48 @@
+project_name: compute_soc_math_mvp_demo_siwg917
+package: compute_app
+quality: production
+label: Compute - Demonstrate the MVP math library
+description: >
+  This example project shows how to use the MVP math library on SiWG917.
+category: Example|Compute
+filter:
+  - name: "Device Type"
+    value: ["SoC"]
+  - name: "MCU"
+    value: ["32-bit MCU"]
+  - name: "Project Difficulty"
+    value: ["Beginner"]
+source:
+  - path: app.c
+include:
+  - path: .
+    file_list:
+      - path: app.h
+component:
+  - id: sl_main
+  - id: emlib_common
+  - id: math_mvp
+  - id: driver_mvp_hal_si91x
+  - id: si91x_memory_default_config
+  - id: sleeptimer_si91x
+  - id: syscalls
+configuration:
+  - name: SL_BOARD_ENABLE_VCOM
+    value: 1
+  - name: SL_IOSTREAM_USART_VCOM_CONVERT_BY_DEFAULT_LF_TO_CRLF
+    value: 1
+  - name: SL_IOSTREAM_UART_VCOM_CONVERT_BY_DEFAULT_LF_TO_CRLF
+    value: 1
+toolchain_settings:
+  - option: gcc_linker_option
+    value: "-u _printf_float"
+  - option: llvm_linker_option
+    value: "-u _printf_float"
+  - option: gcc_compiler_option
+    value: "-mfp16-format=ieee"
+readme:
+  - path: readme.md
+ui_hints:
+  highlight: readme.md
+post_build:
+  - path: ../util/postbuild_profile/wiseconnect_soc.slpb

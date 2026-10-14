@@ -30,18 +30,18 @@
 
 #if defined(SL_CATALOG_CLI_PRESENT)
 
+/** Persistent: print every aux RX PSDU while @c aux-rx-callback-on is active. */
+static volatile uint8_t sli_rail_mux_aux_cli_rx_print_enabled;
+/** One-shot: print next TX completion from @c tx-fixed-psdu. */
 static volatile uint8_t sli_rail_mux_aux_cli_observe_tx;
-static volatile uint8_t sli_rail_mux_aux_cli_observe_rx;
+/** One-shot after local @c tx-fixed-psdu: skip one loopback of the fixed sample. */
+static volatile uint8_t sli_rail_mux_aux_cli_suppress_local_fixed_psdu_echo;
 
-static void sli_rail_mux_aux_cli_deferred_cancel(void)
+static void sli_rail_mux_aux_cli_clear_observers(void)
 {
+  sli_rail_mux_aux_cli_rx_print_enabled = 0U;
   sli_rail_mux_aux_cli_observe_tx = 0U;
-  sli_rail_mux_aux_cli_observe_rx = 0U;
-}
-
-static void sli_rail_mux_aux_cli_disarm_tx_rx_observers(void)
-{
-  sli_rail_mux_aux_cli_deferred_cancel();
+  sli_rail_mux_aux_cli_suppress_local_fixed_psdu_echo = 0U;
 }
 
 static void sli_rail_mux_aux_cli_print_rx_psdu(const uint8_t *psdu, uint16_t psdu_length)
@@ -68,7 +68,7 @@ void sl_zigbee_cli_rail_mux_aux_try_register(sl_cli_command_arg_t *arguments)
   sl_rail_handle_t out_handle;
   sl_rail_status_t st;
 
-  sli_rail_mux_aux_cli_deferred_cancel();
+  sli_rail_mux_aux_cli_clear_observers();
 
   st = sl_zigbee_rail_mux_aux_try_register_and_start_rx(aux_pan, channel);
   sl_zigbee_af_cli_println("mux_reg:0x%04X", (unsigned int)st);
@@ -93,7 +93,7 @@ void sl_zigbee_cli_rail_mux_aux_unregister_aux(sl_cli_command_arg_t *arguments)
   (void)arguments;
   sl_rail_status_t st = sl_zigbee_rail_mux_aux_unregister_protocol();
   if (st == SL_RAIL_STATUS_NO_ERROR) {
-    sli_rail_mux_aux_cli_deferred_cancel();
+    sli_rail_mux_aux_cli_clear_observers();
   }
   sl_zigbee_af_cli_println("mux_aux_tear:0x%04X", (unsigned int)st);
 }
@@ -118,9 +118,19 @@ void sl_zigbee_cli_rail_mux_aux_rx_count(sl_cli_command_arg_t *arguments)
 }
 
 /** Fixed PSDU for rail-mux-aux tx-fixed-psdu (802.15.4-style bytes; CRC added by RAIL). */
+// static const uint8_t rail_mux_aux_cli_tx_fixed_psdu_sample[] = {
+//   0x0F, 0x0A, 0x03, 0x08, 0x20, 0xFF, 0xFF, 0xFF, 0xFF,
+//   0x07, 0x58, 0xAC, 0xFD, 0x0D, 0x05, 0x01
+// };
+
+// Beacon request (802.15.4 command; RAIL appends CRC on TX).
 static const uint8_t rail_mux_aux_cli_tx_fixed_psdu_sample[] = {
-  0xFC, 0x0A, 0x03, 0x08, 0x20, 0xFF, 0xFF, 0xFF, 0xFF,
-  0x07, 0x58, 0xAC, 0xFD, 0x0D, 0x05, 0x01
+  0x0A,                         // PHR: length = 10 (8 MAC + 2 CRC)
+  0x03, 0x08,                   // FCF: command, dest short, no source
+  0x01,                         // Sequence number
+  0xFF, 0xFF,                   // Dest PAN broadcast
+  0xFF, 0xFF,                   // Dest short broadcast
+  0x07                          // Command ID: Beacon Request
 };
 
 #define RAIL_MUX_AUX_CLI_TX_FIXED_PSDU_LEN ((uint16_t)sizeof(rail_mux_aux_cli_tx_fixed_psdu_sample))
@@ -158,13 +168,15 @@ void sl_zigbee_rail_mux_aux_event_callback(sl_rail_handle_t rail_handle,
     sl_zigbee_af_cli_println("aux_tx_complete:0x%08lX", (unsigned long)(uintptr_t)tx_events);
     sli_rail_mux_aux_cli_observe_tx = 0U;
   }
+
   if (((events & SL_RAIL_EVENT_RX_PACKET_RECEIVED) != 0U)
-      && (sli_rail_mux_aux_cli_observe_rx != 0U)) {
-    // Ignore exact echo of the fixed TX PSDU so one-shot RX dump can capture peer/on-air traffic.
-    if (!sli_rail_mux_aux_cli_is_tx_fixed_psdu_echo(psdu, psdu_length)
-        && psdu != NULL) {
+      && (sli_rail_mux_aux_cli_rx_print_enabled != 0U)
+      && (psdu != NULL)) {
+    if ((sli_rail_mux_aux_cli_suppress_local_fixed_psdu_echo != 0U)
+        && sli_rail_mux_aux_cli_is_tx_fixed_psdu_echo(psdu, psdu_length)) {
+      sli_rail_mux_aux_cli_suppress_local_fixed_psdu_echo = 0U;
+    } else {
       sli_rail_mux_aux_cli_print_rx_psdu(psdu, psdu_length);
-      sli_rail_mux_aux_cli_observe_rx = 0U;
     }
   }
 }
@@ -172,12 +184,8 @@ void sl_zigbee_rail_mux_aux_event_callback(sl_rail_handle_t rail_handle,
 /**
  * CLI/task context only.
  *
- * Two logical pieces (code order must keep hooks before @c start_tx so async RAIL events see them):
- *   1) **HW-test hooks** — optional raw-RX PSDU dump + TX-complete print
- *      not required to perform a TX; see @ref sli_rail_mux_aux_rail_events_cb for RX vs TX fan-out).
- *   2) **Minimal aux TX** — write fixed PSDU to mux TX FIFO then @c start_tx / CSMA.
- *
- * Failures after return can still surface in RAIL/mux callbacks (time-critical context).
+ * Arms a one-shot TX-complete print, then writes the fixed PSDU and starts TX/CSMA.
+ * Does not enable RX printing — use @c aux-rx-callback-on for that.
  */
 void sl_zigbee_cli_rail_mux_aux_tx_fixed_psdu(sl_cli_command_arg_t *arguments)
 {
@@ -197,15 +205,11 @@ void sl_zigbee_cli_rail_mux_aux_tx_fixed_psdu(sl_cli_command_arg_t *arguments)
     channel = sl_zigbee_get_radio_channel();
   }
 
-  // ----- HW-test observers (optional; not required to transmit) -----------------
-  // Register before start_tx: RAIL will deliver RX_PACKET_RECEIVED / TX-complete asynchronously.
-  // Raw RX hook is unrelated to TX logic; this CLI bundles observe-next-RX + TX-done for mux CI.
+  // Arm before start_tx so async TX-complete is observed.
   sli_rail_mux_aux_cli_observe_tx = 1U;
-  sli_rail_mux_aux_cli_observe_rx = 1U;
-  
-  sl_zigbee_af_cli_println("before aux_tx:fifo_written_fixed_psdu:%u", RAIL_MUX_AUX_CLI_TX_FIXED_PSDU_LEN);
-
-  // ----- Minimal aux TX: fixed PSDU → FIFO → start_tx / CSMA --------------------
+  if (sli_rail_mux_aux_cli_rx_print_enabled != 0U) {
+    sli_rail_mux_aux_cli_suppress_local_fixed_psdu_echo = 1U;
+  }
 
   written = sl_zigbee_rail_mux_aux_write_tx_fifo(h,
                                                  rail_mux_aux_cli_tx_fixed_psdu_sample,
@@ -213,8 +217,8 @@ void sl_zigbee_cli_rail_mux_aux_tx_fixed_psdu(sl_cli_command_arg_t *arguments)
                                                  true);
   sl_zigbee_af_cli_println("aux_tx:fifo_written:%u_of_%u", written, RAIL_MUX_AUX_CLI_TX_FIXED_PSDU_LEN);
   if (written != RAIL_MUX_AUX_CLI_TX_FIXED_PSDU_LEN) {
-    // Tear down observers on failure (same as successful path would leave armed until aux-rx-callback-off).
-    sli_rail_mux_aux_cli_disarm_tx_rx_observers();
+    sli_rail_mux_aux_cli_observe_tx = 0U;
+    sli_rail_mux_aux_cli_suppress_local_fixed_psdu_echo = 0U;
     sl_zigbee_af_cli_println("aux_tx:abort");
     return;
   }
@@ -233,18 +237,27 @@ void sl_zigbee_cli_rail_mux_aux_tx_fixed_psdu(sl_cli_command_arg_t *arguments)
   }
   sl_zigbee_af_cli_println("aux_tx:tx_st:0x%04X ch:%u csma:%u", (unsigned int)st, channel, use_csma);
   if (st != SL_RAIL_STATUS_NO_ERROR) {
-    sli_rail_mux_aux_cli_disarm_tx_rx_observers();
+    sli_rail_mux_aux_cli_observe_tx = 0U;
+    sli_rail_mux_aux_cli_suppress_local_fixed_psdu_echo = 0U;
   } else {
-    sl_zigbee_af_cli_println("aux_raw_rx:dump_armed_next_packet");
     sl_zigbee_af_cli_println("aux_tx:tx_complete_cb_armed");
   }
+}
+
+void sl_zigbee_cli_rail_mux_aux_raw_rx_on(sl_cli_command_arg_t *arguments)
+{
+  (void)arguments;
+  sli_rail_mux_aux_cli_rx_print_enabled = 1U;
+  sli_rail_mux_aux_cli_suppress_local_fixed_psdu_echo = 0U;
+  sl_zigbee_af_cli_println("aux_raw_rx_cb:on");
 }
 
 void sl_zigbee_cli_rail_mux_aux_raw_rx_off(sl_cli_command_arg_t *arguments)
 {
   (void)arguments;
-  sli_rail_mux_aux_cli_disarm_tx_rx_observers();
-  sl_zigbee_af_cli_println("aux_raw_rx_cb:off aux_tx_complete_cb:off");
+  sli_rail_mux_aux_cli_rx_print_enabled = 0U;
+  sli_rail_mux_aux_cli_suppress_local_fixed_psdu_echo = 0U;
+  sl_zigbee_af_cli_println("aux_raw_rx_cb:off");
 }
 
 void sl_zigbee_cli_rail_mux_aux_rxdc_phy_select_get(sl_cli_command_arg_t *arguments)

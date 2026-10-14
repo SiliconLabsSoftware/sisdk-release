@@ -56,6 +56,18 @@ void sl_zigbee_zdo_dlk_get_supported_negotiation_parameters(sl_zigbee_dlk_suppor
  *
  * @note This routine runs in the context of the stack task, and thus care must be taken to
  * not cause deadlocks or other hangs in execution.
+ * @note When this callback returns SL_STATUS_OK with a SPEKE method or shared secret that
+ * is not in the mutual overlap of the local supported parameters and the peer Supported Key
+ * Negotiation Methods TLV, the stack discards that selection and picks an overlapping
+ * method and secret by priority (SPEKE Curve25519 SHA-256, then SPEKE Curve25519 AES-MMO-128,
+ * then static). For secrets the stack fallback only chooses ones it can produce today
+ * (symmetric authentication token, basic access key, install code, or well-known). A non-OK
+ * return still falls back to static key request as described above and is not replaced with
+ * SPEKE. An OK return that selects static is kept as static. If local and peer Supported
+ * Methods have no bits in common, the stack does not omit the Selected TLV; it advertises
+ * static key request (protocol 0) and does not open SPEKE. When DLK is allowed and SPEKE
+ * open fails after an OK selection (for example a shared secret the stack cannot produce),
+ * Selected is demoted to static rather than advertising SPEKE that will never start.
  */
 sl_status_t sl_zigbee_zdo_dlk_select_negotiation_parameters_callback(sl_zigbee_address_info *partner,
                                                                      sl_zigbee_dlk_supported_negotiation_method their_supported_methods,
@@ -86,6 +98,16 @@ sl_status_t sl_zigbee_zdo_dlk_start_key_update(sl_zigbee_address_info *target,
 sl_status_t sl_zigbee_zdo_dlk_start_key_negotiation(sl_zigbee_address_info *partner,
                                                     sl_zigbee_dlk_negotiation_method selected_method,
                                                     sl_zigbee_dlk_negotiation_shared_secret_source selected_secret);
+
+/**
+ * @brief Testing only: initiate Start Key Update with explicit APS encryption selection.
+ *
+ * @param use_aps_encryption When true, send with APS encryption; when false, send cleartext.
+ */
+sl_status_t slx_zigbee_zdo_dlk_start_key_update_with_aps_encryption(sl_zigbee_address_info *target,
+                                                                    sl_zigbee_dlk_negotiation_method selected_method,
+                                                                    sl_zigbee_dlk_negotiation_shared_secret_source selected_secret,
+                                                                    bool use_aps_encryption);
 
 /**
  * @brief Testing only: callback to override values of the supported key negotiation bitmask

@@ -244,7 +244,7 @@ void sli_ot_radio_csl_update_enh_ack_ie(otInstance   *aInstance,
              // Received frame's expected time in the PHR
              + (aReceivedFrameLength * OT_RADIO_SYMBOL_TIME * 2)
              // rxToTx turnaround time
-             + sli_ot_radio_interface_rail_get_rx_to_tx_timing()
+             + SLI_OT_IEEE802154_2015_ENH_ACK_TIMING_RX_TO_TX_US
              // PHR time of the ACK
              + (PHY_HEADER_SIZE * OT_RADIO_SYMBOL_TIME * 2)
              // SHR time of the ACK

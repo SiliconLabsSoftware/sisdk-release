@@ -41,7 +41,7 @@
     if (ret == PSA_SUCCESS) {                                             \
       printf("PSA_SUCCESS");                                              \
     } else {                                                              \
-      printf("PSA_ERROR: %ld", ret);                                      \
+      printf("PSA_ERROR: %d", ret);                                      \
     }                                                                     \
                                                                           \
     if (cycles < (CMU_ClockFreqGet(cmuClock_CORE) / 10)) {                \
@@ -67,7 +67,7 @@
     if (ret == PSA_SUCCESS) {       \
       printf("OK\n");               \
     } else {                        \
-      printf("Failed: %ld\n", ret); \
+      printf("Failed: %d\n", ret); \
     }                               \
     return ret;                     \
   } while (0)

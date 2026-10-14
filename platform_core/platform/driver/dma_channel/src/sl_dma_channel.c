@@ -208,23 +208,23 @@ static void cleanup_allocated_descriptors(const sl_dma_channel_handle_t *handle,
                                           sl_dma_channel_xfer_descriptor_t *list_head);
 
 /***************************************************************************//**
- * @brief Process a completed descriptor by invoking callback and freeing if needed.
+ * @brief Process a completed descriptor list by invoking callback and freeing if needed.
  *
  * This function processes a completed descriptor by invoking the user callback
- * (if present and requested) and freeing the descriptor if it was internally
- * allocated. It returns a pointer to the next descriptor in the chain.
+ * (if present and requested), freeing the descriptor if it was internally
+ * allocated, and moving the list head to the next descriptor.
  *
- * @param[in] handle     Pointer to the DMA channel handle.
- * @param[in] descriptor Pointer to the descriptor to process.
- * @param[in] error      Error flag to pass to callback.
- * @param[in] aborted    Aborted flag to pass to callback.
+ * @param[in] handle    Pointer to the DMA channel handle.
+ * @param[in] list_head Pointer to the head of the descriptor list to process.
+ * @param[in] error     Error flag to pass to callback.
+ * @param[in] aborted   Aborted flag to pass to callback.
  *
- * @return Pointer to the next descriptor in the chain, or NULL if this was the last.
+ * @return Whether there are more descriptors to process in the list.
  ******************************************************************************/
-static sl_dma_channel_xfer_descriptor_t* process_descriptor(sl_dma_channel_handle_t* handle,
-                                                            sl_dma_channel_xfer_descriptor_t* descriptor,
-                                                            bool error,
-                                                            bool aborted);
+static bool process_descriptor_list_head(sl_dma_channel_handle_t* handle,
+                                         sl_dma_channel_xfer_descriptor_t** list_head,
+                                         bool error,
+                                         bool aborted);
 
 /***************************************************************************//**
  * @brief Process completed descriptors.
@@ -463,6 +463,7 @@ sl_status_t sl_dma_channel_init(sl_dma_channel_handle_t *handle,
     // this is the state we want to be in when there is nothing left in the DMA
     // channel. We will use this assumption later when submitting transfers.
     ldma->CHDONE_SET = 1UL << channel_number;
+    ldma->CH[channel_number].LINK = 0UL;
 
     // Ensure DONE + error interrupts enabled.
 #if defined(LDMA_IEN_ERROR)
@@ -592,8 +593,7 @@ sl_status_t sl_dma_channel_set_peripheral_signal(const sl_dma_channel_handle_t *
  *          processed descriptors, aborting only those that remain. Re-entrant
  *          calls (e.g. from an abort callback that itself calls abort) are
  *          safe: the function returns SL_STATUS_OK immediately when the
- *          channel state is already SL_DMA_CHANNEL_STATE_ABORTING or
- *          SL_DMA_CHANNEL_STATE_DISABLED.
+ *          channel state is already SL_DMA_CHANNEL_STATE_DISABLED.
  ******************************************************************************/
 sl_status_t sl_dma_channel_abort(sl_dma_channel_handle_t *handle)
 {
@@ -606,8 +606,7 @@ sl_status_t sl_dma_channel_abort(sl_dma_channel_handle_t *handle)
 
   // Return an OK status if we are already in the middle of aborting, or the
   // channel is already disabled.
-  if ( handle->state == SL_DMA_CHANNEL_STATE_ABORTING
-       || handle->state == SL_DMA_CHANNEL_STATE_DISABLED ) {
+  if ( handle->state == SL_DMA_CHANNEL_STATE_DISABLED ) {
     return SL_STATUS_OK;
   }
 
@@ -615,7 +614,8 @@ sl_status_t sl_dma_channel_abort(sl_dma_channel_handle_t *handle)
   CORE_ENTER_ATOMIC();
 
   sl_hal_ldma_disable_channel(ldma, ch);
-  handle->state = SL_DMA_CHANNEL_STATE_ABORTING;
+
+  handle->state = SL_DMA_CHANNEL_STATE_DISABLED;
 
   // Let's determine which descriptors need to be aborted and process any
   // completed descriptors if we are not already in the middle of doing so.
@@ -635,38 +635,18 @@ sl_status_t sl_dma_channel_abort(sl_dma_channel_handle_t *handle)
     if ( completed_tail != NULL ) {
       link_descriptors(completed_tail, NULL);
     }
-
-    // Lets process the completed descriptors now if there are any
-    // remaining to be processed.
-    if ( completed_tail != NULL && !CORE_IN_IRQ_CONTEXT() ) {
-      // If we were in an IRQ context, then we would be aborting from
-      // within `process_completed_descriptors` called by the IRQ
-      // handler.
-      //
-      // We currently aren't in an IRQ context, so the abort was not
-      // initiated within `process_completed_descriptors`, so we need
-      // to manually process the completed descriptors.
-      process_completed_descriptors(handle);
-    }
   }
 
-  // Abort the active descriptor and all descriptors linked to it.
-  while (aborted_head != NULL) {
-    aborted_head = process_descriptor(handle, aborted_head, false, true);
-  }
-
-  // Reset DMA channel.
   handle->mode = SL_DMA_CHANNEL_MODE_NORMAL;
-  handle->state = SL_DMA_CHANNEL_STATE_DISABLED;
-  handle->descriptor_list = NULL;
-  ldma->CHDONE_SET = 1UL << ch;
 
+  ldma->CHDONE_SET = 1UL << ch;
   ldma->REQCLEAR = 1UL << ch;
   ldma->CH[ch].CTRL = 0;
   ldma->CH[ch].SRC = 0;
   ldma->CH[ch].DST = 0;
   ldma->CH[ch].LINK = 0UL;
 
+  sl_hal_ldma_disable_channel_request(ldma, ch);
   sl_hal_ldma_clear_interrupts(ldma, 1UL << ch);
   sl_hal_ldma_disable_interrupts(ldma, 1UL << ch);
   __DMB();
@@ -676,7 +656,22 @@ sl_status_t sl_dma_channel_abort(sl_dma_channel_handle_t *handle)
   sl_hal_ldma_disable_channel(ldma, ch);
 
   sl_hal_ldma_enable_interrupts(ldma, 1UL << ch);
+  sl_hal_ldma_enable_channel_request(ldma, ch);
   __DMB();
+
+  // Lets process the completed descriptors now if there are any
+  // remaining to be processed.
+  if ( completed_tail != NULL) {
+    process_completed_descriptors(handle);
+  }
+
+  // From this point on, all the active descriptors have been aborted. Invalidate the
+  // descriptor list to allow re-sumbitting a descriptor from an aborted descriptor's callback.
+  handle->descriptor_list = NULL;
+
+  while (process_descriptor_list_head(handle, &aborted_head, false, true)) {
+    // Abort the active descriptor and all descriptors linked to it.
+  }
 
   CORE_EXIT_ATOMIC();
 
@@ -1660,25 +1655,37 @@ static void cleanup_allocated_descriptors(const sl_dma_channel_handle_t *handle,
 }
 
 SL_CODE_CLASSIFY(SL_CODE_COMPONENT_DMA_CHANNEL, SL_CODE_CLASS_DMA_CHANNEL_PERFORMANCE)
-static sl_dma_channel_xfer_descriptor_t * process_descriptor(sl_dma_channel_handle_t * handle,
-                                                             sl_dma_channel_xfer_descriptor_t * descriptor,
-                                                             bool error,
-                                                             bool aborted)
+static bool process_descriptor_list_head(sl_dma_channel_handle_t * handle,
+                                         sl_dma_channel_xfer_descriptor_t ** list_head,
+                                         bool error,
+                                         bool aborted)
 {
+  EFM_ASSERT(list_head != NULL);
+  if (*list_head == NULL) {
+    return false;
+  }
+
+  // User-allocated descriptors may be re-submitted as part of their callback. Get the pointer to the
+  // next descriptor before calling the callback, otherwise the descriptor may have been modified
+  // by a user call.
+  // As soon as the user callback is called, the descriptor may be re-used by the user to submit a new
+  // transfer. To avoid list corruption, move the list head to the next descriptor, otherwise the
+  // descriptor may be submitted to itself.
+  sl_dma_channel_xfer_descriptor_t* current = *list_head;
+  sl_dma_channel_xfer_descriptor_t* next = get_next_descriptor(current);
+  *list_head = next;
+
   // Call the user callback if present and if callback was requested for this descriptor.
-  if (handle->callback != NULL && descriptor->flags.callback_on_complete) {
+  if (handle->callback != NULL && current->flags.callback_on_complete) {
     handle->callback(handle, handle->user_data, error, aborted);
   }
 
-  // Get the next descriptor in the chain before potentially freeing the current one.
-  sl_dma_channel_xfer_descriptor_t* next = get_next_descriptor(descriptor);
-
   // Free the descriptor if it was allocated internally by the DMA Channel driver.
-  if (descriptor->flags.driver_allocated) {
-    (void)sl_dma_channel_descriptor_free(handle, descriptor);
+  if (current->flags.driver_allocated) {
+    (void)sl_dma_channel_descriptor_free(handle, current);
   }
 
-  return next;
+  return next != NULL;
 }
 
 SL_CODE_CLASSIFY(SL_CODE_COMPONENT_DMA_CHANNEL, SL_CODE_CLASS_DMA_CHANNEL_PERFORMANCE)
@@ -1691,17 +1698,17 @@ static void process_completed_descriptors(sl_dma_channel_handle_t* handle)
   EFM_ASSERT(ch < DMA_CHAN_COUNT);
 
   // Walk queue to process completed descriptors (before active one)
-  sl_dma_channel_xfer_descriptor_t* iter = handle->descriptor_list;
-  while (iter != NULL) {
+  sl_dma_channel_xfer_descriptor_t** list_head = &handle->descriptor_list;
+  while (*list_head != NULL) {
     // If the linked transfer is not yet done, stop processing descriptors if
     // the current descriptor's linkaddr is the actively linked descriptor in
     // the DMA channel (may be NULL).
-    if ( is_active_descriptor(ldma, ch, iter) && !sl_hal_ldma_transfer_is_done(ldma, ch)) {
+    if ( is_active_descriptor(ldma, ch, *list_head) && !sl_hal_ldma_transfer_is_done(ldma, ch)) {
       break;
     }
 
     // If we reach here, this descriptor has completed, so process it.
-    iter = process_descriptor(handle, iter, false, false);
+    (void)process_descriptor_list_head(handle, list_head, false, false);
   }
 
   // Check if there is an error reported for the DMA channel, if so, flush
@@ -1710,21 +1717,25 @@ static void process_completed_descriptors(sl_dma_channel_handle_t* handle)
   // the descriptor list is the descriptor that caused the error.
   uint32_t pending_errors = sl_dma_manager_get_pending_errors(ch);
   if (pending_errors) {
-    const sl_dma_channel_xfer_descriptor_t* error_desc = iter;
-    while (iter != NULL) {
-      // Call the callback with the appropriate error/abort flags.
-      iter = process_descriptor(handle, iter, (iter == error_desc), true);
-    }
+    // Get a snapshot of the descriptor list prior to processing the error callbacks, since users
+    // are allowed to submit new transfers from their callback. Failure to do so may result in
+    // new transfers being aborted before they have even started, preventing error recovery.
+    sl_dma_channel_xfer_descriptor_t *aborted_head = *list_head;
+    const sl_dma_channel_xfer_descriptor_t *error_desc = aborted_head;
+    *list_head = NULL;
 
-    // Clear the LINK register.
-    ldma->CH[ch].LINK = 0UL;
+    // Reset the DMA channel to its original state.
+    sl_status_t status = sl_dma_channel_abort(handle);
+    EFM_ASSERT(status == SL_STATUS_OK);
+
+    // Only set the error flag for the first descriptor that caused the error.
+    while (process_descriptor_list_head(handle, &aborted_head, (aborted_head == error_desc), true));
+
     // Clear the pending error flag after processing all error descriptors
     sl_dma_manager_clear_pending_errors(ch);
   }
 
-  // Update channel descriptor list head
-  handle->descriptor_list = iter;
-  if ( handle->descriptor_list == NULL ) {
+  if (*list_head == NULL ) {
     // Disable the DMA channel when all descriptors have been processed
     sl_hal_ldma_disable_channel(ldma, ch);
     handle->state = SL_DMA_CHANNEL_STATE_DISABLED;

@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.4" xml:lang="en-US">
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.8" xml:lang="en-US">
   <compounddef id="structsl__bt__msg" kind="struct" language="C++" prot="public">
     <compoundname>sl_bt_msg</compoundname>
     <includes refid="sl__bt__api_8h" local="no">sl_bt_api.h</includes>
-      <sectiondef kind="public-attrib">
+    <sectiondef kind="public-attrib">
       <memberdef kind="variable" id="structsl__bt__msg_1af8e8cd7ef11067996f44bb2074784319" prot="public" static="no" mutable="no">
         <type>uint32_t</type>
         <definition>uint32_t sl_bt_msg::header</definition>
@@ -17,11 +17,11 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="17628" column="14" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="17628" bodyend="-1"/>
+        <location file="/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="17633" column="14" bodyfile="/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="17633" bodyend="-1"/>
       </memberdef>
       <memberdef kind="variable" id="structsl__bt__msg_1aa2e55461097fb93e5501cce38d4d951d" prot="public" static="no" mutable="no">
-        <type>union sl_bt_msg::@0</type>
-        <definition>union sl_bt_msg::@0 sl_bt_msg::data</definition>
+        <type>union <ref refid="structsl__bt__msg" kindref="compound">sl_bt_msg</ref></type>
+        <definition>union sl_bt_msg sl_bt_msg::data</definition>
         <argsstring></argsstring>
         <name>data</name>
         <qualifiedname>sl_bt_msg::data</qualifiedname>
@@ -32,15 +32,15 @@
         </detaileddescription>
         <inbodydescription>
         </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="17724" column="8"/>
+        <location file="/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="17729" column="8"/>
       </memberdef>
-      </sectiondef>
+    </sectiondef>
     <briefdescription>
 <para>Data structure of <computeroutput>bt</computeroutput> API messages. </para>
     </briefdescription>
     <detaileddescription>
     </detaileddescription>
-    <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="17626" column="1" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="17626" bodyend="17725"/>
+    <location file="/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" line="17631" column="1" bodyfile="/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_api.h" bodystart="17631" bodyend="17730"/>
     <listofallmembers>
       <member refid="structsl__bt__msg_1aa2e55461097fb93e5501cce38d4d951d" prot="public" virt="non-virtual"><scope>sl_bt_msg</scope><name>data</name></member>
       <member refid="structsl__bt__msg_1af8e8cd7ef11067996f44bb2074784319" prot="public" virt="non-virtual"><scope>sl_bt_msg</scope><name>header</name></member>

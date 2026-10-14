@@ -488,6 +488,7 @@ typedef struct {
     slxi_zigbee_stack_gu_zdo_dlk_mangle_packet_ipc_msg_t gu_zdo_dlk_mangle_packet;
     slxi_zigbee_stack_gu_zdo_dlk_override_psk_fetch_ipc_msg_t gu_zdo_dlk_override_psk_fetch;
     slxi_zigbee_stack_gu_zdo_dlk_override_supported_params_ipc_msg_t gu_zdo_dlk_override_supported_params;
+    slxi_zigbee_stack_zdo_dlk_start_key_update_with_aps_encryption_ipc_msg_t zdo_dlk_start_key_update_with_aps_encryption;
     #endif
     #ifdef SL_CATALOG_ZIGBEE_R23_SUPPORT_PRESENT
     sli_zigbee_stack_request_beacon_survey_ipc_msg_t request_beacon_survey;

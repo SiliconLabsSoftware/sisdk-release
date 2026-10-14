@@ -346,13 +346,19 @@ void sl_hal_eusart_reset(EUSART_TypeDef *eusart)
   // Properly disable the module
   sl_hal_eusart_disable_tx(eusart);
   sl_hal_eusart_disable_rx(eusart);
-  sl_hal_eusart_wait_sync(eusart, EUSART_SYNCBUSY_RXDIS | EUSART_SYNCBUSY_TXDIS);
-  sl_hal_eusart_disable(eusart);
-  sl_hal_eusart_wait_ready(eusart);
 
   // Clear FIFOs.
   sl_hal_eusart_clear_rx(eusart);
-  sl_hal_eusart_clear_tx(eusart);
+#if defined(_EUSART_CFG0_SYNC_MASK)
+  // Clear TX FIFO is only available in async mode.
+  if ((eusart->CFG0 & _EUSART_CFG0_SYNC_MASK) == EUSART_CFG0_SYNC_ASYNC)
+#endif
+  {
+    sl_hal_eusart_clear_tx(eusart);
+  }
+
+  sl_hal_eusart_disable(eusart);
+  sl_hal_eusart_wait_ready(eusart);
 
 #if defined(_SILICON_LABS_32B_SERIES_2_CONFIG_3)  \
   || defined(_SILICON_LABS_32B_SERIES_2_CONFIG_4) \

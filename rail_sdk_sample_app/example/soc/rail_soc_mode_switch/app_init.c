@@ -42,6 +42,7 @@
 #include "sl_rail_util_protocol_types.h"
 #include "rail_config.h"
 #include "sl_rail_sdk_mode_switch.h"
+#include "sl_clock_manager_oscillator_config.h"
 
 #if defined(SL_CATALOG_KERNEL_PRESENT)
 #include "app_task_init.h"
@@ -62,6 +63,11 @@
  * Checks phy setting to avoid errors at packet sending
  *****************************************************************************/
 static void validation_check(void);
+
+/******************************************************************************
+ * Checks that HFXO and radio config crystal frequencies match when both are present.
+ *****************************************************************************/
+static void xtal_frequency_validation_check(void);
 
 // -----------------------------------------------------------------------------
 //                                Global Variables
@@ -91,6 +97,7 @@ SL_WEAK void print_sample_app_name(const char* app_name)
  *****************************************************************************/
 void rail_app_init(void)
 {
+  xtal_frequency_validation_check();
   validation_check();
   set_channel(channelConfigs[0]->configs[0].channelNumberStart);
 
@@ -115,6 +122,17 @@ void app_init(void)
 // -----------------------------------------------------------------------------
 //                          Static Function Definitions
 // -----------------------------------------------------------------------------
+/******************************************************************************
+ * Checks that HFXO and radio config crystal frequencies match when both are present.
+ *****************************************************************************/
+static void xtal_frequency_validation_check(void)
+{
+#if defined(SL_CLOCK_MANAGER_HFXO_FREQ) && defined(RADIO_CONFIG_XTAL_FREQUENCY)
+  _Static_assert(SL_CLOCK_MANAGER_HFXO_FREQ == RADIO_CONFIG_XTAL_FREQUENCY,
+                 "SL_CLOCK_MANAGER_HFXO_FREQ must match RADIO_CONFIG_XTAL_FREQUENCY.");
+#endif
+}
+
 /******************************************************************************
  * Checks phy setting to avoid errors at packet sending
  *****************************************************************************/

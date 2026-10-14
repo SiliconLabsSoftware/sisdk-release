@@ -68,6 +68,8 @@ static psa_status_t driver_can_handle(const psa_key_attributes_t *attributes,
                                       psa_algorithm_t alg,
                                       size_t key_buffer_size)
 {
+  // Declared here to avoid IAR Pe546 (init inside switch can be bypassed by case jump).
+  psa_key_location_t location;
   switch (alg) {
 #if defined(SLI_PSA_DRIVER_FEATURE_AES_ECB)
     case PSA_ALG_ECB_NO_PADDING:
@@ -95,7 +97,7 @@ static psa_status_t driver_can_handle(const psa_key_attributes_t *attributes,
     if (psa_get_key_type(attributes) != PSA_KEY_TYPE_AES) {
       return PSA_ERROR_NOT_SUPPORTED;
     }
-    psa_key_location_t location =
+    location =
       PSA_KEY_LIFETIME_GET_LOCATION(psa_get_key_lifetime(attributes));
 
     if (location == PSA_KEY_LOCATION_LOCAL_STORAGE) {

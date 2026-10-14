@@ -1,60 +1,13 @@
 <?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.4" xml:lang="en-US">
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.8" xml:lang="en-US">
   <compounddef id="sl__bt__version_8h" kind="file" language="C++">
     <compoundname>sl_bt_version.h</compoundname>
-      <sectiondef kind="define">
-      <memberdef kind="define" id="group__sl__bt__version_1ga5d2a7dcd8cadd547bf5339828102c833" prot="public" static="no">
-        <name>SL_BT_VERSION_MAJOR</name>
-        <initializer>11</initializer>
-        <briefdescription>
-<para>The major number of Bluetooth SDK version. </para>
-        </briefdescription>
-        <detaileddescription>
-<para>An increment indicates incompatible Bluetooth API changes. </para>
-        </detaileddescription>
-        <inbodydescription>
-        </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_version.h" line="31" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_version.h" bodystart="31" bodyend="-1"/>
-      </memberdef>
-      <memberdef kind="define" id="group__sl__bt__version_1ga7181c131dceaeb031cc90bdaa5ecdc6c" prot="public" static="no">
-        <name>SL_BT_VERSION_MINOR</name>
-        <initializer>1</initializer>
-        <briefdescription>
-<para>The minor number of Bluetooth SDK version. </para>
-        </briefdescription>
-        <detaileddescription>
-<para>An increment indicates new backwards compatible functionalities. </para>
-        </detaileddescription>
-        <inbodydescription>
-        </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_version.h" line="38" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_version.h" bodystart="38" bodyend="-1"/>
-      </memberdef>
-      <memberdef kind="define" id="group__sl__bt__version_1gabdc3b1f3ef5b86303857c56b8c89e600" prot="public" static="no">
-        <name>SL_BT_VERSION_PATCH</name>
-        <initializer>0</initializer>
-        <briefdescription>
-<para>The patch number of Bluetooth SDK version. </para>
-        </briefdescription>
-        <detaileddescription>
-<para>An increment indicates backwards compatible bug fixes. </para>
-        </detaileddescription>
-        <inbodydescription>
-        </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_version.h" line="45" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_version.h" bodystart="45" bodyend="-1"/>
-      </memberdef>
-      <memberdef kind="define" id="group__sl__bt__version_1ga702d68a51ae68d689249900414058101" prot="public" static="no">
-        <name>SL_BT_VERSION_HASH</name>
-        <initializer>{0x01,0xcd,0x44,0x35,0x61,0xdd,0x17,0xda,0xd3,0x71,0x26,0xcb,0x61,0xce,0x9c,0x6b,0xec,0x1b,0xa8,0x2c}</initializer>
-        <briefdescription>
-<para>The hash value of the build the Bluetooth SDK was created from. </para>
-        </briefdescription>
-        <detaileddescription>
-        </detaileddescription>
-        <inbodydescription>
-        </inbodydescription>
-        <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_version.h" line="50" column="9" bodyfile="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_version.h" bodystart="50" bodyend="-1"/>
-      </memberdef>
-      </sectiondef>
+    <sectiondef kind="define">
+      <member refid="group__sl__bt__version_1ga5d2a7dcd8cadd547bf5339828102c833" kind="define"><name>SL_BT_VERSION_MAJOR</name></member>
+      <member refid="group__sl__bt__version_1ga7181c131dceaeb031cc90bdaa5ecdc6c" kind="define"><name>SL_BT_VERSION_MINOR</name></member>
+      <member refid="group__sl__bt__version_1gabdc3b1f3ef5b86303857c56b8c89e600" kind="define"><name>SL_BT_VERSION_PATCH</name></member>
+      <member refid="group__sl__bt__version_1ga702d68a51ae68d689249900414058101" kind="define"><name>SL_BT_VERSION_HASH</name></member>
+    </sectiondef>
     <briefdescription>
     </briefdescription>
     <detaileddescription>
@@ -64,18 +17,18 @@
 <codeline lineno="17"><highlight class="normal"></highlight><highlight class="preprocessor">#ifndef<sp/>SL_BT_VERSION_H</highlight><highlight class="normal"></highlight></codeline>
 <codeline lineno="18"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SL_BT_VERSION_H</highlight><highlight class="normal"></highlight></codeline>
 <codeline lineno="19"><highlight class="normal"></highlight></codeline>
-<codeline lineno="20"><highlight class="normal"></highlight><highlight class="comment">/***************************************************************************/</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="20"><highlight class="normal"></highlight><highlight class="comment">/***************************************************************************/</highlight></codeline>
 <codeline lineno="31" refid="group__sl__bt__version_1ga5d2a7dcd8cadd547bf5339828102c833" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SL_BT_VERSION_MAJOR<sp/>11</highlight><highlight class="normal"></highlight></codeline>
 <codeline lineno="32"><highlight class="normal"></highlight></codeline>
 <codeline lineno="38" refid="group__sl__bt__version_1ga7181c131dceaeb031cc90bdaa5ecdc6c" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SL_BT_VERSION_MINOR<sp/>1</highlight><highlight class="normal"></highlight></codeline>
 <codeline lineno="39"><highlight class="normal"></highlight></codeline>
-<codeline lineno="45" refid="group__sl__bt__version_1gabdc3b1f3ef5b86303857c56b8c89e600" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SL_BT_VERSION_PATCH<sp/>0</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="45" refid="group__sl__bt__version_1gabdc3b1f3ef5b86303857c56b8c89e600" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SL_BT_VERSION_PATCH<sp/>2</highlight><highlight class="normal"></highlight></codeline>
 <codeline lineno="46"><highlight class="normal"></highlight></codeline>
-<codeline lineno="50" refid="group__sl__bt__version_1ga702d68a51ae68d689249900414058101" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SL_BT_VERSION_HASH<sp/>{0x01,0xcd,0x44,0x35,0x61,0xdd,0x17,0xda,0xd3,0x71,0x26,0xcb,0x61,0xce,0x9c,0x6b,0xec,0x1b,0xa8,0x2c}</highlight><highlight class="normal"></highlight></codeline>
-<codeline lineno="51"><highlight class="normal"><sp/></highlight><highlight class="comment">//<sp/>end<sp/>addtogroup<sp/>sl_bt_version</highlight><highlight class="normal"></highlight></codeline>
-<codeline lineno="53"><highlight class="normal"></highlight></codeline>
+<codeline lineno="50" refid="group__sl__bt__version_1ga702d68a51ae68d689249900414058101" refkind="member"><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>SL_BT_VERSION_HASH<sp/>{0x64,0x32,0xe2,0x8f,0xb4,0xd6,0xfc,0x2c,0x04,0x69,0x57,0xb2,0xbf,0x4d,0x60,0xc4,0x05,0xbf,0xea,0x12}</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="51"><highlight class="normal"></highlight></codeline>
+<sp/><highlight class="comment">//<sp/>end<sp/>addtogroup<sp/>sl_bt_version</highlight><codeline lineno="53"><highlight class="normal"></highlight></codeline>
 <codeline lineno="54"><highlight class="normal"></highlight><highlight class="preprocessor">#endif</highlight></codeline>
     </programlisting>
-    <location file="/var/lib/jenkins/github/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_version.h"/>
+    <location file="/__w/bluetooth-le/bluetooth-le/bluetooth_le_host/build/native/ble_bgapi/inc/sl_bt_version.h"/>
   </compounddef>
 </doxygen>

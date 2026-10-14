@@ -311,7 +311,10 @@ bool sli_zigbee_process_application_link_key(sl_802154_long_addr_t partnerEui64,
   if (sli_zigbee_stack_get_stack_compliance_revision() >= R23_COMPLIANCE_REVISION) {
     // We only accept partner link keys if we are either an initiator who started a partner link key update
     // or a target who is free to service a partner link key update session
-#if !defined(SL_ZIGBEE_GOLDEN_UNIT)
+#if defined(SL_ZIGBEE_GOLDEN_UNIT)
+    (void)status;
+    store_key = true;
+#else // SL_ZIGBEE_GOLDEN_UNIT
     // Golden Unit does not use the app link key state machine, it has CLIs to separately send the messages
     // (Get Authen Sec Level, Request Key, Verify Key Req)
     if ((sli_zigbee_get_update_app_link_key_state() == UPDATE_APP_LINK_KEY_STATE_REQUEST_KEY_INITIATOR)
@@ -333,6 +336,7 @@ bool sli_zigbee_process_application_link_key(sl_802154_long_addr_t partnerEui64,
         sli_zigbee_stack_zigbee_key_establishment_handler(partnerEui64, SL_ZIGBEE_FAILED_GET_AUTH_SECURITY);
       }
     }
+#endif // SL_ZIGBEE_GOLDEN_UNIT
 
     if (store_key) {
       sl_zigbee_sec_man_flags_t flags = ZB_SEC_MAN_FLAG_EUI_IS_VALID | ZB_SEC_MAN_FLAG_UNCONFIRMED_TRANSIENT_KEY;
@@ -341,10 +345,6 @@ bool sli_zigbee_process_application_link_key(sl_802154_long_addr_t partnerEui64,
         return false;
       }
     }
-#else
-    (void) status;
-    (void) store_key;
-#endif
   } else {
     sl_zigbee_sec_man_context_t context;
     sli_zigbee_stack_sec_man_init_context(&context);

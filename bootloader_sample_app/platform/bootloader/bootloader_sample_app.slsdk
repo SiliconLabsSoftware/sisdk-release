@@ -6,7 +6,7 @@ label=Bootloader Sample App Package
 
 description=Bootloader Sample App Package
 
-version=1.1.1-beta.8
+version=1.1.2-alpha.11
 
 prop.partCompatibility=mcu.arm.*
 

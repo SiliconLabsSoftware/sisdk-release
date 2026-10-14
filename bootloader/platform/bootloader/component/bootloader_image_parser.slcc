@@ -15,6 +15,8 @@ source:
 include:
 - path: platform/bootloader/core
 - path: platform/bootloader
+  file_list:
+  - path: core/btl_helper.h
 provides:
 - name: bootloader_image_parser
 - name: bootloader_nonsecure_incompatible

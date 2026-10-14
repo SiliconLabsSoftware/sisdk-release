@@ -596,10 +596,10 @@ void stackStatusHandler(sl_status_t status)
   }
 }
 
-extern void slx_zigbee_application_handle_new_aps_link_key_with_partner(sl_802154_long_addr_t partner);
-
 void keyEstablishmentHandler(sl_802154_long_addr_t partner, sl_zigbee_key_status_t status)
 {
+  (void)partner;
+
   const char *msg;
   switch (status) {
     case SL_ZIGBEE_APP_LINK_KEY_ESTABLISHED:
@@ -612,11 +612,9 @@ void keyEstablishmentHandler(sl_802154_long_addr_t partner, sl_zigbee_key_status
       break;
     case SL_ZIGBEE_VERIFY_LINK_KEY_SUCCESS:
       msg = "Key verified";
-      slx_zigbee_application_handle_new_aps_link_key_with_partner(partner);
       break;
     case SL_ZIGBEE_TC_REQUESTER_VERIFY_KEY_SUCCESS:
       msg = "TC verified key request";
-      slx_zigbee_application_handle_new_aps_link_key_with_partner(partner);
       break;
     case SL_ZIGBEE_TC_REQUESTER_VERIFY_KEY_TIMEOUT:
       msg = "timeout";

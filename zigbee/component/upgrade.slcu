@@ -170,3 +170,20 @@ upgrade:
       - script: zigbee/component/scripts/upgrade_zigbee_end_device_configuration.lua
         description: >
           Introduced a new configuration parameter SL_ZIGBEE_AF_PLUGIN_END_DEVICE_SUPPORT_MOVE_DELAY_SECONDS that allows configuring the delay time (in seconds) for scheduling end device moves as part of the end device support component.
+
+  - sdk:
+      id: simplicity_sdk
+      version: 2026.6.2
+    configuration:
+      - script: zigbee/component/scripts/upgrade_zigbee_leaf_stack_with_csl_neighbor_table_size.lua
+        description: >
+          The zigbee_pro_leaf_stack_with_csl component now defaults SL_ZIGBEE_NEIGHBOR_TABLE_SIZE to 16
+          (configurable 16-26) to support sleepy-to-sleepy initiators. Projects using this component
+          with a neighbor table size below 16 are upgraded to 16. No action is needed.
+      - script: zigbee/component/scripts/upgrade_zigbee_reporting_configuration.lua
+        description: >
+          Introduced a new configuration parameter SL_ZIGBEE_AF_PLUGIN_REPORTING_ENABLE_RETRY that controls whether attribute reports request an APS acknowledgement.
+          The default is 1 (request an APS acknowledgement). No action is needed.
+      - script: zigbee/component/scripts/upgrade_zigbee_end_device_start_move_delay_jitter.lua
+        description: >
+          Introduced a new configuration parameter SL_ZIGBEE_AF_PLUGIN_END_DEVICE_SUPPORT_START_MOVE_DELAY_JITTER_SECONDS that sets a random delay, up to that many seconds, before an end device's first move to a new parent. The default is 0 (no delay). No action is needed.
